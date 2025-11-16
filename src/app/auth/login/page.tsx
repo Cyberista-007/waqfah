@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useUser, useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -29,12 +28,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isUserLoading && user) {
-        router.push('/profile');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,7 +81,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) {
+  if (isUserLoading) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-16 w-16 animate-spin" />
