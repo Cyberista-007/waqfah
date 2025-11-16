@@ -17,13 +17,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAllLectures } from "@/lib/data";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import type { Lecture } from "@/lib/types";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 
 export default function AdminLecturesPage() {
-    const allLectures = getAllLectures();
     const { toast } = useToast();
+    const firestore = useFirestore();
+
+    const lecturesQuery = useMemoFirebase(
+        () => query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')),
+        [firestore]
+    );
+    const { data: allLectures, isLoading } = useCollection<Lecture>(lecturesQuery);
 
     const handleDelete = (title: string) => {
         toast({
@@ -32,6 +40,10 @@ export default function AdminLecturesPage() {
             description: `تم حذف محاضرة "${title}".`,
         });
     };
+
+    if (isLoading) {
+        return <p>جار تحميل المحاضرات...</p>;
+    }
 
     return (
         <Card>
@@ -57,15 +69,17 @@ export default function AdminLecturesPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {allLectures.map((lecture) => (
-                <TableRow key={lecture.slug}>
+                {allLectures?.map((lecture) => (
+                <TableRow key={lecture.id}>
                     <TableCell className="font-medium">{lecture.title}</TableCell>
                     <TableCell>{lecture.seriesTitle}</TableCell>
-                    <TableCell className="hidden md:table-cell">{new Date(lecture.createdAt).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                        {lecture.createdAt?.toDate ? lecture.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير معروف'}
+                    </TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2">
                         <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/lectures/${lecture.slug}/edit`}>
+                        <Link href={`/admin/lectures/${lecture.id}/edit`}>
                             تعديل
                         </Link>
                         </Button>

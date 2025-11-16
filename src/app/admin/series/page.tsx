@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,15 +18,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import type { Series } from "@/lib/types";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 
 export default function AdminSeriesPage() {
   const firestore = useFirestore();
-  const seriesCollection = collection(firestore, 'series');
-  const seriesQuery = query(seriesCollection, orderBy('title'));
+  const seriesQuery = useMemoFirebase(
+    () => query(collection(firestore, 'series'), orderBy('title')),
+    [firestore]
+  );
   const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
 
   if (isLoading) {
