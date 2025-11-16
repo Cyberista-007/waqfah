@@ -1,3 +1,4 @@
+
 "use server";
 
 import { cookies } from "next/headers";
@@ -16,10 +17,10 @@ export async function handleAdminLogin(
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
-    // Instead of redirecting here, we will return a success state
-    // and let the client-side handle the redirect.
-    return { success: true };
   } catch (error) {
     return { error: "حدث خطأ غير متوقع أثناء تسجيل الدخول." };
   }
+  // Redirect must be called outside of the try/catch block
+  // as it throws a NEXT_REDIRECT error.
+  redirect("/admin/dashboard");
 }

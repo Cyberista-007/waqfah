@@ -1,12 +1,13 @@
+
 "use client";
 
-import { useEffect, useActionState } from "react";
+import { useEffect } from "react";
+import { useActionState } from "react";
 import { handleAdminLogin } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -19,14 +20,10 @@ function SubmitButton() {
 
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [state, formAction] = useActionState(handleAdminLogin, null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (state?.success) {
-      router.push("/admin/dashboard");
-    }
     if (state?.error) {
       toast({
         variant: "destructive",
@@ -34,7 +31,7 @@ export default function AdminLoginPage() {
         description: state.error,
       });
     }
-  }, [state, toast, router]);
+  }, [state, toast]);
 
   return (
     <div className="flex items-center justify-center py-12">

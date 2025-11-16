@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -29,6 +30,12 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  experimental: {
+    // This is required for Next.js 15 to handle redirects in server actions correctly.
+    serverActions: {
+        bodySizeLimit: '2mb', // Or any other appropriate size limit
+    },
   },
   async redirects() {
     return [
