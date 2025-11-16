@@ -5,6 +5,7 @@ import {
   LogIn,
   Menu,
   Search,
+  ChevronDown,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -15,12 +16,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ThemeToggle } from "./theme-toggle"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-const navItems = [
+const mainNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/books", label: "الكتب" },
+]
+
+const moreNavItems = [
   { href: "/schedule", label: "جدول الدروس" },
   { href: "/qa", label: "سؤال وجواب" },
   { href: "/donations", label: "الدعم" },
@@ -36,11 +46,28 @@ export function SiteHeader() {
         </Link>
         
         <div className="hidden md:flex flex-grow justify-center space-x-8 space-x-reverse">
-          {navItems.map((item) => (
+          {mainNavItems.map((item) => (
             <Link key={item.label} href={item.href} className="text-gray-300 hover:text-white transition-colors">
               {item.label}
             </Link>
           ))}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-transparent p-0">
+                        <span>المزيد</span>
+                        <ChevronDown className="h-4 w-4 ms-1"/>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-900 text-white border-gray-700">
+                    {moreNavItems.map((item) => (
+                        <DropdownMenuItem key={item.label} asChild>
+                            <Link href={item.href} className="flex justify-end w-full">
+                                {item.label}
+                            </Link>
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
         <div className="hidden md:flex items-center space-x-4 space-x-reverse">
@@ -72,7 +99,7 @@ export function SiteHeader() {
               <Link href="/" className="text-xl font-bold font-headline hover:text-gray-300 mb-4">
                   موقع أمجد سمير
               </Link>
-                {navItems.map((item) => (
+                {[...mainNavItems, ...moreNavItems].map((item) => (
                   <Link key={item.label} href={item.href} className="block text-gray-300 hover:text-white py-2">
                     {item.label}
                   </Link>
