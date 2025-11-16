@@ -25,7 +25,7 @@ import { collection, query, orderBy } from "firebase/firestore";
 export default function AdminSeriesPage() {
   const firestore = useFirestore();
   const seriesQuery = useMemoFirebase(
-    () => query(collection(firestore, 'series'), orderBy('title')),
+    () => firestore ? query(collection(firestore, 'series'), orderBy('title')) : null,
     [firestore]
   );
   const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
