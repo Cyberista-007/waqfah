@@ -17,11 +17,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAllSeries } from "@/lib/data";
+import { series as allSeriesData } from "@/lib/data";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import type { Series } from "@/lib/types";
 
 export default function AdminSeriesPage() {
-  const allSeries = getAllSeries();
+  // Use state to manage series data so it can be updated
+  const [allSeries, setAllSeries] = useState<Series[]>([]);
+
+  useEffect(() => {
+    // In a real app, you'd fetch this from an API.
+    // For now, we'll use the imported data as the initial state.
+    setAllSeries(allSeriesData);
+  }, []);
 
   return (
     <Card>

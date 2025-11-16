@@ -13,25 +13,45 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { getSeriesBySlug } from "@/lib/data";
+import { series as seriesData, getSeriesBySlug } from "@/lib/data";
 import { notFound, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { Series } from "@/lib/types";
 
 export default function AdminDeleteSeriesPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const series = getSeriesBySlug(params.slug);
   const router = useRouter();
   const { toast } = useToast();
-
-  if (!series) {
-    notFound();
-  }
+  const [series, setSeries] = useState<Series | undefined>(undefined);
+  
+  useEffect(() => {
+    const seriesItem = getSeriesBySlug(params.slug);
+    if (seriesItem) {
+        setSeries(seriesItem);
+    } else {
+        // If series not found after trying, redirect back
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "السلسلة المطلوبة غير موجودة.",
+        });
+        router.push("/admin/series");
+    }
+  }, [params.slug, router, toast]);
 
   const handleDelete = () => {
-    // Simulate API call for deletion
-    console.log("Deleting series:", series.slug);
+    if (!series) return;
+
+    // Find the index of the series to delete
+    const seriesIndex = seriesData.findIndex(s => s.slug === series.slug);
+    
+    if (seriesIndex !== -1) {
+        // Remove the series from the mock database
+        seriesData.splice(seriesIndex, 1);
+    }
 
     toast({
       variant: "destructive",
@@ -40,21 +60,26 @@ export default function AdminDeleteSeriesPage({
     });
 
     router.push("/admin/series");
+    router.refresh();
   };
 
   const handleCancel = () => {
     router.back();
   };
 
+  if (!series) {
+      return null; // Don't render the dialog until we find the series
+  }
+
   return (
     <AlertDialog open={true} onOpenChange={handleCancel}>
-      <AlertDialogContent>
+      <AlertDialogContent dir="rtl">
         <AlertDialogHeader>
           <AlertDialogTitle>هل أنت متأكد تماماً؟</AlertDialogTitle>
           <AlertDialogDescription>
             هذا الإجراء لا يمكن التراجع عنه. سيؤدي هذا إلى حذف السلسلة
             <span className="font-bold mx-1">"{series.title}"</span>
-            وجميع المحاضرات المرتبطة بها بشكل دائم.
+            بشكل دائم.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

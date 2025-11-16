@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-
+import { series } from "@/lib/data";
 
 export default function AdminNewSeriesPage() {
   const { toast } = useToast();
@@ -25,11 +25,16 @@ export default function AdminNewSeriesPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
-    
-    // Simulate API call and data addition
-    console.log("Adding new series:", {
+    const description = formData.get("description") as string;
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+
+    // Simulate data addition
+    series.push({
+        slug: slug,
         title: title,
-        description: formData.get("description"),
+        description: description,
+        lectureCount: 0,
+        imageId: `series-${slug}` // a mock imageId
     });
 
     toast({
@@ -37,9 +42,9 @@ export default function AdminNewSeriesPage() {
         description: `تمت إضافة سلسلة "${title}" الجديدة.`,
     });
 
-    // In a real app, you would invalidate a cache and re-fetch data.
-    // For now, we just redirect.
+    // Redirect to the series list page to see the new series
     router.push("/admin/series");
+    router.refresh(); // Tell Next.js to re-fetch the data on the target page
   };
 
   return (
