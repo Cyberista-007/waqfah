@@ -14,7 +14,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="bg-gray-700 p-2 rounded-full text-white hover:bg-gray-600 focus-visible:ring-0 focus-visible:ring-offset-0"
+      className="text-foreground/70 hover:text-primary focus-visible:ring-0 focus-visible:ring-offset-0"
       aria-label="Toggle theme"
     >
       <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

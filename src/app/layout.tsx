@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
@@ -33,7 +33,7 @@ export default function RootLayout({
             <AudioPlayerProvider>
               <div className="relative flex min-h-screen flex-col">
                 <SiteHeader />
-                <main className="flex-1 container mx-auto px-4 sm:px-6 py-8">
+                <main className="flex-1">
                   {children}
                 </main>
                 <SiteFooter />

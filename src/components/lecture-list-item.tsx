@@ -34,10 +34,10 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
     };
 
     return (
-        <div className="bg-card text-card-foreground rounded-lg shadow-md p-4 flex items-center gap-4">
-            <span className="text-2xl font-bold text-muted-foreground">{index.toString().padStart(2, '0')}</span>
+        <div className="bg-card text-card-foreground rounded-lg border p-4 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5">
+            <span className="text-xl font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
             <div className="flex-grow">
-                <Link href={`/lectures/${lecture.slug}`} className="text-lg font-semibold text-primary-foreground/80 hover:underline">
+                <Link href={`/lectures/${lecture.slug}`} className="text-lg font-semibold text-foreground hover:text-primary hover:underline">
                     {lecture.title}
                 </Link>
                 <p className="text-sm text-muted-foreground">{lecture.duration} دقيقة</p>
@@ -47,7 +47,7 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button onClick={handlePlay} variant="ghost" size="icon" aria-label="استماع">
-                                <Play className="w-6 h-6" />
+                                <Play className="w-6 h-6 text-primary" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>استماع</p></TooltipContent>
@@ -56,7 +56,7 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
                         <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon" aria-label="تحميل">
                                 <a href={lecture.audioSrc} download>
-                                    <Download className="w-6 h-6" />
+                                    <Download className="w-5 h-5 text-muted-foreground" />
                                 </a>
                             </Button>
                         </TooltipTrigger>
@@ -65,7 +65,7 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button onClick={handleFavorite} variant="ghost" size="icon" aria-label="إضافة للمفضلة">
-                                <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 hover:fill-current" />
+                                <Heart className="w-5 h-5 text-muted-foreground hover:text-red-500 hover:fill-current" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>إضافة للمفضلة</p></TooltipContent>

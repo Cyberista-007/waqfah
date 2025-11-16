@@ -22,6 +22,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useScroll } from "@/hooks/use-scroll"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -38,29 +39,34 @@ const moreNavItems = [
 ]
 
 export function SiteHeader() {
+  const scrolled = useScroll(50);
+
   return (
-    <header className="bg-gray-900/75 backdrop-blur-sm text-white sticky top-0 z-50">
-      <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold font-headline hover:text-gray-300">
+    <header className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
+    )}>
+      <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors">
             موقع أمجد سمير
         </Link>
         
-        <div className="hidden md:flex flex-grow justify-center space-x-8 space-x-reverse">
+        <div className="hidden md:flex flex-grow justify-center items-center gap-6">
           {mainNavItems.map((item) => (
-            <Link key={item.label} href={item.href} className="text-gray-300 hover:text-white transition-colors">
+            <Link key={item.label} href={item.href} className="font-medium text-foreground/70 hover:text-primary transition-colors">
               {item.label}
             </Link>
           ))}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-transparent p-0">
+                    <Button variant="ghost" className="text-foreground/70 hover:text-primary hover:bg-transparent p-0">
                         <span>المزيد</span>
                         <ChevronDown className="h-4 w-4 ms-1"/>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-gray-900 text-white border-gray-700">
+                <DropdownMenuContent className="bg-background border-border">
                     {moreNavItems.map((item) => (
-                        <DropdownMenuItem key={item.label} asChild>
+                        <DropdownMenuItem key={item.label} asChild className="focus:bg-primary/10 focus:text-primary justify-end">
                             <Link href={item.href} className="flex justify-end w-full">
                                 {item.label}
                             </Link>
@@ -70,15 +76,15 @@ export function SiteHeader() {
             </DropdownMenu>
         </div>
 
-        <div className="hidden md:flex items-center space-x-4 space-x-reverse">
-          <Button variant="ghost" size="icon" className="bg-gray-700 p-2 rounded-full text-white hover:bg-gray-600">
+        <div className="hidden md:flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
             <Search className="h-5 w-5" />
             <span className="sr-only">بحث</span>
           </Button>
           
           <ThemeToggle />
 
-          <Button asChild className="border border-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
+          <Button asChild>
             <Link href="/auth/login">
               <span>تسجيل الدخول</span>
               <LogIn className="w-4 h-4" />
@@ -86,39 +92,36 @@ export function SiteHeader() {
           </Button>
         </div>
 
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
+              <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-gray-900 text-white border-l-gray-700 w-[250px] p-6">
+            <SheetContent side="right" className="bg-background w-[280px] p-6">
               <div className="flex flex-col space-y-4">
-              <Link href="/" className="text-xl font-bold font-headline hover:text-gray-300 mb-4">
+              <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4">
                   موقع أمجد سمير
               </Link>
                 {[...mainNavItems, ...moreNavItems].map((item) => (
-                  <Link key={item.label} href={item.href} className="block text-gray-300 hover:text-white py-2">
+                  <Link key={item.label} href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
                     {item.label}
                   </Link>
                 ))}
-                <div className="border-t border-gray-700 pt-4 space-y-3">
-                  <Button asChild className="w-full justify-center border border-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <div className="border-t border-border pt-4 space-y-3">
+                  <Button asChild className="w-full justify-center">
                     <Link href="/auth/login">
                       <span>تسجيل الدخول</span>
                       <LogIn className="w-5 h-5" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" className="w-full bg-gray-700 p-2 rounded-lg text-white hover:bg-gray-600">
+                  <Button variant="outline" className="w-full">
                     <Search className="h-5 w-5 me-2" />
                     <span>بحث</span>
                   </Button>
-                  <div className="w-full bg-gray-700 p-2 rounded-lg text-white hover:bg-gray-600 flex items-center justify-between">
-                    <span>تبديل الوضع</span>
-                    <ThemeToggle />
-                  </div>
                 </div>
               </div>
             </SheetContent>
