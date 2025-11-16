@@ -13,9 +13,9 @@ import Link from 'next/link';
 import { getPlaceholderImage } from '@/lib/images';
 import { LectureCard } from '@/components/lecture-card';
 
-export default function Home() {
-  const latestSeries = getLatestSeries(3);
-  const latestLectures = getLatestLectures(8);
+export default async function Home() {
+  const latestSeries = await getLatestSeries(3);
+  const latestLectures = await getLatestLectures(8);
 
   return (
     <div className="space-y-12">

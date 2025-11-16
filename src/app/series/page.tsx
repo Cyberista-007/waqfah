@@ -8,8 +8,8 @@ export const metadata = {
   title: 'السلاسل العلمية',
 };
 
-export default function SeriesListPage() {
-  const allSeries = getAllSeries();
+export default async function SeriesListPage() {
+  const allSeries = await getAllSeries();
 
   return (
     <div>

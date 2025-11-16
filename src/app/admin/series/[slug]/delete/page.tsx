@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -13,45 +12,28 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { series as seriesData, getSeriesBySlug } from "@/lib/data";
-import { notFound, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, notFound } from "next/navigation";
 import type { Series } from "@/lib/types";
+import { useDoc, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminDeleteSeriesPage({
   params,
 }: {
-  params: { slug: string };
+  params: { slug: string }; // slug is now the document ID
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [series, setSeries] = useState<Series | undefined>(undefined);
-  
-  useEffect(() => {
-    const seriesItem = getSeriesBySlug(params.slug);
-    if (seriesItem) {
-        setSeries(seriesItem);
-    } else {
-        // If series not found after trying, redirect back
-        toast({
-            variant: "destructive",
-            title: "خطأ",
-            description: "السلسلة المطلوبة غير موجودة.",
-        });
-        router.push("/admin/series");
-    }
-  }, [params.slug, router, toast]);
+  const firestore = useFirestore();
+  const seriesDocRef = doc(firestore, "series", params.slug);
+  const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!series) return;
-
-    // Find the index of the series to delete
-    const seriesIndex = seriesData.findIndex(s => s.slug === series.slug);
     
-    if (seriesIndex !== -1) {
-        // Remove the series from the mock database
-        seriesData.splice(seriesIndex, 1);
-    }
+    // Delete the document from Firestore
+    await deleteDocumentNonBlocking(seriesDocRef);
 
     toast({
       variant: "destructive",
@@ -60,15 +42,18 @@ export default function AdminDeleteSeriesPage({
     });
 
     router.push("/admin/series");
-    router.refresh();
   };
 
   const handleCancel = () => {
     router.back();
   };
 
+  if (isLoading) {
+    return null; // Don't render dialog while loading
+  }
+
   if (!series) {
-      return null; // Don't render the dialog until we find the series
+    notFound();
   }
 
   return (

@@ -3,12 +3,7 @@ import Image from 'next/image';
 import { getSeriesBySlug, getLecturesBySeries } from '@/lib/data';
 import { getPlaceholderImage } from '@/lib/images';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LectureCard } from '@/components/lecture-card';
-import Link from 'next/link';
-import { useAudioPlayer } from '@/components/audio-player-provider';
-import { Button } from '@/components/ui/button';
-import { Download, Heart, Play } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import LectureListItem from '@/components/lecture-list-item';
 
 type SeriesDetailPageProps = {
@@ -18,20 +13,20 @@ type SeriesDetailPageProps = {
 };
 
 export async function generateMetadata({ params }: SeriesDetailPageProps) {
-  const series = getSeriesBySlug(params.slug);
+  const series = await getSeriesBySlug(params.slug);
   if (!series) {
     return { title: 'السلسلة غير موجودة' };
   }
   return { title: series.title };
 }
 
-export default function SeriesDetailPage({ params }: SeriesDetailPageProps) {
-  const series = getSeriesBySlug(params.slug);
+export default async function SeriesDetailPage({ params }: SeriesDetailPageProps) {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) {
     notFound();
   }
 
-  const lecturesInSeries = getLecturesBySeries(series.slug);
+  const lecturesInSeries = await getLecturesBySeries(series.slug);
   const placeholder = getPlaceholderImage(series.imageId);
 
   return (

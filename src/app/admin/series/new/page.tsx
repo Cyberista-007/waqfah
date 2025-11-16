@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -15,21 +14,35 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { series } from "@/lib/data";
+import { useFirestore } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminNewSeriesPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const slug = title.toLowerCase().replace(/\s+/g, '-');
 
-    // Simulate data addition
-    series.push({
+    if (!title || !description) {
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "يرجى ملء جميع الحقول المطلوبة.",
+        });
+        return;
+    }
+
+    const seriesCollection = collection(firestore, 'series');
+    
+    // Add the new series to Firestore
+    await addDocumentNonBlocking(seriesCollection, {
         slug: slug,
         title: title,
         description: description,
@@ -44,7 +57,6 @@ export default function AdminNewSeriesPage() {
 
     // Redirect to the series list page to see the new series
     router.push("/admin/series");
-    router.refresh(); // Tell Next.js to re-fetch the data on the target page
   };
 
   return (

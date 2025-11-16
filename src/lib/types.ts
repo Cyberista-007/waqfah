@@ -1,8 +1,9 @@
 export type Lecture = {
+  id: string; // Document ID from Firestore
   slug: string;
   title: string;
   seriesSlug: string;
-  seriesTitle: string;
+  seriesTitle: string; // This will be fetched/joined, not stored directly
   duration: number; // in minutes
   audioSrc: string;
   imageId: string;
@@ -13,7 +14,7 @@ export type Lecture = {
   rating: number;
   ratingCount: number;
   viewCount: number;
-  createdAt: string;
+  createdAt: any; // Firestore timestamp
 };
 
 export type TranscriptItem = {
@@ -22,6 +23,7 @@ export type TranscriptItem = {
 };
 
 export type Series = {
+  id: string; // Document ID from Firestore
   slug: string;
   title:string;
   description: string;
@@ -30,6 +32,7 @@ export type Series = {
 };
 
 export type Book = {
+  id: string; // Document ID from Firestore
   slug: string;
   title: string;
   pdfUrl: string;
@@ -39,7 +42,7 @@ export type Book = {
 export type ScheduleItem = {
   id: string;
   title: string;
-  date: string;
+  date: string; // Consider using a Timestamp for better sorting
   time: string;
   isLive: boolean;
 };

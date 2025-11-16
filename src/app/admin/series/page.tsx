@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,20 +16,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { series as allSeriesData } from "@/lib/data";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Series } from "@/lib/types";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 
 export default function AdminSeriesPage() {
-  // Use state to manage series data so it can be updated
-  const [allSeries, setAllSeries] = useState<Series[]>([]);
+  const firestore = useFirestore();
+  const seriesCollection = collection(firestore, 'series');
+  const seriesQuery = query(seriesCollection, orderBy('title'));
+  const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
 
-  useEffect(() => {
-    // In a real app, you'd fetch this from an API.
-    // For now, we'll use the imported data as the initial state.
-    setAllSeries(allSeriesData);
-  }, []);
+  if (isLoading) {
+      return <p>جار تحميل السلاسل...</p>
+  }
 
   return (
     <Card>
@@ -55,19 +55,19 @@ export default function AdminSeriesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {allSeries.map((series) => (
-              <TableRow key={series.slug}>
+            {allSeries?.map((series) => (
+              <TableRow key={series.id}>
                 <TableCell className="font-medium">{series.title}</TableCell>
                 <TableCell>{series.lectureCount}</TableCell>
                 <TableCell className="text-left">
                   <div className="flex gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/series/${series.slug}/edit`}>
+                      <Link href={`/admin/series/${series.id}/edit`}>
                         تعديل
                       </Link>
                     </Button>
                     <Button asChild variant="destructive" size="sm">
-                      <Link href={`/admin/series/${series.slug}/delete`}>
+                      <Link href={`/admin/series/${series.id}/delete`}>
                         حذف
                       </Link>
                     </Button>

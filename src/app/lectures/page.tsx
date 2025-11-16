@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,14 +10,24 @@ import {
 } from "@/components/ui/select";
 import { getAllLectures, getAllSeries } from "@/lib/data";
 import { LectureCard } from "@/components/lecture-card";
+import type { Lecture, Series } from '@/lib/types';
 
 export default function LecturesListPage() {
-  const allLectures = useMemo(() => getAllLectures(), []);
-  const allSeries = useMemo(() => getAllSeries(), []);
+  const [allLectures, setAllLectures] = useState<Lecture[]>([]);
+  const [allSeries, setAllSeries] = useState<Series[]>([]);
+  const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
   
-  const [filteredLectures, setFilteredLectures] = useState(allLectures);
+  useEffect(() => {
+    const fetchData = async () => {
+        const lectures = await getAllLectures();
+        const series = await getAllSeries();
+        setAllLectures(lectures);
+        setFilteredLectures(lectures);
+        setAllSeries(series);
+    }
+    fetchData();
+  }, []);
 
-  // Note: Topics would likely come from a taxonomy/category system in a real app
   const allTopics = useMemo(() => [...new Set(allLectures.map(l => l.seriesTitle))], [allLectures]);
 
   const handleFilter = (type: 'series' | 'topic', value: string) => {
@@ -38,11 +48,14 @@ export default function LecturesListPage() {
 
   const handleSort = (value: string) => {
     const sorted = [...filteredLectures].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+
         switch (value) {
             case 'newest':
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                return dateB.getTime() - dateA.getTime();
             case 'oldest':
-                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                return dateA.getTime() - dateB.getTime();
             case 'most_popular':
                 return b.viewCount - a.viewCount;
             case 'alphabetical':

@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -12,52 +11,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { series as seriesData, getSeriesBySlug } from "@/lib/data";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
 import type { Series } from "@/lib/types";
+import { useDoc, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminEditSeriesPage({
   params,
 }: {
-  params: { slug: string };
+  params: { slug: string }; // slug is now the document ID
 }) {
   const { toast } = useToast();
   const router = useRouter();
-  const [series, setSeries] = useState<Series | undefined>(undefined);
+  const firestore = useFirestore();
+  const seriesDocRef = doc(firestore, "series", params.slug);
+  const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
-  useEffect(() => {
-    // Fetch the series data on the client side to ensure we have the latest
-    const seriesItem = getSeriesBySlug(params.slug);
-    if (seriesItem) {
-      setSeries(seriesItem);
-    } else {
-      notFound();
-    }
-  }, [params.slug]);
-
-
-  if (!series) {
-    // You can show a loading spinner here
-    return <div>جار التحميل...</div>;
-  }
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!series) return;
+
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-
-    // Find the index of the series to update
-    const seriesIndex = seriesData.findIndex(s => s.slug === series.slug);
-
-    if (seriesIndex !== -1) {
-        // Update the data in the mock database
-        seriesData[seriesIndex].title = title;
-        seriesData[seriesIndex].description = description;
-    }
+    
+    // Update the document in Firestore
+    await updateDocumentNonBlocking(seriesDocRef, {
+        title,
+        description,
+    });
 
     toast({
         title: "تم الحفظ بنجاح",
@@ -65,8 +50,16 @@ export default function AdminEditSeriesPage({
     });
 
     router.push("/admin/series");
-    router.refresh();
   };
+  
+  if (isLoading) {
+    return <div>جار التحميل...</div>;
+  }
+
+  if (!series) {
+    // This will be true if the doc doesn't exist.
+    notFound();
+  }
 
   return (
     <Card>

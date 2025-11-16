@@ -1,53 +1,31 @@
-import { recommendLectures } from "@/ai/flows/recommend-lectures"
-import { getLectureBySlug, getLecturesBySeries } from "@/lib/data"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { getLectureBySlug, getRelatedLectures } from "@/lib/data"
+import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { notFound } from "next/navigation";
+import type { Lecture } from "@/lib/types";
+
+
+async function fetchRelatedLectures(currentLectureSlug: string): Promise<Lecture[]> {
+    const currentLecture = await getLectureBySlug(currentLectureSlug);
+    if (!currentLecture) {
+        // This case should ideally not happen if the main page logic is sound
+        return [];
+    }
+
+    // Simple fallback: get other lectures from the same series
+    const fallbackLectures = await getRelatedLectures(currentLecture.slug, currentLecture.seriesSlug);
+    
+    // In a real app, you might try AI recommendations first and use this as a fallback.
+    // For now, we'll just use the simple series-based relation.
+    return fallbackLectures;
+}
+
 
 export default async function RelatedLectures({ currentLectureSlug }: { currentLectureSlug: string }) {
-    const currentLecture = getLectureBySlug(currentLectureSlug);
-    if (!currentLecture) {
-        notFound();
-    }
     
-    // Mock viewing history. In a real app, this would come from the user's session/database.
-    const viewingHistory = [
-        "أهمية التوحيد",
-        "فضل العلم",
-    ];
-
-    let relatedLectures = [];
-
-    try {
-        const recommendations = await recommendLectures({
-            viewingHistory,
-            numberOfRecommendations: 2,
-        });
-
-        // Find the full lecture objects from the recommended titles
-        relatedLectures = recommendations.recommendedLectures
-            .map(title => getLectureBySlug(title.toLowerCase().replace(/\s+/g, '-')))
-            .filter((l): l is NonNullable<typeof l> => l !== undefined && l.slug !== currentLectureSlug);
-
-    } catch (error) {
-        console.error("AI recommendation failed, falling back to simple logic:", error);
-    }
-    
-    // Fallback logic if AI fails or returns too few lectures
-    if (relatedLectures.length < 2) {
-        const fallbackLectures = getLecturesBySeries(currentLecture.seriesSlug)
-            .filter(l => l.slug !== currentLectureSlug)
-            .slice(0, 2);
-        
-        // Add fallback lectures, avoiding duplicates
-        fallbackLectures.forEach(fl => {
-            if (!relatedLectures.some(rl => rl.slug === fl.slug) && relatedLectures.length < 2) {
-                relatedLectures.push(fl);
-            }
-        });
-    }
+    const relatedLectures = await fetchRelatedLectures(currentLectureSlug);
 
     if (relatedLectures.length === 0) {
         return null;
@@ -55,7 +33,7 @@ export default async function RelatedLectures({ currentLectureSlug }: { currentL
 
     return (
         <section>
-            <h3 className="text-2xl font-semibold mb-4 font-headline">محاضرات مقترحة لك</h3>
+            <h3 className="text-2xl font-semibold mb-4 font-headline">محاضرات ذات صلة</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedLectures.map(lecture => {
                     const placeholder = getPlaceholderImage(lecture.imageId);

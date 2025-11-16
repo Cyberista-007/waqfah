@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/site-footer';
 import { Toaster } from '@/components/ui/toaster';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'موقع أمجد سمير',
@@ -28,17 +29,19 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AudioPlayerProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <SiteHeader />
-              <main className="flex-1 container mx-auto px-4 sm:px-6 py-8">
-                {children}
-              </main>
-              <SiteFooter />
-            </div>
-            <FloatingAudioPlayer />
-            <Toaster />
-          </AudioPlayerProvider>
+          <FirebaseClientProvider>
+            <AudioPlayerProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1 container mx-auto px-4 sm:px-6 py-8">
+                  {children}
+                </main>
+                <SiteFooter />
+              </div>
+              <FloatingAudioPlayer />
+              <Toaster />
+            </AudioPlayerProvider>
+          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>
