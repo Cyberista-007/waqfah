@@ -1,10 +1,21 @@
 
+"use client";
+
 import { ReactNode } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare, BookOpenCheck } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { usePathname, useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { handleAdminLogout } from '@/lib/actions';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
     { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
@@ -13,13 +24,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
   ];
 
+  const onLogout = async () => {
+    await signOut(auth);
+    await handleAdminLogout();
+  }
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
-              <BookOpenCheck className="h-6 w-6" />
+              <Users className="h-6 w-6" />
               <span className="">لوحة التحكم</span>
             </Link>
           </div>
@@ -27,11 +43,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               {navItems.map(item => {
                   const Icon = item.icon;
+                  const isActive = pathname === item.href;
                   return (
                     <Link
                         key={item.label}
                         href={item.href}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                        className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                            isActive && "bg-primary/10 text-primary"
+                        )}
                     >
                         <Icon className="h-4 w-4" />
                         {item.label}
@@ -40,7 +60,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               })}
             </nav>
           </div>
-           <div className="mt-auto p-4">
+           <div className="mt-auto p-4 space-y-2">
+             <Button size="sm" className="w-full" variant="outline" onClick={onLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                تسجيل الخروج
+             </Button>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>

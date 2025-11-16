@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, MessageSquare, ListVideo } from "lucide-react";
+import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -18,21 +18,30 @@ export default function AdminDashboardPage() {
     const lecturesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'lectures')) : null, [firestore]);
     const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series')) : null, [firestore]);
     const booksQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'books')) : null, [firestore]);
+    const usersQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'users')) : null, [firestore]);
     
     const recentCommentsQuery = useMemoFirebase(
       () => firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending')) : null, 
       [firestore]
     );
 
-    const { data: allLectures } = useCollection<Lecture>(lecturesQuery);
-    const { data: allSeries } = useCollection<Series>(seriesQuery);
-    const { data: allBooks } = useCollection<BookType>(booksQuery);
-    const { data: recentComments } = useCollection<Comment>(recentCommentsQuery);
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
+    const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
+    const { data: allUsers, isLoading: usersLoading } = useCollection(usersQuery);
+    const { data: recentComments, isLoading: commentsLoading } = useCollection<Comment>(recentCommentsQuery);
     
-    const lectureCount = allLectures?.length ?? 0;
-    const seriesCount = allSeries?.length ?? 0;
-    const bookCount = allBooks?.length ?? 0;
-    const newCommentsCount = recentComments?.length ?? 0;
+    const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
+      <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground font-headline">{title}</CardTitle>
+              <Icon className="w-5 h-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+              {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <p className="text-3xl font-bold">{value}</p>}
+          </CardContent>
+      </Card>
+    );
 
   return (
     <div className="space-y-8">
@@ -47,44 +56,12 @@ export default function AdminDashboardPage() {
           </div>
         </header>
         
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">إجمالي المحاضرات</CardTitle>
-                    <Clapperboard className="w-5 h-5 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-3xl font-bold">{lectureCount}</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">إجمالي السلاسل</CardTitle>
-                    <ListVideo className="w-5 h-5 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-3xl font-bold">{seriesCount}</p>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">إجمالي الكتب</CardTitle>
-                    <Book className="w-5 h-5 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-3xl font-bold">{bookCount}</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">التعليقات الجديدة</CardTitle>
-                    <MessageSquare className="w-5 h-5 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-3xl font-bold">{newCommentsCount}</p>
-                     <p className="text-xs text-muted-foreground">في انتظار المراجعة</p>
-                </CardContent>
-            </Card>
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={lecturesLoading} />
+            <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={seriesLoading} />
+            <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={booksLoading} />
+            <StatCard title="إجمالي المستخدمين" value={allUsers?.length ?? 0} icon={Users} isLoading={usersLoading} />
+            <StatCard title="التعليقات الجديدة" value={recentComments?.length ?? 0} icon={MessageSquare} isLoading={commentsLoading} />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -127,7 +104,13 @@ export default function AdminDashboardPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {recentComments?.slice(0, 4).map(comment => (
+                        {commentsLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                              <Loader2 className="mx-auto my-4 h-8 w-8 animate-spin" />
+                            </TableCell>
+                          </TableRow>
+                        ) : recentComments?.slice(0, 4).map(comment => (
                             <TableRow key={comment.id}>
                                 <TableCell className="font-medium">{comment.userName}</TableCell>
                                 <TableCell className="text-muted-foreground">{comment.text}</TableCell>
@@ -148,6 +131,7 @@ export default function AdminDashboardPage() {
                         ))}
                     </TableBody>
                 </Table>
+                {!commentsLoading && !recentComments?.length && <p className="text-center text-muted-foreground py-8">لا توجد تعليقات جديدة للمراجعة.</p>}
                 <div className="mt-4 text-center">
                     <Button asChild variant="secondary">
                         <Link href="/admin/comments">عرض كل التعليقات</Link>

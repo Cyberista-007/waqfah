@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { FirebaseClientProvider } from '@/firebase';
+import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
   title: 'موقع أمجد سمير',
@@ -33,7 +34,7 @@ export default function RootLayout({
             <AudioPlayerProvider>
               <div className="relative flex min-h-screen flex-col">
                 <SiteHeader />
-                <main className="flex-1">
+                <main className="flex-1 container py-8">
                   {children}
                 </main>
                 <SiteFooter />
@@ -43,6 +44,7 @@ export default function RootLayout({
             </AudioPlayerProvider>
           </FirebaseClientProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

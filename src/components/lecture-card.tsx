@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Play, Share2, Heart } from "lucide-react"
+import { Play, Share2 } from "lucide-react"
 
 import type { Lecture } from "@/lib/types"
 import { getPlaceholderImage } from "@/lib/images"
@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Card } from "./ui/card"
+import { FavoriteButton } from "./favorite-button"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -27,18 +28,21 @@ export function LectureCard({ lecture }: LectureCardProps) {
   const { toast } = useToast();
 
     const handlePlay = () => {
-        playTrack({ src: lecture.audioSrc, title: lecture.title });
-    };
-
-    const handleFavorite = () => {
-        toast({
-            title: "تمت الإضافة إلى المفضلة",
-            description: `تمت إضافة "${lecture.title}" إلى قائمة مفضلاتك.`,
+        playTrack({ 
+            src: lecture.audioSrc, 
+            title: lecture.title,
+            id: lecture.id,
+            seriesId: lecture.seriesId,
+            seriesSlug: lecture.seriesSlug,
+            seriesTitle: lecture.seriesTitle,
+            imageId: lecture.imageId,
+            slug: lecture.slug,
         });
     };
 
     const copyLinkToClipboard = () => {
-        navigator.clipboard.writeText(window.location.origin + `/lectures/${lecture.slug}`);
+        const url = window.location.origin + `/lectures/${lecture.slug}`;
+        navigator.clipboard.writeText(url);
         toast({
             title: "تم نسخ الرابط",
             description: "يمكنك الآن مشاركة الرابط.",
@@ -46,11 +50,12 @@ export function LectureCard({ lecture }: LectureCardProps) {
     };
 
     const handleShare = () => {
+        const url = window.location.origin + `/lectures/${lecture.slug}`;
         if (navigator.share) {
             navigator.share({
                 title: lecture.title,
                 text: `استمع إلى محاضرة "${lecture.title}"`,
-                url: window.location.origin + `/lectures/${lecture.slug}`,
+                url: url,
             }).catch((error) => {
                 if (error.name !== 'AbortError') {
                     console.error("Share failed:", error);
@@ -79,14 +84,7 @@ export function LectureCard({ lecture }: LectureCardProps) {
         </Link>
         <div className="absolute bottom-2 right-2 flex items-center gap-2">
             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button onClick={handleFavorite} variant="ghost" size="icon" className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 hover:text-red-500 rounded-full h-10 w-10">
-                            <Heart className="w-5 h-5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>إضافة للمفضلة</p></TooltipContent>
-                </Tooltip>
+                <FavoriteButton lectureId={lecture.id} />
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button onClick={handleShare} variant="ghost" size="icon" className="text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 hover:text-white rounded-full h-10 w-10">

@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { getLecturesBySeries } from '@/lib/data';
 import { getPlaceholderImage } from '@/lib/images';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import LectureListItem from '@/components/lecture-list-item';
-import type { Series } from '@/lib/types';
-import { doc, getDoc } from 'firebase/firestore';
+import type { Series, Lecture } from '@/lib/types';
+import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
+import { SeriesPageSkeleton } from '@/components/skeletons';
 
 type SeriesDetailPageProps = {
   params: {
@@ -15,35 +15,47 @@ type SeriesDetailPageProps = {
   };
 };
 
-export async function generateMetadata({ params }: SeriesDetailPageProps) {
-  const { serverFirestore } = initializeFirebaseOnServer();
-  const seriesDocRef = doc(serverFirestore, 'series', params.slug);
-  const seriesSnap = await getDoc(seriesDocRef);
+async function getSeriesData(seriesId: string) {
+    const { serverFirestore } = initializeFirebaseOnServer();
+    const seriesDocRef = doc(serverFirestore, 'series', seriesId);
+    const seriesSnap = await getDoc(seriesDocRef);
 
-  if (!seriesSnap.exists()) {
+    if (!seriesSnap.exists()) {
+        return null;
+    }
+
+    const series = { ...seriesSnap.data(), id: seriesSnap.id } as Series;
+
+    const lecturesCol = collection(serverFirestore, 'lectures');
+    const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesId), orderBy('createdAt', 'asc'));
+    const lecturesSnapshot = await getDocs(lecturesQuery);
+    const lecturesInSeries = lecturesSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Lecture));
+
+    return { series, lecturesInSeries };
+}
+
+
+export async function generateMetadata({ params }: SeriesDetailPageProps) {
+  const data = await getSeriesData(params.slug);
+  if (!data?.series) {
     return { title: 'السلسلة غير موجودة' };
   }
-  const series = seriesSnap.data() as Series;
-  return { title: series.title };
+  return { title: data.series.title };
 }
 
 export default async function SeriesDetailPage({ params }: SeriesDetailPageProps) {
-  const { serverFirestore } = initializeFirebaseOnServer();
-  const seriesDocRef = doc(serverFirestore, 'series', params.slug);
-  const seriesSnap = await getDoc(seriesDocRef);
+  const data = await getSeriesData(params.slug);
 
-  if (!seriesSnap.exists()) {
+  if (!data) {
     notFound();
   }
 
-  const series = { ...seriesSnap.data(), id: seriesSnap.id } as Series;
-
-  const lecturesInSeries = await getLecturesBySeries(series.slug);
+  const { series, lecturesInSeries } = data;
   const placeholder = getPlaceholderImage(series.imageId);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-12">
-      <Card className="flex flex-col md:flex-row gap-8 items-center p-8 border-none shadow-none">
+      <Card className="flex flex-col md:flex-row gap-8 items-center p-8 border-none shadow-none bg-transparent">
         <Image
           src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/300/300`}
           alt={series.title}
@@ -63,7 +75,7 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
         <h2 className="text-3xl font-bold mb-6 font-headline">محاضرات السلسلة</h2>
         <div className="space-y-4">
           {lecturesInSeries.map((lecture, index) => (
-            <LectureListItem key={lecture.slug} lecture={lecture} index={index + 1} />
+            <LectureListItem key={lecture.id} lecture={lecture} index={index + 1} />
           ))}
         </div>
       </section>

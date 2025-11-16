@@ -4,8 +4,8 @@ export type Lecture = {
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
-  seriesSlug: string;
   seriesId: string; // Document ID of the series
+  seriesSlug: string;
   seriesTitle: string; 
   duration: number; // in minutes
   audioSrc: string;
@@ -32,6 +32,7 @@ export type Series = {
   description: string;
   lectureCount: number;
   imageId: string;
+  createdAt: Timestamp;
 };
 
 export type Book = {
@@ -64,7 +65,31 @@ export type Comment = {
     lectureTitle: string;
     userId: string;
     userName: string;
+    userImage?: string;
     text: string;
     status: 'pending' | 'approved' | 'rejected';
+    createdAt: Timestamp;
+};
+
+export type UserProfile = {
+    id: string;
+    email: string;
+    name: string;
+    photoURL?: string;
+    createdAt: Timestamp;
+};
+
+export type Favorite = {
+    id: string; // lectureId
+    userId: string;
+    lectureId: string;
+    addedAt: Timestamp;
+}
+
+export type Rating = {
+    id: string; // combination of userId_lectureId
+    userId: string;
+    lectureId: string;
+    value: number;
     createdAt: Timestamp;
 }

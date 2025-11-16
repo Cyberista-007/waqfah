@@ -2,138 +2,130 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a combination of public read access for general content and authenticated-user write access for content management. User-specific data remains protected by ownership checks.
+ * This ruleset enforces a combination of public read access for general content,
+ * and authenticated-user write access for user-specific data (favorites, ratings, comments).
+ * Admin-level write access for core content (lectures, series) is granted to any signed-in user for simplicity,
+ * but in a real-world scenario this should be locked down with custom claims.
  *
  * Data Structure:
- * - `/series/{seriesId}`: Series data.
- * - `/lectures/{lectureId}`: Lecture data.
- * - `/books/{bookId}`: Book data.
- * - `/question_answers/{questionAnswerId}`: Question and answer data.
- * - `/scheduled_lessons/{scheduledLessonId}`: Scheduled lesson data.
- * - `/users/{userId}`: User profile data.
- * - `/lectures/{lectureId}/comments/{commentId}`: Comments on lectures.
- *
- * Key Security Decisions:
- * - Public read access is granted to all content to allow anonymous browsing.
- * - Write access (create, update, delete) to content collections (series, lectures, etc.) is restricted to authenticated users. This is a simple authorization model where any logged-in user is treated as an admin/editor. For more granular control, custom claims (e.g., `request.auth.token.isAdmin`) should be implemented.
- * - User data and subcollections are strictly protected by ownership checks (`isOwner`).
+ * - /series/{seriesId}
+ * - /lectures/{lectureId}
+ * - /books/{bookId}
+ * - /question_answers/{qaId}
+ * - /scheduled_lessons/{lessonId}
+ * - /users/{userId}
+ * - /users/{userId}/favorites/{lectureId}
+ * - /lectures/{lectureId}/ratings/{ratingId} -> (ratingId is userId)
+ * - /lectures/{lectureId}/comments/{commentId}
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Public read, authenticated write.
-     * @path /series/{seriesId}
-     * @allow (get, list): Anyone can read series data.
-     * @allow (create, update, delete): Any signed-in user can manage series data.
+     * Helper Functions
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isResourceOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    /**
+     * Public Content: Public read, admin (any signed-in user) write.
      */
     match /series/{seriesId} {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow write: if isSignedIn();
     }
-
-    /**
-     * @description Public read, authenticated write.
-     * @path /lectures/{lectureId}
-     * @allow (get, list): Anyone can read lecture data.
-     * @allow (create, update, delete): Any signed-in user can manage lecture data.
-     */
     match /lectures/{lectureId} {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow write: if isSignedIn();
     }
-
-    /**
-     * @description Public read, authenticated write.
-     * @path /books/{bookId}
-     * @allow (get, list): Anyone can read book data.
-     * @allow (create, update, delete): Any signed-in user can manage book data.
-     */
     match /books/{bookId} {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
+      allow write: if isSignedIn();
+    }
+    match /question_answers/{qaId} {
+      allow get, list: if true;
+      allow write: if isSignedIn();
+    }
+    match /scheduled_lessons/{lessonId} {
+      allow get, list: if true;
       allow write: if isSignedIn();
     }
 
     /**
-     * @description Public read, authenticated write.
-     * @path /question_answers/{questionAnswerId}
-     * @allow (get, list): Anyone can read Q&A data.
-     * @allow (create, update, delete): Any signed-in user can manage Q&A data.
-     */
-    match /question_answers/{questionAnswerId} {
-      allow get: if true;
-      allow list: if true;
-      allow write: if isSignedIn();
-    }
-
-    /**
-     * @description Public read, authenticated write.
-     * @path /scheduled_lessons/{scheduledLessonId}
-     * @allow (get, list): Anyone can read scheduled lesson data.
-     * @allow (create, update, delete): Any signed-in user can manage lesson data.
-     */
-    match /scheduled_lessons/{scheduledLessonId} {
-      allow get: if true;
-      allow list: if true;
-      allow write: if isSignedIn();
-    }
-
-    /**
-     * @description Allows read/write access to a user's own profile data.
-     * @path /users/{userId}
-     * @allow (create, get, update, delete): User can manage their own profile.
-     * @principle Enforces user-ownership for profile data.
+     * User Profiles: Users can create, read, and update their own profile.
+     * Deny listing all users.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Deny listing all users
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get, update: if isOwner(userId);
+      allow create: if isSignedIn() && request.resource.id == request.auth.uid;
+      allow list, delete: if false;
+    }
+
+    /**
+     * User Favorites: Users can manage their own list of favorite lectures.
+     * The document ID is the lecture ID.
+     */
+    match /users/{userId}/favorites/{lectureId} {
+        allow read, write: if isOwner(userId);
     }
     
     /**
-     * @description Public read, authenticated user can create. Owner can update/delete.
-     * @path /lectures/{lectureId}/comments/{commentId}
-     * @allow (get, list): Anyone can read comments.
-     * @allow (create): Authenticated user can create a comment if they own it.
-     * @allow (update, delete): The user who created the comment can update or delete it.
+     * Lecture Ratings: A user can rate a lecture. The document ID for a rating is the user's ID
+     * to ensure one rating per user per lecture.
+     */
+    match /lectures/{lectureId}/ratings/{userId} {
+      // Any signed-in user can create/update their own rating.
+      allow write: if isOwner(userId)
+                    && request.resource.data.userId == userId
+                    && request.resource.data.lectureId == lectureId
+                    && request.resource.data.value >= 1 && request.resource.data.value <= 5;
+                    
+      // Anyone can read ratings for a lecture.
+      allow get, list: if true;
+    }
+
+    /**
+     * Lecture Comments:
+     * - Anyone can read approved comments.
+     * - Signed-in users can create comments, which are initially 'pending'.
+     * - Admins (any signed-in user) can update a comment's status.
+     * - The user who wrote the comment can delete it ONLY if it's still pending.
      */
     match /lectures/{lectureId}/comments/{commentId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && isResourceOwner();
-      allow delete: if isSignedIn() && isResourceOwner();
+      // Allow reading approved comments
+      allow get: if resource.data.status == 'approved';
+      // Allow listing approved comments
+      allow list: if request.query.where.to_list().size() == 0 
+                  || (request.query.where[0] == 'status' && request.query.where[1] == '==' && request.query.where[2] == 'approved');
+      
+      // Allow creating a comment if user is signed in and is the author
+      allow create: if isSignedIn() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      
+      // Allow admin (any signed-in user) to update status (approve/reject)
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+
+      // Allow owner to delete their comment only if it is pending or rejected
+      allow delete: if isResourceOwner() && (resource.data.status == 'pending' || resource.data.status == 'rejected');
     }
-  }
 
-  // --- Helper Functions ---
-
-  /**
-   * Checks if the current request is from an authenticated user.
-   */
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  /**
-   * Checks if the requesting user's UID matches the given userId.
-   * Used for path-based ownership checks.
-   */
-  function isOwner(userId) {
-    return isSignedIn() && request.auth.uid == userId;
-  }
-
-  /**
-   * Checks if the requesting user's UID matches the 'userId' field in the document being written/updated.
-   * Used for field-based ownership checks.
-   */
-  function isResourceOwner() {
-      return isSignedIn() && request.auth.uid == resource.data.userId;
+    /**
+     * Admin-only collection group query for comments.
+     * Allows admins (any signed-in user) to list comments across all lectures regardless of status.
+     */
+    match /{path=**}/comments/{commentId} {
+      allow list: if isSignedIn();
+    }
   }
 }

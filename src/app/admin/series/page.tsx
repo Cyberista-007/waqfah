@@ -21,6 +21,7 @@ import Link from "next/link";
 import type { Series } from "@/lib/types";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
+import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 
 export default function AdminSeriesPage() {
   const firestore = useFirestore();
@@ -29,10 +30,6 @@ export default function AdminSeriesPage() {
     [firestore]
   );
   const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
-
-  if (isLoading) {
-      return <p>جار تحميل السلاسل...</p>
-  }
 
   return (
     <Card>
@@ -44,7 +41,10 @@ export default function AdminSeriesPage() {
           </CardDescription>
         </div>
         <Button asChild>
-          <Link href="/admin/series/new">إضافة سلسلة جديدة</Link>
+          <Link href="/admin/series/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            إضافة سلسلة جديدة
+          </Link>
         </Button>
       </CardHeader>
       <CardContent>
@@ -57,20 +57,26 @@ export default function AdminSeriesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {allSeries?.map((series) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center">
+                  <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
+                </TableCell>
+              </TableRow>
+            ): allSeries?.map((series) => (
               <TableRow key={series.id}>
                 <TableCell className="font-medium">{series.title}</TableCell>
-                <TableCell>{series.lectureCount}</TableCell>
+                <TableCell>{series.lectureCount || 0}</TableCell>
                 <TableCell className="text-left">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-end">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/series/${series.id}/edit`}>
-                        تعديل
+                        <Edit className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button asChild variant="destructive" size="sm">
                       <Link href={`/admin/series/${series.id}/delete`}>
-                        حذف
+                        <Trash2 className="h-4 w-4" />
                       </Link>
                     </Button>
                   </div>
@@ -79,6 +85,9 @@ export default function AdminSeriesPage() {
             ))}
           </TableBody>
         </Table>
+        {!isLoading && !allSeries?.length && (
+          <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي سلاسل بعد.</p>
+        )}
       </CardContent>
     </Card>
   );

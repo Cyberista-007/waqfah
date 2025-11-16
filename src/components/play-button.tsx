@@ -1,14 +1,11 @@
 "use client"
 
 import { Play } from "lucide-react"
-import { useAudioPlayer } from "./audio-player-provider"
+import { useAudioPlayer, type Track } from "./audio-player-provider"
 import { Button } from "./ui/button"
 
 interface PlayButtonProps {
-    track: {
-        src: string;
-        title: string;
-    }
+    track: Track;
 }
 
 export function PlayButton({ track }: PlayButtonProps) {

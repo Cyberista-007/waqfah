@@ -3,15 +3,15 @@
 import type { Lecture } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Heart, Play } from "lucide-react";
+import { Download, Play } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
-import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { FavoriteButton } from "./favorite-button";
 
 interface LectureListItemProps {
     lecture: Lecture;
@@ -20,16 +20,17 @@ interface LectureListItemProps {
 
 export default function LectureListItem({ lecture, index }: LectureListItemProps) {
     const { playTrack } = useAudioPlayer();
-    const { toast } = useToast();
 
     const handlePlay = () => {
-        playTrack({ src: lecture.audioSrc, title: lecture.title });
-    };
-
-    const handleFavorite = () => {
-        toast({
-        title: "تمت الإضافة إلى المفضلة",
-        description: `تمت إضافة "${lecture.title}" إلى قائمة مفضلاتك.`,
+        playTrack({ 
+            src: lecture.audioSrc, 
+            title: lecture.title,
+            id: lecture.id,
+            seriesId: lecture.seriesId,
+            seriesSlug: lecture.seriesSlug,
+            seriesTitle: lecture.seriesTitle,
+            imageId: lecture.imageId,
+            slug: lecture.slug,
         });
     };
 
@@ -62,14 +63,7 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
                         </TooltipTrigger>
                         <TooltipContent><p>تحميل</p></TooltipContent>
                     </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button onClick={handleFavorite} variant="ghost" size="icon" aria-label="إضافة للمفضلة">
-                                <Heart className="w-5 h-5 text-muted-foreground hover:text-red-500 hover:fill-current" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>إضافة للمفضلة</p></TooltipContent>
-                    </Tooltip>
+                    <FavoriteButton lectureId={lecture.id} />
                 </TooltipProvider>
             </div>
         </div>
