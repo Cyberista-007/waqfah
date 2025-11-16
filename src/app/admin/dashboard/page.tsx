@@ -17,6 +17,7 @@ import {
   Legend,
   Line,
 } from 'recharts';
+import { useToast } from "@/hooks/use-toast";
 
 const trafficData = [
   { name: 'قبل 6 أيام', visits: 1200, users: 800 },
@@ -35,6 +36,15 @@ export default function AdminDashboardPage() {
     const newCommentsCount = 25;
     const bookCount = 3; 
     const seriesCount = 4;
+    const { toast } = useToast();
+
+    const handleDelete = (title: string) => {
+        toast({
+            title: "تم الحذف (محاكاة)",
+            description: `تم حذف محاضرة "${title}". هذه العملية هي محاكاة ولن تؤثر على البيانات الحقيقية.`,
+            variant: "destructive",
+        })
+    }
 
   return (
     <div className="space-y-8">
@@ -148,7 +158,7 @@ export default function AdminDashboardPage() {
                                 <TableCell className="text-left">
                                     <div className="flex gap-2">
                                         <Button asChild variant="outline" size="sm"><Link href={`/admin/lectures/${lecture.slug}/edit`}>تعديل</Link></Button>
-                                        <Button variant="destructive" size="sm">حذف</Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(lecture.title)}>حذف</Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
