@@ -8,8 +8,13 @@ async function getSeries() {
     const { serverFirestore } = initializeFirebaseOnServer();
     const seriesCol = collection(serverFirestore, 'series');
     const q = query(seriesCol, orderBy('title'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+    try {
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+    } catch (error) {
+        console.error("Failed to fetch series:", error);
+        return [];
+    }
 }
 
 export default async function AdminNewLecturePage() {

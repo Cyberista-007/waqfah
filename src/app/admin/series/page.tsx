@@ -70,11 +70,13 @@ export default function AdminSeriesPage() {
                 <TableCell className="text-left">
                   <div className="flex gap-2 justify-end">
                     <Button asChild variant="outline" size="sm">
+                      {/* Ensure the link uses the document ID for editing */}
                       <Link href={`/admin/series/${series.id}/edit`}>
                         <Edit className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button asChild variant="destructive" size="sm">
+                       {/* Ensure the link uses the document ID for deleting */}
                       <Link href={`/admin/series/${series.id}/delete`}>
                         <Trash2 className="h-4 w-4" />
                       </Link>

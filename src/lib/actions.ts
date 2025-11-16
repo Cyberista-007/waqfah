@@ -5,15 +5,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const ADMIN_COOKIE_NAME = "admin-auth";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "q1w2e3r4";
 
 export async function handleAdminLogin(
-  prevState: { error?: string } | null,
+  prevState: { error?: string } | undefined,
   formData: FormData
-): Promise<{ error?: string } | void> {
+): Promise<{ error?: string }> {
   const password = formData.get("password") as string;
-  const adminPassword = process.env.ADMIN_PASSWORD || "q1w2e3r4";
-
-  if (password !== adminPassword) {
+  
+  if (password !== ADMIN_PASSWORD) {
     return { error: "كلمة المرور غير صحيحة." };
   }
 
@@ -22,8 +22,10 @@ export async function handleAdminLogin(
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24, // 1 day
     path: "/",
+    sameSite: "lax", // Recommended for security
   });
 
+  // Instead of returning, we redirect. The hook will not receive a state update on success.
   redirect("/admin/dashboard");
 }
 

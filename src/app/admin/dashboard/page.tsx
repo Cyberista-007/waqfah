@@ -8,7 +8,7 @@ import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2 } from "lu
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, collectionGroup } from "firebase/firestore";
+import { collection, query, where, collectionGroup, orderBy } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 
@@ -18,17 +18,15 @@ export default function AdminDashboardPage() {
     const lecturesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'lectures')) : null, [firestore]);
     const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series')) : null, [firestore]);
     const booksQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'books')) : null, [firestore]);
-    const usersQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'users')) : null, [firestore]);
     
     const recentCommentsQuery = useMemoFirebase(
-      () => firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending')) : null, 
+      () => firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null, 
       [firestore]
     );
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
     const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
-    const { data: allUsers, isLoading: usersLoading } = useCollection(usersQuery);
     const { data: recentComments, isLoading: commentsLoading } = useCollection<Comment>(recentCommentsQuery);
     
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
@@ -56,11 +54,10 @@ export default function AdminDashboardPage() {
           </div>
         </header>
         
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={lecturesLoading} />
             <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={seriesLoading} />
             <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={booksLoading} />
-            <StatCard title="إجمالي المستخدمين" value={allUsers?.length ?? 0} icon={Users} isLoading={usersLoading} />
             <StatCard title="التعليقات الجديدة" value={recentComments?.length ?? 0} icon={MessageSquare} isLoading={commentsLoading} />
         </section>
 
@@ -89,8 +86,8 @@ export default function AdminDashboardPage() {
         
         <Card>
             <CardHeader>
-                <CardTitle className="text-2xl font-semibold font-headline">أحدث التعليقات</CardTitle>
-                <CardDescription>نظرة سريعة على آخر تعليقات الزوار.</CardDescription>
+                <CardTitle className="text-2xl font-semibold font-headline">أحدث التعليقات قيد المراجعة</CardTitle>
+                <CardDescription>نظرة سريعة على آخر تعليقات الزوار التي تحتاج إلى مراجعة.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
@@ -110,16 +107,16 @@ export default function AdminDashboardPage() {
                               <Loader2 className="mx-auto my-4 h-8 w-8 animate-spin" />
                             </TableCell>
                           </TableRow>
-                        ) : recentComments?.slice(0, 4).map(comment => (
+                        ) : recentComments?.length ? recentComments.map(comment => (
                             <TableRow key={comment.id}>
                                 <TableCell className="font-medium">{comment.userName}</TableCell>
-                                <TableCell className="text-muted-foreground">{comment.text}</TableCell>
+                                <TableCell className="text-muted-foreground truncate max-w-xs">{comment.text}</TableCell>
                                 <TableCell className="hidden md:table-cell">
                                     <Link href={`/lectures/${comment.lectureSlug}`} className="hover:underline">{comment.lectureTitle}</Link>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={comment.status === 'approved' ? 'default' : 'secondary'}>
-                                        {comment.status === 'approved' ? 'مقبول' : 'قيد المراجعة'}
+                                    <Badge variant="secondary">
+                                        قيد المراجعة
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-left">
@@ -128,15 +125,17 @@ export default function AdminDashboardPage() {
                                      </Button>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )) : null}
                     </TableBody>
                 </Table>
                 {!commentsLoading && !recentComments?.length && <p className="text-center text-muted-foreground py-8">لا توجد تعليقات جديدة للمراجعة.</p>}
-                <div className="mt-4 text-center">
-                    <Button asChild variant="secondary">
-                        <Link href="/admin/comments">عرض كل التعليقات</Link>
-                    </Button>
-                </div>
+                {recentComments && recentComments.length > 0 && (
+                    <div className="mt-4 text-center">
+                        <Button asChild variant="secondary">
+                            <Link href="/admin/comments">عرض كل التعليقات</Link>
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     </div>

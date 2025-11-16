@@ -9,28 +9,28 @@ import { getFunctions, Functions } from 'firebase/functions';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  if (!getApps().length) {
-    let firebaseApp: FirebaseApp;
-    try {
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-    return getSdks(firebaseApp);
+  if (getApps().length) {
+    const app = getApp();
+    return getSdks(app);
   }
-
-  return getSdks(getApp());
+  
+  const firebaseApp = initializeApp(firebaseConfig);
+  return getSdks(firebaseApp);
 }
 
 function getSdks(firebaseApp: FirebaseApp) {
-    const auth = initializeAuth(firebaseApp, {
+  let auth: Auth;
+  try {
+    // This can fail in some environments (e.g. server-side) if persistence is not available
+    auth = initializeAuth(firebaseApp, {
         persistence: indexedDBLocalPersistence
     });
-    const firestore = getFirestore(firebaseApp);
-    const functions = getFunctions(firebaseApp);
+  } catch (e) {
+    auth = getAuth(firebaseApp);
+  }
+    
+  const firestore = getFirestore(firebaseApp);
+  const functions = getFunctions(firebaseApp);
     
   return {
     firebaseApp,

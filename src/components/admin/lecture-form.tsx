@@ -25,13 +25,12 @@ import {
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import type { Series, Lecture } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 
 interface LectureFormProps {
     seriesList: Series[];
-    lecture?: Lecture | any;
+    lecture?: Lecture | any; // 'any' to handle serialized date from server
 }
 
 export function LectureForm({ seriesList, lecture }: LectureFormProps) {
@@ -69,30 +68,33 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         return;
     }
     
-    const lectureData = {
-        title: title,
-        slug: slug,
-        description: description,
+    const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript'> = {
+        title,
+        slug,
+        description,
         seriesId: seriesData.id,
         seriesSlug: seriesData.slug,
         seriesTitle: seriesData.title,
-        audioSrc: audioSrc,
+        audioSrc,
         duration: parseInt(duration, 10), 
+        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
+        youtubeUrl: formData.get("youtubeUrl") as string || "",
+        pdfUrl: formData.get("pdfUrl") as string || "",
     };
 
     try {
       if (isEditMode) {
         // ---- EDIT MODE ----
         const lectureRef = doc(firestore, 'lectures', lecture.id);
+        const previousSeriesId = lecture.seriesId;
         
         await runTransaction(firestore, async (transaction) => {
-          const oldSeriesRef = doc(firestore, 'series', lecture.seriesId);
-          const newSeriesRef = doc(firestore, 'series', seriesData.id);
-
           transaction.update(lectureRef, lectureData);
 
-          // If series was changed, decrement old and increment new
-          if (lecture.seriesId !== seriesData.id) {
+          // If series was changed, decrement old count and increment new count
+          if (previousSeriesId !== seriesData.id) {
+            const oldSeriesRef = doc(firestore, 'series', previousSeriesId);
+            const newSeriesRef = doc(firestore, 'series', seriesData.id);
             transaction.update(oldSeriesRef, { lectureCount: increment(-1) });
             transaction.update(newSeriesRef, { lectureCount: increment(1) });
           }
@@ -107,19 +109,17 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         // ---- CREATE MODE ----
         const newLectureData = {
             ...lectureData,
-            imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
-            transcript: [], 
             rating: 0,
             ratingCount: 0,
             viewCount: 0, 
+            transcript: [],
             createdAt: Timestamp.now(),
         };
         const seriesRef = doc(firestore, 'series', seriesData.id);
-        const lecturesCollection = collection(firestore, 'lectures');
+        const newLectureRef = doc(collection(firestore, 'lectures')); // Create a new doc ref with a generated ID
         
         // Use a transaction to add lecture and increment series count atomically
         await runTransaction(firestore, async (transaction) => {
-          const newLectureRef = doc(lecturesCollection); // Create a new doc ref
           transaction.set(newLectureRef, newLectureData);
           transaction.update(seriesRef, { lectureCount: increment(1) });
         });
@@ -163,7 +163,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             <Label htmlFor="series">السلسلة</Label>
              <Select name="series" onValueChange={setSelectedSeriesId} defaultValue={lecture?.seriesId} required>
                 <SelectTrigger>
-                    <SelectValue placeholder={!seriesList ? "جاري تحميل السلاسل..." : "اختر سلسلة..."} />
+                    <SelectValue placeholder={!seriesList || seriesList.length === 0 ? "لا توجد سلاسل" : "اختر سلسلة..."} />
                 </SelectTrigger>
                 <SelectContent>
                     {seriesList?.map(s => (
@@ -179,6 +179,14 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
            <div>
             <Label htmlFor="audioSrc">رابط الملف الصوتي (MP3 URL)</Label>
             <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required />
+          </div>
+           <div>
+            <Label htmlFor="youtubeUrl">رابط اليوتيوب (اختياري)</Label>
+            <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={lecture?.youtubeUrl} />
+          </div>
+           <div>
+            <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
+            <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
           </div>
           <div>
             <Label htmlFor="duration">مدة المحاضرة (بالدقائق)</Label>

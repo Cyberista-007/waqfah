@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { handleAdminLogout } from '@/lib/actions';
 import { useAuth } from '@/firebase';
@@ -13,7 +13,6 @@ import { signOut } from 'firebase/auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
-  const router = useRouter();
   const auth = useAuth();
 
   const navItems = [
@@ -25,7 +24,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   ];
 
   const onLogout = async () => {
-    await signOut(auth);
+    // This will sign out the Firebase user if one is logged in, but our admin auth is cookie-based.
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+    // This server action clears the admin cookie and redirects.
     await handleAdminLogout();
   }
 
@@ -43,14 +46,19 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               {navItems.map(item => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.href;
+                  // Check if the current path starts with the nav item's href
+                  const isActive = pathname.startsWith(item.href) && (item.href !== '/admin/dashboard' || pathname === item.href);
+                   const isDashboardActive = pathname === '/admin/dashboard';
+                  
                   return (
                     <Link
                         key={item.label}
                         href={item.href}
                         className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                            isActive && "bg-primary/10 text-primary"
+                           (item.href === '/admin/dashboard' && isDashboardActive) || (item.href !== '/admin/dashboard' && isActive)
+                            ? "bg-primary/10 text-primary"
+                            : ""
                         )}
                     >
                         <Icon className="h-4 w-4" />

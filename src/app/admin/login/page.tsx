@@ -19,7 +19,7 @@ function SubmitButton() {
   );
 }
 
-const initialState = {
+const initialState: { error?: string } = {
   error: undefined,
 };
 
@@ -38,8 +38,8 @@ export default function AdminLoginPage() {
   }, [state, toast]);
 
   return (
-    <div className="flex items-center justify-center py-12">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-muted/40">
+      <Card className="w-full max-w-md mx-4">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">تسجيل دخول المدير</CardTitle>
           <CardDescription>

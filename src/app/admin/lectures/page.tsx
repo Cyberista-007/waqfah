@@ -22,7 +22,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture } from "@/lib/types";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
+import { collection, query, orderBy, doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -30,7 +30,7 @@ import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 export default function AdminLecturesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
-    const [isDeleting, setIsDeleting] = useState<Lecture | null>(null);
+    const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
 
     const lecturesQuery = useMemoFirebase(
         () => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null,
@@ -39,17 +39,36 @@ export default function AdminLecturesPage() {
     const { data: allLectures, isLoading } = useCollection<Lecture>(lecturesQuery);
 
     const handleDelete = async () => {
-        if (!isDeleting || !firestore) return;
+        if (!lectureToDelete || !firestore) return;
 
-        const docRef = doc(firestore, 'lectures', isDeleting.id);
-        deleteDocumentNonBlocking(docRef);
+        const lectureRef = doc(firestore, 'lectures', lectureToDelete.id);
+        const seriesRef = doc(firestore, 'series', lectureToDelete.seriesId);
+        
+        try {
+            // Use a transaction to delete the lecture and decrement the series count
+            await runTransaction(firestore, async (transaction) => {
+                const seriesDoc = await transaction.get(seriesRef);
+                if (seriesDoc.exists()) {
+                    transaction.update(seriesRef, { lectureCount: increment(-1) });
+                }
+                transaction.delete(lectureRef);
+            });
 
-        toast({
-            variant: "destructive",
-            title: "تم الحذف بنجاح",
-            description: `تم حذف محاضرة "${isDeleting.title}".`,
-        });
-        setIsDeleting(null); // Close the dialog
+            toast({
+                variant: "destructive",
+                title: "تم الحذف بنجاح",
+                description: `تم حذف محاضرة "${lectureToDelete.title}".`,
+            });
+        } catch (error) {
+            console.error("Error deleting lecture:", error);
+            toast({
+                variant: "destructive",
+                title: "حدث خطأ",
+                description: "لم نتمكن من حذف المحاضرة.",
+            });
+        } finally {
+            setLectureToDelete(null); // Close the dialog
+        }
     };
 
     return (
@@ -100,7 +119,7 @@ export default function AdminLecturesPage() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button onClick={() => setIsDeleting(lecture)} variant="destructive" size="sm">
+                        <Button onClick={() => setLectureToDelete(lecture)} variant="destructive" size="sm">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
@@ -116,11 +135,11 @@ export default function AdminLecturesPage() {
         </Card>
         
         <DeleteConfirmationDialog 
-          isOpen={!!isDeleting}
-          onClose={() => setIsDeleting(null)}
+          isOpen={!!lectureToDelete}
+          onClose={() => setLectureToDelete(null)}
           onConfirm={handleDelete}
           title="حذف المحاضرة"
-          description={`هل أنت متأكد من رغبتك في حذف محاضرة "${isDeleting?.title}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+          description={`هل أنت متأكد من رغبتك في حذف محاضرة "${lectureToDelete?.title}"؟ لا يمكن التراجع عن هذا الإجراء.`}
         />
       </>
     );
