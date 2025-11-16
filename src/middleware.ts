@@ -1,4 +1,5 @@
 
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -6,7 +7,7 @@ export function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('admin_session');
   const { pathname } = request.nextUrl;
 
-  const onLoginPage = pathname === '/admin/login';
+  const onLoginPage = pathname.startsWith('/admin/login');
 
   if (sessionCookie) {
     // If logged in and on the login page, redirect to dashboard
@@ -14,9 +15,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
   } else {
-    // If not logged in and not on the login page, redirect to login
-    if (!onLoginPage) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+    // If not logged in and trying to access any admin page other than login, redirect to login
+    if (pathname.startsWith('/admin/') && !onLoginPage) {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }
 
@@ -31,5 +32,5 @@ export const config = {
    * - /_next/image (image optimization files)
    * - favicon.ico (favicon file)
    */
-  matcher: '/admin/:path*',
+  matcher: ['/admin/:path*'],
 }

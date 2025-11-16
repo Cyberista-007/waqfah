@@ -12,17 +12,24 @@ export async function authenticate(
   formData: FormData
 ) {
   const password = formData.get("password");
-  if (password === ADMIN_PASSWORD) {
-    cookies().set(SESSION_COOKIE_NAME, "true", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: "/",
-    });
-    // This must be called outside the try/catch block
-    redirect("/admin/dashboard");
-  } else {
-    return "كلمة المرور غير صحيحة.";
+  try {
+    if (password === ADMIN_PASSWORD) {
+      cookies().set(SESSION_COOKIE_NAME, "true", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24, // 24 hours
+        path: "/",
+      });
+      redirect("/admin/dashboard");
+    } else {
+      return "كلمة المرور غير صحيحة.";
+    }
+  } catch (error: any) {
+    if (error.message.includes('NEXT_REDIRECT')) {
+        // This is not a real error, just Next.js redirecting.
+        throw error;
+    }
+    return 'حدث خطأ غير متوقع.';
   }
 }
 
