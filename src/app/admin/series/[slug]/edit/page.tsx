@@ -15,7 +15,7 @@ import { useRouter, notFound } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Series } from "@/lib/types";
-import { useDoc, useFirestore } from "@/firebase";
+import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
@@ -27,12 +27,16 @@ export default function AdminEditSeriesPage({
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
-  const seriesDocRef = doc(firestore, "series", params.slug);
+
+  const seriesDocRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, "series", params.slug) : null),
+    [firestore, params.slug]
+  );
   const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!series) return;
+    if (!series || !seriesDocRef) return;
 
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
@@ -57,8 +61,12 @@ export default function AdminEditSeriesPage({
   }
 
   if (!series) {
-    // This will be true if the doc doesn't exist.
-    notFound();
+    // This will be true if the doc doesn't exist or firestore is not ready.
+    // We show notFound() if it's not loading and there's no series.
+    if (!isLoading) {
+      notFound();
+    }
+    return <div>جار التحميل...</div>;
   }
 
   return (

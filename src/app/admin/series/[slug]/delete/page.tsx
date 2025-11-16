@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, notFound } from "next/navigation";
 import type { Series } from "@/lib/types";
-import { useDoc, useFirestore } from "@/firebase";
+import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
@@ -26,11 +26,15 @@ export default function AdminDeleteSeriesPage({
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const seriesDocRef = doc(firestore, "series", params.slug);
+  
+  const seriesDocRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, "series", params.slug) : null),
+    [firestore, params.slug]
+  );
   const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
   const handleDelete = async () => {
-    if (!series) return;
+    if (!series || !seriesDocRef) return;
     
     // Delete the document from Firestore
     await deleteDocumentNonBlocking(seriesDocRef);
@@ -49,11 +53,14 @@ export default function AdminDeleteSeriesPage({
   };
 
   if (isLoading) {
-    return null; // Don't render dialog while loading
+    return null; // Don't render dialog while loading, it will flash.
   }
 
   if (!series) {
-    notFound();
+    if (!isLoading) {
+      notFound();
+    }
+    return null; // Don't render dialog if no series
   }
 
   return (
