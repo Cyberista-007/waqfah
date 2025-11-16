@@ -1,34 +1,33 @@
 
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { handleEmailLogin, handleEmailSignup } from "@/lib/actions";
+import { useEffect, useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useFormStatus } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useUser } from "@/firebase";
+import { useUser, useAuth } from "@/firebase";
 import { redirect } from "next/navigation";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 
-function SubmitButton({ isLoginMode }: { isLoginMode: boolean }) {
-  const { pending } = useFormStatus();
+function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? <Loader2 className="animate-spin" /> : isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
+    <Button type="submit" className="w-full" disabled={isLoading}>
+      {isLoading ? <Loader2 className="animate-spin" /> : isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
     </Button>
   );
 }
 
 export default function LoginPage() {
-  const [loginState, loginAction] = useActionState(handleEmailLogin, null);
-  const [signupState, signupAction] = useActionState(handleEmailSignup, null);
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -36,16 +35,45 @@ export default function LoginPage() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const state = isLoginMode ? loginState : signupState;
-    if (state?.error) {
-      toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: state.error,
-      });
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+
+    if (!email || !password || (!isLoginMode && !name)) {
+        toast({
+            variant: "destructive",
+            title: "حقول ناقصة",
+            description: "يرجى ملء جميع الحقول المطلوبة.",
+        });
+        setIsLoading(false);
+        return;
     }
-  }, [loginState, signupState, toast, isLoginMode]);
+
+    try {
+        if (isLoginMode) {
+            await signInWithEmailAndPassword(auth, email, password);
+            toast({ title: "أهلاً بعودتك!", description: "تم تسجيل دخولك بنجاح." });
+            // The redirect is handled by the useEffect hook
+        } else {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+            toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
+            // The redirect is handled by the useEffect hook
+        }
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: getFirebaseAuthErrorMessage(error),
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
   if (isUserLoading || user) {
       return (
@@ -67,7 +95,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={isLoginMode ? loginAction : signupAction} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLoginMode && (
               <div className="space-y-2">
                 <Label htmlFor="name">الاسم</Label>
@@ -82,7 +110,7 @@ export default function LoginPage() {
               <Label htmlFor="password">كلمة المرور</Label>
               <Input id="password" name="password" type="password" required />
             </div>
-             <SubmitButton isLoginMode={isLoginMode} />
+             <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
           </form>
            <div className="mt-4 text-center text-sm">
                 {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
