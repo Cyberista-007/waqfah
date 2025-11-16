@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, Timestamp, query, orderBy } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import type { Series } from "@/lib/types";
@@ -32,13 +32,15 @@ export default function AdminNewLecturePage() {
   const router = useRouter();
   const firestore = useFirestore();
   
-  const seriesQuery = query(collection(firestore, 'series'), orderBy('title'));
+  const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series'), orderBy('title')) : null, [firestore]);
   const { data: series, isLoading } = useCollection<Series>(seriesQuery);
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!firestore) return;
+
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;

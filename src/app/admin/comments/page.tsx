@@ -16,7 +16,7 @@ export default function AdminCommentsPage() {
     const { toast } = useToast();
 
     const commentsQuery = useMemoFirebase(
-        () => query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')),
+        () => firestore ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null,
         [firestore]
     );
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);

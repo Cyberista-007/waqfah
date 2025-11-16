@@ -28,7 +28,7 @@ export default function AdminLecturesPage() {
     const firestore = useFirestore();
 
     const lecturesQuery = useMemoFirebase(
-        () => query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')),
+        () => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null,
         [firestore]
     );
     const { data: allLectures, isLoading } = useCollection<Lecture>(lecturesQuery);
