@@ -5,6 +5,7 @@ export const series: Series[] = [
   { slug: 'seerah', title: 'سلسلة السيرة النبوية', description: 'دروس وعبر من حياة النبي محمد صلى الله عليه وسلم.', lectureCount: 40, imageId: 'series-seerah' },
   { slug: 'fiqh', title: 'سلسلة الفقه الميسر', description: 'تبسيط مسائل الفقه اليومية التي يحتاجها المسلم.', lectureCount: 30, imageId: 'series-fiqh' },
   { slug: 'tafsir', title: 'سلسلة التفسير', description: 'تفسير لآيات مختارة من القرآن الكريم.', lectureCount: 50, imageId: 'series-tafsir' },
+  { slug: 'hadith', title: 'سلسلة الحديث', description: 'شرح أحاديث مختارة من كلام النبي صلى الله عليه وسلم.', lectureCount: 15, imageId: 'series-hadith' },
 ];
 
 export const lectures: Lecture[] = [
@@ -113,7 +114,7 @@ export const qanda: QAPair[] = [
 // Helper functions to get data
 export const getLatestSeries = (count: number) => series.slice(0, count);
 export const getLatestLectures = (count: number) => lectures.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, count);
-export const getAllSeries = () => series;
+export const getAllSeries = () => series.sort((a, b) => a.title.localeCompare(b.title, 'ar'));
 export const getAllLectures = () => lectures.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 export const getSeriesBySlug = (slug: string) => series.find(s => s.slug === slug);
 export const getLecturesBySeries = (seriesSlug: string) => lectures.filter(l => l.seriesSlug === seriesSlug);
