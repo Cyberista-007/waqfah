@@ -2,12 +2,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useActionState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { handleAdminLogin } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useFormStatus } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -20,9 +19,12 @@ function SubmitButton() {
   );
 }
 
+const initialState = {
+  error: undefined,
+};
 
 export default function AdminLoginPage() {
-  const [state, formAction] = useActionState(handleAdminLogin, null);
+  const [state, formAction] = useFormState(handleAdminLogin, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
