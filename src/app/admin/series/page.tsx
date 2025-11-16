@@ -18,20 +18,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAllSeries } from "@/lib/data";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 export default function AdminSeriesPage() {
   const allSeries = getAllSeries();
-  const { toast } = useToast();
-
-  const handleDelete = (title: string) => {
-    toast({
-      title: "تم الحذف (محاكاة)",
-      description: `تم حذف سلسلة "${title}". هذه العملية هي محاكاة.`,
-      variant: "destructive",
-    });
-  };
 
   return (
     <Card>
@@ -67,12 +57,10 @@ export default function AdminSeriesPage() {
                         تعديل
                       </Link>
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(series.title)}
-                    >
-                      حذف
+                    <Button asChild variant="destructive" size="sm">
+                      <Link href={`/admin/series/${series.slug}/delete`}>
+                        حذف
+                      </Link>
                     </Button>
                   </div>
                 </TableCell>

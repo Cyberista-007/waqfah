@@ -1,4 +1,6 @@
 
+"use client";
+
 import {
   Card,
   CardContent,
@@ -11,8 +13,35 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+
 
 export default function AdminNewSeriesPage() {
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const title = formData.get("title") as string;
+    
+    // Simulate API call and data addition
+    console.log("Adding new series:", {
+        title: title,
+        description: formData.get("description"),
+    });
+
+    toast({
+        title: "تم الإنشاء بنجاح",
+        description: `تمت إضافة سلسلة "${title}" الجديدة.`,
+    });
+
+    // In a real app, you would invalidate a cache and re-fetch data.
+    // For now, we just redirect.
+    router.push("/admin/series");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -22,7 +51,7 @@ export default function AdminNewSeriesPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">عنوان السلسلة</Label>
             <Input id="title" name="title" required />
