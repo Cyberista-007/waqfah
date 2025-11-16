@@ -71,37 +71,29 @@ export default function AdminNewLecturePage() {
 
     const lecturesCollection = collection(firestore, 'lectures');
     
-    try {
-        await addDocumentNonBlocking(lecturesCollection, {
-            slug: slug,
-            title: title,
-            description: description,
-            seriesSlug: seriesData.slug,
-            seriesTitle: seriesData.title,
-            audioSrc: audioSrc,
-            duration: parseInt(duration, 10), 
-            imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
-            transcript: [], 
-            rating: 0,
-            ratingCount: 0,
-            viewCount: 0, 
-            createdAt: Timestamp.now(),
-        });
+    addDocumentNonBlocking(lecturesCollection, {
+        slug: slug,
+        title: title,
+        description: description,
+        seriesSlug: seriesData.slug,
+        seriesTitle: seriesData.title,
+        audioSrc: audioSrc,
+        duration: parseInt(duration, 10), 
+        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
+        transcript: [], 
+        rating: 0,
+        ratingCount: 0,
+        viewCount: 0, 
+        createdAt: Timestamp.now(),
+    });
 
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة محاضرة "${title}" الجديدة.`,
-        });
+    toast({
+        title: "تم الإنشاء بنجاح",
+        description: `تمت إضافة محاضرة "${title}" الجديدة.`,
+    });
 
-        router.push("/admin/lectures");
-        router.refresh();
-    } catch (e) {
-        toast({
-            variant: "destructive",
-            title: "خطأ في إنشاء المحاضرة",
-            description: "حدث خطأ أثناء محاولة حفظ المحاضرة في قاعدة البيانات.",
-        });
-    }
+    router.push("/admin/lectures");
+    router.refresh();
   };
 
   return (
