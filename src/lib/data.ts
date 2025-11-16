@@ -1,21 +1,22 @@
 import type { Lecture, Series, Book, ScheduleItem, QAPair } from './types';
-import { collection, getDocs, getDoc, doc, addDoc, updateDoc, deleteDoc, query, orderBy, limit, where } from 'firebase/firestore';
-import { getSdks } from '@/firebase';
+import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
+import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
 // This file now interacts with Firestore instead of mock data.
-
-const { firestore } = getSdks();
+// Initialize firebase on the server to access firestore
+const { serverFirestore } = initializeFirebaseOnServer();
 
 // --- Series ---
 export const getLatestSeries = async (count: number): Promise<Series[]> => {
-  const seriesCol = collection(firestore, 'series');
-  const q = query(seriesCol, limit(count)); // Note: Firestore doesn't have a native "latest" without a timestamp. This gets the first few.
+  const seriesCol = collection(serverFirestore, 'series');
+  // Order by a field, assuming 'createdAt' exists for latest. If not, this just limits.
+  const q = query(seriesCol, orderBy('title', 'desc'), limit(count));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
 };
 
 export const getAllSeries = async (): Promise<Series[]> => {
-  const seriesCol = collection(firestore, 'series');
+  const seriesCol = collection(serverFirestore, 'series');
   const q = query(seriesCol, orderBy('title'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
@@ -23,7 +24,7 @@ export const getAllSeries = async (): Promise<Series[]> => {
 
 export const getSeriesBySlug = async (slug: string): Promise<Series | undefined> => {
   // In Firestore, we query by a field. Assuming 'slug' is a field on the document.
-  const seriesCol = collection(firestore, 'series');
+  const seriesCol = collection(serverFirestore, 'series');
   const q = query(seriesCol, where("slug", "==", slug), limit(1));
   const snapshot = await getDocs(q);
   if (snapshot.empty) return undefined;
@@ -34,28 +35,28 @@ export const getSeriesBySlug = async (slug: string): Promise<Series | undefined>
 
 // --- Lectures ---
 export const getLatestLectures = async (count: number): Promise<Lecture[]> => {
-  const lecturesCol = collection(firestore, 'lectures');
+  const lecturesCol = collection(serverFirestore, 'lectures');
   const q = query(lecturesCol, orderBy('createdAt', 'desc'), limit(count));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
 };
 
 export const getAllLectures = async (): Promise<Lecture[]> => {
-  const lecturesCol = collection(firestore, 'lectures');
+  const lecturesCol = collection(serverFirestore, 'lectures');
   const q = query(lecturesCol, orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
 };
 
 export const getLecturesBySeries = async (seriesSlug: string): Promise<Lecture[]> => {
-  const lecturesCol = collection(firestore, 'lectures');
+  const lecturesCol = collection(serverFirestore, 'lectures');
   const q = query(lecturesCol, where('seriesSlug', '==', seriesSlug), orderBy('createdAt', 'asc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
 };
 
 export const getLectureBySlug = async (slug: string): Promise<Lecture | undefined> => {
-  const lecturesCol = collection(firestore, 'lectures');
+  const lecturesCol = collection(serverFirestore, 'lectures');
   const q = query(lecturesCol, where("slug", "==", slug), limit(1));
   const snapshot = await getDocs(q);
   if (snapshot.empty) return undefined;
@@ -66,26 +67,40 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
 // --- Books, Schedule, Q&A (assuming similar structure) ---
 
 export const getAllBooks = async (): Promise<Book[]> => {
-    const booksCol = collection(firestore, 'books');
+    const booksCol = collection(serverFirestore, 'books');
     const snapshot = await getDocs(booksCol);
     return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Book, 'id'>), id: doc.id }));
 }
 
 export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
-    const scheduleCol = collection(firestore, 'scheduled_lessons');
-    const snapshot = await getDocs(scheduleCol);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<ScheduleItem, 'id'>), id: doc.id }));
+    const scheduleCol = collection(serverFirestore, 'scheduled_lessons');
+    const q = query(scheduleCol, orderBy('dateTime', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert Firestore Timestamp to string if needed
+        if (data.dateTime instanceof Timestamp) {
+            const date = data.dateTime.toDate();
+            return { 
+                ...(data as Omit<ScheduleItem, 'id' | 'date' | 'time'>),
+                id: doc.id,
+                date: date.toLocaleDateString('ar-EG'),
+                time: date.toLocaleTimeString('ar-EG'),
+            };
+        }
+        return { ...(data as Omit<ScheduleItem, 'id'>), id: doc.id };
+    });
 }
 
 export const getAllQAPairs = async (): Promise<QAPair[]> => {
-    const qaCol = collection(firestore, 'question_answers');
+    const qaCol = collection(serverFirestore, 'question_answers');
     const snapshot = await getDocs(qaCol);
     return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<QAPair, 'id'>), id: doc.id }));
 }
 
 // Note: The original `getRelatedLectures` had AI logic. We'll stick to simple logic for now.
 export const getRelatedLectures = async (currentLectureSlug: string, seriesSlug: string): Promise<Lecture[]> => {
-    const lecturesCol = collection(firestore, 'lectures');
+    const lecturesCol = collection(serverFirestore, 'lectures');
     const q = query(
         lecturesCol,
         where('seriesSlug', '==', seriesSlug),

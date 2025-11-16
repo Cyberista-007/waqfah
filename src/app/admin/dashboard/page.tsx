@@ -1,10 +1,9 @@
 
-"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAllLectures, series, books } from "@/lib/data";
+import { getAllLectures, getAllSeries, getAllBooks } from "@/lib/data";
 import { BarChart, Book, Clapperboard, MessageSquare, Users, BookOpenCheck, ListVideo } from "lucide-react";
 import Link from "next/link";
 import {
@@ -17,7 +16,6 @@ import {
   Legend,
   Line,
 } from 'recharts';
-import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 const trafficData = [
@@ -38,22 +36,16 @@ const recentComments = [
 ];
 
 
-export default function AdminDashboardPage() {
-    const allLectures = getAllLectures();
+export default async function AdminDashboardPage() {
+    const allLectures = await getAllLectures();
+    const allSeries = await getAllSeries();
+    const allBooks = await getAllBooks();
+    
     const lectureCount = allLectures.length;
-    const userCount = "1,500";
+    const seriesCount = allSeries.length;
+    const bookCount = allBooks.length;
+    const userCount = "1,500"; // Mock data
     const newCommentsCount = recentComments.filter(c => c.status === 'pending').length;
-    const bookCount = books.length; 
-    const seriesCount = series.length;
-    const { toast } = useToast();
-
-    const handleDelete = (title: string) => {
-        toast({
-            title: "تم الحذف (محاكاة)",
-            description: `تم حذف محاضرة "${title}". هذه العملية هي محاكاة ولن تؤثر على البيانات الحقيقية.`,
-            variant: "destructive",
-        })
-    }
 
   return (
     <div className="space-y-8">
@@ -196,3 +188,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
