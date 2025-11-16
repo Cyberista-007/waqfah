@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -15,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { lectures, series } from "@/lib/data";
 import {
   Select,
   SelectContent,
@@ -24,22 +22,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, Timestamp, query, orderBy } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import type { Series } from "@/lib/types";
 
 export default function AdminNewLecturePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [selectedSeries, setSelectedSeries] = useState<string>("");
+  const firestore = useFirestore();
+  
+  const seriesQuery = query(collection(firestore, 'series'), orderBy('title'));
+  const { data: series, isLoading } = useCollection<Series>(seriesQuery);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>("");
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const audioSrc = formData.get("audioSrc") as string;
-    const seriesData = series.find(s => s.slug === selectedSeries);
-    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    const duration = formData.get("duration") as string;
+    
+    const seriesData = series?.find(s => s.id === selectedSeriesId);
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    if (!title || !description || !selectedSeries || !audioSrc) {
+
+    if (!title || !description || !selectedSeriesId || !audioSrc || !duration) {
         toast({
             variant: "destructive",
             title: "خطأ",
@@ -57,32 +67,39 @@ export default function AdminNewLecturePage() {
         return;
     }
 
+    const lecturesCollection = collection(firestore, 'lectures');
+    
+    try {
+        await addDocumentNonBlocking(lecturesCollection, {
+            slug: slug,
+            title: title,
+            description: description,
+            seriesSlug: seriesData.slug,
+            seriesTitle: seriesData.title,
+            audioSrc: audioSrc,
+            duration: parseInt(duration, 10), 
+            imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
+            transcript: [], 
+            rating: 0,
+            ratingCount: 0,
+            viewCount: 0, 
+            createdAt: Timestamp.now(),
+        });
 
-    // Simulate data addition
-    lectures.unshift({
-        slug: slug,
-        title: title,
-        description: description,
-        seriesSlug: seriesData.slug,
-        seriesTitle: seriesData.title,
-        audioSrc: audioSrc,
-        duration: 40, // Mock data
-        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, // Mock data
-        transcript: [], // Mock data
-        rating: 0, // Mock data
-        ratingCount: 0, // Mock data
-        viewCount: 0, // Mock data
-        createdAt: new Date().toISOString(), // Mock data
-    });
+        toast({
+            title: "تم الإنشاء بنجاح",
+            description: `تمت إضافة محاضرة "${title}" الجديدة.`,
+        });
 
-    toast({
-        title: "تم الإنشاء بنجاح",
-        description: `تمت إضافة محاضرة "${title}" الجديدة.`,
-    });
-
-    // Redirect to the lectures list page to see the new lecture
-    router.push("/admin/lectures");
-    router.refresh(); // Tell Next.js to re-fetch the data on the target page
+        router.push("/admin/lectures");
+        router.refresh();
+    } catch (e) {
+        toast({
+            variant: "destructive",
+            title: "خطأ في إنشاء المحاضرة",
+            description: "حدث خطأ أثناء محاولة حفظ المحاضرة في قاعدة البيانات.",
+        });
+    }
   };
 
   return (
@@ -101,13 +118,13 @@ export default function AdminNewLecturePage() {
           </div>
           <div>
             <Label htmlFor="series">السلسلة</Label>
-             <Select name="series" onValueChange={setSelectedSeries} required>
+             <Select name="series" onValueChange={setSelectedSeriesId} required>
                 <SelectTrigger>
-                    <SelectValue placeholder="اختر سلسلة..." />
+                    <SelectValue placeholder={isLoading ? "جاري تحميل السلاسل..." : "اختر سلسلة..."} />
                 </SelectTrigger>
                 <SelectContent>
-                    {series.map(s => (
-                        <SelectItem key={s.slug} value={s.slug}>{s.title}</SelectItem>
+                    {series?.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -119,6 +136,10 @@ export default function AdminNewLecturePage() {
            <div>
             <Label htmlFor="audioSrc">رابط الملف الصوتي (MP3 URL)</Label>
             <Input id="audioSrc" name="audioSrc" type="url" required />
+          </div>
+          <div>
+            <Label htmlFor="duration">مدة المحاضرة (بالدقائق)</Label>
+            <Input id="duration" name="duration" type="number" required />
           </div>
           <div className="flex gap-2">
             <Button type="submit">إضافة المحاضرة</Button>

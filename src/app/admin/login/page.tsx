@@ -1,17 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
-import { useActionState } from "react";
 import { handleAdminLogin } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90" disabled={pending}>
+      {pending ? "جاري الدخول..." : "دخول لوحة تحكم المدير"}
+    </Button>
+  );
+}
+
 
 export default function AdminLoginPage() {
-  const [state, formAction] = useActionState(handleAdminLogin, null);
+  const router = useRouter();
+  const [state, formAction] = useFormState(handleAdminLogin, null);
   const { toast } = useToast();
 
   useEffect(() => {
+    if (state?.success) {
+      router.push("/admin/dashboard");
+    }
     if (state?.error) {
       toast({
         variant: "destructive",
@@ -19,7 +34,7 @@ export default function AdminLoginPage() {
         description: state.error,
       });
     }
-  }, [state, toast]);
+  }, [state, toast, router]);
 
   return (
     <div className="flex items-center justify-center py-12">
@@ -32,9 +47,7 @@ export default function AdminLoginPage() {
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">
-            <Button type="submit" className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90">
-              دخول لوحة تحكم المدير
-            </Button>
+             <SubmitButton />
           </form>
         </CardContent>
       </Card>

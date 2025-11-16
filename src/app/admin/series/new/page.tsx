@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useFirestore } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, Timestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminNewSeriesPage() {
@@ -28,7 +28,8 @@ export default function AdminNewSeriesPage() {
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
 
     if (!title || !description) {
         toast({
@@ -42,21 +43,31 @@ export default function AdminNewSeriesPage() {
     const seriesCollection = collection(firestore, 'series');
     
     // Add the new series to Firestore
-    await addDocumentNonBlocking(seriesCollection, {
-        slug: slug,
-        title: title,
-        description: description,
-        lectureCount: 0,
-        imageId: `series-${slug}` // a mock imageId
-    });
+    try {
+        await addDocumentNonBlocking(seriesCollection, {
+            slug: slug,
+            title: title,
+            description: description,
+            lectureCount: 0,
+            imageId: `series-${slug}`, // a mock imageId
+            createdAt: Timestamp.now()
+        });
 
-    toast({
-        title: "تم الإنشاء بنجاح",
-        description: `تمت إضافة سلسلة "${title}" الجديدة.`,
-    });
+        toast({
+            title: "تم الإنشاء بنجاح",
+            description: `تمت إضافة سلسلة "${title}" الجديدة.`,
+        });
 
-    // Redirect to the series list page to see the new series
-    router.push("/admin/series");
+        // Redirect to the series list page to see the new series
+        router.push("/admin/series");
+        router.refresh(); // To show the new item in the list
+    } catch(e) {
+        toast({
+            variant: "destructive",
+            title: "خطأ في إنشاء السلسلة",
+            description: "حدث خطأ أثناء محاولة حفظ السلسلة في قاعدة البيانات.",
+        });
+    }
   };
 
   return (
