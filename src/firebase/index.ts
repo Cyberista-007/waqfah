@@ -3,16 +3,16 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { Auth, getAuth, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore'
-import { getFunctions, connectFunctionsEmulator, Functions } from 'firebase/functions';
+import { Auth, getAuth, indexedDBLocalPersistence, initializeAuth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore'
+import { getFunctions, Functions } from 'firebase/functions';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   if (!getApps().length) {
     let firebaseApp: FirebaseApp;
     try {
-      firebaseApp = initializeApp();
+      firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
@@ -31,14 +31,6 @@ function getSdks(firebaseApp: FirebaseApp) {
     });
     const firestore = getFirestore(firebaseApp);
     const functions = getFunctions(firebaseApp);
-
-    if (process.env.NEXT_PUBLIC_EMULATORS_ENABLED === 'true') {
-        const host = process.env.NEXT_PUBLIC_EMULATOR_HOST || 'localhost';
-        console.log(`Connecting to Firebase Emulators on ${host}`);
-        connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-        connectFirestoreEmulator(firestore, host, 8080);
-        connectFunctionsEmulator(functions, host, 5001);
-    }
     
   return {
     firebaseApp,
