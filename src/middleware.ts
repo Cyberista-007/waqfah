@@ -2,23 +2,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Admin authentication is removed. Middleware now does nothing.
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const adminCookie = request.cookies.get('admin-auth');
-  const isAdminPage = pathname.startsWith('/admin');
-  const isLoginPage = pathname === '/admin/login';
-
-  if (isAdminPage && !isLoginPage && (!adminCookie || adminCookie.value !== 'true')) {
-    const loginUrl = new URL('/admin/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (isLoginPage && adminCookie && adminCookie.value === 'true') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-  }
-
   return NextResponse.next();
 }
 
