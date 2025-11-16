@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Query,
   onSnapshot,
@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useMemoFirebase } from '../provider';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -59,20 +60,21 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading true
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  const stableQuery = useMemo(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
+  const stableQuery = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
-    // If the query is not ready, set state to non-loading and return.
+    // If the query is not ready (null or undefined), set state to a clean, non-loading state and do nothing.
     if (!stableQuery) {
       setData(null);
       setIsLoading(false);
       setError(null);
-      return () => {}; // Return an empty cleanup function
+      return; // Stop execution of the effect
     }
 
+    // If we have a valid query, start loading.
     setIsLoading(true);
     setError(null);
 
