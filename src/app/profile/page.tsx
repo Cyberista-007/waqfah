@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { redirect } from "next/navigation";
+import { useUser, useFirestore } from "@/firebase";
+import { useRouter } from "next/navigation";
 import { Loader2, User as UserIcon, Heart, LogOut, Clapperboard, Edit } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,9 @@ import { collection, query, where, getDocs, doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import type { Lecture } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
-import { handleAdminLogout } from "@/lib/actions";
-import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import Link from "next/link";
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -24,54 +24,70 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const auth = useAuth();
+    const router = useRouter();
     const [favoriteLectures, setFavoriteLectures] = useState<Lecture[]>([]);
     const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
 
     useEffect(() => {
-        if (isUserLoading) return;
-        if (!user) {
-            redirect('/auth/login');
+        if (!isUserLoading && !user) {
+            router.push('/auth/login');
         }
+    }, [user, isUserLoading, router]);
 
+    useEffect(() => {
         const fetchFavorites = async () => {
-            if (!firestore || !user) return;
+            if (!firestore || !user?.uid) {
+                setIsLoadingFavorites(false);
+                return;
+            };
             setIsLoadingFavorites(true);
-            const favoritesRef = collection(firestore, 'users', user.uid, 'favorites');
-            const favoritesSnap = await getDocs(favoritesRef);
-            const lectureIds = favoritesSnap.docs.map(doc => doc.id);
+            try {
+                const favoritesRef = collection(firestore, 'users', user.uid, 'favorites');
+                const favoritesSnap = await getDocs(favoritesRef);
+                const lectureIds = favoritesSnap.docs.map(doc => doc.id);
 
-            if (lectureIds.length > 0) {
-                const lecturesRef = collection(firestore, 'lectures');
-                // Firestore 'in' query is limited to 10 items. For more, multiple queries are needed.
-                const lecturesQuery = query(lecturesRef, where('__name__', 'in', lectureIds.slice(0, 10)));
-                const lecturesSnap = await getDocs(lecturesQuery);
-                const lectures = lecturesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture));
-                setFavoriteLectures(lectures);
-            } else {
+                if (lectureIds.length > 0) {
+                    const lecturesData: Lecture[] = [];
+                    // Firestore 'in' query is limited to 30 items in chunks.
+                    for (let i = 0; i < lectureIds.length; i += 30) {
+                        const chunk = lectureIds.slice(i, i + 30);
+                        const lecturesRef = collection(firestore, 'lectures');
+                        const lecturesQuery = query(lecturesRef, where('__name__', 'in', chunk));
+                        const lecturesSnap = await getDocs(lecturesQuery);
+                        const lectures = lecturesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture));
+                        lecturesData.push(...lectures);
+                    }
+                    setFavoriteLectures(lecturesData);
+                } else {
+                    setFavoriteLectures([]);
+                }
+            } catch (error) {
+                console.error("Error fetching favorite lectures:", error);
                 setFavoriteLectures([]);
+            } finally {
+                setIsLoadingFavorites(false);
             }
-            setIsLoadingFavorites(false);
         };
 
-        fetchFavorites();
-    }, [user, isUserLoading, firestore]);
+        if (user) {
+            fetchFavorites();
+        }
 
-    if (isUserLoading) {
+    }, [user, firestore]);
+
+    const onLogout = async () => {
+        if (auth) {
+            await signOut(auth);
+            router.push('/');
+        }
+    }
+
+    if (isUserLoading || !user) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin" />
             </div>
         )
-    }
-
-    if (!user) {
-        // This should be handled by the redirect, but as a fallback
-        return <p>الرجاء تسجيل الدخول لعرض هذه الصفحة.</p>
-    }
-    
-    const onLogout = async () => {
-        await signOut(auth);
-        await handleAdminLogout(); // This will clear admin cookie if it exists and redirect
     }
 
     return (

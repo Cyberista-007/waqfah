@@ -3,19 +3,17 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 
 const ADMIN_COOKIE_NAME = "admin-auth";
-const ADMIN_PASSWORD = "q1w2e3r4"; // The password you requested
 
 export async function handleAdminLogin(
   prevState: { error?: string } | null,
   formData: FormData
 ): Promise<{ error?: string } | void> {
-
   const password = formData.get("password") as string;
+  const adminPassword = process.env.ADMIN_PASSWORD || "q1w2e3r4";
 
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== adminPassword) {
     return { error: "كلمة المرور غير صحيحة." };
   }
 
@@ -25,11 +23,11 @@ export async function handleAdminLogin(
     maxAge: 60 * 60 * 24, // 1 day
     path: "/",
   });
-  
+
   redirect("/admin/dashboard");
 }
 
 export async function handleAdminLogout() {
-    cookies().delete(ADMIN_COOKIE_NAME);
-    redirect("/");
+  cookies().delete(ADMIN_COOKIE_NAME);
+  redirect("/");
 }

@@ -8,6 +8,7 @@ import {
   ChevronDown,
   User as UserIcon,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -53,8 +54,11 @@ export function SiteHeader() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
+    if (auth) {
+        await signOut(auth);
+        router.push('/');
+        router.refresh();
+    }
   }
 
   const getInitials = (name: string | null | undefined) => {
@@ -98,10 +102,12 @@ export function SiteHeader() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">بحث</span>
-          </Button>
+           <Link href="/search">
+              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">بحث</span>
+              </Button>
+           </Link>
           
           <ThemeToggle />
 
@@ -122,7 +128,7 @@ export function SiteHeader() {
                         <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                     </DropdownMenuItem>
                      <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard"><UserIcon className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                        <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
@@ -151,9 +157,11 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="bg-background w-[280px] p-6">
               <div className="flex flex-col space-y-4">
-              <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4">
-                  موقع أمجد سمير
-              </Link>
+              <SheetClose asChild>
+                <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4">
+                    موقع أمجد سمير
+                </Link>
+              </SheetClose>
                 {[...mainNavItems, ...moreNavItems].map((item) => (
                   <SheetClose asChild key={item.label}>
                     <Link href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
@@ -181,10 +189,12 @@ export function SiteHeader() {
                     </SheetClose>
                    )}
                   <SheetClose asChild>
-                    <Button variant="outline" className="w-full">
-                        <Search className="h-5 w-5 me-2" />
-                        <span>بحث</span>
-                    </Button>
+                     <Link href="/search" className="w-full">
+                        <Button variant="outline" className="w-full">
+                            <Search className="h-5 w-5 me-2" />
+                            <span>بحث</span>
+                        </Button>
+                     </Link>
                   </SheetClose>
                 </div>
               </div>

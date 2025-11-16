@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useUser, useAuth } from "@/firebase";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 
@@ -26,14 +26,15 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-        redirect('/');
+    if (!isUserLoading && user) {
+        router.push('/profile');
     }
-  }, [user]);
+  }, [user, isUserLoading, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,6 +43,16 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
+
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "خطأ في التهيئة",
+            description: "خدمة المصادقة غير متوفرة. يرجى المحاولة مرة أخرى لاحقًا.",
+        });
+        setIsLoading(false);
+        return;
+    }
 
     if (!email || !password || (!isLoginMode && !name)) {
         toast({
@@ -57,12 +68,14 @@ export default function LoginPage() {
         if (isLoginMode) {
             await signInWithEmailAndPassword(auth, email, password);
             toast({ title: "أهلاً بعودتك!", description: "تم تسجيل دخولك بنجاح." });
-            // The redirect is handled by the useEffect hook
+            router.push('/');
         } else {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await updateProfile(userCredential.user, { displayName: name });
+            if (userCredential.user) {
+              await updateProfile(userCredential.user, { displayName: name });
+            }
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
-            // The redirect is handled by the useEffect hook
+            router.push('/');
         }
     } catch (error: any) {
         toast({

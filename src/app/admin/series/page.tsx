@@ -26,7 +26,7 @@ import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 export default function AdminSeriesPage() {
   const firestore = useFirestore();
   const seriesQuery = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'series'), orderBy('title')) : null,
+    () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
     [firestore]
   );
   const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
