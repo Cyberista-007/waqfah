@@ -19,10 +19,10 @@ export default async function SeriesListPage() {
           const placeholder = getPlaceholderImage(series.imageId);
           return (
              <Card
-                key={series.slug}
+                key={series.id}
                 className="overflow-hidden transition-transform transform hover:-translate-y-1 group"
               >
-                <Link href={`/series/${series.slug}`} className="block relative">
+                <Link href={`/series/${series.id}`} className="block relative">
                    <Image
                     src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/400`}
                     alt={series.title}
@@ -39,7 +39,7 @@ export default async function SeriesListPage() {
                 </Link>
                 <div className="bg-card-foreground text-card p-4">
                   <h3 className="font-headline text-lg truncate">
-                    <Link href={`/series/${series.slug}`} className="hover:underline">{series.title}</Link>
+                    <Link href={`/series/${series.id}`} className="hover:underline">{series.title}</Link>
                   </h3>
                 </div>
               </Card>
