@@ -33,3 +33,4 @@ export async function handleAdminLogout() {
   cookies().delete(ADMIN_COOKIE_NAME);
   redirect("/");
 }
+
