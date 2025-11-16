@@ -8,9 +8,9 @@ const ADMIN_COOKIE_NAME = "admin-auth";
 const ADMIN_PASSWORD = "q1w2e3r4"; // The password you requested
 
 export async function handleAdminLogin(
-  prevState: { error?: string, success?: boolean } | null,
+  prevState: { error?: string } | null,
   formData: FormData
-): Promise<{ error?: string, success?: boolean }> {
+): Promise<{ error?: string }> {
 
   const password = formData.get("password") as string;
 
@@ -18,16 +18,15 @@ export async function handleAdminLogin(
     return { error: "كلمة المرور غير صحيحة." };
   }
 
-  try {
-    cookies().set(ADMIN_COOKIE_NAME, "true", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24, // 1 day
-      path: "/",
-    });
-  } catch (error) {
-    return { error: "حدث خطأ غير متوقع أثناء تسجيل الدخول." };
-  }
+  // Set the cookie
+  cookies().set(ADMIN_COOKIE_NAME, "true", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24, // 1 day
+    path: "/",
+  });
   
+  // After setting the cookie, redirect to the dashboard.
+  // This is the correct way to redirect from a server action.
   redirect("/admin/dashboard");
 }
