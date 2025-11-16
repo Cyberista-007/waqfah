@@ -18,35 +18,31 @@ export default function SeriesListPage() {
         {allSeries.map((series) => {
           const placeholder = getPlaceholderImage(series.imageId);
           return (
-            <Card
-              key={series.slug}
-              className="overflow-hidden transition-transform transform hover:-translate-y-1"
-            >
-              <Link href={`/series/${series.slug}`} className="block">
-                <Image
-                  src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/400`}
-                  alt={series.title}
-                  width={600}
-                  height={400}
-                  className="w-full h-48 object-cover"
-                  data-ai-hint={placeholder?.imageHint}
-                />
-              </Link>
-              <CardHeader>
-                <CardTitle className="font-headline">
-                    <Link href={`/series/${series.slug}`}>{series.title}</Link>
-                </CardTitle>
-                <CardDescription>{series.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link
-                  href={`/series/${series.slug}`}
-                  className="font-medium text-primary-foreground/80 hover:text-primary-foreground"
-                >
-                  عرض السلسلة ({series.lectureCount} محاضرة)
+             <Card
+                key={series.slug}
+                className="overflow-hidden transition-transform transform hover:-translate-y-1 group"
+              >
+                <Link href={`/series/${series.slug}`} className="block relative">
+                   <Image
+                    src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/400`}
+                    alt={series.title}
+                    width={600}
+                    height={400}
+                    className="w-full h-48 object-cover"
+                    data-ai-hint={placeholder?.imageHint}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                   <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                      <span>{series.lectureCount}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-play"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
                 </Link>
-              </CardContent>
-            </Card>
+                <div className="bg-card-foreground text-card p-4">
+                  <h3 className="font-headline text-lg truncate">
+                    <Link href={`/series/${series.slug}`} className="hover:underline">{series.title}</Link>
+                  </h3>
+                </div>
+              </Card>
           );
         })}
       </div>

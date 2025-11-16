@@ -90,7 +90,7 @@ export default function LecturesListPage() {
         </Select>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredLectures.map((lecture) => (
           <LectureCard key={lecture.slug} lecture={lecture} />
         ))}
