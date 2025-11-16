@@ -1,32 +1,16 @@
 
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAllLectures, getAllSeries, getAllBooks } from "@/lib/data";
-import { BarChart, Book, Clapperboard, MessageSquare, Users, BookOpenCheck, ListVideo } from "lucide-react";
+import { Book, Clapperboard, MessageSquare, ListVideo } from "lucide-react";
 import Link from "next/link";
-import {
-  ResponsiveContainer,
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Line,
-} from 'recharts';
 import { Badge } from "@/components/ui/badge";
-
-const trafficData = [
-  { name: 'قبل 6 أيام', visits: 1200, users: 800 },
-  { name: 'قبل 5 أيام', visits: 1500, users: 950 },
-  { name: 'قبل 4 أيام', visits: 1300, users: 900 },
-  { name: 'قبل 3 أيام', visits: 1700, users: 1100 },
-  { name: 'قبل 2 يوم', visits: 1600, users: 1050 },
-  { name: 'الأمس', visits: 1900, users: 1250 },
-  { name: 'اليوم', visits: 2400, users: 1500 },
-];
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, query, orderBy, limit, where } from "firebase/firestore";
+import type { Lecture, Series, Book as BookType } from "@/lib/types"; // Renamed to avoid conflict with lucide icon
+import { TrafficChart } from "@/components/admin/traffic-chart";
 
 const recentComments = [
     { id: 1, user: "عبد الله محمد", text: "جزاكم الله خيراً، محاضرة قيمة جداً.", lecture: "أهمية التوحيد", status: "approved" },
@@ -36,15 +20,20 @@ const recentComments = [
 ];
 
 
-export default async function AdminDashboardPage() {
-    const allLectures = await getAllLectures();
-    const allSeries = await getAllSeries();
-    const allBooks = await getAllBooks();
+export default function AdminDashboardPage() {
+    const firestore = useFirestore();
+
+    const lecturesQuery = query(collection(firestore, 'lectures'));
+    const seriesQuery = query(collection(firestore, 'series'));
+    const booksQuery = query(collection(firestore, 'books'));
     
-    const lectureCount = allLectures.length;
-    const seriesCount = allSeries.length;
-    const bookCount = allBooks.length;
-    const userCount = "1,500"; // Mock data
+    const { data: allLectures } = useCollection<Lecture>(lecturesQuery);
+    const { data: allSeries } = useCollection<Series>(seriesQuery);
+    const { data: allBooks } = useCollection<BookType>(booksQuery);
+    
+    const lectureCount = allLectures?.length ?? 0;
+    const seriesCount = allSeries?.length ?? 0;
+    const bookCount = allBooks?.length ?? 0;
     const newCommentsCount = recentComments.filter(c => c.status === 'pending').length;
 
   return (
@@ -106,24 +95,7 @@ export default async function AdminDashboardPage() {
                     <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار (آخر 7 أيام)</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[350px] w-full">
-                    <ResponsiveContainer>
-                        <LineChart data={trafficData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                            <XAxis dataKey="name" stroke="hsl(var(--foreground))" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                            <YAxis stroke="hsl(var(--foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'hsl(var(--card))',
-                                    borderColor: 'hsl(var(--border))',
-                                    borderRadius: 'var(--radius)',
-                                    color: 'hsl(var(--card-foreground))'
-                                }}
-                            />
-                            <Legend />
-                            <Line type="monotone" dataKey="visits" name="الزيارات" stroke="hsl(var(--primary))" strokeWidth={2} />
-                            <Line type="monotone" dataKey="users" name="المستخدمون" stroke="hsl(var(--accent))" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
+                  <TrafficChart />
                 </CardContent>
             </Card>
             <Card>
@@ -188,5 +160,3 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
-
-    
