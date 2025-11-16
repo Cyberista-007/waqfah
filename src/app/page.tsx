@@ -48,7 +48,7 @@ export default async function Home() {
               const placeholder = getPlaceholderImage(series.imageId);
               return (
                 <Card
-                  key={series.slug}
+                  key={series.id}
                   className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50"
                 >
                   <Link href={`/series/${series.id}`} className="block relative">
@@ -82,7 +82,7 @@ export default async function Home() {
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {latestLectures.map((lecture) => (
-              <LectureCard key={lecture.slug} lecture={lecture} />
+              <LectureCard key={lecture.id} lecture={lecture} />
             ))}
           </div>
         </section>
