@@ -13,7 +13,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button className="w-full" type="submit" aria-disabled={pending}>
+    <Button className="w-full" type="submit" disabled={pending}>
        {pending ? <Loader2 className="animate-spin" /> : "دخول"}
     </Button>
   );
@@ -40,7 +40,6 @@ export default function AdminLoginPage() {
                 type="password"
                 name="password"
                 required
-                minLength={3}
               />
             </div>
             {errorMessage && (

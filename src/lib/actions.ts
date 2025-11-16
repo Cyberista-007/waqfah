@@ -11,26 +11,18 @@ export async function authenticate(
   prevState: string | undefined,
   formData: FormData
 ) {
-  try {
-    const password = formData.get("password");
-    if (password === ADMIN_PASSWORD) {
-      // Set a session cookie
-      cookies().set(SESSION_COOKIE_NAME, "true", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 24 hours
-        path: "/",
-      });
-      // Redirect to the dashboard on successful login
-      redirect("/admin/dashboard");
-    } else {
-      return "كلمة المرور غير صحيحة.";
-    }
-  } catch (error) {
-    if ((error as Error).message.includes('NEXT_REDIRECT')) {
-        throw error;
-    }
-    return "حدث خطأ ما. يرجى المحاولة مرة أخرى.";
+  const password = formData.get("password");
+  if (password === ADMIN_PASSWORD) {
+    cookies().set(SESSION_COOKIE_NAME, "true", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: "/",
+    });
+    // This must be called outside the try/catch block
+    redirect("/admin/dashboard");
+  } else {
+    return "كلمة المرور غير صحيحة.";
   }
 }
 
