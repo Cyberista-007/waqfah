@@ -7,8 +7,8 @@ export const metadata = {
     title: 'جدول الدروس',
 };
 
-export default function SchedulePage() {
-  const scheduleItems = getAllScheduleItems();
+export default async function SchedulePage() {
+  const scheduleItems = await getAllScheduleItems();
 
   return (
     <div>
