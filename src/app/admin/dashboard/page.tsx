@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAllLectures } from "@/lib/data";
 import { BarChart, Book, Clapperboard, MessageSquare, Users } from "lucide-react";
+import Link from "next/link";
 import {
   ResponsiveContainer,
   LineChart,
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
             <h1 className="text-4xl font-bold font-headline">لوحة تحكم المدير</h1>
             <p className="text-muted-foreground mt-2">نظرة عامة على أداء الموقع والمحتوى.</p>
           </div>
-          <Button size="lg" className="bg-primary/90 hover:bg-primary">إضافة محاضرة جديدة</Button>
+          <Button asChild size="lg" className="bg-primary/90 hover:bg-primary"><Link href="/admin/lectures/new">إضافة محاضرة جديدة</Link></Button>
         </header>
         
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -116,10 +117,10 @@ export default function AdminDashboardPage() {
                     <CardDescription>أدوات سريعة للتحكم بالموقع</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
-                    <Button size="lg" className="w-full">إدارة السلاسل ({seriesCount})</Button>
-                    <Button size="lg" className="w-full">إدارة الكتب ({bookCount})</Button>
-                    <Button size="lg" className="w-full">إدارة الأسئلة والأجوبة</Button>
-                    <Button size="lg" variant="secondary" className="w-full">مراجعة التعليقات</Button>
+                    <Button asChild size="lg" className="w-full"><Link href="/admin/series">إدارة السلاسل ({seriesCount})</Link></Button>
+                    <Button asChild size="lg" className="w-full"><Link href="/admin/books">إدارة الكتب ({bookCount})</Link></Button>
+                    <Button asChild size="lg" className="w-full"><Link href="/admin/qa">إدارة الأسئلة والأجوبة</Link></Button>
+                    <Button asChild size="lg" variant="secondary" className="w-full"><Link href="/admin/comments">مراجعة التعليقات</Link></Button>
                 </CardContent>
             </Card>
         </section>
@@ -146,7 +147,7 @@ export default function AdminDashboardPage() {
                                 <TableCell className="hidden md:table-cell">{new Date(lecture.createdAt).toLocaleDateString('ar-EG')}</TableCell>
                                 <TableCell className="text-left">
                                     <div className="flex gap-2">
-                                        <Button variant="outline" size="sm">تعديل</Button>
+                                        <Button asChild variant="outline" size="sm"><Link href={`/admin/lectures/${lecture.slug}/edit`}>تعديل</Link></Button>
                                         <Button variant="destructive" size="sm">حذف</Button>
                                     </div>
                                 </TableCell>
@@ -159,5 +160,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
