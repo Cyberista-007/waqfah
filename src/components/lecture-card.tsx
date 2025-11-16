@@ -37,19 +37,29 @@ export function LectureCard({ lecture }: LectureCardProps) {
         });
     };
 
+    const copyLinkToClipboard = () => {
+        navigator.clipboard.writeText(window.location.origin + `/lectures/${lecture.slug}`);
+        toast({
+            title: "تم نسخ الرابط",
+            description: "يمكنك الآن مشاركة الرابط.",
+        });
+    };
+
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
                 title: lecture.title,
                 text: `استمع إلى محاضرة "${lecture.title}"`,
                 url: window.location.origin + `/lectures/${lecture.slug}`,
-            }).catch(console.error);
-        } else {
-            toast({
-                title: "تم نسخ الرابط",
-                description: "يمكنك الآن مشاركة الرابط.",
+            }).catch((error) => {
+                // Fallback to clipboard if share is cancelled or fails
+                if (error.name !== 'AbortError') {
+                    console.error("Share failed:", error);
+                    copyLinkToClipboard();
+                }
             });
-            navigator.clipboard.writeText(window.location.origin + `/lectures/${lecture.slug}`);
+        } else {
+            copyLinkToClipboard();
         }
     };
 
