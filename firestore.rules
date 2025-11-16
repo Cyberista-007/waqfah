@@ -2,7 +2,7 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a combination of public read access for general content (series, lectures, books, Q&A, scheduled lessons) and user-ownership for user-specific data (user profiles, favorite lectures, lecture ratings, and comments).
+ * This ruleset enforces a combination of public read access for general content and authenticated-user write access for content management. User-specific data remains protected by ownership checks.
  *
  * Data Structure:
  * - `/series/{seriesId}`: Series data.
@@ -11,181 +11,129 @@
  * - `/question_answers/{questionAnswerId}`: Question and answer data.
  * - `/scheduled_lessons/{scheduledLessonId}`: Scheduled lesson data.
  * - `/users/{userId}`: User profile data.
- * - `/users/{userId}/favorite_lectures/{lectureId}`: User's favorite lectures.
- * - `/users/{userId}/lecture_ratings/{lectureRatingId}`: User's lecture ratings.
  * - `/lectures/{lectureId}/comments/{commentId}`: Comments on lectures.
  *
  * Key Security Decisions:
- * - Public read access is granted to series, lectures, books, question answers, and scheduled lessons.
- * - User data and associated subcollections are protected by ownership checks.
- * - Write access to series, lectures, books, question answers, and scheduled lessons is not defined, and therefore denied by default. Add role-based authorization here in future updates.
- * - For any `update` and `delete` operations, the document existence is checked to prevent accidental removals.
- *
- * Denormalization for Authorization:
- *  N/A. Currently, no denormalization is used, but can be used in future updates to improve efficiency.
- *
- * Structural Segregation:
- *  The ruleset leverages structural segregation by placing different types of data into separate collections with distinct security postures.
+ * - Public read access is granted to all content to allow anonymous browsing.
+ * - Write access (create, update, delete) to content collections (series, lectures, etc.) is restricted to authenticated users. This is a simple authorization model where any logged-in user is treated as an admin/editor. For more granular control, custom claims (e.g., `request.auth.token.isAdmin`) should be implemented.
+ * - User data and subcollections are strictly protected by ownership checks (`isOwner`).
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access to series data. Write access is denied.
+     * @description Public read, authenticated write.
      * @path /series/{seriesId}
      * @allow (get, list): Anyone can read series data.
-     * @deny (create, update, delete): No one can create, update, or delete series data without admin role.
-     * @principle Grants public read access while restricting write access to authorized users.
+     * @allow (create, update, delete): Any signed-in user can manage series data.
      */
     match /series/{seriesId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
     /**
-     * @description Allows public read access to lecture data. Write access is denied.
+     * @description Public read, authenticated write.
      * @path /lectures/{lectureId}
      * @allow (get, list): Anyone can read lecture data.
-     * @deny (create, update, delete): No one can create, update, or delete lecture data without admin role.
-     * @principle Grants public read access while restricting write access to authorized users.
+     * @allow (create, update, delete): Any signed-in user can manage lecture data.
      */
     match /lectures/{lectureId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
     /**
-     * @description Allows public read access to book data. Write access is denied.
+     * @description Public read, authenticated write.
      * @path /books/{bookId}
      * @allow (get, list): Anyone can read book data.
-     * @deny (create, update, delete): No one can create, update, or delete book data without admin role.
-     * @principle Grants public read access while restricting write access to authorized users.
+     * @allow (create, update, delete): Any signed-in user can manage book data.
      */
     match /books/{bookId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
     /**
-     * @description Allows public read access to question and answer data. Write access is denied.
+     * @description Public read, authenticated write.
      * @path /question_answers/{questionAnswerId}
-     * @allow (get, list): Anyone can read question and answer data.
-     * @deny (create, update, delete): No one can create, update, or delete question and answer data without admin role.
-     * @principle Grants public read access while restricting write access to authorized users.
+     * @allow (get, list): Anyone can read Q&A data.
+     * @allow (create, update, delete): Any signed-in user can manage Q&A data.
      */
     match /question_answers/{questionAnswerId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
     /**
-     * @description Allows public read access to scheduled lesson data. Write access is denied.
+     * @description Public read, authenticated write.
      * @path /scheduled_lessons/{scheduledLessonId}
      * @allow (get, list): Anyone can read scheduled lesson data.
-     * @deny (create, update, delete): No one can create, update, or delete scheduled lesson data without admin role.
-     * @principle Grants public read access while restricting write access to authorized users.
+     * @allow (create, update, delete): Any signed-in user can manage lesson data.
      */
     match /scheduled_lessons/{scheduledLessonId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if isSignedIn();
     }
 
     /**
      * @description Allows read/write access to a user's own profile data.
      * @path /users/{userId}
-     * @allow (create): User can create their own profile if the userId matches their auth ID.
-     * @allow (get, update, delete): User can get, update, and delete their own profile if the userId matches their auth ID and if the doc exists.
-     * @deny (create): User cannot create a profile with an ID that doesn't match their auth ID.
-     * @deny (get, update, delete): User cannot access or modify other user's profiles.
+     * @allow (create, get, update, delete): User can manage their own profile.
      * @principle Enforces user-ownership for profile data.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if false; // Deny listing all users
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
-
+    
     /**
-     * @description Allows a user to manage their favorite lectures.
-     * @path /users/{userId}/favorite_lectures/{lectureId}
-     * @allow (create): User can add a lecture to their favorites if the userId matches their auth ID.
-     * @allow (get, list, delete): User can get, list, and delete their own favorite lectures if the userId matches their auth ID and if the doc exists for delete.
-     * @deny (create): User cannot add a lecture to another user's favorites.
-     * @deny (get, list, delete): User cannot access or modify other user's favorite lectures.
-     * @principle Enforces user-ownership for favorite lectures.
-     */
-    match /users/{userId}/favorite_lectures/{lectureId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if false;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Allows a user to manage their lecture ratings.
-     * @path /users/{userId}/lecture_ratings/{lectureRatingId}
-     * @allow (create): User can rate a lecture if the userId matches their auth ID.
-     * @allow (get, list, update, delete): User can get, list, update and delete their own lecture ratings if the userId matches their auth ID and if the doc exists for update and delete.
-     * @deny (create): User cannot rate a lecture on behalf of another user.
-     * @deny (get, list, update, delete): User cannot access or modify other user's lecture ratings.
-     * @principle Enforces user-ownership for lecture ratings.
-     */
-    match /users/{userId}/lecture_ratings/{lectureRatingId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Allows anyone to read comments for a lecture. Authenticated users can create comments.  Users can update/delete their comments.
+     * @description Public read, authenticated user can create. Owner can update/delete.
      * @path /lectures/{lectureId}/comments/{commentId}
-     * @allow (get, list): Anyone can read comments for a lecture.
-     * @allow (create): Authenticated user can create a comment. The comment's userId must match their auth ID.
-     * @allow (update, delete): User can update or delete their own comment if the comment's userId matches their auth ID, and if the doc exists.
-     * @deny (create): User cannot create a comment for a different user.
-     * @deny (update, delete): User cannot update or delete comments created by other users.
-     * @principle Public read, user-owned writes for comments.
+     * @allow (get, list): Anyone can read comments.
+     * @allow (create): Authenticated user can create a comment if they own it.
+     * @allow (update, delete): The user who created the comment can update or delete it.
      */
     match /lectures/{lectureId}/comments/{commentId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isResourceOwner();
+      allow delete: if isSignedIn() && isResourceOwner();
     }
   }
 
-  // Helper functions
+  // --- Helper Functions ---
+
+  /**
+   * Checks if the current request is from an authenticated user.
+   */
   function isSignedIn() {
     return request.auth != null;
   }
 
+  /**
+   * Checks if the requesting user's UID matches the given userId.
+   * Used for path-based ownership checks.
+   */
   function isOwner(userId) {
-    return request.auth.uid == userId;
+    return isSignedIn() && request.auth.uid == userId;
   }
 
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
+  /**
+   * Checks if the requesting user's UID matches the 'userId' field in the document being written/updated.
+   * Used for field-based ownership checks.
+   */
+  function isResourceOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
   }
 }
