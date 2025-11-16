@@ -1,3 +1,5 @@
+
+"use client";
 import {
   Select,
   SelectContent,
@@ -5,95 +7,107 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAllLectures, getAllSeries } from "@/lib/data";
 import { LectureCard } from "@/components/lecture-card";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
+import type { Lecture, Series } from "@/lib/types";
+import { HomePageSkeleton } from "@/components/skeletons";
 
-// This is now a Server Component
-export default async function LecturesListPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | undefined };
-}) {
-  let allLectures = await getAllLectures();
-  const allSeries = await getAllSeries();
+export default function LecturesListPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const firestore = useFirestore();
 
-  const seriesFilter = searchParams?.series;
-  const topicFilter = searchParams?.topic;
-  const sortOrder = searchParams?.sort || 'newest';
+  const lecturesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null, [firestore]);
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
+  
+  const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series'), orderBy('title')) : null, [firestore]);
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
 
-  const allTopics = [...new Set(allLectures.map(l => l.seriesTitle))];
+  const seriesFilter = searchParams.get('series');
+  const sortOrder = searchParams.get('sort') || 'newest';
 
-  let filteredLectures = allLectures;
+  const handleFilterChange = (type: 'series' | 'sort', value: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
 
-  if (seriesFilter && seriesFilter !== 'all') {
-    filteredLectures = filteredLectures.filter(l => l.seriesSlug === seriesFilter);
-  }
+    if (value === "all") {
+      current.delete(type);
+    } else {
+      current.set(type, value);
+    }
 
-  if (topicFilter && topicFilter !== 'all') {
-    // This is a simplified topic filter based on series title
-    filteredLectures = filteredLectures.filter(l => l.seriesTitle === topicFilter);
-  }
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
 
-  filteredLectures.sort((a, b) => {
-      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+    router.push(`${pathname}${query}`);
+  };
+  
+  const filteredLectures = useMemoFirebase(() => {
+    if (!allLectures) return [];
+    
+    let lectures = [...allLectures];
+    
+    if (seriesFilter && seriesFilter !== 'all') {
+      lectures = lectures.filter(l => l.seriesId === seriesFilter);
+    }
+    
+    lectures.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt as any);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt as any);
 
       switch (sortOrder) {
-          case 'newest':
-              return dateB.getTime() - dateA.getTime();
           case 'oldest':
               return dateA.getTime() - dateB.getTime();
           case 'most_popular':
               return (b.viewCount || 0) - (a.viewCount || 0);
           case 'alphabetical':
               return a.title.localeCompare(b.title, 'ar');
+          case 'newest':
           default:
-              return 0;
+              return dateB.getTime() - dateA.getTime();
       }
-  });
+    });
+
+    return lectures;
+
+  }, [allLectures, seriesFilter, sortOrder]);
+
+
+  if (lecturesLoading || seriesLoading) {
+    return <HomePageSkeleton />;
+  }
 
   return (
     <div>
       <h1 className="text-4xl font-bold mb-8 font-headline">كل المحاضرات</h1>
-      {/* The filtering logic will now work via URL params and server-side rendering */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <form className="contents">
-            <Select name="series" defaultValue={seriesFilter || "all"}>
-              <SelectTrigger className="md:w-1/3">
-                <SelectValue placeholder="فلترة حسب السلسلة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل السلاسل</SelectItem>
-                {allSeries.map(s => <SelectItem key={s.slug} value={s.slug}>{s.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select name="topic" defaultValue={topicFilter || "all"}>
-              <SelectTrigger className="md:w-1/3">
-                <SelectValue placeholder="فلترة حسب الموضوع" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل المواضيع</SelectItem>
-                {allTopics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select name="sort" defaultValue={sortOrder}>
-              <SelectTrigger className="md:w-1/3">
-                <SelectValue placeholder="فرز حسب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">فرز حسب: الأحدث</SelectItem>
-                <SelectItem value="oldest">الأقدم</SelectItem>
-                <SelectItem value="most_popular">الأكثر استماعاً</SelectItem>
-                <SelectItem value="alphabetical">أبجدي (أ-ي)</SelectItem>
-              </SelectContent>
-            </Select>
-            {/* A submit button can be added if we don't want to rely on JS to submit the form */}
-        </form>
+        <Select onValueChange={(value) => handleFilterChange("series", value)} defaultValue={seriesFilter || "all"}>
+          <SelectTrigger className="md:w-1/2">
+            <SelectValue placeholder="فلترة حسب السلسلة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل السلاسل</SelectItem>
+            {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={(value) => handleFilterChange("sort", value)} defaultValue={sortOrder}>
+          <SelectTrigger className="md:w-1/2">
+            <SelectValue placeholder="فرز حسب" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">فرز حسب: الأحدث</SelectItem>
+            <SelectItem value="oldest">الأقدم</SelectItem>
+            <SelectItem value="most_popular">الأكثر استماعاً</SelectItem>
+            <SelectItem value="alphabetical">أبجدي (أ-ي)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filteredLectures.map((lecture) => (
-          <LectureCard key={lecture.slug} lecture={lecture} />
+        {filteredLectures?.map((lecture) => (
+          <LectureCard key={lecture.id} lecture={lecture} />
         ))}
       </div>
     </div>

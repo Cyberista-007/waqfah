@@ -1,3 +1,4 @@
+
 import { getLectureBySlug, getRelatedLectures } from "@/lib/data"
 import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
@@ -10,12 +11,11 @@ import type { Lecture } from "@/lib/types";
 async function fetchRelatedLectures(currentLectureSlug: string): Promise<Lecture[]> {
     const currentLecture = await getLectureBySlug(currentLectureSlug);
     if (!currentLecture) {
-        // This case should ideally not happen if the main page logic is sound
         return [];
     }
 
     // Simple fallback: get other lectures from the same series
-    const fallbackLectures = await getRelatedLectures(currentLecture.slug, currentLecture.seriesSlug);
+    const fallbackLectures = await getRelatedLectures(currentLecture.id, currentLecture.seriesId);
     
     // In a real app, you might try AI recommendations first and use this as a fallback.
     // For now, we'll just use the simple series-based relation.
@@ -23,9 +23,9 @@ async function fetchRelatedLectures(currentLectureSlug: string): Promise<Lecture
 }
 
 
-export default async function RelatedLectures({ currentLectureSlug }: { currentLectureSlug: string }) {
+export default async function RelatedLectures({ currentLectureId, seriesId }: { currentLectureId: string, seriesId: string }) {
     
-    const relatedLectures = await fetchRelatedLectures(currentLectureSlug);
+    const relatedLectures = await getRelatedLectures(currentLectureId, seriesId);
 
     if (relatedLectures.length === 0) {
         return null;

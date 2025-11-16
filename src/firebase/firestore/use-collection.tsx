@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -43,7 +44,7 @@ export interface InternalQuery extends Query<DocumentData> {
  * 
  *
  * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
+ * use useMemoFirebase to memoize it per React guidence.  Also make sure that it's dependencies are stable
  * references
  *  
  * @template T Optional type for document data. Defaults to any.
@@ -84,11 +85,16 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        // This logic extracts the path from either a ref or a query
-        const path: string =
-          stableQuery.type === 'collection'
-            ? (stableQuery as CollectionReference).path
-            : (stableQuery as unknown as InternalQuery)._query.path.canonicalString()
+        let path = '';
+        try {
+            path =
+            stableQuery.type === 'collection'
+                ? (stableQuery as CollectionReference).path
+                : (stableQuery as unknown as InternalQuery)._query.path.canonicalString()
+        } catch (e) {
+            // Path extraction can fail if query is weird, just use a placeholder
+            path = "unknown/path"
+        }
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',

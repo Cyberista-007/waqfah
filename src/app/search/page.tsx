@@ -1,4 +1,5 @@
 
+
 import { searchContent } from "@/lib/data";
 import { Suspense } from "react";
 import { Loader2, SearchIcon } from "lucide-react";

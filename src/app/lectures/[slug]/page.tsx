@@ -1,8 +1,9 @@
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getLectureBySlug } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, MessageCircle, Share2, Whatsapp } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, MessageCircle, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import RelatedLectures from '@/components/related-lectures';
@@ -79,9 +80,6 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
             </Button>
              <Button asChild variant="outline">
                 <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><Twitter/><span className="ms-2">تويتر</span></a>
-            </Button>
-             <Button asChild variant="outline">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`} target="_blank" rel="noopener noreferrer"><Whatsapp/><span className="ms-2">واتساب</span></a>
             </Button>
         </div>
       </section>
