@@ -25,7 +25,6 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminLecturesPage() {
     const { toast } = useToast();

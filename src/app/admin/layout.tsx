@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { handleAdminLogout } from '@/lib/actions';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
@@ -23,14 +22,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
   ];
 
-  const onLogout = async () => {
-    // This will sign out the Firebase user if one is logged in, but our admin auth is cookie-based.
-    if (auth.currentUser) {
-      await signOut(auth);
-    }
-    // This server action clears the admin cookie and redirects.
-    await handleAdminLogout();
-  }
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -69,10 +60,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </nav>
           </div>
            <div className="mt-auto p-4 space-y-2">
-             <Button size="sm" className="w-full" variant="outline" onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                تسجيل الخروج
-             </Button>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>

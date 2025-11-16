@@ -8,7 +8,7 @@ import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2 } from "lu
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, collectionGroup, orderBy } from "firebase/firestore";
+import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 

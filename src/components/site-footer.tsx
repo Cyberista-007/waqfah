@@ -41,7 +41,7 @@ export function SiteFooter() {
                 English
             </Button>
             <Button variant="link" asChild className="text-gray-400 hover:text-white text-sm hover:underline">
-                <Link href="/admin">Admin</Link>
+                <Link href="/admin/dashboard">Admin</Link>
             </Button>
           </div>
         </div>
