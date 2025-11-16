@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -13,6 +13,7 @@ import { signOut } from 'firebase/auth';
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const auth = useAuth();
+  const router = useRouter();
 
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
@@ -21,6 +22,13 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/books', label: 'الكتب', icon: Book },
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
   ];
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/auth/login');
+    }
+  };
 
 
   return (
@@ -60,6 +68,10 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </nav>
           </div>
            <div className="mt-auto p-4 space-y-2">
+            <Button size="sm" variant="outline" className="w-full" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              تسجيل الخروج
+            </Button>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>

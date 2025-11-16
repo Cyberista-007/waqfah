@@ -2,6 +2,7 @@
 // src/firebase/server-init.ts
 import { initializeApp, getApps, getApp, type FirebaseApp, AppOptions, deleteApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import { firebaseConfig } from './config';
 import { credential } from 'firebase-admin';
 
@@ -42,5 +43,9 @@ const getAppInstance = (): FirebaseApp => {
 export function initializeFirebaseOnServer() {
   const serverApp = getAppInstance();
   const serverFirestore = getFirestore(serverApp);
-  return { serverApp, serverFirestore };
+  const serverAuth = getAuth(serverApp);
+  return { serverApp, serverFirestore, serverAuth };
 }
+
+// Export a singleton for middleware usage
+export const auth = getAuth(getAppInstance());
