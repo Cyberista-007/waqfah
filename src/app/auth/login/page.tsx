@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 
@@ -26,6 +26,7 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,6 +37,7 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
+    const redirectTo = searchParams.get('redirect_to') || '/';
 
     if (!auth) {
         toast({
@@ -61,14 +63,14 @@ export default function LoginPage() {
         if (isLoginMode) {
             await signInWithEmailAndPassword(auth, email, password);
             toast({ title: "أهلاً بعودتك!", description: "تم تسجيل دخولك بنجاح." });
-            router.push('/');
+            router.push(redirectTo);
         } else {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             if (userCredential.user) {
               await updateProfile(userCredential.user, { displayName: name });
             }
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
-            router.push('/');
+            router.push(redirectTo);
         }
     } catch (error: any) {
         toast({

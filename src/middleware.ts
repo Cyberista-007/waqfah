@@ -13,7 +13,10 @@ export async function middleware(request: NextRequest) {
 
   if (!sessionCookie) {
     // If no session and they are trying to access an admin page, redirect to login.
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+    // We add a 'redirect_to' query param to send them back after login.
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('redirect_to', pathname);
+    return NextResponse.redirect(loginUrl);
   }
   
   // If they are authenticated, let them proceed.
