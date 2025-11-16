@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Book, Clapperboard, MessageSquare, ListVideo } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, limit, where } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType } from "@/lib/types"; // Renamed to avoid conflict with lucide icon
 import { TrafficChart } from "@/components/admin/traffic-chart";
 
@@ -23,9 +23,9 @@ const recentComments = [
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
 
-    const lecturesQuery = query(collection(firestore, 'lectures'));
-    const seriesQuery = query(collection(firestore, 'series'));
-    const booksQuery = query(collection(firestore, 'books'));
+    const lecturesQuery = useMemoFirebase(() => query(collection(firestore, 'lectures')), [firestore]);
+    const seriesQuery = useMemoFirebase(() => query(collection(firestore, 'series')), [firestore]);
+    const booksQuery = useMemoFirebase(() => query(collection(firestore, 'books')), [firestore]);
     
     const { data: allLectures } = useCollection<Lecture>(lecturesQuery);
     const { data: allSeries } = useCollection<Series>(seriesQuery);
