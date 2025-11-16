@@ -1,3 +1,9 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +14,9 @@ import { getAllQAPairs } from '@/lib/data';
 export const metadata = {
     title: 'سؤال وجواب',
 };
+
+// Revalidate this page every hour
+export const revalidate = 3600;
 
 export default async function QAPage() {
   const qanda = await getAllQAPairs();
@@ -37,18 +46,18 @@ export default async function QAPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-2">
           <h2 className="text-3xl font-bold mb-4 font-headline">الأسئلة الشائعة</h2>
-          {qanda.map(item => (
-            <Card key={item.id}>
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold font-headline">{item.question}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{item.answer}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <Accordion type="single" collapsible className="w-full">
+            {qanda.map(item => (
+              <AccordionItem value={item.id} key={item.id}>
+                <AccordionTrigger className="text-lg text-right font-semibold font-headline">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </div>

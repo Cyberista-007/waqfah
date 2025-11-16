@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -60,26 +61,28 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Start as true
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  const stableQuery = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
+  // The memoized query is now just a dependency, not the source of truth for the effect.
+  // The stableQuery variable inside useEffect will be used.
+  const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
     // If the query is not ready (null or undefined), set state to a clean, non-loading state and do nothing.
-    if (!stableQuery) {
+    if (!stableQueryDep) {
       setData(null);
-      setIsLoading(false);
+      setIsLoading(false); // Not loading because there's nothing to load
       setError(null);
       return; // Stop execution of the effect
     }
-
-    // If we have a valid query, start loading.
+    
+    // Reset state for new query
     setIsLoading(true);
     setError(null);
 
     const unsubscribe = onSnapshot(
-      stableQuery,
+      stableQueryDep,
       (snapshot: QuerySnapshot<DocumentData>) => {
         const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
         setData(results);
@@ -90,9 +93,9 @@ export function useCollection<T = any>(
         let path = '';
         try {
             path =
-            stableQuery.type === 'collection'
-                ? (stableQuery as CollectionReference).path
-                : (stableQuery as unknown as InternalQuery)._query.path.canonicalString()
+            stableQueryDep.type === 'collection'
+                ? (stableQueryDep as CollectionReference).path
+                : (stableQueryDep as unknown as InternalQuery)._query.path.canonicalString()
         } catch (e) {
             // Path extraction can fail if query is weird, just use a placeholder
             path = "unknown/path"
@@ -102,7 +105,12 @@ export function useCollection<T = any>(
           operation: 'list',
           path,
         })
-        console.error("Firestore Permission Error in useCollection:", contextualError.message);
+        
+        // We throw the error in dev to make it visible in the Next.js overlay
+        if (process.env.NODE_ENV === 'development') {
+           console.error("Firestore Permission Error in useCollection:", contextualError.message);
+        }
+
         setError(contextualError)
         setData(null)
         setIsLoading(false)
@@ -113,7 +121,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [stableQuery]); // Re-run if the memoized query changes.
+  }, [stableQueryDep]); // Re-run if the memoized query changes.
   
   return { data, isLoading, error };
 }

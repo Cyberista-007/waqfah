@@ -7,6 +7,9 @@ export const metadata = {
     title: 'جدول الدروس',
 };
 
+// Revalidate this page every hour
+export const revalidate = 3600;
+
 export default async function SchedulePage() {
   const scheduleItems = await getAllScheduleItems();
 
@@ -22,7 +25,7 @@ export default async function SchedulePage() {
             {scheduleItems.map((item, index) => (
               <div key={item.id}>
                 <div className="pb-4">
-                  <h3 className="text-xl font-bold text-primary-foreground/90 font-headline">{item.title}</h3>
+                  <h3 className="text-xl font-bold text-foreground font-headline">{item.title}</h3>
                   <p className="text-muted-foreground">{item.date}</p>
                   <p className="text-muted-foreground">{item.time}</p>
                   {item.isLive && (
@@ -32,6 +35,9 @@ export default async function SchedulePage() {
                 {index < scheduleItems.length - 1 && <Separator />}
               </div>
             ))}
+             {!scheduleItems || scheduleItems.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">لا توجد دروس مجدولة حالياً.</p>
+            )}
           </div>
         </CardContent>
       </Card>

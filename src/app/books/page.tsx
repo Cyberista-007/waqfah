@@ -8,6 +8,9 @@ export const metadata = {
   title: 'الكتب والمؤلفات',
 };
 
+// Revalidate this page every hour
+export const revalidate = 3600;
+
 export default async function BooksPage() {
   const books = await getAllBooks();
 
