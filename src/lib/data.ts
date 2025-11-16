@@ -61,7 +61,15 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
   const snapshot = await getDocs(q);
   if (snapshot.empty) return undefined;
   const docSnap = snapshot.docs[0];
-  return { ...(docSnap.data() as Omit<Lecture, 'id'>), id: docSnap.id };
+  const lectureData = docSnap.data();
+
+  // Fetch the series to get the seriesId for linking
+  const seriesSnapshot = await getDocs(query(collection(serverFirestore, 'series'), where('slug', '==', lectureData.seriesSlug), limit(1)));
+  if (!seriesSnapshot.empty) {
+    lectureData.seriesId = seriesSnapshot.docs[0].id;
+  }
+
+  return { ...(lectureData as Omit<Lecture, 'id'>), id: docSnap.id };
 };
 
 // --- Books, Schedule, Q&A (assuming similar structure) ---
@@ -100,12 +108,13 @@ export const getAllQAPairs = async (): Promise<QAPair[]> => {
 
 // Note: The original `getRelatedLectures` had AI logic. We'll stick to simple logic for now.
 export const getRelatedLectures = async (currentLectureSlug: string, seriesSlug: string): Promise<Lecture[]> => {
+    if (!seriesSlug) return [];
     const lecturesCol = collection(serverFirestore, 'lectures');
     const q = query(
         lecturesCol,
         where('seriesSlug', '==', seriesSlug),
         where('slug', '!=', currentLectureSlug),
-        limit(2)
+        limit(3)
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));

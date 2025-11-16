@@ -5,27 +5,41 @@ import { getPlaceholderImage } from '@/lib/images';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import LectureListItem from '@/components/lecture-list-item';
+import type { Series } from '@/lib/types';
+import { doc, getDoc } from 'firebase/firestore';
+import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
 type SeriesDetailPageProps = {
   params: {
-    slug: string;
+    slug: string; // This is the document ID now
   };
 };
 
 export async function generateMetadata({ params }: SeriesDetailPageProps) {
-  const series = await getSeriesBySlug(params.slug);
-  if (!series) {
+  const { serverFirestore } = initializeFirebaseOnServer();
+  const seriesDocRef = doc(serverFirestore, 'series', params.slug);
+  const seriesSnap = await getDoc(seriesDocRef);
+
+  if (!seriesSnap.exists()) {
     return { title: 'السلسلة غير موجودة' };
   }
+  const series = seriesSnap.data() as Series;
   return { title: series.title };
 }
 
 export default async function SeriesDetailPage({ params }: SeriesDetailPageProps) {
-  const series = await getSeriesBySlug(params.slug);
-  if (!series) {
+  // We use the doc ID from the params to fetch the series
+  const { serverFirestore } = initializeFirebaseOnServer();
+  const seriesDocRef = doc(serverFirestore, 'series', params.slug);
+  const seriesSnap = await getDoc(seriesDocRef);
+
+  if (!seriesSnap.exists()) {
     notFound();
   }
 
+  const series = { ...seriesSnap.data(), id: seriesSnap.id } as Series;
+
+  // We use the original slug field to find lectures
   const lecturesInSeries = await getLecturesBySeries(series.slug);
   const placeholder = getPlaceholderImage(series.imageId);
 

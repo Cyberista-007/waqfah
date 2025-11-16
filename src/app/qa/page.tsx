@@ -9,8 +9,8 @@ export const metadata = {
     title: 'سؤال وجواب',
 };
 
-export default function QAPage() {
-  const qanda = getAllQAPairs();
+export default async function QAPage() {
+  const qanda = await getAllQAPairs();
 
   return (
     <div>

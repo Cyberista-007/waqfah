@@ -1,9 +1,12 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export type Lecture = {
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
   seriesSlug: string;
-  seriesTitle: string; // This will be fetched/joined, not stored directly
+  seriesId: string; // Document ID of the series
+  seriesTitle: string; 
   duration: number; // in minutes
   audioSrc: string;
   imageId: string;
@@ -14,7 +17,7 @@ export type Lecture = {
   rating: number;
   ratingCount: number;
   viewCount: number;
-  createdAt: any; // Firestore timestamp
+  createdAt: Timestamp; // Firestore timestamp
 };
 
 export type TranscriptItem = {
@@ -45,6 +48,7 @@ export type ScheduleItem = {
   date: string; // Consider using a Timestamp for better sorting
   time: string;
   isLive: boolean;
+  dateTime?: Timestamp;
 };
 
 export type QAPair = {

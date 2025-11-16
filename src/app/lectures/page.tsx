@@ -1,6 +1,3 @@
-"use client"
-
-import { useState, useMemo, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,97 +7,88 @@ import {
 } from "@/components/ui/select";
 import { getAllLectures, getAllSeries } from "@/lib/data";
 import { LectureCard } from "@/components/lecture-card";
-import type { Lecture, Series } from '@/lib/types';
 
-export default function LecturesListPage() {
-  const [allLectures, setAllLectures] = useState<Lecture[]>([]);
-  const [allSeries, setAllSeries] = useState<Series[]>([]);
-  const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-        const lectures = await getAllLectures();
-        const series = await getAllSeries();
-        setAllLectures(lectures);
-        setFilteredLectures(lectures);
-        setAllSeries(series);
-    }
-    fetchData();
-  }, []);
+// This is now a Server Component
+export default async function LecturesListPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | undefined };
+}) {
+  let allLectures = await getAllLectures();
+  const allSeries = await getAllSeries();
 
-  const allTopics = useMemo(() => [...new Set(allLectures.map(l => l.seriesTitle))], [allLectures]);
+  const seriesFilter = searchParams?.series;
+  const topicFilter = searchParams?.topic;
+  const sortOrder = searchParams?.sort || 'newest';
 
-  const handleFilter = (type: 'series' | 'topic', value: string) => {
-    if (value === 'all') {
-      setFilteredLectures(allLectures);
-      return;
-    }
-    let lectures = allLectures;
-    if (type === 'series') {
-        lectures = lectures.filter(l => l.seriesSlug === value);
-    }
-    if (type === 'topic') {
-        // This is a simplified topic filter based on series title
-        lectures = lectures.filter(l => l.seriesTitle === value);
-    }
-    setFilteredLectures(lectures);
+  const allTopics = [...new Set(allLectures.map(l => l.seriesTitle))];
+
+  let filteredLectures = allLectures;
+
+  if (seriesFilter && seriesFilter !== 'all') {
+    filteredLectures = filteredLectures.filter(l => l.seriesSlug === seriesFilter);
   }
 
-  const handleSort = (value: string) => {
-    const sorted = [...filteredLectures].sort((a, b) => {
-        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-
-        switch (value) {
-            case 'newest':
-                return dateB.getTime() - dateA.getTime();
-            case 'oldest':
-                return dateA.getTime() - dateB.getTime();
-            case 'most_popular':
-                return b.viewCount - a.viewCount;
-            case 'alphabetical':
-                return a.title.localeCompare(b.title, 'ar');
-            default:
-                return 0;
-        }
-    });
-    setFilteredLectures(sorted);
+  if (topicFilter && topicFilter !== 'all') {
+    // This is a simplified topic filter based on series title
+    filteredLectures = filteredLectures.filter(l => l.seriesTitle === topicFilter);
   }
 
+  filteredLectures.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+
+      switch (sortOrder) {
+          case 'newest':
+              return dateB.getTime() - dateA.getTime();
+          case 'oldest':
+              return dateA.getTime() - dateB.getTime();
+          case 'most_popular':
+              return (b.viewCount || 0) - (a.viewCount || 0);
+          case 'alphabetical':
+              return a.title.localeCompare(b.title, 'ar');
+          default:
+              return 0;
+      }
+  });
 
   return (
     <div>
       <h1 className="text-4xl font-bold mb-8 font-headline">كل المحاضرات</h1>
+      {/* The filtering logic will now work via URL params and server-side rendering */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <Select onValueChange={(value) => handleFilter('series', value)}>
-          <SelectTrigger className="md:w-1/3">
-            <SelectValue placeholder="فلترة حسب السلسلة" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل السلاسل</SelectItem>
-            {allSeries.map(s => <SelectItem key={s.slug} value={s.slug}>{s.title}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select onValueChange={(value) => handleFilter('topic', value)}>
-          <SelectTrigger className="md:w-1/3">
-            <SelectValue placeholder="فلترة حسب الموضوع" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل المواضيع</SelectItem>
-            {allTopics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select defaultValue="newest" onValueChange={handleSort}>
-          <SelectTrigger className="md:w-1/3">
-            <SelectValue placeholder="فرز حسب" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">فرز حسب: الأحدث</SelectItem>
-            <SelectItem value="oldest">الأقدم</SelectItem>
-            <SelectItem value="most_popular">الأكثر استماعاً</SelectItem>
-            <SelectItem value="alphabetical">أبجدي (أ-ي)</SelectItem>
-          </SelectContent>
-        </Select>
+        <form className="contents">
+            <Select name="series" defaultValue={seriesFilter || "all"}>
+              <SelectTrigger className="md:w-1/3">
+                <SelectValue placeholder="فلترة حسب السلسلة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل السلاسل</SelectItem>
+                {allSeries.map(s => <SelectItem key={s.slug} value={s.slug}>{s.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select name="topic" defaultValue={topicFilter || "all"}>
+              <SelectTrigger className="md:w-1/3">
+                <SelectValue placeholder="فلترة حسب الموضوع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل المواضيع</SelectItem>
+                {allTopics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select name="sort" defaultValue={sortOrder}>
+              <SelectTrigger className="md:w-1/3">
+                <SelectValue placeholder="فرز حسب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">فرز حسب: الأحدث</SelectItem>
+                <SelectItem value="oldest">الأقدم</SelectItem>
+                <SelectItem value="most_popular">الأكثر استماعاً</SelectItem>
+                <SelectItem value="alphabetical">أبجدي (أ-ي)</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* A submit button can be added if we don't want to rely on JS to submit the form */}
+        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
