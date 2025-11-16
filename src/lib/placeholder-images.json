@@ -1,3 +1,100 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "series-aqidah",
+      "description": "Cover for the Aqidah (Creed) series",
+      "imageUrl": "https://images.unsplash.com/photo-1531165424588-80b93de6f807?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxpc2xhbWljJTIwcGF0dGVybnxlbnwwfHx8fDE3NjMzMDU0OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "islamic pattern"
+    },
+    {
+      "id": "series-seerah",
+      "description": "Cover for the Seerah (Prophetic Biography) series",
+      "imageUrl": "https://images.unsplash.com/photo-1760215973363-a98c90517c43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhbmNpZW50JTIwbWFudXNjcmlwdHxlbnwwfHx8fDE3NjMzMDc0NTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ancient manuscript"
+    },
+    {
+      "id": "series-fiqh",
+      "description": "Cover for the Fiqh (Jurisprudence) series",
+      "imageUrl": "https://images.unsplash.com/photo-1608688243802-c296927ea4d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwcmF5ZXIlMjBiZWFkc3xlbnwwfHx8fDE3NjMyMTU5MjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "prayer beads"
+    },
+    {
+      "id": "series-tafsir",
+      "description": "Cover for the Tafsir (Quran Exegesis) series",
+      "imageUrl": "https://images.unsplash.com/photo-1646205037017-c95da70fe001?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8b3BlbiUyMHF1cmFufGVufDB8fHx8MTc2MzMwNzQ0OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "open quran"
+    },
+    {
+      "id": "series-hadith",
+      "description": "Cover for the Hadith series",
+      "imageUrl": "https://images.unsplash.com/photo-1710637305770-fd299797d3d6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzY3JvbGxzJTIwYm9va3N8ZW58MHx8fHwxNzYzMzA3NDQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "scrolls books"
+    },
+    {
+      "id": "lecture-thumbnail-1",
+      "description": "Generic lecture thumbnail 1",
+      "imageUrl": "https://images.unsplash.com/photo-1582574736964-02de9666c77f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtb3NxdWUlMjBpbnRlcmlvcnxlbnwwfHx8fDE3NjMyOTQyMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mosque interior"
+    },
+    {
+      "id": "lecture-thumbnail-2",
+      "description": "Generic lecture thumbnail 2",
+      "imageUrl": "https://images.unsplash.com/photo-1718818553442-44ba8baa6367?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjYWxsaWdyYXBoeSUyMGFydHxlbnwwfHx8fDE3NjMzMDc0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "calligraphy art"
+    },
+    {
+      "id": "lecture-thumbnail-3",
+      "description": "Generic lecture thumbnail 3",
+      "imageUrl": "https://images.unsplash.com/photo-1672936608998-a7a74344ac5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsYW50ZXJuJTIwbGlnaHR8ZW58MHx8fHwxNzYzMzA3NDQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lantern light"
+    },
+    {
+      "id": "lecture-thumbnail-4",
+      "description": "Generic lecture thumbnail 4",
+      "imageUrl": "https://images.unsplash.com/photo-1613109526778-27605f1f27d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxkZXNlcnQlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzYzMjE1NjIxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desert landscape"
+    },
+    {
+      "id": "related-lecture-1",
+      "description": "Related lecture image 1",
+      "imageUrl": "https://images.unsplash.com/photo-1555169048-ee590a06ab39?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxpc2xhbWljJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc2MzI0MjIzNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "islamic architecture"
+    },
+    {
+      "id": "related-lecture-2",
+      "description": "Related lecture image 2",
+      "imageUrl": "https://images.unsplash.com/photo-1760006782177-7f05cce886bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzdHVkeSUyMHNlc3Npb258ZW58MHx8fHwxNzYzMzA3NDQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "study session"
+    },
+    {
+      "id": "related-lecture-3",
+      "description": "Related lecture image 3",
+      "imageUrl": "https://images.unsplash.com/photo-1519992599773-1e1d4029929d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb21wYXNzJTIwbWFwfGVufDB8fHx8MTc2MzMwNzQ0OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "compass map"
+    },
+    {
+      "id": "book-cover-1",
+      "description": "Book cover for 'Sharh Al-Usul Al-Thalatha'",
+      "imageUrl": "https://images.unsplash.com/photo-1595023282083-5c0d7779c88c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx2aW50YWdlJTIwYm9va3xlbnwwfHx8fDE3NjMyNzEwMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage book"
+    },
+    {
+      "id": "book-cover-2",
+      "description": "Book cover for 'Kitab Al-Tawhid'",
+      "imageUrl": "https://images.unsplash.com/photo-1627906733001-83569a011da2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxsZWF0aGVyLWJvdW5kJTIwYm9va3xlbnwwfHx8fDE3NjMzMDc0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "leather-bound book"
+    },
+    {
+      "id": "book-cover-3",
+      "description": "Book cover for 'Forty Hadith'",
+      "imageUrl": "https://images.unsplash.com/photo-1587303988571-c5563c0bceab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjYWxsaWdyYXBoeSUyMHBlbnxlbnwwfHx8fDE3NjMyNjMzNzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "calligraphy pen"
+    },
+    {
+      "id": "series-detail",
+      "description": "Detailed image for a series page",
+      "imageUrl": "https://images.unsplash.com/photo-1620285716602-c697e120c0c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxnZW9tZXRyaWMlMjBwYXR0ZXJufGVufDB8fHx8MTc2MzI4NjMxNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "geometric pattern"
+    }
+  ]
 }
