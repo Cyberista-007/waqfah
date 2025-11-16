@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStatus } from "react-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -39,11 +41,15 @@ export default function AdminLoginPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">تسجيل دخول المدير</CardTitle>
           <CardDescription>
-            اضغط على الزر أدناه للوصول إلى لوحة التحكم.
+            أدخل كلمة المرور للوصول إلى لوحة التحكم.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">كلمة المرور</Label>
+              <Input id="password" name="password" type="password" required />
+            </div>
              <SubmitButton />
           </form>
         </CardContent>
