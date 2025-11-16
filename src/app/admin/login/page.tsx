@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useActionState } from "react";
 import { handleAdminLogin } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
 function SubmitButton() {
@@ -20,7 +20,7 @@ function SubmitButton() {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [state, formAction] = useFormState(handleAdminLogin, null);
+  const [state, formAction] = useActionState(handleAdminLogin, null);
   const { toast } = useToast();
 
   useEffect(() => {
