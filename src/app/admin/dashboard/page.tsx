@@ -8,17 +8,9 @@ import { Book, Clapperboard, MessageSquare, ListVideo } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
-import type { Lecture, Series, Book as BookType } from "@/lib/types"; // Renamed to avoid conflict with lucide icon
+import { collection, query, where, collectionGroup } from "firebase/firestore";
+import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
-
-const recentComments = [
-    { id: 1, user: "عبد الله محمد", text: "جزاكم الله خيراً، محاضرة قيمة جداً.", lecture: "أهمية التوحيد", status: "approved" },
-    { id: 2, user: "فاطمة علي", text: "نفع الله بكم.", lecture: "فضل العلم", status: "approved" },
-    { id: 3, user: "أحمد ياسر", text: "شرح ممتاز وواضح.", lecture: "المقدمة: العالم قبل البعثة", status: "pending" },
-    { id: 4, user: "سارة محمود", text: "هل هناك جزء ثان لهذه المحاضرة؟", lecture: "شرح نواقض الإسلام", status: "pending" },
-];
-
 
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
@@ -27,14 +19,20 @@ export default function AdminDashboardPage() {
     const seriesQuery = useMemoFirebase(() => query(collection(firestore, 'series')), [firestore]);
     const booksQuery = useMemoFirebase(() => query(collection(firestore, 'books')), [firestore]);
     
+    const recentCommentsQuery = useMemoFirebase(
+      () => query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending')), 
+      [firestore]
+    );
+
     const { data: allLectures } = useCollection<Lecture>(lecturesQuery);
     const { data: allSeries } = useCollection<Series>(seriesQuery);
     const { data: allBooks } = useCollection<BookType>(booksQuery);
+    const { data: recentComments } = useCollection<Comment>(recentCommentsQuery);
     
     const lectureCount = allLectures?.length ?? 0;
     const seriesCount = allSeries?.length ?? 0;
     const bookCount = allBooks?.length ?? 0;
-    const newCommentsCount = recentComments.filter(c => c.status === 'pending').length;
+    const newCommentsCount = recentComments?.length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -129,12 +127,12 @@ export default function AdminDashboardPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {recentComments.map(comment => (
+                        {recentComments?.slice(0, 4).map(comment => (
                             <TableRow key={comment.id}>
-                                <TableCell className="font-medium">{comment.user}</TableCell>
+                                <TableCell className="font-medium">{comment.userName}</TableCell>
                                 <TableCell className="text-muted-foreground">{comment.text}</TableCell>
                                 <TableCell className="hidden md:table-cell">
-                                    <Link href="#" className="hover:underline">{comment.lecture}</Link>
+                                    <Link href={`/lectures/${comment.lectureSlug}`} className="hover:underline">{comment.lectureTitle}</Link>
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant={comment.status === 'approved' ? 'default' : 'secondary'}>

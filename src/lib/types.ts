@@ -56,3 +56,15 @@ export type QAPair = {
   question: string;
   answer: string;
 };
+
+export type Comment = {
+    id: string;
+    lectureId: string;
+    lectureSlug: string;
+    lectureTitle: string;
+    userId: string;
+    userName: string;
+    text: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: Timestamp;
+}
