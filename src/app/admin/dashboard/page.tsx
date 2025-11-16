@@ -4,8 +4,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAllLectures } from "@/lib/data";
-import { BarChart, Book, Clapperboard, MessageSquare, Users } from "lucide-react";
+import { getAllLectures, series, books } from "@/lib/data";
+import { BarChart, Book, Clapperboard, MessageSquare, Users, BookOpenCheck, ListVideo } from "lucide-react";
 import Link from "next/link";
 import {
   ResponsiveContainer,
@@ -18,6 +18,7 @@ import {
   Line,
 } from 'recharts';
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const trafficData = [
   { name: 'قبل 6 أيام', visits: 1200, users: 800 },
@@ -29,13 +30,21 @@ const trafficData = [
   { name: 'اليوم', visits: 2400, users: 1500 },
 ];
 
+const recentComments = [
+    { id: 1, user: "عبد الله محمد", text: "جزاكم الله خيراً، محاضرة قيمة جداً.", lecture: "أهمية التوحيد", status: "approved" },
+    { id: 2, user: "فاطمة علي", text: "نفع الله بكم.", lecture: "فضل العلم", status: "approved" },
+    { id: 3, user: "أحمد ياسر", text: "شرح ممتاز وواضح.", lecture: "المقدمة: العالم قبل البعثة", status: "pending" },
+    { id: 4, user: "سارة محمود", text: "هل هناك جزء ثان لهذه المحاضرة؟", lecture: "شرح نواقض الإسلام", status: "pending" },
+];
+
+
 export default function AdminDashboardPage() {
     const allLectures = getAllLectures();
     const lectureCount = allLectures.length;
     const userCount = "1,500";
-    const newCommentsCount = 25;
-    const bookCount = 3; 
-    const seriesCount = 4;
+    const newCommentsCount = recentComments.filter(c => c.status === 'pending').length;
+    const bookCount = books.length; 
+    const seriesCount = series.length;
     const { toast } = useToast();
 
     const handleDelete = (title: string) => {
@@ -53,7 +62,10 @@ export default function AdminDashboardPage() {
             <h1 className="text-4xl font-bold font-headline">لوحة تحكم المدير</h1>
             <p className="text-muted-foreground mt-2">نظرة عامة على أداء الموقع والمحتوى.</p>
           </div>
-          <Button asChild size="lg" className="bg-primary/90 hover:bg-primary"><Link href="/admin/lectures/new">إضافة محاضرة جديدة</Link></Button>
+          <div className="flex gap-2">
+            <Button asChild size="lg"><Link href="/admin/lectures/new">إضافة محاضرة</Link></Button>
+            <Button asChild size="lg" variant="secondary"><Link href="/admin/series/new">إضافة سلسلة</Link></Button>
+          </div>
         </header>
         
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -68,16 +80,16 @@ export default function AdminDashboardPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">المستخدمون</CardTitle>
-                    <Users className="w-5 h-5 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">إجمالي السلاسل</CardTitle>
+                    <ListVideo className="w-5 h-5 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-3xl font-bold">{userCount}</p>
+                    <p className="text-3xl font-bold">{seriesCount}</p>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">الكتب</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground font-headline">إجمالي الكتب</CardTitle>
                     <Book className="w-5 h-5 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -91,6 +103,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="text-3xl font-bold">{newCommentsCount}</p>
+                     <p className="text-xs text-muted-foreground">في انتظار المراجعة</p>
                 </CardContent>
             </Card>
         </section>
@@ -115,8 +128,8 @@ export default function AdminDashboardPage() {
                                 }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="visits" name="الزيارات" stroke="hsl(var(--primary-foreground))" strokeWidth={2} />
-                            <Line type="monotone" dataKey="users" name="المستخدمون" stroke="hsl(var(--accent-foreground))" strokeWidth={2} />
+                            <Line type="monotone" dataKey="visits" name="الزيارات" stroke="hsl(var(--primary))" strokeWidth={2} />
+                            <Line type="monotone" dataKey="users" name="المستخدمون" stroke="hsl(var(--accent))" strokeWidth={2} />
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -124,47 +137,60 @@ export default function AdminDashboardPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold font-headline">إدارة المحتوى</CardTitle>
-                    <CardDescription>أدوات سريعة للتحكم بالموقع</CardDescription>
+                    <CardDescription>روابط سريعة للتحكم بالموقع</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
-                    <Button asChild size="lg" className="w-full"><Link href="/admin/series">إدارة السلاسل ({seriesCount})</Link></Button>
-                    <Button asChild size="lg" className="w-full"><Link href="/admin/books">إدارة الكتب ({bookCount})</Link></Button>
-                    <Button asChild size="lg" className="w-full"><Link href="/admin/qa">إدارة الأسئلة والأجوبة</Link></Button>
-                    <Button asChild size="lg" variant="secondary" className="w-full"><Link href="/admin/comments">مراجعة التعليقات</Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures"><span>إدارة المحاضرات</span><Clapperboard /></Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/series"><span>إدارة السلاسل</span><ListVideo /></Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/comments"><span>مراجعة التعليقات</span><MessageSquare /></Link></Button>
                 </CardContent>
             </Card>
         </section>
         
         <Card>
             <CardHeader>
-                <CardTitle className="text-2xl font-semibold font-headline">أحدث المحاضرات</CardTitle>
+                <CardTitle className="text-2xl font-semibold font-headline">أحدث التعليقات</CardTitle>
+                <CardDescription>نظرة سريعة على آخر تعليقات الزوار.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>عنوان المحاضرة</TableHead>
-                            <TableHead>السلسلة</TableHead>
-                            <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
-                            <TableHead className="text-left">إجراءات</TableHead>
+                            <TableHead>المستخدم</TableHead>
+                            <TableHead>التعليق</TableHead>
+                            <TableHead className="hidden md:table-cell">المحاضرة</TableHead>
+                            <TableHead>الحالة</TableHead>
+                            <TableHead className="text-left">إجراء</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allLectures.slice(0, 5).map(lecture => (
-                            <TableRow key={lecture.slug}>
-                                <TableCell className="font-medium">{lecture.title}</TableCell>
-                                <TableCell>{lecture.seriesTitle}</TableCell>
-                                <TableCell className="hidden md:table-cell">{new Date(lecture.createdAt).toLocaleDateString('ar-EG')}</TableCell>
+                        {recentComments.map(comment => (
+                            <TableRow key={comment.id}>
+                                <TableCell className="font-medium">{comment.user}</TableCell>
+                                <TableCell className="text-muted-foreground">{comment.text}</TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                    <Link href="#" className="hover:underline">{comment.lecture}</Link>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant={comment.status === 'approved' ? 'default' : 'secondary'}>
+                                        {comment.status === 'approved' ? 'مقبول' : 'قيد المراجعة'}
+                                    </Badge>
+                                </TableCell>
                                 <TableCell className="text-left">
-                                    <div className="flex gap-2">
-                                        <Button asChild variant="outline" size="sm"><Link href={`/admin/lectures/${lecture.slug}/edit`}>تعديل</Link></Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(lecture.title)}>حذف</Button>
-                                    </div>
+                                     <Button asChild variant="outline" size="sm">
+                                        <Link href="/admin/comments">مراجعة</Link>
+                                     </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
+                <div className="mt-4 text-center">
+                    <Button asChild variant="secondary">
+                        <Link href="/admin/comments">عرض كل التعليقات</Link>
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     </div>
