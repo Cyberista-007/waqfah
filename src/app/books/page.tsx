@@ -8,8 +8,8 @@ export const metadata = {
   title: 'الكتب والمؤلفات',
 };
 
-export default function BooksPage() {
-  const books = getAllBooks();
+export default async function BooksPage() {
+  const books = await getAllBooks();
 
   return (
     <div>
