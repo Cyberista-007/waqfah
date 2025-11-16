@@ -1,25 +1,21 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { auth } from '@/firebase/server-init'; // Assuming you have a way to check auth server-side
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
+  const sessionCookie = request.cookies.get('admin_session');
   const { pathname } = request.nextUrl;
 
-  // We are checking if the user is authenticated.
-  // For this simple case, we will check for a session cookie.
-  // In a real app, you would use a more robust method like verifying a JWT.
-  const sessionCookie = request.cookies.get('session')?.value;
-
-  if (!sessionCookie) {
-    // If no session and they are trying to access an admin page, redirect to login.
-    // We add a 'redirect_to' query param to send them back after login.
-    const loginUrl = new URL('/auth/login', request.url);
-    loginUrl.searchParams.set('redirect_to', pathname);
-    return NextResponse.redirect(loginUrl);
+  // If trying to access login page while already logged in, redirect to dashboard
+  if (sessionCookie && pathname === '/admin/login') {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
   
-  // If they are authenticated, let them proceed.
+  // If no session and trying to access any admin page (except login), redirect to login
+  if (!sessionCookie && pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    return NextResponse.redirect(new URL('/admin/login', request.url));
+  }
+
   return NextResponse.next();
 }
 
@@ -30,7 +26,6 @@ export const config = {
    * - /_next/static (static files)
    * - /_next/image (image optimization files)
    * - favicon.ico (favicon file)
-   * - The login page itself to avoid a redirect loop
    */
   matcher: ['/admin/:path*'],
 }

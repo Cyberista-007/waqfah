@@ -5,15 +5,12 @@ import { ReactNode } from 'react';
 import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { logout } from '@/lib/actions';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
-  const auth = useAuth();
-  const router = useRouter();
 
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
@@ -22,14 +19,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/books', label: 'الكتب', icon: Book },
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
   ];
-
-  const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-      router.push('/auth/login');
-    }
-  };
-
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -45,9 +34,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               {navItems.map(item => {
                   const Icon = item.icon;
-                  // Check if the current path starts with the nav item's href
-                  const isActive = pathname.startsWith(item.href) && (item.href !== '/admin/dashboard' || pathname === item.href);
-                   const isDashboardActive = pathname === '/admin/dashboard';
+                  const isActive = pathname.startsWith(item.href);
                   
                   return (
                     <Link
@@ -55,9 +42,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                         href={item.href}
                         className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                           (item.href === '/admin/dashboard' && isDashboardActive) || (item.href !== '/admin/dashboard' && isActive)
-                            ? "bg-primary/10 text-primary"
-                            : ""
+                           isActive ? "bg-primary/10 text-primary" : ""
                         )}
                     >
                         <Icon className="h-4 w-4" />
@@ -68,10 +53,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </nav>
           </div>
            <div className="mt-auto p-4 space-y-2">
-            <Button size="sm" variant="outline" className="w-full" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              تسجيل الخروج
-            </Button>
+            <form action={logout}>
+              <Button size="sm" variant="outline" className="w-full">
+                <LogOut className="mr-2 h-4 w-4" />
+                تسجيل الخروج
+              </Button>
+            </form>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>
@@ -79,6 +66,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
       <div className="flex flex-col">
+         {/* This is a simplified header for mobile. 
+             A full implementation would have a Sheet component for the nav.
+          */}
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
+            <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
+                <Users className="h-6 w-6" />
+                <span className="">لوحة التحكم</span>
+            </Link>
+        </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20">
           {children}
         </main>
