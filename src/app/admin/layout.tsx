@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, BookOpenCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
