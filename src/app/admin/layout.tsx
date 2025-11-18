@@ -7,39 +7,27 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user && firestore) {
-        try {
-          const usersQuery = query(collection(firestore, 'users'), orderBy('createdAt', 'asc'), limit(1));
-          const querySnapshot = await getDocs(usersQuery);
-          if (!querySnapshot.empty) {
-            const firstUser = querySnapshot.docs[0];
-            if (firstUser.id === user.uid) {
-              setIsAdmin(true);
-            } else {
-              setIsAdmin(false);
-            }
-          }
-        } catch (error) {
-          console.error("Error checking admin status:", error);
+    const checkAdminStatus = () => {
+      if (user) {
+        // Check if the logged-in user's email is the admin email
+        if (user.email === 'abdoreda6249@gmail.com') {
+          setIsAdmin(true);
+        } else {
           setIsAdmin(false);
-        } finally {
-            setIsCheckingAdmin(false);
         }
+        setIsCheckingAdmin(false);
       } else if (!isUserLoading) {
         // If there's no user and we are not loading, they are definitely not an admin.
         setIsCheckingAdmin(false);
@@ -48,7 +36,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     };
 
     checkAdminStatus();
-  }, [user, firestore, isUserLoading]);
+  }, [user, isUserLoading]);
 
 
   const handleLogout = async () => {
