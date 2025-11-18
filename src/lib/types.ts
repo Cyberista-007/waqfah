@@ -117,4 +117,33 @@ export type Playlist = {
     userId: string;
 }
 
+export type Topic = {
+    id: string;
+    name: string;
+    description: string;
+    imageId: string;
+    lectureIds: string[];
+    seriesIds: string[];
+};
+
+export type Challenge = {
+    id: string;
+    title: string;
+    description: string;
+    lectureIds: string[];
+    seriesId?: string;
+    startDate: Timestamp;
+    endDate: Timestamp;
+    isActive: boolean;
+};
+
+export type LectureClip = {
+    id: string;
+    lectureId: string;
+    userId: string; // Creator
+    title: string;
+    startTime: number; // in seconds
+    endTime: number; // in seconds
+    createdAt: Timestamp;
+};
     

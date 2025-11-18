@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -15,6 +16,7 @@ import { collection, query, orderBy } from "firebase/firestore";
 import type { Lecture, Series } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo } from "react";
+import { Dices } from "lucide-react";
 
 export default function LecturesListPage() {
   const router = useRouter();
@@ -76,6 +78,15 @@ export default function LecturesListPage() {
 
   }, [allLectures, seriesFilter, sortOrder]);
 
+  const pickRandomLecture = () => {
+    if (!filteredLectures || filteredLectures.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * filteredLectures.length);
+    const randomLecture = filteredLectures[randomIndex];
+    if (randomLecture) {
+      router.push(`/lectures/${randomLecture.slug}`);
+    }
+  }
+
 
   if (lecturesLoading || seriesLoading) {
     return <HomePageSkeleton />;
@@ -83,7 +94,14 @@ export default function LecturesListPage() {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-8 font-headline">كل المحاضرات</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold font-headline">كل المحاضرات</h1>
+        <Button onClick={pickRandomLecture} variant="outline" size="lg" className="shrink-0">
+          <Dices className="me-2" />
+          اختر لي محاضرة
+        </Button>
+      </div>
+
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <Select onValueChange={(value) => handleFilterChange("series", value)} defaultValue={seriesFilter || "all"}>
           <SelectTrigger className="md:w-1/2">

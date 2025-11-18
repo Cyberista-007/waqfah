@@ -13,14 +13,17 @@ import { getPlaceholderImage } from '@/lib/images';
 import { LectureCard } from '@/components/lecture-card';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import type { Series, Lecture } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { RecommendedLectures } from '@/components/recommended-lectures';
+
 
 export default function Home() {
   const router = useRouter();
   const firestore = useFirestore();
+  const { user } = useUser();
 
   const latestSeriesQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'series'), orderBy('createdAt', 'desc'), limit(3)) : null),
@@ -76,6 +79,8 @@ export default function Home() {
       </section>
 
       <div className="container mx-auto px-4 sm:px-6 py-8 space-y-16">
+        {user && <RecommendedLectures />}
+
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث السلاسل</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

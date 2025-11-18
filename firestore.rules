@@ -56,6 +56,16 @@ service cloud.firestore {
       allow get, list: if true;
       allow write: if isSignedIn(); // Admin-only in production
     }
+    
+    match /topics/{topicId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only
+    }
+    
+    match /challenges/{challengeId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only
+    }
 
 
     // =====================================================================
@@ -123,10 +133,16 @@ service cloud.firestore {
       // The original author can delete their comment if it's 'pending' or 'rejected'.
       allow delete: if isResourceOwner() && (resource.data.status == 'pending' || resource.data.status == 'rejected');
     }
+    
+    match /lectures/{lectureId}/clips/{clipId} {
+      allow get, list: if true;
+      allow create: if isCreatingOwnResource(request.resource.data.userId);
+      allow delete: if isResourceOwner();
+    }
 
     // =====================================================================
     // Admin-Only Collection Group Queries
-    // =================================e====================================
+    // =====================================================================
     
     // Allows admins to query the 'comments' collection group across all lectures
     // to see pending/rejected comments.
@@ -135,5 +151,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
