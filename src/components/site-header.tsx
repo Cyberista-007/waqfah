@@ -55,20 +55,12 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const { checkAdminPassword } = useAdminAuth();
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
         router.push('/');
         router.refresh();
-    }
-  }
-
-  const handleAdminClick = async () => {
-    const isNowAdmin = await checkAdminPassword();
-    if (isNowAdmin) {
-      router.push('/admin');
     }
   }
 
@@ -110,11 +102,6 @@ export function SiteHeader() {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-            {user && (
-                 <Button onClick={handleAdminClick} variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                    <LayoutDashboard className="h-5 w-5" />
-                 </Button>
-            )}
         </div>
 
         <div className="hidden md:flex items-center gap-2">
@@ -130,26 +117,33 @@ export function SiteHeader() {
           {isUserLoading ? (
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                       <Avatar>
-                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
-                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                       </Avatar>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background border-border">
-                    <DropdownMenuItem asChild>
-                        <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="me-2 h-4 w-4" />
-                        تسجيل الخروج
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                  <Link href="/admin">
+                    <LayoutDashboard className="h-5 w-5" />
+                  </Link>
+              </Button>
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                        <Avatar>
+                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
+                          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-background border-border">
+                      <DropdownMenuItem asChild>
+                          <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                          <LogOut className="me-2 h-4 w-4" />
+                          تسجيل الخروج
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
              <Button asChild>
               <Link href="/auth/login">
