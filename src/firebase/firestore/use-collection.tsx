@@ -60,8 +60,9 @@ export function useCollection<T = any>(
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
 
+  // isLoading now defaults to true ONLY if the query is initially provided.
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   // Use a stable reference for the query across renders
