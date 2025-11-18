@@ -57,6 +57,20 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     )
   }
 
+  // Check if the logged-in user is the admin
+  if (user.displayName !== "عبدالرحمن رضا محمد") {
+      if (typeof window !== 'undefined') {
+        router.push('/');
+      }
+      return (
+        <div className="flex h-screen items-center justify-center flex-col gap-4">
+             <Loader2 className="h-16 w-16 animate-spin" />
+            <p>غير مصرح لك بالدخول. جارِ إعادة التوجيه...</p>
+        </div>
+    )
+  }
+
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <aside className="hidden border-r bg-muted/40 md:block">
