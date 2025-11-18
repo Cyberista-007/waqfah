@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Query,
   onSnapshot,
@@ -64,9 +64,12 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(true); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
+  // Use a stable reference for the query across renders
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
+    // If the query is null or undefined, it's not ready yet. 
+    // Set loading to false, clear data/errors, and wait.
     if (!stableQueryDep) {
       setData(null);
       setIsLoading(false); 
@@ -74,6 +77,7 @@ export function useCollection<T = any>(
       return; 
     }
     
+    // Query is valid, start loading and clear previous errors.
     setIsLoading(true);
     setError(null);
 
@@ -86,21 +90,23 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        let path = '';
+        // Attempt to get the path for a better error message.
+        let path = 'unknown/path';
         try {
             path =
             stableQueryDep.type === 'collection'
                 ? (stableQueryDep as CollectionReference).path
                 : (stableQueryDep as unknown as InternalQuery)._query.path.canonicalString()
         } catch (e) {
-            path = "unknown/path"
+            // Path extraction failed, use the fallback.
         }
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
-        })
+        });
         
+        // We throw the error in dev to make it visible in the Next.js overlay
         if (process.env.NODE_ENV === 'development') {
            console.error("Firestore Permission Error in useCollection:", contextualError.message);
         }
@@ -113,8 +119,11 @@ export function useCollection<T = any>(
       }
     );
 
+    // Cleanup function to unsubscribe from the listener when the component unmounts
+    // or when the query dependency changes.
     return () => unsubscribe();
-  }, [stableQueryDep]); 
+  }, [stableQueryDep]); // Effect dependencies
   
   return { data, isLoading, error };
 }
+
