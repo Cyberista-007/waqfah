@@ -184,6 +184,13 @@ export function SiteHeader() {
                             <Link href="/profile">الملف الشخصي</Link>
                         </Button>
                        </SheetClose>
+                        {user && (
+                            <SheetClose asChild>
+                                <Button asChild className="w-full justify-center" variant="secondary">
+                                    <Link href="/admin">لوحة التحكم</Link>
+                                </Button>
+                            </SheetClose>
+                        )}
                        <Button onClick={handleLogout} variant="outline" className="w-full">
                           تسجيل الخروج
                        </Button>

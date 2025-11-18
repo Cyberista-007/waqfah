@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
