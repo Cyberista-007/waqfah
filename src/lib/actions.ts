@@ -1,27 +1,13 @@
+'use server';
 
-"use server";
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
-
-const ADMIN_USERNAME = "عبدالرحمن رضا محمد";
-
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData
-) {
-  const name = formData.get('name') as string;
-  
-  if (name === ADMIN_USERNAME) {
-    cookies().set(SESSION_COOKIE_NAME, "true", { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/' });
-    redirect('/admin/dashboard');
-  }
-
-  return "اسم المستخدم غير صحيح.";
-}
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export async function logout() {
-    cookies().delete(SESSION_COOKIE_NAME);
-    redirect('/admin/login');
+  // This function is kept for the admin logout button, but it will be adapted
+  // In a real Firebase app, you'd call signOut() on the client and redirect.
+  // For now, we just clear the "pretend" cookie if it exists and redirect.
+  const cookieName = 'admin_session'; // Using a local constant
+  cookies().delete(cookieName);
+  redirect('/auth/login');
 }
