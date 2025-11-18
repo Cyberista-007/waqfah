@@ -2,7 +2,7 @@
 "use client";
 
 import { ReactNode } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2, Hash, HelpCircle, CalendarClock } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,6 +33,8 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
     { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
     { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
+    { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
+    { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
   ];
   
     if (isUserLoading) {

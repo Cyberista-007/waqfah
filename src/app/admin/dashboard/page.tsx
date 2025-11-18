@@ -1,17 +1,17 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock } from "lucide-react";
+import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
+import { format } from "date-fns";
 
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
@@ -20,6 +20,7 @@ export default function AdminDashboardPage() {
     const lecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
     const seriesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'series')) : null), [firestore]);
     const booksQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
+    const popularLecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('viewCount', 'desc'), limit(5)) : null), [firestore]);
     
     // This query is now safe because useCollection will wait for `user` and `firestore` to be ready.
     const recentCommentsQuery = useMemoFirebase(
@@ -31,8 +32,9 @@ export default function AdminDashboardPage() {
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
     const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
     const { data: recentComments, isLoading: commentsLoading } = useCollection<Comment>(recentCommentsQuery);
+    const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>(popularLecturesQuery);
     
-    const isLoading = lecturesLoading || seriesLoading || booksLoading || commentsLoading;
+    const isLoading = lecturesLoading || seriesLoading || booksLoading || commentsLoading || popularLecturesLoading;
 
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
       <Card>
@@ -88,6 +90,46 @@ export default function AdminDashboardPage() {
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/comments"><span>مراجعة التعليقات</span><MessageSquare /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/schedule"><span>جدول الدروس</span><CalendarClock /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/qa"><span>الأسئلة والأجوبة</span><HelpCircle /></Link></Button>
+                </CardContent>
+            </Card>
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl font-semibold font-headline">أكثر المحاضرات استماعًا</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>المحاضرة</TableHead>
+                                <TableHead>الاستماعات</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {popularLecturesLoading ? (
+                                <TableRow><TableCell colSpan={2} className="text-center"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
+                            ) : popularLectures?.map(lecture => (
+                                <TableRow key={lecture.id}>
+                                    <TableCell className="font-medium">
+                                        <Link href={`/lectures/${lecture.slug}`} className="hover:underline" target="_blank">{lecture.title}</Link>
+                                    </TableCell>
+                                    <TableCell>{lecture.viewCount || 0}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl font-semibold font-headline">أدوات إدارية متقدمة</CardTitle>
+                    <CardDescription>أدوات لإدارة المحتوى والمستخدمين بكفاءة.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/users"><span>إدارة المستخدمين</span><UserCog /></Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures/import"><span>استيراد المحاضرات</span><Upload /></Link></Button>
                 </CardContent>
             </Card>
         </section>
