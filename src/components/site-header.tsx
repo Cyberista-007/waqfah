@@ -55,16 +55,6 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const { isAdmin, checkAdminPassword } = useAdminAuth();
-
-  const handleAdminClick = async () => {
-    // This function now just prompts for password.
-    // The layout will handle the redirection if the user becomes an admin.
-    const isNowAdmin = await checkAdminPassword();
-    if (isNowAdmin) {
-      router.push('/admin/dashboard');
-    }
-  };
 
   const handleLogout = async () => {
     if (auth) {
@@ -113,8 +103,10 @@ export function SiteHeader() {
                 </DropdownMenuContent>
             </DropdownMenu>
             {user && (
-                 <Button variant="ghost" size="icon" onClick={handleAdminClick} className="text-foreground/70 hover:text-primary">
-                    <LayoutDashboard className="h-5 w-5" />
+                 <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                    <Link href="/admin">
+                        <LayoutDashboard className="h-5 w-5" />
+                    </Link>
                  </Button>
             )}
         </div>

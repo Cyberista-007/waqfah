@@ -25,7 +25,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     }
     
     if (!user) {
-        router.replace('/auth/login?redirect_to=/admin/dashboard');
+        router.replace('/auth/login?redirect_to=/admin');
         return;
     }
     
@@ -33,7 +33,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         // Prompt for password if not already an admin this session
         checkAdminPassword().then(isNowAdmin => {
             if (!isNowAdmin) {
-                router.replace('/'); // Redirect if password is wrong
+                router.replace('/'); // Redirect if password is wrong or cancelled
             }
         });
     }
@@ -48,6 +48,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  // Show a loader while authentication checks are in progress, or if user is not yet an admin
   if (isUserLoading || isAdminLoading || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
