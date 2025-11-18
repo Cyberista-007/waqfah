@@ -46,6 +46,3 @@ export function initializeFirebaseOnServer() {
   const serverAuth = getAuth(serverApp);
   return { serverApp, serverFirestore, serverAuth };
 }
-
-// Export a singleton for middleware usage
-export const auth = getAuth(getAppInstance());
