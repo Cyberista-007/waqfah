@@ -11,7 +11,7 @@ type AudioPlayerContextType = {
   track: Track | null;
   isPlaying: boolean;
   audioRef: React.RefObject<HTMLAudioElement>;
-  playTrack: (track: Track) => void;
+  playTrack: (track: Track, startTime?: number) => void;
   pauseTrack: () => void;
   closePlayer: () => void;
   togglePlayPause: () => void;
@@ -24,19 +24,33 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const playTrack = (newTrack: Track) => {
+  const playTrack = (newTrack: Track, startTime: number = 0) => {
     if (track?.src !== newTrack.src) {
         setTrack(newTrack);
     }
-    setIsPlaying(true);
+    // Use a timeout to ensure the state has updated and the audio element is ready
+    setTimeout(() => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = startTime;
+            setIsPlaying(true);
+            audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        }
+    }, 50);
   };
 
   const pauseTrack = () => {
     setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
   };
   
   const togglePlayPause = () => {
-    setIsPlaying(prev => !prev);
+    if (isPlaying) {
+      pauseTrack();
+    } else if (track) {
+      playTrack(track, audioRef.current?.currentTime || 0);
+    }
   }
 
   const closePlayer = () => {

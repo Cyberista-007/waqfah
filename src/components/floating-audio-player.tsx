@@ -1,60 +1,91 @@
 
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { X, Rewind } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { cn } from "@/lib/utils";
+import { useUser, useFirestore } from "@/firebase";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export function FloatingAudioPlayer() {
   const { track, isPlaying, audioRef, closePlayer, playTrack, pauseTrack } = useAudioPlayer();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  const updateListenHistory = useCallback(() => {
+    if (!user || !firestore || !track || !audioRef.current) return;
+
+    const currentTime = audioRef.current.currentTime;
+    const duration = audioRef.current.duration;
+
+    if (currentTime > 0 && duration > 0) {
+      const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
+      setDoc(historyRef, {
+        lectureId: track.id,
+        position: currentTime,
+        duration: duration,
+        lastListened: Timestamp.now(),
+      }, { merge: true }).catch(error => {
+        // This is a background task, so we don't need to show a UI error
+        console.error("Failed to update listen history:", error);
+      });
+    }
+  }, [user, firestore, track, audioRef]);
+
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
 
-    if (isPlaying) {
-      audioElement.play().catch(e => console.error("Error playing audio:", e));
-    } else {
-      audioElement.pause();
-    }
-  }, [isPlaying, track, audioRef]);
-  
-  useEffect(() => {
-    const audioElement = audioRef.current;
-    if (!audioElement || !track) return;
-
     const handlePlay = () => {
-        if (!isPlaying) playTrack(track);
+      if (!isPlaying) playTrack(track!, audioElement.currentTime);
+      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+      updateIntervalRef.current = setInterval(updateListenHistory, 10000); // Update every 10 seconds
     };
+    
     const handlePause = () => {
-        if (isPlaying) pauseTrack();
+      if (isPlaying) pauseTrack();
+      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+      updateListenHistory(); // Final update on pause
+    };
+    
+    const handleEnded = () => {
+      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+      updateListenHistory();
+      closePlayer();
     };
 
     audioElement.addEventListener('play', handlePlay);
     audioElement.addEventListener('pause', handlePause);
+    audioElement.addEventListener('ended', handleEnded);
 
-    // If the track changes, load the new source
-    audioElement.src = track.src;
-    audioElement.load();
-    if(isPlaying) {
-      audioElement.play();
+    if (track) {
+      audioElement.src = track.src;
+      audioElement.load();
+      if (isPlaying) {
+        audioElement.play().catch(e => console.error("Error playing audio:", e));
+      }
     }
 
-
     return () => {
-        audioElement.removeEventListener('play', handlePlay);
-        audioElement.removeEventListener('pause', handlePause);
+      audioElement.removeEventListener('play', handlePlay);
+      audioElement.removeEventListener('pause', handlePause);
+      audioElement.removeEventListener('ended', handleEnded);
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+      }
     };
-}, [audioRef, isPlaying, playTrack, pauseTrack, track]);
-
+  }, [audioRef, isPlaying, playTrack, pauseTrack, track, updateListenHistory, closePlayer]);
 
   const handleRewind = () => {
     if (audioRef.current) {
@@ -67,7 +98,7 @@ export function FloatingAudioPlayer() {
       audioRef.current.playbackRate = parseFloat(value);
     }
   };
-  
+
   if (!isMounted || !track) {
     return null;
   }
