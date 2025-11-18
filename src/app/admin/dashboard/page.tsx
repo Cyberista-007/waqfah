@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
     
     // This query is now safe because useCollection will wait for `user` and `firestore` to be ready.
     const recentCommentsQuery = useMemoFirebase(
-      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc'), limit(5)) : null), 
+      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
       [firestore, user]
     );
 
@@ -190,5 +190,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
