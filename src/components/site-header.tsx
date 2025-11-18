@@ -55,7 +55,6 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const { isAdmin } = useAdminActivation();
 
   const handleLogout = async () => {
     if (auth) {
@@ -122,14 +121,12 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <>
-              {isAdmin && (
-                <Link href="/admin">
-                  <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                    <LayoutDashboard className="h-5 w-5" />
-                    <span className="sr-only">لوحة التحكم</span>
-                  </Button>
-                </Link>
-              )}
+              <Link href="/admin">
+                <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                  <LayoutDashboard className="h-5 w-5" />
+                  <span className="sr-only">لوحة التحكم</span>
+                </Button>
+              </Link>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -194,13 +191,11 @@ export function SiteHeader() {
                             <Link href="/profile">الملف الشخصي</Link>
                         </Button>
                        </SheetClose>
-                        {isAdmin && (
-                            <SheetClose asChild>
-                                <Button asChild className="w-full justify-center" variant="secondary">
-                                    <Link href="/admin">لوحة التحكم</Link>
-                                </Button>
-                            </SheetClose>
-                        )}
+                        <SheetClose asChild>
+                            <Button asChild className="w-full justify-center" variant="secondary">
+                                <Link href="/admin">لوحة التحكم</Link>
+                            </Button>
+                        </SheetClose>
                        <Button onClick={handleLogout} variant="outline" className="w-full">
                           تسجيل الخروج
                        </Button>

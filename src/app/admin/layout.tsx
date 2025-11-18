@@ -38,7 +38,8 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
   }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
 
   // While we are waiting for user or admin status, show a loader.
-  if (isUserLoading || isAdminLoading || !isAdmin || !user) {
+  // OR if the user is logged in but the check hasn't confirmed them as admin yet.
+  if (isUserLoading || isAdminLoading || (user && !isAdmin)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />

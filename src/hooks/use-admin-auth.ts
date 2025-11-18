@@ -31,28 +31,30 @@ export function useAdminActivation() {
     }
     // If already admin, no need to ask again.
     if (isAdmin) {
+      setIsLoading(false);
       return;
     }
 
     const password = prompt("يرجى إدخال كلمة مرور المدير للوصول:");
+    
     if (password === 'abdoR3d@') {
       sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
       setIsAdmin(true);
       toast({ title: "تم تفعيل وضع المدير بنجاح!" });
-      // We don't need to router.push here as the guard will re-render and show the content.
-    } else if (password !== null) { // User entered something but it was wrong
-      toast({ variant: 'destructive', title: "كلمة المرور غير صحيحة." });
+    } else {
+      if (password !== null) { // User entered something but it was wrong
+        toast({ variant: 'destructive', title: "كلمة المرور غير صحيحة." });
+      }
+      // If user cancelled or entered wrong password, redirect them away.
       router.replace('/');
-    } else { // User cancelled the prompt
-       router.replace('/');
     }
+    setIsLoading(false);
   }, [user, isAdmin, router, toast]);
 
   const deActivateAdmin = useCallback(() => {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
     setIsAdmin(false);
-    toast({ title: "تم تعطيل وضع المدير." });
-  }, [toast]);
+  }, []);
 
   return { isAdmin, isLoading, checkAdminPassword, deActivateAdmin };
 }
