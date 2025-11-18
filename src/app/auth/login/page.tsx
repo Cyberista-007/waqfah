@@ -15,8 +15,19 @@ import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
+  const glassmorphismStyle = {
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+  };
+
   return (
-    <Button type="submit" className="w-full" disabled={isLoading}>
+    <Button
+      type="submit"
+      className="w-full text-white hover:bg-white/20"
+      style={glassmorphismStyle}
+      disabled={isLoading}
+    >
       {isLoading ? <Loader2 className="animate-spin" /> : isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
     </Button>
   );
@@ -70,13 +81,11 @@ export default function LoginPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
             
-            // Critical Fix: Update profile display name *before* creating the Firestore document.
             await updateProfile(newUser, { displayName: name });
             
             const userRef = doc(firestore, "users", newUser.uid);
-            // Create the user profile document in Firestore with the correct name.
             await setDoc(userRef, {
-              name: name, // Use the name from the form
+              name: name,
               email: newUser.email,
               createdAt: Timestamp.now(),
             }, { merge: true });
@@ -113,10 +122,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center py-12">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-transparent border-white/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">
-            {isLoginMode ? "تسجيل الدخول" : "حساب جديد"}
+            {isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
           </CardTitle>
           <CardDescription>
             {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "املأ الحقول لإنشاء حساب جديد."}
@@ -127,22 +136,22 @@ export default function LoginPage() {
             {!isLoginMode && (
               <div className="space-y-2">
                 <Label htmlFor="name">الاسم</Label>
-                <Input id="name" name="name" type="text" required />
+                <Input id="name" name="name" type="text" required className="bg-white/10 border-white/20 focus:bg-white/20" />
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" name="email" type="email" required />
+              <Input id="email" name="email" type="email" required className="bg-white/10 border-white/20 focus:bg-white/20" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input id="password" name="password" type="password" required className="bg-white/10 border-white/20 focus:bg-white/20" />
             </div>
              <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
           </form>
            <div className="mt-4 text-center text-sm">
                 {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
-                <Button variant="link" className="p-0 h-auto" onClick={() => setIsLoginMode(!isLoginMode)}>
+                <Button variant="link" className="p-0 h-auto text-white/80 hover:text-white" onClick={() => setIsLoginMode(!isLoginMode)}>
                     {isLoginMode ? "أنشئ حساباً جديداً" : "سجل الدخول"}
                 </Button>
             </div>

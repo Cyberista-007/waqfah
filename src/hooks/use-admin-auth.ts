@@ -1,24 +1,22 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './use-toast';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 
 const SESSION_STORAGE_KEY = 'isAdminAuthenticated';
-const REQUIRED_CLICKS = 10;
-const TIME_LIMIT_MS = 5000;
 
 export function useAdminActivation() {
+  const { user, isUserLoading } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const router = useRouter();
-
-  const clickCount = useRef(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
+    // Check session storage on component mount
     const sessionValue = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (sessionValue === 'true') {
       setIsAdmin(true);
@@ -26,38 +24,35 @@ export function useAdminActivation() {
     setIsLoading(false);
   }, []);
 
-  const handleAdminActivationClick = useCallback(() => {
-    if (isAdmin) return;
-
-    if (timerRef.current === null) {
-      clickCount.current = 1; 
-      timerRef.current = setTimeout(() => {
-        clickCount.current = 0;
-        timerRef.current = null;
-      }, TIME_LIMIT_MS);
-    } else {
-      clickCount.current += 1;
+  const checkAdminPassword = useCallback(() => {
+    // If user is not logged in, do nothing. Let the guard handle redirection.
+    if (!user) {
+        return;
+    }
+    // If already admin, no need to ask again.
+    if (isAdmin) {
+      return;
     }
 
-    if (clickCount.current >= REQUIRED_CLICKS) {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      clickCount.current = 0;
-      
+    const password = prompt("يرجى إدخال كلمة مرور المدير للوصول:");
+    if (password === 'abdoR3d@') {
       sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
       setIsAdmin(true);
-      toast({ title: "تم تفعيل وضع المدير!", description: "أهلاً بك. يمكنك الآن الوصول إلى لوحة التحكم." });
-      
-      router.push('/admin');
+      toast({ title: "تم تفعيل وضع المدير بنجاح!" });
+      // We don't need to router.push here as the guard will re-render and show the content.
+    } else if (password !== null) { // User entered something but it was wrong
+      toast({ variant: 'destructive', title: "كلمة المرور غير صحيحة." });
+      router.replace('/');
+    } else { // User cancelled the prompt
+       router.replace('/');
     }
-  }, [isAdmin, toast, router]);
+  }, [user, isAdmin, router, toast]);
 
-  const deActivateAdmin = () => {
+  const deActivateAdmin = useCallback(() => {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
     setIsAdmin(false);
-  }
+    toast({ title: "تم تعطيل وضع المدير." });
+  }, [toast]);
 
-  return { isAdmin, isLoading, handleAdminActivationClick, deActivateAdmin };
+  return { isAdmin, isLoading, checkAdminPassword, deActivateAdmin };
 }

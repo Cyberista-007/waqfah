@@ -55,7 +55,7 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const { handleAdminActivationClick } = useAdminActivation();
+  const { isAdmin } = useAdminActivation();
 
   const handleLogout = async () => {
     if (auth) {
@@ -76,12 +76,12 @@ export function SiteHeader() {
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
     )}>
       <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-        <div 
-          onClick={handleAdminActivationClick} 
+        <Link 
+          href="/"
           className="text-xl font-bold font-headline hover:text-primary transition-colors cursor-pointer"
         >
             موقع أمجد سمير
-        </div>
+        </Link>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-6">
           {mainNavItems.map((item) => (
@@ -122,6 +122,14 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <>
+              {isAdmin && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="sr-only">لوحة التحكم</span>
+                  </Button>
+                </Link>
+              )}
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -134,9 +142,6 @@ export function SiteHeader() {
                   <DropdownMenuContent align="end" className="bg-background border-border">
                       <DropdownMenuItem asChild>
                           <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                          <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
@@ -167,12 +172,12 @@ export function SiteHeader() {
             <SheetContent side="right" className="bg-background w-[280px] p-6">
               <div className="flex flex-col space-y-4">
               <SheetClose asChild>
-                <div 
-                  onClick={handleAdminActivationClick} 
+                <Link 
+                  href="/"
                   className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4 cursor-pointer"
                 >
                     موقع أمجد سمير
-                </div>
+                </Link>
               </SheetClose>
                 {[...mainNavItems, ...moreNavItems].map((item) => (
                   <SheetClose asChild key={item.label}>
@@ -189,7 +194,7 @@ export function SiteHeader() {
                             <Link href="/profile">الملف الشخصي</Link>
                         </Button>
                        </SheetClose>
-                        {user && (
+                        {isAdmin && (
                             <SheetClose asChild>
                                 <Button asChild className="w-full justify-center" variant="secondary">
                                     <Link href="/admin">لوحة التحكم</Link>

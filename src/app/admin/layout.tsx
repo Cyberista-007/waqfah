@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ReactNode, useEffect } from 'react';
@@ -15,29 +16,28 @@ import { useAdminActivation } from '@/hooks/use-admin-auth';
 // This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isLoading: isAdminLoading } = useAdminActivation();
+  const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminActivation();
   const router = useRouter();
 
   useEffect(() => {
-    // Wait until both user and admin status are resolved
+    // If we're still loading user or admin status, don't do anything yet.
     if (isUserLoading || isAdminLoading) {
       return;
     }
 
-    // If there's no user, redirect to the login page.
+    // 1. If there's no user, redirect to the main login page.
     if (!user) {
       router.replace('/auth/login?redirect_to=/admin');
       return;
     }
 
-    // If the user is logged in, but not an admin, redirect to home page.
-    if (!isAdmin) {
-      router.replace('/');
-      return;
+    // 2. If the user is logged in, but not an admin, check the password.
+    if (user && !isAdmin) {
+      checkAdminPassword();
     }
-  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
 
-  // While we are waiting for user or admin status, or if checks fail, show a loader.
+  // While we are waiting for user or admin status, show a loader.
   if (isUserLoading || isAdminLoading || !isAdmin || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -46,7 +46,7 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
     );
   }
   
-  // If all checks pass, render the admin layout.
+  // If all checks pass (user exists and is an admin), render the admin layout.
   return <>{children}</>;
 }
 
@@ -59,6 +59,8 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   
   const handleLogout = async () => {
     if (user) {
+        // Since useUser hook gets user from onAuthStateChanged,
+        // we just need to sign out, and the user state will update automatically.
         await signOut(user.auth);
         // Clear the admin session storage as well
         deActivateAdmin();
