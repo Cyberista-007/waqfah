@@ -19,7 +19,6 @@ export function useAdminActivation() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Check session storage on initial client-side load
     const sessionValue = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (sessionValue === 'true') {
       setIsAdmin(true);
@@ -28,26 +27,18 @@ export function useAdminActivation() {
   }, []);
 
   const handleAdminActivationClick = useCallback(() => {
-    // If already admin, do nothing
     if (isAdmin) return;
 
-    // Reset if timer has expired
     if (timerRef.current === null) {
-      clickCount.current = 0;
-    }
-    
-    clickCount.current += 1;
-
-    // If this is the first click in a sequence, start the timer
-    if (clickCount.current === 1) {
+      clickCount.current = 1; 
       timerRef.current = setTimeout(() => {
-        // Reset after time limit
         clickCount.current = 0;
         timerRef.current = null;
       }, TIME_LIMIT_MS);
+    } else {
+      clickCount.current += 1;
     }
 
-    // Check if the required number of clicks is reached
     if (clickCount.current >= REQUIRED_CLICKS) {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -59,7 +50,6 @@ export function useAdminActivation() {
       setIsAdmin(true);
       toast({ title: "تم تفعيل وضع المدير!", description: "أهلاً بك. يمكنك الآن الوصول إلى لوحة التحكم." });
       
-      // Redirect to the admin dashboard upon successful activation
       router.push('/admin');
     }
   }, [isAdmin, toast, router]);

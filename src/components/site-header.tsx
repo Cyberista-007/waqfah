@@ -55,12 +55,11 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const { handleAdminActivationClick, deActivateAdmin } = useAdminActivation();
+  const { handleAdminActivationClick } = useAdminActivation();
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
-        deActivateAdmin(); // Also clear admin state on logout
         router.push('/');
         router.refresh();
     }
