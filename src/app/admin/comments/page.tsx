@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collectionGroup, query, orderBy, doc } from "firebase/firestore";
 import type { Comment } from "@/lib/types";
 import { Loader2 } from "lucide-react";
@@ -17,23 +17,26 @@ import { useMemo } from "react";
 export default function AdminCommentsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
+    const { user } = useUser(); // Get user to ensure queries run only when authenticated
 
     // Query for all comments across all lectures, ordered by creation date.
     // Filtering will be done on the client-side.
     const commentsQuery = useMemoFirebase(
-        () => (firestore ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
-        [firestore]
+        () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
+        [firestore, user] // Depend on user to re-run query after login
     );
     const { data: allComments, isLoading, error } = useCollection<Comment>(commentsQuery);
     
-    // Client-side filtering
+    // Client-side filtering and sorting
     const comments = useMemo(() => {
         if (!allComments) return [];
-        // Optionally sort to show pending items first
         return allComments.sort((a, b) => {
             if (a.status === 'pending' && b.status !== 'pending') return -1;
             if (a.status !== 'pending' && b.status === 'pending') return 1;
-            return 0;
+            // Add a secondary sort to keep the original order for items with the same status
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+            return dateB - dateA;
         });
     }, [allComments]);
 
@@ -64,6 +67,7 @@ export default function AdminCommentsPage() {
     return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin" /></div>
   }
 
+  // Display a more specific error if it's a permission error
   if (error) {
       return (
         <Card className="bg-destructive/10 border-destructive">
@@ -71,7 +75,7 @@ export default function AdminCommentsPage() {
                 <CardTitle>خطأ في الأذونات</CardTitle>
                 <CardDescription className="text-destructive">
                     حدث خطأ أثناء تحميل التعليقات. قد يكون السبب هو عدم وجود أذونات كافية.
-                    تأكد من أن قواعد أمان Firestore تسمح باستعلام `collectionGroup` لمجموعة `comments`.
+                    تأكد من أن قواعد أمان Firestore تسمح باستعلام `collectionGroup` لمجموعة `comments` للمستخدمين المسجلين.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -123,8 +127,8 @@ export default function AdminCommentsPage() {
                         </TableCell>
                         <TableCell className="text-left">
                             <div className="flex gap-2">
-                                <Button disabled={comment.status === 'approved'} onClick={() => handleAction(comment, 'approved')} variant="default" size="sm">قبول</Button>
-                                <Button disabled={comment.status === 'rejected'} onClick={() => handleAction(comment, 'rejected')} variant="destructive" size="sm">رفض</Button>
+                                {comment.status !== 'approved' && <Button onClick={() => handleAction(comment, 'approved')} variant="default" size="sm">قبول</Button>}
+                                {comment.status !== 'rejected' && <Button onClick={() => handleAction(comment, 'rejected')} variant="secondary" size="sm">رفض</Button>}
                                 <Button onClick={() => handleDelete(comment)} variant="link" size="sm" className="text-destructive">حذف</Button>
                             </div>
                         </TableCell>
@@ -142,3 +146,5 @@ export default function AdminCommentsPage() {
     </Card>
   );
 }
+
+    
