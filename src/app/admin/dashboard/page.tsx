@@ -11,7 +11,6 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebas
 import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
-import { format } from "date-fns";
 
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
@@ -24,7 +23,7 @@ export default function AdminDashboardPage() {
     
     // This query is now safe because useCollection will wait for `user` and `firestore` to be ready.
     const recentCommentsQuery = useMemoFirebase(
-      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
+      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc'), limit(5)) : null), 
       [firestore, user]
     );
 
@@ -191,3 +190,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
