@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useUser, useFirestore } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,7 +18,6 @@ import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { EditProfileForm } from "@/components/profile/edit-profile-form";
-import { useDocumentData } from "react-firebase-hooks/firestore";
 
 
 const getInitials = (name: string | null | undefined) => {
@@ -174,8 +173,8 @@ export default function ProfilePage() {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
 
-    const userDocRef = user && firestore ? doc(firestore, "users", user.uid) : null;
-    const [userProfile, isProfileLoading] = useDocumentData(userDocRef);
+    const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {
         if (!isUserLoading && !user) {

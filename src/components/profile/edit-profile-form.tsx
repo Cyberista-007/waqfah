@@ -14,12 +14,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useStorage } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserProfile, EditProfileForm } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { User, updateProfile } from 'firebase/auth';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 interface EditProfileFormProps {
   user: User;
@@ -31,21 +34,41 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
   const { toast } = useToast();
   const firestore = useFirestore();
   const auth = useAuth();
+  const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(user.photoURL);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+      }
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore || !auth?.currentUser) return;
+    if (!firestore || !auth?.currentUser || !storage) return;
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formData.entries()) as EditProfileForm;
+    const data = Object.fromEntries(formData.entries()) as Omit<EditProfileForm, 'photoURL'> & { name: string; bio: string };
+    
+    let newPhotoURL = user.photoURL || userProfile.photoURL || '';
 
     try {
+        // Upload image if a new one is selected
+        if (imageFile) {
+            const imageRef = ref(storage, `profile-images/${user.uid}/${imageFile.name}`);
+            const snapshot = await uploadBytes(imageRef, imageFile);
+            newPhotoURL = await getDownloadURL(snapshot.ref);
+        }
+
       // Update Firebase Auth profile
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: data.photoURL,
+        photoURL: newPhotoURL,
       });
 
       // Update Firestore document
@@ -53,7 +76,7 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
       await updateDocumentNonBlocking(userRef, {
         name: data.name,
         bio: data.bio,
-        photoURL: data.photoURL,
+        photoURL: newPhotoURL,
       });
 
       toast({
@@ -84,6 +107,23 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col items-center space-y-4">
+                <Avatar className="h-24 w-24">
+                    <AvatarImage src={imagePreview || undefined} />
+                    <AvatarFallback className="text-3xl">{user.displayName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <Label htmlFor="photoFile">تغيير الصورة</Label>
+                  <Input
+                    id="photoFile"
+                    name="photoFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={isSubmitting}
+                  />
+                </div>
+            </div>
           <div>
             <Label htmlFor="name">الاسم</Label>
             <Input
@@ -105,17 +145,7 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
               disabled={isSubmitting}
             />
           </div>
-          <div>
-            <Label htmlFor="photoURL">رابط الصورة الشخصية</Label>
-            <Input
-              id="photoURL"
-              name="photoURL"
-              type="url"
-              defaultValue={user.photoURL || userProfile?.photoURL || ''}
-              placeholder="https://example.com/image.png"
-              disabled={isSubmitting}
-            />
-          </div>
+          
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (

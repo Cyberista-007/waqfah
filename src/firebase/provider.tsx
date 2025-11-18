@@ -7,6 +7,7 @@ import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, initializeAuth, indexedDBLocalPersistence, getAuth } from 'firebase/auth';
 import { Functions, getFunctions } from 'firebase/functions';
+import { FirebaseStorage, getStorage } from 'firebase/storage';
 
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { HomePageSkeleton } from '@/components/skeletons';
@@ -20,6 +21,7 @@ export interface FirebaseContextState {
   firestore: Firestore | null;
   auth: Auth | null;
   functions: Functions | null;
+  storage: FirebaseStorage | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -40,7 +42,8 @@ const getFirebaseServices = () => {
     const auth = getAuth(app);
     const firestore = getFirestore(app);
     const functions = getFunctions(app);
-    return { app, auth, firestore, functions };
+    const storage = getStorage(app);
+    return { app, auth, firestore, functions, storage };
   }
 
   const app = initializeApp(firebaseConfig);
@@ -52,7 +55,8 @@ const getFirebaseServices = () => {
   }
   const firestore = getFirestore(app);
   const functions = getFunctions(app);
-  return { app, auth, firestore, functions };
+  const storage = getStorage(app);
+  return { app, auth, firestore, functions, storage };
 };
 
 
@@ -118,6 +122,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       firestore: services.firestore,
       auth: services.auth,
       functions: services.functions,
+      storage: services.storage,
       ...userAuthState,
     }
   }, [services, userAuthState]);
@@ -143,6 +148,7 @@ const useFirebaseContext = (): FirebaseContextState => {
             firestore: null,
             auth: null,
             functions: null,
+            storage: null,
             user: null,
             isUserLoading: true,
             userError: null
@@ -174,6 +180,13 @@ export const useFunctions = (): Functions | null => {
   const context = useContext(FirebaseContext);
   return context?.functions ?? null;
 };
+
+/** Hook to access Firebase Storage instance. */
+export const useStorage = (): FirebaseStorage | null => {
+    const context = useContext(FirebaseContext);
+    return context?.storage ?? null;
+};
+
 
 /**
  * A memoization hook that is stable across renders for Firebase objects.
