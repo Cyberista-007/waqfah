@@ -61,7 +61,7 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   // Use a stable reference for the query across renders
@@ -69,7 +69,7 @@ export function useCollection<T = any>(
 
   useEffect(() => {
     // If the query is null or undefined, it's not ready yet. 
-    // Set loading to false, clear data/errors, and wait.
+    // Set loading to false, clear data/errors, and stop.
     if (!stableQueryDep) {
       setData(null);
       setIsLoading(false); 
@@ -126,4 +126,3 @@ export function useCollection<T = any>(
   
   return { data, isLoading, error };
 }
-
