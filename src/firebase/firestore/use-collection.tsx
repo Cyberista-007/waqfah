@@ -61,7 +61,6 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  // **FIX:** Start with loading false. We are only loading if we have a valid query.
   const [isLoading, setIsLoading] = useState<boolean>(false); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -69,7 +68,7 @@ export function useCollection<T = any>(
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
-    // **CRITICAL FIX**: If the query is null or undefined, it's not ready. 
+    // CRITICAL FIX: If the query is null or undefined, it's not ready. 
     // Immediately set a clean state and exit the effect. Do not proceed to onSnapshot.
     if (!stableQueryDep) {
       setData(null);
@@ -94,13 +93,19 @@ export function useCollection<T = any>(
         // Attempt to get the path for a better error message.
         let path = 'unknown/path';
         try {
-            path =
-            stableQueryDep.type === 'collection'
-                ? (stableQueryDep as CollectionReference).path
-                : (stableQueryDep as unknown as InternalQuery)._query.path.canonicalString()
+            // This is a best-effort attempt to get a path for error logging.
+            // It might not work for all query types, especially complex ones.
+            if (stableQueryDep.type === 'collection') {
+              path = (stableQueryDep as CollectionReference).path;
+            } else if ((stableQueryDep as any)?._query?.path) {
+                // This accesses an internal property and might break in future SDK versions.
+                path = (stableQueryDep as any)._query.path.canonicalString();
+            }
         } catch (e) {
             // Path extraction failed, use the fallback.
+            console.warn("Could not determine path for Firestore query error logging.");
         }
+
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',

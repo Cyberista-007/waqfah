@@ -7,21 +7,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
 import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
 
     const lecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
     const seriesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'series')) : null), [firestore]);
     const booksQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
     
+    // This query is now safe because useCollection will wait for `user` and `firestore` to be ready.
     const recentCommentsQuery = useMemoFirebase(
-      () => (firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
-      [firestore]
+      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
+      [firestore, user]
     );
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);

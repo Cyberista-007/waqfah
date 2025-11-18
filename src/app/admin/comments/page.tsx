@@ -8,42 +8,43 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collectionGroup, query, orderBy, doc, updateDoc } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collectionGroup, query, orderBy, doc } from "firebase/firestore";
 import type { Comment } from "@/lib/types";
 import { Loader2 } from "lucide-react";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminCommentsPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
     const { toast } = useToast();
 
+    // This query is now safe because useCollection waits for firestore and user to be ready
     const commentsQuery = useMemoFirebase(
-        () => firestore ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null,
-        [firestore]
+        () => firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null,
+        [firestore, user]
     );
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
 
     const handleAction = (comment: Comment, action: 'approved' | 'rejected') => {
-        if (!firestore || !comment.id) return;
+        if (!firestore || !comment.id || !comment.lectureId) return;
         
-        // Path needs lectureId and the comment's own ID.
-        // Assuming comment documents have a lectureId field.
-        if (!comment.lectureId) {
-             toast({
-                variant: "destructive",
-                title: "خطأ في البيانات",
-                description: "لم يتم العثور على معرف المحاضرة للتعليق.",
-            });
-            return;
-        }
-
         const commentRef = doc(firestore, 'lectures', comment.lectureId, 'comments', comment.id);
 
         updateDocumentNonBlocking(commentRef, { status: action });
         
         toast({
             title: `تم ${action === 'approved' ? 'قبول' : 'رفض'} التعليق بنجاح.`,
+        });
+    }
+
+    const handleDelete = (comment: Comment) => {
+        if (!firestore || !comment.id || !comment.lectureId) return;
+        const commentRef = doc(firestore, 'lectures', comment.lectureId, 'comments', comment.id);
+        deleteDocumentNonBlocking(commentRef);
+        toast({
+            variant: "destructive",
+            title: "تم حذف التعليق بنجاح.",
         });
     }
 
@@ -99,6 +100,7 @@ export default function AdminCommentsPage() {
                             <div className="flex gap-2">
                                 <Button disabled={comment.status === 'approved'} onClick={() => handleAction(comment, 'approved')} variant="default" size="sm">قبول</Button>
                                 <Button disabled={comment.status === 'rejected'} onClick={() => handleAction(comment, 'rejected')} variant="destructive" size="sm">رفض</Button>
+                                <Button onClick={() => handleDelete(comment)} variant="link" size="sm" className="text-destructive">حذف</Button>
                             </div>
                         </TableCell>
                     </TableRow>
