@@ -1,20 +1,49 @@
 
 "use client";
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user && firestore) {
+        try {
+          const usersQuery = query(collection(firestore, 'users'), orderBy('createdAt', 'asc'), limit(1));
+          const querySnapshot = await getDocs(usersQuery);
+          if (!querySnapshot.empty) {
+            const firstUser = querySnapshot.docs[0];
+            if (firstUser.id === user.uid) {
+              setIsAdmin(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error checking admin status:", error);
+        } finally {
+            setIsCheckingAdmin(false);
+        }
+      } else if (!isUserLoading) {
+        setIsCheckingAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user, firestore, isUserLoading]);
 
 
   const handleLogout = async () => {
@@ -37,7 +66,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
   ];
   
-    if (isUserLoading) {
+    if (isUserLoading || isCheckingAdmin) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-16 w-16 animate-spin" />
@@ -57,8 +86,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  // Check if the logged-in user is the admin
-  if (user.displayName !== "عبدالرحمن رضا محمد") {
+  if (!isAdmin) {
       if (typeof window !== 'undefined') {
         router.push('/');
       }
