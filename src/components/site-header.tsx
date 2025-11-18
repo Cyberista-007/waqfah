@@ -67,6 +67,10 @@ export function SiteHeader() {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
+  
+  const ADMIN_EMAIL = 'abdoreda6249@gmail.com';
+  const isAuthorized = user?.email === ADMIN_EMAIL;
+
 
   return (
     <header className={cn(
@@ -101,6 +105,11 @@ export function SiteHeader() {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
+             {isAuthorized && (
+                 <Link href="/admin/dashboard" className="font-medium text-foreground/70 hover:text-primary transition-colors">
+                    <LayoutDashboard className="h-5 w-5" />
+                 </Link>
+            )}
         </div>
 
         <div className="hidden md:flex items-center gap-2">
@@ -129,9 +138,11 @@ export function SiteHeader() {
                     <DropdownMenuItem asChild>
                         <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                     </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
-                    </DropdownMenuItem>
+                     {isAuthorized && (
+                         <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                        </DropdownMenuItem>
+                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="me-2 h-4 w-4" />
