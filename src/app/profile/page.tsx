@@ -195,8 +195,8 @@ export default function ProfilePage() {
                     <p className="text-muted-foreground">{user.email}</p>
                     {/* Add Bio here once available */}
                     <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                        <Button variant="outline" size="sm">
-                            <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
+                        <Button variant="outline" size="sm" disabled>
+                            هذا الزر لا يعمل
                         </Button>
                         <Button onClick={onLogout} variant="secondary" size="sm">
                             <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
