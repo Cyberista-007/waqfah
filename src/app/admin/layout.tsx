@@ -1,9 +1,8 @@
 
-
 "use client";
 
 import { ReactNode } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2 } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2, Hash, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname, useRouter } from 'next/navigation';
@@ -30,7 +29,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
     { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
     { href: '/admin/books', label: 'الكتب', icon: Book },
+    { href: '/admin/topics', label: 'المواضيع', icon: Hash },
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
+    { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
   ];
   
     if (isUserLoading) {

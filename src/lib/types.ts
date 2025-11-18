@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type Lecture = {
@@ -120,6 +121,7 @@ export type Playlist = {
 export type Topic = {
     id: string;
     name: string;
+    slug: string;
     description: string;
     imageId: string;
     lectureIds: string[];
