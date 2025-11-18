@@ -17,13 +17,12 @@ import { useMemo } from "react";
 export default function AdminCommentsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const { user } = useUser(); // Get user to ensure queries run only when authenticated
+    const { user } = useUser(); 
 
-    // Query for all pending comments across all lectures, ordered by creation date.
-    // This query is now more specific to avoid permission errors for non-admins.
+    // Query for all pending comments across all lectures.
     const commentsQuery = useMemoFirebase(
         () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc')) : null), 
-        [firestore, user] // Depend on user to re-run query after login
+        [firestore, user]
     );
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
     
