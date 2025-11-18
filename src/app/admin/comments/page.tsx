@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collectionGroup, query, orderBy, doc } from "firebase/firestore";
 import type { Comment } from "@/lib/types";
 import { Loader2 } from "lucide-react";
@@ -15,13 +15,12 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase
 
 export default function AdminCommentsPage() {
     const firestore = useFirestore();
-    const { user } = useUser();
     const { toast } = useToast();
 
-    // This query is now safe because useCollection waits for firestore and user to be ready
+    // This query is now safe because useCollection waits for firestore to be ready
     const commentsQuery = useMemoFirebase(
-        () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
-        [firestore, user]
+        () => (firestore ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
+        [firestore]
     );
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
 
