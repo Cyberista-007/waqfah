@@ -78,7 +78,7 @@ export function SiteHeader() {
           href="/"
           className="text-xl font-bold font-headline hover:text-primary transition-colors cursor-pointer"
         >
-            موقع أمجد سمير
+          موقع أمجد سمير
         </Link>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-6">

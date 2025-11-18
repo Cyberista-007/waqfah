@@ -2,7 +2,7 @@
 
 'use client';
 
-import { ReactNode, useEffect, useCallback, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
