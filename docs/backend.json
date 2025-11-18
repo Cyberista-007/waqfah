@@ -183,6 +183,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["lectureId", "userId", "title", "startTime", "endTime", "createdAt"]
+    },
+    "ScheduleItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ScheduleItem",
+      "description": "An item in the lesson schedule.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "dateTime": { "type": "string", "format": "date-time" },
+        "duration": { "type": "number" },
+        "isLive": { "type": "boolean" }
+      },
+      "required": ["title", "dateTime", "isLive"]
     }
   },
   "auth": {
@@ -239,6 +252,10 @@
       {
         "path": "/lectures/{lectureId}/clips/{clipId}",
         "definition": { "schema": { "$ref": "#/entities/LectureClip" } }
+      },
+      {
+        "path": "/scheduled_lessons/{lessonId}",
+        "definition": { "schema": { "$ref": "#/entities/ScheduleItem" } }
       }
     ]
   }

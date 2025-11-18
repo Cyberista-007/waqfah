@@ -50,7 +50,8 @@ export type ScheduleItem = {
   date: string; // Consider using a Timestamp for better sorting
   time: string;
   isLive: boolean;
-  dateTime?: Timestamp;
+  dateTime: Timestamp;
+  duration?: number; // in minutes
 };
 
 export type QAPair = {

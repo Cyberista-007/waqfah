@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Rewind } from "lucide-react";
+import { X, Rewind, Timer } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Label } from "./ui/label";
 
 export function FloatingAudioPlayer() {
   const { track, isPlaying, audioRef, closePlayer, playTrack, pauseTrack } = useAudioPlayer();
@@ -18,6 +20,8 @@ export function FloatingAudioPlayer() {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [sleepTimerDuration, setSleepTimerDuration] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
@@ -42,6 +46,14 @@ export function FloatingAudioPlayer() {
       });
     }
   }, [user, firestore, track, audioRef]);
+  
+  const clearSleepTimer = () => {
+    if (sleepTimerRef.current) {
+        clearTimeout(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+        setSleepTimerDuration(0);
+    }
+  }
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -63,6 +75,7 @@ export function FloatingAudioPlayer() {
       if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
       updateListenHistory();
       closePlayer();
+      clearSleepTimer();
     };
 
     audioElement.addEventListener('play', handlePlay);
@@ -84,7 +97,9 @@ export function FloatingAudioPlayer() {
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current);
       }
+      clearSleepTimer();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioRef, isPlaying, playTrack, pauseTrack, track, updateListenHistory, closePlayer]);
 
   const handleRewind = () => {
@@ -98,6 +113,20 @@ export function FloatingAudioPlayer() {
       audioRef.current.playbackRate = parseFloat(value);
     }
   };
+  
+  const setSleepTimer = (minutes: number) => {
+    clearSleepTimer();
+    if (minutes > 0) {
+        setSleepTimerDuration(minutes);
+        sleepTimerRef.current = setTimeout(() => {
+            pauseTrack();
+            toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل بعد ${minutes} دقيقة.` });
+            clearSleepTimer();
+        }, minutes * 60 * 1000);
+        toast({ title: "مؤقت النوم", description: `سيتم إيقاف التشغيل بعد ${minutes} دقيقة.` });
+    }
+  }
+
 
   if (!isMounted || !track) {
     return null;
@@ -142,6 +171,32 @@ export function FloatingAudioPlayer() {
             </SelectContent>
           </Select>
         </div>
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn("text-white hover:bg-gray-700", sleepTimerDuration > 0 && "text-primary")}>
+                    <Timer className="w-5 h-5" />
+                    <span className="sr-only">مؤقت النوم</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 bg-gray-800 border-gray-700 text-white" align="center">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">مؤقت النوم</h4>
+                        <p className="text-sm text-muted-foreground">
+                            إيقاف التشغيل تلقائياً.
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Button onClick={() => setSleepTimer(15)} variant={sleepTimerDuration === 15 ? 'default' : 'outline'}>بعد 15 دقيقة</Button>
+                        <Button onClick={() => setSleepTimer(30)} variant={sleepTimerDuration === 30 ? 'default' : 'outline'}>بعد 30 دقيقة</Button>
+                        <Button onClick={() => setSleepTimer(60)} variant={sleepTimerDuration === 60 ? 'default' : 'outline'}>بعد 60 دقيقة</Button>
+                        {sleepTimerDuration > 0 && (
+                             <Button onClick={() => setSleepTimer(0)} variant="destructive">إلغاء المؤقت</Button>
+                        )}
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

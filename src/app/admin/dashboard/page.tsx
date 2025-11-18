@@ -5,7 +5,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle } from "lucide-react";
+import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -86,6 +86,7 @@ export default function AdminDashboardPage() {
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/topics"><span>إدارة المواضيع</span><Hash /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/comments"><span>مراجعة التعليقات</span><MessageSquare /></Link></Button>
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/schedule"><span>جدول الدروس</span><CalendarClock /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/qa"><span>الأسئلة والأجوبة</span><HelpCircle /></Link></Button>
                 </CardContent>
             </Card>
