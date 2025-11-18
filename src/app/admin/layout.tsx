@@ -17,48 +17,51 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
   const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminAuth();
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Wait until both user and admin status are resolved.
-    if (isUserLoading || isAdminLoading) {
-      return; 
+    // Don't do anything until we know if a user is logged in or not.
+    if (isUserLoading) {
+      return;
     }
 
-    // If there's no logged-in user, redirect to login.
+    // If there's no user, redirect to the login page.
     if (!user) {
       router.replace('/auth/login?redirect_to=/admin');
       return;
     }
 
-    // If the user is logged in but not yet an admin for this session,
+    // If the user is logged in, but we are still checking if they are an admin, wait.
+    if (isAdminLoading) {
+      return;
+    }
+    
+    // If the user is logged in and we know they are not an admin yet,
     // trigger the password check.
     if (!isAdmin) {
       checkAdminPassword().then(isNowAdmin => {
+        // If the password check fails (wrong password or cancelled),
+        // redirect them away from the admin area to the home page.
         if (!isNowAdmin) {
-          // If the password is wrong or cancelled, redirect to home page.
           router.replace('/');
-        } else {
-          // If password was correct, we are now an admin. Stop checking.
-          setIsChecking(false);
         }
+        // If it succeeds, the `isAdmin` state will update, and this
+        // effect will re-run. On the next run, `isAdmin` will be true,
+        // and the component will render the children.
       });
-    } else {
-      // If user is already an admin, no need to check further.
-      setIsChecking(false);
     }
+
   }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
 
-  // While any check is in progress, show the main loader.
-  if (isChecking || isUserLoading || isAdminLoading) {
+  // While we are waiting for user or admin status, show a loader.
+  if (isUserLoading || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
       </div>
     );
   }
-
-  // If all checks are passed and user is an admin, render the children (the admin layout).
+  
+  // If all checks pass, render the admin layout.
   return <>{children}</>;
 }
 
