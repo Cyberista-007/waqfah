@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
@@ -8,10 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore } from "@/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   return (
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -39,7 +40,7 @@ export default function LoginPage() {
     const name = formData.get("name") as string;
     const redirectTo = searchParams.get('redirect_to') || '/';
 
-    if (!auth) {
+    if (!auth || !firestore) {
         toast({
             variant: "destructive",
             title: "خطأ في التهيئة",
@@ -66,8 +67,17 @@ export default function LoginPage() {
             router.push(redirectTo);
         } else {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            if (userCredential.user && auth.currentUser) {
-              await updateProfile(auth.currentUser, { displayName: name });
+            const newUser = userCredential.user;
+            if (newUser) {
+              if (auth.currentUser) {
+                await updateProfile(auth.currentUser, { displayName: name });
+              }
+              const userRef = doc(firestore, "users", newUser.uid);
+              await setDoc(userRef, {
+                name: name,
+                email: newUser.email,
+                createdAt: Timestamp.now(),
+              }, { merge: true });
             }
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
             router.push(redirectTo);
