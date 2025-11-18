@@ -145,9 +145,9 @@ service cloud.firestore {
     // =====================================================================
     
     // Allows admins to query the 'comments' collection group across all lectures
-    // to see pending/rejected comments.
+    // to see pending/rejected comments. THIS IS THE CRITICAL RULE.
     match /{path=**}/comments/{commentId} {
-       allow list: if isSignedIn(); // Should be admin-only
+       allow list: if isSignedIn(); // Should be admin-only in a real app
     }
   }
 }

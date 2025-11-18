@@ -12,17 +12,31 @@ import { collectionGroup, query, orderBy, doc } from "firebase/firestore";
 import type { Comment } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useMemo } from "react";
 
 export default function AdminCommentsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    // This query is now safe because useCollection waits for firestore to be ready
+    // Query for all comments across all lectures, ordered by creation date.
+    // Filtering will be done on the client-side.
     const commentsQuery = useMemoFirebase(
         () => (firestore ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
         [firestore]
     );
-    const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
+    const { data: allComments, isLoading, error } = useCollection<Comment>(commentsQuery);
+    
+    // Client-side filtering
+    const comments = useMemo(() => {
+        if (!allComments) return [];
+        // Optionally sort to show pending items first
+        return allComments.sort((a, b) => {
+            if (a.status === 'pending' && b.status !== 'pending') return -1;
+            if (a.status !== 'pending' && b.status === 'pending') return 1;
+            return 0;
+        });
+    }, [allComments]);
+
 
     const handleAction = (comment: Comment, action: 'approved' | 'rejected') => {
         if (!firestore || !comment.id || !comment.lectureId) return;
@@ -51,7 +65,20 @@ export default function AdminCommentsPage() {
   }
 
   if (error) {
-      return <div>حدث خطأ أثناء تحميل التعليقات: {error.message}</div>
+      return (
+        <Card className="bg-destructive/10 border-destructive">
+            <CardHeader>
+                <CardTitle>خطأ في الأذونات</CardTitle>
+                <CardDescription className="text-destructive">
+                    حدث خطأ أثناء تحميل التعليقات. قد يكون السبب هو عدم وجود أذونات كافية.
+                    تأكد من أن قواعد أمان Firestore تسمح باستعلام `collectionGroup` لمجموعة `comments`.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <code className="text-sm bg-muted p-2 rounded-md block whitespace-pre-wrap">{error.message}</code>
+            </CardContent>
+        </Card>
+      );
   }
 
   return (
