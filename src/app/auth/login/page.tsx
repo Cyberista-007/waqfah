@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
@@ -68,17 +69,18 @@ export default function LoginPage() {
         } else {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
-            if (newUser) {
-              if (auth.currentUser) {
-                await updateProfile(auth.currentUser, { displayName: name });
-              }
-              const userRef = doc(firestore, "users", newUser.uid);
-              await setDoc(userRef, {
-                name: name,
-                email: newUser.email,
-                createdAt: Timestamp.now(),
-              }, { merge: true });
-            }
+            
+            // Critical Fix: Update profile display name *before* creating the Firestore document.
+            await updateProfile(newUser, { displayName: name });
+            
+            const userRef = doc(firestore, "users", newUser.uid);
+            // Create the user profile document in Firestore with the correct name.
+            await setDoc(userRef, {
+              name: name, // Use the name from the form
+              email: newUser.email,
+              createdAt: Timestamp.now(),
+            }, { merge: true });
+
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
             router.push(redirectTo);
         }
