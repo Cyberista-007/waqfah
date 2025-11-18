@@ -61,8 +61,8 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  // Start with loading true only if the query is initially provided.
-  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery); 
+  // **FIX:** Start with loading false. We are only loading if we have a valid query.
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   // Use a stable reference for the query across renders
