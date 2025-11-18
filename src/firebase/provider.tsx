@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
-import { Firestore, getFirestore, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { Firestore, getFirestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth';
 import { Functions, getFunctions } from 'firebase/functions';
 
@@ -11,13 +11,14 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { HomePageSkeleton } from '@/components/skeletons';
 import type { UserProfile } from '@/lib/types';
 import { firebaseConfig } from './config';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 
 // Combined state for the Firebase context
 export interface FirebaseContextState {
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null;
-  functions: Functions | null;
+  firebaseApp: FirebaseApp;
+  firestore: Firestore;
+  auth: Auth;
+  functions: Functions;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -89,11 +90,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
     const { auth, firestore } = services;
     
-    // Set initial user state synchronously if available
-    if (auth.currentUser) {
-        setUserAuthState(prev => ({ ...prev, user: auth.currentUser, isUserLoading: true }));
-    }
-
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
@@ -122,18 +118,22 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       }
     );
     return () => unsubscribe();
-  }, [services]); // This effect depends on the services being initialized.
+  }, [services]);
 
-  const contextValue = useMemo((): FirebaseContextState => ({
-    firebaseApp: services?.app || null,
-    firestore: services?.firestore || null,
-    auth: services?.auth || null,
-    functions: services?.functions || null,
-    ...userAuthState,
-  }), [services, userAuthState]);
+  const contextValue = useMemo(() => {
+    if (!services) return undefined;
+    return {
+      firebaseApp: services.app,
+      firestore: services.firestore,
+      auth: services.auth,
+      functions: services.functions,
+      ...userAuthState,
+    }
+  }, [services, userAuthState]);
+
 
   // Render a loading state until services are ready AND the initial user check is complete.
-  if (!services || userAuthState.isUserLoading) {
+  if (!contextValue || contextValue.isUserLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -157,28 +157,24 @@ const useFirebaseContext = (): FirebaseContextState => {
 /** Hook to access Firebase Auth instance. */
 export const useAuth = (): Auth => {
   const { auth } = useFirebaseContext();
-  if (!auth) throw new Error("Auth service not available.");
   return auth;
 };
 
 /** Hook to access Firestore instance. */
 export const useFirestore = (): Firestore => {
   const { firestore } = useFirebaseContext();
-  if (!firestore) throw new Error("Firestore service not available.");
   return firestore;
 };
 
 /** Hook to access Firebase App instance. */
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebaseContext();
-  if (!firebaseApp) throw new Error("Firebase App not available.");
   return firebaseApp;
 };
 
 /** Hook to access Firebase Functions instance. */
 export const useFunctions = (): Functions => {
   const { functions } = useFirebaseContext();
-  if (!functions) throw new Error("Functions service not available.");
   return functions;
 };
 
