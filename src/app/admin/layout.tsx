@@ -2,7 +2,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { useUser, useAuth } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, Loader2 } from 'lucide-react';
@@ -11,59 +11,49 @@ import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminAuth();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace('/auth/login?redirect_to=/admin/dashboard');
+    if (isUserLoading || isAdminLoading) {
+        return; // Wait until we know user and admin status
     }
-  }, [user, isUserLoading, router]);
+    
+    if (!user) {
+        router.replace('/auth/login?redirect_to=/admin/dashboard');
+        return;
+    }
+    
+    if (!isAdmin) {
+        // Prompt for password if not already an admin this session
+        checkAdminPassword().then(isNowAdmin => {
+            if (!isNowAdmin) {
+                router.replace('/'); // Redirect if password is wrong
+            }
+        });
+    }
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
   
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
+    // Note: Logging out of Firebase doesn't clear the session storage for admin.
+    // This is generally fine, as they'll be prompted to log into Firebase again first.
+    if (user) {
+        await signOut(user.auth);
         router.push('/');
     }
   }
 
-  // Define the admin email
-  const ADMIN_EMAIL = 'abdoreda6249@gmail.com';
-  const isAuthorized = user?.email === ADMIN_EMAIL;
-
-  if (isUserLoading || !user) {
+  if (isUserLoading || isAdminLoading || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
       </div>
     );
-  }
-  
-  if (!isAuthorized) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
-            <Card className="w-full max-w-md text-center">
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">وصول غير مصرح به</CardTitle>
-                    <CardDescription>
-                        أنت لا تملك الصلاحيات اللازمة للوصول لهذه الصفحة.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="mb-4">
-                        هذه المنطقة مخصصة للمدير فقط. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع الدعم.
-                    </p>
-                    <Button asChild>
-                        <Link href="/">العودة إلى الصفحة الرئيسية</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-        </div>
-    )
   }
 
   const navItems = [

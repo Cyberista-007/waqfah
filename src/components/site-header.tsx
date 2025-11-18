@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -54,6 +55,14 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { isAdmin, checkAdminPassword } = useAdminAuth();
+
+  const handleAdminClick = async () => {
+    const isAdmin = await checkAdminPassword();
+    if (isAdmin) {
+      router.push('/admin/dashboard');
+    }
+  };
 
   const handleLogout = async () => {
     if (auth) {
@@ -68,10 +77,6 @@ export function SiteHeader() {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
   
-  const ADMIN_EMAIL = 'abdoreda6249@gmail.com';
-  const isAuthorized = user?.email === ADMIN_EMAIL;
-
-
   return (
     <header className={cn(
         "sticky top-0 z-50 transition-all duration-300",
@@ -105,10 +110,10 @@ export function SiteHeader() {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-             {isAuthorized && (
-                 <Link href="/admin/dashboard" className="font-medium text-foreground/70 hover:text-primary transition-colors">
+            {user && (
+                 <Button variant="ghost" size="icon" onClick={handleAdminClick} className="text-foreground/70 hover:text-primary">
                     <LayoutDashboard className="h-5 w-5" />
-                 </Link>
+                 </Button>
             )}
         </div>
 
