@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { SESSION_COOKIE_NAME } from '@/lib/actions';
+import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
 export function middleware(request: NextRequest) {
     const session = request.cookies.get(SESSION_COOKIE_NAME);

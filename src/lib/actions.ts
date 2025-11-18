@@ -3,9 +3,9 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
-export const ADMIN_USERNAME = "عبدالرحمن رضا محمد";
-export const SESSION_COOKIE_NAME = "admin_session";
+const ADMIN_USERNAME = "عبدالرحمن رضا محمد";
 
 export async function authenticate(
   prevState: string | undefined,
