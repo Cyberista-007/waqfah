@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,13 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import type { Lecture, ListenHistoryItem } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { EditProfileForm } from "@/components/profile/edit-profile-form";
+import { useDocumentData } from "react-firebase-hooks/firestore";
+
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -40,6 +43,7 @@ function FavoritesSection() {
 
                 if (lectureIds.length > 0) {
                     const lecturesData: Lecture[] = [];
+                    // Firestore 'in' query supports up to 30 items
                     for (let i = 0; i < lectureIds.length; i += 30) {
                         const chunk = lectureIds.slice(i, i + 30);
                         const lecturesRef = collection(firestore, 'lectures');
@@ -100,7 +104,13 @@ function ListenHistorySection() {
                 const items = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ListenHistoryItem));
 
                 if (items.length > 0) {
-                    const lectureIds = items.map(item => item.lectureId);
+                    const lectureIds = items.map(item => item.lectureId).filter(Boolean);
+                    if(lectureIds.length === 0) {
+                        setHistory([]);
+                        setIsLoading(false);
+                        return;
+                    }
+                    
                     const lecturesRef = collection(firestore, 'lectures');
                     const lecturesQuery = query(lecturesRef, where('__name__', 'in', lectureIds));
                     const lecturesSnap = await getDocs(lecturesQuery);
@@ -160,7 +170,12 @@ function PlaylistsSection() {
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
+    const firestore = useFirestore();
     const router = useRouter();
+    const [isEditing, setIsEditing] = useState(false);
+
+    const userDocRef = user && firestore ? doc(firestore, "users", user.uid) : null;
+    const [userProfile, isProfileLoading] = useDocumentData(userDocRef);
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -175,7 +190,7 @@ export default function ProfilePage() {
         }
     }
 
-    if (isUserLoading || !user) {
+    if (isUserLoading || isProfileLoading || !user) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin" />
@@ -183,20 +198,30 @@ export default function ProfilePage() {
         )
     }
 
+    if (isEditing) {
+        return (
+            <EditProfileForm 
+                user={user} 
+                userProfile={userProfile as UserProfile}
+                onClose={() => setIsEditing(false)}
+            />
+        );
+    }
+    
     return (
         <div className="space-y-8">
             <header className="flex flex-col sm:flex-row items-center gap-6">
                 <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+                    <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
                     <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
                 </Avatar>
                 <div className="text-center sm:text-right">
                     <h1 className="text-3xl font-bold font-headline">{user.displayName}</h1>
                     <p className="text-muted-foreground">{user.email}</p>
-                    {/* Add Bio here once available */}
+                    {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
                     <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                        <Button variant="outline" size="sm" disabled>
-                            هذا الزر لا يعمل
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                           <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
                         </Button>
                         <Button onClick={onLogout} variant="secondary" size="sm">
                             <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
@@ -226,5 +251,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

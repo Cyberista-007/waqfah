@@ -1,4 +1,5 @@
 
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type Lecture = {
@@ -84,6 +85,12 @@ export type UserProfile = {
     lecturesCompleted?: number;
     seriesCompleted?: number;
 };
+
+export type EditProfileForm = {
+    name: string;
+    bio: string;
+    photoURL: string;
+}
 
 export type Favorite = {
     id: string; // lectureId
