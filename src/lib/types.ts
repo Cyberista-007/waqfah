@@ -1,5 +1,4 @@
 
-
 import type { Timestamp } from 'firebase/firestore';
 
 export type Lecture = {
@@ -156,4 +155,3 @@ export type LectureClip = {
     endTime: number; // in seconds
     createdAt: Timestamp;
 };
-    
