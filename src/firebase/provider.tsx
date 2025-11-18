@@ -8,6 +8,7 @@ import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 import type { UserProfile } from '@/lib/types';
 import { Functions } from 'firebase/functions';
+import { HomePageSkeleton } from '@/components/skeletons';
 
 
 // Combined state for the Firebase context
@@ -45,23 +46,28 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   functions
 }) => {
   const [userAuthState, setUserAuthState] = useState<{user: User | null, isUserLoading: boolean, userError: Error | null}>({
-    user: null,
+    user: auth.currentUser, // Initialize with current user if available
     isUserLoading: true, // Start loading until first auth event
     userError: null,
   });
 
+  const areServicesReady = !!(firebaseApp && firestore && auth);
+
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
+    if (!areServicesReady) {
+        // If services aren't ready, don't set up the listener.
+        setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Firebase services not available.") });
+        return;
+    }
+    
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
         if (firebaseUser) {
-          // User is signed in, see docs for a list of available properties
-          // https://firebase.google.com/docs/reference/js/firebase.User
           const userRef = doc(firestore, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           if (!userSnap.exists()) {
-            // Create user profile document if it doesn't exist
             const newUserProfile: Omit<UserProfile, 'id'> = {
               name: firebaseUser.displayName || "مستخدم جديد",
               email: firebaseUser.email!,
@@ -79,16 +85,22 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe();
-  }, [auth, firestore]);
+  }, [auth, firestore, areServicesReady]);
 
   const contextValue = useMemo((): FirebaseContextState => ({
-    areServicesAvailable: true,
+    areServicesAvailable: areServicesReady,
     firebaseApp,
     firestore,
     auth,
     functions,
     ...userAuthState,
-  }), [firebaseApp, firestore, auth, functions, userAuthState]);
+  }), [firebaseApp, firestore, auth, functions, userAuthState, areServicesReady]);
+  
+  // Render a loading state until both services are ready AND the initial user check is complete.
+  // This prevents child components from trying to use Firebase before it's fully initialized.
+  if (!areServicesReady || userAuthState.isUserLoading) {
+    return <HomePageSkeleton />;
+  }
 
   return (
     <FirebaseContext.Provider value={contextValue}>
