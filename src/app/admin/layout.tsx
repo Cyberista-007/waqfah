@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -37,7 +37,7 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
     }
   }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
 
-  // While we are waiting for user or admin status, show a loader.
+  // While we are waiting for user or admin status, or if checks fail, show a loader.
   if (isUserLoading || isAdminLoading || !isAdmin || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
