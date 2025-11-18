@@ -1,30 +1,13 @@
-/**
- * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset enforces a combination of public read access for general content,
- * and authenticated-user write access for user-specific data (favorites, ratings, comments).
- * Admin-level write access for core content (lectures, series) is granted to any signed-in user for simplicity,
- * but in a real-world scenario this should be locked down with custom claims.
- *
- * Data Structure:
- * - /series/{seriesId}
- * - /lectures/{lectureId}
- * - /books/{bookId}
- * - /question_answers/{qaId}
- * - /scheduled_lessons/{lessonId}
- * - /users/{userId}
- * - /users/{userId}/favorites/{lectureId}
- * - /lectures/{lectureId}/ratings/{ratingId} -> (ratingId is userId)
- * - /lectures/{lectureId}/comments/{commentId}
- */
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * Helper Functions
-     */
+    // =====================================================================
+    // Helper Functions
+    // =====================================================================
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -32,100 +15,110 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
+
+    // Check if the user ID in the incoming data matches the authenticated user.
+    function isCreatingOwnResource(userId) {
+      return isOwner(userId) && request.resource.data.userId == userId;
+    }
+
+    // Check if the user is the owner based on the 'userId' field of an existing resource.
     function isResourceOwner() {
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
 
-    /**
-     * Public Content: Public read, admin (any signed-in user) write.
-     */
+    // =====================================================================
+    // Public Content Collections (series, lectures, books, etc.)
+    // Anyone can read, but only signed-in users (admins) can write.
+    // In a real app, 'isSignedIn()' for write should be replaced with an admin check.
+    // =====================================================================
+
     match /series/{seriesId} {
       allow get, list: if true;
       allow write: if isSignedIn();
     }
+
     match /lectures/{lectureId} {
       allow get, list: if true;
-      allow write: if isSignedIn();
-    }
-    match /books/{bookId} {
-      allow get, list: if true;
-      allow write: if isSignedIn();
-    }
-    match /question_answers/{qaId} {
-      allow get, list: if true;
-      allow write: if isSignedIn();
-    }
-    match /scheduled_lessons/{lessonId} {
-      allow get, list: if true;
-      allow write: if isSignedIn();
+      allow write: if isSignedIn(); // Admin-only in production
     }
 
-    /**
-     * User Profiles: Users can create, read, and update their own profile.
-     * Deny listing all users.
-     */
+    match /books/{bookId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only in production
+    }
+    
+    match /question_answers/{qaId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only in production
+    }
+
+    match /scheduled_lessons/{lessonId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only in production
+    }
+
+
+    // =====================================================================
+    // User-Specific Data
+    // =====================================================================
+
     match /users/{userId} {
+      // Users can only read and update their own profile. No one can list all users.
       allow get, update: if isOwner(userId);
-      allow create: if isSignedIn() && request.resource.id == request.auth.uid;
+      // A user can create their own profile document.
+      allow create: if isOwner(userId);
       allow list, delete: if false;
     }
 
-    /**
-     * User Favorites: Users can manage their own list of favorite lectures.
-     * The document ID is the lecture ID.
-     */
     match /users/{userId}/favorites/{lectureId} {
-        allow read, write: if isOwner(userId);
+      // Users can only manage their own favorites.
+      allow read, write: if isOwner(userId);
     }
     
-    /**
-     * Lecture Ratings: A user can rate a lecture. The document ID for a rating is the user's ID
-     * to ensure one rating per user per lecture.
-     */
+
+    // =====================================================================
+    // Subcollections for Lectures
+    // =====================================================================
+
     match /lectures/{lectureId}/ratings/{userId} {
-      // Any signed-in user can create/update their own rating.
-      allow write: if isOwner(userId)
-                    && request.resource.data.userId == userId
-                    && request.resource.data.lectureId == lectureId
-                    && request.resource.data.value >= 1 && request.resource.data.value <= 5;
-                    
       // Anyone can read ratings for a lecture.
       allow get, list: if true;
+
+      // A user can create or update their own rating.
+      // The document ID must be the user's ID to enforce one rating per user.
+      allow write: if isCreatingOwnResource(userId) &&
+                      request.resource.data.lectureId == lectureId &&
+                      request.resource.data.value >= 1 &&
+                      request.resource.data.value <= 5;
     }
 
-    /**
-     * Lecture Comments:
-     * - Anyone can read approved comments.
-     * - Signed-in users can create comments, which are initially 'pending'.
-     * - Admins (any signed-in user) can update a comment's status.
-     * - The user who wrote the comment can delete it ONLY if it's still pending.
-     */
     match /lectures/{lectureId}/comments/{commentId} {
-      // Allow reading approved comments
+      // Anyone can read 'approved' comments.
       allow get: if resource.data.status == 'approved';
-      // Allow listing approved comments
-      allow list: if request.query.where.to_list().size() == 0 
-                  || (request.query.where[0] == 'status' && request.query.where[1] == '==' && request.query.where[2] == 'approved');
       
-      // Allow creating a comment if user is signed in and is the author
-      allow create: if isSignedIn() 
-                    && request.resource.data.userId == request.auth.uid
-                    && request.resource.data.status == 'pending';
+      // Allow listing comments but only if filtered by 'approved' status.
+      allow list: if request.query.get('where.status') == 'approved';
       
-      // Allow admin (any signed-in user) to update status (approve/reject)
+      // A signed-in user can create a comment, which must be 'pending'.
+      allow create: if isSignedIn() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending';
+      
+      // An 'admin' (any signed-in user for now) can update only the status.
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
 
-      // Allow owner to delete their comment only if it is pending or rejected
+      // The original author can delete their comment if it's 'pending' or 'rejected'.
       allow delete: if isResourceOwner() && (resource.data.status == 'pending' || resource.data.status == 'rejected');
     }
 
-    /**
-     * Admin-only collection group query for comments.
-     * Allows admins (any signed-in user) to list comments across all lectures regardless of status.
-     */
+    // =====================================================================
+    // Admin-Only Collection Group Queries
+    // =====================================================================
+    
+    // Allows admins to query the 'comments' collection group across all lectures
+    // to see pending/rejected comments.
     match /{path=**}/comments/{commentId} {
-      allow list: if isSignedIn();
+       allow list: if isSignedIn(); // Should be admin-only
     }
   }
 }
