@@ -42,8 +42,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   }
   
   if (!user) {
-    // router.push('/admin/login') should not be used in the render phase.
-    // We'll show a message and a link instead, or handle redirection in useEffect in a real app.
     if (typeof window !== 'undefined') {
        router.push('/admin/login');
     }

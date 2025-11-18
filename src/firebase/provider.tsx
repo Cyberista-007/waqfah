@@ -122,10 +122,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     }
   }, [services, userAuthState]);
 
+  if (contextValue.isUserLoading) {
+    return <HomePageSkeleton />;
+  }
+
   return (
     <FirebaseContext.Provider value={contextValue}>
       <FirebaseErrorListener />
-      {contextValue.isUserLoading ? <HomePageSkeleton /> : children}
+      {children}
     </FirebaseContext.Provider>
   );
 };
@@ -134,7 +138,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 const useFirebaseContext = (): FirebaseContextState => {
     const context = useContext(FirebaseContext);
     if (context === undefined) {
-        // This can happen on first render. Return a loading state.
         return {
             firebaseApp: null,
             firestore: null,

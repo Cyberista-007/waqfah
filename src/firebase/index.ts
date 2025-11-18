@@ -9,7 +9,6 @@ export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './auth/useUser';
-export * from './non-blocking-updates';
 export * from './errors';
 export * from './error-emitter';
 export * from './config';
