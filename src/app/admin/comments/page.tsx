@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collectionGroup, query, orderBy, doc } from "firebase/firestore";
+import { collectionGroup, query, where, orderBy, doc } from "firebase/firestore";
 import type { Comment } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -19,28 +19,14 @@ export default function AdminCommentsPage() {
     const { toast } = useToast();
     const { user } = useUser(); // Get user to ensure queries run only when authenticated
 
-    // Query for all comments across all lectures, ordered by creation date.
-    // Filtering will be done on the client-side.
+    // Query for all pending comments across all lectures, ordered by creation date.
+    // This query is now more specific to avoid permission errors for non-admins.
     const commentsQuery = useMemoFirebase(
-        () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
+        () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc')) : null), 
         [firestore, user] // Depend on user to re-run query after login
     );
-    const { data: allComments, isLoading, error } = useCollection<Comment>(commentsQuery);
+    const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
     
-    // Client-side filtering and sorting
-    const comments = useMemo(() => {
-        if (!allComments) return [];
-        return allComments.sort((a, b) => {
-            if (a.status === 'pending' && b.status !== 'pending') return -1;
-            if (a.status !== 'pending' && b.status === 'pending') return 1;
-            // Add a secondary sort to keep the original order for items with the same status
-            const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-            const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-            return dateB - dateA;
-        });
-    }, [allComments]);
-
-
     const handleAction = (comment: Comment, action: 'approved' | 'rejected') => {
         if (!firestore || !comment.id || !comment.lectureId) return;
         
@@ -89,7 +75,7 @@ export default function AdminCommentsPage() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl">مراجعة التعليقات</CardTitle>
-        <CardDescription>هنا يمكنك مراجعة وإدارة تعليقات المستخدمين.</CardDescription>
+        <CardDescription>هنا يمكنك مراجعة وإدارة تعليقات المستخدمين التي تنتظر الموافقة.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -117,12 +103,8 @@ export default function AdminCommentsPage() {
                             )}
                         </TableCell>
                         <TableCell>
-                             <Badge variant={
-                                comment.status === 'approved' ? 'default' : 
-                                comment.status === 'pending' ? 'secondary' : 'destructive'
-                             }>
-                                {comment.status === 'approved' ? 'مقبول' : 
-                                 comment.status === 'pending' ? 'قيد المراجعة' : 'مرفوض'}
+                             <Badge variant={'secondary'}>
+                                قيد المراجعة
                             </Badge>
                         </TableCell>
                         <TableCell className="text-left">
