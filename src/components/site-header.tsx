@@ -138,11 +138,6 @@ export function SiteHeader() {
                     <DropdownMenuItem asChild>
                         <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                     </DropdownMenuItem>
-                     {isAuthorized && (
-                         <DropdownMenuItem asChild>
-                            <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
-                        </DropdownMenuItem>
-                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="me-2 h-4 w-4" />
