@@ -37,7 +37,7 @@ export default function AdminQAPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const qaQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'question_answers')) : null,
+        () => (firestore ? query(collection(firestore, 'question_answers')) : null),
         [firestore]
     );
     const { data: allItems, isLoading } = useCollection<QAPair>(qaQuery);
@@ -47,23 +47,15 @@ export default function AdminQAPage() {
         
         const itemRef = doc(firestore, 'question_answers', itemToDelete.id);
         
-        try {
-            await deleteDocumentNonBlocking(itemRef);
-            toast({
-                variant: "destructive",
-                title: "تم الحذف بنجاح",
-                description: `تم حذف السؤال.`,
-            });
-        } catch (error) {
-            console.error("Error deleting item:", error);
-            toast({
-                variant: "destructive",
-                title: "حدث خطأ",
-                description: "لم نتمكن من حذف السؤال.",
-            });
-        } finally {
-            setItemToDelete(null); // Close the dialog
-        }
+        deleteDocumentNonBlocking(itemRef);
+
+        toast({
+            variant: "destructive",
+            title: "تم الحذف بنجاح",
+            description: `تم حذف السؤال.`,
+        });
+        
+        setItemToDelete(null); // Close the dialog
     };
     
     const handleNew = () => {

@@ -21,7 +21,7 @@ export default function AdminCommentsPage() {
 
     // This query is now safe because useCollection waits for firestore and user to be ready
     const commentsQuery = useMemoFirebase(
-        () => firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null,
+        () => (firestore && user ? query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc')) : null), 
         [firestore, user]
     );
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);

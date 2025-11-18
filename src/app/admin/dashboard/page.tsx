@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ export default function AdminDashboardPage() {
     const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
     const { data: recentComments, isLoading: commentsLoading } = useCollection<Comment>(recentCommentsQuery);
     
+    const isLoading = lecturesLoading || seriesLoading || booksLoading || commentsLoading;
+
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
       <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

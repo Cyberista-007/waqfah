@@ -1,15 +1,17 @@
 
+
 "use client";
 
 import Link from "next/link";
 import type { Lecture } from "@/lib/types";
 import { Button } from "./ui/button";
-import { useAuth, useFirestore } from "@/firebase";
+import { useAuth, useFirestore, useUser } from "@/firebase";
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc, runTransaction, increment } from "firebase/firestore";
+import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { Star } from "lucide-react";
 import { FavoriteButton } from "./favorite-button";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface LectureHeaderProps {
     lecture: Lecture;
@@ -17,35 +19,48 @@ interface LectureHeaderProps {
 }
 
 export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
-    const { user } = useAuth();
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const router = useRouter();
     const { toast } = useToast();
     const [userRating, setUserRating] = useState<number | null>(null);
     const [hoverRating, setHoverRating] = useState<number | null>(null);
-    const [currentRating, setCurrentRating] = useState(lecture.rating);
-    const [ratingCount, setRatingCount] = useState(lecture.ratingCount);
+    const [currentRating, setCurrentRating] = useState(lecture.rating || 0);
+    const [ratingCount, setRatingCount] = useState(lecture.ratingCount || 0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchRating = async () => {
             if (user && firestore) {
                 const ratingRef = doc(firestore, 'lectures', lecture.id, 'ratings', user.uid);
-                const ratingSnap = await getDoc(ratingRef);
-                if (ratingSnap.exists()) {
-                    setUserRating(ratingSnap.data().value);
+                try {
+                    const ratingSnap = await getDoc(ratingRef);
+                    if (ratingSnap.exists()) {
+                        setUserRating(ratingSnap.data().value);
+                    }
+                } catch(e) {
+                    // This might fail due to permissions before login, which is fine.
                 }
             }
         };
-        fetchRating();
-    }, [user, firestore, lecture.id]);
+        if (!isUserLoading) {
+            fetchRating();
+        }
+    }, [user, firestore, lecture.id, isUserLoading]);
 
     const handleRating = async (ratingValue: number) => {
+        if (isSubmitting) return;
+
         if (!user || !firestore) {
             toast({
                 variant: "destructive",
                 title: "يرجى تسجيل الدخول للتقييم.",
             });
+            router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
             return;
         }
+
+        setIsSubmitting(true);
 
         const lectureRef = doc(firestore, 'lectures', lecture.id);
         const ratingRef = doc(firestore, 'lectures', lecture.id, 'ratings', user.uid);
@@ -59,17 +74,18 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                     throw "Lecture does not exist!";
                 }
 
-                const oldRating = ratingSnap.exists() ? ratingSnap.data().value : 0;
-                const oldRatingCount = lectureSnap.data().ratingCount || 0;
-                const oldRatingTotal = (lectureSnap.data().rating || 0) * oldRatingCount;
+                const oldRatingVal = ratingSnap.exists() ? ratingSnap.data().value : 0;
+                const currentLectureData = lectureSnap.data();
+                const currentRatingCount = currentLectureData.ratingCount || 0;
+                const currentRatingTotal = (currentLectureData.rating || 0) * currentRatingCount;
 
-                let newRatingCount = oldRatingCount;
+                let newRatingCount = currentRatingCount;
                 if (!ratingSnap.exists()) {
                     newRatingCount++;
                 }
 
-                const newRatingTotal = oldRatingTotal - oldRating + ratingValue;
-                const newAverageRating = newRatingTotal / newRatingCount;
+                const newRatingTotal = currentRatingTotal - oldRatingVal + ratingValue;
+                const newAverageRating = newRatingCount > 0 ? newRatingTotal / newRatingCount : 0;
 
                 transaction.update(lectureRef, {
                     rating: newAverageRating,
@@ -80,21 +96,21 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                     value: ratingValue,
                     userId: user.uid,
                     lectureId: lecture.id,
-                    createdAt: new Date(),
+                    createdAt: Timestamp.now(),
                 });
-            });
 
-            setUserRating(ratingValue);
-            // Optimistically update UI
-            const newTotal = currentRating * ratingCount - (userRating || 0) + ratingValue;
-            const newCount = userRating ? ratingCount : ratingCount + 1;
-            setCurrentRating(newTotal / newCount);
-            setRatingCount(newCount);
+                 // Optimistically update UI state after successful transaction
+                setUserRating(ratingValue);
+                setRatingCount(newRatingCount);
+                setCurrentRating(newAverageRating);
+            });
 
             toast({ title: "شكراً لتقييمك!" });
         } catch (e) {
             console.error("Transaction failed: ", e);
             toast({ variant: 'destructive', title: "حدث خطأ أثناء التقييم." });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

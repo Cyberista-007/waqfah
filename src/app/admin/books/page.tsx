@@ -37,7 +37,7 @@ export default function AdminBooksPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const booksQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'books'), orderBy('title')) : null,
+        () => (firestore ? query(collection(firestore, 'books'), orderBy('title')) : null),
         [firestore]
     );
     const { data: allBooks, isLoading } = useCollection<Book>(booksQuery);
@@ -47,23 +47,14 @@ export default function AdminBooksPage() {
         
         const bookRef = doc(firestore, 'books', bookToDelete.id);
         
-        try {
-            await deleteDocumentNonBlocking(bookRef);
-            toast({
-                variant: "destructive",
-                title: "تم الحذف بنجاح",
-                description: `تم حذف كتاب "${bookToDelete.title}".`,
-            });
-        } catch (error) {
-            console.error("Error deleting book:", error);
-            toast({
-                variant: "destructive",
-                title: "حدث خطأ",
-                description: "لم نتمكن من حذف الكتاب.",
-            });
-        } finally {
-            setBookToDelete(null); // Close the dialog
-        }
+        deleteDocumentNonBlocking(bookRef);
+
+        toast({
+            variant: "destructive",
+            title: "تم الحذف بنجاح",
+            description: `تم حذف كتاب "${bookToDelete.title}".`,
+        });
+        setBookToDelete(null); // Close the dialog
     };
     
     const handleNew = () => {

@@ -1,16 +1,29 @@
 
+
 "use client";
 
 import { ReactNode } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { logout } from '@/lib/actions';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/');
+    }
+  }
 
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
@@ -19,6 +32,28 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/books', label: 'الكتب', icon: Book },
     { href: '/admin/comments', label: 'التعليقات', icon: MessageSquare },
   ];
+  
+    if (isUserLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+              <Loader2 className="h-16 w-16 animate-spin" />
+          </div>
+      )
+  }
+  
+  if (!user) {
+    // router.push('/admin/login') should not be used in the render phase.
+    // We'll show a message and a link instead, or handle redirection in useEffect in a real app.
+    if (typeof window !== 'undefined') {
+       router.push('/admin/login');
+    }
+    return (
+        <div className="flex h-screen items-center justify-center flex-col gap-4">
+             <Loader2 className="h-16 w-16 animate-spin" />
+            <p>إعادة التوجيه إلى صفحة تسجيل الدخول...</p>
+        </div>
+    )
+  }
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -53,12 +88,10 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </nav>
           </div>
            <div className="mt-auto p-4 space-y-2">
-            <form action={logout}>
-              <Button size="sm" variant="outline" className="w-full">
+              <Button onClick={handleLogout} size="sm" variant="outline" className="w-full">
                 <LogOut className="mr-2 h-4 w-4" />
                 تسجيل الخروج
               </Button>
-            </form>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -17,15 +18,20 @@ import { useRouter } from "next/navigation";
 import { useFirestore } from "@/firebase";
 import { collection, Timestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function AdminNewSeriesPage() {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
+    setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
@@ -39,6 +45,7 @@ export default function AdminNewSeriesPage() {
             title: "خطأ",
             description: "يرجى ملء جميع الحقول المطلوبة.",
         });
+        setIsSubmitting(false);
         return;
     }
 
@@ -69,6 +76,8 @@ export default function AdminNewSeriesPage() {
             title: "خطأ في إنشاء السلسلة",
             description: "حدث خطأ أثناء محاولة حفظ السلسلة في قاعدة البيانات.",
         });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -84,18 +93,21 @@ export default function AdminNewSeriesPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">عنوان السلسلة</Label>
-            <Input id="title" name="title" required />
+            <Input id="title" name="title" required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="description">وصف السلسلة</Label>
-            <Textarea id="description" name="description" required />
+            <Textarea id="description" name="description" required disabled={isSubmitting}/>
           </div>
            <div>
             <Label htmlFor="image">صورة الغلاف</Label>
-            <Input id="image" name="image" type="file" />
+            <Input id="image" name="image" type="file" disabled={isSubmitting}/>
           </div>
           <div className="flex gap-2">
-            <Button type="submit">إنشاء السلسلة</Button>
+            <Button type="submit" disabled={isSubmitting || !firestore}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                إنشاء السلسلة
+            </Button>
             <Button asChild variant="outline">
               <Link href="/admin/series">إلغاء</Link>
             </Button>

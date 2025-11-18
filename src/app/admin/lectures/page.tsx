@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -25,6 +26,7 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminLecturesPage() {
     const { toast } = useToast();
@@ -32,7 +34,7 @@ export default function AdminLecturesPage() {
     const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
 
     const lecturesQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null,
+        () => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null),
         [firestore]
     );
     const { data: allLectures, isLoading } = useCollection<Lecture>(lecturesQuery);
@@ -47,7 +49,7 @@ export default function AdminLecturesPage() {
             // Use a transaction to delete the lecture and decrement the series count
             await runTransaction(firestore, async (transaction) => {
                 const seriesDoc = await transaction.get(seriesRef);
-                if (seriesDoc.exists()) {
+                if (seriesDoc.exists() && (seriesDoc.data().lectureCount || 0) > 0) {
                     transaction.update(seriesRef, { lectureCount: increment(-1) });
                 }
                 transaction.delete(lectureRef);
@@ -60,10 +62,12 @@ export default function AdminLecturesPage() {
             });
         } catch (error) {
             console.error("Error deleting lecture:", error);
+            // If transaction fails, attempt to delete just the lecture
+            deleteDocumentNonBlocking(lectureRef);
             toast({
                 variant: "destructive",
-                title: "حدث خطأ",
-                description: "لم نتمكن من حذف المحاضرة.",
+                title: "تم الحذف (مع تحذير)",
+                description: "تم حذف المحاضرة، ولكن قد يكون هناك خطأ في تحديث عدد السلسلة.",
             });
         } finally {
             setLectureToDelete(null); // Close the dialog

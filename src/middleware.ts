@@ -1,26 +1,11 @@
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // This middleware is currently disabled to remove password protection from admin panel.
 // To re-enable, uncomment the code inside the middleware function and the config.
 export function middleware(request: NextRequest) {
-  // const sessionCookie = request.cookies.get('admin_session');
-  // const { pathname } = request.nextUrl;
-
-  // const onLoginPage = pathname.startsWith('/admin/login');
-
-  // if (sessionCookie) {
-  //   // If logged in and on the login page, redirect to dashboard
-  //   if (onLoginPage) {
-  //     return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-  //   }
-  // } else {
-  //   // If not logged in and trying to access any admin page other than login, redirect to login
-  //   if (pathname.startsWith('/admin/') && !onLoginPage) {
-  //       return NextResponse.redirect(new URL('/admin/login', request.url));
-  //   }
-  // }
-
+  // The admin panel now uses Firebase Auth, so this middleware is no longer needed.
   return NextResponse.next();
 }
 
@@ -31,6 +16,7 @@ export const config = {
    * - /_next/static (static files)
    * - /_next/image (image optimization files)
    * - favicon.ico (favicon file)
+   * - /admin/login (the login page itself)
    */
-  // matcher: ['/admin/:path*'],
+  // matcher: ['/admin/(?!login)(:path*)'],
 }

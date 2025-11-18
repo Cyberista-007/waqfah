@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -66,8 +67,8 @@ export default function LoginPage() {
             router.push(redirectTo);
         } else {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            if (userCredential.user) {
-              await updateProfile(userCredential.user, { displayName: name });
+            if (userCredential.user && auth.currentUser) {
+              await updateProfile(auth.currentUser, { displayName: name });
             }
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
             router.push(redirectTo);
@@ -83,13 +84,21 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading) {
+  useEffect(() => {
+    if (!isUserLoading && user) {
+        const redirectTo = searchParams.get('redirect_to') || '/';
+        router.push(redirectTo);
+    }
+  },[user, isUserLoading, router, searchParams]);
+
+  if (isUserLoading || user) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-16 w-16 animate-spin" />
           </div>
       )
   }
+
 
   return (
     <div className="flex items-center justify-center py-12">

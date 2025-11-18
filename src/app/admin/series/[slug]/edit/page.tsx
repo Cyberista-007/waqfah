@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -19,6 +20,7 @@ import type { Series } from "@/lib/types";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Loader2 } from "lucide-react";
 
 export default function AdminEditSeriesPage({
   params,
@@ -58,16 +60,12 @@ export default function AdminEditSeriesPage({
   };
   
   if (isLoading) {
-    return <div>جار التحميل...</div>;
+    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
   }
 
   if (!series) {
-    // This will be true if the doc doesn't exist or firestore is not ready.
-    // We show notFound() if it's not loading and there's no series.
-    if (!isLoading) {
-      notFound();
-    }
-    return <div>جار التحميل...</div>;
+    notFound();
+    return null;
   }
 
   return (

@@ -18,6 +18,7 @@ import type { Series } from "@/lib/types";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Loader2 } from "lucide-react";
 
 export default function AdminDeleteSeriesPage({
   params,
@@ -54,18 +55,20 @@ export default function AdminDeleteSeriesPage({
   };
 
   if (isLoading) {
-    return null; // Don't render dialog while loading, it will flash.
+    return (
+       <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin text-white" />
+       </div>
+    );
   }
 
   if (!series) {
-    if (!isLoading) {
-      notFound();
-    }
-    return null; // Don't render dialog if no series
+    notFound();
+    return null;
   }
 
   return (
-    <AlertDialog open={true} onOpenChange={handleCancel}>
+    <AlertDialog open={true} onOpenChange={(open) => !open && handleCancel()}>
       <AlertDialogContent dir="rtl">
         <AlertDialogHeader>
           <AlertDialogTitle>هل أنت متأكد تماماً؟</AlertDialogTitle>

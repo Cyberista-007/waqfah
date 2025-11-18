@@ -1,14 +1,16 @@
 
+
 "use client";
 
 import { Heart } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, deleteDoc, collection } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, collection, Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface FavoriteButtonProps {
     lectureId: string;
@@ -19,7 +21,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
     const { toast } = useToast();
     const { user, isUserLoading } = useAuth();
     const firestore = useFirestore();
-    const [isFavorite, setIsFavorite] = useState(false);
+    const router = useRouter();
 
     const favoritesQuery = useMemoFirebase(
         () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
@@ -27,11 +29,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
     );
     const { data: favorites, isLoading: favoritesLoading } = useCollection(favoritesQuery);
 
-    useEffect(() => {
-        if (favorites) {
-            setIsFavorite(favorites.some(fav => fav.id === lectureId));
-        }
-    }, [favorites, lectureId]);
+    const isFavorite = favorites?.some(fav => fav.id === lectureId) || false;
 
     const handleFavorite = async () => {
         if (!user || !firestore) {
@@ -40,6 +38,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
                 title: "يرجى تسجيل الدخول",
                 description: "يجب عليك تسجيل الدخول أولاً لتتمكن من إضافة المحاضرات إلى المفضلة.",
             });
+            router.push('/auth/login');
             return;
         }
 
@@ -51,7 +50,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
                 title: "تمت الإزالة من المفضلة",
             });
         } else {
-            await setDoc(favRef, { lectureId: lectureId, addedAt: new Date() });
+            await setDoc(favRef, { lectureId: lectureId, addedAt: Timestamp.now() });
             toast({
                 title: "تمت الإضافة إلى المفضلة",
             });

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useUser, useFirestore } from "@/firebase";
@@ -30,14 +31,18 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (!isUserLoading && !user) {
-            router.push('/auth/login');
+            router.push('/auth/login?redirect_to=/profile');
         }
     }, [user, isUserLoading, router]);
 
     useEffect(() => {
         const fetchFavorites = async () => {
             if (!firestore || !user?.uid) {
-                setIsLoadingFavorites(false);
+                // If firestore or user is not ready, don't do anything yet.
+                // It might be loading, so don't set loading to false immediately.
+                if(!isUserLoading && !firestore) {
+                  setIsLoadingFavorites(false);
+                }
                 return;
             };
             setIsLoadingFavorites(true);
@@ -69,11 +74,9 @@ export default function ProfilePage() {
             }
         };
 
-        if (user) {
-            fetchFavorites();
-        }
+        fetchFavorites();
 
-    }, [user, firestore]);
+    }, [user, firestore, isUserLoading]);
 
     const onLogout = async () => {
         if (auth) {

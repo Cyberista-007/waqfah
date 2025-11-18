@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import Link from "next/link"
@@ -32,6 +33,7 @@ import { useUser, useAuth } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
+import { Skeleton } from "./ui/skeleton"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -112,7 +114,7 @@ export function SiteHeader() {
           <ThemeToggle />
 
           {isUserLoading ? (
-            <div className="w-24 h-10 bg-muted-foreground/20 animate-pulse rounded-md"></div>
+            <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

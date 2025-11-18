@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -15,10 +16,10 @@ import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 
 // Combined state for the Firebase context
 export interface FirebaseContextState {
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-  functions: Functions;
+  firebaseApp: FirebaseApp | null;
+  firestore: Firestore | null;
+  auth: Auth | null;
+  functions: Functions | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -32,17 +33,37 @@ interface FirebaseProviderProps {
   children: ReactNode;
 }
 
+// This function ensures Firebase is initialized only once.
+const getFirebaseServices = () => {
+  if (getApps().length) {
+    const app = getApp();
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    const functions = getFunctions(app);
+    return { app, auth, firestore, functions };
+  }
+
+  const app = initializeApp(firebaseConfig);
+  let auth: Auth;
+  try {
+    auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
+  } catch (e) {
+    auth = getAuth(app);
+  }
+  const firestore = getFirestore(app);
+  const functions = getFunctions(app);
+  return { app, auth, firestore, functions };
+};
+
+
 /**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
  * It now handles its own initialization to prevent race conditions.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) => {
-  const [services, setServices] = useState<{
-    app: FirebaseApp;
-    firestore: Firestore;
-    auth: Auth;
-    functions: Functions;
-  } | null>(null);
+  // Initialize services immediately and synchronously.
+  // This is safe because getFirebaseServices handles the singleton pattern.
+  const services = useMemo(() => getFirebaseServices(), []);
 
   const [userAuthState, setUserAuthState] = useState<{
     user: User | null;
@@ -54,39 +75,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     userError: null,
   });
 
-  // Effect to initialize Firebase services ONCE.
-  useEffect(() => {
-    // This function ensures Firebase is initialized only once.
-    const getFirebaseServices = () => {
-      if (getApps().length) {
-        const app = getApp();
-        const auth = getAuth(app);
-        const firestore = getFirestore(app);
-        const functions = getFunctions(app);
-        return { app, auth, firestore, functions };
-      }
-
-      const app = initializeApp(firebaseConfig);
-      let auth: Auth;
-      try {
-        auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
-      } catch (e) {
-        auth = getAuth(app);
-      }
-      const firestore = getFirestore(app);
-      const functions = getFunctions(app);
-      return { app, auth, firestore, functions };
-    };
-    
-    setServices(getFirebaseServices());
-  }, []); // Empty dependency array ensures this runs only once.
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!services) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Firebase services not initialized.") });
-      return;
-    }
+    if (!services) return;
 
     const { auth, firestore } = services;
     
@@ -121,7 +113,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
   }, [services]);
 
   const contextValue = useMemo(() => {
-    if (!services) return undefined;
     return {
       firebaseApp: services.app,
       firestore: services.firestore,
@@ -131,16 +122,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     }
   }, [services, userAuthState]);
 
-
-  // Render a loading state until services are ready AND the initial user check is complete.
-  if (!contextValue || contextValue.isUserLoading) {
-    return <HomePageSkeleton />;
-  }
-
   return (
     <FirebaseContext.Provider value={contextValue}>
       <FirebaseErrorListener />
-      {children}
+      {contextValue.isUserLoading ? <HomePageSkeleton /> : children}
     </FirebaseContext.Provider>
   );
 };
@@ -155,27 +140,27 @@ const useFirebaseContext = (): FirebaseContextState => {
 }
 
 /** Hook to access Firebase Auth instance. */
-export const useAuth = (): Auth => {
-  const { auth } = useFirebaseContext();
-  return auth;
+export const useAuth = (): Auth | null => {
+  const context = useContext(FirebaseContext);
+  return context?.auth ?? null;
 };
 
 /** Hook to access Firestore instance. */
-export const useFirestore = (): Firestore => {
-  const { firestore } = useFirebaseContext();
-  return firestore;
+export const useFirestore = (): Firestore | null => {
+  const context = useContext(FirebaseContext);
+  return context?.firestore ?? null;
 };
 
 /** Hook to access Firebase App instance. */
-export const useFirebaseApp = (): FirebaseApp => {
-  const { firebaseApp } = useFirebaseContext();
-  return firebaseApp;
+export const useFirebaseApp = (): FirebaseApp | null => {
+  const context = useContext(FirebaseContext);
+  return context?.firebaseApp ?? null;
 };
 
 /** Hook to access Firebase Functions instance. */
-export const useFunctions = (): Functions => {
-  const { functions } = useFirebaseContext();
-  return functions;
+export const useFunctions = (): Functions | null => {
+  const context = useContext(FirebaseContext);
+  return context?.functions ?? null;
 };
 
 /**
