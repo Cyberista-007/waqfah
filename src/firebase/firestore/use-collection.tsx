@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Query,
   onSnapshot,
@@ -61,6 +61,7 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
+  // Start with loading true only if the query is initially provided.
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -68,13 +69,13 @@ export function useCollection<T = any>(
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
-    // If the query is null or undefined, it's not ready yet. 
-    // Set loading to false, clear data/errors, and stop.
+    // **CRITICAL FIX**: If the query is null or undefined, it's not ready. 
+    // Immediately set a clean state and exit the effect. Do not proceed to onSnapshot.
     if (!stableQueryDep) {
       setData(null);
       setIsLoading(false); 
       setError(null);
-      return; 
+      return; // Stop execution here.
     }
     
     // Query is valid, start loading and clear previous errors.
@@ -106,7 +107,7 @@ export function useCollection<T = any>(
           path,
         });
         
-        // We throw the error in dev to make it visible in the Next.js overlay
+        // We log the error in dev to make it visible in the Next.js overlay
         if (process.env.NODE_ENV === 'development') {
            console.error("Firestore Permission Error in useCollection:", contextualError.message);
         }
