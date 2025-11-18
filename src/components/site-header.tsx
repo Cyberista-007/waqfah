@@ -58,8 +58,10 @@ export function SiteHeader() {
   const { isAdmin, checkAdminPassword } = useAdminAuth();
 
   const handleAdminClick = async () => {
-    const isAdmin = await checkAdminPassword();
-    if (isAdmin) {
+    // This function now just prompts for password.
+    // The layout will handle the redirection if the user becomes an admin.
+    const isNowAdmin = await checkAdminPassword();
+    if (isNowAdmin) {
       router.push('/admin/dashboard');
     }
   };
