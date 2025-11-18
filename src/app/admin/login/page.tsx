@@ -1,150 +1,61 @@
 
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useFormState, useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useUser, useAuth, useFirestore } from "@/firebase";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { authenticate, ADMIN_USERNAME } from "@/lib/actions";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from "lucide-react"
 
-function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
+function SubmitButton() {
+  const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={isLoading}>
-      {isLoading ? <Loader2 className="animate-spin" /> : isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? <Loader2 className="animate-spin" /> : "تسجيل الدخول"}
     </Button>
   );
 }
 
 export default function LoginPage() {
-  const { toast } = useToast();
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-  const firestore = useFirestore();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
-    const redirectTo = searchParams.get('redirect_to') || '/admin/dashboard';
-
-    if (!auth || !firestore) {
-        toast({
-            variant: "destructive",
-            title: "خطأ في التهيئة",
-            description: "خدمة المصادقة غير متوفرة. يرجى المحاولة مرة أخرى لاحقًا.",
-        });
-        setIsLoading(false);
-        return;
-    }
-
-    if (!email || !password || (!isLoginMode && !name)) {
-        toast({
-            variant: "destructive",
-            title: "حقول ناقصة",
-            description: "يرجى ملء جميع الحقول المطلوبة.",
-        });
-        setIsLoading(false);
-        return;
-    }
-
-    try {
-        if (isLoginMode) {
-            await signInWithEmailAndPassword(auth, email, password);
-            toast({ title: "أهلاً بعودتك!", description: "تم تسجيل دخولك بنجاح." });
-            router.push(redirectTo);
-        } else {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const newUser = userCredential.user;
-            
-            // Critical Fix: Update profile display name *before* creating the Firestore document.
-            await updateProfile(newUser, { displayName: name });
-            
-            const userRef = doc(firestore, "users", newUser.uid);
-            // Create the user profile document in Firestore with the correct name.
-            await setDoc(userRef, {
-              name: name, // Use the name from the form
-              email: newUser.email,
-              createdAt: Timestamp.now(),
-            }, { merge: true });
-
-            toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
-            router.push(redirectTo);
-        }
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "حدث خطأ",
-            description: getFirebaseAuthErrorMessage(error),
-        });
-    } finally {
-        setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!isUserLoading && user) {
-        const redirectTo = searchParams.get('redirect_to') || '/admin/dashboard';
-        router.push(redirectTo);
-    }
-  }, [user, isUserLoading, router, searchParams]);
-
-  if (isUserLoading || user) {
-      return (
-          <div className="flex h-screen items-center justify-center">
-              <Loader2 className="h-16 w-16 animate-spin" />
-          </div>
-      )
-  }
+  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
 
   return (
-    <div className="flex items-center justify-center py-12">
+    <div className="flex items-center justify-center min-h-screen py-12 bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">
-            {isLoginMode ? "تسجيل الدخول" : "حساب جديد"}
+            الدخول للوحة التحكم
           </CardTitle>
           <CardDescription>
-            {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "املأ الحقول لإنشاء حساب جديد."}
+            هذه المنطقة مخصصة للمدير فقط.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLoginMode && (
-              <div className="space-y-2">
-                <Label htmlFor="name">الاسم</Label>
-                <Input id="name" name="name" type="text" required />
-              </div>
+          <form action={dispatch} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">اسم المدير</Label>
+              <Input id="name" name="name" type="text" placeholder="أدخل اسم المدير..." required />
+            </div>
+            {errorMessage && (
+                <Alert variant="destructive">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>خطأ في الدخول</AlertTitle>
+                    <AlertDescription>
+                        {errorMessage}
+                    </AlertDescription>
+                </Alert>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" name="email" type="email" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" name="password" type="password" required />
-            </div>
-             <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
+             <SubmitButton />
           </form>
-           <div className="mt-4 text-center text-sm">
-                {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
-                <Button variant="link" className="p-0 h-auto" onClick={() => setIsLoginMode(!isLoginMode)}>
-                    {isLoginMode ? "أنشئ حساباً جديداً" : "سجل الدخول"}
-                </Button>
-            </div>
+          <div className="mt-4 p-4 bg-secondary/50 border border-dashed border-secondary-foreground/20 rounded-md">
+            <p className="text-xs text-center text-muted-foreground">
+                لأغراض العرض، اسم المستخدم هو: <br/> <strong className="font-mono">{ADMIN_USERNAME}</strong>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

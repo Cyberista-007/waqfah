@@ -1,49 +1,19 @@
 
 "use client";
 
-import { ReactNode, useEffect, useState } from 'react';
-import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog } from 'lucide-react';
+import { ReactNode } from 'react';
+import { Book, Clapperboard, Home, ListVideo, MessageSquare, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { logout } from '@/lib/actions';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
-
-  useEffect(() => {
-    const checkAdminStatus = () => {
-      if (user) {
-        // Check if the logged-in user's email is the admin email
-        if (user.email === 'abdoreda6249@gmail.com') {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-        setIsCheckingAdmin(false);
-      } else if (!isUserLoading) {
-        // If there's no user and we are not loading, they are definitely not an admin.
-        setIsCheckingAdmin(false);
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [user, isUserLoading]);
-
 
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-        router.push('/');
-    }
+    await logout();
   }
 
   const navItems = [
@@ -58,43 +28,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
     { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
   ];
-  
-    if (isUserLoading || isCheckingAdmin) {
-      return (
-          <div className="flex h-screen items-center justify-center">
-              <Loader2 className="h-16 w-16 animate-spin" />
-          </div>
-      )
-  }
-  
-  if (!user) {
-    // This effect will run on the client side to redirect.
-    if (typeof window !== 'undefined') {
-       router.push('/admin/login');
-    }
-    // Return a loading state while redirecting to prevent flash of content.
-    return (
-        <div className="flex h-screen items-center justify-center flex-col gap-4">
-             <Loader2 className="h-16 w-16 animate-spin" />
-            <p>إعادة التوجيه إلى صفحة تسجيل الدخول...</p>
-        </div>
-    )
-  }
-
-  if (!isAdmin) {
-      // This effect will run on the client side to redirect.
-      if (typeof window !== 'undefined') {
-        router.push('/');
-      }
-      // Return a loading state to prevent flash of content.
-      return (
-        <div className="flex h-screen items-center justify-center flex-col gap-4">
-             <Loader2 className="h-16 w-16 animate-spin" />
-            <p>غير مصرح لك بالدخول. جارِ إعادة التوجيه...</p>
-        </div>
-    )
-  }
-
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -129,10 +62,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </nav>
           </div>
            <div className="mt-auto p-4 space-y-2">
-              <Button onClick={handleLogout} size="sm" variant="outline" className="w-full">
-                <LogOut className="mr-2 h-4 w-4" />
-                تسجيل الخروج
-              </Button>
+              <form action={logout}>
+                <Button type="submit" size="sm" variant="outline" className="w-full">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  تسجيل الخروج
+                </Button>
+              </form>
             <Button size="sm" className="w-full" asChild>
               <Link href="/">العودة للموقع</Link>
             </Button>
@@ -158,5 +93,3 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 };
 
 export default AdminLayout;
-
-    

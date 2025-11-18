@@ -1,12 +1,18 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { SESSION_COOKIE_NAME } from '@/lib/actions';
 
-// This middleware is currently disabled to remove password protection from admin panel.
-// To re-enable, uncomment the code inside the middleware function and the config.
 export function middleware(request: NextRequest) {
-  // The admin panel now uses Firebase Auth, so this middleware is no longer needed.
-  return NextResponse.next();
+    const session = request.cookies.get(SESSION_COOKIE_NAME);
+
+    // If no session cookie, redirect to login page
+    if (!session) {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+
+    // If there is a session, let them proceed
+    return NextResponse.next();
 }
 
 export const config = {
@@ -18,5 +24,15 @@ export const config = {
    * - favicon.ico (favicon file)
    * - /admin/login (the login page itself)
    */
-  // matcher: ['/admin/(?!login)(:path*)'],
+   matcher: [
+    '/admin/dashboard',
+    '/admin/lectures/:path*',
+    '/admin/series/:path*',
+    '/admin/books/:path*',
+    '/admin/comments/:path*',
+    '/admin/users/:path*',
+    '/admin/qa/:path*',
+    '/admin/schedule/:path*',
+    '/admin/topics/:path*',
+  ],
 }
