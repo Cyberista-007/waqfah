@@ -5,7 +5,7 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { Firestore, getFirestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, initializeAuth, indexedDBLocalPersistence, getAuth } from 'firebase/auth';
 import { Functions, getFunctions } from 'firebase/functions';
 
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
@@ -134,7 +134,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 const useFirebaseContext = (): FirebaseContextState => {
     const context = useContext(FirebaseContext);
     if (context === undefined) {
-        throw new Error('useFirebaseContext must be used within a FirebaseProvider.');
+        // This can happen on first render. Return a loading state.
+        return {
+            firebaseApp: null,
+            firestore: null,
+            auth: null,
+            functions: null,
+            user: null,
+            isUserLoading: true,
+            userError: null
+        };
     }
     return context;
 }
