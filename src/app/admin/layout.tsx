@@ -30,15 +30,20 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             const firstUser = querySnapshot.docs[0];
             if (firstUser.id === user.uid) {
               setIsAdmin(true);
+            } else {
+              setIsAdmin(false);
             }
           }
         } catch (error) {
           console.error("Error checking admin status:", error);
+          setIsAdmin(false);
         } finally {
             setIsCheckingAdmin(false);
         }
       } else if (!isUserLoading) {
+        // If there's no user and we are not loading, they are definitely not an admin.
         setIsCheckingAdmin(false);
+        setIsAdmin(false);
       }
     };
 
@@ -75,9 +80,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   }
   
   if (!user) {
+    // This effect will run on the client side to redirect.
     if (typeof window !== 'undefined') {
        router.push('/admin/login');
     }
+    // Return a loading state while redirecting to prevent flash of content.
     return (
         <div className="flex h-screen items-center justify-center flex-col gap-4">
              <Loader2 className="h-16 w-16 animate-spin" />
@@ -87,9 +94,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   }
 
   if (!isAdmin) {
+      // This effect will run on the client side to redirect.
       if (typeof window !== 'undefined') {
         router.push('/');
       }
+      // Return a loading state to prevent flash of content.
       return (
         <div className="flex h-screen items-center justify-center flex-col gap-4">
              <Loader2 className="h-16 w-16 animate-spin" />
