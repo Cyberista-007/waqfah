@@ -55,12 +55,20 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { checkAdminPassword } = useAdminAuth();
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
         router.push('/');
         router.refresh();
+    }
+  }
+
+  const handleAdminClick = async () => {
+    const isNowAdmin = await checkAdminPassword();
+    if (isNowAdmin) {
+      router.push('/admin');
     }
   }
 
@@ -103,10 +111,8 @@ export function SiteHeader() {
                 </DropdownMenuContent>
             </DropdownMenu>
             {user && (
-                 <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                    <Link href="/admin">
-                        <LayoutDashboard className="h-5 w-5" />
-                    </Link>
+                 <Button onClick={handleAdminClick} variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                    <LayoutDashboard className="h-5 w-5" />
                  </Button>
             )}
         </div>
