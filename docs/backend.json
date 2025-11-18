@@ -62,6 +62,10 @@
         "email": { "type": "string", "format": "email" },
         "name": { "type": "string" },
         "photoURL": { "type": "string", "format": "uri" },
+        "bio": { "type": "string" },
+        "minutesListened": { "type": "number" },
+        "lecturesCompleted": { "type": "number" },
+        "seriesCompleted": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["email", "name", "createdAt"]
@@ -105,6 +109,33 @@
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "lectureId", "value", "createdAt"]
+    },
+    "ListenHistory": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ListenHistory",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "lectureId": { "type": "string" },
+            "position": { "type": "number" },
+            "duration": { "type": "number" },
+            "lastListened": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "lectureId", "position", "duration", "lastListened"]
+    },
+    "Playlist": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Playlist",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "lectureIds": { "type": "array", "items": { "type": "string" } },
+            "isPublic": { "type": "boolean" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "name", "lectureIds", "isPublic", "createdAt"]
     }
   },
   "auth": {
@@ -135,6 +166,14 @@
         "definition": { "schema": { "$ref": "#/entities/Favorite" } }
       },
       {
+        "path": "/users/{userId}/listenHistory/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/ListenHistory" } }
+      },
+      {
+        "path": "/users/{userId}/playlists/{playlistId}",
+        "definition": { "schema": { "$ref": "#/entities/Playlist" } }
+      },
+      {
         "path": "/lectures/{lectureId}/comments/{commentId}",
         "definition": { "schema": { "$ref": "#/entities/Comment" } }
       },
@@ -145,3 +184,5 @@
     ]
   }
 }
+
+    

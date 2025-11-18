@@ -75,6 +75,19 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
     
+    match /users/{userId}/listenHistory/{lectureId} {
+      // Users can only read and write to their own listening history.
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/playlists/{playlistId} {
+      // Users can read, write, and delete their own playlists.
+      allow read, write: if isOwner(userId);
+      
+      // Other signed-in users can read public playlists.
+      allow get: if isSignedIn() && resource.data.isPublic == true;
+    }
+    
 
     // =====================================================================
     // Subcollections for Lectures
@@ -113,7 +126,7 @@ service cloud.firestore {
 
     // =====================================================================
     // Admin-Only Collection Group Queries
-    // =====================================================================
+    // =================================e====================================
     
     // Allows admins to query the 'comments' collection group across all lectures
     // to see pending/rejected comments.
@@ -122,3 +135,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

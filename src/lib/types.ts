@@ -77,6 +77,10 @@ export type UserProfile = {
     name: string;
     photoURL?: string;
     createdAt: Timestamp;
+    bio?: string;
+    minutesListened?: number;
+    lecturesCompleted?: number;
+    seriesCompleted?: number;
 };
 
 export type Favorite = {
@@ -93,3 +97,24 @@ export type Rating = {
     value: number;
     createdAt: Timestamp;
 }
+
+export type ListenHistoryItem = {
+    id: string; // lectureId
+    lectureId: string;
+    position: number;
+    duration: number;
+    lastListened: Timestamp;
+    lecture?: Lecture; // Populated client-side
+}
+
+export type Playlist = {
+    id: string;
+    name: string;
+    description?: string;
+    lectureIds: string[];
+    isPublic: boolean;
+    createdAt: Timestamp;
+    userId: string;
+}
+
+    

@@ -2,50 +2,37 @@
 
 "use client";
 
-import { useUser, useFirestore } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, User as UserIcon, Heart, LogOut, Clapperboard, Edit } from "lucide-react";
+import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { collection, query, where, getDocs, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import type { Lecture } from "@/lib/types";
+import type { Lecture, ListenHistoryItem } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
-export default function ProfilePage() {
-    const { user, isUserLoading } = useUser();
+function FavoritesSection() {
+    const { user } = useUser();
     const firestore = useFirestore();
-    const auth = useAuth();
-    const router = useRouter();
     const [favoriteLectures, setFavoriteLectures] = useState<Lecture[]>([]);
-    const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
-
-    useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.push('/auth/login?redirect_to=/profile');
-        }
-    }, [user, isUserLoading, router]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchFavorites = async () => {
-            if (!firestore || !user?.uid) {
-                // If firestore or user is not ready, don't do anything yet.
-                // It might be loading, so don't set loading to false immediately.
-                if(!isUserLoading && !firestore) {
-                  setIsLoadingFavorites(false);
-                }
-                return;
-            };
-            setIsLoadingFavorites(true);
+            if (!firestore || !user?.uid) return;
+            
             try {
                 const favoritesRef = collection(firestore, 'users', user.uid, 'favorites');
                 const favoritesSnap = await getDocs(favoritesRef);
@@ -53,14 +40,12 @@ export default function ProfilePage() {
 
                 if (lectureIds.length > 0) {
                     const lecturesData: Lecture[] = [];
-                    // Firestore 'in' query is limited to 30 items in chunks.
                     for (let i = 0; i < lectureIds.length; i += 30) {
                         const chunk = lectureIds.slice(i, i + 30);
                         const lecturesRef = collection(firestore, 'lectures');
                         const lecturesQuery = query(lecturesRef, where('__name__', 'in', chunk));
                         const lecturesSnap = await getDocs(lecturesQuery);
-                        const lectures = lecturesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture));
-                        lecturesData.push(...lectures);
+                        lecturesData.push(...lecturesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture)));
                     }
                     setFavoriteLectures(lecturesData);
                 } else {
@@ -68,15 +53,120 @@ export default function ProfilePage() {
                 }
             } catch (error) {
                 console.error("Error fetching favorite lectures:", error);
-                setFavoriteLectures([]);
             } finally {
-                setIsLoadingFavorites(false);
+                setIsLoading(false);
             }
         };
-
         fetchFavorites();
+    }, [user, firestore]);
 
-    }, [user, firestore, isUserLoading]);
+    if (isLoading) {
+         return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+               <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+
+    return favoriteLectures.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {favoriteLectures.map(lecture => <LectureCard key={lecture.id} lecture={lecture} />)}
+        </div>
+    ) : (
+        <Card className="text-center py-16">
+            <CardContent className="flex flex-col items-center gap-4">
+                <Heart className="w-16 h-16 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">لم تقم بإضافة أي محاضرات إلى المفضلة بعد.</p>
+                <Button asChild><Link href="/lectures">تصفح المحاضرات</Link></Button>
+            </CardContent>
+        </Card>
+    );
+}
+
+function ListenHistorySection() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [history, setHistory] = useState<ListenHistoryItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (!firestore || !user?.uid) return;
+            try {
+                const historyRef = collection(firestore, 'users', user.uid, 'listenHistory');
+                const historyQuery = query(historyRef, orderBy('lastListened', 'desc'), limit(8));
+                const historySnap = await getDocs(historyQuery);
+                
+                const items = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ListenHistoryItem));
+
+                if (items.length > 0) {
+                    const lectureIds = items.map(item => item.lectureId);
+                    const lecturesRef = collection(firestore, 'lectures');
+                    const lecturesQuery = query(lecturesRef, where('__name__', 'in', lectureIds));
+                    const lecturesSnap = await getDocs(lecturesQuery);
+                    const lecturesData = lecturesSnap.docs.reduce((acc, doc) => {
+                        acc[doc.id] = { id: doc.id, ...doc.data() } as Lecture;
+                        return acc;
+                    }, {} as Record<string, Lecture>);
+
+                    const populatedHistory = items.map(item => ({ ...item, lecture: lecturesData[item.lectureId] })).filter(item => item.lecture);
+                    setHistory(populatedHistory);
+                } else {
+                    setHistory([]);
+                }
+            } catch (error) {
+                console.error("Error fetching listen history:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchHistory();
+    }, [user, firestore]);
+
+     if (isLoading) {
+         return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+               <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+    
+    return history.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {history.map(item => <LectureCard key={item.id} lecture={item.lecture!} />)}
+        </div>
+    ) : (
+        <Card className="text-center py-16">
+            <CardContent className="flex flex-col items-center gap-4">
+                <History className="w-16 h-16 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">لم تستمع لأي محاضرات بعد.</p>
+                <Button asChild><Link href="/lectures">ابدأ الاستماع الآن</Link></Button>
+            </CardContent>
+        </Card>
+    );
+}
+
+function PlaylistsSection() {
+     return (
+        <Card className="text-center py-16">
+            <CardContent className="flex flex-col items-center gap-4">
+                <ListMusic className="w-16 h-16 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">ميزة قوائم التشغيل قادمة قريباً!</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+export default function ProfilePage() {
+    const { user, isUserLoading } = useUser();
+    const auth = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/auth/login?redirect_to=/profile');
+        }
+    }, [user, isUserLoading, router]);
 
     const onLogout = async () => {
         if (auth) {
@@ -95,56 +185,46 @@ export default function ProfilePage() {
 
     return (
         <div className="space-y-8">
-            <Card>
-                <CardHeader className="flex flex-col sm:flex-row items-center gap-6">
-                    <Avatar className="h-24 w-24">
-                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                        <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-center sm:text-right">
-                        <CardTitle className="text-3xl font-headline">{user.displayName}</CardTitle>
-                        <CardDescription>{user.email}</CardDescription>
-                        <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                             <Button variant="outline" size="sm">
-                                <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
-                            </Button>
-                            <Button onClick={onLogout} variant="destructive" size="sm">
-                                <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
-                            </Button>
-                        </div>
+            <header className="flex flex-col sm:flex-row items-center gap-6">
+                <Avatar className="h-24 w-24">
+                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+                    <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
+                </Avatar>
+                <div className="text-center sm:text-right">
+                    <h1 className="text-3xl font-bold font-headline">{user.displayName}</h1>
+                    <p className="text-muted-foreground">{user.email}</p>
+                    {/* Add Bio here once available */}
+                    <div className="flex gap-2 mt-4 justify-center sm:justify-start">
+                        <Button variant="outline" size="sm">
+                            <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
+                        </Button>
+                        <Button onClick={onLogout} variant="secondary" size="sm">
+                            <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
+                        </Button>
                     </div>
-                </CardHeader>
-            </Card>
+                </div>
+            </header>
+            
+            <Separator />
 
-            <section>
-                <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3">
-                    <Heart className="text-primary" />
-                    المحاضرات المفضلة
-                </h2>
-                {isLoadingFavorites ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[...Array(4)].map((_, i) => (
-                           <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
-                        ))}
-                    </div>
-                ) : favoriteLectures.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {favoriteLectures.map(lecture => (
-                            <LectureCard key={lecture.id} lecture={lecture} />
-                        ))}
-                    </div>
-                ) : (
-                    <Card className="text-center py-16">
-                        <CardContent className="flex flex-col items-center gap-4">
-                            <Clapperboard className="w-16 h-16 text-muted-foreground" />
-                            <p className="text-lg text-muted-foreground">لم تقم بإضافة أي محاضرات إلى المفضلة بعد.</p>
-                            <Button asChild>
-                                <Link href="/lectures">تصفح المحاضرات</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                )}
-            </section>
+            <Tabs defaultValue="history" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="history"><History className="me-2"/>سجل الاستماع</TabsTrigger>
+                <TabsTrigger value="favorites"><Heart className="me-2"/>المفضلة</TabsTrigger>
+                <TabsTrigger value="playlists"><ListMusic className="me-2"/>قوائم التشغيل</TabsTrigger>
+              </TabsList>
+              <TabsContent value="history" className="mt-6">
+                <ListenHistorySection />
+              </TabsContent>
+              <TabsContent value="favorites" className="mt-6">
+                <FavoritesSection />
+              </TabsContent>
+              <TabsContent value="playlists" className="mt-6">
+                <PlaylistsSection />
+              </TabsContent>
+            </Tabs>
         </div>
     );
 }
+
+    
