@@ -11,29 +11,13 @@ export async function authenticate(
   prevState: string | undefined,
   formData: FormData
 ) {
-  const password = formData.get("password");
-  try {
-    if (password === ADMIN_PASSWORD) {
-      cookies().set(SESSION_COOKIE_NAME, "true", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 24 hours
-        path: "/",
-      });
-      redirect("/admin/dashboard");
-    } else {
-      return "كلمة المرور غير صحيحة.";
-    }
-  } catch (error: any) {
-    if (error.message.includes('NEXT_REDIRECT')) {
-        // This is not a real error, just Next.js redirecting.
-        throw error;
-    }
-    return 'حدث خطأ غير متوقع.';
-  }
+  // This functionality is disabled.
+  return "Authentication is disabled.";
 }
 
 export async function logout() {
-    cookies().delete(SESSION_COOKIE_NAME);
-    redirect('/admin/login');
+    // Since login is disabled, this function is not strictly necessary but kept for potential future use.
+    // cookies().delete(SESSION_COOKIE_NAME);
+    // redirect('/admin/login');
+    redirect('/');
 }
