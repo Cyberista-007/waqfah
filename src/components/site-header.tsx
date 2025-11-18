@@ -34,7 +34,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
-import { useAdminActivation } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -121,12 +120,12 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <>
-              <Link href="/admin">
-                <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                  <LayoutDashboard className="h-5 w-5" />
-                  <span className="sr-only">لوحة التحكم</span>
-                </Button>
-              </Link>
+              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                  <Link href="/admin">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="sr-only">لوحة التحكم</span>
+                  </Link>
+              </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">

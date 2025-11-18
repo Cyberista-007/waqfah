@@ -9,14 +9,13 @@ import { useUser } from '@/firebase';
 const SESSION_STORAGE_KEY = 'isAdminAuthenticated';
 
 export function useAdminActivation() {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check session storage on component mount
     const sessionValue = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (sessionValue === 'true') {
       setIsAdmin(true);
@@ -25,31 +24,25 @@ export function useAdminActivation() {
   }, []);
 
   const checkAdminPassword = useCallback(() => {
-    // If user is not logged in, do nothing. Let the guard handle redirection.
-    if (!user) {
-        return;
-    }
-    // If already admin, no need to ask again.
     if (isAdmin) {
       setIsLoading(false);
       return;
     }
 
-    const password = prompt("يرجى إدخال كلمة مرور المدير للوصول:");
+    const password = prompt("للوصول إلى لوحة التحكم، يرجى إدخال كلمة مرور المدير:");
     
     if (password === 'abdoR3d@') {
       sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
       setIsAdmin(true);
       toast({ title: "تم تفعيل وضع المدير بنجاح!" });
     } else {
-      if (password !== null) { // User entered something but it was wrong
+      if (password !== null) { 
         toast({ variant: 'destructive', title: "كلمة المرور غير صحيحة." });
       }
-      // If user cancelled or entered wrong password, redirect them away.
       router.replace('/');
     }
     setIsLoading(false);
-  }, [user, isAdmin, router, toast]);
+  }, [isAdmin, router, toast]);
 
   const deActivateAdmin = useCallback(() => {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);

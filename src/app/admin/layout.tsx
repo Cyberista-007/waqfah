@@ -2,7 +2,7 @@
 
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useCallback } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -19,24 +19,25 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminActivation();
   const router = useRouter();
 
-  useEffect(() => {
-    // If we're still loading user or admin status, don't do anything yet.
+  const verifyAccess = useCallback(() => {
     if (isUserLoading || isAdminLoading) {
-      return;
+      return; // Still loading, wait.
     }
 
-    // 1. If there's no user, redirect to the main login page.
     if (!user) {
       router.replace('/auth/login?redirect_to=/admin');
       return;
     }
 
-    // 2. If the user is logged in, but not an admin, check the password.
-    if (user && !isAdmin) {
+    if (!isAdmin) {
       checkAdminPassword();
     }
   }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
 
+  useEffect(() => {
+    verifyAccess();
+  }, [verifyAccess]);
+  
   // While we are waiting for user or admin status, show a loader.
   // OR if the user is logged in but the check hasn't confirmed them as admin yet.
   if (isUserLoading || isAdminLoading || (user && !isAdmin)) {
@@ -60,10 +61,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   
   const handleLogout = async () => {
     if (user) {
-        // Since useUser hook gets user from onAuthStateChanged,
-        // we just need to sign out, and the user state will update automatically.
         await signOut(user.auth);
-        // Clear the admin session storage as well
         deActivateAdmin();
         router.push('/');
     }
