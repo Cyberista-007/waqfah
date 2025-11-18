@@ -15,12 +15,12 @@ import { TrafficChart } from "@/components/admin/traffic-chart";
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
 
-    const lecturesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'lectures')) : null, [firestore]);
-    const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series')) : null, [firestore]);
-    const booksQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'books')) : null, [firestore]);
+    const lecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
+    const seriesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'series')) : null), [firestore]);
+    const booksQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
     
     const recentCommentsQuery = useMemoFirebase(
-      () => firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null, 
+      () => (firestore ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
       [firestore]
     );
 

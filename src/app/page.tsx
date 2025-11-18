@@ -1,11 +1,11 @@
 
+
 "use client";
 
 import {
   Card,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { getLatestLectures, getLatestSeries } from '@/lib/data';
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,13 +23,13 @@ export default function Home() {
   const firestore = useFirestore();
 
   const latestSeriesQuery = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'series'), orderBy('createdAt', 'desc'), limit(3)) : null,
+    () => (firestore ? query(collection(firestore, 'series'), orderBy('createdAt', 'desc'), limit(3)) : null),
     [firestore]
   );
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>(latestSeriesQuery);
 
   const latestLecturesQuery = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc'), limit(8)) : null,
+    () => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc'), limit(8)) : null),
     [firestore]
   );
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>(latestLecturesQuery);

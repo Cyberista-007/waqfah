@@ -55,29 +55,25 @@ export interface InternalQuery extends Query<DocumentData> {
  * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>))  | null | undefined,
+    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>))  | null,
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Start as true
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // The memoized query is now just a dependency, not the source of truth for the effect.
-  // The stableQuery variable inside useEffect will be used.
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
-    // If the query is not ready (null or undefined), set state to a clean, non-loading state and do nothing.
     if (!stableQueryDep) {
       setData(null);
-      setIsLoading(false); // Not loading because there's nothing to load
+      setIsLoading(false); 
       setError(null);
-      return; // Stop execution of the effect
+      return; 
     }
     
-    // Reset state for new query
     setIsLoading(true);
     setError(null);
 
@@ -97,7 +93,6 @@ export function useCollection<T = any>(
                 ? (stableQueryDep as CollectionReference).path
                 : (stableQueryDep as unknown as InternalQuery)._query.path.canonicalString()
         } catch (e) {
-            // Path extraction can fail if query is weird, just use a placeholder
             path = "unknown/path"
         }
 
@@ -106,7 +101,6 @@ export function useCollection<T = any>(
           path,
         })
         
-        // We throw the error in dev to make it visible in the Next.js overlay
         if (process.env.NODE_ENV === 'development') {
            console.error("Firestore Permission Error in useCollection:", contextualError.message);
         }
@@ -115,13 +109,12 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // trigger global error propagation
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
     return () => unsubscribe();
-  }, [stableQueryDep]); // Re-run if the memoized query changes.
+  }, [stableQueryDep]); 
   
   return { data, isLoading, error };
 }

@@ -1,4 +1,5 @@
 
+
 "use client";
 import {
   Select,
@@ -13,6 +14,7 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import type { Lecture, Series } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
+import { useMemo } from "react";
 
 export default function LecturesListPage() {
   const router = useRouter();
@@ -20,10 +22,10 @@ export default function LecturesListPage() {
   const searchParams = useSearchParams();
   const firestore = useFirestore();
 
-  const lecturesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null, [firestore]);
+  const lecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null), [firestore]);
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
   
-  const seriesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'series'), orderBy('title')) : null, [firestore]);
+  const seriesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null), [firestore]);
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
 
   const seriesFilter = searchParams.get('series');
@@ -44,7 +46,7 @@ export default function LecturesListPage() {
     router.push(`${pathname}${query}`);
   };
   
-  const filteredLectures = useMemoFirebase(() => {
+  const filteredLectures = useMemo(() => {
     if (!allLectures) return [];
     
     let lectures = [...allLectures];

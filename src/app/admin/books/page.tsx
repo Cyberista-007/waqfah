@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Book } from "@/lib/types";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";

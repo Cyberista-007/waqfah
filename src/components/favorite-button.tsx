@@ -25,10 +25,12 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
         () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
         [user, firestore]
     );
-    const { data: favorites } = useCollection(favoritesQuery);
+    const { data: favorites, isLoading: favoritesLoading } = useCollection(favoritesQuery);
 
     useEffect(() => {
-        setIsFavorite(favorites?.some(fav => fav.id === lectureId) || false);
+        if (favorites) {
+            setIsFavorite(favorites.some(fav => fav.id === lectureId));
+        }
     }, [favorites, lectureId]);
 
     const handleFavorite = async () => {
@@ -65,7 +67,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
               !showLabel && "text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full h-10 w-10",
               isFavorite && !showLabel && "text-red-500",
           )}
-          disabled={isUserLoading}
+          disabled={isUserLoading || favoritesLoading}
       >
           <Heart className={cn("w-5 h-5 transition-colors", isFavorite && "fill-current text-red-500")} />
           {showLabel && <span className="ms-2"> {isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</span>}
