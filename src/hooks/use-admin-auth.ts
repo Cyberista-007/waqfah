@@ -1,19 +1,25 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from './use-toast';
+import { useRouter } from 'next/navigation';
 
-const ADMIN_PASSWORD = "abdoR3d@";
 const SESSION_STORAGE_KEY = 'isAdminAuthenticated';
+const REQUIRED_CLICKS = 10;
+const TIME_LIMIT_MS = 5000;
 
-export function useAdminAuth() {
+export function useAdminActivation() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
+
+  const clickCount = useRef(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // This effect runs only once on the client-side
+    // Check session storage on initial client-side load
     const sessionValue = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (sessionValue === 'true') {
       setIsAdmin(true);
@@ -21,25 +27,47 @@ export function useAdminAuth() {
     setIsLoading(false);
   }, []);
 
-  const checkAdminPassword = useCallback(async (): Promise<boolean> => {
-    // If already admin, no need to ask again
-    if (isAdmin) {
-      return true;
+  const handleAdminActivationClick = useCallback(() => {
+    // If already admin, do nothing
+    if (isAdmin) return;
+
+    // Reset if timer has expired
+    if (timerRef.current === null) {
+      clickCount.current = 0;
+    }
+    
+    clickCount.current += 1;
+
+    // If this is the first click in a sequence, start the timer
+    if (clickCount.current === 1) {
+      timerRef.current = setTimeout(() => {
+        // Reset after time limit
+        clickCount.current = 0;
+        timerRef.current = null;
+      }, TIME_LIMIT_MS);
     }
 
-    const password = prompt("يرجى إدخال كلمة مرور المدير للوصول:");
-    if (password === ADMIN_PASSWORD) {
+    // Check if the required number of clicks is reached
+    if (clickCount.current >= REQUIRED_CLICKS) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      clickCount.current = 0;
+      
       sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
       setIsAdmin(true);
-      toast({ title: "أهلاً بك أيها المدير!", description: "تم منح صلاحيات الوصول." });
-      return true;
-    } else if (password !== null) { // User entered something but it was wrong
-      toast({ variant: "destructive", title: "كلمة مرور خاطئة", description: "ليس لديك الصلاحيات اللازمة للوصول." });
-      return false;
-    } else { // User cancelled the prompt
-      return false;
+      toast({ title: "تم تفعيل وضع المدير!", description: "أهلاً بك. يمكنك الآن الوصول إلى لوحة التحكم." });
+      
+      // Redirect to the admin dashboard upon successful activation
+      router.push('/admin');
     }
-  }, [isAdmin, toast]);
+  }, [isAdmin, toast, router]);
 
-  return { isAdmin, isLoading, checkAdminPassword };
+  const deActivateAdmin = () => {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    setIsAdmin(false);
+  }
+
+  return { isAdmin, isLoading, handleAdminActivationClick, deActivateAdmin };
 }

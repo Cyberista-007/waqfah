@@ -10,17 +10,17 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { useAdminActivation } from '@/hooks/use-admin-auth';
 
-// This is the new Guard component that handles all auth logic.
+// This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminAuth();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminActivation();
   const router = useRouter();
 
   useEffect(() => {
-    // Don't do anything until we know if a user is logged in or not.
-    if (isUserLoading) {
+    // Wait until both user and admin status are resolved
+    if (isUserLoading || isAdminLoading) {
       return;
     }
 
@@ -30,30 +30,15 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If the user is logged in, but we are still checking if they are an admin, wait.
-    if (isAdminLoading) {
+    // If the user is logged in, but not an admin, redirect to home page.
+    if (!isAdmin) {
+      router.replace('/');
       return;
     }
-    
-    // If the user is logged in and we know they are not an admin yet,
-    // trigger the password check.
-    if (!isAdmin) {
-      checkAdminPassword().then(isNowAdmin => {
-        // If the password check fails (wrong password or cancelled),
-        // redirect them away from the admin area to the home page.
-        if (!isNowAdmin) {
-          router.replace('/');
-        }
-        // If it succeeds, the `isAdmin` state will update, and this
-        // effect will re-run. On the next run, `isAdmin` will be true,
-        // and the component will render the children.
-      });
-    }
-
-  }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
 
   // While we are waiting for user or admin status, show a loader.
-  if (isUserLoading || !isAdmin) {
+  if (isUserLoading || isAdminLoading || !isAdmin || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
@@ -70,12 +55,13 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const { deActivateAdmin } = useAdminActivation();
   
   const handleLogout = async () => {
     if (user) {
         await signOut(user.auth);
-        // Clear the session storage so they have to re-enter admin password next time
-        sessionStorage.removeItem('isAdminAuthenticated');
+        // Clear the admin session storage as well
+        deActivateAdmin();
         router.push('/');
     }
   }

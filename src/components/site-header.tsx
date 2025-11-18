@@ -34,7 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
-import { useAdminAuth } from "@/hooks/use-admin-auth"
+import { useAdminActivation } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -55,10 +55,12 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { handleAdminActivationClick, deActivateAdmin } = useAdminActivation();
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
+        deActivateAdmin(); // Also clear admin state on logout
         router.push('/');
         router.refresh();
     }
@@ -75,9 +77,12 @@ export function SiteHeader() {
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
     )}>
       <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors">
+        <div 
+          onClick={handleAdminActivationClick} 
+          className="text-xl font-bold font-headline hover:text-primary transition-colors cursor-pointer"
+        >
             موقع أمجد سمير
-        </Link>
+        </div>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-6">
           {mainNavItems.map((item) => (
@@ -118,11 +123,6 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <>
-              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                  <Link href="/admin">
-                    <LayoutDashboard className="h-5 w-5" />
-                  </Link>
-              </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -135,6 +135,9 @@ export function SiteHeader() {
                   <DropdownMenuContent align="end" className="bg-background border-border">
                       <DropdownMenuItem asChild>
                           <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
@@ -165,9 +168,12 @@ export function SiteHeader() {
             <SheetContent side="right" className="bg-background w-[280px] p-6">
               <div className="flex flex-col space-y-4">
               <SheetClose asChild>
-                <Link href="/" className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4">
+                <div 
+                  onClick={handleAdminActivationClick} 
+                  className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4 cursor-pointer"
+                >
                     موقع أمجد سمير
-                </Link>
+                </div>
               </SheetClose>
                 {[...mainNavItems, ...moreNavItems].map((item) => (
                   <SheetClose asChild key={item.label}>
