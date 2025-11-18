@@ -73,7 +73,7 @@ export function useCollection<T = any>(
     // Immediately set a clean state and exit the effect. Do not proceed to onSnapshot.
     if (!stableQueryDep) {
       setData(null);
-      setIsLoading(false); 
+      setIsLoading(false); // No query means we are not loading.
       setError(null);
       return; // Stop execution here.
     }
