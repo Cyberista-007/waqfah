@@ -32,6 +32,9 @@ export function RecommendedLectures() {
   useEffect(() => {
     const getRecommendations = async () => {
       if (historyLoading || lecturesLoading || !listenHistory || !allLectures) {
+        if (!historyLoading && !lecturesLoading) {
+            setIsLoading(false);
+        }
         return;
       }
       

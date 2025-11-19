@@ -1,11 +1,10 @@
 
-
 "use client";
 
 import { Heart } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useUser } from "@/firebase";
 import { doc, setDoc, deleteDoc, collection, Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -19,7 +18,7 @@ interface FavoriteButtonProps {
 
 export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonProps) {
     const { toast } = useToast();
-    const { user, isUserLoading } = useAuth();
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
 

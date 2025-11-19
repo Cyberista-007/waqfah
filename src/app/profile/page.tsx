@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useUser, useFirestore, useDoc } from "@/firebase";
@@ -33,7 +32,10 @@ function FavoritesSection() {
 
     useEffect(() => {
         const fetchFavorites = async () => {
-            if (!firestore || !user?.uid) return;
+            if (!firestore || !user?.uid) {
+                if (!firestore) setIsLoading(false);
+                return;
+            }
             
             try {
                 const favoritesRef = collection(firestore, 'users', user.uid, 'favorites');
@@ -94,7 +96,10 @@ function ListenHistorySection() {
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!firestore || !user?.uid) return;
+            if (!firestore || !user?.uid) {
+                if (!firestore) setIsLoading(false);
+                return;
+            }
             try {
                 const historyRef = collection(firestore, 'users', user.uid, 'listenHistory');
                 const historyQuery = query(historyRef, orderBy('lastListened', 'desc'), limit(8));

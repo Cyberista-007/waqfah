@@ -1,7 +1,7 @@
 
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useMemoFirebase } from '../provider';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -30,11 +29,6 @@ export interface UseDocResult<T> {
  * React hook to subscribe to a single Firestore document in real-time.
  * Handles nullable references.
  *
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
- * references
- *
- *
  * @template T Optional type for document data. Defaults to any.
  * @param {DocumentReference<DocumentData> | null | undefined} docRef -
  * The Firestore DocumentReference. Waits if null/undefined.
@@ -49,7 +43,8 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  const stableDocRef = useMemoFirebase(() => memoizedDocRef, [memoizedDocRef]);
+  // useMemo is sufficient here because the dependency is the ref itself.
+  const stableDocRef = useMemo(() => memoizedDocRef, [memoizedDocRef]);
 
   useEffect(() => {
     // If the doc ref is not ready, set loading to false and clear data/errors.
