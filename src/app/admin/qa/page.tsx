@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import type { QAPair } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, HelpCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -36,7 +36,7 @@ export default function AdminQAPage() {
     const [itemToEdit, setItemToEdit] = useState<QAPair | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const qaQuery = useMemoFirebase(
+    const qaQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'question_answers')) : null),
         [firestore]
     );

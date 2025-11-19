@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import type { Sheikh } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, doc, orderBy } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, MicVocal } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -41,7 +41,7 @@ export default function AdminSheikhsPage() {
     const [itemToEdit, setItemToEdit] = useState<Sheikh | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const sheikhsQuery = useMemoFirebase(
+    const sheikhsQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'sheikhs'), orderBy('name')) : null),
         [firestore]
     );

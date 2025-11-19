@@ -7,15 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getPlaceholderImage } from '@/lib/images';
 import { ListVideo } from 'lucide-react';
 import { SeriesCard } from '@/components/series-card';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Series } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
 
 
 export default function SeriesListPage() {
   const firestore = useFirestore();
-  const seriesQuery = useMemoFirebase(
+  const seriesQuery = useMemo(
     () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
     [firestore]
   );

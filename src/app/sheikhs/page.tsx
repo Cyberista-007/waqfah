@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -5,10 +6,11 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { getPlaceholderImage } from '@/lib/images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MicVocal, Loader2 } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Sheikh } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
 
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -16,7 +18,7 @@ const getInitials = (name: string) => {
 
 export default function SheikhsPage() {
     const firestore = useFirestore();
-    const sheikhsQuery = useMemoFirebase(
+    const sheikhsQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'sheikhs'), orderBy('name')) : null),
         [firestore]
     );

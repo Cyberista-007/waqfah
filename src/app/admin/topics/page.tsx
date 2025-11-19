@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import type { Topic } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, doc, orderBy } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Hash } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -35,7 +35,7 @@ export default function AdminTopicsPage() {
     const [itemToEdit, setItemToEdit] = useState<Topic | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const topicsQuery = useMemoFirebase(
+    const topicsQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'topics'), orderBy('name')) : null),
         [firestore]
     );

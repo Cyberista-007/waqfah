@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import type { ScheduleItem } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, doc, orderBy } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, CalendarClock } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -36,7 +37,7 @@ export default function AdminSchedulePage() {
     const [itemToEdit, setItemToEdit] = useState<ScheduleItem | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const scheduleQuery = useMemoFirebase(
+    const scheduleQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'scheduled_lessons'), orderBy('dateTime', 'desc')) : null),
         [firestore]
     );

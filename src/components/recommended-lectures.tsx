@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useEffect, useState, useMemo } from 'react';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import type { Lecture, ListenHistoryItem } from '@/lib/types';
 import { recommendLectures } from '@/ai/flows/recommend-lectures';
@@ -16,7 +16,7 @@ export function RecommendedLectures() {
   const [recommendations, setRecommendations] = useState<Lecture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const listenHistoryQuery = useMemoFirebase(
+  const listenHistoryQuery = useMemo(
     () =>
       user && firestore
         ? query(collection(firestore, 'users', user.uid, 'listenHistory'), orderBy('lastListened', 'desc'), limit(10))
@@ -25,7 +25,7 @@ export function RecommendedLectures() {
   );
   const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(listenHistoryQuery);
   
-  const allLecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
+  const allLecturesQuery = useMemo(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(allLecturesQuery);
 
 

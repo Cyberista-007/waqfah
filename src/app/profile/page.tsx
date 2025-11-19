@@ -2,14 +2,14 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { Lecture, ListenHistoryItem, UserProfile } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import { useAuth } from "@/firebase";
@@ -173,7 +173,7 @@ export default function ProfilePage() {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
 
-    const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
+    const userDocRef = useMemo(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {

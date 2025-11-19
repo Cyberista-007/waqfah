@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import type { Series } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 
 export default function AdminSeriesPage() {
   const firestore = useFirestore();
-  const seriesQuery = useMemoFirebase(
+  const seriesQuery = useMemo(
     () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
     [firestore]
   );

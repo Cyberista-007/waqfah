@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture } from "@/lib/types";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, orderBy, doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -32,7 +32,7 @@ export default function AdminLecturesPage() {
     const firestore = useFirestore();
     const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
 
-    const lecturesQuery = useMemoFirebase(
+    const lecturesQuery = useMemo(
         () => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null),
         [firestore]
     );
