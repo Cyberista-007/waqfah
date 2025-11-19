@@ -37,11 +37,6 @@ export function SiteFooter() {
           <p className="text-sm text-muted-foreground">
             هذا الموقع هو تصميم مبدئي لأغراض العرض.
           </p>
-          <div className="mt-4 space-x-4 space-x-reverse">
-             <Button variant="link" className="text-muted-foreground hover:text-foreground text-sm hover:underline">
-                English
-            </Button>
-          </div>
         </div>
       </div>
     </footer>
