@@ -429,6 +429,22 @@
     --font-body: 'Lalezar';
     --font-headline: 'Lalezar';
   }
+  .font-tajawal {
+    --font-body: 'Tajawal';
+    --font-headline: 'Tajawal';
+  }
+  .font-amiri {
+    --font-body: 'Amiri';
+    --font-headline: 'Amiri';
+  }
+  .font-markazi-text {
+    --font-body: 'Markazi Text';
+    --font-headline: 'Markazi Text';
+  }
+  .font-ibm-plex-sans-arabic {
+    --font-body: 'IBM Plex Sans Arabic';
+    --font-headline: 'IBM Plex Sans Arabic';
+  }
 
   .animated-gradient {
     background: linear-gradient(

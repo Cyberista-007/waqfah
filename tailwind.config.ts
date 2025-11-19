@@ -23,6 +23,10 @@ export default {
         'cairo': ['Cairo', 'sans-serif'],
         'noto-sans-arabic': ['"Noto Sans Arabic"', 'sans-serif'],
         'lalezar': ['Lalezar', 'cursive'],
+        'tajawal': ['Tajawal', 'sans-serif'],
+        'amiri': ['Amiri', 'serif'],
+        'markazi-text': ['"Markazi Text"', 'serif'],
+        'ibm-plex-sans-arabic': ['"IBM Plex Sans Arabic"', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
