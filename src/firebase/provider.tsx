@@ -114,14 +114,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     return () => unsubscribe();
   }, [services]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
       firebaseApp: services.app,
       firestore: services.firestore,
       auth: services.auth,
       functions: services.functions,
       storage: services.storage,
       ...authState,
-  };
+  }), [services, authState]);
 
   // CRITICAL FIX: Do not render children until user state is resolved.
   // This ensures that all child components that use Firebase hooks
@@ -191,3 +191,4 @@ export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(factory, deps);
 }
+
