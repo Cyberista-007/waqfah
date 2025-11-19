@@ -1,8 +1,10 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getAllScheduleItems } from '@/lib/data';
 import { CalendarPlus } from 'lucide-react';
+import type { ScheduleItem } from '@/lib/types';
 
 export const metadata = {
     title: 'جدول الدروس',
@@ -11,7 +13,9 @@ export const metadata = {
 // Revalidate this page every hour
 export const revalidate = 3600;
 
-function generateICSLink(item: Awaited<ReturnType<typeof getAllScheduleItems>>[0]) {
+function generateICSLink(item: ScheduleItem) {
+    if (!item.dateTime?.toDate) return '#';
+
     const startTime = item.dateTime.toDate();
     const endTime = new Date(startTime.getTime() + (item.duration || 60) * 60 * 1000); // Default to 60 minutes if no duration
 

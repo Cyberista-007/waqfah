@@ -1,12 +1,11 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getLectureBySlug } from '@/lib/data';
+import { getLectureBySlug, getRelatedLectures } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, MessageCircle, Share2 } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
-import RelatedLectures from '@/components/related-lectures';
 import { LectureHeader } from '@/components/lecture-header';
 import { PlayButton } from '@/components/play-button';
 
@@ -28,8 +27,10 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
   if (!lecture) {
     notFound();
   }
+  
+  const relatedLectures = await getRelatedLectures(lecture.id, lecture.seriesId);
 
-  const seriesLink = `/series/${lecture.seriesId || lecture.seriesSlug}`;
+  const seriesLink = `/series/${lecture.seriesId}`;
   const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://your-domain.com/lectures/${lecture.slug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ أمجد سمير`;
 
@@ -39,7 +40,7 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
 
       <Card className="shadow-lg">
         <CardContent className="p-4">
-          <PlayButton track={{ src: lecture.audioSrc, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId, seriesSlug: lecture.seriesSlug, seriesTitle: lecture.seriesTitle, imageId: lecture.imageId, slug: lecture.slug }} />
+          <PlayButton track={{ src: lecture.audioSrc, title: lecture.title, id: lecture.id, seriesId: lecture.seriesId, seriesSlug: lecture.seriesSlug, seriesTitle: lecture.seriesTitle, imageId: lecture.imageId, slug: lecture.slug }} />
         </CardContent>
       </Card>
       
@@ -94,7 +95,25 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
         </Card>
       )}
       
-      <RelatedLectures currentLectureId={lecture.id} seriesId={lecture.seriesId} />
+      {relatedLectures.length > 0 && (
+        <section>
+            <h3 className="text-2xl font-semibold mb-4 font-headline">محاضرات ذات صلة</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedLectures.map(related => (
+                    <Card key={related.slug} className="overflow-hidden">
+                        <Link href={`/lectures/${related.slug}`}>
+                            <CardContent className="p-4">
+                                <h4 className="font-semibold font-headline hover:underline">
+                                    {related.title}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">{related.seriesTitle}</p>
+                            </CardContent>
+                        </Link>
+                    </Card>
+                ))}
+            </div>
+        </section>
+      )}
 
     </div>
   );

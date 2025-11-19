@@ -1,27 +1,9 @@
 
-import { getLectureBySlug, getRelatedLectures } from "@/lib/data"
+import { getRelatedLectures } from "@/lib/data"
 import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
-import { notFound } from "next/navigation";
-import type { Lecture } from "@/lib/types";
-
-
-async function fetchRelatedLectures(currentLectureSlug: string): Promise<Lecture[]> {
-    const currentLecture = await getLectureBySlug(currentLectureSlug);
-    if (!currentLecture) {
-        return [];
-    }
-
-    // Simple fallback: get other lectures from the same series
-    const fallbackLectures = await getRelatedLectures(currentLecture.id, currentLecture.seriesId);
-    
-    // In a real app, you might try AI recommendations first and use this as a fallback.
-    // For now, we'll just use the simple series-based relation.
-    return fallbackLectures;
-}
-
 
 export default async function RelatedLectures({ currentLectureId, seriesId }: { currentLectureId: string, seriesId: string }) {
     
