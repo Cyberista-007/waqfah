@@ -114,40 +114,11 @@ service cloud.firestore {
                       request.resource.data.value >= 1 &&
                       request.resource.data.value <= 5;
     }
-
-    match /lectures/{lectureId}/comments/{commentId} {
-      // Anyone can read 'approved' comments.
-      allow get: if resource.data.status == 'approved';
-      
-      // Allow listing comments but only if filtered by 'approved' status.
-      allow list: if request.query.get('where.status') == 'approved';
-      
-      // A signed-in user can create a comment, which must be 'pending'.
-      allow create: if isSignedIn() &&
-                       request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.status == 'pending';
-      
-      // An 'admin' (any signed-in user for now) can update only the status.
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
-
-      // The original author can delete their comment if it's 'pending' or 'rejected'.
-      allow delete: if isResourceOwner() && (resource.data.status == 'pending' || resource.data.status == 'rejected');
-    }
     
     match /lectures/{lectureId}/clips/{clipId} {
       allow get, list: if true;
       allow create: if isCreatingOwnResource(request.resource.data.userId);
       allow delete: if isResourceOwner();
-    }
-
-    // =====================================================================
-    // Admin-Only Collection Group Queries
-    // =====================================================================
-    
-    // Allows admins to query the 'comments' collection group across all lectures
-    // to see pending/rejected comments. THIS IS THE CRITICAL RULE.
-    match /{path=**}/comments/{commentId} {
-       allow list: if isSignedIn() && request.query.get('where.status') == 'pending';
     }
   }
 }

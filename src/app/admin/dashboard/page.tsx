@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
-import type { Lecture, Series, Book as BookType, Comment } from "@/lib/types";
+import type { Lecture, Series, Book as BookType } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 
 export default function AdminDashboardPage() {
@@ -21,19 +21,13 @@ export default function AdminDashboardPage() {
     const booksQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
     const popularLecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('viewCount', 'desc'), limit(5)) : null), [firestore]);
     
-    // This query is now safe because useCollection will wait for `user` and `firestore` to be ready.
-    const recentCommentsQuery = useMemoFirebase(
-      () => (firestore && user ? query(collectionGroup(firestore, 'comments'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)) : null), 
-      [firestore, user]
-    );
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
     const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
-    const { data: recentComments, isLoading: commentsLoading } = useCollection<Comment>(recentCommentsQuery);
     const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>(popularLecturesQuery);
     
-    const isLoading = lecturesLoading || seriesLoading || booksLoading || commentsLoading || popularLecturesLoading;
+    const isLoading = lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
 
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
       <Card>
@@ -60,11 +54,10 @@ export default function AdminDashboardPage() {
           </div>
         </header>
         
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={lecturesLoading} />
             <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={seriesLoading} />
             <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={booksLoading} />
-            <StatCard title="التعليقات الجديدة" value={recentComments?.length ?? 0} icon={MessageSquare} isLoading={commentsLoading} />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,7 +79,6 @@ export default function AdminDashboardPage() {
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/series"><span>إدارة السلاسل</span><ListVideo /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/topics"><span>إدارة المواضيع</span><Hash /></Link></Button>
-                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/comments"><span>مراجعة التعليقات</span><MessageSquare /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/schedule"><span>جدول الدروس</span><CalendarClock /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/qa"><span>الأسئلة والأجوبة</span><HelpCircle /></Link></Button>
                 </CardContent>
@@ -132,61 +124,6 @@ export default function AdminDashboardPage() {
                 </CardContent>
             </Card>
         </section>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-2xl font-semibold font-headline">أحدث التعليقات قيد المراجعة</CardTitle>
-                <CardDescription>نظرة سريعة على آخر تعليقات الزوار التي تحتاج إلى مراجعة.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>المستخدم</TableHead>
-                            <TableHead>التعليق</TableHead>
-                            <TableHead className="hidden md:table-cell">المحاضرة</TableHead>
-                            <TableHead>الحالة</TableHead>
-                            <TableHead className="text-left">إجراء</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {commentsLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center">
-                              <Loader2 className="mx-auto my-4 h-8 w-8 animate-spin" />
-                            </TableCell>
-                          </TableRow>
-                        ) : recentComments?.length ? recentComments.map(comment => (
-                            <TableRow key={comment.id}>
-                                <TableCell className="font-medium">{comment.userName}</TableCell>
-                                <TableCell className="text-muted-foreground truncate max-w-xs">{comment.text}</TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                    <Link href={`/lectures/${comment.lectureSlug}`} className="hover:underline">{comment.lectureTitle}</Link>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant="secondary">
-                                        قيد المراجعة
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-left">
-                                     <Button asChild variant="outline" size="sm">
-                                        <Link href="/admin/comments">مراجعة</Link>
-                                     </Button>
-                                </TableCell>
-                            </TableRow>
-                        )) : null}
-                    </TableBody>
-                </Table>
-                {!commentsLoading && !recentComments?.length && <p className="text-center text-muted-foreground py-8">لا توجد تعليقات جديدة للمراجعة.</p>}
-                {recentComments && recentComments.length > 0 && (
-                    <div className="mt-4 text-center">
-                        <Button asChild variant="secondary">
-                            <Link href="/admin/comments">عرض كل التعليقات</Link>
-                        </Button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
     </div>
   );
 }

@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
+import { useAdminActivation } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },

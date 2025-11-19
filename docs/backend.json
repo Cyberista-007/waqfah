@@ -71,23 +71,6 @@
       },
       "required": ["email", "name", "createdAt"]
     },
-    "Comment": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "Comment",
-        "type": "object",
-        "properties": {
-            "lectureId": { "type": "string" },
-            "lectureSlug": { "type": "string" },
-            "lectureTitle": { "type": "string" },
-            "userId": { "type": "string" },
-            "userName": { "type": "string" },
-            "userImage": { "type": "string", "format": "uri" },
-            "text": { "type": "string" },
-            "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-            "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["lectureId", "userId", "userName", "text", "status", "createdAt"]
-    },
     "Favorite": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Favorite",
@@ -232,10 +215,6 @@
       {
         "path": "/users/{userId}/playlists/{playlistId}",
         "definition": { "schema": { "$ref": "#/entities/Playlist" } }
-      },
-      {
-        "path": "/lectures/{lectureId}/comments/{commentId}",
-        "definition": { "schema": { "$ref": "#/entities/Comment" } }
       },
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",

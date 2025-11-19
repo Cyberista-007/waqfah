@@ -60,19 +60,6 @@ export type QAPair = {
   answer: string;
 };
 
-export type Comment = {
-    id: string;
-    lectureId: string;
-    lectureSlug: string;
-    lectureTitle: string;
-    userId: string;
-    userName: string;
-    userImage?: string;
-    text: string;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: Timestamp;
-};
-
 export type UserProfile = {
     id: string;
     email: string;

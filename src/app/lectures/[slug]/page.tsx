@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import RelatedLectures from '@/components/related-lectures';
 import { LectureHeader } from '@/components/lecture-header';
-import { CommentSection } from '@/components/comment-section';
 import { PlayButton } from '@/components/play-button';
 
 type LectureDetailPageProps = {
@@ -97,13 +96,6 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
       
       <RelatedLectures currentLectureId={lecture.id} seriesId={lecture.seriesId} />
 
-      <section>
-        <h3 className="text-2xl font-bold mb-4 font-headline flex items-center gap-2">
-            <MessageCircle />
-            التعليقات
-        </h3>
-        <CommentSection lecture={lecture} />
-      </section>
     </div>
   );
 }
