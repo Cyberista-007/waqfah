@@ -54,7 +54,8 @@ export default function RootLayout({
             'theme-red-volcano',
             'theme-hekla-volcano',
             'theme-deep-space',
-            'theme-oled'
+            'theme-oled',
+            'theme-studio-simpatico'
           ]}
         >
           <FontProvider>

@@ -32,6 +32,7 @@ export const themes = [
   { name: "بركان هيكلا", value: "theme-hekla-volcano", colors: ["#191b22", "#93c5fd", "#e03131"] },
   { name: "فضاء عميق", value: "theme-deep-space", colors: ["#0c0a1d", "#a5b4fc", "#4338ca"] },
   { name: "OLED أسود", value: "theme-oled", colors: ["#000000", "#3b82f6", "#ef4444"] },
+  { name: "Studio Simpatico", value: "theme-studio-simpatico", colors: ["#1A2238", "#FF6A3D", "#9DAAF2"] },
 ];
 
 
