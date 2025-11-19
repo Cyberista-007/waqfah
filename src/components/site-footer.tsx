@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -22,7 +23,7 @@ export function SiteFooter() {
             />
             <Button
               type="submit"
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              className="bg-primary text-primary-foreground px-6 py-3 font-medium hover:bg-primary/90 transition-colors"
             >
               اشتراك
             </Button>
@@ -38,7 +39,7 @@ export function SiteFooter() {
           </p>
           <div className="mt-4 space-x-4 space-x-reverse">
              <Button variant="link" className="text-muted-foreground hover:text-foreground text-sm hover:underline" asChild>
-                <Link href="/admin">لوحة تحكم المدير</Link>
+                <Link href="/admin/login">لوحة تحكم المدير</Link>
             </Button>
              <Button variant="link" className="text-muted-foreground hover:text-foreground text-sm hover:underline">
                 English
