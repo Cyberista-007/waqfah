@@ -457,6 +457,18 @@
     --font-body: 'El Messiri';
     --font-headline: 'El Messiri';
   }
+  .font-reem-kufi {
+    --font-body: 'Reem Kufi';
+    --font-headline: 'Reem Kufi';
+  }
+  .font-mada {
+    --font-body: 'Mada';
+    --font-headline: 'Mada';
+  }
+  .font-scheherazade-new {
+    --font-body: 'Scheherazade New';
+    --font-headline: 'Scheherazade New';
+  }
 
   .animated-gradient {
     background: linear-gradient(

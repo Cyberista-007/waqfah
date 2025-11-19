@@ -25,6 +25,9 @@ export const fonts = [
   { name: "Almarai", value: "font-almarai" },
   { name: "Changa", value: "font-changa" },
   { name: "El Messiri", value: "font-el-messiri" },
+  { name: "Reem Kufi", value: "font-reem-kufi" },
+  { name: "Mada", value: "font-mada" },
+  { name: "Scheherazade New", value: "font-scheherazade-new" },
 ];
 
 interface FontSwitcherDialogProps {

@@ -30,6 +30,9 @@ export default {
         'almarai': ['Almarai', 'sans-serif'],
         'changa': ['Changa', 'sans-serif'],
         'el-messiri': ['"El Messiri"', 'sans-serif'],
+        'reem-kufi': ['"Reem Kufi"', 'sans-serif'],
+        'mada': ['Mada', 'sans-serif'],
+        'scheherazade-new': ['"Scheherazade New"', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
