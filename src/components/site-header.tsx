@@ -10,6 +10,7 @@ import {
   LogOut,
   LayoutDashboard,
   MicVocal,
+  Hash,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -41,6 +42,7 @@ const mainNavItems = [
   { href: "/sheikhs", label: "المشايخ" },
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
+  { href: "/topics", label: "المواضيع" },
   { href: "/books", label: "الكتب" },
 ]
 

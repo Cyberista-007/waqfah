@@ -1,4 +1,4 @@
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
@@ -312,3 +312,52 @@ export const getAllUsers = async (): Promise<any[]> => {
     const snapshot = await getDocs(usersCol);
     return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 };
+
+// --- Topics ---
+export const getAllTopics = async (): Promise<Topic[]> => {
+  try {
+    const db = getDb();
+    const topicsCol = collection(db, 'topics');
+    const q = query(topicsCol, orderBy('name'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Topic, 'id'>), id: doc.id }));
+  } catch (error) {
+    console.error("Error fetching all topics:", error);
+    return [];
+  }
+};
+
+export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> => {
+  try {
+    const db = getDb();
+    const topicsCol = collection(db, 'topics');
+    const q = query(topicsCol, where("slug", "==", slug), limit(1));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return undefined;
+    const docSnap = snapshot.docs[0];
+    return { ...(docSnap.data() as Omit<Topic, 'id'>), id: docSnap.id };
+  } catch (error) {
+    console.error("Error fetching topic by slug:", error);
+    return undefined;
+  }
+};
+
+async function getDocumentsByIds<T>(collectionName: string, ids: string[]): Promise<T[]> {
+    if (!ids || ids.length === 0) return [];
+    const db = getDb();
+    const docs: T[] = [];
+    // Firestore 'in' query limit is 30
+    for (let i = 0; i < ids.length; i += 30) {
+        const chunk = ids.slice(i, i + 30);
+        const colRef = collection(db, collectionName);
+        const q = query(colRef, where('__name__', 'in', chunk));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+            docs.push({ ...(doc.data() as Omit<T, 'id'>), id: doc.id } as T);
+        });
+    }
+    return docs;
+}
+
+export const getLecturesByIds = (ids: string[]) => getDocumentsByIds<Lecture>('lectures', ids);
+export const getSeriesByIds = (ids: string[]) => getDocumentsByIds<Series>('series', ids);
