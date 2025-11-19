@@ -16,9 +16,18 @@ const getDb = () => {
     return serverFirestore;
 }
 
-const toTimestamp = (dateString?: string): Timestamp => {
-    if (!dateString) return Timestamp.now();
-    return Timestamp.fromDate(new Date(dateString));
+const toTimestamp = (dateValue?: string | Timestamp): Timestamp => {
+    if (dateValue instanceof Timestamp) {
+        return dateValue;
+    }
+    if (typeof dateValue === 'string') {
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+            return Timestamp.fromDate(date);
+        }
+    }
+    // Fallback to current time if the input is invalid or undefined
+    return Timestamp.now();
 };
 
 // --- Sheikhs ---
@@ -32,10 +41,10 @@ export const getAllSheikhs = async (): Promise<Sheikh[]> => {
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
     }
     // Fallback to dummy data
-    return DUMMY_SHEIKHS.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SHEIKHS.map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
     console.error("Error fetching all sheikhs, using fallback:", error);
-    return DUMMY_SHEIKHS.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SHEIKHS.map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   }
 }
 
@@ -51,12 +60,12 @@ export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined>
         return { ...(data as Omit<Sheikh, 'id' | 'createdAt'>), id: docSnap.id, createdAt: toTimestamp(data.createdAt) };
     }
     const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
-    if (dummySheikh) return {...dummySheikh, createdAt: toTimestamp(dummySheikh.createdAt)};
+    if (dummySheikh) return {...dummySheikh, id: dummySheikh.id, createdAt: toTimestamp(dummySheikh.createdAt)};
     return undefined;
   } catch (error) {
     console.error("Error fetching sheikh by slug, using fallback:", error);
     const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
-    if (dummySheikh) return {...dummySheikh, createdAt: toTimestamp(dummySheikh.createdAt)};
+    if (dummySheikh) return {...dummySheikh, id: dummySheikh.id, createdAt: toTimestamp(dummySheikh.createdAt)};
     return undefined;
   }
 }
@@ -72,10 +81,10 @@ export const getAllSeries = async (): Promise<Series[]> => {
     if (!snapshot.empty) {
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
     }
-    return DUMMY_SERIES.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SERIES.map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
     console.error("Error fetching all series, using fallback:", error);
-    return DUMMY_SERIES.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SERIES.map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   }
 };
 
@@ -94,16 +103,17 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
           ...(lectureData as Omit<Lecture, 'id' | 'createdAt'>), 
           id: docSnap.id,
           createdAt: toTimestamp(lectureData.createdAt),
+          transcript: lectureData.transcript || [],
         };
     }
     const dummyLecture = DUMMY_LECTURES.find(l => l.slug === slug);
-    if (dummyLecture) return {...dummyLecture, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
+    if (dummyLecture) return {...dummyLecture, id: dummyLecture.id, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
     return undefined;
 
   } catch (error) {
       console.error("Error fetching lecture by slug, using fallback:", error);
       const dummyLecture = DUMMY_LECTURES.find(l => l.slug === slug);
-      if (dummyLecture) return {...dummyLecture, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
+      if (dummyLecture) return {...dummyLecture, id: dummyLecture.id, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
       return undefined;
   }
 };
@@ -117,10 +127,10 @@ export const getLecturesBySheikh = async (sheikhId: string): Promise<Lecture[]> 
     if (!snapshot.empty) {
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
     }
-    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
   } catch (error) {
     console.error("Error fetching lectures by sheikh, using fallback:", error);
-    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
   }
 }
 
@@ -133,10 +143,10 @@ export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => 
     if (!snapshot.empty) {
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
     }
-    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
     console.error("Error fetching series by sheikh, using fallback:", error);
-    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
+    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, id: s.id, createdAt: toTimestamp(s.createdAt)}));
   }
 }
 
@@ -214,10 +224,10 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId: str
         if (!snapshot.empty) {
             return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
         }
-        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
     } catch (e) {
         console.error("Error fetching related lectures, using fallback:", e);
-        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
     }
 }
 
@@ -256,10 +266,10 @@ const getAllLectures = async (): Promise<Lecture[]> => {
     if (!snapshot.empty) {
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
     }
-    return DUMMY_LECTURES.map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+    return DUMMY_LECTURES.map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
   } catch (error) {
     console.error("Error fetching all lectures, using fallback:", error);
-    return DUMMY_LECTURES.map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+    return DUMMY_LECTURES.map(l => ({...l, id: l.id, createdAt: toTimestamp(l.createdAt), transcript: []}));
   }
 }
 
@@ -333,6 +343,7 @@ async function getDocumentsByIds<T>(collectionName: string, ids: string[] | unde
     
     return dummyData.filter(item => ids.includes(item.id)).map(item => ({
         ...item,
+        id: item.id,
         createdAt: toTimestamp(item.createdAt)
     })) as T[];
 }
