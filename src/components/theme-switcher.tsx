@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Check } from "lucide-react"
+import { ScrollArea } from "./ui/scroll-area"
 
 export const themes = [
   { name: "الافتراضي (داكن)", value: "theme-default-dark", colors: ["#09090b", "#fafafa", "#27272a"] },
@@ -51,40 +52,40 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
             اختر لوحة الألوان التي تفضلها لتخصيص مظهر الموقع.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4 max-h-[60vh] overflow-y-auto">
-          {themes.map((theme) => {
-            const isActive = activeTheme === theme.value
-            return (
-              <div
-                key={theme.name}
-                onClick={() => setTheme(theme.value)}
-                className={cn(
-                  "cursor-pointer rounded-lg border-2 p-2 transition-all",
-                  isActive ? "border-primary" : "border-muted hover:border-muted-foreground"
-                )}
-              >
-                <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                        {theme.colors.map((color) => (
-                            <div
-                            key={color}
-                            className="h-6 w-6 rounded-full border"
-                            style={{ backgroundColor: color }}
-                            />
-                        ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{theme.name}</span>
-                        {isActive && <Check className="h-5 w-5 text-primary" />}
-                    </div>
+        <ScrollArea className="max-h-[60vh]">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4 pr-4">
+            {themes.map((theme) => {
+              const isActive = activeTheme === theme.value
+              return (
+                <div
+                  key={theme.name}
+                  onClick={() => setTheme(theme.value)}
+                  className={cn(
+                    "cursor-pointer rounded-lg border-2 p-2 transition-all",
+                    isActive ? "border-primary" : "border-muted hover:border-muted-foreground"
+                  )}
+                >
+                  <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                          {theme.colors.map((color) => (
+                              <div
+                              key={color}
+                              className="h-6 w-6 rounded-full border"
+                              style={{ backgroundColor: color }}
+                              />
+                          ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{theme.name}</span>
+                          {isActive && <Check className="h-5 w-5 text-primary" />}
+                      </div>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
 }
-
-    
