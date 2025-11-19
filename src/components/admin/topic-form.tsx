@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, doc, orderBy, query, Timestamp } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import type { Topic, Lecture, Series } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -34,17 +34,8 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
   
   const isEditMode = !!topic;
 
-  const lecturesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'lectures'), orderBy('title')) : null),
-    [firestore]
-  );
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
-
-  const seriesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
-    [firestore]
-  );
-  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['title', 'asc'] });
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   
   const [selectedLectures, setSelectedLectures] = useState<string[]>(topic?.lectureIds || []);
   const [selectedSeries, setSelectedSeries] = useState<string[]>(topic?.seriesIds || []);

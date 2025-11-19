@@ -22,7 +22,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, doc, runTransaction, increment } from "firebase/firestore";
+import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -32,11 +32,7 @@ export default function AdminLecturesPage() {
     const firestore = useFirestore();
     const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
 
-    const lecturesQuery = useMemo(
-        () => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null),
-        [firestore]
-    );
-    const { data: allLectures, isLoading } = useCollection<Lecture>(lecturesQuery);
+    const { data: allLectures, isLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
 
     const handleDelete = async () => {
         if (!lectureToDelete || !firestore) return;

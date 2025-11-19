@@ -13,7 +13,6 @@ import { LectureCard } from '@/components/lecture-card';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
 import type { Series, Lecture } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
@@ -22,20 +21,10 @@ import { useMemo } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const firestore = useFirestore();
   const { user } = useUser();
 
-  const latestSeriesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'series'), orderBy('createdAt', 'desc'), limit(3)) : null),
-    [firestore]
-  );
-  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>(latestSeriesQuery);
-
-  const latestLecturesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc'), limit(8)) : null),
-    [firestore]
-  );
-  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>(latestLecturesQuery);
+  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
+  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 8 });
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

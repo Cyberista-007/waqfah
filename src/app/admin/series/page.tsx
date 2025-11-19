@@ -19,18 +19,11 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import type { Series } from "@/lib/types";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection } from "@/firebase";
 import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
-import { useMemo } from "react";
 
 export default function AdminSeriesPage() {
-  const firestore = useFirestore();
-  const seriesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
-    [firestore]
-  );
-  const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
+  const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
 
   return (
     <Card>

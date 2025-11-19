@@ -1,26 +1,16 @@
 
 "use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getPlaceholderImage } from '@/lib/images';
+import { Card, CardContent } from '@/components/ui/card';
 import { ListVideo } from 'lucide-react';
 import { SeriesCard } from '@/components/series-card';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollection } from '@/firebase';
 import type { Series } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
 
 
 export default function SeriesListPage() {
-  const firestore = useFirestore();
-  const seriesQuery = useMemo(
-    () => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null),
-    [firestore]
-  );
-  const { data: allSeries, isLoading } = useCollection<Series>(seriesQuery);
+  const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
 
   return (
     <div>

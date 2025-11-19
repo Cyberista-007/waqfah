@@ -7,29 +7,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { useCollection, useFirestore, useUser } from "@/firebase";
-import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
+import { useCollection, useUser } from "@/firebase";
 import type { Lecture, Series, Book as BookType, Sheikh } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
-import { useMemo } from "react";
 
 export default function AdminDashboardPage() {
-    const firestore = useFirestore();
     const { user } = useUser();
 
-    const sheikhsQuery = useMemo(() => (firestore ? query(collection(firestore, 'sheikhs')) : null), [firestore]);
-    const lecturesQuery = useMemo(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
-    const seriesQuery = useMemo(() => (firestore ? query(collection(firestore, 'series')) : null), [firestore]);
-    const booksQuery = useMemo(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
-    const popularLecturesQuery = useMemo(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('viewCount', 'desc'), limit(5)) : null), [firestore]);
-    
+    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs');
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+    const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>('books');
+    const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['viewCount', 'desc'], limit: 5 });
 
-    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>(sheikhsQuery);
-    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
-    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
-    const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
-    const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>(popularLecturesQuery);
-    
     const isLoading = sheikhsLoading || lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
 
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (

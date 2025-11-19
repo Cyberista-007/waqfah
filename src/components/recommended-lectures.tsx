@@ -3,7 +3,6 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import type { Lecture, ListenHistoryItem } from '@/lib/types';
 import { recommendLectures } from '@/ai/flows/recommend-lectures';
 import { Skeleton } from './ui/skeleton';
@@ -12,21 +11,16 @@ import { BrainCircuit } from 'lucide-react';
 
 export function RecommendedLectures() {
   const { user } = useUser();
-  const firestore = useFirestore();
   const [recommendations, setRecommendations] = useState<Lecture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const listenHistoryQuery = useMemo(
-    () =>
-      user && firestore
-        ? query(collection(firestore, 'users', user.uid, 'listenHistory'), orderBy('lastListened', 'desc'), limit(10))
-        : null,
-    [user, firestore]
+  const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
+  const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(
+      listenHistoryPath, 
+      { orderBy: ['lastListened', 'desc'], limit: 10 }
   );
-  const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(listenHistoryQuery);
   
-  const allLecturesQuery = useMemo(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(allLecturesQuery);
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
 
 
   useEffect(() => {

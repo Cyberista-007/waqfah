@@ -5,10 +5,9 @@ import { Heart } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useUser } from "@/firebase";
-import { doc, setDoc, deleteDoc, collection, Timestamp } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 interface FavoriteButtonProps {
@@ -22,11 +21,8 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
     const firestore = useFirestore();
     const router = useRouter();
 
-    const favoritesQuery = useMemo(
-        () => (user && firestore ? collection(firestore, 'users', user.uid, 'favorites') : null),
-        [user, firestore]
-    );
-    const { data: favorites, isLoading: favoritesLoading } = useCollection(favoritesQuery);
+    const favoritesPath = user ? `users/${user.uid}/favorites` : null;
+    const { data: favorites, isLoading: favoritesLoading } = useCollection(favoritesPath);
 
     const isFavorite = favorites?.some(fav => fav.id === lectureId) || false;
 

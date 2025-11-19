@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
 import type { Lecture, Series } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo } from "react";
@@ -21,13 +20,9 @@ export default function LecturesListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const firestore = useFirestore();
 
-  const lecturesQuery = useMemo(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('createdAt', 'desc')) : null), [firestore]);
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
-  
-  const seriesQuery = useMemo(() => (firestore ? query(collection(firestore, 'series'), orderBy('title')) : null), [firestore]);
-  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
 
   const seriesFilter = searchParams.get('series');
   const sortOrder = searchParams.get('sort') || 'newest';

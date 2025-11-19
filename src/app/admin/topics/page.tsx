@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Topic } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, doc, orderBy } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Hash } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { TopicForm } from "@/components/admin/topic-form";
@@ -35,11 +35,7 @@ export default function AdminTopicsPage() {
     const [itemToEdit, setItemToEdit] = useState<Topic | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const topicsQuery = useMemo(
-        () => (firestore ? query(collection(firestore, 'topics'), orderBy('name')) : null),
-        [firestore]
-    );
-    const { data: allItems, isLoading } = useCollection<Topic>(topicsQuery);
+    const { data: allItems, isLoading } = useCollection<Topic>('topics', { orderBy: ['name', 'asc'] });
 
     const handleDelete = async () => {
         if (!itemToDelete || !firestore) return;

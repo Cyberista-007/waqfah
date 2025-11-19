@@ -16,14 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection } from "@/firebase";
 import type { UserProfile } from "@/lib/types";
 import { Loader2, UserCog } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -32,13 +30,7 @@ const getInitials = (name: string | null | undefined) => {
 
 
 export default function AdminUsersPage() {
-    const firestore = useFirestore();
-    
-    const usersQuery = useMemo(
-        () => (firestore ? query(collection(firestore, 'users'), orderBy('createdAt', 'desc')) : null),
-        [firestore]
-    );
-    const { data: allUsers, isLoading } = useCollection<UserProfile>(usersQuery);
+    const { data: allUsers, isLoading } = useCollection<UserProfile>('users', { orderBy: ['createdAt', 'desc'] });
 
     return (
         <Card>

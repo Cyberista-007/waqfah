@@ -6,23 +6,16 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { getPlaceholderImage } from '@/lib/images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MicVocal, Loader2 } from 'lucide-react';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollection } from '@/firebase';
 import type { Sheikh } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
 
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
 export default function SheikhsPage() {
-    const firestore = useFirestore();
-    const sheikhsQuery = useMemo(
-        () => (firestore ? query(collection(firestore, 'sheikhs'), orderBy('name')) : null),
-        [firestore]
-    );
-    const { data: sheikhs, isLoading } = useCollection<Sheikh>(sheikhsQuery);
+    const { data: sheikhs, isLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">

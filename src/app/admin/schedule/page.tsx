@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { ScheduleItem } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, doc, orderBy } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, CalendarClock } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ScheduleForm } from "@/components/admin/schedule-form";
@@ -36,11 +36,7 @@ export default function AdminSchedulePage() {
     const [itemToEdit, setItemToEdit] = useState<ScheduleItem | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const scheduleQuery = useMemo(
-        () => (firestore ? query(collection(firestore, 'scheduled_lessons'), orderBy('dateTime', 'desc')) : null),
-        [firestore]
-    );
-    const { data: allItems, isLoading } = useCollection<ScheduleItem>(scheduleQuery);
+    const { data: allItems, isLoading } = useCollection<ScheduleItem>('scheduled_lessons', { orderBy: ['dateTime', 'desc'] });
 
     const handleDelete = async () => {
         if (!itemToDelete || !firestore) return;
