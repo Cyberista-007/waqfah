@@ -17,6 +17,7 @@ import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { EditProfileForm } from "@/components/profile/edit-profile-form";
+import { ContinueListening } from "@/components/continue-listening";
 
 
 const getInitials = (name: string | null | undefined) => {
@@ -102,74 +103,8 @@ function FavoritesSection() {
 
 function ListenHistorySection() {
     const { user } = useUser();
-    const firestore = useFirestore();
-    const [history, setHistory] = useState<ListenHistoryItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchHistory = async () => {
-            if (!firestore || !user?.uid) {
-                if (!firestore) setIsLoading(false);
-                return;
-            }
-            try {
-                const historyRef = collection(firestore, 'users', user.uid, 'listenHistory');
-                const historyQuery = query(historyRef, orderBy('lastListened', 'desc'), limit(8));
-                const historySnap = await getDocs(historyQuery);
-                
-                const items = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ListenHistoryItem));
-
-                if (items.length > 0) {
-                    const lectureIds = items.map(item => item.lectureId).filter(Boolean);
-                    if(lectureIds.length === 0) {
-                        setHistory([]);
-                        setIsLoading(false);
-                        return;
-                    }
-                    
-                    const lecturesRef = collection(firestore, 'lectures');
-                    const lecturesQuery = query(lecturesRef, where('__name__', 'in', lectureIds));
-                    const lecturesSnap = await getDocs(lecturesQuery);
-                    const lecturesData = lecturesSnap.docs.reduce((acc, doc) => {
-                        acc[doc.id] = { id: doc.id, ...doc.data() } as Lecture;
-                        return acc;
-                    }, {} as Record<string, Lecture>);
-
-                    const populatedHistory = items.map(item => ({ ...item, lecture: lecturesData[item.lectureId] })).filter(item => item.lecture);
-                    setHistory(populatedHistory);
-                } else {
-                    setHistory([]);
-                }
-            } catch (error) {
-                console.error("Error fetching listen history:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchHistory();
-    }, [user, firestore]);
-
-     if (isLoading) {
-         return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-               <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
-            ))}
-        </div>
-    }
-    
-    return history.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {history.map(item => <LectureCard key={item.id} lecture={item.lecture!} />)}
-        </div>
-    ) : (
-        <Card className="text-center py-16">
-            <CardContent className="flex flex-col items-center gap-4">
-                <History className="w-16 h-16 text-muted-foreground" />
-                <p className="text-lg text-muted-foreground">لم تستمع لأي محاضرات بعد.</p>
-                <Button asChild><Link href="/lectures">ابدأ الاستماع الآن</Link></Button>
-            </CardContent>
-        </Card>
-    );
+    if (!user) return null;
+    return <ContinueListening isProfilePage={true} />
 }
 
 function PlaylistsSection() {
@@ -262,7 +197,7 @@ export default function ProfilePage() {
 
             <Tabs defaultValue="history" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="history"><History className="me-2"/>سجل الاستماع</TabsTrigger>
+                <TabsTrigger value="history"><History className="me-2"/>أكمل الاستماع</TabsTrigger>
                 <TabsTrigger value="favorites"><Heart className="me-2"/>المفضلة</TabsTrigger>
                 <TabsTrigger value="playlists"><ListMusic className="me-2"/>قوائم التشغيل</TabsTrigger>
               </TabsList>

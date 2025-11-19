@@ -17,6 +17,7 @@ import type { Series, Lecture } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
 import { useMemo } from 'react';
+import { ContinueListening } from '@/components/continue-listening';
 
 
 export default function Home() {
@@ -68,6 +69,7 @@ export default function Home() {
       </section>
 
       <div className="container mx-auto px-4 sm:px-6 py-8 space-y-16">
+        {user && <ContinueListening />}
         {user && <RecommendedLectures />}
 
         <section>
