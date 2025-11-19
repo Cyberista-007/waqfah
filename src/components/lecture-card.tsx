@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Play, Share2, MicVocal } from "lucide-react"
 import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
+import { useState } from "react"
 
 import type { Lecture } from "@/lib/types"
 import { getPlaceholderImage } from "@/lib/images"
@@ -20,16 +21,41 @@ import {
 import { Card } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
 import { cn } from "@/lib/utils"
+import { YoutubePlayerModal } from "./youtube-player-modal"
 
 interface LectureCardProps {
   lecture: Lecture;
   index?: number;
 }
 
+function getYoutubeVideoId(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const videoUrl = new URL(url);
+    if (videoUrl.hostname === 'youtu.be') {
+      return videoUrl.pathname.slice(1);
+    }
+    if (videoUrl.hostname.includes('youtube.com')) {
+      const videoId = videoUrl.searchParams.get('v');
+      if (videoId) {
+        return videoId;
+      }
+    }
+  } catch (error) {
+    console.error("Invalid YouTube URL", error);
+    return null;
+  }
+  return null;
+}
+
+
 export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const placeholder = getPlaceholderImage(lecture.imageId)
   const { playTrack } = useAudioPlayer();
   const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const videoId = getYoutubeVideoId(lecture.youtubeUrl);
 
     const handlePlay = () => {
         playTrack({ 
@@ -73,6 +99,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
 
 
   return (
+    <>
     <Card 
       className={cn(
         "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col",
@@ -131,13 +158,21 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                     <SiTelegram size={20} />
                 </a>
             )}
-            {lecture.youtubeUrl && (
-                 <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+            {videoId && (
+                 <button onClick={() => setIsModalOpen(true)} className="text-muted-foreground hover:text-primary transition-colors">
                     <SiYoutube size={20} />
-                </a>
+                </button>
             )}
         </div>
       </div>
     </Card>
+    {videoId && (
+        <YoutubePlayerModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          videoId={videoId}
+        />
+    )}
+    </>
   )
 }
