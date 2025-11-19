@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { doc, setDoc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Label } from "./ui/label";
@@ -27,23 +27,40 @@ export function FloatingAudioPlayer() {
     setIsMounted(true);
   }, []);
 
-  const updateListenHistory = useCallback(() => {
+  const updateListenHistory = useCallback(async () => {
     if (!user || !firestore || !track || !audioRef.current) return;
 
     const currentTime = audioRef.current.currentTime;
     const duration = audioRef.current.duration;
 
     if (currentTime > 0 && duration > 0) {
-      const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
-      setDoc(historyRef, {
-        lectureId: track.id,
-        position: currentTime,
-        duration: duration,
-        lastListened: Timestamp.now(),
-      }, { merge: true }).catch(error => {
-        // This is a background task, so we don't need to show a UI error
-        console.error("Failed to update listen history:", error);
-      });
+        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
+        const userRef = doc(firestore, 'users', user.uid);
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const historyDoc = await transaction.get(historyRef);
+                const lastPosition = historyDoc.exists() ? historyDoc.data().position : 0;
+                const timeListened = currentTime - lastPosition;
+
+                // Update lecture-specific history
+                transaction.set(historyRef, {
+                    lectureId: track.id,
+                    position: currentTime,
+                    duration: duration,
+                    lastListened: Timestamp.now(),
+                }, { merge: true });
+
+                // Update total minutes listened if time listened is positive and realistic
+                if (timeListened > 0 && timeListened < 20) { // < 20s to avoid large jumps
+                    transaction.update(userRef, {
+                        minutesListened: increment(timeListened / 60)
+                    });
+                }
+            });
+        } catch (error) {
+            console.error("Failed to update listen history/stats:", error);
+        }
     }
   }, [user, firestore, track, audioRef]);
   
@@ -74,6 +91,12 @@ export function FloatingAudioPlayer() {
     const handleEnded = () => {
       if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
       updateListenHistory();
+      
+       if (user && firestore && track) {
+            const userRef = doc(firestore, 'users', user.uid);
+            setDoc(userRef, { lecturesCompleted: increment(1) }, { merge: true });
+        }
+
       closePlayer();
       clearSleepTimer();
     };

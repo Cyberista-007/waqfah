@@ -118,6 +118,7 @@ export type ListenHistoryItem = {
     duration: number;
     lastListened: Timestamp;
     lecture?: Lecture; // Populated client-side
+    lastUpdateTime?: Timestamp;
 }
 
 export type Playlist = {

@@ -3,7 +3,7 @@
 
 import { useUser, useFirestore, useDoc } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History } from "lucide-react";
+import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,18 @@ import { EditProfileForm } from "@/components/profile/edit-profile-form";
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function StatCard({ title, value, icon: Icon }: { title: string, value: string, icon: React.ElementType }) {
+    return (
+        <Card className="text-center">
+            <CardContent className="p-4">
+                <Icon className="w-8 h-8 mx-auto mb-2 text-primary" />
+                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-sm text-muted-foreground">{title}</p>
+            </CardContent>
+        </Card>
+    )
 }
 
 function FavoritesSection() {
@@ -194,7 +206,7 @@ export default function ProfilePage() {
         }
     }
 
-    if (isUserLoading || isProfileLoading || !user) {
+    if (isUserLoading || isProfileLoading || !user || !userProfile) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin" />
@@ -212,6 +224,10 @@ export default function ProfilePage() {
         );
     }
     
+    const minutesListened = Math.floor(userProfile?.minutesListened || 0);
+    const hoursListened = (minutesListened / 60).toFixed(1);
+    const lecturesCompleted = userProfile?.lecturesCompleted || 0;
+
     return (
         <div className="space-y-8">
             <header className="flex flex-col sm:flex-row items-center gap-6">
@@ -233,6 +249,14 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </header>
+
+            <section>
+                <h2 className="text-2xl font-bold mb-4 font-headline">إحصائياتي</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <StatCard title="ساعة استماع" value={hoursListened} icon={Clock} />
+                    <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
+                </div>
+            </section>
             
             <Separator />
 
