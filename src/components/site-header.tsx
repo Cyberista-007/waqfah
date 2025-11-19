@@ -82,7 +82,7 @@ export function SiteHeader() {
           href="/"
           className="flex items-center space-x-2 space-x-reverse cursor-pointer"
         >
-          <div className="text-3xl font-extrabold font-headline tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-destructive to-primary">
+          <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
             وقفة
           </div>
         </Link>
@@ -182,7 +182,7 @@ export function SiteHeader() {
                   href="/"
                   className="flex items-center space-x-2 space-x-reverse cursor-pointer mb-4"
                 >
-                  <div className="text-3xl font-extrabold font-headline tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-destructive to-primary">
+                  <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
                     وقفة
                   </div>
                 </Link>
