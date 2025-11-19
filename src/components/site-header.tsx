@@ -30,15 +30,12 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { useScroll } from "@/hooks/use-scroll"
-import { useUser, useDoc, useFirestore } from "@/firebase"
+import { useUser } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
-import { doc } from "firebase/firestore"
-import type { UserProfile } from "@/lib/types"
-import { useMemo } from "react"
-import { useAdminActivation } from "@/hooks/use-admin-auth"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -59,14 +56,15 @@ const moreNavItems = [
 export function SiteHeader() {
   const scrolled = useScroll(50);
   const { user, isUserLoading } = useUser();
-  const { isAdmin } = useAdminActivation();
+  const { isAdmin, logoutAdmin } = useAdminAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     if (user) {
         await signOut(user.auth);
-        router.push('/');
     }
+    logoutAdmin();
+    router.push('/');
   }
 
   const getInitials = (name: string | null | undefined) => {
@@ -124,7 +122,7 @@ export function SiteHeader() {
 
           {isUserLoading ? (
             <Skeleton className="w-24 h-10 rounded-md" />
-          ) : user ? (
+          ) : (
             <>
               {isAdmin && (
                 <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
@@ -134,6 +132,7 @@ export function SiteHeader() {
                     </Link>
                 </Button>
               )}
+              { user ? (
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -154,13 +153,14 @@ export function SiteHeader() {
                       </DropdownMenuItem>
                   </DropdownMenuContent>
               </DropdownMenu>
+              ) : (
+                 <Button asChild>
+                  <Link href="/auth/login">
+                    <span>تسجيل الدخول</span>
+                  </Link>
+                </Button>
+              )}
             </>
-          ) : (
-             <Button asChild>
-              <Link href="/auth/login">
-                <span>تسجيل الدخول</span>
-              </Link>
-            </Button>
           )}
         </div>
 

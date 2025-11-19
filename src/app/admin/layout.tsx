@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
@@ -9,35 +10,28 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAdminActivation } from '@/hooks/use-admin-auth';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 // This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const { isAdmin, isLoading: isAdminLoading } = useAdminActivation();
+  const { isAdmin, isLoading } = useAdminAuth();
   const router = useRouter();
   
   useEffect(() => {
-    if (isUserLoading || isAdminLoading) {
-      return; // Wait until all initial loading is complete.
-    }
-
-    // User must be logged in first.
-    if (!user) {
-      router.replace('/auth/login?redirect_to=/admin');
-      return;
+    if (isLoading) {
+      return; // Wait until loading is complete.
     }
     
-    // If user is logged in but is not an admin, redirect to admin login page.
+    // If not an admin, redirect to admin login page.
     if (!isAdmin) {
       router.replace('/admin/login');
       return;
     }
 
-  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
+  }, [isAdmin, isLoading, router]);
   
-  // Show a loader while verifying authentication and admin status.
-  if (isUserLoading || isAdminLoading || !isAdmin || !user) {
+  // Show a loader while verifying admin status.
+  if (isLoading || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
@@ -45,7 +39,7 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
     );
   }
   
-  // If all checks pass (user exists and is an admin), render the admin layout.
+  // If all checks pass, render the admin layout.
   return <>{children}</>;
 }
 
@@ -54,14 +48,16 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { deActivateAdmin } = useAdminActivation();
+  const { logoutAdmin } = useAdminAuth();
   
   const handleLogout = async () => {
+    // This logs out the main user, not the admin session.
+    // The admin session is separate.
     if (user) {
         await signOut(user.auth);
-        deActivateAdmin();
-        router.push('/');
     }
+    logoutAdmin(); // This clears the admin session
+    router.push('/');
   }
 
   const navItems = [

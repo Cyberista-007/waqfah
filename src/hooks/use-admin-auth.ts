@@ -1,16 +1,18 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 
-const ADMIN_PASSWORD = "admin"; // In a real app, this would come from a secure config
-const SESSION_STORAGE_KEY = "is_admin_activated";
+// Hardcoded credentials as seen in the image
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "arm100sena"; 
+const SESSION_STORAGE_KEY = "is_admin_logged_in";
 
-export function useAdminActivation() {
+export function useAdminAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check sessionStorage on initial load
+  // Check sessionStorage on initial component load
   useEffect(() => {
     try {
       const storedState = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -24,22 +26,22 @@ export function useAdminActivation() {
     }
   }, []);
 
-  const activateAdmin = useCallback((password: string): boolean => {
-    if (password === ADMIN_PASSWORD) {
+  const loginAdmin = useCallback((username, password) => {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       try {
         sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
         setIsAdmin(true);
         return true;
       } catch (e) {
         console.error("Session storage is not available.");
-        alert("لا يمكن تفعيل وضع المدير لأن التخزين المؤقت للمتصفح غير متاح.");
+        alert("لا يمكن تسجيل الدخول كمدير لأن التخزين المؤقت للمتصفح غير متاح.");
         return false;
       }
     }
     return false;
   }, []);
   
-  const deActivateAdmin = useCallback(() => {
+  const logoutAdmin = useCallback(() => {
       try {
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
         setIsAdmin(false);
@@ -48,5 +50,5 @@ export function useAdminActivation() {
       }
   }, []);
 
-  return { isAdmin, isLoading, activateAdmin, deActivateAdmin };
+  return { isAdmin, isLoading, loginAdmin, logoutAdmin };
 }
