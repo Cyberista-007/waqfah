@@ -11,20 +11,26 @@ interface FirebaseAdminConfig extends AppOptions {
   serviceAccountId?: string;
 }
 
+// Store app instance in a global variable to avoid re-initialization
 let serverApp: FirebaseApp | null = null;
 
 const getAppInstance = (): FirebaseApp => {
+    // If the app is already initialized, return it.
     if (serverApp) {
         return serverApp;
     }
 
+    // Check if any app is already initialized by Next.js hot-reloading in dev
     const apps = getApps();
     if (apps.length > 0) {
         serverApp = apps[0];
         return serverApp;
     }
 
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : undefined;
+    // Initialize the app with credentials
+    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
+        : undefined;
       
     const config: FirebaseAdminConfig = {
         projectId: firebaseConfig.projectId,
@@ -33,6 +39,7 @@ const getAppInstance = (): FirebaseApp => {
     if (serviceAccount) {
         config.credential = credential.cert(serviceAccount);
     } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        // Use default credentials if service account is not provided
         config.credential = credential.applicationDefault();
     } else {
        console.warn("Firebase Admin SDK initialized without explicit credentials. This might rely on ambient credentials (e.g., GCE metadata server). For local development, set GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT.");
