@@ -87,7 +87,6 @@ export type UserProfile = {
     minutesListened?: number;
     lecturesCompleted?: number;
     seriesCompleted?: number;
-    role?: 'user' | 'admin';
 };
 
 export type EditProfileForm = {
@@ -161,3 +160,5 @@ export type LectureClip = {
     endTime: number; // in seconds
     createdAt: Timestamp;
 };
+
+    

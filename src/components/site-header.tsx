@@ -38,6 +38,7 @@ import { Skeleton } from "./ui/skeleton"
 import { doc } from "firebase/firestore"
 import type { UserProfile } from "@/lib/types"
 import { useMemo } from "react"
+import { useAdminActivation } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -58,16 +59,8 @@ const moreNavItems = [
 export function SiteHeader() {
   const scrolled = useScroll(50);
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const { isAdmin } = useAdminActivation();
   const router = useRouter();
-
-  const userDocRef = useMemo(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [user, firestore]);
-  
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-  const isAdmin = userProfile?.role === 'admin';
 
   const handleLogout = async () => {
     if (user) {
@@ -240,3 +233,5 @@ export function SiteHeader() {
     </header>
   )
 }
+
+    

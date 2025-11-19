@@ -89,8 +89,7 @@
         "minutesListened": { "type": "number" },
         "lecturesCompleted": { "type": "number" },
         "seriesCompleted": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "role": { "type": "string", "enum": ["user", "admin"] }
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["email", "name", "createdAt"]
     },
@@ -266,3 +265,5 @@
     ]
   }
 }
+
+    

@@ -1,50 +1,43 @@
 'use client';
 
-import { ReactNode, useEffect, useState, useMemo } from 'react';
-import { useUser, useDoc, useFirestore } from '@/firebase';
+import { ReactNode, useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
 import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, Loader2, LayoutDashboard, MicVocal } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import type { UserProfile } from '@/lib/types';
+import { useAdminActivation } from '@/hooks/use-admin-auth';
 
 // This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
+  const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminActivation();
   const router = useRouter();
-  const firestore = useFirestore();
-
-  // Memoize the document reference
-  const userDocRef = useMemo(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [user, firestore]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
-
-  const isAdmin = userProfile?.role === 'admin';
-  const isAuthCheckComplete = !isUserLoading && !isProfileLoading;
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    if (isAuthCheckComplete) {
-      if (!user) {
-        // If auth check is done and there's no user, redirect to login
-        router.replace('/auth/login?redirect_to=/admin');
-      } else if (!isAdmin) {
-        // If user is logged in but is not an admin, show an error and redirect to home
-        console.error("Access denied: User is not an admin.");
-        router.replace('/');
-      }
+    if (isUserLoading || isAdminLoading) {
+      return; // Wait until all initial loading is complete.
     }
-  }, [user, isAdmin, isAuthCheckComplete, router]);
+
+    if (!user) {
+      router.replace('/auth/login?redirect_to=/admin');
+      return;
+    }
+
+    if (!isAdmin) {
+      checkAdminPassword(); // This will trigger the prompt
+    }
+    // After the initial check logic, we can stop verifying.
+    // The guard will re-render if isAdmin or user state changes.
+    setIsVerifying(false);
+
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
   
-  // While checking user auth or profile, show a loader.
-  // Also show a loader if the check is complete but the user is not an admin yet (avoids flashing content).
-  if (!isAuthCheckComplete || !isAdmin) {
+  if (isVerifying || isUserLoading || (user && !isAdmin)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
@@ -61,10 +54,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const { deActivateAdmin } = useAdminActivation();
   
   const handleLogout = async () => {
     if (user) {
         await signOut(user.auth);
+        deActivateAdmin();
         router.push('/');
     }
   }
@@ -143,3 +138,5 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 };
 
 export default AdminLayout;
+
+    

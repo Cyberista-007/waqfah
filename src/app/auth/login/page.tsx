@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
+import type { UserProfile } from "@/lib/types";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   const glassmorphismStyle = {
@@ -83,12 +84,12 @@ export default function LoginPage() {
             await updateProfile(newUser, { displayName: name });
             
             const userRef = doc(firestore, "users", newUser.uid);
-            await setDoc(userRef, {
-              name: name,
-              email: newUser.email,
-              createdAt: Timestamp.now(),
-              role: 'user' // Default role for new users
-            }, { merge: true });
+            const newUserProfile: Omit<UserProfile, 'id'> = {
+                name: name,
+                email: newUser.email!,
+                createdAt: Timestamp.now(),
+            };
+            await setDoc(userRef, newUserProfile, { merge: true });
 
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
             router.push(redirectTo);
@@ -160,3 +161,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

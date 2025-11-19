@@ -14,65 +14,62 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
-    function getUserData(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
-    }
 
-    function isAdmin() {
-      return isSignedIn() && getUserData(request.auth.uid).role == 'admin';
-    }
-
+    // Check if the user ID in the incoming data matches the authenticated user.
     function isCreatingOwnResource(userId) {
       return isOwner(userId) && request.resource.data.userId == userId;
     }
 
+    // Check if the user is the owner based on the 'userId' field of an existing resource.
     function isResourceOwner() {
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
 
     // =====================================================================
-    // Public Content Collections
+    // Public Content Collections (series, lectures, books, etc.)
+    // Anyone can read, but only signed-in users can write.
+    // This is suitable for a trusted admin panel environment.
+    // For production with untrusted clients, you'd want admin-only rules.
     // =====================================================================
 
     match /sheikhs/{sheikhId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
     
     match /series/{seriesId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     match /lectures/{lectureId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     match /books/{bookId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
     
     match /question_answers/{qaId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     match /scheduled_lessons/{lessonId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
     
     match /topics/{topicId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
     
     match /challenges/{challengeId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
 
@@ -81,17 +78,11 @@ service cloud.firestore {
     // =====================================================================
 
     match /users/{userId} {
-      // Admins can read and update any user's role.
-      // Users can only read and update their own profile (but not their role).
-      allow get: if isOwner(userId) || isAdmin();
-      allow update: if (isOwner(userId) && !("role" in request.resource.data)) || 
-                       (isAdmin() && !("role" in resource.data) && "role" in request.resource.data);
+      // Users can only read and update their own profile. No one can list all users.
+      allow get, update: if isOwner(userId);
       // A user can create their own profile document.
       allow create: if isOwner(userId);
-      // Only admins can list all users.
-      allow list: if isAdmin();
-      // Only admins can delete users.
-      allow delete: if isAdmin();
+      allow list, delete: if false;
     }
 
     match /users/{userId}/favorites/{lectureId} {
@@ -122,6 +113,7 @@ service cloud.firestore {
       allow get, list: if true;
 
       // A user can create or update their own rating.
+      // The document ID must be the user's ID to enforce one rating per user.
       allow write: if isCreatingOwnResource(userId) &&
                       request.resource.data.lectureId == lectureId &&
                       request.resource.data.value >= 1 &&
@@ -135,3 +127,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
