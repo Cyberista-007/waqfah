@@ -57,20 +57,27 @@ export function SheikhForm({ sheikh, onFormClose }: SheikhFormProps) {
         slug,
         bio,
         imageId: `sheikh-${slug}`, // Placeholder
-        createdAt: isEditMode ? sheikh.createdAt : Timestamp.now(),
     };
 
     try {
       if (isEditMode && sheikh) {
         const sheikhRef = doc(firestore, 'sheikhs', sheikh.id);
-        await updateDocumentNonBlocking(sheikhRef, sheikhData);
+        const updateData = {
+            ...sheikhData,
+            createdAt: sheikh.createdAt // Preserve original creation date
+        };
+        await updateDocumentNonBlocking(sheikhRef, updateData);
         toast({
             title: "تم التحديث بنجاح",
             description: `تم تحديث بيانات الشيخ "${name}".`,
         });
       } else {
         const sheikhsCollection = collection(firestore, 'sheikhs');
-        await addDocumentNonBlocking(sheikhsCollection, sheikhData);
+        const addData = {
+            ...sheikhData,
+            createdAt: Timestamp.now()
+        };
+        await addDocumentNonBlocking(sheikhsCollection, addData);
         toast({
             title: "تم الإنشاء بنجاح",
             description: `تمت إضافة الشيخ "${name}" الجديد.`,

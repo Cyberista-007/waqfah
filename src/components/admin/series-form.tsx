@@ -79,7 +79,13 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
     try {
         if(isEditMode && series) {
             const seriesRef = doc(firestore, 'series', series.id);
-            await updateDocumentNonBlocking(seriesRef, seriesData);
+            // We don't update createdAt on edit
+            const updateData = {
+                ...seriesData,
+                lectureCount: series.lectureCount,
+                createdAt: series.createdAt,
+            };
+            await updateDocumentNonBlocking(seriesRef, updateData);
             toast({
                 title: "تم التحديث بنجاح",
                 description: `تم تحديث سلسلة "${title}".`,
