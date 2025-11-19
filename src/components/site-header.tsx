@@ -30,12 +30,14 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { useScroll } from "@/hooks/use-scroll"
-import { useUser, useAuth } from "@/firebase"
+import { useUser, useDoc, useFirestore } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
-import { useAdminActivation } from "@/hooks/use-admin-auth"
+import { doc } from "firebase/firestore"
+import type { UserProfile } from "@/lib/types"
+import { useMemo } from "react"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -56,14 +58,21 @@ const moreNavItems = [
 export function SiteHeader() {
   const scrolled = useScroll(50);
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
+  const userDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  const isAdmin = userProfile?.role === 'admin';
+
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
+    if (user) {
+        await signOut(user.auth);
         router.push('/');
-        router.refresh();
     }
   }
 
@@ -124,12 +133,14 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-md" />
           ) : user ? (
             <>
-              <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                  <Link href="/admin">
-                    <LayoutDashboard className="h-5 w-5" />
-                    <span className="sr-only">لوحة التحكم</span>
-                  </Link>
-              </Button>
+              {isAdmin && (
+                <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                    <Link href="/admin">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span className="sr-only">لوحة التحكم</span>
+                    </Link>
+                </Button>
+              )}
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -194,11 +205,13 @@ export function SiteHeader() {
                             <Link href="/profile">الملف الشخصي</Link>
                         </Button>
                        </SheetClose>
-                        <SheetClose asChild>
-                            <Button asChild className="w-full justify-center" variant="secondary">
-                                <Link href="/admin">لوحة التحكم</Link>
-                            </Button>
-                        </SheetClose>
+                        {isAdmin && (
+                            <SheetClose asChild>
+                                <Button asChild className="w-full justify-center" variant="secondary">
+                                    <Link href="/admin">لوحة التحكم</Link>
+                                </Button>
+                            </SheetClose>
+                        )}
                        <Button onClick={handleLogout} variant="outline" className="w-full">
                           تسجيل الخروج
                        </Button>

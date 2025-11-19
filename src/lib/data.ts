@@ -1,4 +1,4 @@
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
@@ -42,19 +42,6 @@ export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined>
 
 
 // --- Series ---
-export const getLatestSeries = async (count: number): Promise<Series[]> => {
-  try {
-    const db = getDb();
-    const seriesCol = collection(db, 'series');
-    const q = query(seriesCol, orderBy('createdAt', 'desc'), limit(count));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
-  } catch (error) {
-    console.error("Error fetching latest series:", error);
-    return [];
-  }
-};
-
 export const getAllSeries = async (): Promise<Series[]> => {
   try {
     const db = getDb();
@@ -68,62 +55,8 @@ export const getAllSeries = async (): Promise<Series[]> => {
   }
 };
 
-export const getSeriesBySlug = async (slug: string): Promise<Series | undefined> => {
-  try {
-    const db = getDb();
-    const seriesCol = collection(db, 'series');
-    const q = query(seriesCol, where("slug", "==", slug), limit(1));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return undefined;
-    const docSnap = snapshot.docs[0];
-    return { ...(docSnap.data() as Omit<Series, 'id'>), id: docSnap.id };
-  } catch (error) {
-    console.error("Error fetching series by slug:", error);
-    return undefined;
-  }
-};
-
 
 // --- Lectures ---
-export const getLatestLectures = async (count: number): Promise<Lecture[]> => {
-  try {
-    const db = getDb();
-    const lecturesCol = collection(db, 'lectures');
-    const q = query(lecturesCol, orderBy('createdAt', 'desc'), limit(count));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
-  } catch (error) {
-    console.error("Error fetching latest lectures:", error);
-    return [];
-  }
-};
-
-export const getAllLectures = async (): Promise<Lecture[]> => {
-  try {
-    const db = getDb();
-    const lecturesCol = collection(db, 'lectures');
-    const q = query(lecturesCol, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
-  } catch (error) {
-    console.error("Error fetching all lectures:", error);
-    return [];
-  }
-};
-
-export const getLecturesBySeries = async (seriesSlug: string): Promise<Lecture[]> => {
-  try {
-    const db = getDb();
-    const lecturesCol = collection(db, 'lectures');
-    const q = query(lecturesCol, where('seriesSlug', '==', seriesSlug), orderBy('createdAt', 'asc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
-  } catch (error) {
-    console.error("Error fetching lectures by series:", error);
-    return [];
-  }
-};
-
 export const getLectureBySlug = async (slug: string): Promise<Lecture | undefined> => {
   try {
     const db = getDb();
@@ -134,7 +67,14 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
     const docSnap = snapshot.docs[0];
     const lectureData = docSnap.data();
 
-    return { ...(lectureData as Omit<Lecture, 'id'>), id: docSnap.id };
+    // Ensure Timestamps are converted if they exist
+    const createdAt = lectureData.createdAt instanceof Timestamp ? lectureData.createdAt : Timestamp.now();
+
+    return { 
+      ...(lectureData as Omit<Lecture, 'id' | 'createdAt'>), 
+      id: docSnap.id,
+      createdAt,
+    };
   } catch (error) {
       console.error("Error fetching lecture by slug:", error);
       return undefined;
@@ -167,15 +107,17 @@ export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => 
   }
 }
 
-// --- Books, Schedule, Q&A (assuming similar structure) ---
+// --- Books, Schedule, Q&A ---
 
 export const getAllBooks = async (): Promise<Book[]> => {
     try {
         const db = getDb();
         const booksCol = collection(db, 'books');
-        const snapshot = await getDocs(booksCol);
+        const q = query(booksCol, orderBy('title', 'asc'));
+        const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Book, 'id'>), id: doc.id }));
     } catch(e) {
+        console.error("Error fetching books:", e);
         return [];
     }
 }
@@ -186,21 +128,18 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
         const scheduleCol = collection(db, 'scheduled_lessons');
         const q = query(scheduleCol, orderBy('dateTime', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Convert Firestore Timestamp to string if needed
-            if (data.dateTime instanceof Timestamp) {
-                const date = data.dateTime.toDate();
-                return { 
-                    ...(data as Omit<ScheduleItem, 'id' | 'date' | 'time'>),
-                    id: doc.id,
-                    date: date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-                    time: date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-                };
-            }
-            return { ...(data as Omit<ScheduleItem, 'id'>), id: doc.id };
+        return snapshot.docs.map(docSnap => {
+            const data = docSnap.data();
+            const date = data.dateTime.toDate();
+            return { 
+                ...(data as Omit<ScheduleItem, 'id' | 'date' | 'time'>),
+                id: docSnap.id,
+                date: date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+                time: date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            };
         });
     } catch (e) {
+        console.error("Error fetching schedule items:", e);
         return [];
     }
 }
@@ -212,6 +151,7 @@ export const getAllQAPairs = async (): Promise<QAPair[]> => {
         const snapshot = await getDocs(qaCol);
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<QAPair, 'id'>), id: doc.id }));
     } catch (e) {
+        console.error("Error fetching Q&A pairs:", e);
         return [];
     }
 }
@@ -225,93 +165,51 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId: str
             lecturesCol,
             where('seriesId', '==', seriesId),
             where('__name__', '!=', currentLectureId),
+            orderBy('__name__'), // orderBy name is required for inequality filters
             limit(3)
         );
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
     } catch (e) {
+        console.error("Error fetching related lectures:", e);
         return [];
     }
 }
 
-export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], books: Book[], sheikhs: Sheikh[] }> {
+export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], sheikhs: Sheikh[] }> {
     if (!searchTerm) {
-        return { lectures: [], series: [], books: [], sheikhs: [] };
+        return { lectures: [], series: [], sheikhs: [] };
     }
     const db = getDb();
-
+    
     // This is a very basic search. For production, a dedicated search service like Algolia or Typesense is recommended.
-    // This queries for titles that are >= search term and < search term + a high-unicode character.
-    const searchTermEnd = searchTerm + '\uf8ff';
-    
-    const lecturesRef = collection(db, "lectures");
-    const seriesRef = collection(db, "series");
-    const booksRef = collection(db, "books");
-    const sheikhsRef = collection(db, "sheikhs");
+    const searchTermLower = searchTerm.toLowerCase();
 
-    const lecturesQuery = query(lecturesRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
-    const seriesQuery = query(seriesRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
-    const booksQuery = query(booksRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
-    const sheikhsQuery = query(sheikhsRef, where("name", ">=", searchTerm), where("name", "<=", searchTermEnd));
-    
     try {
-        const [lecturesSnapshot, seriesSnapshot, booksSnapshot, sheikhsSnapshot] = await Promise.all([
-            getDocs(lecturesQuery),
-            getDocs(seriesQuery),
-            getDocs(booksQuery),
-            getDocs(sheikhsQuery)
+        const [lecturesSnap, seriesSnap, sheikhsSnap] = await Promise.all([
+            getDocs(collection(db, "lectures")),
+            getDocs(collection(db, "series")),
+            getDocs(collection(db, "sheikhs"))
         ]);
 
-        const lectures = lecturesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture));
-        const series = seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Series));
-        const books = booksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Book));
-        const sheikhs = sheikhsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sheikh));
+        const lectures = lecturesSnap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Lecture))
+            .filter(l => l.title.toLowerCase().includes(searchTermLower));
 
-        return { lectures, series, books, sheikhs };
+        const series = seriesSnap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Series))
+            .filter(s => s.title.toLowerCase().includes(searchTermLower));
+            
+        const sheikhs = sheikhsSnap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Sheikh))
+            .filter(s => s.name.toLowerCase().includes(searchTermLower));
+
+        return { lectures, series, sheikhs };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { lectures: [], series: [], books: [], sheikhs: [] };
+        return { lectures: [], series: [], sheikhs: [] };
     }
 }
-
-export const getListenHistory = async (userId: string): Promise<any[]> => {
-    const db = getDb();
-    const historyRef = collection(db, 'users', userId, 'listenHistory');
-    const q = query(historyRef, orderBy('lastListened', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...doc.data(), lectureId: doc.id }));
-};
-
-export const getPlaylist = async (userId: string): Promise<string[]> => {
-    const db = getDb();
-    const playlistRef = collection(db, 'users', userId, 'playlist');
-    const snapshot = await getDocs(playlistRef);
-    // Returns an array of lecture IDs
-    return snapshot.docs.map(doc => doc.id);
-};
-
-
-export const getStats = async (userId: string) => {
-    const db = getDb();
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    if (userSnap.exists()) {
-        const userData = userSnap.data();
-        return {
-            minutesListened: userData.minutesListened || 0,
-            lecturesCompleted: userData.lecturesCompleted || 0,
-            seriesCompleted: userData.seriesCompleted || 0,
-        };
-    }
-    return { minutesListened: 0, lecturesCompleted: 0, seriesCompleted: 0 };
-};
-
-export const getAllUsers = async (): Promise<any[]> => {
-    const db = getDb();
-    const usersCol = collection(db, 'users');
-    const snapshot = await getDocs(usersCol);
-    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-};
 
 // --- Topics ---
 export const getAllTopics = async (): Promise<Topic[]> => {
@@ -342,7 +240,7 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
   }
 };
 
-async function getDocumentsByIds<T>(collectionName: string, ids: string[]): Promise<T[]> {
+async function getDocumentsByIds<T>(collectionName: string, ids: string[] | undefined): Promise<T[]> {
     if (!ids || ids.length === 0) return [];
     const db = getDb();
     const docs: T[] = [];
@@ -352,12 +250,12 @@ async function getDocumentsByIds<T>(collectionName: string, ids: string[]): Prom
         const colRef = collection(db, collectionName);
         const q = query(colRef, where('__name__', 'in', chunk));
         const snapshot = await getDocs(q);
-        snapshot.forEach(doc => {
-            docs.push({ ...(doc.data() as Omit<T, 'id'>), id: doc.id } as T);
+        snapshot.forEach(docSnap => {
+            docs.push({ ...(docSnap.data() as Omit<T, 'id'>), id: docSnap.id } as T);
         });
     }
     return docs;
 }
 
-export const getLecturesByIds = (ids: string[]) => getDocumentsByIds<Lecture>('lectures', ids);
-export const getSeriesByIds = (ids: string[]) => getDocumentsByIds<Series>('series', ids);
+export const getLecturesByIds = (ids: string[] | undefined) => getDocumentsByIds<Lecture>('lectures', ids);
+export const getSeriesByIds = (ids: string[] | undefined) => getDocumentsByIds<Series>('series', ids);

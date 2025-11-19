@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useMemo } from 'react';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/types';
-import { useMemo } from 'react';
 
 // This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
@@ -36,7 +35,8 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
         // If auth check is done and there's no user, redirect to login
         router.replace('/auth/login?redirect_to=/admin');
       } else if (!isAdmin) {
-        // If user is logged in but is not an admin, redirect to home
+        // If user is logged in but is not an admin, show an error and redirect to home
+        console.error("Access denied: User is not an admin.");
         router.replace('/');
       }
     }

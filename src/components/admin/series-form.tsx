@@ -66,7 +66,7 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
         return;
     }
 
-    const seriesData = {
+    const seriesData: Partial<Series> & { imageId: string } = {
         title,
         slug,
         description,
