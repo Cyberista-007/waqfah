@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogOverlay,
 } from '@/components/ui/dialog';
 
 interface YoutubePlayerModalProps {
@@ -16,15 +17,15 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 border-0 bg-transparent shadow-none">
+      <DialogContent className="max-w-screen-lg w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-none">
         <div className="aspect-video">
           <iframe
             width="100%"
             height="100%"
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
             title="YouTube video player"
             frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             className="rounded-lg"
           ></iframe>
