@@ -1,47 +1,132 @@
 
+'use client';
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getLectureBySlug, getRelatedLectures } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
-import { PlayButton } from '@/components/play-button';
 import { SiTelegram, SiSoundcloud } from '@icons-pack/react-simple-icons';
+import type { Lecture } from '@/lib/types';
+import { useAudioPlayer } from '@/components/audio-player-provider';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { YoutubePlayerModal } from '@/components/youtube-player-modal';
+import { SeriesPageSkeleton } from '@/components/skeletons';
 
-type LectureDetailPageProps = {
-  params: { slug: string };
-};
 
-export async function generateMetadata({ params }: LectureDetailPageProps) {
-  const lecture = await getLectureBySlug(params.slug);
-  if (!lecture) {
-    return { title: 'المحاضرة غير موجودة' };
+function getYoutubeVideoId(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const videoUrl = new URL(url);
+    if (videoUrl.hostname === 'youtu.be') {
+      return videoUrl.pathname.slice(1);
+    }
+    if (videoUrl.hostname.includes('youtube.com')) {
+      const videoId = videoUrl.searchParams.get('v');
+      if (videoId) {
+        return videoId;
+      }
+    }
+  } catch (error) {
+    console.error("Invalid YouTube URL", error);
+    return null;
   }
-  return { title: lecture.title, description: lecture.description };
+  return null;
 }
 
-export default async function LectureDetailPage({ params }: LectureDetailPageProps) {
-  const lecture = await getLectureBySlug(params.slug);
 
-  if (!lecture) {
-    notFound();
+export default function LectureDetailPage({ params }: { params: { slug: string } }) {
+  const [lecture, setLecture] = useState<Lecture | null>(null);
+  const [relatedLectures, setRelatedLectures] = useState<Lecture[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { playTrack } = useAudioPlayer();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const fetchedLecture = await getLectureBySlug(params.slug);
+        if (fetchedLecture) {
+          setLecture(fetchedLecture);
+          const fetchedRelated = await getRelatedLectures(fetchedLecture.id, fetchedLecture.seriesId);
+          setRelatedLectures(fetchedRelated);
+        } else {
+          notFound();
+        }
+      } catch (error) {
+        console.error("Failed to fetch lecture data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, [params.slug]);
+  
+  if (isLoading || !lecture) {
+    return <SeriesPageSkeleton />;
   }
   
-  const relatedLectures = await getRelatedLectures(lecture.id, lecture.seriesId);
+  const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
+
+  const handlePlay = async () => {
+    let startTime = 0;
+    if (user && firestore) {
+        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', lecture.id);
+        const historySnap = await getDoc(historyRef);
+        if (historySnap.exists()) {
+            const data = historySnap.data();
+            if (data.position && data.duration && (data.duration - data.position) > 10 && data.position > 5) {
+                startTime = data.position;
+                toast({
+                    title: "تكملة الاستماع",
+                    description: `تم استئناف المحاضرة من حيث توقفت.`,
+                });
+            }
+        }
+    }
+    playTrack({
+      id: lecture.id,
+      title: lecture.title,
+      audioSrc: lecture.audioSrc,
+      imageId: lecture.imageId,
+      seriesId: lecture.seriesId,
+      seriesSlug: lecture.seriesSlug,
+      seriesTitle: lecture.seriesTitle,
+      slug: lecture.slug,
+    }, startTime);
+  };
+
 
   const seriesLink = `/series/${lecture.seriesId}`;
   const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://your-domain.com/lectures/${lecture.slug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ أمجد سمير`;
 
   return (
+    <>
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
       <Card className="shadow-lg">
         <CardContent className="p-4">
-          <PlayButton track={{ audioSrc: lecture.audioSrc, title: lecture.title, id: lecture.id, seriesId: lecture.seriesId, seriesSlug: lecture.seriesSlug, seriesTitle: lecture.seriesTitle, imageId: lecture.imageId, slug: lecture.slug }} />
+           <Button 
+            onClick={handlePlay}
+            className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90 transition-colors"
+            size="lg"
+          >
+            <Play className="w-6 h-6 me-2" />
+            <span>استماع</span>
+        </Button>
         </CardContent>
       </Card>
       
@@ -54,12 +139,10 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
               <span>تحميل صوت (MP3)</span>
             </a>
           </Button>
-          {lecture.youtubeUrl && (
-            <Button asChild variant="destructive">
-              <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer">
-                <Youtube />
-                <span className="ms-2">مشاهدة (يوتيوب)</span>
-              </a>
+          {videoId && (
+            <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
+              <Youtube />
+              <span className="ms-2">مشاهدة (يوتيوب)</span>
             </Button>
           )}
           {lecture.soundcloudUrl && (
@@ -133,5 +216,13 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
       )}
 
     </div>
+    {videoId && (
+      <YoutubePlayerModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        videoId={videoId}
+      />
+    )}
+    </>
   );
 }

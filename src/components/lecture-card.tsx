@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from "next/image"
@@ -58,16 +57,22 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const videoId = getYoutubeVideoId(lecture.youtubeUrl);
 
     const handlePlay = () => {
-        playTrack({ 
-            audioSrc: lecture.audioSrc, 
-            title: lecture.title,
-            id: lecture.id,
-            seriesId: lecture.seriesId,
-            seriesSlug: lecture.seriesSlug,
-            seriesTitle: lecture.seriesTitle,
-            imageId: lecture.imageId,
-            slug: lecture.slug,
-        });
+        // Priority to video if it exists
+        if (videoId) {
+            setIsModalOpen(true);
+        } else {
+            // Fallback to audio
+            playTrack({ 
+                audioSrc: lecture.audioSrc, 
+                title: lecture.title,
+                id: lecture.id,
+                seriesId: lecture.seriesId,
+                seriesSlug: lecture.seriesSlug,
+                seriesTitle: lecture.seriesTitle,
+                imageId: lecture.imageId,
+                slug: lecture.slug,
+            });
+        }
     };
 
     const copyLinkToClipboard = () => {
@@ -108,7 +113,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <div className="relative">
-        <Link href={`/lectures/${lecture.slug}`} className="block">
+        <div onClick={handlePlay} className="block cursor-pointer">
           <Image
             src={placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/400/300`}
             alt={lecture.title}
@@ -118,7 +123,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             data-ai-hint={placeholder?.imageHint}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-        </Link>
+        </div>
         
         <div className="absolute top-2 right-2 flex items-center gap-2">
             <TooltipProvider>
