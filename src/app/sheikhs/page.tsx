@@ -10,10 +10,7 @@ import { useCollection } from '@/firebase';
 import type { Sheikh } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SheikhCard } from '@/components/sheikh-card';
-
-const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-}
+import { getInitials } from '@/lib/utils';
 
 export default function SheikhsPage() {
     const { data: sheikhs, isLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });

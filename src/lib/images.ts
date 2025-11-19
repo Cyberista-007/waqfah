@@ -9,6 +9,7 @@ export type ImagePlaceholder = {
 
 export const placeholderImages: ImagePlaceholder[] = data.placeholderImages;
 
-export function getPlaceholderImage(id: string): ImagePlaceholder | undefined {
+export function getPlaceholderImage(id: string | undefined): ImagePlaceholder | undefined {
+  if (!id) return undefined;
   return placeholderImages.find(img => img.id === id);
 }

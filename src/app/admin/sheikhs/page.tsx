@@ -28,11 +28,7 @@ import { SheikhForm } from "@/components/admin/sheikh-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
-
-const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-}
+import { getInitials } from "@/lib/utils";
 
 export default function AdminSheikhsPage() {
     const { toast } = useToast();

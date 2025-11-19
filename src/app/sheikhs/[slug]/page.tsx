@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import { Clapperboard, ListVideo } from 'lucide-react';
+import { getInitials } from '@/lib/utils';
 
 
 type SheikhDetailPageProps = {
@@ -39,10 +40,6 @@ export async function generateMetadata({ params }: SheikhDetailPageProps) {
       title: `الشيخ ${data.sheikh.name}`,
       description: data.sheikh.bio,
  };
-}
-
-const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
 
@@ -78,7 +75,7 @@ export default async function SheikhDetailPage({ params }: SheikhDetailPageProps
         <TabsContent value="series" className="mt-6">
             {series.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {series.map(s => <SeriesCard key={s.id} series={s} />)}
+                    {series.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
                 </div>
             ) : (
                 <p className="text-center text-muted-foreground py-8">لا توجد سلاسل لهذا الشيخ بعد.</p>
@@ -88,7 +85,7 @@ export default async function SheikhDetailPage({ params }: SheikhDetailPageProps
         <TabsContent value="lectures" className="mt-6">
             {lectures.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {lectures.map(l => <LectureCard key={l.id} lecture={l} />)}
+                    {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i}/>)}
                 </div>
             ) : (
                 <p className="text-center text-muted-foreground py-8">لا توجد محاضرات لهذا الشيخ بعد.</p>

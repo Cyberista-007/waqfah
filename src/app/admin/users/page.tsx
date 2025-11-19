@@ -22,11 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-
-const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-}
+import { getInitials } from "@/lib/utils";
 
 
 export default function AdminUsersPage() {
@@ -87,5 +83,3 @@ export default function AdminUsersPage() {
         </Card>
     );
 }
-
-    

@@ -5,14 +5,11 @@ import { getPlaceholderImage } from '@/lib/images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Sheikh } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { getInitials } from '@/lib/utils';
 
 interface SheikhCardProps {
     sheikh: Sheikh;
     index?: number;
-}
-
-const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
 export function SheikhCard({ sheikh, index = 0 }: SheikhCardProps) {

@@ -43,6 +43,7 @@ import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useState } from "react"
 import { ThemeSwitcherDialog } from "./theme-switcher"
 import { FontSwitcherDialog } from "./font-switcher"
+import { getInitials } from "@/lib/utils"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -75,11 +76,6 @@ export function SiteHeader() {
     }
     logoutAdmin();
     router.push('/');
-  }
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
   
   const dynamicMoreNavItems = isAdmin
