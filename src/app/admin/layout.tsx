@@ -1,58 +1,16 @@
 
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, Loader2, LayoutDashboard, MicVocal } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-
-// This is the Guard component that handles all auth logic.
-function AdminAuthGuard({ children }: { children: ReactNode }) {
-  const { isAdmin, isLoading } = useAdminAuth();
-  const router = useRouter();
-  
-  useEffect(() => {
-    if (isLoading) {
-      return; // Wait until loading is complete.
-    }
-    
-    // If not an admin, redirect to admin login page.
-    if (!isAdmin) {
-      router.replace('/admin/login');
-      return;
-    }
-
-  }, [isAdmin, isLoading, router]);
-  
-  // Show a loader while verifying admin status.
-  if (isLoading || !isAdmin) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <svg version="1.1" id="loader-1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-          width="64px" height="64px" viewBox="0 0 50 50" enableBackground="new 0 0 50 50" xmlSpace="preserve">
-          <path fill="hsl(var(--primary))" d="M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z">
-            <animateTransform attributeType="xml"
-              attributeName="transform"
-              type="rotate"
-              from="0 25 25"
-              to="360 25 25"
-              dur="0.6s"
-              repeatCount="indefinite"/>
-            </path>
-        </svg>
-      </div>
-    );
-  }
-  
-  // If all checks pass, render the admin layout.
-  return <>{children}</>;
-}
 
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
@@ -62,12 +20,10 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { logoutAdmin } = useAdminAuth();
   
   const handleLogout = async () => {
-    // This logs out the main user, not the admin session.
-    // The admin session is separate.
     if (user) {
         await signOut(user.auth);
     }
-    logoutAdmin(); // This clears the admin session
+    logoutAdmin();
     router.push('/');
   }
 
@@ -85,7 +41,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   ];
 
   return (
-    <AdminAuthGuard>
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <aside className="hidden border-r bg-muted/40 md:block">
           <div className="flex h-full max-h-screen flex-col gap-2">
@@ -140,7 +95,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           </main>
         </div>
       </div>
-    </AdminAuthGuard>
   );
 };
 
