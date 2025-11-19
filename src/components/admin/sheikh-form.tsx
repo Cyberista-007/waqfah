@@ -59,41 +59,30 @@ export function SheikhForm({ sheikh, onFormClose }: SheikhFormProps) {
         imageId: `sheikh-${slug}`, // Placeholder
     };
 
-    try {
-      if (isEditMode && sheikh) {
-        const sheikhRef = doc(firestore, 'sheikhs', sheikh.id);
-        const updateData = {
-            ...sheikhData,
-            createdAt: sheikh.createdAt // Preserve original creation date
-        };
-        await updateDocumentNonBlocking(sheikhRef, updateData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث بيانات الشيخ "${name}".`,
-        });
-      } else {
-        const sheikhsCollection = collection(firestore, 'sheikhs');
-        const addData = {
-            ...sheikhData,
-            createdAt: Timestamp.now()
-        };
-        await addDocumentNonBlocking(sheikhsCollection, addData);
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة الشيخ "${name}" الجديد.`,
-        });
-      }
-      onFormClose();
-    } catch (error) {
-      console.error("Error submitting sheikh:", error);
+    if (isEditMode && sheikh) {
+      const sheikhRef = doc(firestore, 'sheikhs', sheikh.id);
+      const updateData = {
+          ...sheikhData,
+      };
+      updateDocumentNonBlocking(sheikhRef, updateData);
       toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: "لم نتمكن من حفظ بيانات الشيخ. يرجى المحاولة مرة أخرى.",
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث بيانات الشيخ "${name}".`,
       });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      const sheikhsCollection = collection(firestore, 'sheikhs');
+      const addData = {
+          ...sheikhData,
+          createdAt: Timestamp.now()
+      };
+      addDocumentNonBlocking(sheikhsCollection, addData);
+      toast({
+          title: "تم الإنشاء بنجاح",
+          description: `تمت إضافة الشيخ "${name}" الجديد.`,
+      });
     }
+    onFormClose();
+    setIsSubmitting(false);
   };
 
   return (

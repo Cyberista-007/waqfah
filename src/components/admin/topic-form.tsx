@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore, useCollection } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import type { Topic, Lecture, Series } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -78,33 +78,24 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
         seriesIds: selectedSeries,
     };
 
-    try {
-      if (isEditMode && topic) {
-        const topicRef = doc(firestore, 'topics', topic.id);
-        await updateDocumentNonBlocking(topicRef, topicData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث موضوع "${name}".`,
-        });
-      } else {
-        const topicsCollection = collection(firestore, 'topics');
-        await addDocumentNonBlocking(topicsCollection, topicData);
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة موضوع "${name}" الجديد.`,
-        });
-      }
-      onFormClose();
-    } catch (error) {
-      console.error("Error submitting topic:", error);
+    
+    if (isEditMode && topic) {
+      const topicRef = doc(firestore, 'topics', topic.id);
+      updateDocumentNonBlocking(topicRef, topicData);
       toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: "لم نتمكن من حفظ الموضوع. يرجى المحاولة مرة أخرى.",
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث موضوع "${name}".`,
       });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      const topicsCollection = collection(firestore, 'topics');
+      addDocumentNonBlocking(topicsCollection, topicData);
+      toast({
+          title: "تم الإنشاء بنجاح",
+          description: `تمت إضافة موضوع "${name}" الجديد.`,
+      });
     }
+    onFormClose();
+    setIsSubmitting(false);
   };
   
   const isLoading = lecturesLoading || seriesLoading;

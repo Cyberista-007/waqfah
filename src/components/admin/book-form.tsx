@@ -75,14 +75,14 @@ export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
     try {
       if (isEditMode && book) {
         const bookRef = doc(firestore, 'books', book.id);
-        await updateDocumentNonBlocking(bookRef, bookData);
+        updateDocumentNonBlocking(bookRef, bookData);
         toast({
             title: "تم التحديث بنجاح",
             description: `تم تحديث كتاب "${title}".`,
         });
       } else {
         const booksCollection = collection(firestore, 'books');
-        await addDocumentNonBlocking(booksCollection, bookData);
+        addDocumentNonBlocking(booksCollection, bookData);
         toast({
             title: "تم الإنشاء بنجاح",
             description: `تمت إضافة كتاب "${title}" الجديد.`,

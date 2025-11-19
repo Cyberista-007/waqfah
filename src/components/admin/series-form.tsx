@@ -76,46 +76,34 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
         imageId: `series-${slug}`,
     };
     
-    try {
-        if(isEditMode && series) {
-            const seriesRef = doc(firestore, 'series', series.id);
-            // We don't update createdAt on edit
-            const updateData = {
-                ...seriesData,
-                lectureCount: series.lectureCount,
-                createdAt: series.createdAt,
-            };
-            await updateDocumentNonBlocking(seriesRef, updateData);
-            toast({
-                title: "تم التحديث بنجاح",
-                description: `تم تحديث سلسلة "${title}".`,
-            });
-        } else {
-             const fullSeriesData = {
-                ...seriesData,
-                lectureCount: 0,
-                createdAt: Timestamp.now()
-            };
-            const seriesCollection = collection(firestore, 'series');
-            await addDocumentNonBlocking(seriesCollection, fullSeriesData);
-            toast({
-                title: "تم الإنشاء بنجاح",
-                description: `تمت إضافة سلسلة "${title}" الجديدة.`,
-            });
-        }
-
-        router.push("/admin/series");
-        router.refresh();
-    } catch(e) {
-        console.error("Error submitting series: ", e);
+    if(isEditMode && series) {
+        const seriesRef = doc(firestore, 'series', series.id);
+        // We don't update createdAt on edit
+        const updateData = {
+            ...seriesData,
+        };
+        updateDocumentNonBlocking(seriesRef, updateData);
         toast({
-            variant: "destructive",
-            title: "خطأ في حفظ السلسلة",
-            description: "حدث خطأ أثناء محاولة حفظ السلسلة في قاعدة البيانات.",
+            title: "تم التحديث بنجاح",
+            description: `تم تحديث سلسلة "${title}".`,
         });
-    } finally {
-        setIsSubmitting(false);
+    } else {
+         const fullSeriesData = {
+            ...seriesData,
+            lectureCount: 0,
+            createdAt: Timestamp.now()
+        };
+        const seriesCollection = collection(firestore, 'series');
+        addDocumentNonBlocking(seriesCollection, fullSeriesData);
+        toast({
+            title: "تم الإنشاء بنجاح",
+            description: `تمت إضافة سلسلة "${title}" الجديدة.`,
+        });
     }
+
+    router.push("/admin/series");
+    router.refresh();
+    setIsSubmitting(false);
   };
 
   return (

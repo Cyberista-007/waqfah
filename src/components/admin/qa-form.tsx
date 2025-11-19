@@ -56,33 +56,25 @@ export function QAForm({ item, onFormClose }: QAFormProps) {
         answer,
     };
 
-    try {
-      if (isEditMode && item) {
-        const itemRef = doc(firestore, 'question_answers', item.id);
-        await updateDocumentNonBlocking(itemRef, itemData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث السؤال.`,
-        });
-      } else {
-        const itemsCollection = collection(firestore, 'question_answers');
-        await addDocumentNonBlocking(itemsCollection, itemData);
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة السؤال الجديد.`,
-        });
-      }
-      onFormClose();
-    } catch (error) {
-      console.error("Error submitting Q&A item:", error);
+    
+    if (isEditMode && item) {
+      const itemRef = doc(firestore, 'question_answers', item.id);
+      updateDocumentNonBlocking(itemRef, itemData);
       toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: "لم نتمكن من حفظ السؤال. يرجى المحاولة مرة أخرى.",
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث السؤال.`,
       });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      const itemsCollection = collection(firestore, 'question_answers');
+      addDocumentNonBlocking(itemsCollection, itemData);
+      toast({
+          title: "تم الإنشاء بنجاح",
+          description: `تمت إضافة السؤال الجديد.`,
+      });
     }
+    onFormClose();
+    setIsSubmitting(false);
+    
   };
 
   return (

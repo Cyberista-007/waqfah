@@ -104,7 +104,7 @@ export default function LoginPage() {
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
-    const fullName = `${'firstName'} ${'lastName'}`;
+    const fullName = `${firstName} ${lastName}`;
     
     const redirectTo = searchParams.get('redirect_to') || '/';
 
@@ -160,6 +160,7 @@ export default function LoginPage() {
                 gender: formData.get("gender") as string,
                 phone: formData.get("phone") as string,
                 createdAt: Timestamp.now(),
+                role: 'user',
             };
             await setDoc(userRef, newUserProfile, { merge: true });
 
@@ -266,15 +267,15 @@ export default function LoginPage() {
                                                     key={country.value}
                                                     value={country.label}
                                                     onSelect={(currentValue) => {
-                                                        const selected = countries.find(c => c.label.toLowerCase() === currentValue);
-                                                        setCountryValue(selected ? selected.value.toLowerCase() : "")
+                                                        const selected = countries.find(c => c.label.toLowerCase() === currentValue.toLowerCase());
+                                                        setCountryValue(selected ? selected.value : "")
                                                         setCountryOpen(false)
                                                     }}
                                                 >
                                                     <Check
                                                     className={cn(
                                                         "mr-2 h-4 w-4",
-                                                        countryValue === country.value.toLowerCase() ? "opacity-100" : "opacity-0"
+                                                        countryValue === country.value ? "opacity-100" : "opacity-0"
                                                     )}
                                                     />
                                                     {country.label}
@@ -315,5 +316,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

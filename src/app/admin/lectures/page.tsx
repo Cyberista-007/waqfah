@@ -57,12 +57,10 @@ export default function AdminLecturesPage() {
             });
         } catch (error) {
             console.error("Error deleting lecture:", error);
-            // If transaction fails, attempt to delete just the lecture
-            deleteDocumentNonBlocking(lectureRef);
             toast({
                 variant: "destructive",
-                title: "تم الحذف (مع تحذير)",
-                description: "تم حذف المحاضرة، ولكن قد يكون هناك خطأ في تحديث عدد السلسلة.",
+                title: "فشل الحذف",
+                description: "لم نتمكن من حذف المحاضرة. قد يكون السبب مشكلة في الصلاحيات.",
             });
         } finally {
             setLectureToDelete(null); // Close the dialog

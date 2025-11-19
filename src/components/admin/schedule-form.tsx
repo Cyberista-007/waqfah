@@ -70,33 +70,23 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
         isLive,
     };
 
-    try {
-      if (isEditMode && item) {
-        const itemRef = doc(firestore, 'scheduled_lessons', item.id);
-        await updateDocumentNonBlocking(itemRef, itemData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث الدرس "${title}".`,
-        });
-      } else {
-        const itemsCollection = collection(firestore, 'scheduled_lessons');
-        await addDocumentNonBlocking(itemsCollection, itemData);
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة الدرس "${title}" الجديد.`,
-        });
-      }
-      onFormClose();
-    } catch (error) {
-      console.error("Error submitting schedule item:", error);
+    if (isEditMode && item) {
+      const itemRef = doc(firestore, 'scheduled_lessons', item.id);
+      updateDocumentNonBlocking(itemRef, itemData);
       toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: "لم نتمكن من حفظ الدرس. يرجى المحاولة مرة أخرى.",
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث الدرس "${title}".`,
       });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      const itemsCollection = collection(firestore, 'scheduled_lessons');
+      addDocumentNonBlocking(itemsCollection, itemData);
+      toast({
+          title: "تم الإنشاء بنجاح",
+          description: `تمت إضافة الدرس "${title}" الجديد.`,
+      });
     }
+    onFormClose();
+    setIsSubmitting(false);
   };
 
   return (
