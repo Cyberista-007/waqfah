@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image"
@@ -153,10 +154,10 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
         </div>
       </div>
       <div className="p-4 flex-grow flex items-center justify-between bg-card">
-         <h3 className="font-headline text-md font-bold flex-grow text-right">
+         <h3 className="font-headline text-md font-bold flex-grow text-right truncate">
           <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors">{lecture.title}</Link>
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 ms-2">
              {lecture.telegramUrl && (
                 <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                     <SiTelegram size={20} />
