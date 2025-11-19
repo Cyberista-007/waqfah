@@ -9,8 +9,7 @@ import {
   User as UserIcon,
   LogOut,
   LayoutDashboard,
-  MicVocal,
-  Hash,
+  Palette,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -36,6 +35,8 @@ import { signOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
+import { useState } from "react"
+import { ThemeSwitcherDialog } from "./theme-switcher"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -58,6 +59,8 @@ export function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const { isAdmin, logoutAdmin } = useAdminAuth();
   const router = useRouter();
+  const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
+
 
   const handleLogout = async () => {
     if (user) {
@@ -73,6 +76,7 @@ export function SiteHeader() {
   }
   
   return (
+    <>
     <header className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
@@ -82,7 +86,7 @@ export function SiteHeader() {
           href="/"
           className="flex items-center space-x-2 space-x-reverse cursor-pointer"
         >
-          <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
+           <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
             وقفة
           </div>
         </Link>
@@ -108,6 +112,13 @@ export function SiteHeader() {
                             </Link>
                         </DropdownMenuItem>
                     ))}
+                    <DropdownMenuSeparator />
+                     <DropdownMenuItem onSelect={() => setIsThemeSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
+                        <div className="flex items-center gap-2">
+                           <Palette className="h-4 w-4" />
+                           <span>تغيير الثيم</span>
+                        </div>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -194,6 +205,12 @@ export function SiteHeader() {
                     </Link>
                   </SheetClose>
                 ))}
+                 <div className="border-t border-border pt-4">
+                    <Button onSelect={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
+                        <Palette className="me-2 h-4 w-4" />
+                        <span>تغيير الثيم</span>
+                    </Button>
+                 </div>
                 <div className="border-t border-border pt-4 space-y-3">
                    {user ? (
                      <>
@@ -235,5 +252,7 @@ export function SiteHeader() {
         </div>
       </nav>
     </header>
+    <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
+    </>
   )
 }

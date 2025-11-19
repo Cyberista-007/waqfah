@@ -3,38 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --gradient-start: 340 82% 52%;
-    --gradient-mid: 20 82% 52%;
-    --gradient-end: 45 82% 52%;
-  }
-
-  .dark {
+  :root, .theme-default-dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -63,6 +32,247 @@
     --gradient-mid: 20 82% 52%;
     --gradient-end: 45 82% 52%;
   }
+
+  .light, .theme-default-light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --gradient-start: 340 82% 52%;
+    --gradient-mid: 20 82% 52%;
+    --gradient-end: 45 82% 52%;
+  }
+
+  /* 1. Emerald Mosque */
+  .theme-emerald-mosque {
+    --background: 160 30% 5%;
+    --foreground: 150 20% 95%;
+    --card: 160 30% 10%;
+    --card-foreground: 150 20% 95%;
+    --popover: 160 30% 8%;
+    --popover-foreground: 150 20% 95%;
+    --primary: 155 80% 65%;
+    --primary-foreground: 160 30% 5%;
+    --secondary: 160 25% 20%;
+    --secondary-foreground: 150 20% 95%;
+    --muted: 160 25% 15%;
+    --muted-foreground: 150 20% 60%;
+    --accent: 150 70% 50%;
+    --accent-foreground: 0 0% 100%;
+    --border: 160 25% 20%;
+    --input: 160 25% 25%;
+    --ring: 155 80% 70%;
+  }
+
+  /* 2. Desert Night */
+  .theme-desert-night {
+    --background: 25 20% 8%;
+    --foreground: 30 15% 90%;
+    --card: 25 20% 12%;
+    --card-foreground: 30 15% 90%;
+    --popover: 25 20% 10%;
+    --popover-foreground: 30 15% 90%;
+    --primary: 35 85% 70%;
+    --primary-foreground: 25 20% 5%;
+    --secondary: 30 15% 25%;
+    --secondary-foreground: 30 15% 90%;
+    --muted: 30 15% 20%;
+    --muted-foreground: 30 15% 55%;
+    --accent: 40 80% 60%;
+    --accent-foreground: 25 20% 5%;
+    --border: 30 15% 25%;
+    --input: 30 15% 30%;
+    --ring: 35 85% 75%;
+  }
+
+  /* 3. Royal Blue */
+  .theme-royal-blue {
+    --background: 220 40% 10%;
+    --foreground: 215 20% 92%;
+    --card: 220 40% 15%;
+    --card-foreground: 215 20% 92%;
+    --popover: 220 40% 12%;
+    --popover-foreground: 215 20% 92%;
+    --primary: 210 90% 75%;
+    --primary-foreground: 220 40% 10%;
+    --secondary: 215 30% 25%;
+    --secondary-foreground: 215 20% 92%;
+    --muted: 215 30% 20%;
+    --muted-foreground: 215 20% 60%;
+    --accent: 45 90% 65%;
+    --accent-foreground: 220 40% 10%;
+    --border: 215 30% 25%;
+    --input: 215 30% 30%;
+    --ring: 210 90% 80%;
+  }
+
+  /* 4. Crimson & Gold */
+  .theme-crimson-gold {
+    --background: 0 50% 8%;
+    --foreground: 30 20% 90%;
+    --card: 0 50% 14%;
+    --card-foreground: 30 20% 90%;
+    --popover: 0 50% 10%;
+    --popover-foreground: 30 20% 90%;
+    --primary: 40 90% 70%;
+    --primary-foreground: 0 50% 8%;
+    --secondary: 10 40% 25%;
+    --secondary-foreground: 30 20% 90%;
+    --muted: 10 40% 20%;
+    --muted-foreground: 30 20% 55%;
+    --accent: 350 80% 65%;
+    --accent-foreground: 0 50% 8%;
+    --border: 10 40% 25%;
+    --input: 10 40% 30%;
+    --ring: 40 90% 75%;
+  }
+
+  /* 5. Olive & Sage */
+  .theme-olive-sage {
+    --background: 90 15% 15%;
+    --foreground: 80 10% 94%;
+    --card: 90 15% 20%;
+    --card-foreground: 80 10% 94%;
+    --popover: 90 15% 18%;
+    --popover-foreground: 80 10% 94%;
+    --primary: 75 50% 75%;
+    --primary-foreground: 90 15% 10%;
+    --secondary: 85 12% 30%;
+    --secondary-foreground: 80 10% 94%;
+    --muted: 85 12% 25%;
+    --muted-foreground: 80 10% 60%;
+    --accent: 100 40% 60%;
+    --accent-foreground: 90 15% 10%;
+    --border: 85 12% 30%;
+    --input: 85 12% 35%;
+    --ring: 75 50% 80%;
+  }
+
+  /* 6. Mecca Nights */
+  .theme-mecca-nights {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 45 100% 70%; /* Gold */
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 0 0% 98%;
+    --accent-foreground: 240 10% 3.9%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 45 100% 75%;
+  }
+
+  /* 7. Medina Green */
+  .theme-medina-green {
+    --background: 140 60% 10%;
+    --foreground: 120 10% 95%;
+    --card: 140 60% 15%;
+    --card-foreground: 120 10% 95%;
+    --popover: 140 60% 12%;
+    --popover-foreground: 120 10% 95%;
+    --primary: 130 50% 70%;
+    --primary-foreground: 140 60% 10%;
+    --secondary: 135 40% 25%;
+    --secondary-foreground: 120 10% 95%;
+    --muted: 135 40% 20%;
+    --muted-foreground: 120 10% 60%;
+    --accent: 50 80% 65%;
+    --accent-foreground: 140 60% 10%;
+    --border: 135 40% 25%;
+    --input: 135 40% 30%;
+    --ring: 130 50% 75%;
+  }
+
+  /* 8. Andalusian Sunset */
+  .theme-andalusian-sunset {
+    --background: 20 25% 12%;
+    --foreground: 25 15% 92%;
+    --card: 20 25% 18%;
+    --card-foreground: 25 15% 92%;
+    --popover: 20 25% 15%;
+    --popover-foreground: 25 15% 92%;
+    --primary: 15 90% 68%;
+    --primary-foreground: 20 25% 8%;
+    --secondary: 25 20% 30%;
+    --secondary-foreground: 25 15% 92%;
+    --muted: 25 20% 25%;
+    --muted-foreground: 25 15% 60%;
+    --accent: 30 85% 75%;
+    --accent-foreground: 20 25% 8%;
+    --border: 25 20% 30%;
+    --input: 25 20% 35%;
+    --ring: 15 90% 72%;
+  }
+  
+  /* 9. Light Academia */
+  .theme-light-academia {
+    --background: 45 35% 96%;
+    --foreground: 30 20% 15%;
+    --card: 45 35% 100%;
+    --card-foreground: 30 20% 15%;
+    --popover: 45 35% 98%;
+    --popover-foreground: 30 20% 15%;
+    --primary: 25 45% 30%;
+    --primary-foreground: 45 35% 96%;
+    --secondary: 40 25% 92%;
+    --secondary-foreground: 25 45% 30%;
+    --muted: 40 25% 92%;
+    --muted-foreground: 30 20% 45%;
+    --accent: 20 60% 50%;
+    --accent-foreground: 45 35% 96%;
+    --border: 40 25% 88%;
+    --input: 40 25% 88%;
+    --ring: 25 45% 30%;
+  }
+
+  /* 10. Parchment */
+  .theme-parchment {
+    --background: 40 30% 92%;
+    --foreground: 35 25% 20%;
+    --card: 40 30% 98%;
+    --card-foreground: 35 25% 20%;
+    --popover: 40 30% 95%;
+    --popover-foreground: 35 25% 20%;
+    --primary: 10 50% 35%;
+    --primary-foreground: 40 30% 92%;
+    --secondary: 35 25% 88%;
+    --secondary-foreground: 10 50% 35%;
+    --muted: 35 25% 88%;
+    --muted-foreground: 35 25% 45%;
+    --accent: 140 35% 40%;
+    --accent-foreground: 40 30% 92%;
+    --border: 35 25% 80%;
+    --input: 35 25% 80%;
+    --ring: 10 50% 35%;
+  }
+
 }
 
 @layer base {

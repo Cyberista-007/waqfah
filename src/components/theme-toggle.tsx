@@ -2,12 +2,13 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Palette } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
+import { Button } from "./ui/button"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [isMounted, setIsMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -15,33 +16,33 @@ export function ThemeToggle() {
   }, [])
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
+    const isDark = resolvedTheme === 'dark';
+    if(isDark) {
+        // If current theme is a dark variant, switch to light variant, not system 'light'
+        setTheme('theme-default-light')
+    } else {
+        // If current theme is a light variant, switch to dark variant
+        setTheme('theme-default-dark')
+    }
   }
 
   // Avoid rendering toggle with incorrect state during SSR
   if (!isMounted) {
     return <div className="h-10 w-10" />
   }
+  
+  const isDark = resolvedTheme === 'dark';
 
   return (
-    <button
+    <Button
       onClick={toggleTheme}
-      className={cn(
-        "relative inline-flex h-8 w-14 items-center rounded-full px-1 transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-        theme === "light" ? "bg-primary" : "bg-gray-600"
-      )}
+      variant="ghost"
+      size="icon"
       aria-label="Toggle theme"
+      className="text-foreground/70 hover:text-primary"
     >
-      <span
-        className={cn(
-          "absolute inset-y-0 left-1 my-auto flex h-6 w-6 items-center justify-center rounded-full bg-white text-gray-800 shadow-md transition-transform duration-300 ease-in-out",
-          theme === "dark" && "translate-x-[26px]"
-        )}
-      >
-        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      </span>
-      <span className="sr-only">Toggle theme</span>
-    </button>
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+    </Button>
   )
 }

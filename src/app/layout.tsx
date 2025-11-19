@@ -30,7 +30,25 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="theme-default-dark" 
+          enableSystem={false}
+          themes={[
+            'theme-default-light', 
+            'theme-default-dark', 
+            'theme-emerald-mosque', 
+            'theme-desert-night', 
+            'theme-royal-blue', 
+            'theme-crimson-gold', 
+            'theme-olive-sage',
+            'theme-mecca-nights',
+            'theme-medina-green',
+            'theme-andalusian-sunset',
+            'theme-light-academia',
+            'theme-parchment'
+          ]}
+        >
           <FirebaseProvider>
             <AudioPlayerProvider>
               <div className="relative flex min-h-screen flex-col">
