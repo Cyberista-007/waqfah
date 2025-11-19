@@ -29,11 +29,14 @@ async function getPageData(lectureId: string) {
     const series = seriesSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
     const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
     const lectureData = lectureSnap.data();
-    // Ensure createdAt is a plain object for serialization
+    
+    // Convert timestamp to a serializable format if it exists
+    const createdAt = lectureData.createdAt?.toDate ? lectureData.createdAt.toDate().toISOString() : new Date().toISOString();
+
     const lecture = { 
       ...lectureData, 
       id: lectureSnap.id,
-      createdAt: lectureData.createdAt.toDate().toISOString(),
+      createdAt: createdAt,
      };
 
     return { series, sheikhs, lecture };

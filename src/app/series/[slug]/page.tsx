@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
@@ -5,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import LectureListItem from '@/components/lecture-list-item';
 import type { Series, Lecture } from '@/lib/types';
-import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { SeriesPageSkeleton } from '@/components/skeletons';
 
@@ -24,12 +25,26 @@ async function getSeriesData(seriesId: string) {
         return null;
     }
 
-    const series = { ...seriesSnap.data(), id: seriesSnap.id } as Series;
+    const seriesData = seriesSnap.data();
+    const series = {
+       ...seriesData,
+       id: seriesSnap.id,
+       createdAt: seriesData.createdAt instanceof Timestamp ? seriesData.createdAt.toDate().toISOString() : new Date().toISOString()
+    } as Series;
+
 
     const lecturesCol = collection(serverFirestore, 'lectures');
     const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesId), orderBy('createdAt', 'asc'));
     const lecturesSnapshot = await getDocs(lecturesQuery);
-    const lecturesInSeries = lecturesSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Lecture));
+    
+    const lecturesInSeries = lecturesSnapshot.docs.map(doc => {
+      const lectureData = doc.data();
+      return { 
+        ...lectureData, 
+        id: doc.id,
+        createdAt: lectureData.createdAt instanceof Timestamp ? lectureData.createdAt : Timestamp.now()
+      } as Lecture
+    });
 
     return { series, lecturesInSeries };
 }

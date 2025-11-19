@@ -43,12 +43,11 @@ export interface InternalQuery extends Query<DocumentData> {
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
- * 
  *
  * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
  * use useMemoFirebase to memoize it per React guidence.  Also make sure that it's dependencies are stable
  * references
- *  
+ *
  * @template T Optional type for document data. Defaults to any.
  * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
  * The Firestore CollectionReference or Query. Waits if null/undefined.
@@ -61,12 +60,14 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
+  // useMemoFirebase is just a useMemo, this keeps the reference stable across renders
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
+    // If the query is not ready, set loading to false and clear data/errors.
     if (!stableQueryDep) {
       setData(null);
       setIsLoading(false);
@@ -74,6 +75,7 @@ export function useCollection<T = any>(
       return;
     }
     
+    // Query is ready, set loading state and prepare for snapshot.
     setIsLoading(true);
     setError(null);
 
@@ -83,7 +85,7 @@ export function useCollection<T = any>(
         const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
         setData(results);
         setError(null);
-        setIsLoading(false);
+        setIsLoading(false); // Data fetched, no longer loading.
       },
       (err: FirestoreError) => {
         let path = 'unknown/path';
@@ -91,32 +93,4 @@ export function useCollection<T = any>(
             if (stableQueryDep.type === 'collection') {
               path = (stableQueryDep as CollectionReference).path;
             } else if ((stableQueryDep as any)?._query?.path) {
-                path = (stableQueryDep as any)._query.path.canonicalString();
-            }
-        } catch (e) {
-            console.warn("Could not determine path for Firestore query error logging.");
-        }
-
-
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        });
-        
-        if (process.env.NODE_ENV === 'development') {
-           console.error("Firestore Permission Error in useCollection:", contextualError.message);
-        }
-
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
-
-        errorEmitter.emit('permission-error', contextualError);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [stableQueryDep]);
-  
-  return { data, isLoading, error };
-}
+                path = (stableQueryD

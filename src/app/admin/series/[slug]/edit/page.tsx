@@ -28,10 +28,12 @@ async function getPageData(seriesId: string) {
     const seriesData = seriesSnap.data();
     
     // Ensure createdAt is a plain object for serialization
+    const createdAt = seriesData.createdAt?.toDate ? seriesData.createdAt.toDate().toISOString() : new Date().toISOString();
+
     const series = { 
       ...seriesData, 
       id: seriesSnap.id,
-      createdAt: seriesData.createdAt.toDate().toISOString(),
+      createdAt: createdAt,
      } as Series;
 
     return { series, sheikhs };
