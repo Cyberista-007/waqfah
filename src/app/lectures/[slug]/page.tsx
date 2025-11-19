@@ -41,7 +41,7 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
 
       <Card className="shadow-lg">
         <CardContent className="p-4">
-          <PlayButton track={{ src: lecture.audioSrc, title: lecture.title, id: lecture.id, seriesId: lecture.seriesId, seriesSlug: lecture.seriesSlug, seriesTitle: lecture.seriesTitle, imageId: lecture.imageId, slug: lecture.slug }} />
+          <PlayButton track={{ audioSrc: lecture.audioSrc, title: lecture.title, id: lecture.id, seriesId: lecture.seriesId, seriesSlug: lecture.seriesSlug, seriesTitle: lecture.seriesTitle, imageId: lecture.imageId, slug: lecture.slug }} />
         </CardContent>
       </Card>
       

@@ -32,7 +32,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
 
     const handlePlay = () => {
         playTrack({ 
-            src: lecture.audioSrc, 
+            audioSrc: lecture.audioSrc, 
             title: lecture.title,
             id: lecture.id,
             seriesId: lecture.seriesId,

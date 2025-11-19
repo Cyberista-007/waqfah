@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useState, useRef } from "react";
 import type { Lecture } from "@/lib/types";
 
-export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug'> & { src: string };
+export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug'>;
 
 
 type AudioPlayerContextType = {
@@ -25,7 +25,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const playTrack = (newTrack: Track, startTime: number = 0) => {
-    if (track?.src !== newTrack.src) {
+    if (track?.audioSrc !== newTrack.audioSrc) {
         setTrack(newTrack);
     }
     // Use a timeout to ensure the state has updated and the audio element is ready

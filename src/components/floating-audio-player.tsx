@@ -106,7 +106,7 @@ export function FloatingAudioPlayer() {
     audioElement.addEventListener('ended', handleEnded);
 
     if (track) {
-      audioElement.src = track.src;
+      audioElement.src = track.audioSrc;
       audioElement.load();
       if (isPlaying) {
         audioElement.play().catch(e => console.error("Error playing audio:", e));
@@ -161,7 +161,7 @@ export function FloatingAudioPlayer() {
       track ? "translate-y-0" : "translate-y-[200%]"
     )}>
       <div className="bg-background/80 backdrop-blur-md text-foreground rounded-lg p-4">
-        <audio ref={audioRef} src={track.src} preload="metadata" className="hidden" />
+        <audio ref={audioRef} src={track.audioSrc} preload="metadata" className="hidden" />
         <div className="flex items-center justify-between">
             <div className="flex-grow min-w-0">
             <p className="text-sm font-medium truncate">{track.title}</p>
@@ -173,7 +173,7 @@ export function FloatingAudioPlayer() {
             </Button>
         </div>
         <div className="w-full mt-2">
-            <audio controls className="w-full h-10" src={track.src} ref={audioRef}></audio>
+            <audio controls className="w-full h-10" src={track.audioSrc} ref={audioRef}></audio>
         </div>
         <div className="flex items-center justify-center gap-4 mt-3">
             <Button onClick={handleRewind} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">

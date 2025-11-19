@@ -46,7 +46,7 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
       }
 
       playTrack({ 
-          src: lecture.audioSrc, 
+          audioSrc: lecture.audioSrc, 
           title: lecture.title,
           id: lecture.id,
           seriesId: lecture.seriesId,
