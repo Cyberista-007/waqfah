@@ -288,3 +288,4 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     </Card>
   );
 }
+ 
