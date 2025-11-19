@@ -14,7 +14,7 @@ export default function AdminLoginPage() {
   const { isAdmin, isLoading, loginAdmin } = useAdminAuth();
   const router = useRouter();
   
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,17 +26,17 @@ export default function AdminLoginPage() {
     }
   }, [isAdmin, isLoading, router]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
     
-    const success = loginAdmin(username, password);
+    const success = await loginAdmin(username, password);
 
     if (success) {
         router.replace('/admin/dashboard');
     } else {
-        setError('Please enter your username and password.');
+        setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
         setIsSubmitting(false);
     }
   };
@@ -51,37 +51,41 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
+    <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-headline">تسجيل دخول المدير</CardTitle>
+            <CardDescription>أدخل بيانات الاعتماد للوصول إلى لوحة التحكم.</CardDescription>
+        </CardHeader>
         <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-3 items-center">
-                    <Label htmlFor="username" className="text-right pr-4">Username:</Label>
+                <div className="space-y-2">
+                    <Label htmlFor="username">اسم المستخدم:</Label>
                     <Input 
                         id="username"
-                        className="col-span-2"
                         type="text" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        required
                         />
                 </div>
-                <div className="grid grid-cols-3 items-center">
-                    <Label htmlFor="password" className="text-right pr-4">Password:</Label>
+                <div className="space-y-2">
+                    <Label htmlFor="password">كلمة المرور:</Label>
                     <Input 
                         id="password" 
-                        className="col-span-2"
                         type="password" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        required
                         />
                 </div>
-                {error && <p className="text-orange-500 text-sm text-center">{error}</p>}
+                {error && <p className="text-destructive text-sm text-center">{error}</p>}
                 <div className="flex justify-center gap-4 pt-4">
                     <Button type="submit" disabled={isSubmitting} className="px-8">
-                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Login'}
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'دخول'}
                     </Button>
                     <Button type="button" variant="outline" className="px-8" onClick={() => router.push('/')}>
-                        Cancel
+                        إلغاء
                     </Button>
                 </div>
             </form>

@@ -3,10 +3,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-// Hardcoded credentials as seen in the image
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "arm100sena"; 
 const SESSION_STORAGE_KEY = "is_admin_logged_in";
+
+// Read credentials from environment variables
+const ADMIN_USERNAME = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 export function useAdminAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -26,7 +27,13 @@ export function useAdminAuth() {
     }
   }, []);
 
-  const loginAdmin = useCallback((username, password) => {
+  const loginAdmin = useCallback(async (username, password) => {
+    // Ensure credentials are set in environment variables
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+        console.error("Admin credentials are not set in environment variables.");
+        return false;
+    }
+
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       try {
         sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
