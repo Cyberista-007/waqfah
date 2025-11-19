@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -33,8 +33,8 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
   // Show a loader while verifying admin status.
   if (isLoading || !isAdmin) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-16 w-16 rounded-full border-4 border-t-transparent border-primary animate-spin"></div>
       </div>
     );
   }
