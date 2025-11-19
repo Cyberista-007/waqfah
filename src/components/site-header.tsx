@@ -78,11 +78,13 @@ export function SiteHeader() {
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
     )}>
       <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-        <Link 
+        <Link
           href="/"
-          className="text-xl font-bold font-headline hover:text-primary transition-colors cursor-pointer"
+          className="flex items-center space-x-2 space-x-reverse cursor-pointer"
         >
-          منصة الدروس العلمية
+          <div className="text-3xl font-extrabold font-headline tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-destructive to-primary">
+            وقفة
+          </div>
         </Link>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-6">
@@ -176,11 +178,13 @@ export function SiteHeader() {
             <SheetContent side="right" className="bg-background w-[280px] p-6">
               <div className="flex flex-col space-y-4">
               <SheetClose asChild>
-                <Link 
+                <Link
                   href="/"
-                  className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4 cursor-pointer"
+                  className="flex items-center space-x-2 space-x-reverse cursor-pointer mb-4"
                 >
-                    منصة الدروس العلمية
+                  <div className="text-3xl font-extrabold font-headline tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-destructive to-primary">
+                    وقفة
+                  </div>
                 </Link>
               </SheetClose>
                 {[...mainNavItems, ...moreNavItems].map((item) => (
