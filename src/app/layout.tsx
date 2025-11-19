@@ -2,16 +2,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/components/theme-provider';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { Toaster } from '@/components/ui/toaster';
-import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
-import { FirebaseProvider } from '@/firebase';
-import { Analytics } from "@vercel/analytics/react"
-import { FontProvider } from '@/components/font-provider';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Analytics } from "@vercel/analytics/react";
+import { AppProviders } from '@/components/app-providers';
 
 export const metadata: Metadata = {
   title: 'منصة الدروس العلمية',
@@ -33,49 +29,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;700&family=Lalezar&family=Markazi+Text:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Tajawal:wght@400;700&family=Almarai:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Mada:wght@400;700&family=Reem+Kufi:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="theme-default-dark" 
-          enableSystem={false}
-          themes={[
-            'theme-default-light', 
-            'theme-default-dark', 
-            'theme-emerald-mosque', 
-            'theme-desert-night', 
-            'theme-royal-blue', 
-            'theme-crimson-gold', 
-            'theme-olive-sage',
-            'theme-mecca-nights',
-            'theme-medina-green',
-            'theme-andalusian-sunset',
-            'theme-light-academia',
-            'theme-parchment',
-            'theme-classic-dark',
-            'theme-night-neon',
-            'theme-red-volcano',
-            'theme-hekla-volcano',
-            'theme-deep-space',
-            'theme-oled',
-            'theme-studio-simpatico'
-          ]}
-        >
-          <FontProvider>
-            <FirebaseProvider>
-              <AudioPlayerProvider>
-                <div className="relative flex min-h-screen flex-col">
-                  <SiteHeader />
-                  <main className="flex-1 container py-8">
-                    <FirebaseErrorListener />
-                    {children}
-                  </main>
-                  <SiteFooter />
-                </div>
-                <FloatingAudioPlayer />
-                <Toaster />
-              </AudioPlayerProvider>
-            </FirebaseProvider>
-          </FontProvider>
-        </ThemeProvider>
+        <AppProviders>
+            <div className="relative flex min-h-screen flex-col">
+              <SiteHeader />
+              <main className="flex-1 container py-8">
+                {children}
+              </main>
+              <SiteFooter />
+            </div>
+            <FloatingAudioPlayer />
+            <Toaster />
+        </AppProviders>
         <Analytics />
       </body>
     </html>
