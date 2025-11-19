@@ -1,4 +1,3 @@
-
 import type { Timestamp } from 'firebase/firestore';
 
 export type Sheikh = {
@@ -88,6 +87,7 @@ export type UserProfile = {
     minutesListened?: number;
     lecturesCompleted?: number;
     seriesCompleted?: number;
+    role?: 'user' | 'admin';
 };
 
 export type EditProfileForm = {

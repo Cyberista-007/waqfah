@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
@@ -88,6 +87,7 @@ export default function LoginPage() {
               name: name,
               email: newUser.email,
               createdAt: Timestamp.now(),
+              role: 'user' // Default role for new users
             }, { merge: true });
 
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });

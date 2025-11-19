@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Sheikh": {
@@ -90,7 +89,8 @@
         "minutesListened": { "type": "number" },
         "lecturesCompleted": { "type": "number" },
         "seriesCompleted": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
       },
       "required": ["email", "name", "createdAt"]
     },

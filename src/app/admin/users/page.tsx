@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -16,12 +15,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore, useUser } from "@/firebase";
 import type { UserProfile } from "@/lib/types";
 import { Loader2, UserCog } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Badge } from "@/components/ui/badge";
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -30,7 +39,22 @@ const getInitials = (name: string | null | undefined) => {
 
 
 export default function AdminUsersPage() {
+    const { user: currentUser } = useUser();
     const { data: allUsers, isLoading } = useCollection<UserProfile>('users', { orderBy: ['createdAt', 'desc'] });
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
+        if (!firestore) return;
+
+        const userRef = doc(firestore, 'users', userId);
+        updateDocumentNonBlocking(userRef, { role: newRole });
+
+        toast({
+            title: "تم تحديث الدور",
+            description: `تم تغيير دور المستخدم بنجاح إلى ${newRole}.`,
+        });
+    };
 
     return (
         <Card>
@@ -51,13 +75,12 @@ export default function AdminUsersPage() {
                     <TableHead>البريد الإلكتروني</TableHead>
                     <TableHead>تاريخ التسجيل</TableHead>
                     <TableHead>الدور</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">
+                    <TableCell colSpan={4} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
@@ -77,13 +100,20 @@ export default function AdminUsersPage() {
                         {user.createdAt ? format(user.createdAt.toDate(), 'yyyy/MM/dd') : 'غير معروف'}
                     </TableCell>
                     <TableCell>
-                        {/* Placeholder for role - to be implemented */}
-                        <span className="text-muted-foreground">مستخدم</span>
-                    </TableCell>
-                    <TableCell className="text-left">
-                        <Button variant="outline" size="sm" disabled>
-                            تعديل
-                        </Button>
+                       <Select
+                          defaultValue={user.role || 'user'}
+                          onValueChange={(value: 'admin' | 'user') => handleRoleChange(user.id, value)}
+                          disabled={user.id === currentUser?.uid}
+                       >
+                           <SelectTrigger className="w-[120px]">
+                               <SelectValue/>
+                           </SelectTrigger>
+                           <SelectContent>
+                               <SelectItem value="user">مستخدم</SelectItem>
+                               <SelectItem value="admin">مدير</SelectItem>
+                           </SelectContent>
+                       </Select>
+                       {user.id === currentUser?.uid && <Badge variant="secondary" className="mt-1">أنت</Badge>}
                     </TableCell>
                 </TableRow>
                 ))}

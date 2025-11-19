@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -96,6 +95,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
                 email: firebaseUser.email!,
                 photoURL: firebaseUser.photoURL || '',
                 createdAt: Timestamp.now(),
+                role: 'user', // Set default role
               };
               await setDoc(userRef, newUserProfile);
             }
