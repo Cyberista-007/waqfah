@@ -112,7 +112,7 @@ export function SiteHeader() {
             </DropdownMenu>
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-4">
            <Link href="/search">
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
                 <Search className="h-5 w-5" />
@@ -233,5 +233,3 @@ export function SiteHeader() {
     </header>
   )
 }
-
-    
