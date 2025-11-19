@@ -17,11 +17,11 @@ import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 
 // Combined state for the Firebase context
 export interface FirebaseContextState {
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null;
-  functions: Functions | null;
-  storage: FirebaseStorage | null;
+  firebaseApp: FirebaseApp;
+  firestore: Firestore;
+  auth: Auth;
+  functions: Functions;
+  storage: FirebaseStorage;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -47,6 +47,7 @@ const getFirebaseServices = () => {
   }
 
   const app = initializeApp(firebaseConfig);
+  // Use try-catch for persistence to support environments where it might fail (like SSR)
   let auth: Auth;
   try {
     auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
@@ -69,21 +70,19 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
   // This is safe because getFirebaseServices handles the singleton pattern.
   const services = useMemo(() => getFirebaseServices(), []);
 
-  const [userAuthState, setUserAuthState] = useState<{
+  const [authState, setAuthState] = useState<{
     user: User | null;
     isUserLoading: boolean;
     userError: Error | null;
   }>({
     user: null,
-    isUserLoading: true,
+    isUserLoading: true, // Start as loading
     userError: null,
   });
 
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!services) return;
-
     const { auth, firestore } = services;
     
     const unsubscribe = onAuthStateChanged(
@@ -106,11 +105,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
             console.error("Error checking or creating user profile:", e);
           }
         }
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        setAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => {
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
-        setUserAuthState({ user: null, isUserLoading: false, userError: error });
+        setAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
     return () => unsubscribe();
@@ -123,10 +122,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       auth: services.auth,
       functions: services.functions,
       storage: services.storage,
-      ...userAuthState,
+      ...authState,
     }
-  }, [services, userAuthState]);
+  }, [services, authState]);
 
+  // CRITICAL FIX: Do not render children until user state is resolved.
+  // This ensures that all child components that use Firebase hooks
+  // will have a valid and ready context.
   if (contextValue.isUserLoading) {
     return <HomePageSkeleton />;
   }
@@ -139,54 +141,51 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
   );
 };
 
-// Generic hook to access the raw context
-const useFirebaseContext = (): FirebaseContextState => {
-    const context = useContext(FirebaseContext);
-    if (context === undefined) {
-        return {
-            firebaseApp: null,
-            firestore: null,
-            auth: null,
-            functions: null,
-            storage: null,
-            user: null,
-            isUserLoading: true,
-            userError: null
-        };
-    }
-    return context;
-}
 
 /** Hook to access Firebase Auth instance. */
-export const useAuth = (): Auth | null => {
+export const useAuth = (): Auth => {
   const context = useContext(FirebaseContext);
-  return context?.auth ?? null;
+  if (context === undefined) {
+    throw new Error('useAuth must be used within a FirebaseProvider');
+  }
+  return context.auth;
 };
 
 /** Hook to access Firestore instance. */
-export const useFirestore = (): Firestore | null => {
+export const useFirestore = (): Firestore => {
   const context = useContext(FirebaseContext);
-  return context?.firestore ?? null;
+   if (context === undefined) {
+    throw new Error('useFirestore must be used within a FirebaseProvider');
+  }
+  return context.firestore;
 };
 
 /** Hook to access Firebase App instance. */
-export const useFirebaseApp = (): FirebaseApp | null => {
+export const useFirebaseApp = (): FirebaseApp => {
   const context = useContext(FirebaseContext);
-  return context?.firebaseApp ?? null;
+   if (context === undefined) {
+    throw new Error('useFirebaseApp must be used within a FirebaseProvider');
+  }
+  return context.firebaseApp;
 };
 
 /** Hook to access Firebase Functions instance. */
-export const useFunctions = (): Functions | null => {
+export const useFunctions = (): Functions => {
   const context = useContext(FirebaseContext);
-  return context?.functions ?? null;
+   if (context === undefined) {
+    throw new Error('useFunctions must be used within a FirebaseProvider');
+  }
+  return context.functions;
 };
 
 /** Hook to access Firebase Storage instance. */
-export const useStorage = (): FirebaseStorage | null => {
+export const useStorage = (): FirebaseStorage => {
     const context = useContext(FirebaseContext);
-    return context?.storage ?? null;
+    if (context === undefined) {
+        throw new Error('useStorage must be used within a FirebaseProvider');
+    }
+    return context.storage;
 };
-
 
 /**
  * A memoization hook that is stable across renders for Firebase objects.

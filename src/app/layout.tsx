@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site-footer';
 import { Toaster } from '@/components/ui/toaster';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
-import { FirebaseClientProvider } from '@/firebase';
+import { FirebaseProvider } from '@/firebase';
 import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <FirebaseClientProvider>
+          <FirebaseProvider>
             <AudioPlayerProvider>
               <div className="relative flex min-h-screen flex-col">
                 <SiteHeader />
@@ -42,7 +42,7 @@ export default function RootLayout({
               <FloatingAudioPlayer />
               <Toaster />
             </AudioPlayerProvider>
-          </FirebaseClientProvider>
+          </FirebaseProvider>
         </ThemeProvider>
         <Analytics />
       </body>
