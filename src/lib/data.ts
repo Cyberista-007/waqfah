@@ -234,49 +234,43 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId: str
     }
 }
 
-export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], books: Book[] }> {
+export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], books: Book[], sheikhs: Sheikh[] }> {
     if (!searchTerm) {
-        return { lectures: [], series: [], books: [] };
+        return { lectures: [], series: [], books: [], sheikhs: [] };
     }
     const db = getDb();
 
     // This is a very basic search. For production, a dedicated search service like Algolia or Typesense is recommended.
     // This queries for titles that are >= search term and < search term + a high-unicode character.
+    const searchTermEnd = searchTerm + '\uf8ff';
+    
     const lecturesRef = collection(db, "lectures");
     const seriesRef = collection(db, "series");
     const booksRef = collection(db, "books");
+    const sheikhsRef = collection(db, "sheikhs");
 
-    const lecturesQuery = query(
-        lecturesRef,
-        where("title", ">=", searchTerm),
-        where("title", "<=", searchTerm + "\uf8ff")
-    );
-    const seriesQuery = query(
-        seriesRef,
-        where("title", ">=", searchTerm),
-        where("title", "<=", searchTerm + "\uf8ff")
-    );
-    const booksQuery = query(
-        booksRef,
-        where("title", ">=", searchTerm),
-        where("title", "<=", searchTerm + "\uf8ff")
-    );
+    const lecturesQuery = query(lecturesRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
+    const seriesQuery = query(seriesRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
+    const booksQuery = query(booksRef, where("title", ">=", searchTerm), where("title", "<=", searchTermEnd));
+    const sheikhsQuery = query(sheikhsRef, where("name", ">=", searchTerm), where("name", "<=", searchTermEnd));
     
     try {
-        const [lecturesSnapshot, seriesSnapshot, booksSnapshot] = await Promise.all([
+        const [lecturesSnapshot, seriesSnapshot, booksSnapshot, sheikhsSnapshot] = await Promise.all([
             getDocs(lecturesQuery),
             getDocs(seriesQuery),
-            getDocs(booksQuery)
+            getDocs(booksQuery),
+            getDocs(sheikhsQuery)
         ]);
 
         const lectures = lecturesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lecture));
         const series = seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Series));
         const books = booksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Book));
+        const sheikhs = sheikhsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sheikh));
 
-        return { lectures, series, books };
+        return { lectures, series, books, sheikhs };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { lectures: [], series: [], books: [] };
+        return { lectures: [], series: [], books: [], sheikhs: [] };
     }
 }
 

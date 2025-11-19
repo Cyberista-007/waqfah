@@ -9,11 +9,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { SeriesCard } from "@/components/series-card";
+import { SheikhCard } from "@/components/sheikh-card";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { lectures, series } = await searchContent(searchTerm);
+    const { lectures, series, sheikhs } = await searchContent(searchTerm);
 
-    if (!lectures.length && !series.length) {
+    if (!lectures.length && !series.length && !sheikhs.length) {
         return (
             <div className="text-center py-16">
                 <p className="text-lg text-muted-foreground">
@@ -25,6 +26,14 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
 
     return (
         <div className="space-y-12">
+             {sheikhs.length > 0 && (
+                <section>
+                    <h2 className="text-3xl font-bold mb-6 font-headline">المشايخ</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                       {sheikhs.map(s => <SheikhCard key={s.id} sheikh={s} />)}
+                    </div>
+                </section>
+            )}
             {series.length > 0 && (
                 <section>
                     <h2 className="text-3xl font-bold mb-6 font-headline">السلاسل</h2>
