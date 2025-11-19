@@ -25,6 +25,12 @@ export const themes = [
   { name: "غروب أندلسي", value: "theme-andalusian-sunset", colors: ["#2a1a14", "#ffccb0", "#45312b"] },
   { name: "أكاديمي فاتح", value: "theme-light-academia", colors: ["#fdf9f3", "#4d3a2a", "#f5efe6"] },
   { name: "لون الرق", value: "theme-parchment", colors: ["#f5f1e9", "#7a3a23", "#e9e3d7"] },
+  { name: "داكن كلاسيكي", value: "theme-classic-dark", colors: ["#1e293b", "#e2e8f0", "#334155"] },
+  { name: "ليل نيون", value: "theme-night-neon", colors: ["#0b021d", "#d946ef", "#3b0764"] },
+  { name: "بركان أحمر", value: "theme-red-volcano", colors: ["#1f0a0a", "#ff6b6b", "#5e1e1e"] },
+  { name: "بركان هيكلا", value: "theme-hekla-volcano", colors: ["#191b22", "#93c5fd", "#e03131"] },
+  { name: "فضاء عميق", value: "theme-deep-space", colors: ["#0c0a1d", "#a5b4fc", "#4338ca"] },
+  { name: "OLED أسود", value: "theme-oled", colors: ["#000000", "#3b82f6", "#ef4444"] },
 ];
 
 

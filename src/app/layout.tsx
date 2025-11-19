@@ -46,7 +46,13 @@ export default function RootLayout({
             'theme-medina-green',
             'theme-andalusian-sunset',
             'theme-light-academia',
-            'theme-parchment'
+            'theme-parchment',
+            'theme-classic-dark',
+            'theme-night-neon',
+            'theme-red-volcano',
+            'theme-hekla-volcano',
+            'theme-deep-space',
+            'theme-oled'
           ]}
         >
           <FirebaseProvider>

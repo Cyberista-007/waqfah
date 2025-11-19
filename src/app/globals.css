@@ -273,6 +273,132 @@
     --ring: 10 50% 35%;
   }
 
+  /* 11. Classic Dark */
+  .theme-classic-dark {
+    --background: 220 15% 12%;
+    --foreground: 210 15% 95%;
+    --card: 220 15% 17%;
+    --card-foreground: 210 15% 95%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 210 15% 95%;
+    --primary: 210 20% 80%;
+    --primary-foreground: 220 15% 12%;
+    --secondary: 220 15% 25%;
+    --secondary-foreground: 210 15% 95%;
+    --muted: 220 15% 22%;
+    --muted-foreground: 210 15% 65%;
+    --accent: 210 20% 70%;
+    --accent-foreground: 220 15% 12%;
+    --border: 220 15% 25%;
+    --input: 220 15% 28%;
+    --ring: 210 20% 85%;
+  }
+
+  /* 12. Night Neon */
+  .theme-night-neon {
+    --background: 270 25% 5%;
+    --foreground: 270 20% 90%;
+    --card: 270 25% 9%;
+    --card-foreground: 270 20% 90%;
+    --popover: 270 25% 4%;
+    --popover-foreground: 270 20% 90%;
+    --primary: 300 100% 75%; /* Neon Pink/Purple */
+    --primary-foreground: 270 25% 5%;
+    --secondary: 270 20% 15%;
+    --secondary-foreground: 270 20% 90%;
+    --muted: 270 20% 12%;
+    --muted-foreground: 270 20% 55%;
+    --accent: 180 100% 50%; /* Neon Cyan */
+    --accent-foreground: 270 25% 5%;
+    --border: 270 20% 15%;
+    --input: 270 20% 18%;
+    --ring: 300 100% 80%;
+  }
+
+  /* 13. Red Volcano */
+  .theme-red-volcano {
+    --background: 15 60% 8%;
+    --foreground: 20 20% 92%;
+    --card: 15 60% 12%;
+    --card-foreground: 20 20% 92%;
+    --popover: 15 60% 6%;
+    --popover-foreground: 20 20% 92%;
+    --primary: 0 100% 70%; /* Fiery Red */
+    --primary-foreground: 15 60% 8%;
+    --secondary: 10 40% 20%;
+    --secondary-foreground: 20 20% 92%;
+    --muted: 10 40% 15%;
+    --muted-foreground: 20 20% 60%;
+    --accent: 30 100% 65%; /* Molten Orange */
+    --accent-foreground: 15 60% 8%;
+    --border: 10 40% 20%;
+    --input: 10 40% 25%;
+    --ring: 0 100% 75%;
+  }
+
+  /* 14. Hekla Volcano */
+  .theme-hekla-volcano {
+    --background: 220 5% 10%;
+    --foreground: 210 10% 85%;
+    --card: 220 5% 15%;
+    --card-foreground: 210 10% 85%;
+    --popover: 220 5% 8%;
+    --popover-foreground: 210 10% 85%;
+    --primary: 195 90% 70%; /* Icy Blue */
+    --primary-foreground: 220 5% 10%;
+    --secondary: 220 5% 25%;
+    --secondary-foreground: 210 10% 85%;
+    --muted: 220 5% 20%;
+    --muted-foreground: 210 10% 55%;
+    --accent: 5 80% 65%; /* Lava Red */
+    --accent-foreground: 220 5% 10%;
+    --border: 220 5% 25%;
+    --input: 220 5% 28%;
+    --ring: 195 90% 75%;
+  }
+
+  /* 15. Deep Space */
+  .theme-deep-space {
+    --background: 240 30% 6%;
+    --foreground: 240 15% 90%;
+    --card: 240 30% 10%;
+    --card-foreground: 240 15% 90%;
+    --popover: 240 30% 4%;
+    --popover-foreground: 240 15% 90%;
+    --primary: 260 90% 75%; /* Nebula Purple */
+    --primary-foreground: 240 30% 6%;
+    --secondary: 240 20% 18%;
+    --secondary-foreground: 240 15% 90%;
+    --muted: 240 20% 14%;
+    --muted-foreground: 240 15% 60%;
+    --accent: 220 90% 65%; /* Star Blue */
+    --accent-foreground: 240 30% 6%;
+    --border: 240 20% 18%;
+    --input: 240 20% 22%;
+    --ring: 260 90% 80%;
+  }
+  
+  /* 16. OLED */
+  .theme-oled {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 2%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 50%; /* Vibrant Blue */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 80% 60%; /* Vibrant Red */
+    --accent-foreground: 0 0% 98%;
+    --border: 0 0% 12%;
+    --input: 0 0% 15%;
+    --ring: 210 100% 55%;
+  }
+
 }
 
 @layer base {
