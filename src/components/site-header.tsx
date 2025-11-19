@@ -78,6 +78,10 @@ export function SiteHeader() {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
   
+  const dynamicMoreNavItems = isAdmin
+    ? [...moreNavItems, { href: "/admin", label: "لوحة التحكم" }]
+    : moreNavItems;
+  
   return (
     <>
     <header className={cn(
@@ -110,7 +114,7 @@ export function SiteHeader() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-background border-border">
-                    {moreNavItems.map((item) => (
+                    {dynamicMoreNavItems.map((item) => (
                         <DropdownMenuItem key={item.label} asChild className="focus:bg-primary/10 focus:text-primary justify-end">
                             <Link href={item.href} className="flex justify-end w-full">
                                 {item.label}
@@ -148,14 +152,6 @@ export function SiteHeader() {
             <Skeleton className="w-24 h-10 rounded-full" />
           ) : (
             <>
-              {isAdmin && (
-                <Button asChild variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                    <Link href="/admin">
-                      <LayoutDashboard className="h-5 w-5" />
-                      <span className="sr-only">لوحة التحكم</span>
-                    </Link>
-                </Button>
-              )}
               { user ? (
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -209,7 +205,7 @@ export function SiteHeader() {
                   </div>
                 </Link>
               </SheetClose>
-                {[...mainNavItems, ...moreNavItems].map((item) => (
+                {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
                   <SheetClose asChild key={item.label}>
                     <Link href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
                         {item.label}
@@ -234,13 +230,6 @@ export function SiteHeader() {
                             <Link href="/profile">الملف الشخصي</Link>
                         </Button>
                        </SheetClose>
-                        {isAdmin && (
-                            <SheetClose asChild>
-                                <Button asChild className="w-full justify-center" variant="secondary">
-                                    <Link href="/admin">لوحة التحكم</Link>
-                                </Button>
-                            </SheetClose>
-                        )}
                        <Button onClick={handleLogout} variant="outline" className="w-full">
                           تسجيل الخروج
                        </Button>
