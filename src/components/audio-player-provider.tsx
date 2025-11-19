@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { ReactNode } from "react";
@@ -25,18 +26,26 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const playTrack = (newTrack: Track, startTime: number = 0) => {
-    if (track?.audioSrc !== newTrack.audioSrc) {
+    // If it's a new track, update the state and the audio element's src
+    if (track?.id !== newTrack.id) {
         setTrack(newTrack);
+        if (audioRef.current) {
+            audioRef.current.src = newTrack.audioSrc;
+            audioRef.current.load();
+        }
     }
-    // Use a timeout to ensure the state has updated and the audio element is ready
+    
+    // Use a timeout to ensure the audio element is ready for playback, especially for new tracks
     setTimeout(() => {
         if (audioRef.current) {
             audioRef.current.currentTime = startTime;
-            setIsPlaying(true);
-            audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch(e => console.error("Error playing audio:", e));
         }
     }, 50);
   };
+
 
   const pauseTrack = () => {
     setIsPlaying(false);
@@ -49,6 +58,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (isPlaying) {
       pauseTrack();
     } else if (track) {
+      // playTrack will handle setting isPlaying to true on successful playback
       playTrack(track, audioRef.current?.currentTime || 0);
     }
   }
