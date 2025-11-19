@@ -15,17 +15,10 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
-  const glassmorphismStyle = {
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-  };
-
   return (
     <Button
       type="submit"
-      className="w-full text-white hover:bg-white/20"
-      style={glassmorphismStyle}
+      className="w-full text-white bg-primary/80 hover:bg-primary"
       disabled={isLoading}
     >
       {isLoading ? <Loader2 className="animate-spin" /> : isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
@@ -123,43 +116,43 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center py-12">
-      <Card className="w-full max-w-md bg-transparent border-white/20">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">
-            {isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
-          </CardTitle>
-          <CardDescription>
-            {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "املأ الحقول لإنشاء حساب جديد."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLoginMode && (
-              <div className="space-y-2">
-                <Label htmlFor="name">الاسم</Label>
-                <Input id="name" name="name" type="text" required className="bg-white/10 border-white/20 focus:bg-white/20" />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" name="email" type="email" required className="bg-white/10 border-white/20 focus:bg-white/20" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" name="password" type="password" required className="bg-white/10 border-white/20 focus:bg-white/20" />
-            </div>
-             <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
-          </form>
-           <div className="mt-4 text-center text-sm">
-                {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
-                <Button variant="link" className="p-0 h-auto text-white/80 hover:text-white" onClick={() => setIsLoginMode(!isLoginMode)}>
-                    {isLoginMode ? "أنشئ حساباً جديداً" : "سجل الدخول"}
-                </Button>
-            </div>
-        </CardContent>
-      </Card>
+        <div className="w-full max-w-md p-[1px] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-lg">
+          <Card className="w-full bg-background/80 backdrop-blur-md border-none">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-headline">
+                {isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
+              </CardTitle>
+              <CardDescription>
+                {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "املأ الحقول لإنشاء حساب جديد."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLoginMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">الاسم</Label>
+                    <Input id="name" name="name" type="text" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="email">البريد الإلكتروني</Label>
+                  <Input id="email" name="email" type="email" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">كلمة المرور</Label>
+                  <Input id="password" name="password" type="password" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
+                </div>
+                 <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
+              </form>
+               <div className="mt-4 text-center text-sm">
+                    {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
+                    <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsLoginMode(!isLoginMode)}>
+                        {isLoginMode ? "أنشئ حساباً جديداً" : "سجل الدخول"}
+                    </Button>
+                </div>
+            </CardContent>
+          </Card>
+      </div>
     </div>
   );
 }
-
-    

@@ -29,9 +29,9 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --gradient-start: 180 50% 95%;
-    --gradient-mid: 200 50% 90%;
-    --gradient-end: 220 50% 85%;
+    --gradient-start: 340 82% 52%;
+    --gradient-mid: 20 82% 52%;
+    --gradient-end: 45 82% 52%;
   }
 
   .dark {
@@ -59,9 +59,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 350 75% 55%;
-    --gradient-start: 240 10% 3.9%;
-    --gradient-mid: 240 8% 8%;
-    --gradient-end: 240 10% 3.9%;
+    --gradient-start: 340 82% 52%;
+    --gradient-mid: 20 82% 52%;
+    --gradient-end: 45 82% 52%;
   }
 }
 

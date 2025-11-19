@@ -157,69 +157,70 @@ export function FloatingAudioPlayer() {
 
   return (
     <div className={cn(
-      "sticky bottom-4 inset-x-4 max-w-md mx-auto z-50 bg-gray-900/75 backdrop-blur-sm border border-gray-700/50 text-white rounded-lg shadow-xl p-4 transition-transform duration-300",
+      "sticky bottom-4 inset-x-4 max-w-md mx-auto z-50 p-[1px] rounded-lg shadow-xl transition-transform duration-300 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500",
       track ? "translate-y-0" : "translate-y-[200%]"
     )}>
-       <audio ref={audioRef} src={track.src} preload="metadata" className="hidden" />
-      <div className="flex items-center justify-between">
-        <div className="flex-grow min-w-0">
-          <p className="text-sm font-medium truncate">{track.title}</p>
-          <p className="text-xs text-gray-400 truncate">{track.seriesTitle}</p>
+      <div className="bg-background/80 backdrop-blur-md text-foreground rounded-lg p-4">
+        <audio ref={audioRef} src={track.src} preload="metadata" className="hidden" />
+        <div className="flex items-center justify-between">
+            <div className="flex-grow min-w-0">
+            <p className="text-sm font-medium truncate">{track.title}</p>
+            <p className="text-xs text-muted-foreground truncate">{track.seriesTitle}</p>
+            </div>
+            <Button onClick={closePlayer} variant="ghost" size="icon" className="ms-3 text-muted-foreground hover:text-foreground shrink-0">
+            <X className="w-5 h-5" />
+            <span className="sr-only">إغلاق المشغل</span>
+            </Button>
         </div>
-        <Button onClick={closePlayer} variant="ghost" size="icon" className="ms-3 text-gray-400 hover:text-white shrink-0">
-          <X className="w-5 h-5" />
-          <span className="sr-only">إغلاق المشغل</span>
-        </Button>
-      </div>
-      <div className="w-full mt-2">
-        {/* We use a native audio element for controls now for reliability */}
-        <audio controls className="w-full h-10" src={track.src} ref={audioRef}></audio>
-      </div>
-      <div className="flex items-center justify-center gap-4 mt-3">
-        <Button onClick={handleRewind} variant="ghost" size="icon" className="text-white hover:bg-gray-700">
-          <Rewind className="w-5 h-5" />
-          <span className="sr-only">إرجاع 10 ثواني</span>
-        </Button>
-        <div className="flex items-center gap-2">
-          <label htmlFor="global-speed-select" className="text-sm text-gray-300">السرعة:</label>
-          <Select defaultValue="1" onValueChange={handleSpeedChange}>
-            <SelectTrigger id="global-speed-select" className="p-1 text-sm border rounded-md focus:outline-none bg-gray-700 border-gray-600 text-white w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700 text-white">
-              <SelectItem value="0.5">0.5x</SelectItem>
-              <SelectItem value="1">1x</SelectItem>
-              <SelectItem value="1.5">1.5x</SelectItem>
-              <SelectItem value="2">2x</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="w-full mt-2">
+            <audio controls className="w-full h-10" src={track.src} ref={audioRef}></audio>
         </div>
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className={cn("text-white hover:bg-gray-700", sleepTimerDuration > 0 && "text-primary")}>
-                    <Timer className="w-5 h-5" />
-                    <span className="sr-only">مؤقت النوم</span>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 bg-gray-800 border-gray-700 text-white" align="center">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <h4 className="font-medium leading-none">مؤقت النوم</h4>
-                        <p className="text-sm text-muted-foreground">
-                            إيقاف التشغيل تلقائياً.
-                        </p>
+        <div className="flex items-center justify-center gap-4 mt-3">
+            <Button onClick={handleRewind} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
+            <Rewind className="w-5 h-5" />
+            <span className="sr-only">إرجاع 10 ثواني</span>
+            </Button>
+            <div className="flex items-center gap-2">
+            <label htmlFor="global-speed-select" className="text-sm text-muted-foreground">السرعة:</label>
+            <Select defaultValue="1" onValueChange={handleSpeedChange}>
+                <SelectTrigger id="global-speed-select" className="p-1 text-sm border rounded-md focus:outline-none bg-foreground/10 border-border text-foreground w-[80px]">
+                <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground">
+                <SelectItem value="0.5">0.5x</SelectItem>
+                <SelectItem value="1">1x</SelectItem>
+                <SelectItem value="1.5">1.5x</SelectItem>
+                <SelectItem value="2">2x</SelectItem>
+                </SelectContent>
+            </Select>
+            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className={cn("text-foreground hover:bg-foreground/10", sleepTimerDuration > 0 && "text-primary")}>
+                        <Timer className="w-5 h-5" />
+                        <span className="sr-only">مؤقت النوم</span>
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 bg-background border-border text-foreground" align="center">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">مؤقت النوم</h4>
+                            <p className="text-sm text-muted-foreground">
+                                إيقاف التشغيل تلقائياً.
+                            </p>
+                        </div>
+                        <div className="grid gap-2">
+                            <Button onClick={() => setSleepTimer(15)} variant={sleepTimerDuration === 15 ? 'default' : 'outline'}>بعد 15 دقيقة</Button>
+                            <Button onClick={() => setSleepTimer(30)} variant={sleepTimerDuration === 30 ? 'default' : 'outline'}>بعد 30 دقيقة</Button>
+                            <Button onClick={() => setSleepTimer(60)} variant={sleepTimerDuration === 60 ? 'default' : 'outline'}>بعد 60 دقيقة</Button>
+                            {sleepTimerDuration > 0 && (
+                                <Button onClick={() => setSleepTimer(0)} variant="destructive">إلغاء المؤقت</Button>
+                            )}
+                        </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Button onClick={() => setSleepTimer(15)} variant={sleepTimerDuration === 15 ? 'default' : 'outline'}>بعد 15 دقيقة</Button>
-                        <Button onClick={() => setSleepTimer(30)} variant={sleepTimerDuration === 30 ? 'default' : 'outline'}>بعد 30 دقيقة</Button>
-                        <Button onClick={() => setSleepTimer(60)} variant={sleepTimerDuration === 60 ? 'default' : 'outline'}>بعد 60 دقيقة</Button>
-                        {sleepTimerDuration > 0 && (
-                             <Button onClick={() => setSleepTimer(0)} variant="destructive">إلغاء المؤقت</Button>
-                        )}
-                    </div>
-                </div>
-            </PopoverContent>
-        </Popover>
+                </PopoverContent>
+            </Popover>
+        </div>
       </div>
     </div>
   );
