@@ -25,7 +25,7 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
                 <section>
                     <h2 className="text-3xl font-bold mb-6 font-headline">المشايخ</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                       {sheikhs.map(s => <SheikhCard key={s.id} sheikh={s} />)}
+                       {sheikhs.map((s, index) => <SheikhCard key={s.id} sheikh={s} index={index} />)}
                     </div>
                 </section>
             )}
@@ -33,7 +33,7 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
                 <section>
                     <h2 className="text-3xl font-bold mb-6 font-headline">السلاسل</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                       {series.map(s => <SeriesCard key={s.id} series={s} />)}
+                       {series.map((s, index) => <SeriesCard key={s.id} series={s} index={index} />)}
                     </div>
                 </section>
             )}
@@ -41,7 +41,7 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
                 <section>
                     <h2 className="text-3xl font-bold mb-6 font-headline">المحاضرات</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {lectures.map(lecture => <LectureCard key={lecture.id} lecture={lecture} />)}
+                        {lectures.map((lecture, index) => <LectureCard key={lecture.id} lecture={lecture} index={index} />)}
                     </div>
                 </section>
             )}

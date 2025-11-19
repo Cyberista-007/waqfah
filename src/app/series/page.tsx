@@ -26,8 +26,8 @@ export default function SeriesListPage() {
               </CardContent>
             </Card>
           ))
-        ) : allSeries?.map((series) => (
-          <SeriesCard series={series} key={series.id} />
+        ) : allSeries?.map((series, index) => (
+          <SeriesCard series={series} key={series.id} index={index} />
         ))}
       </div>
        {!isLoading && (!allSeries || allSeries.length === 0) && (

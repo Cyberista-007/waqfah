@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/tooltip"
 import { Card } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
+import { cn } from "@/lib/utils"
 
 interface LectureCardProps {
-  lecture: Lecture
+  lecture: Lecture;
+  index?: number;
 }
 
-export function LectureCard({ lecture }: LectureCardProps) {
+export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const placeholder = getPlaceholderImage(lecture.imageId)
   const { playTrack } = useAudioPlayer();
   const { toast } = useToast();
@@ -70,7 +72,13 @@ export function LectureCard({ lecture }: LectureCardProps) {
 
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col">
+    <Card 
+      className={cn(
+        "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col",
+        "animate-fade-in-up"
+        )}
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       <div className="relative">
         <Link href={`/lectures/${lecture.slug}`} className="block">
           <Image

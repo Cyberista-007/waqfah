@@ -5,17 +5,23 @@ import { Card } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Series } from '@/lib/types';
 import { Play } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SeriesCardProps {
     series: Series;
+    index?: number;
 }
 
-export function SeriesCard({ series }: SeriesCardProps) {
+export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
     const placeholder = getPlaceholderImage(series.imageId);
     return (
         <Card
             key={series.id}
-            className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20"
+            className={cn(
+                "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20",
+                "animate-fade-in-up"
+            )}
+            style={{ animationDelay: `${index * 100}ms` }}
         >
             <Link href={`/series/${series.id}`} className="block relative">
                 <Image

@@ -67,8 +67,8 @@ export default function Home() {
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث السلاسل</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestSeries?.map((series) => (
-              <SeriesCard key={series.id} series={series} />
+            {latestSeries?.map((series, index) => (
+              <SeriesCard key={series.id} series={series} index={index}/>
             ))}
           </div>
         </section>
@@ -76,8 +76,8 @@ export default function Home() {
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {latestLectures?.map((lecture) => (
-              <LectureCard key={lecture.id} lecture={lecture} />
+            {latestLectures?.map((lecture, index) => (
+              <LectureCard key={lecture.id} lecture={lecture} index={index}/>
             ))}
           </div>
         </section>

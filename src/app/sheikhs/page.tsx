@@ -9,6 +9,7 @@ import { MicVocal, Loader2 } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import type { Sheikh } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SheikhCard } from '@/components/sheikh-card';
 
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -34,25 +35,9 @@ export default function SheikhsPage() {
                              <Skeleton className="h-4 w-full mt-1" />
                         </Card>
                     ))
-                ) : sheikhs?.map(sheikh => {
-                    const placeholder = getPlaceholderImage(sheikh.imageId);
-                    return (
-                        <Link href={`/sheikhs/${sheikh.slug}`} key={sheikh.id} className="block group">
-                            <Card className="h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50">
-                                <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors">
-                                    <AvatarImage src={placeholder?.imageUrl} alt={sheikh.name} />
-                                    <AvatarFallback className="text-4xl">{getInitials(sheikh.name)}</AvatarFallback>
-                                </Avatar>
-                                <CardHeader className="p-0">
-                                    <CardTitle className="font-headline text-xl">{sheikh.name}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0 mt-2">
-                                    <CardDescription className="line-clamp-3">{sheikh.bio}</CardDescription>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    )
-                })}
+                ) : sheikhs?.map((sheikh, index) => (
+                    <SheikhCard sheikh={sheikh} key={sheikh.id} index={index}/>
+                ))}
             </div>
             {!isLoading && (!sheikhs || sheikhs.length === 0) && (
                 <div className="text-center py-16">
