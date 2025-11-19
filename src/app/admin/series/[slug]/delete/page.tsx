@@ -29,10 +29,11 @@ export default function AdminDeleteSeriesPage({
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
+  const slug = params.slug;
   
   const seriesDocRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, "series", params.slug) : null),
-    [firestore, params.slug]
+    () => (firestore ? doc(firestore, "series", slug) : null),
+    [firestore, slug]
   );
   const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 

@@ -11,12 +11,13 @@ import { HomePageSkeleton } from '@/components/skeletons';
 export default function AdminEditSeriesPage({ params }: { params: { slug: string } }) {
   // The 'slug' param from the URL is actually the document ID
   const firestore = useFirestore();
+  const slug = params.slug;
 
   const { data: sheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   const seriesDocRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, "series", params.slug) : null),
-    [firestore, params.slug]
+    () => (firestore ? doc(firestore, "series", slug) : null),
+    [firestore, slug]
   );
   const { data: series, isLoading: seriesLoading } = useDoc<Series>(seriesDocRef);
 
