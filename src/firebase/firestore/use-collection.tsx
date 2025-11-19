@@ -101,6 +101,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firestore, path, options?.orderBy?.[0], options?.orderBy?.[1], options?.limit, options?.where?.[0], options?.where?.[1], options?.where?.[2]]);
 
   return { data, isLoading, error };
