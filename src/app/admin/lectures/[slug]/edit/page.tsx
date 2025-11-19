@@ -1,7 +1,6 @@
 
-
 import { LectureForm } from '@/components/admin/lecture-form';
-import type { Series, Lecture } from '@/lib/types';
+import type { Series, Lecture, Sheikh } from '@/lib/types';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
@@ -11,11 +10,15 @@ async function getPageData(lectureId: string) {
   const seriesCol = collection(serverFirestore, 'series');
   const seriesQuery = query(seriesCol, orderBy('title'));
   
+  const sheikhsCol = collection(serverFirestore, 'sheikhs');
+  const sheikhsQuery = query(sheikhsCol, orderBy('name'));
+
   const lectureDocRef = doc(serverFirestore, 'lectures', lectureId);
 
   try {
-    const [seriesSnapshot, lectureSnap] = await Promise.all([
+    const [seriesSnapshot, sheikhsSnapshot, lectureSnap] = await Promise.all([
       getDocs(seriesQuery),
+      getDocs(sheikhsQuery),
       getDoc(lectureDocRef)
     ]);
     
@@ -24,6 +27,7 @@ async function getPageData(lectureId: string) {
     }
 
     const series = seriesSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+    const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
     const lectureData = lectureSnap.data();
     // Ensure createdAt is a plain object for serialization
     const lecture = { 
@@ -32,7 +36,7 @@ async function getPageData(lectureId: string) {
       createdAt: lectureData.createdAt.toDate().toISOString(),
      };
 
-    return { series, lecture };
+    return { series, sheikhs, lecture };
   } catch (error) {
     console.error("Failed to fetch page data:", error);
     return null;
@@ -48,9 +52,9 @@ export default async function AdminEditLecturePage({ params }: { params: { slug:
     notFound();
   }
 
-  const { series, lecture } = data;
+  const { series, sheikhs, lecture } = data;
 
   return (
-    <LectureForm seriesList={series} lecture={lecture} />
+    <LectureForm seriesList={series} sheikhsList={sheikhs} lecture={lecture} />
   );
 }

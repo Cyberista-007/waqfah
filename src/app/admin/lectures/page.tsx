@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState } from "react";
@@ -96,6 +95,7 @@ export default function AdminLecturesPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>عنوان المحاضرة</TableHead>
+                <TableHead>الشيخ</TableHead>
                 <TableHead>السلسلة</TableHead>
                 <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
@@ -104,13 +104,14 @@ export default function AdminLecturesPage() {
             <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={5} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
                 ) : allLectures?.map((lecture) => (
                 <TableRow key={lecture.id}>
                     <TableCell className="font-medium">{lecture.title}</TableCell>
+                    <TableCell>{lecture.sheikhName}</TableCell>
                     <TableCell>{lecture.seriesTitle}</TableCell>
                     <TableCell className="hidden md:table-cell">
                         {lecture.createdAt?.toDate ? lecture.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير معروف'}

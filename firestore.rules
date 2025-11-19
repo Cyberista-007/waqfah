@@ -32,6 +32,11 @@ service cloud.firestore {
     // In a real app, 'isSignedIn()' for write should be replaced with an admin check.
     // =====================================================================
 
+    match /sheikhs/{sheikhId} {
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Admin-only
+    }
+    
     match /series/{seriesId} {
       allow get, list: if true;
       allow write: if isSignedIn();

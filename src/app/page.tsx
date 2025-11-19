@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import {
@@ -57,7 +56,7 @@ export default function Home() {
             العلم الشرعي بين يديك
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            منصة شاملة لمحاضرات ودروس الشيخ أمجد سمير. تصفح، استمع، وتعلم.
+            منصة شاملة لمحاضرات ودروس نخبة من المشايخ. تصفح، استمع، وتعلم.
           </p>
           <div className="max-w-xl mx-auto">
             <form onSubmit={handleSearch}>
@@ -110,7 +109,7 @@ export default function Home() {
                     <h3 className="font-headline text-lg font-bold">
                       <Link href={`/series/${series.id}`} className="hover:text-primary transition-colors">{series.title}</Link>
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{series.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{series.sheikhName}</p>
                   </div>
                 </Card>
               );

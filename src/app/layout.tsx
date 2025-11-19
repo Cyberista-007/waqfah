@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -11,8 +12,8 @@ import { FirebaseProvider } from '@/firebase';
 import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
-  title: 'موقع أمجد سمير',
-  description: 'منصة محاضرات ودروس أمجد سمير',
+  title: 'منصة الدروس العلمية',
+  description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ.',
 };
 
 export default function RootLayout({

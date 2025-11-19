@@ -15,19 +15,28 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
-import type { Book } from "@/lib/types";
+import type { Book, Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BookFormProps {
     book?: Book | null;
+    sheikhs: Sheikh[];
     onFormClose: () => void;
 }
 
-export function BookForm({ book, onFormClose }: BookFormProps) {
+export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(book?.sheikhId || "");
   
   const isEditMode = !!book;
 
@@ -41,12 +50,13 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
     const pdfUrl = formData.get("pdfUrl") as string;
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
+    const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
 
-    if (!title || !pdfUrl) {
+    if (!title || !pdfUrl || !sheikhData) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة.",
+            description: "يرجى ملء جميع الحقول المطلوبة واختيار شيخ صالح.",
         });
         setIsSubmitting(false);
         return;
@@ -57,6 +67,9 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         title,
         pdfUrl,
         imageId: `book-cover-${Math.floor(Math.random() * 3) + 1}`,
+        sheikhId: sheikhData.id,
+        sheikhName: sheikhData.name,
+        sheikhSlug: sheikhData.slug,
     };
 
     try {
@@ -101,6 +114,19 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
           <div>
             <Label htmlFor="title">عنوان الكتاب</Label>
             <Input id="title" name="title" defaultValue={book?.title} required disabled={isSubmitting} />
+          </div>
+          <div>
+            <Label htmlFor="sheikh">الشيخ</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={book?.sheikhId} required>
+                  <SelectTrigger>
+                      <SelectValue placeholder={!sheikhs || sheikhs.length === 0 ? "لا يوجد مشايخ" : "اختر شيخًا..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {sheikhs?.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
           </div>
           <div>
             <Label htmlFor="pdfUrl">رابط الكتاب (PDF)</Label>

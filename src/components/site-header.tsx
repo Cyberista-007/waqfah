@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import Link from "next/link"
@@ -10,6 +9,7 @@ import {
   User as UserIcon,
   LogOut,
   LayoutDashboard,
+  MicVocal,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -38,6 +38,7 @@ import { useAdminActivation } from "@/hooks/use-admin-auth"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
+  { href: "/sheikhs", label: "المشايخ" },
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/books", label: "الكتب" },
@@ -79,7 +80,7 @@ export function SiteHeader() {
           href="/"
           className="text-xl font-bold font-headline hover:text-primary transition-colors cursor-pointer"
         >
-          موقع أمجد سمير
+          منصة الدروس العلمية
         </Link>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-6">
@@ -173,7 +174,7 @@ export function SiteHeader() {
                   href="/"
                   className="text-xl font-bold font-headline hover:text-primary transition-colors mb-4 cursor-pointer"
                 >
-                    موقع أمجد سمير
+                    منصة الدروس العلمية
                 </Link>
               </SheetClose>
                 {[...mainNavItems, ...moreNavItems].map((item) => (

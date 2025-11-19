@@ -2,25 +2,36 @@
 import { LectureForm } from "@/components/admin/lecture-form";
 import { initializeFirebaseOnServer } from "@/firebase/server-init";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import type { Series } from "@/lib/types";
+import type { Series, Sheikh } from "@/lib/types";
 
-async function getSeries() {
+async function getPageData() {
     const { serverFirestore } = initializeFirebaseOnServer();
     const seriesCol = collection(serverFirestore, 'series');
-    const q = query(seriesCol, orderBy('title'));
+    const sheikhsCol = collection(serverFirestore, 'sheikhs');
+    
+    const seriesQuery = query(seriesCol, orderBy('title'));
+    const sheikhsQuery = query(sheikhsCol, orderBy('name'));
+
     try {
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+        const [seriesSnapshot, sheikhsSnapshot] = await Promise.all([
+            getDocs(seriesQuery),
+            getDocs(sheikhsQuery)
+        ]);
+
+        const series = seriesSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+        const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
+
+        return { series, sheikhs };
     } catch (error) {
-        console.error("Failed to fetch series:", error);
-        return [];
+        console.error("Failed to fetch page data:", error);
+        return { series: [], sheikhs: [] };
     }
 }
 
 export default async function AdminNewLecturePage() {
-  const series = await getSeries();
+  const { series, sheikhs } = await getPageData();
   
   return (
-    <LectureForm seriesList={series} />
+    <LectureForm seriesList={series} sheikhsList={sheikhs} />
   );
 }

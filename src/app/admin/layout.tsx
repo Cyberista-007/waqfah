@@ -1,12 +1,11 @@
 
-
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, Loader2, LayoutDashboard } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, Loader2, LayoutDashboard, MicVocal } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
@@ -68,6 +67,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
+    { href: '/admin/sheikhs', label: 'المشايخ', icon: MicVocal },
     { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
     { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
     { href: '/admin/books', label: 'الكتب', icon: Book },

@@ -1,30 +1,50 @@
 
 {
   "entities": {
+    "Sheikh": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sheikh",
+      "type": "object",
+      "description": "Represents a Sheikh or author on the platform.",
+      "properties": {
+        "slug": { "type": "string" },
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "imageId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "name", "bio", "imageId", "createdAt"]
+    },
     "Series": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Series",
       "type": "object",
-      "description": "Represents a series of lectures.",
+      "description": "Represents a series of lectures by a specific sheikh.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "imageId": { "type": "string" },
         "lectureCount": { "type": "number" },
+        "sheikhId": { "type": "string" },
+        "sheikhName": { "type": "string" },
+        "sheikhSlug": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["slug", "title", "description", "imageId", "createdAt"]
+      "required": ["slug", "title", "description", "imageId", "sheikhId", "sheikhName", "sheikhSlug", "createdAt"]
     },
     "Lecture": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Lecture",
       "type": "object",
-      "description": "Represents a single lecture.",
+      "description": "Represents a single lecture by a specific sheikh.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
+        "sheikhId": { "type": "string" },
+        "sheikhName": { "type": "string" },
+        "sheikhSlug": { "type": "string" },
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
@@ -39,20 +59,23 @@
         "viewCount": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["slug", "title", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "createdAt"]
+      "required": ["slug", "title", "sheikhId", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Book",
       "type": "object",
-      "description": "Represents a book or publication.",
+      "description": "Represents a book or publication by a specific sheikh.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "pdfUrl": { "type": "string", "format": "uri" },
-        "imageId": { "type": "string" }
+        "imageId": { "type": "string" },
+        "sheikhId": { "type": "string" },
+        "sheikhName": { "type": "string" },
+        "sheikhSlug": { "type": "string" }
       },
-      "required": ["slug", "title", "pdfUrl", "imageId"]
+      "required": ["slug", "title", "pdfUrl", "imageId", "sheikhId", "sheikhName", "sheikhSlug"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -188,6 +211,10 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/sheikhs/{sheikhId}",
+        "definition": { "schema": { "$ref": "#/entities/Sheikh" } }
+      },
       {
         "path": "/series/{seriesId}",
         "definition": { "schema": { "$ref": "#/entities/Series" } }

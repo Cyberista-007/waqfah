@@ -19,14 +19,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Book } from "@/lib/types";
+import type { Book, Sheikh } from "@/lib/types";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Book as BookIcon } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { BookForm } from "@/components/admin/book-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-
 
 export default function AdminBooksPage() {
     const { toast } = useToast();
@@ -40,6 +39,13 @@ export default function AdminBooksPage() {
         [firestore]
     );
     const { data: allBooks, isLoading } = useCollection<Book>(booksQuery);
+
+    const sheikhsQuery = useMemoFirebase(
+        () => (firestore ? query(collection(firestore, 'sheikhs'), orderBy('name')) : null),
+        [firestore]
+    );
+    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>(sheikhsQuery);
+
 
     const handleDelete = async () => {
         if (!bookToDelete || !firestore) return;
@@ -72,8 +78,10 @@ export default function AdminBooksPage() {
     }
 
     if (isFormOpen) {
-      return <BookForm book={bookToEdit} onFormClose={handleFormClose} />
+      return <BookForm book={bookToEdit} sheikhs={allSheikhs || []} onFormClose={handleFormClose} />
     }
+    
+    const pageIsLoading = isLoading || sheikhsLoading;
 
     return (
         <>
@@ -95,19 +103,21 @@ export default function AdminBooksPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>عنوان الكتاب</TableHead>
+                <TableHead>الشيخ</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {isLoading ? (
+                {pageIsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={2} className="text-center">
+                    <TableCell colSpan={3} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
                 ) : allBooks?.map((book) => (
                 <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.title}</TableCell>
+                    <TableCell>{book.sheikhName}</TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                         <Button onClick={() => handleEdit(book)} variant="outline" size="sm">
@@ -122,7 +132,7 @@ export default function AdminBooksPage() {
                 ))}
             </TableBody>
             </Table>
-            {!isLoading && !allBooks?.length && (
+            {!pageIsLoading && !allBooks?.length && (
               <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي كتب بعد.</p>
             )}
         </CardContent>

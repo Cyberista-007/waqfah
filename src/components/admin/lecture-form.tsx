@@ -22,18 +22,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useFirestore } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture } from "@/lib/types";
+import type { Series, Lecture, Sheikh } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
     seriesList: Series[];
+    sheikhsList: Sheikh[];
     lecture?: Lecture | any; // 'any' to handle serialized date from server
 }
 
-export function LectureForm({ seriesList, lecture }: LectureFormProps) {
+export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
@@ -42,10 +43,25 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   
   const isEditMode = !!lecture;
 
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "");
+
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const audioSrcRef = useRef<HTMLInputElement>(null);
+
+  const filteredSeries = useMemo(() => {
+      if (!selectedSheikhId) return [];
+      return seriesList.filter(s => s.sheikhId === selectedSheikhId);
+  }, [selectedSheikhId, seriesList]);
+  
+  // Effect to clear series selection if sheikh changes and selected series is no longer valid
+  useEffect(() => {
+    if(!filteredSeries.find(s => s.id === selectedSeriesId)) {
+        setSelectedSeriesId("");
+    }
+  }, [selectedSheikhId, filteredSeries, selectedSeriesId]);
+
 
   const handleFetchMetadata = () => {
     const url = audioSrcRef.current?.value;
@@ -76,15 +92,16 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     const audioSrc = formData.get("audioSrc") as string;
     const duration = formData.get("duration") as string;
     
-    const seriesData = seriesList?.find(s => s.id === selectedSeriesId);
+    const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
+    const seriesData = filteredSeries?.find(s => s.id === selectedSeriesId);
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    if (!title || !description || !selectedSeriesId || !audioSrc || !duration || !seriesData) {
+    if (!title || !description || !selectedSeriesId || !audioSrc || !duration || !seriesData || !sheikhData) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة واختيار سلسلة صالحة.",
+            description: "يرجى ملء جميع الحقول المطلوبة واختيار شيخ وسلسلة صالحين.",
         });
         setIsSubmitting(false);
         return;
@@ -94,6 +111,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         title,
         slug,
         description,
+        sheikhId: sheikhData.id,
+        sheikhName: sheikhData.name,
+        sheikhSlug: sheikhData.slug,
         seriesId: seriesData.id,
         seriesSlug: seriesData.slug,
         seriesTitle: seriesData.title,
@@ -194,19 +214,33 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
               <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
             </div>
             <div className="space-y-2">
+                <Label htmlFor="sheikh">الشيخ</Label>
+                <Select onValueChange={setSelectedSheikhId} defaultValue={lecture?.sheikhId} required>
+                    <SelectTrigger>
+                        <SelectValue placeholder="اختر شيخًا..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {sheikhsList?.map(s => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
+
+           <div className="space-y-2">
               <Label htmlFor="series">السلسلة</Label>
-              <Select name="series" onValueChange={setSelectedSeriesId} defaultValue={lecture?.seriesId} required>
+              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId} required disabled={!selectedSheikhId}>
                   <SelectTrigger>
-                      <SelectValue placeholder={!seriesList || seriesList.length === 0 ? "لا توجد سلاسل" : "اختر سلسلة..."} />
+                      <SelectValue placeholder={!selectedSheikhId ? "اختر شيخًا أولاً" : "اختر سلسلة..."} />
                   </SelectTrigger>
                   <SelectContent>
-                      {seriesList?.map(s => (
+                      {filteredSeries.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
                       ))}
                   </SelectContent>
               </Select>
             </div>
-          </div>
           
           <div>
             <Label htmlFor="description">وصف المحاضرة</Label>

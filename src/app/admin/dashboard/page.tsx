@@ -4,30 +4,32 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog } from "lucide-react";
+import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, collectionGroup, orderBy, limit } from "firebase/firestore";
-import type { Lecture, Series, Book as BookType } from "@/lib/types";
+import type { Lecture, Series, Book as BookType, Sheikh } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
+    const sheikhsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'sheikhs')) : null), [firestore]);
     const lecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures')) : null), [firestore]);
     const seriesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'series')) : null), [firestore]);
     const booksQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'books')) : null), [firestore]);
     const popularLecturesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'lectures'), orderBy('viewCount', 'desc'), limit(5)) : null), [firestore]);
     
 
+    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>(sheikhsQuery);
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>(lecturesQuery);
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>(seriesQuery);
     const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>(booksQuery);
     const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>(popularLecturesQuery);
     
-    const isLoading = lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
+    const isLoading = sheikhsLoading || lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
 
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
       <Card>
@@ -54,7 +56,8 @@ export default function AdminDashboardPage() {
           </div>
         </header>
         
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard title="إجمالي المشايخ" value={allSheikhs?.length ?? 0} icon={MicVocal} isLoading={sheikhsLoading} />
             <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={lecturesLoading} />
             <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={seriesLoading} />
             <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={booksLoading} />
@@ -75,6 +78,7 @@ export default function AdminDashboardPage() {
                     <CardDescription>روابط سريعة للتحكم بالموقع</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
+                    <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/sheikhs"><span>إدارة المشايخ</span><MicVocal /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures"><span>إدارة المحاضرات</span><Clapperboard /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/series"><span>إدارة السلاسل</span><ListVideo /></Link></Button>
                     <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
