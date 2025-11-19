@@ -1,24 +1,17 @@
 
 "use client";
 
-import {
-  Card,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { getPlaceholderImage } from '@/lib/images';
-import { LectureCard } from '@/components/lecture-card';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useUser } from '@/firebase';
 import type { Series, Lecture } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
-import { useMemo } from 'react';
 import { ContinueListening } from '@/components/continue-listening';
-
+import { SeriesCard } from '@/components/series-card';
+import { LectureCard } from '@/components/lecture-card';
 
 export default function Home() {
   const router = useRouter();
@@ -75,37 +68,9 @@ export default function Home() {
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث السلاسل</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestSeries?.map((series) => {
-              const placeholder = getPlaceholderImage(series.imageId);
-              return (
-                <Card
-                  key={series.id}
-                  className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50"
-                >
-                  <Link href={`/series/${series.id}`} className="block relative">
-                     <Image
-                      src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/400`}
-                      alt={series.title}
-                      width={600}
-                      height={400}
-                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                      data-ai-hint={placeholder?.imageHint}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                    <div className="absolute top-2 left-2 bg-black/50 text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                        <span>{series.lectureCount || 0}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-play"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    </div>
-                  </Link>
-                  <div className="p-4 bg-card">
-                    <h3 className="font-headline text-lg font-bold">
-                      <Link href={`/series/${series.id}`} className="hover:text-primary transition-colors">{series.title}</Link>
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">{series.sheikhName}</p>
-                  </div>
-                </Card>
-              );
-            })}
+            {latestSeries?.map((series) => (
+              <SeriesCard key={series.id} series={series} />
+            ))}
           </div>
         </section>
 

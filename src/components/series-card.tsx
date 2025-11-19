@@ -36,7 +36,7 @@ export function SeriesCard({ series }: SeriesCardProps) {
                 <h3 className="font-headline text-lg font-bold">
                     <Link href={`/series/${series.id}`} className="hover:text-primary transition-colors">{series.title}</Link>
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{series.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{series.sheikhName}</p>
             </div>
         </Card>
     );

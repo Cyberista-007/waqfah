@@ -1,13 +1,8 @@
 
-
 import { searchContent } from "@/lib/data";
 import { Suspense } from "react";
 import { Loader2, SearchIcon } from "lucide-react";
 import { LectureCard } from "@/components/lecture-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import Image from "next/image";
-import { getPlaceholderImage } from "@/lib/images";
 import { SeriesCard } from "@/components/series-card";
 import { SheikhCard } from "@/components/sheikh-card";
 
