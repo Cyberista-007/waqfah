@@ -1,0 +1,39 @@
+
+[
+    {
+        "id": "sharh-sona",
+        "slug": "sharh-sona",
+        "title": "شرح السنة للبربهاري",
+        "description": "سلسلة علمية متكاملة لشرح كتاب 'شرح السنة' للإمام البربهاري، والذي يعد من أهم متون العقيدة السلفية.",
+        "lectureCount": 15,
+        "imageId": "series-aqidah",
+        "sheikhId": "amged-samir",
+        "sheikhName": "أمجد سمير",
+        "sheikhSlug": "amged-samir",
+        "createdAt": "2023-05-01T10:00:00Z"
+    },
+    {
+        "id": "ahwal-nass",
+        "slug": "ahwal-nass",
+        "title": "أحوال الناس",
+        "description": "سلسلة مؤثرة تتناول أحوال الناس يوم القيامة، من البعث والحشر إلى الحساب والميزان والصراط.",
+        "lectureCount": 10,
+        "imageId": "series-fiqh",
+        "sheikhId": "mohamed-hassan",
+        "sheikhName": "محمد حسان",
+        "sheikhSlug": "mohamed-hassan",
+        "createdAt": "2023-06-15T18:00:00Z"
+    },
+    {
+        "id": "sharh-hadith",
+        "slug": "sharh-hadith",
+        "title": "شرح الأربعين النووية",
+        "description": "شرح ماتع ومفصل للأربعين حديثًا التي جمعها الإمام النووي رحمه الله، والتي تعد من جوامع كلم النبي صلى الله عليه وسلم.",
+        "lectureCount": 20,
+        "imageId": "series-hadith",
+        "sheikhId": "abu-ishaq",
+        "sheikhName": "أبو إسحاق الحويني",
+        "sheikhSlug": "abu-ishaq",
+        "createdAt": "2023-04-22T14:00:00Z"
+    }
+]

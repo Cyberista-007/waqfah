@@ -2,6 +2,11 @@ import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, Listen
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
+// Dummy data imports
+import DUMMY_SHEIKHS from '@/../docs/dummy-data/sheikhs.json';
+import DUMMY_SERIES from '@/../docs/dummy-data/series.json';
+import DUMMY_LECTURES from '@/../docs/dummy-data/lectures.json';
+
 // This file now interacts with Firestore instead of mock data.
 const getDb = () => {
     const { serverFirestore } = initializeFirebaseOnServer();
@@ -11,6 +16,11 @@ const getDb = () => {
     return serverFirestore;
 }
 
+const toTimestamp = (dateString?: string): Timestamp => {
+    if (!dateString) return Timestamp.now();
+    return Timestamp.fromDate(new Date(dateString));
+};
+
 // --- Sheikhs ---
 export const getAllSheikhs = async (): Promise<Sheikh[]> => {
   try {
@@ -18,10 +28,14 @@ export const getAllSheikhs = async (): Promise<Sheikh[]> => {
     const sheikhsCol = collection(db, 'sheikhs');
     const q = query(sheikhsCol, orderBy('name'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
+    if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+    }
+    // Fallback to dummy data
+    return DUMMY_SHEIKHS.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
-    console.error("Error fetching all sheikhs:", error);
-    return [];
+    console.error("Error fetching all sheikhs, using fallback:", error);
+    return DUMMY_SHEIKHS.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   }
 }
 
@@ -31,11 +45,18 @@ export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined>
     const sheikhsCol = collection(db, 'sheikhs');
     const q = query(sheikhsCol, where("slug", "==", slug), limit(1));
     const snapshot = await getDocs(q);
-    if (snapshot.empty) return undefined;
-    const docSnap = snapshot.docs[0];
-    return { ...(docSnap.data() as Omit<Sheikh, 'id'>), id: docSnap.id };
+    if (!snapshot.empty) {
+        const docSnap = snapshot.docs[0];
+        const data = docSnap.data();
+        return { ...(data as Omit<Sheikh, 'id' | 'createdAt'>), id: docSnap.id, createdAt: toTimestamp(data.createdAt) };
+    }
+    const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
+    if (dummySheikh) return {...dummySheikh, createdAt: toTimestamp(dummySheikh.createdAt)};
+    return undefined;
   } catch (error) {
-    console.error("Error fetching sheikh by slug:", error);
+    console.error("Error fetching sheikh by slug, using fallback:", error);
+    const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
+    if (dummySheikh) return {...dummySheikh, createdAt: toTimestamp(dummySheikh.createdAt)};
     return undefined;
   }
 }
@@ -48,10 +69,13 @@ export const getAllSeries = async (): Promise<Series[]> => {
     const seriesCol = collection(db, 'series');
     const q = query(seriesCol, orderBy('title'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+    if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+    }
+    return DUMMY_SERIES.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
-    console.error("Error fetching all series:", error);
-    return [];
+    console.error("Error fetching all series, using fallback:", error);
+    return DUMMY_SERIES.map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   }
 };
 
@@ -63,20 +87,23 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
     const lecturesCol = collection(db, 'lectures');
     const q = query(lecturesCol, where("slug", "==", slug), limit(1));
     const snapshot = await getDocs(q);
-    if (snapshot.empty) return undefined;
-    const docSnap = snapshot.docs[0];
-    const lectureData = docSnap.data();
+    if (!snapshot.empty) {
+        const docSnap = snapshot.docs[0];
+        const lectureData = docSnap.data();
+        return { 
+          ...(lectureData as Omit<Lecture, 'id' | 'createdAt'>), 
+          id: docSnap.id,
+          createdAt: toTimestamp(lectureData.createdAt),
+        };
+    }
+    const dummyLecture = DUMMY_LECTURES.find(l => l.slug === slug);
+    if (dummyLecture) return {...dummyLecture, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
+    return undefined;
 
-    // Ensure Timestamps are converted if they exist
-    const createdAt = lectureData.createdAt instanceof Timestamp ? lectureData.createdAt : Timestamp.now();
-
-    return { 
-      ...(lectureData as Omit<Lecture, 'id' | 'createdAt'>), 
-      id: docSnap.id,
-      createdAt,
-    };
   } catch (error) {
-      console.error("Error fetching lecture by slug:", error);
+      console.error("Error fetching lecture by slug, using fallback:", error);
+      const dummyLecture = DUMMY_LECTURES.find(l => l.slug === slug);
+      if (dummyLecture) return {...dummyLecture, createdAt: toTimestamp(dummyLecture.createdAt), transcript: []};
       return undefined;
   }
 };
@@ -87,10 +114,13 @@ export const getLecturesBySheikh = async (sheikhId: string): Promise<Lecture[]> 
     const lecturesCol = collection(db, 'lectures');
     const q = query(lecturesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
+    if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+    }
+    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
   } catch (error) {
-    console.error("Error fetching lectures by sheikh:", error);
-    return [];
+    console.error("Error fetching lectures by sheikh, using fallback:", error);
+    return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
   }
 }
 
@@ -100,10 +130,13 @@ export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => 
     const seriesCol = collection(db, 'series');
     const q = query(seriesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+    if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+    }
+    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   } catch (error) {
-    console.error("Error fetching series by sheikh:", error);
-    return [];
+    console.error("Error fetching series by sheikh, using fallback:", error);
+    return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => ({...s, createdAt: toTimestamp(s.createdAt)}));
   }
 }
 
@@ -115,7 +148,10 @@ export const getAllBooks = async (): Promise<Book[]> => {
         const booksCol = collection(db, 'books');
         const q = query(booksCol, orderBy('title', 'asc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Book, 'id'>), id: doc.id }));
+        if(!snapshot.empty) {
+          return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Book, 'id'>), id: doc.id }));
+        }
+        return []; // No dummy data for books yet
     } catch(e) {
         console.error("Error fetching books:", e);
         return [];
@@ -128,16 +164,19 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
         const scheduleCol = collection(db, 'scheduled_lessons');
         const q = query(scheduleCol, orderBy('dateTime', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(docSnap => {
-            const data = docSnap.data();
-            const date = data.dateTime.toDate();
-            return { 
-                ...(data as Omit<ScheduleItem, 'id' | 'date' | 'time'>),
-                id: docSnap.id,
-                date: date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-                time: date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-            };
-        });
+        if (!snapshot.empty) {
+            return snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                const date = data.dateTime.toDate();
+                return { 
+                    ...(data as Omit<ScheduleItem, 'id' | 'date' | 'time'>),
+                    id: docSnap.id,
+                    date: date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+                    time: date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                };
+            });
+        }
+        return []; // No dummy data for schedule yet
     } catch (e) {
         console.error("Error fetching schedule items:", e);
         return [];
@@ -149,7 +188,10 @@ export const getAllQAPairs = async (): Promise<QAPair[]> => {
         const db = getDb();
         const qaCol = collection(db, 'question_answers');
         const snapshot = await getDocs(qaCol);
-        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<QAPair, 'id'>), id: doc.id }));
+        if (!snapshot.empty) {
+            return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<QAPair, 'id'>), id: doc.id }));
+        }
+        return []; // No dummy data for Q&A yet
     } catch (e) {
         console.error("Error fetching Q&A pairs:", e);
         return [];
@@ -169,10 +211,13 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId: str
             limit(3)
         );
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
+        if (!snapshot.empty) {
+            return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+        }
+        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
     } catch (e) {
-        console.error("Error fetching related lectures:", e);
-        return [];
+        console.error("Error fetching related lectures, using fallback:", e);
+        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
     }
 }
 
@@ -180,29 +225,20 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
     if (!searchTerm) {
         return { lectures: [], series: [], sheikhs: [] };
     }
-    const db = getDb();
     
     // This is a very basic search. For production, a dedicated search service like Algolia or Typesense is recommended.
     const searchTermLower = searchTerm.toLowerCase();
 
     try {
-        const [lecturesSnap, seriesSnap, sheikhsSnap] = await Promise.all([
-            getDocs(collection(db, "lectures")),
-            getDocs(collection(db, "series")),
-            getDocs(collection(db, "sheikhs"))
+        const [allLectures, allSeries, allSheikhs] = await Promise.all([
+          getAllLectures(),
+          getAllSeries(),
+          getAllSheikhs()
         ]);
 
-        const lectures = lecturesSnap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() } as Lecture))
-            .filter(l => l.title.toLowerCase().includes(searchTermLower));
-
-        const series = seriesSnap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() } as Series))
-            .filter(s => s.title.toLowerCase().includes(searchTermLower));
-            
-        const sheikhs = sheikhsSnap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() } as Sheikh))
-            .filter(s => s.name.toLowerCase().includes(searchTermLower));
+        const lectures = allLectures.filter(l => l.title.toLowerCase().includes(searchTermLower));
+        const series = allSeries.filter(s => s.title.toLowerCase().includes(searchTermLower));
+        const sheikhs = allSheikhs.filter(s => s.name.toLowerCase().includes(searchTermLower));
 
         return { lectures, series, sheikhs };
     } catch (error) {
@@ -210,6 +246,23 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
         return { lectures: [], series: [], sheikhs: [] };
     }
 }
+
+const getAllLectures = async (): Promise<Lecture[]> => {
+  try {
+    const db = getDb();
+    const lecturesCol = collection(db, 'lectures');
+    const q = query(lecturesCol, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id' | 'createdAt'>), id: doc.id, createdAt: toTimestamp(doc.data().createdAt) }));
+    }
+    return DUMMY_LECTURES.map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+  } catch (error) {
+    console.error("Error fetching all lectures, using fallback:", error);
+    return DUMMY_LECTURES.map(l => ({...l, createdAt: toTimestamp(l.createdAt), transcript: []}));
+  }
+}
+
 
 // --- Topics ---
 export const getAllTopics = async (): Promise<Topic[]> => {
@@ -242,19 +295,46 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
 
 async function getDocumentsByIds<T>(collectionName: string, ids: string[] | undefined): Promise<T[]> {
     if (!ids || ids.length === 0) return [];
-    const db = getDb();
-    const docs: T[] = [];
-    // Firestore 'in' query limit is 30
-    for (let i = 0; i < ids.length; i += 30) {
-        const chunk = ids.slice(i, i + 30);
-        const colRef = collection(db, collectionName);
-        const q = query(colRef, where('__name__', 'in', chunk));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(docSnap => {
-            docs.push({ ...(docSnap.data() as Omit<T, 'id'>), id: docSnap.id } as T);
-        });
+    
+    // First try Firestore
+    try {
+        const db = getDb();
+        const docs: T[] = [];
+        // Firestore 'in' query limit is 30
+        for (let i = 0; i < ids.length; i += 30) {
+            const chunk = ids.slice(i, i + 30);
+            const colRef = collection(db, collectionName);
+            const q = query(colRef, where('__name__', 'in', chunk));
+            const snapshot = await getDocs(q);
+            if(!snapshot.empty) {
+                 snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const item = { 
+                        ...(data as Omit<T, 'id' | 'createdAt'>), 
+                        id: docSnap.id, 
+                        createdAt: toTimestamp((data as any).createdAt) 
+                    } as T;
+                    docs.push(item);
+                });
+            }
+        }
+        if (docs.length > 0) return docs;
+    } catch(e) {
+         console.error(`Error fetching docs from ${collectionName}, using fallback`, e);
     }
-    return docs;
+
+    // Fallback to dummy data
+    let dummyData: any[] = [];
+    if (collectionName === 'lectures') {
+        dummyData = DUMMY_LECTURES;
+    } else if (collectionName === 'series') {
+        dummyData = DUMMY_SERIES;
+    }
+    
+    return dummyData.filter(item => ids.includes(item.id)).map(item => ({
+        ...item,
+        createdAt: toTimestamp(item.createdAt)
+    })) as T[];
 }
 
 export const getLecturesByIds = (ids: string[] | undefined) => getDocumentsByIds<Lecture>('lectures', ids);
