@@ -90,14 +90,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
           try {
             const userSnap = await getDoc(userRef);
             if (!userSnap.exists()) {
-              const newUserProfile: Omit<UserProfile, 'id'> = {
+              const newUserProfile: Omit<UserProfile, 'id' | 'role'> = {
                 name: firebaseUser.displayName || "مستخدم جديد",
                 email: firebaseUser.email!,
                 photoURL: firebaseUser.photoURL || '',
                 createdAt: Timestamp.now(),
-                role: 'user', // Set default role
               };
-              await setDoc(userRef, newUserProfile);
+              await setDoc(userRef, {
+                ...newUserProfile,
+                role: 'user', // Set default role
+              });
             }
           } catch (e) {
             console.error("Error checking or creating user profile:", e);

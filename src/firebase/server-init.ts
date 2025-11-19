@@ -11,10 +11,17 @@ interface FirebaseAdminConfig extends AppOptions {
   serviceAccountId?: string;
 }
 
+let serverApp: FirebaseApp | null = null;
+
 const getAppInstance = (): FirebaseApp => {
+    if (serverApp) {
+        return serverApp;
+    }
+
     const apps = getApps();
     if (apps.length > 0) {
-        return apps[0] as FirebaseApp;
+        serverApp = apps[0];
+        return serverApp;
     }
 
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : undefined;
@@ -31,7 +38,8 @@ const getAppInstance = (): FirebaseApp => {
        console.warn("Firebase Admin SDK initialized without explicit credentials. This might rely on ambient credentials (e.g., GCE metadata server). For local development, set GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT.");
     }
     
-    return initializeApp(config);
+    serverApp = initializeApp(config);
+    return serverApp;
 }
 
 
@@ -41,8 +49,8 @@ const getAppInstance = (): FirebaseApp => {
  * This is safe to call from Server Components.
  */
 export function initializeFirebaseOnServer() {
-  const serverApp = getAppInstance();
-  const serverFirestore = getFirestore(serverApp);
-  const serverAuth = getAuth(serverApp);
-  return { serverApp, serverFirestore, serverAuth };
+  const app = getAppInstance();
+  const serverFirestore = getFirestore(app);
+  const serverAuth = getAuth(app);
+  return { serverApp: app, serverFirestore, serverAuth };
 }
