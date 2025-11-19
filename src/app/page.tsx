@@ -33,8 +33,7 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-background text-center">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 to-transparent"></div>
+      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center animated-gradient">
         <div className="container relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight text-foreground">
             العلم الشرعي بين يديك
@@ -49,7 +48,7 @@ export default function Home() {
                   type="search"
                   name="search"
                   placeholder="ابحث عن محاضرة، سلسلة، كتاب..."
-                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary"
+                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300"
                   aria-label="بحث"
                 />
                 <button type="submit" className="absolute top-1/2 end-4 -translate-y-1/2 text-muted-foreground">

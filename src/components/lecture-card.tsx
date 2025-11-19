@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image"
@@ -69,7 +70,7 @@ export function LectureCard({ lecture }: LectureCardProps) {
 
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 flex flex-col">
+    <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col">
       <div className="relative">
         <Link href={`/lectures/${lecture.slug}`} className="block">
           <Image
@@ -95,7 +96,7 @@ export function LectureCard({ lecture }: LectureCardProps) {
                 </Tooltip>
             </TooltipProvider>
         </div>
-        <Button onClick={handlePlay} variant="ghost" size="icon" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 bg-white/20 backdrop-blur-sm text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white/30 scale-90 group-hover:scale-100">
+        <Button onClick={handlePlay} variant="ghost" size="icon" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 bg-white/20 backdrop-blur-sm text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/30 scale-90 group-hover:scale-100 active:scale-95">
             <Play className="w-8 h-8 fill-current ms-1" />
         </Button>
       </div>

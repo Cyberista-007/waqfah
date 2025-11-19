@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
@@ -16,7 +17,7 @@ export function SheikhCard({ sheikh }: SheikhCardProps) {
     const placeholder = getPlaceholderImage(sheikh.imageId);
     return (
         <Link href={`/sheikhs/${sheikh.slug}`} key={sheikh.id} className="block group">
-            <Card className="h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50">
+            <Card className="h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20">
                 <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors">
                     <AvatarImage src={placeholder?.imageUrl} alt={sheikh.name} />
                     <AvatarFallback className="text-4xl">{getInitials(sheikh.name)}</AvatarFallback>

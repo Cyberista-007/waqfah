@@ -15,7 +15,7 @@ export function SeriesCard({ series }: SeriesCardProps) {
     return (
         <Card
             key={series.id}
-            className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50"
+            className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20"
         >
             <Link href={`/series/${series.id}`} className="block relative">
                 <Image
