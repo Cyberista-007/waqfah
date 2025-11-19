@@ -123,6 +123,9 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             data-ai-hint={placeholder?.imageHint}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 bg-white/20 backdrop-blur-sm text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/30 scale-90 group-hover:scale-100 active:scale-95 flex items-center justify-center">
+            <Play className="w-8 h-8 fill-current ms-1" />
+          </div>
         </div>
         
         <div className="absolute top-2 right-2 flex items-center gap-2">
@@ -138,10 +141,6 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 </Tooltip>
             </TooltipProvider>
         </div>
-        
-        <Button onClick={handlePlay} variant="ghost" size="icon" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 bg-white/20 backdrop-blur-sm text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/30 scale-90 group-hover:scale-100 active:scale-95">
-            <Play className="w-8 h-8 fill-current ms-1" />
-        </Button>
 
         <div className="absolute bottom-4 right-4 text-white text-right">
              <h3 className="font-headline text-2xl font-bold drop-shadow-lg">
