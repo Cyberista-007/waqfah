@@ -10,6 +10,7 @@ import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { FirebaseProvider } from '@/firebase';
 import { Analytics } from "@vercel/analytics/react"
+import { FontProvider } from '@/components/font-provider';
 
 export const metadata: Metadata = {
   title: 'منصة الدروس العلمية',
@@ -28,6 +29,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Lalezar&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <ThemeProvider 
@@ -55,19 +57,21 @@ export default function RootLayout({
             'theme-oled'
           ]}
         >
-          <FirebaseProvider>
-            <AudioPlayerProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <SiteHeader />
-                <main className="flex-1 container py-8">
-                  {children}
-                </main>
-                <SiteFooter />
-              </div>
-              <FloatingAudioPlayer />
-              <Toaster />
-            </AudioPlayerProvider>
-          </FirebaseProvider>
+          <FontProvider>
+            <FirebaseProvider>
+              <AudioPlayerProvider>
+                <div className="relative flex min-h-screen flex-col">
+                  <SiteHeader />
+                  <main className="flex-1 container py-8">
+                    {children}
+                  </main>
+                  <SiteFooter />
+                </div>
+                <FloatingAudioPlayer />
+                <Toaster />
+              </AudioPlayerProvider>
+            </FirebaseProvider>
+          </FontProvider>
         </ThemeProvider>
         <Analytics />
       </body>

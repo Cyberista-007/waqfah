@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,6 +32,8 @@
     --gradient-start: 340 82% 52%;
     --gradient-mid: 20 82% 52%;
     --gradient-end: 45 82% 52%;
+    --font-body: 'Alegreya';
+    --font-headline: 'Alegreya';
   }
 
   .light, .theme-default-light {
@@ -408,6 +411,25 @@
   body {
     @apply bg-background text-foreground;
   }
+  .font-body {
+    font-family: var(--font-body), sans-serif;
+  }
+  .font-headline {
+      font-family: var(--font-headline), sans-serif;
+  }
+  .font-cairo {
+    --font-body: 'Cairo';
+    --font-headline: 'Cairo';
+  }
+  .font-noto-sans-arabic {
+    --font-body: 'Noto Sans Arabic';
+    --font-headline: 'Noto Sans Arabic';
+  }
+  .font-lalezar {
+    --font-body: 'Lalezar';
+    --font-headline: 'Lalezar';
+  }
+
   .animated-gradient {
     background: linear-gradient(
       -45deg,

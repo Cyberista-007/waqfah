@@ -17,9 +17,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Alegreya', 'sans-serif'],
-        headline: ['Alegreya', 'sans-serif'],
+        body: ['var(--font-body)', 'sans-serif'],
+        headline: ['var(--font-headline)', 'sans-serif'],
         code: ['Source Code Pro', 'monospace'],
+        'cairo': ['Cairo', 'sans-serif'],
+        'noto-sans-arabic': ['"Noto Sans Arabic"', 'sans-serif'],
+        'lalezar': ['Lalezar', 'cursive'],
       },
       colors: {
         background: 'hsl(var(--background))',

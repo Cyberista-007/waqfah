@@ -10,6 +10,7 @@ import {
   LogOut,
   LayoutDashboard,
   Palette,
+  CaseSensitive,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -37,6 +38,7 @@ import { Skeleton } from "./ui/skeleton"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useState } from "react"
 import { ThemeSwitcherDialog } from "./theme-switcher"
+import { FontSwitcherDialog } from "./font-switcher"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -60,6 +62,7 @@ export function SiteHeader() {
   const { isAdmin, logoutAdmin } = useAdminAuth();
   const router = useRouter();
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
+  const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
 
 
   const handleLogout = async () => {
@@ -121,6 +124,12 @@ export function SiteHeader() {
                            <span>تغيير الثيم</span>
                         </div>
                     </DropdownMenuItem>
+                     <DropdownMenuItem onSelect={() => setIsFontSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
+                        <div className="flex items-center gap-2">
+                           <CaseSensitive className="h-4 w-4" />
+                           <span>تغيير الخط</span>
+                        </div>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -136,7 +145,7 @@ export function SiteHeader() {
           <ThemeToggle />
 
           {isUserLoading ? (
-            <Skeleton className="w-24 h-10 rounded-md" />
+            <Skeleton className="w-24 h-10 rounded-full" />
           ) : (
             <>
               {isAdmin && (
@@ -207,10 +216,14 @@ export function SiteHeader() {
                     </Link>
                   </SheetClose>
                 ))}
-                 <div className="border-t border-border pt-4">
+                 <div className="border-t border-border pt-4 space-y-2">
                     <Button onSelect={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
                         <Palette className="me-2 h-4 w-4" />
                         <span>تغيير الثيم</span>
+                    </Button>
+                    <Button onSelect={() => setIsFontSwitcherOpen(true)} variant="outline" className="w-full justify-center">
+                        <CaseSensitive className="me-2 h-4 w-4" />
+                        <span>تغيير الخط</span>
                     </Button>
                  </div>
                 <div className="border-t border-border pt-4 space-y-3">
@@ -255,6 +268,7 @@ export function SiteHeader() {
       </nav>
     </header>
     <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
+    <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
     </>
   )
 }
