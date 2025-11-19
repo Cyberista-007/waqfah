@@ -1,15 +1,22 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
-export type Sheikh = {
+// When passing data from server to client, Timestamps are serialized to strings.
+// This type helps handle that.
+type Serializable<T> = {
+  [P in keyof T]: T[P] extends Timestamp ? string : T[P];
+};
+
+export type Sheikh = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   name: string;
   bio: string;
   imageId: string;
   createdAt: Timestamp;
-};
+}>;
 
-export type Lecture = {
+export type Lecture = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
@@ -30,14 +37,14 @@ export type Lecture = {
   ratingCount: number;
   viewCount: number;
   createdAt: Timestamp; // Firestore timestamp
-};
+}>;
 
 export type TranscriptItem = {
   timestamp: number;
   text: string;
 };
 
-export type Series = {
+export type Series = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title:string;
@@ -48,9 +55,9 @@ export type Series = {
   sheikhName: string;
   sheikhSlug: string;
   createdAt: Timestamp;
-};
+}>;
 
-export type Book = {
+export type Book = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
@@ -59,9 +66,9 @@ export type Book = {
   sheikhId: string;
   sheikhName: string;
   sheikhSlug: string;
-};
+}>;
 
-export type ScheduleItem = {
+export type ScheduleItem = Serializable<{
   id: string;
   title: string;
   date: string; // Consider using a Timestamp for better sorting
@@ -69,15 +76,15 @@ export type ScheduleItem = {
   isLive: boolean;
   dateTime: Timestamp;
   duration?: number; // in minutes
-};
+}>;
 
-export type QAPair = {
+export type QAPair = Serializable<{
   id: string;
   question: string;
   answer: string;
-};
+}>;
 
-export type UserProfile = {
+export type UserProfile = Serializable<{
     id: string;
     email: string;
     name: string;
@@ -87,7 +94,7 @@ export type UserProfile = {
     minutesListened?: number;
     lecturesCompleted?: number;
     seriesCompleted?: number;
-};
+}>;
 
 export type EditProfileForm = {
     name: string;
@@ -95,22 +102,22 @@ export type EditProfileForm = {
     photoURL: string;
 }
 
-export type Favorite = {
+export type Favorite = Serializable<{
     id: string; // lectureId
     userId: string;
     lectureId: string;
     addedAt: Timestamp;
-}
+}>;
 
-export type Rating = {
+export type Rating = Serializable<{
     id: string; // combination of userId_lectureId
     userId: string;
     lectureId: string;
     value: number;
     createdAt: Timestamp;
-}
+}>;
 
-export type ListenHistoryItem = {
+export type ListenHistoryItem = Serializable<{
     id: string; // lectureId
     lectureId: string;
     position: number;
@@ -118,9 +125,9 @@ export type ListenHistoryItem = {
     lastListened: Timestamp;
     lecture?: Lecture; // Populated client-side
     lastUpdateTime?: Timestamp;
-}
+}>;
 
-export type Playlist = {
+export type Playlist = Serializable<{
     id: string;
     name: string;
     description?: string;
@@ -128,9 +135,9 @@ export type Playlist = {
     isPublic: boolean;
     createdAt: Timestamp;
     userId: string;
-}
+}>;
 
-export type Topic = {
+export type Topic = Serializable<{
     id: string;
     name: string;
     slug: string;
@@ -138,9 +145,9 @@ export type Topic = {
     imageId: string;
     lectureIds: string[];
     seriesIds: string[];
-};
+}>;
 
-export type Challenge = {
+export type Challenge = Serializable<{
     id: string;
     title: string;
     description: string;
@@ -149,9 +156,9 @@ export type Challenge = {
     startDate: Timestamp;
     endDate: Timestamp;
     isActive: boolean;
-};
+}>;
 
-export type LectureClip = {
+export type LectureClip = Serializable<{
     id: string;
     lectureId: string;
     userId: string; // Creator
@@ -159,6 +166,4 @@ export type LectureClip = {
     startTime: number; // in seconds
     endTime: number; // in seconds
     createdAt: Timestamp;
-};
-
-    
+}>;

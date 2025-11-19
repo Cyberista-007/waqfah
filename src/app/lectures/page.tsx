@@ -52,8 +52,8 @@ export default function LecturesListPage() {
     }
     
     lectures.sort((a, b) => {
-      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt as any);
-      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt as any);
+      const dateA = new Date(a.createdAt as any);
+      const dateB = new Date(b.createdAt as any);
 
       switch (sortOrder) {
           case 'oldest':

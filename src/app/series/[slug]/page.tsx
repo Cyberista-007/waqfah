@@ -9,6 +9,7 @@ import type { Series, Lecture } from '@/lib/types';
 import { doc, getDoc, collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { SeriesPageSkeleton } from '@/components/skeletons';
+import { toSerializable } from '@/lib/data-helpers';
 
 type SeriesDetailPageProps = {
   params: {
@@ -26,11 +27,10 @@ async function getSeriesData(seriesId: string) {
     }
 
     const seriesData = seriesSnap.data();
-    const series = {
+    const series = toSerializable({
        ...seriesData,
        id: seriesSnap.id,
-       createdAt: seriesData.createdAt instanceof Timestamp ? seriesData.createdAt.toDate().toISOString() : new Date().toISOString()
-    } as Series;
+    }) as Series;
 
 
     const lecturesCol = collection(serverFirestore, 'lectures');
@@ -39,11 +39,10 @@ async function getSeriesData(seriesId: string) {
     
     const lecturesInSeries = lecturesSnapshot.docs.map(doc => {
       const lectureData = doc.data();
-      return { 
+      return toSerializable({ 
         ...lectureData, 
         id: doc.id,
-        createdAt: lectureData.createdAt instanceof Timestamp ? lectureData.createdAt : Timestamp.now()
-      } as Lecture
+      }) as Lecture
     });
 
     return { series, lecturesInSeries };

@@ -110,7 +110,7 @@ export default function AdminLecturesPage() {
                     <TableCell>{lecture.sheikhName}</TableCell>
                     <TableCell>{lecture.seriesTitle}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                        {lecture.createdAt?.toDate ? lecture.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير معروف'}
+                        {new Date(lecture.createdAt as any).toLocaleDateString('ar-EG')}
                     </TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">

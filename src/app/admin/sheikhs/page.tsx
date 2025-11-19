@@ -124,7 +124,7 @@ export default function AdminSheikhsPage() {
                                 </div>
                             </TableCell>
                             <TableCell>
-                                {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير معروف'}
+                                {new Date(item.createdAt as any).toLocaleDateString('ar-EG')}
                             </TableCell>
                             <TableCell className="text-left">
                             <div className="flex gap-2 justify-end">

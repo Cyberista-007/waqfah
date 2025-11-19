@@ -37,7 +37,7 @@ async function getPageData(lectureId: string) {
       ...lectureData, 
       id: lectureSnap.id,
       createdAt: createdAt,
-     };
+     } as Lecture;
 
     return { series, sheikhs, lecture };
   } catch (error) {
