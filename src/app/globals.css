@@ -445,6 +445,18 @@
     --font-body: 'IBM Plex Sans Arabic';
     --font-headline: 'IBM Plex Sans Arabic';
   }
+  .font-almarai {
+    --font-body: 'Almarai';
+    --font-headline: 'Almarai';
+  }
+  .font-changa {
+    --font-body: 'Changa';
+    --font-headline: 'Changa';
+  }
+  .font-el-messiri {
+    --font-body: 'El Messiri';
+    --font-headline: 'El Messiri';
+  }
 
   .animated-gradient {
     background: linear-gradient(
@@ -470,3 +482,5 @@
     background-position: 0% 50%;
   }
 }
+
+    

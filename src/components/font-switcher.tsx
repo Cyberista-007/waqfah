@@ -21,6 +21,9 @@ export const fonts = [
   { name: "Amiri", value: "font-amiri" },
   { name: "Markazi Text", value: "font-markazi-text" },
   { name: "IBM Plex Sans Arabic", value: "font-ibm-plex-sans-arabic" },
+  { name: "Almarai", value: "font-almarai" },
+  { name: "Changa", value: "font-changa" },
+  { name: "El Messiri", value: "font-el-messiri" },
 ];
 
 interface FontSwitcherDialogProps {
@@ -64,3 +67,5 @@ export function FontSwitcherDialog({ isOpen, onOpenChange }: FontSwitcherDialogP
     </Dialog>
   )
 }
+
+    

@@ -27,6 +27,9 @@ export default {
         'amiri': ['Amiri', 'serif'],
         'markazi-text': ['"Markazi Text"', 'serif'],
         'ibm-plex-sans-arabic': ['"IBM Plex Sans Arabic"', 'sans-serif'],
+        'almarai': ['Almarai', 'sans-serif'],
+        'changa': ['Changa', 'sans-serif'],
+        'el-messiri': ['"El Messiri"', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -121,3 +124,5 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
+    
