@@ -10,10 +10,9 @@ import DUMMY_LECTURES from '@/../docs/dummy-data/lectures.json';
 
 // This file now interacts with Firestore instead of mock data.
 const getDb = () => {
+    // This can throw if credentials are not available.
+    // The calling functions must handle this.
     const { serverFirestore } = initializeFirebaseOnServer();
-    if (!serverFirestore) {
-        throw new Error("Firestore is not initialized on the server.");
-    }
     return serverFirestore;
 }
 
@@ -39,7 +38,7 @@ export const getAllSheikhs = async (): Promise<Sheikh[]> => {
     if (!snapshot.empty) {
         return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id })) as Sheikh[];
     }
-    // Fallback to dummy data
+    // Fallback to dummy data if collection is empty
     return DUMMY_SHEIKHS.map(s => ({...s, id: s.id, createdAt: new Date(s.createdAt).toISOString()})) as Sheikh[];
   } catch (error) {
     console.error("Error fetching all sheikhs, using fallback:", error);
@@ -343,3 +342,5 @@ async function getDocumentsByIds<T>(collectionName: string, ids: string[] | unde
 
 export const getLecturesByIds = (ids: string[] | undefined) => getDocumentsByIds<Lecture>('lectures', ids);
 export const getSeriesByIds = (ids: string[] | undefined) => getDocumentsByIds<Series>('series', ids);
+
+    

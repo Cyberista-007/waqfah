@@ -13,51 +13,72 @@ interface FirebaseAdminConfig extends AppOptions {
 
 // Store app instance in a global variable to avoid re-initialization
 let serverApp: FirebaseApp | null = null;
+let initError: Error | null = null;
+let credentialsAvailable = false;
 
-const getAppInstance = (): FirebaseApp => {
-    // If the app is already initialized, return it.
-    if (serverApp) {
-        return serverApp;
-    }
-
-    // Check if any app is already initialized by Next.js hot-reloading in dev
-    const apps = getApps();
-    if (apps.length > 0) {
-        serverApp = apps[0];
-        return serverApp;
-    }
-
-    // Initialize the app with credentials
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
         ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
         : undefined;
-      
-    const config: FirebaseAdminConfig = {
-        projectId: firebaseConfig.projectId,
-    };
 
-    if (serviceAccount) {
-        config.credential = credential.cert(serviceAccount);
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-        // Use default credentials if service account is not provided
-        config.credential = credential.applicationDefault();
-    } else {
-       console.warn("Firebase Admin SDK initialized without explicit credentials. This might rely on ambient credentials (e.g., GCE metadata server). For local development, set GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT.");
-    }
-    
-    serverApp = initializeApp(config);
-    return serverApp;
+if (serviceAccount || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    credentialsAvailable = true;
 }
 
 
 /**
- * Initializes and returns a server-side Firebase app instance.
+ * Safely initializes and returns a server-side Firebase app instance.
  * Ensures that initialization only happens once.
  * This is safe to call from Server Components.
+ * Throws an error if initialization fails and no credentials are provided.
  */
 export function initializeFirebaseOnServer() {
-  const app = getAppInstance();
-  const serverFirestore = getFirestore(app);
-  const serverAuth = getAuth(app);
-  return { serverApp: app, serverFirestore, serverAuth };
+  if (serverApp) {
+      return { 
+          serverApp, 
+          serverFirestore: getFirestore(serverApp), 
+          serverAuth: getAuth(serverApp) 
+      };
+  }
+  
+  if (initError) {
+      throw initError;
+  }
+
+  // If no credentials, don't even try to initialize.
+  if (!credentialsAvailable) {
+      const errorMsg = "Firebase Admin SDK not initialized: No credentials found. Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS environment variables.";
+      initError = new Error(errorMsg);
+      throw initError;
+  }
+
+  try {
+    // Check if any app is already initialized by Next.js hot-reloading in dev
+    const apps = getApps();
+    if (apps.length > 0) {
+        serverApp = apps[0];
+    } else {
+        const config: FirebaseAdminConfig = {
+            projectId: firebaseConfig.projectId,
+        };
+
+        if (serviceAccount) {
+            config.credential = credential.cert(serviceAccount);
+        } else {
+            config.credential = credential.applicationDefault();
+        }
+        
+        serverApp = initializeApp(config);
+    }
+    
+    const serverFirestore = getFirestore(serverApp);
+    const serverAuth = getAuth(serverApp);
+    return { serverApp, serverFirestore, serverAuth };
+
+  } catch (e: any) {
+      initError = e;
+      console.error("FATAL: Firebase Admin SDK initialization failed:", e);
+      throw e; // re-throw the error to be caught by the calling data-fetching function
+  }
 }
+
+    
