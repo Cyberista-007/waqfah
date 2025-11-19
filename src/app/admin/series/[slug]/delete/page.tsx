@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, notFound } from "next/navigation";
+import { useRouter, notFound, redirect } from "next/navigation";
 import type { Series } from "@/lib/types";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function AdminDeleteSeriesPage({
   params,
@@ -35,10 +36,33 @@ export default function AdminDeleteSeriesPage({
   );
   const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
+  useEffect(() => {
+    if (!isLoading && series) {
+        if ((series.lectureCount || 0) > 0) {
+            toast({
+                variant: "destructive",
+                title: "لا يمكن الحذف",
+                description: "لا يمكنك حذف سلسلة تحتوي على محاضرات. قم بحذف المحاضرات أولاً."
+            });
+            redirect('/admin/series');
+        }
+    }
+  }, [series, isLoading, toast, router]);
+
   const handleDelete = async () => {
     if (!series || !seriesDocRef) return;
     
-    // Delete the document from Firestore
+    // Final check to be safe
+    if ((series.lectureCount || 0) > 0) {
+        toast({
+            variant: "destructive",
+            title: "لا يمكن الحذف",
+            description: "السلسلة تحتوي على محاضرات."
+        });
+        router.push("/admin/series");
+        return;
+    }
+
     await deleteDocumentNonBlocking(seriesDocRef);
 
     toast({
@@ -54,7 +78,7 @@ export default function AdminDeleteSeriesPage({
     router.back();
   };
 
-  if (isLoading) {
+  if (isLoading || !series) {
     return (
        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
             <Loader2 className="h-16 w-16 animate-spin text-white" />
@@ -62,9 +86,15 @@ export default function AdminDeleteSeriesPage({
     );
   }
 
-  if (!series) {
-    notFound();
-    return null;
+  // Double check, as redirect might not have completed
+  if ((series.lectureCount || 0) > 0) {
+      return (
+           <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                <div className="bg-background p-8 rounded-lg">
+                    <p>إعادة توجيه...</p>
+                </div>
+           </div>
+      )
   }
 
   return (

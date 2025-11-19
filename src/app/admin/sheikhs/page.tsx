@@ -60,6 +60,19 @@ export default function AdminSheikhsPage() {
         return stats;
 
     }, [allItems, allSeries, allLectures]);
+    
+    const handleDeleteAttempt = (item: Sheikh) => {
+        const stats = sheikhStats[item.id];
+        if (stats && (stats.seriesCount > 0 || stats.lecturesCount > 0)) {
+            toast({
+                variant: "destructive",
+                title: "لا يمكن حذف الشيخ",
+                description: "يجب أولاً حذف جميع السلاسل والمحاضرات المرتبطة بهذا الشيخ.",
+            });
+            return;
+        }
+        setItemToDelete(item);
+    };
 
     const handleDelete = async () => {
         if (!itemToDelete || !firestore) return;
@@ -152,7 +165,7 @@ export default function AdminSheikhsPage() {
                                 <Button onClick={() => handleEdit(item)} variant="outline" size="sm">
                                 <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button onClick={() => setItemToDelete(item)} variant="destructive" size="sm">
+                                <Button onClick={() => handleDeleteAttempt(item)} variant="destructive" size="sm">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
