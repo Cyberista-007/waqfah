@@ -43,12 +43,8 @@ export interface InternalQuery extends Query<DocumentData> {
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
  *
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemoFirebase to memoize it per React guidence.  Also make sure that it's dependencies are stable
- * references
- *
  * @template T Optional type for document data. Defaults to any.
- * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
+ * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} memoizedTargetRefOrQuery -
  * The Firestore CollectionReference or Query. Waits if null/undefined.
  * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
@@ -62,12 +58,9 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // useMemoFirebase is just a useMemo, this keeps the reference stable across renders
-  const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
-
   useEffect(() => {
     // If the query is not ready, set loading to false and clear data/errors.
-    if (!stableQueryDep) {
+    if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -79,7 +72,7 @@ export function useCollection<T = any>(
     setError(null);
 
     const unsubscribe = onSnapshot(
-      stableQueryDep,
+      memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
         const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
         setData(results);
@@ -89,10 +82,10 @@ export function useCollection<T = any>(
       (err: FirestoreError) => {
         let path = 'unknown/path';
         try {
-            if (stableQueryDep.type === 'collection') {
-              path = (stableQueryDep as CollectionReference).path;
-            } else if ((stableQueryDep as any)?._query?.path) {
-                path = (stableQueryDep as InternalQuery)._query.path.toString();
+            if (memoizedTargetRefOrQuery.type === 'collection') {
+              path = (memoizedTargetRefOrQuery as CollectionReference).path;
+            } else if ((memoizedTargetRefOrQuery as any)?._query?.path) {
+                path = (memoizedTargetRefOrQuery as InternalQuery)._query.path.toString();
             }
         } catch(e) {
             console.error("Could not determine path for useCollection error", e);
@@ -112,7 +105,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe(); // Cleanup subscription on unmount.
-  }, [stableQueryDep]); // Re-run effect if the query itself changes.
+  }, [memoizedTargetRefOrQuery]); // Re-run effect if the query itself changes.
 
   return { data, isLoading, error };
 }

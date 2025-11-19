@@ -118,7 +118,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       ...authState,
   }), [services, authState]);
 
-  if (contextValue.isUserLoading || !contextValue.services) {
+  // Render a loading state until both Firebase services and user auth are resolved.
+  if (!contextValue.services || contextValue.isUserLoading) {
     return <HomePageSkeleton />;
   }
 
