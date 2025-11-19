@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Sheikh } from "@/lib/types";
+import type { Sheikh, Series, Lecture } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, MicVocal } from "lucide-react";
@@ -42,13 +42,30 @@ export default function AdminSheikhsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const { data: allItems, isLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+
+    const sheikhStats = useMemo(() => {
+        if (!allItems || !allSeries || !allLectures) return {};
+
+        const stats: { [sheikhId: string]: { seriesCount: number, lecturesCount: number } } = {};
+        
+        allItems.forEach(sheikh => {
+            stats[sheikh.id] = {
+                seriesCount: allSeries.filter(s => s.sheikhId === sheikh.id).length,
+                lecturesCount: allLectures.filter(l => l.sheikhId === sheikh.id).length
+            };
+        });
+        
+        return stats;
+
+    }, [allItems, allSeries, allLectures]);
 
     const handleDelete = async () => {
         if (!itemToDelete || !firestore) return;
         
         const itemRef = doc(firestore, 'sheikhs', itemToDelete.id);
         
-        // Note: In a real app, you should check if this sheikh has any content before deleting.
         deleteDocumentNonBlocking(itemRef);
 
         toast({
@@ -78,6 +95,8 @@ export default function AdminSheikhsPage() {
     if (isFormOpen) {
       return <SheikhForm sheikh={itemToEdit} onFormClose={handleFormClose} />
     }
+    
+    const pageIsLoading = isLoading || seriesLoading || lecturesLoading;
 
     return (
         <>
@@ -99,19 +118,22 @@ export default function AdminSheikhsPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>الشيخ</TableHead>
-                <TableHead>تاريخ الإضافة</TableHead>
+                <TableHead>عدد السلاسل</TableHead>
+                <TableHead>عدد المحاضرات</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {isLoading ? (
+                {pageIsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center">
+                    <TableCell colSpan={4} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
                 ) : allItems?.map((item) => {
                     const image = getPlaceholderImage(item.imageId);
+                    const stats = sheikhStats[item.id] || { seriesCount: 0, lecturesCount: 0 };
+
                     return(
                         <TableRow key={item.id}>
                             <TableCell className="font-medium">
@@ -123,9 +145,8 @@ export default function AdminSheikhsPage() {
                                     <span>{item.name}</span>
                                 </div>
                             </TableCell>
-                            <TableCell>
-                                {new Date(item.createdAt as any).toLocaleDateString('ar-EG')}
-                            </TableCell>
+                            <TableCell>{stats.seriesCount}</TableCell>
+                            <TableCell>{stats.lecturesCount}</TableCell>
                             <TableCell className="text-left">
                             <div className="flex gap-2 justify-end">
                                 <Button onClick={() => handleEdit(item)} variant="outline" size="sm">
@@ -141,7 +162,7 @@ export default function AdminSheikhsPage() {
                 )}
             </TableBody>
             </Table>
-            {!isLoading && !allItems?.length && (
+            {!pageIsLoading && !allItems?.length && (
               <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي مشايخ بعد.</p>
             )}
         </CardContent>
