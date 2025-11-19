@@ -31,9 +31,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    serverActions: true,
-  },
   async redirects() {
     return [
       {
