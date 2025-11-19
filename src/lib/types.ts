@@ -31,6 +31,8 @@ export type Lecture = Serializable<{
   imageId: string;
   youtubeUrl?: string;
   pdfUrl?: string;
+  telegramUrl?: string;
+  soundcloudUrl?: string;
   description: string;
   transcript: TranscriptItem[];
   rating: number;

@@ -78,7 +78,7 @@ export default function AdminImportLecturesPage() {
                 const seriesToUpdate = new Map<string, number>();
 
                 for (const lectureData of lecturesToImport) {
-                    const { title, description, seriesId, audioSrc, duration, youtubeUrl, pdfUrl } = lectureData;
+                    const { title, description, seriesId, audioSrc, duration, youtubeUrl, pdfUrl, telegramUrl, soundcloudUrl } = lectureData;
 
                     if (!title || !seriesId || !audioSrc || !duration) {
                         console.warn("Skipping row due to missing data:", lectureData);
@@ -114,6 +114,8 @@ export default function AdminImportLecturesPage() {
                         imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
                         youtubeUrl: youtubeUrl || "",
                         pdfUrl: pdfUrl || "",
+                        telegramUrl: telegramUrl || "",
+                        soundcloudUrl: soundcloudUrl || "",
                         rating: 0,
                         ratingCount: 0,
                         viewCount: 0,
@@ -170,9 +172,9 @@ export default function AdminImportLecturesPage() {
                     <ul className="list-disc list-inside space-y-1 text-sm">
                         <li>يجب أن يكون الملف بصيغة CSV.</li>
                         <li>
-                            يجب أن يحتوي الملف على الأعمدة التالية بالترتيب: `title`, `description`, `seriesId`, `audioSrc`, `duration`.
+                            الأعمدة الإلزامية: `title`, `description`, `seriesId`, `audioSrc`, `duration`.
                         </li>
-                        <li>الأعمدة `youtubeUrl` و `pdfUrl` اختيارية.</li>
+                        <li>الأعمدة الاختيارية: `youtubeUrl`, `pdfUrl`, `telegramUrl`, `soundcloudUrl`.</li>
                          <li>تأكد من أن `seriesId` الموجود في الملف يطابق معرف سلسلة موجود بالفعل في قاعدة البيانات.</li>
                     </ul>
                 </div>

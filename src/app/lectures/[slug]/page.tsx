@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
 import { PlayButton } from '@/components/play-button';
+import { SiTelegram, SiSoundcloud } from '@icons-pack/react-simple-icons';
 
 type LectureDetailPageProps = {
   params: { slug: string };
@@ -45,7 +46,7 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
       </Card>
       
       <section>
-        <h3 className="text-2xl font-bold mb-4 font-headline">روابط التحميل</h3>
+        <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
         <div className="flex flex-wrap gap-3">
           <Button asChild>
             <a href={lecture.audioSrc} download>
@@ -58,6 +59,22 @@ export default async function LectureDetailPage({ params }: LectureDetailPagePro
               <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer">
                 <Youtube />
                 <span className="ms-2">مشاهدة (يوتيوب)</span>
+              </a>
+            </Button>
+          )}
+          {lecture.soundcloudUrl && (
+            <Button asChild style={{ backgroundColor: '#ff5500', color: 'white' }}>
+              <a href={lecture.soundcloudUrl} target="_blank" rel="noopener noreferrer">
+                <SiSoundcloud size={20} />
+                <span className="ms-2">استماع (ساوندكلاود)</span>
+              </a>
+            </Button>
+          )}
+           {lecture.telegramUrl && (
+            <Button asChild style={{ backgroundColor: '#26A5E4', color: 'white' }}>
+              <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                <SiTelegram size={20} />
+                <span className="ms-2">متابعة (تيليجرام)</span>
               </a>
             </Button>
           )}

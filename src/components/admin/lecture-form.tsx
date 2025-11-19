@@ -122,6 +122,8 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
         youtubeUrl: formData.get("youtubeUrl") as string || "",
         pdfUrl: formData.get("pdfUrl") as string || "",
+        telegramUrl: formData.get("telegramUrl") as string || "",
+        soundcloudUrl: formData.get("soundcloudUrl") as string || "",
     };
 
     try {
@@ -198,7 +200,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="audioSrc">رابط المحاضرة (يوتيوب, MP3, إلخ)</Label>
+            <Label htmlFor="audioSrc">رابط المحاضرة الأساسي (يوتيوب, MP3, إلخ)</Label>
             <div className="flex items-center gap-2">
               <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required ref={audioSrcRef} />
               <Button type="button" variant="outline" size="icon" onClick={handleFetchMetadata} disabled={isFetching}>
@@ -247,18 +249,28 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
             <Textarea id="description" name="description" defaultValue={lecture?.description} required rows={4} ref={descriptionRef}/>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="duration">المدة (بالدقائق)</Label>
               <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
             </div>
+             <div>
+              <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
+              <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
+            </div>
+          </div>
+           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="youtubeUrl">رابط يوتيوب بديل (اختياري)</Label>
               <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={lecture?.youtubeUrl} />
             </div>
             <div>
-              <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
-              <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
+              <Label htmlFor="soundcloudUrl">رابط ساوندكلاود (اختياري)</Label>
+              <Input id="soundcloudUrl" name="soundcloudUrl" type="url" defaultValue={lecture?.soundcloudUrl} />
+            </div>
+            <div>
+              <Label htmlFor="telegramUrl">رابط تيليجرام (اختياري)</Label>
+              <Input id="telegramUrl" name="telegramUrl" type="url" defaultValue={lecture?.telegramUrl} />
             </div>
           </div>
 
