@@ -7,11 +7,11 @@
       "type": "object",
       "description": "Represents a Sheikh or author on the platform.",
       "properties": {
-        "slug": { "type": "string" },
-        "name": { "type": "string" },
-        "bio": { "type": "string" },
-        "imageId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "slug": { "type": "string", "description": "A URL-friendly identifier for the sheikh." },
+        "name": { "type": "string", "description": "The full name of the sheikh." },
+        "bio": { "type": "string", "description": "A short biography of the sheikh." },
+        "imageId": { "type": "string", "description": "An ID for a placeholder image for the sheikh." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the sheikh was added." }
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
     },
@@ -25,13 +25,13 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "imageId": { "type": "string" },
-        "lectureCount": { "type": "number" },
+        "lectureCount": { "type": "number", "minimum": 0 },
         "sheikhId": { "type": "string" },
         "sheikhName": { "type": "string" },
         "sheikhSlug": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["slug", "title", "description", "imageId", "sheikhId", "sheikhName", "sheikhSlug", "createdAt"]
+      "required": ["slug", "title", "description", "imageId", "lectureCount", "sheikhId", "sheikhName", "sheikhSlug", "createdAt"]
     },
     "Lecture": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -54,12 +54,12 @@
         "imageId": { "type": "string" },
         "duration": { "type": "number" },
         "transcript": { "type": "array" },
-        "rating": { "type": "number" },
-        "ratingCount": { "type": "number" },
-        "viewCount": { "type": "number" },
+        "rating": { "type": "number", "minimum": 0, "maximum": 5 },
+        "ratingCount": { "type": "number", "minimum": 0 },
+        "viewCount": { "type": "number", "minimum": 0 },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["slug", "title", "sheikhId", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "createdAt"]
+      "required": ["slug", "title", "sheikhId", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -92,17 +92,19 @@
         "phone": { "type": "string" },
         "photoURL": { "type": "string", "format": "uri" },
         "bio": { "type": "string" },
-        "minutesListened": { "type": "number" },
-        "lecturesCompleted": { "type": "number" },
-        "seriesCompleted": { "type": "number" },
+        "minutesListened": { "type": "number", "minimum": 0 },
+        "lecturesCompleted": { "type": "number", "minimum": 0 },
+        "seriesCompleted": { "type": "number", "minimum": 0 },
+        "role": { "type": "string", "enum": ["user", "admin"], "default": "user" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["email", "name", "createdAt"]
+      "required": ["email", "name", "createdAt", "role"]
     },
     "Favorite": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Favorite",
         "type": "object",
+        "description": "Represents a user's favorited lecture.",
         "properties": {
             "userId": { "type": "string" },
             "lectureId": { "type": "string" },
@@ -114,6 +116,7 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Rating",
         "type": "object",
+        "description": "A user's rating for a lecture.",
         "properties": {
             "userId": { "type": "string" },
             "lectureId": { "type": "string" },
@@ -126,11 +129,12 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "ListenHistory",
         "type": "object",
+        "description": "Tracks a user's listening progress for a lecture.",
         "properties": {
             "userId": { "type": "string" },
             "lectureId": { "type": "string" },
-            "position": { "type": "number" },
-            "duration": { "type": "number" },
+            "position": { "type": "number", "minimum": 0 },
+            "duration": { "type": "number", "minimum": 0 },
             "lastListened": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "lectureId", "position", "duration", "lastListened"]
@@ -139,12 +143,13 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Playlist",
         "type": "object",
+        "description": "A user-created playlist of lectures.",
         "properties": {
             "userId": { "type": "string" },
             "name": { "type": "string" },
             "description": { "type": "string" },
             "lectureIds": { "type": "array", "items": { "type": "string" } },
-            "isPublic": { "type": "boolean" },
+            "isPublic": { "type": "boolean", "default": false },
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "name", "lectureIds", "isPublic", "createdAt"]
@@ -178,7 +183,7 @@
         "endDate": { "type": "string", "format": "date-time" },
         "isActive": { "type": "boolean" }
       },
-      "required": ["title", "description", "startDate", "endDate", "isActive"]
+      "required": ["title", "description", "lectureIds", "startDate", "endDate", "isActive"]
     },
     "LectureClip": {
       "$schema": "http://json-schema.org/draft-07/schema#",
