@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Check } from "lucide-react"
+import { ScrollArea } from "./ui/scroll-area"
 
 export const fonts = [
   { name: "الافتراضي (Alegreya)", value: "font-body" },
@@ -43,29 +44,29 @@ export function FontSwitcherDialog({ isOpen, onOpenChange }: FontSwitcherDialogP
             اختر الخط الذي تفضله لتصفح الموقع.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 gap-4 py-4">
-          {fonts.map((font) => {
-            const isActive = activeFont === font.value
-            return (
-              <div
-                key={font.name}
-                onClick={() => setFont(font.value)}
-                className={cn(
-                  "cursor-pointer rounded-lg border-2 p-3 transition-all",
-                  isActive ? "border-primary" : "border-muted hover:border-muted-foreground"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                    <span className={cn("text-lg", font.value)}>{font.name}</span>
-                    {isActive && <Check className="h-5 w-5 text-primary" />}
+        <ScrollArea className="h-[60vh]">
+          <div className="grid grid-cols-1 gap-4 py-4 pr-4">
+            {fonts.map((font) => {
+              const isActive = activeFont === font.value
+              return (
+                <div
+                  key={font.name}
+                  onClick={() => setFont(font.value)}
+                  className={cn(
+                    "cursor-pointer rounded-lg border-2 p-3 transition-all",
+                    isActive ? "border-primary" : "border-muted hover:border-muted-foreground"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                      <span className={cn("text-lg", font.value)}>{font.name}</span>
+                      {isActive && <Check className="h-5 w-5 text-primary" />}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
 }
-
-    
