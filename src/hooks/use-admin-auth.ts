@@ -9,7 +9,6 @@ const SESSION_STORAGE_KEY = "is_admin_activated";
 export function useAdminActivation() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   // Check sessionStorage on initial load
   useEffect(() => {
@@ -25,30 +24,20 @@ export function useAdminActivation() {
     }
   }, []);
 
-  const checkAdminPassword = useCallback(() => {
-    // If already admin, do nothing
-    if (isAdmin) {
-      return;
-    }
-
-    const password = prompt("يرجى إدخال كلمة مرور المدير للوصول إلى لوحة التحكم:");
+  const activateAdmin = useCallback((password: string): boolean => {
     if (password === ADMIN_PASSWORD) {
       try {
         sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
         setIsAdmin(true);
-        // Refresh the page to ensure all components re-render with admin state
-        window.location.reload(); 
+        return true;
       } catch (e) {
         console.error("Session storage is not available.");
         alert("لا يمكن تفعيل وضع المدير لأن التخزين المؤقت للمتصفح غير متاح.");
+        return false;
       }
-    } else if (password !== null) { // User entered something but it was wrong
-      alert("كلمة المرور غير صحيحة.");
-      router.push('/');
-    } else { // User cancelled the prompt
-       router.push('/');
     }
-  }, [isAdmin, router]);
+    return false;
+  }, []);
   
   const deActivateAdmin = useCallback(() => {
       try {
@@ -59,7 +48,5 @@ export function useAdminActivation() {
       }
   }, []);
 
-  return { isAdmin, isLoading, checkAdminPassword, deActivateAdmin };
+  return { isAdmin, isLoading, activateAdmin, deActivateAdmin };
 }
-
-    

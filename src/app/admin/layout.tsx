@@ -14,30 +14,30 @@ import { useAdminActivation } from '@/hooks/use-admin-auth';
 // This is the Guard component that handles all auth logic.
 function AdminAuthGuard({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isLoading: isAdminLoading, checkAdminPassword } = useAdminActivation();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminActivation();
   const router = useRouter();
-  const [isVerifying, setIsVerifying] = useState(true);
-
+  
   useEffect(() => {
     if (isUserLoading || isAdminLoading) {
       return; // Wait until all initial loading is complete.
     }
 
+    // User must be logged in first.
     if (!user) {
       router.replace('/auth/login?redirect_to=/admin');
       return;
     }
-
+    
+    // If user is logged in but is not an admin, redirect to admin login page.
     if (!isAdmin) {
-      checkAdminPassword(); // This will trigger the prompt
+      router.replace('/admin/login');
+      return;
     }
-    // After the initial check logic, we can stop verifying.
-    // The guard will re-render if isAdmin or user state changes.
-    setIsVerifying(false);
 
-  }, [user, isUserLoading, isAdmin, isAdminLoading, router, checkAdminPassword]);
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
   
-  if (isVerifying || isUserLoading || (user && !isAdmin)) {
+  // Show a loader while verifying authentication and admin status.
+  if (isUserLoading || isAdminLoading || !isAdmin || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin" />
@@ -138,5 +138,3 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 };
 
 export default AdminLayout;
-
-    
