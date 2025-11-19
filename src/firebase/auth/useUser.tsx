@@ -14,9 +14,11 @@ interface UserHookResult {
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
-    // This can happen on first render before context is available.
-    // Return a loading state instead of throwing an error.
-    return { user: null, isUserLoading: true, userError: null };
+    // This is the critical change. Instead of returning a loading state,
+    // we throw an error. This ensures that any component using this hook
+    // MUST be a child of FirebaseProvider and will only render when the
+    // context is actually available, preventing race conditions.
+    throw new Error('useUser must be used within a FirebaseProvider');
   }
   const { user, isUserLoading, userError } = context;
   return { user, isUserLoading, userError };
