@@ -182,13 +182,53 @@ export default function LoginPage() {
                              <Select name="country" required>
                                 <SelectTrigger><SelectValue placeholder="اختر الدولة" /></SelectTrigger>
                                 <SelectContent className="max-h-60">
-                                    <SelectItem value="sa">المملكة العربية السعودية</SelectItem>
-                                    <SelectItem value="eg">مصر</SelectItem>
-                                    <SelectItem value="kw">الكويت</SelectItem>
-                                    <SelectItem value="qa">قطر</SelectItem>
-                                    <SelectItem value="bh">البحرين</SelectItem>
-                                    <SelectItem value="om">عمان</SelectItem>
-                                    <SelectItem value="ae">الإمارات العربية المتحدة</SelectItem>
+                                    <SelectItem value="AF">أفغانستان</SelectItem>
+                                    <SelectItem value="AL">ألبانيا</SelectItem>
+                                    <SelectItem value="DZ">الجزائر</SelectItem>
+                                    <SelectItem value="AZ">أذربيجان</SelectItem>
+                                    <SelectItem value="BH">البحرين</SelectItem>
+                                    <SelectItem value="BD">بنغلاديش</SelectItem>
+                                    <SelectItem value="BN">بروناي</SelectItem>
+                                    <SelectItem value="BF">بوركينا فاسو</SelectItem>
+                                    <SelectItem value="TD">تشاد</SelectItem>
+                                    <SelectItem value="KM">جزر القمر</SelectItem>
+                                    <SelectItem value="DJ">جيبوتي</SelectItem>
+                                    <SelectItem value="EG">مصر</SelectItem>
+                                    <SelectItem value="GM">غامبيا</SelectItem>
+                                    <SelectItem value="GN">غينيا</SelectItem>
+                                    <SelectItem value="ID">إندونيسيا</SelectItem>
+                                    <SelectItem value="IR">إيران</SelectItem>
+                                    <SelectItem value="IQ">العراق</SelectItem>
+                                    <SelectItem value="JO">الأردن</SelectItem>
+                                    <SelectItem value="KZ">كازاخستان</SelectItem>
+                                    <SelectItem value="KW">الكويت</SelectItem>
+                                    <SelectItem value="KG">قيرغيزستان</SelectItem>
+                                    <SelectItem value="LB">لبنان</SelectItem>
+                                    <SelectItem value="LY">ليبيا</SelectItem>
+                                    <SelectItem value="MY">ماليزيا</SelectItem>
+                                    <SelectItem value="MV">جزر المالديف</SelectItem>
+                                    <SelectItem value="ML">مالي</SelectItem>
+                                    <SelectItem value="MR">موريتانيا</SelectItem>
+                                    <SelectItem value="MA">المغرب</SelectItem>
+                                    <SelectItem value="NE">النيجر</SelectItem>
+                                    <SelectItem value="NG">نيجيريا</SelectItem>
+                                    <SelectItem value="OM">عمان</SelectItem>
+                                    <SelectItem value="PK">باكستان</SelectItem>
+                                    <SelectItem value="PS">فلسطين</SelectItem>
+                                    <SelectItem value="QA">قطر</SelectItem>
+                                    <SelectItem value="SA">المملكة العربية السعودية</SelectItem>
+                                    <SelectItem value="SN">السنغال</SelectItem>
+                                    <SelectItem value="SL">سيراليون</SelectItem>
+                                    <SelectItem value="SO">الصومال</SelectItem>
+                                    <SelectItem value="SD">السودان</SelectItem>
+                                    <SelectItem value="SY">سوريا</SelectItem>
+                                    <SelectItem value="TJ">طاجيكستان</SelectItem>
+                                    <SelectItem value="TN">تونس</SelectItem>
+                                    <SelectItem value="TR">تركيا</SelectItem>
+                                    <SelectItem value="TM">تركمانستان</SelectItem>
+                                    <SelectItem value="AE">الإمارات العربية المتحدة</SelectItem>
+                                    <SelectItem value="UZ">أوزبكستان</SelectItem>
+                                    <SelectItem value="YE">اليمن</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -221,3 +261,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
