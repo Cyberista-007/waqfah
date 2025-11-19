@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useUser, useAuth, useFirestore } from "@/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -15,6 +15,9 @@ import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   return (
@@ -28,6 +31,57 @@ function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoad
   );
 }
 
+const countries = [
+    { value: "AF", label: "أفغانستان" },
+    { value: "AL", label: "ألبانيا" },
+    { value: "DZ", label: "الجزائر" },
+    { value: "AZ", label: "أذربيجان" },
+    { value: "BH", label: "البحرين" },
+    { value: "BD", label: "بنغلاديش" },
+    { value: "BN", label: "بروناي" },
+    { value: "BF", label: "بوركينا فاسو" },
+    { value: "TD", label: "تشاد" },
+    { value: "KM", label: "جزر القمر" },
+    { value: "DJ", label: "جيبوتي" },
+    { value: "EG", label: "مصر" },
+    { value: "GM", label: "غامبيا" },
+    { value: "GN", label: "غينيا" },
+    { value: "ID", label: "إندونيسيا" },
+    { value: "IR", label: "إيران" },
+    { value: "IQ", label: "العراق" },
+    { value: "JO", label: "الأردن" },
+    { value: "KZ", label: "كازاخستان" },
+    { value: "KW", label: "الكويت" },
+    { value: "KG", label: "قيرغيزستان" },
+    { value: "LB", label: "لبنان" },
+    { value: "LY", label: "ليبيا" },
+    { value: "MY", label: "ماليزيا" },
+    { value: "MV", label: "جزر المالديف" },
+    { value: "ML", label: "مالي" },
+    { value: "MR", label: "موريتانيا" },
+    { value: "MA", label: "المغرب" },
+    { value: "NE", label: "النيجر" },
+    { value: "NG", label: "نيجيريا" },
+    { value: "OM", label: "عمان" },
+    { value: "PK", label: "باكستان" },
+    { value: "PS", label: "فلسطين" },
+    { value: "QA", label: "قطر" },
+    { value: "SA", label: "المملكة العربية السعودية" },
+    { value: "SN", label: "السنغال" },
+    { value: "SL", label: "سيراليون" },
+    { value: "SO", label: "الصومال" },
+    { value: "SD", label: "السودان" },
+    { value: "SY", label: "سوريا" },
+    { value: "TJ", label: "طاجيكستان" },
+    { value: "TN", label: "تونس" },
+    { value: "TR", label: "تركيا" },
+    { value: "TM", label: "تركمانستان" },
+    { value: "AE", label: "الإمارات العربية المتحدة" },
+    { value: "UZ", label: "أوزبكستان" },
+    { value: "YE", label: "اليمن" }
+];
+
+
 export default function LoginPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
@@ -38,6 +92,9 @@ export default function LoginPage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [countryOpen, setCountryOpen] = useState(false)
+  const [countryValue, setCountryValue] = useState("")
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -47,7 +104,7 @@ export default function LoginPage() {
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
-    const fullName = `${firstName} ${lastName}`;
+    const fullName = `${'firstName'} ${'lastName'}`;
     
     const redirectTo = searchParams.get('redirect_to') || '/';
 
@@ -97,6 +154,11 @@ export default function LoginPage() {
             const newUserProfile: Omit<UserProfile, 'id'> = {
                 name: fullName,
                 email: newUser.email!,
+                firstName,
+                lastName,
+                country: countryValue,
+                gender: formData.get("gender") as string,
+                phone: formData.get("phone") as string,
                 createdAt: Timestamp.now(),
             };
             await setDoc(userRef, newUserProfile, { merge: true });
@@ -179,58 +241,50 @@ export default function LoginPage() {
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="country">الدولة *</Label>
-                             <Select name="country" required>
-                                <SelectTrigger><SelectValue placeholder="اختر الدولة" /></SelectTrigger>
-                                <SelectContent className="max-h-60">
-                                    <SelectItem value="AF">أفغانستان</SelectItem>
-                                    <SelectItem value="AL">ألبانيا</SelectItem>
-                                    <SelectItem value="DZ">الجزائر</SelectItem>
-                                    <SelectItem value="AZ">أذربيجان</SelectItem>
-                                    <SelectItem value="BH">البحرين</SelectItem>
-                                    <SelectItem value="BD">بنغلاديش</SelectItem>
-                                    <SelectItem value="BN">بروناي</SelectItem>
-                                    <SelectItem value="BF">بوركينا فاسو</SelectItem>
-                                    <SelectItem value="TD">تشاد</SelectItem>
-                                    <SelectItem value="KM">جزر القمر</SelectItem>
-                                    <SelectItem value="DJ">جيبوتي</SelectItem>
-                                    <SelectItem value="EG">مصر</SelectItem>
-                                    <SelectItem value="GM">غامبيا</SelectItem>
-                                    <SelectItem value="GN">غينيا</SelectItem>
-                                    <SelectItem value="ID">إندونيسيا</SelectItem>
-                                    <SelectItem value="IR">إيران</SelectItem>
-                                    <SelectItem value="IQ">العراق</SelectItem>
-                                    <SelectItem value="JO">الأردن</SelectItem>
-                                    <SelectItem value="KZ">كازاخستان</SelectItem>
-                                    <SelectItem value="KW">الكويت</SelectItem>
-                                    <SelectItem value="KG">قيرغيزستان</SelectItem>
-                                    <SelectItem value="LB">لبنان</SelectItem>
-                                    <SelectItem value="LY">ليبيا</SelectItem>
-                                    <SelectItem value="MY">ماليزيا</SelectItem>
-                                    <SelectItem value="MV">جزر المالديف</SelectItem>
-                                    <SelectItem value="ML">مالي</SelectItem>
-                                    <SelectItem value="MR">موريتانيا</SelectItem>
-                                    <SelectItem value="MA">المغرب</SelectItem>
-                                    <SelectItem value="NE">النيجر</SelectItem>
-                                    <SelectItem value="NG">نيجيريا</SelectItem>
-                                    <SelectItem value="OM">عمان</SelectItem>
-                                    <SelectItem value="PK">باكستان</SelectItem>
-                                    <SelectItem value="PS">فلسطين</SelectItem>
-                                    <SelectItem value="QA">قطر</SelectItem>
-                                    <SelectItem value="SA">المملكة العربية السعودية</SelectItem>
-                                    <SelectItem value="SN">السنغال</SelectItem>
-                                    <SelectItem value="SL">سيراليون</SelectItem>
-                                    <SelectItem value="SO">الصومال</SelectItem>
-                                    <SelectItem value="SD">السودان</SelectItem>
-                                    <SelectItem value="SY">سوريا</SelectItem>
-                                    <SelectItem value="TJ">طاجيكستان</SelectItem>
-                                    <SelectItem value="TN">تونس</SelectItem>
-                                    <SelectItem value="TR">تركيا</SelectItem>
-                                    <SelectItem value="TM">تركمانستان</SelectItem>
-                                    <SelectItem value="AE">الإمارات العربية المتحدة</SelectItem>
-                                    <SelectItem value="UZ">أوزبكستان</SelectItem>
-                                    <SelectItem value="YE">اليمن</SelectItem>
-                                </SelectContent>
-                            </Select>
+                             <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={countryOpen}
+                                    className="w-full justify-between"
+                                    >
+                                    {countryValue
+                                        ? countries.find((country) => country.value.toLowerCase() === countryValue)?.label
+                                        : "اختر الدولة..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                    <Command>
+                                        <CommandInput placeholder="ابحث عن الدولة..." />
+                                        <CommandList>
+                                            <CommandEmpty>لم يتم العثور على الدولة.</CommandEmpty>
+                                            <CommandGroup>
+                                                {countries.map((country) => (
+                                                <CommandItem
+                                                    key={country.value}
+                                                    value={country.label}
+                                                    onSelect={(currentValue) => {
+                                                        const selected = countries.find(c => c.label.toLowerCase() === currentValue);
+                                                        setCountryValue(selected ? selected.value.toLowerCase() : "")
+                                                        setCountryOpen(false)
+                                                    }}
+                                                >
+                                                    <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        countryValue === country.value.toLowerCase() ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                    />
+                                                    {country.label}
+                                                </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                      <div className="space-y-2">
