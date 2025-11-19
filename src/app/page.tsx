@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center animated-gradient">
+      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center animated-gradient rounded-b-3xl">
         <div className="container relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight text-foreground">
             العلم الشرعي بين يديك

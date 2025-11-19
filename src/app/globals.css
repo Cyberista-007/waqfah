@@ -32,6 +32,7 @@
     --gradient-start: 340 82% 52%;
     --gradient-mid: 20 82% 52%;
     --gradient-end: 45 82% 52%;
+    --gradient-extra: 210 82% 52%;
     --font-body: 'Alegreya';
     --font-headline: 'Alegreya';
   }
@@ -64,6 +65,7 @@
     --gradient-start: 340 82% 52%;
     --gradient-mid: 20 82% 52%;
     --gradient-end: 45 82% 52%;
+    --gradient-extra: 210 82% 52%;
   }
 
   /* 1. Emerald Mosque */
@@ -476,7 +478,7 @@
       hsl(var(--gradient-start)),
       hsl(var(--gradient-mid)),
       hsl(var(--gradient-end)),
-      hsl(var(--gradient-mid))
+      hsl(var(--gradient-extra))
     );
     background-size: 400% 400%;
     animation: gradient-move 15s ease infinite;
