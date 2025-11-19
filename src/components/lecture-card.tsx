@@ -3,7 +3,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Play, Share2 } from "lucide-react"
+import { Play, Share2, MicVocal } from "lucide-react"
+import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
 
 import type { Lecture } from "@/lib/types"
 import { getPlaceholderImage } from "@/lib/images"
@@ -74,7 +75,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col",
+        "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col",
         "animate-fade-in-up"
         )}
       style={{ animationDelay: `${index * 100}ms` }}
@@ -89,9 +90,10 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint={placeholder?.imageHint}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
         </Link>
-        <div className="absolute bottom-2 right-2 flex items-center gap-2">
+        
+        <div className="absolute top-2 right-2 flex items-center gap-2">
             <TooltipProvider>
                 <FavoriteButton lectureId={lecture.id} />
                 <Tooltip>
@@ -104,15 +106,37 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 </Tooltip>
             </TooltipProvider>
         </div>
+        
         <Button onClick={handlePlay} variant="ghost" size="icon" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 bg-white/20 backdrop-blur-sm text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/30 scale-90 group-hover:scale-100 active:scale-95">
             <Play className="w-8 h-8 fill-current ms-1" />
         </Button>
+
+        <div className="absolute bottom-4 right-4 text-white text-right">
+             <h3 className="font-headline text-2xl font-bold drop-shadow-lg">
+                <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors">{lecture.title}</Link>
+            </h3>
+            <p className="text-sm mt-1 flex items-center justify-end gap-2 drop-shadow-md">
+                <MicVocal className="w-4 h-4" />
+                <span>{lecture.sheikhName}</span>
+            </p>
+        </div>
       </div>
-      <div className="p-4 flex-grow flex flex-col bg-card">
-        <h3 className="font-headline text-lg font-bold flex-grow">
+      <div className="p-4 flex-grow flex items-center justify-between bg-card">
+         <h3 className="font-headline text-md font-bold flex-grow text-right">
           <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors">{lecture.title}</Link>
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">{lecture.seriesTitle}</p>
+        <div className="flex items-center gap-2">
+             {lecture.telegramUrl && (
+                <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    <SiTelegram size={20} />
+                </a>
+            )}
+            {lecture.youtubeUrl && (
+                 <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    <SiYoutube size={20} />
+                </a>
+            )}
+        </div>
       </div>
     </Card>
   )
