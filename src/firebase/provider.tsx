@@ -67,7 +67,7 @@ const getFirebaseServices = () => {
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) => {
   // Initialize services immediately and synchronously.
   // This is safe because getFirebaseServices handles the singleton pattern.
-  const services = useMemo(() => getFirebaseServices(), []);
+  const services = getFirebaseServices();
 
   const [authState, setAuthState] = useState<{
     user: User | null;
@@ -114,16 +114,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     return () => unsubscribe();
   }, [services]);
 
-  const contextValue = useMemo(() => {
-    return {
+  const contextValue = {
       firebaseApp: services.app,
       firestore: services.firestore,
       auth: services.auth,
       functions: services.functions,
       storage: services.storage,
       ...authState,
-    }
-  }, [services, authState]);
+  };
 
   // CRITICAL FIX: Do not render children until user state is resolved.
   // This ensures that all child components that use Firebase hooks
