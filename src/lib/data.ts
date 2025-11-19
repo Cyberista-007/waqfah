@@ -1,4 +1,4 @@
-import type { Lecture, Series, Book, ScheduleItem, QAPair } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 
@@ -10,6 +10,36 @@ const getDb = () => {
     }
     return serverFirestore;
 }
+
+// --- Sheikhs ---
+export const getAllSheikhs = async (): Promise<Sheikh[]> => {
+  try {
+    const db = getDb();
+    const sheikhsCol = collection(db, 'sheikhs');
+    const q = query(sheikhsCol, orderBy('name'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
+  } catch (error) {
+    console.error("Error fetching all sheikhs:", error);
+    return [];
+  }
+}
+
+export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined> => {
+  try {
+    const db = getDb();
+    const sheikhsCol = collection(db, 'sheikhs');
+    const q = query(sheikhsCol, where("slug", "==", slug), limit(1));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return undefined;
+    const docSnap = snapshot.docs[0];
+    return { ...(docSnap.data() as Omit<Sheikh, 'id'>), id: docSnap.id };
+  } catch (error) {
+    console.error("Error fetching sheikh by slug:", error);
+    return undefined;
+  }
+}
+
 
 // --- Series ---
 export const getLatestSeries = async (count: number): Promise<Series[]> => {
@@ -110,6 +140,32 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
       return undefined;
   }
 };
+
+export const getLecturesBySheikh = async (sheikhId: string): Promise<Lecture[]> => {
+  try {
+    const db = getDb();
+    const lecturesCol = collection(db, 'lectures');
+    const q = query(lecturesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Lecture, 'id'>), id: doc.id }));
+  } catch (error) {
+    console.error("Error fetching lectures by sheikh:", error);
+    return [];
+  }
+}
+
+export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => {
+  try {
+    const db = getDb();
+    const seriesCol = collection(db, 'series');
+    const q = query(seriesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
+  } catch (error) {
+    console.error("Error fetching series by sheikh:", error);
+    return [];
+  }
+}
 
 // --- Books, Schedule, Q&A (assuming similar structure) ---
 
