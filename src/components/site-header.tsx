@@ -96,7 +96,7 @@ export function SiteHeader() {
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-2">
           {mainNavItems.map((item) => (
-            <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary">
+            <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
               <Link href={item.href}>
                 {item.label}
               </Link>
@@ -104,7 +104,7 @@ export function SiteHeader() {
           ))}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-foreground/80 hover:text-primary">
+                    <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
                         <span>المزيد</span>
                         <ChevronDown className="h-4 w-4 ms-1"/>
                     </Button>
