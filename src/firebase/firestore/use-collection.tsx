@@ -60,25 +60,20 @@ export function useCollection<T = any>(
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
 
-  // isLoading now defaults to true ONLY if the query is initially provided.
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery); 
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // Use a stable reference for the query across renders
   const stableQueryDep = useMemoFirebase(() => memoizedTargetRefOrQuery, [memoizedTargetRefOrQuery]);
 
   useEffect(() => {
-    // CRITICAL FIX: If the query is null or undefined, it's not ready. 
-    // Immediately set a clean state and exit the effect. Do not proceed to onSnapshot.
     if (!stableQueryDep) {
       setData(null);
-      setIsLoading(false); // No query means we are not loading.
+      setIsLoading(false);
       setError(null);
-      return; // Stop execution here.
+      return;
     }
     
-    // Query is valid, start loading and clear previous errors.
     setIsLoading(true);
     setError(null);
 
@@ -91,19 +86,14 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        // Attempt to get the path for a better error message.
         let path = 'unknown/path';
         try {
-            // This is a best-effort attempt to get a path for error logging.
-            // It might not work for all query types, especially complex ones.
             if (stableQueryDep.type === 'collection') {
               path = (stableQueryDep as CollectionReference).path;
             } else if ((stableQueryDep as any)?._query?.path) {
-                // This accesses an internal property and might break in future SDK versions.
                 path = (stableQueryDep as any)._query.path.canonicalString();
             }
         } catch (e) {
-            // Path extraction failed, use the fallback.
             console.warn("Could not determine path for Firestore query error logging.");
         }
 
@@ -113,7 +103,6 @@ export function useCollection<T = any>(
           path,
         });
         
-        // We log the error in dev to make it visible in the Next.js overlay
         if (process.env.NODE_ENV === 'development') {
            console.error("Firestore Permission Error in useCollection:", contextualError.message);
         }
@@ -126,10 +115,8 @@ export function useCollection<T = any>(
       }
     );
 
-    // Cleanup function to unsubscribe from the listener when the component unmounts
-    // or when the query dependency changes.
     return () => unsubscribe();
-  }, [stableQueryDep]); // Effect dependencies
+  }, [stableQueryDep]);
   
   return { data, isLoading, error };
 }
