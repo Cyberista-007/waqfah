@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -93,4 +92,27 @@ export function useCollection<T = any>(
             if (stableQueryDep.type === 'collection') {
               path = (stableQueryDep as CollectionReference).path;
             } else if ((stableQueryDep as any)?._query?.path) {
-                path = (stableQueryD
+                path = (stableQueryDep as InternalQuery)._query.path.toString();
+            }
+        } catch(e) {
+            console.error("Could not determine path for useCollection error", e);
+        }
+        
+        const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path: path,
+        })
+        
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false); // Stop loading on error.
+
+        errorEmitter.emit('permission-error', contextualError);
+      }
+    );
+
+    return () => unsubscribe(); // Cleanup subscription on unmount.
+  }, [stableQueryDep]); // Re-run effect if the query itself changes.
+
+  return { data, isLoading, error };
+}
