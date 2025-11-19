@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -53,10 +52,10 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If firestore or path is not ready, do nothing and reset state.
-    if (!firestore || !path) {
+    // If path is not ready, do nothing and reset state.
+    if (!path) {
       setData(null);
-      setIsLoading(false); // Not loading if there's no path/firestore
+      setIsLoading(false); // Not loading if there's no path
       setError(null);
       return;
     }

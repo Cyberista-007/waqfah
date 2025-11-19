@@ -24,7 +24,7 @@ interface FirebaseServices {
 
 // Combined state for the Firebase context
 export interface FirebaseContextState {
-  services: FirebaseServices | null;
+  services: FirebaseServices; // Now non-nullable
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -115,13 +115,18 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     return () => unsubscribe();
   }, []);
 
-  const contextValue = useMemo(() => ({
+  const contextValue = useMemo(() => {
+    if (!services) {
+        return null;
+    }
+    return {
       services,
       ...authState,
-  }), [services, authState]);
+    };
+  }, [services, authState]);
 
   // Render a loading state until both Firebase services and user auth are resolved.
-  if (!contextValue.services || contextValue.isUserLoading) {
+  if (!contextValue || contextValue.isUserLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -135,48 +140,48 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
 
 /** Hook to access Firebase Auth instance. */
-export const useAuth = (): Auth | null => {
+export const useAuth = (): Auth => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within a FirebaseProvider');
   }
-  return context.services?.auth ?? null;
+  return context.services.auth;
 };
 
 /** Hook to access Firestore instance. */
-export const useFirestore = (): Firestore | null => {
+export const useFirestore = (): Firestore => {
   const context = useContext(FirebaseContext);
    if (context === undefined) {
     throw new Error('useFirestore must be used within a FirebaseProvider');
   }
-  return context.services?.firestore ?? null;
+  return context.services.firestore;
 };
 
 /** Hook to access Firebase App instance. */
-export const useFirebaseApp = (): FirebaseApp | null => {
+export const useFirebaseApp = (): FirebaseApp => {
   const context = useContext(FirebaseContext);
    if (context === undefined) {
     throw new Error('useFirebaseApp must be used within a FirebaseProvider');
   }
-  return context.services?.app ?? null;
+  return context.services.app;
 };
 
 /** Hook to access Firebase Functions instance. */
-export const useFunctions = (): Functions | null => {
+export const useFunctions = (): Functions => {
   const context = useContext(FirebaseContext);
    if (context === undefined) {
     throw new Error('useFunctions must be used within a FirebaseProvider');
   }
-  return context.services?.functions ?? null;
+  return context.services.functions;
 };
 
 /** Hook to access Firebase Storage instance. */
-export const useStorage = (): FirebaseStorage | null => {
+export const useStorage = (): FirebaseStorage => {
     const context = useContext(FirebaseContext);
     if (context === undefined) {
         throw new Error('useStorage must be used within a FirebaseProvider');
     }
-    return context.services?.storage ?? null;
+    return context.services.storage;
 };
 
 /**

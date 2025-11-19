@@ -5,6 +5,7 @@ import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/fires
 import { notFound } from 'next/navigation';
 import type { Series, Sheikh } from '@/lib/types';
 import { SeriesForm } from '@/components/admin/series-form';
+import { toSerializable } from '@/lib/data-helpers';
 
 async function getPageData(seriesId: string) {
   const { serverFirestore } = initializeFirebaseOnServer();
@@ -25,16 +26,10 @@ async function getPageData(seriesId: string) {
     }
 
     const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
-    const seriesData = seriesSnap.data();
-    
-    // Ensure createdAt is a plain object for serialization
-    const createdAt = seriesData.createdAt?.toDate ? seriesData.createdAt.toDate().toISOString() : new Date().toISOString();
-
-    const series = { 
-      ...seriesData, 
+    const series = toSerializable({ 
+      ...seriesSnap.data(), 
       id: seriesSnap.id,
-      createdAt: createdAt,
-     } as Series;
+     }) as Series;
 
     return { series, sheikhs };
   } catch (error) {

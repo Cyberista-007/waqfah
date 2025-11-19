@@ -4,6 +4,7 @@ import type { Series, Lecture, Sheikh } from '@/lib/types';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
+import { toSerializable } from '@/lib/data-helpers';
 
 async function getPageData(lectureId: string) {
   const { serverFirestore } = initializeFirebaseOnServer();
@@ -28,16 +29,11 @@ async function getPageData(lectureId: string) {
 
     const series = seriesSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Series, 'id'>), id: doc.id }));
     const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
-    const lectureData = lectureSnap.data();
     
-    // Convert timestamp to a serializable format if it exists
-    const createdAt = lectureData.createdAt?.toDate ? lectureData.createdAt.toDate().toISOString() : new Date().toISOString();
-
-    const lecture = { 
-      ...lectureData, 
+    const lecture = toSerializable({ 
+      ...lectureSnap.data(), 
       id: lectureSnap.id,
-      createdAt: createdAt,
-     } as Lecture;
+     }) as Lecture;
 
     return { series, sheikhs, lecture };
   } catch (error) {
