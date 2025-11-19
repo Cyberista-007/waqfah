@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, FormEvent, useEffect } from "react";
@@ -13,6 +14,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfi
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   return (
@@ -42,7 +44,11 @@ export default function LoginPage() {
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+    const fullName = `${firstName} ${lastName}`;
+    
     const redirectTo = searchParams.get('redirect_to') || '/';
 
     if (!auth || !firestore) {
@@ -55,30 +61,41 @@ export default function LoginPage() {
         return;
     }
 
-    if (!email || !password || (!isLoginMode && !name)) {
-        toast({
-            variant: "destructive",
-            title: "حقول ناقصة",
-            description: "يرجى ملء جميع الحقول المطلوبة.",
-        });
-        setIsLoading(false);
-        return;
-    }
-
-    try {
-        if (isLoginMode) {
+    if (isLoginMode) {
+        // --- Login Logic ---
+        if (!email || !password) {
+            toast({ variant: "destructive", title: "حقول ناقصة", description: "يرجى إدخال البريد الإلكتروني وكلمة المرور." });
+            setIsLoading(false);
+            return;
+        }
+        try {
             await signInWithEmailAndPassword(auth, email, password);
             toast({ title: "أهلاً بعودتك!", description: "تم تسجيل دخولك بنجاح." });
             router.push(redirectTo);
-        } else {
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "حدث خطأ", description: getFirebaseAuthErrorMessage(error) });
+        }
+    } else {
+        // --- Registration Logic ---
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+            toast({ variant: "destructive", title: "حقول ناقصة", description: "يرجى ملء جميع الحقول الإلزامية." });
+            setIsLoading(false);
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast({ variant: "destructive", title: "كلمة المرور غير متطابقة", description: "الرجاء التأكد من تطابق كلمة المرور وتأكيدها." });
+            setIsLoading(false);
+            return;
+        }
+        try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
             
-            await updateProfile(newUser, { displayName: name });
+            await updateProfile(newUser, { displayName: fullName });
             
             const userRef = doc(firestore, "users", newUser.uid);
             const newUserProfile: Omit<UserProfile, 'id'> = {
-                name: name,
+                name: fullName,
                 email: newUser.email!,
                 createdAt: Timestamp.now(),
             };
@@ -86,16 +103,11 @@ export default function LoginPage() {
 
             toast({ title: "تم إنشاء الحساب بنجاح!", description: "مرحباً بك." });
             router.push(redirectTo);
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "حدث خطأ", description: getFirebaseAuthErrorMessage(error) });
         }
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "حدث خطأ",
-            description: getFirebaseAuthErrorMessage(error),
-        });
-    } finally {
-        setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -113,41 +125,94 @@ export default function LoginPage() {
       )
   }
 
-
   return (
     <div className="flex items-center justify-center py-12">
-        <div className="w-full max-w-md p-[1px] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-lg">
-          <Card className="w-full bg-background/80 backdrop-blur-md border-none">
+        <div className="w-full max-w-2xl">
+          <Card className="w-full bg-card/80 backdrop-blur-md">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-headline">
-                {isLoginMode ? "تسجيل الدخول" : "إنشاء حساب"}
+              <CardTitle className="text-3xl font-headline">
+                {isLoginMode ? "تسجيل الدخول" : "إنشاء حساب جديد"}
               </CardTitle>
               <CardDescription>
-                {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "املأ الحقول لإنشاء حساب جديد."}
+                {isLoginMode ? "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة." : "أنشئ حساب جديد للاستفادة من ميزات الموقع."}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLoginMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name">الاسم</Label>
-                    <Input id="name" name="name" type="text" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {isLoginMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">البريد الإلكتروني</Label>
+                      <Input id="email" name="email" type="email" required placeholder="أدخل بريدك الإلكتروني"/>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">كلمة المرور</Label>
+                      <Input id="password" name="password" type="password" required placeholder="أدخل كلمة المرور" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="firstName">الاسم الأول</Label>
+                            <Input id="firstName" name="firstName" type="text" required placeholder="الاسم الأول"/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="lastName">الاسم الأخير</Label>
+                            <Input id="lastName" name="lastName" type="text" required placeholder="الاسم الأخير"/>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">البريد الإلكتروني</Label>
+                        <Input id="email" name="email" type="email" required placeholder="أدخل بريدك الإلكتروني" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="gender">الجنس *</Label>
+                            <Select name="gender" required>
+                                <SelectTrigger><SelectValue placeholder="اختر الجنس" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="male">ذكر</SelectItem>
+                                    <SelectItem value="female">أنثى</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="country">الدولة *</Label>
+                             <Select name="country" required>
+                                <SelectTrigger><SelectValue placeholder="اختر الدولة" /></SelectTrigger>
+                                <SelectContent className="max-h-60">
+                                    <SelectItem value="sa">المملكة العربية السعودية</SelectItem>
+                                    <SelectItem value="eg">مصر</SelectItem>
+                                    <SelectItem value="kw">الكويت</SelectItem>
+                                    <SelectItem value="qa">قطر</SelectItem>
+                                    <SelectItem value="bh">البحرين</SelectItem>
+                                    <SelectItem value="om">عمان</SelectItem>
+                                    <SelectItem value="ae">الإمارات العربية المتحدة</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
+                        <Input id="phone" name="phone" type="tel" placeholder="أدخل رقم الهاتف" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">كلمة المرور</Label>
+                      <Input id="password" name="password" type="password" required placeholder="أدخل كلمة المرور" />
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
+                      <Input id="confirmPassword" name="confirmPassword" type="password" required placeholder="أعد إدخال كلمة المرور" />
+                    </div>
+                  </>
                 )}
-                <div className="space-y-2">
-                  <Label htmlFor="email">البريد الإلكتروني</Label>
-                  <Input id="email" name="email" type="email" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">كلمة المرور</Label>
-                  <Input id="password" name="password" type="password" required className="bg-foreground/5 border-foreground/20 focus:bg-foreground/10" />
-                </div>
                  <SubmitButton isLoginMode={isLoginMode} isLoading={isLoading} />
               </form>
                <div className="mt-4 text-center text-sm">
                     {isLoginMode ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{' '}
-                    <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsLoginMode(!isLoginMode)}>
-                        {isLoginMode ? "أنشئ حساباً جديداً" : "سجل الدخول"}
+                    <Button variant="link" className="p-0 h-auto text-primary hover:underline" onClick={() => setIsLoginMode(!isLoginMode)}>
+                        {isLoginMode ? "أنشئ حساباً جديداً" : "سجل دخولك"}
                     </Button>
                 </div>
             </CardContent>
