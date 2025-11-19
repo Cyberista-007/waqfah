@@ -22,11 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useFirestore } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
 import type { Series, Lecture } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
     seriesList: Series[];
@@ -38,10 +38,32 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const router = useRouter();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   
   const isEditMode = !!lecture;
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "");
+  const titleRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const audioSrcRef = useRef<HTMLInputElement>(null);
+
+  const handleFetchMetadata = () => {
+    const url = audioSrcRef.current?.value;
+    if (!url) {
+      toast({ variant: 'destructive', title: 'الرجاء إدخال رابط أولاً.' });
+      return;
+    }
+    
+    setIsFetching(true);
+    // --- Mock implementation ---
+    // In a real app, this would be a server action calling a service like yt-dlp
+    setTimeout(() => {
+        if (titleRef.current) titleRef.current.value = "عنوان مستخلص من الرابط (مثال)";
+        if (descriptionRef.current) descriptionRef.current.value = "وصف تم استخلاصه تلقائياً من الرابط (مثال).";
+        toast({ title: 'تم استخلاص البيانات بنجاح (محاكاة)' });
+        setIsFetching(false);
+    }, 1500);
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -150,54 +172,68 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
       <CardHeader>
         <CardTitle className="font-headline">{isEditMode ? `تعديل المحاضرة: ${lecture.title}` : 'إضافة محاضرة جديدة'}</CardTitle>
         <CardDescription>
-          {isEditMode ? 'قم بتحديث تفاصيل المحاضرة أدناه.' : 'املأ الحقول أدناه لإضافة محاضرة جديدة إلى الموقع.'}
+          {isEditMode ? 'قم بتحديث تفاصيل المحاضرة أدناه.' : 'أدخل رابط المحاضرة ثم املأ باقي الحقول لإضافة محاضرة جديدة.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="title">عنوان المحاضرة</Label>
-            <Input id="title" name="title" defaultValue={lecture?.title} required />
+            <Label htmlFor="audioSrc">رابط المحاضرة (يوتيوب, MP3, إلخ)</Label>
+            <div className="flex items-center gap-2">
+              <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required ref={audioSrcRef} />
+              <Button type="button" variant="outline" size="icon" onClick={handleFetchMetadata} disabled={isFetching}>
+                {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
+                <span className="sr-only">استخلاص البيانات</span>
+              </Button>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="series">السلسلة</Label>
-             <Select name="series" onValueChange={setSelectedSeriesId} defaultValue={lecture?.seriesId} required>
-                <SelectTrigger>
-                    <SelectValue placeholder={!seriesList || seriesList.length === 0 ? "لا توجد سلاسل" : "اختر سلسلة..."} />
-                </SelectTrigger>
-                <SelectContent>
-                    {seriesList?.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">عنوان المحاضرة</Label>
+              <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="series">السلسلة</Label>
+              <Select name="series" onValueChange={setSelectedSeriesId} defaultValue={lecture?.seriesId} required>
+                  <SelectTrigger>
+                      <SelectValue placeholder={!seriesList || seriesList.length === 0 ? "لا توجد سلاسل" : "اختر سلسلة..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {seriesList?.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
           </div>
+          
           <div>
             <Label htmlFor="description">وصف المحاضرة</Label>
-            <Textarea id="description" name="description" defaultValue={lecture?.description} required rows={4} />
+            <Textarea id="description" name="description" defaultValue={lecture?.description} required rows={4} ref={descriptionRef}/>
           </div>
-           <div>
-            <Label htmlFor="audioSrc">رابط الملف الصوتي (MP3 URL)</Label>
-            <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="duration">المدة (بالدقائق)</Label>
+              <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
+            </div>
+            <div>
+              <Label htmlFor="youtubeUrl">رابط يوتيوب بديل (اختياري)</Label>
+              <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={lecture?.youtubeUrl} />
+            </div>
+            <div>
+              <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
+              <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
+            </div>
           </div>
-           <div>
-            <Label htmlFor="youtubeUrl">رابط اليوتيوب (اختياري)</Label>
-            <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={lecture?.youtubeUrl} />
-          </div>
-           <div>
-            <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
-            <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
-          </div>
-          <div>
-            <Label htmlFor="duration">مدة المحاضرة (بالدقائق)</Label>
-            <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
-          </div>
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 pt-4 border-t">
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إضافة المحاضرة'}
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" type="button">
               <Link href="/admin/lectures">إلغاء</Link>
             </Button>
           </div>
