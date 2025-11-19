@@ -37,22 +37,30 @@ export default function AdminDeleteSeriesPage({
   const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
 
   useEffect(() => {
+    // This effect runs on the client after the component mounts and the data is loaded.
     if (!isLoading && series) {
+        // If the series has lectures, it's a critical error to be on this page.
+        // Redirect and show a toast.
         if ((series.lectureCount || 0) > 0) {
             toast({
                 variant: "destructive",
                 title: "لا يمكن الحذف",
                 description: "لا يمكنك حذف سلسلة تحتوي على محاضرات. قم بحذف المحاضرات أولاً."
             });
-            redirect('/admin/series');
+            // Using `redirect` from Next.js is preferred for server components,
+            // but since this is a client component with hooks, router.replace is appropriate.
+            router.replace('/admin/series');
         }
+    } else if (!isLoading && !series) {
+        // If data fetching is complete and no series was found, this is a 404.
+        notFound();
     }
   }, [series, isLoading, toast, router]);
 
   const handleDelete = async () => {
     if (!series || !seriesDocRef) return;
     
-    // Final check to be safe
+    // A final client-side check to be absolutely sure before deleting.
     if ((series.lectureCount || 0) > 0) {
         toast({
             variant: "destructive",
@@ -63,7 +71,7 @@ export default function AdminDeleteSeriesPage({
         return;
     }
 
-    await deleteDocumentNonBlocking(seriesDocRef);
+    deleteDocumentNonBlocking(seriesDocRef);
 
     toast({
       variant: "destructive",
@@ -72,29 +80,25 @@ export default function AdminDeleteSeriesPage({
     });
 
     router.push("/admin/series");
+    router.refresh();
   };
 
   const handleCancel = () => {
     router.back();
   };
 
+  // While loading, show a full-screen spinner.
   if (isLoading || !series) {
     return (
-       <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-            <Loader2 className="h-16 w-16 animate-spin text-white" />
+       <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
        </div>
     );
   }
-
-  // Double check, as redirect might not have completed
+  
+  // This check is a safeguard. The useEffect should handle the redirect.
   if ((series.lectureCount || 0) > 0) {
-      return (
-           <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-                <div className="bg-background p-8 rounded-lg">
-                    <p>إعادة توجيه...</p>
-                </div>
-           </div>
-      )
+      return null;
   }
 
   return (

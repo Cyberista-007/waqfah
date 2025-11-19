@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -117,7 +118,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   const contextValue = useMemo(() => {
     if (!services) {
-        return null;
+        return undefined; // Return undefined if services are not ready
     }
     return {
       services,
@@ -132,7 +133,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   return (
     <FirebaseContext.Provider value={contextValue}>
-      <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
@@ -187,7 +187,7 @@ export const useStorage = (): FirebaseStorage => {
 /**
  * A memoization hook that is stable across renders for Firebase objects.
  */
-export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
+export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T | null {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(factory, deps);
 }

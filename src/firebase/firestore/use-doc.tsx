@@ -1,7 +1,7 @@
 
 'use client';
     
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -30,12 +30,12 @@ export interface UseDocResult<T> {
  * Handles nullable references.
  *
  * @template T Optional type for document data. Defaults to any.
- * @param {DocumentReference<DocumentData> | null | undefined} memoizedDocRef -
+ * @param {DocumentReference<DocumentData> | null | undefined} docRef -
  * The Firestore DocumentReference. Waits if null/undefined.
  * @returns {UseDocResult<T>} Object with data, isLoading, error.
  */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  docRef: DocumentReference<DocumentData> | null | undefined,
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
 
@@ -45,7 +45,7 @@ export function useDoc<T = any>(
 
   useEffect(() => {
     // If the doc ref is not ready, set loading to false and clear data/errors.
-    if (!memoizedDocRef) {
+    if (!docRef) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -56,7 +56,7 @@ export function useDoc<T = any>(
     setError(null);
 
     const unsubscribe = onSnapshot(
-      memoizedDocRef,
+      docRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
@@ -70,7 +70,7 @@ export function useDoc<T = any>(
       (err: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
           operation: 'get',
-          path: memoizedDocRef.path,
+          path: docRef.path,
         })
 
         setError(contextualError)
@@ -83,7 +83,7 @@ export function useDoc<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]);
+  }, [docRef]);
 
   return { data, isLoading, error };
 }

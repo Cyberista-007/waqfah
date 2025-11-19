@@ -117,7 +117,7 @@ export default function AdminSheikhsPage() {
                 أضف أو عدّل أو احذف المشايخ في الموقع.
             </CardDescription>
             </div>
-            <Button onClick={handleNew}>
+            <Button onClick={handleNew} disabled={pageIsLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
               إضافة شيخ جديد
             </Button>

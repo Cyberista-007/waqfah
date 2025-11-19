@@ -11,6 +11,7 @@ import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { FirebaseProvider } from '@/firebase';
 import { Analytics } from "@vercel/analytics/react"
 import { FontProvider } from '@/components/font-provider';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'منصة الدروس العلمية',
@@ -64,6 +65,7 @@ export default function RootLayout({
                 <div className="relative flex min-h-screen flex-col">
                   <SiteHeader />
                   <main className="flex-1 container py-8">
+                    <FirebaseErrorListener />
                     {children}
                   </main>
                   <SiteFooter />

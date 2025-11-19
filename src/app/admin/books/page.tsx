@@ -34,7 +34,7 @@ export default function AdminBooksPage() {
     const [bookToEdit, setBookToEdit] = useState<Book | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const { data: allBooks, isLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc'] });
+    const { data: allBooks, isLoading: booksLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc'] });
     const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
 
@@ -72,7 +72,7 @@ export default function AdminBooksPage() {
       return <BookForm book={bookToEdit} sheikhs={allSheikhs || []} onFormClose={handleFormClose} />
     }
     
-    const pageIsLoading = isLoading || sheikhsLoading;
+    const pageIsLoading = booksLoading || sheikhsLoading;
 
     return (
         <>
@@ -84,7 +84,7 @@ export default function AdminBooksPage() {
                 أضف أو عدّل أو احذف الكتب في الموقع.
             </CardDescription>
             </div>
-            <Button onClick={handleNew}>
+            <Button onClick={handleNew} disabled={pageIsLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
               إضافة كتاب جديد
             </Button>

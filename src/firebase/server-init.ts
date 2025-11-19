@@ -14,15 +14,12 @@ interface FirebaseAdminConfig extends AppOptions {
 // Store app instance in a global variable to avoid re-initialization
 let serverApp: FirebaseApp | null = null;
 let initError: Error | null = null;
-let credentialsAvailable = false;
 
+// Determine if credentials are available at the module level.
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
         ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
         : undefined;
-
-if (serviceAccount || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    credentialsAvailable = true;
-}
+const credentialsAvailable = !!serviceAccount || !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 
 /**
@@ -40,14 +37,18 @@ export function initializeFirebaseOnServer() {
       };
   }
   
+  // If an initialization error occurred previously, re-throw it.
   if (initError) {
       throw initError;
   }
 
   // If no credentials, don't even try to initialize.
   if (!credentialsAvailable) {
-      const errorMsg = "Firebase Admin SDK not initialized: No credentials found. Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS environment variables.";
+      const errorMsg = "Firebase Admin SDK not initialized: No credentials found. Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS environment variables for server-side data fetching.";
       initError = new Error(errorMsg);
+      // We don't throw here, but let the `getDb` function in `data.ts` handle it.
+      // This allows the app to fall back to dummy data instead of crashing.
+      console.warn(errorMsg);
       throw initError;
   }
 
@@ -61,6 +62,7 @@ export function initializeFirebaseOnServer() {
             projectId: firebaseConfig.projectId,
         };
 
+        // Prefer service account from env var, fall back to ADC
         if (serviceAccount) {
             config.credential = credential.cert(serviceAccount);
         } else {
@@ -75,10 +77,9 @@ export function initializeFirebaseOnServer() {
     return { serverApp, serverFirestore, serverAuth };
 
   } catch (e: any) {
-      initError = e;
-      console.error("FATAL: Firebase Admin SDK initialization failed:", e);
-      throw e; // re-throw the error to be caught by the calling data-fetching function
+      initError = e; // Store the error for subsequent calls
+      console.error("FATAL: Firebase Admin SDK initialization failed:", e.message);
+      // Re-throw so data fetching functions can catch it and fall back to dummy data.
+      throw e; 
   }
 }
-
-    

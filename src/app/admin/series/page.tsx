@@ -19,17 +19,21 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import type { Series } from "@/lib/types";
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
+
 
 export default function AdminSeriesPage() {
   const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   const { toast } = useToast();
+  const router = useRouter();
+
 
   const handleDeleteAttempt = (series: Series) => {
-    if (series.lectureCount > 0) {
+    if (series.lectureCount && series.lectureCount > 0) {
       toast({
         variant: "destructive",
         title: "لا يمكن حذف السلسلة",
@@ -38,7 +42,7 @@ export default function AdminSeriesPage() {
       return;
     }
     // If lectureCount is 0, proceed to delete page
-    window.location.href = `/admin/series/${series.id}/delete`;
+    router.push(`/admin/series/${series.id}/delete`);
   };
 
   return (
@@ -50,7 +54,7 @@ export default function AdminSeriesPage() {
             أضف أو عدّل أو احذف السلاسل العلمية في الموقع.
           </CardDescription>
         </div>
-        <Button asChild>
+        <Button asChild disabled={isLoading}>
           <Link href="/admin/series/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             إضافة سلسلة جديدة
