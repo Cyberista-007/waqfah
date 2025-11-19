@@ -11,6 +11,10 @@ import {
   LayoutDashboard,
   Palette,
   CaseSensitive,
+  Calendar,
+  HelpCircle,
+  Heart,
+  Mail,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -50,10 +54,10 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
-  { href: "/schedule", label: "جدول الدروس" },
-  { href: "/qa", label: "سؤال وجواب" },
-  { href: "/donations", label: "الدعم" },
-  { href: "/contact", label: "تواصل معنا" },
+  { href: "/schedule", label: "جدول الدروس", icon: Calendar },
+  { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
+  { href: "/donations", label: "الدعم", icon: Heart },
+  { href: "/contact", label: "تواصل معنا", icon: Mail },
 ]
 
 export function SiteHeader() {
@@ -79,7 +83,7 @@ export function SiteHeader() {
   }
   
   const dynamicMoreNavItems = isAdmin
-    ? [...moreNavItems, { href: "/admin", label: "لوحة التحكم" }]
+    ? [...moreNavItems, { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard }]
     : moreNavItems;
   
   return (
@@ -114,13 +118,17 @@ export function SiteHeader() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-background border-border">
-                    {dynamicMoreNavItems.map((item) => (
+                    {dynamicMoreNavItems.map((item) => {
+                      const Icon = item.icon;
+                      return(
                         <DropdownMenuItem key={item.label} asChild className="focus:bg-primary/10 focus:text-primary justify-end">
-                            <Link href={item.href} className="flex justify-end w-full">
-                                {item.label}
+                            <Link href={item.href} className="flex justify-end w-full items-center gap-2">
+                                <span>{item.label}</span>
+                                {Icon && <Icon className="h-4 w-4" />}
                             </Link>
                         </DropdownMenuItem>
-                    ))}
+                      )
+                    })}
                     <DropdownMenuSeparator />
                      <DropdownMenuItem onSelect={() => setIsThemeSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
                         <div className="flex items-center gap-2">
@@ -205,13 +213,19 @@ export function SiteHeader() {
                   </div>
                 </Link>
               </SheetClose>
-                {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
-                  <SheetClose asChild key={item.label}>
-                    <Link href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
-                        {item.label}
-                    </Link>
-                  </SheetClose>
-                ))}
+                {[...mainNavItems, ...dynamicMoreNavItems].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <SheetClose asChild key={item.label}>
+                      <Link href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
+                          <span className='flex items-center gap-2'>
+                            {Icon && <Icon className="h-4 w-4" />}
+                            {item.label}
+                          </span>
+                      </Link>
+                    </SheetClose>
+                  )
+                })}
                  <div className="border-t border-border pt-4 space-y-2">
                     <Button onClick={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
                         <Palette className="me-2 h-4 w-4" />
@@ -261,5 +275,3 @@ export function SiteHeader() {
     </>
   )
 }
-
-    
