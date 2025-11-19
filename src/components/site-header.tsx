@@ -213,11 +213,11 @@ export function SiteHeader() {
                   </SheetClose>
                 ))}
                  <div className="border-t border-border pt-4 space-y-2">
-                    <Button onSelect={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
+                    <Button onClick={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
                         <Palette className="me-2 h-4 w-4" />
                         <span>تغيير الثيم</span>
                     </Button>
-                    <Button onSelect={() => setIsFontSwitcherOpen(true)} variant="outline" className="w-full justify-center">
+                     <Button onClick={() => setIsFontSwitcherOpen(true)} variant="outline" className="w-full justify-center">
                         <CaseSensitive className="me-2 h-4 w-4" />
                         <span>تغيير الخط</span>
                     </Button>
@@ -261,3 +261,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    
