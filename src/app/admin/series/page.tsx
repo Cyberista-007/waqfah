@@ -53,6 +53,7 @@ export default function AdminSeriesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>عنوان السلسلة</TableHead>
+              <TableHead>الشيخ</TableHead>
               <TableHead>عدد المحاضرات</TableHead>
               <TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
@@ -60,13 +61,14 @@ export default function AdminSeriesPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center">
+                <TableCell colSpan={4} className="text-center">
                   <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                 </TableCell>
               </TableRow>
             ): allSeries?.map((series) => (
               <TableRow key={series.id}>
                 <TableCell className="font-medium">{series.title}</TableCell>
+                <TableCell>{series.sheikhName}</TableCell>
                 <TableCell>{series.lectureCount || 0}</TableCell>
                 <TableCell className="text-left">
                   <div className="flex gap-2 justify-end">

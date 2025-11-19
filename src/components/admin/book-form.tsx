@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, Timestamp } from "firebase/firestore";
 import type { Book, Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -118,8 +118,8 @@ export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
           <div>
             <Label htmlFor="sheikh">الشيخ</Label>
               <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={book?.sheikhId} required>
-                  <SelectTrigger>
-                      <SelectValue placeholder={!sheikhs || sheikhs.length === 0 ? "لا يوجد مشايخ" : "اختر شيخًا..."} />
+                  <SelectTrigger disabled={sheikhs.length === 0}>
+                      <SelectValue placeholder={sheikhs.length === 0 ? "لا يوجد مشايخ، يرجى إضافة شيخ أولاً." : "اختر شيخًا..."} />
                   </SelectTrigger>
                   <SelectContent>
                       {sheikhs?.map(s => (
@@ -133,7 +133,7 @@ export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
             <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={book?.pdfUrl} required disabled={isSubmitting} />
           </div>
            <div>
-            <Label htmlFor="image">صورة الغلاف</Label>
+            <Label htmlFor="image">صورة الغلاف (اختياري)</Label>
             <Input id="image" name="image" type="file" disabled={isSubmitting}/>
           </div>
           <div className="flex gap-2">

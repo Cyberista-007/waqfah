@@ -1,109 +1,58 @@
 
 
-"use client";
+import { initializeFirebaseOnServer } from '@/firebase/server-init';
+import { collection, getDocs, query, orderBy, getDoc, doc } from 'firebase/firestore';
+import { notFound } from 'next/navigation';
+import type { Series, Sheikh } from '@/lib/types';
+import { SeriesForm } from '@/components/admin/series-form';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useRouter, notFound } from "next/navigation";
-import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
-import type { Series } from "@/lib/types";
-import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Loader2 } from "lucide-react";
-
-export default function AdminEditSeriesPage({
-  params,
-}: {
-  params: { slug: string }; // slug is now the document ID
-}) {
-  const { toast } = useToast();
-  const router = useRouter();
-  const firestore = useFirestore();
-
-  const seriesDocRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, "series", params.slug) : null),
-    [firestore, params.slug]
-  );
-  const { data: series, isLoading } = useDoc<Series>(seriesDocRef);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!series || !seriesDocRef) return;
-
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    
-    // Update the document in Firestore
-    await updateDocumentNonBlocking(seriesDocRef, {
-        title,
-        description,
-    });
-
-    toast({
-        title: "تم الحفظ بنجاح",
-        description: `تم تحديث بيانات سلسلة "${title}".`,
-    });
-
-    router.push("/admin/series");
-  };
+async function getPageData(seriesId: string) {
+  const { serverFirestore } = initializeFirebaseOnServer();
   
-  if (isLoading) {
-    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
-  }
+  const sheikhsCol = collection(serverFirestore, 'sheikhs');
+  const sheikhsQuery = query(sheikhsCol, orderBy('name'));
 
-  if (!series) {
-    notFound();
+  const seriesDocRef = doc(serverFirestore, 'series', seriesId);
+
+  try {
+    const [sheikhsSnapshot, seriesSnap] = await Promise.all([
+      getDocs(sheikhsQuery),
+      getDoc(seriesDocRef)
+    ]);
+    
+    if (!seriesSnap.exists()) {
+      return null;
+    }
+
+    const sheikhs = sheikhsSnapshot.docs.map(doc => ({ ...(doc.data() as Omit<Sheikh, 'id'>), id: doc.id }));
+    const seriesData = seriesSnap.data();
+    
+    // Ensure createdAt is a plain object for serialization
+    const series = { 
+      ...seriesData, 
+      id: seriesSnap.id,
+      createdAt: seriesData.createdAt.toDate().toISOString(),
+     } as Series;
+
+    return { series, sheikhs };
+  } catch (error) {
+    console.error("Failed to fetch page data:", error);
     return null;
   }
+}
+
+
+export default async function AdminEditSeriesPage({ params }: { params: { slug: string } }) {
+  // The 'slug' param from the URL is actually the document ID
+  const data = await getPageData(params.slug);
+
+  if (!data) {
+    notFound();
+  }
+
+  const { series, sheikhs } = data;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline">تعديل السلسلة: {series.title}</CardTitle>
-        <CardDescription>
-          قم بتحديث تفاصيل السلسلة هنا.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">عنوان السلسلة</Label>
-            <Input id="title" name="title" defaultValue={series.title} required />
-          </div>
-          <div>
-            <Label htmlFor="description">وصف السلسلة</Label>
-            <Textarea
-              id="description"
-              name="description"
-              defaultValue={series.description}
-              rows={5}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="image">تغيير صورة الغلاف</Label>
-            <Input id="image" name="image" type="file" />
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit">حفظ التغييرات</Button>
-             <Button asChild variant="outline">
-              <Link href="/admin/series">إلغاء</Link>
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <SeriesForm series={series} sheikhs={sheikhs} />
   );
 }
