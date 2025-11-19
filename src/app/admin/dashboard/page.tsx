@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
     const isLoading = sheikhsLoading || lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
 
     const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number, icon: React.ElementType, isLoading: boolean }) => (
-      <Card>
+      <Card className="rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground font-headline">{title}</CardTitle>
               <Icon className="w-5 h-5 text-muted-foreground" />
@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 rounded-xl">
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار (آخر 7 أيام)</CardTitle>
                 </CardHeader>
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
                   <TrafficChart />
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl">
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold font-headline">إدارة المحتوى</CardTitle>
                     <CardDescription>روابط سريعة للتحكم بالموقع</CardDescription>
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
+            <Card className="rounded-xl">
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold font-headline">أكثر المحاضرات استماعًا</CardTitle>
                 </CardHeader>
@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
                     </Table>
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl">
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold font-headline">أدوات إدارية متقدمة</CardTitle>
                     <CardDescription>أدوات لإدارة المحتوى والمستخدمين بكفاءة.</CardDescription>
