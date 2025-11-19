@@ -33,7 +33,7 @@ export function SiteFooter() {
         <div className="border-t border-border/50"></div>
 
         <div className="text-center pt-8">
-          <p>&copy; {new Date().getFullYear()} جميع الحقوق محفوظة | موقع وقـــفـــة.</p>
+          <p>&copy; {new Date().getFullYear()} جميع الحقوق محفوظة | موقع وقـــفــــة.</p>
           <p className="text-sm text-muted-foreground">
             هذا الموقع هو تصميم مبدئي لأغراض العرض.
           </p>

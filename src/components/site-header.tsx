@@ -94,7 +94,7 @@ export function SiteHeader() {
           className="flex items-center space-x-2 space-x-reverse cursor-pointer"
         >
            <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
-            وقفة
+            وقـــفــــة
           </div>
         </Link>
         
@@ -205,7 +205,7 @@ export function SiteHeader() {
                   className="flex items-center space-x-2 space-x-reverse cursor-pointer mb-4"
                 >
                   <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
-                    وقفة
+                    وقـــفــــة
                   </div>
                 </Link>
               </SheetClose>
