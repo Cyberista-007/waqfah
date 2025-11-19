@@ -3,15 +3,16 @@
 "use client";
 
 import Link from "next/link";
-import type { Lecture } from "@/lib/types";
+import type { Lecture, Playlist } from "@/lib/types";
 import { Button } from "./ui/button";
-import { useAuth, useFirestore, useUser } from "@/firebase";
+import { useAuth, useFirestore, useUser, useCollection } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
-import { Star } from "lucide-react";
+import { Star, ListPlus } from "lucide-react";
 import { FavoriteButton } from "./favorite-button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog";
 
 interface LectureHeaderProps {
     lecture: Lecture;
@@ -28,6 +29,10 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     const [currentRating, setCurrentRating] = useState(lecture.rating || 0);
     const [ratingCount, setRatingCount] = useState(lecture.ratingCount || 0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+
+    const playlistsPath = user ? `users/${user.uid}/playlists` : null;
+    const { data: playlists } = useCollection<Playlist>(playlistsPath);
 
     useEffect(() => {
         const fetchRating = async () => {
@@ -47,6 +52,19 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
             fetchRating();
         }
     }, [user, firestore, lecture.id, isUserLoading]);
+    
+    const handleAddToPlaylistClick = () => {
+        if (!user) {
+            toast({
+                variant: "destructive",
+                title: "يرجى تسجيل الدخول",
+                description: "يجب عليك تسجيل الدخول أولاً لتتمكن من إضافة المحاضرات إلى قائمة التشغيل.",
+            });
+            router.push('/auth/login');
+            return;
+        }
+        setIsPlaylistDialogOpen(true);
+    }
 
     const handleRating = async (ratingValue: number) => {
         if (isSubmitting) return;
@@ -115,36 +133,52 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-start">
-                <div>
-                    <p className="text-primary font-semibold mb-2">
-                        <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
-                    </p>
-                    <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
-                </div>
-                <FavoriteButton lectureId={lecture.id} showLabel />
-            </div>
-
-            <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold text-foreground">{currentRating.toFixed(1)}</p>
-                    <div className="flex items-center text-yellow-400" onMouseLeave={() => setHoverRating(null)}>
-                        {[...Array(5)].map((_, i) => {
-                            const ratingValue = i + 1;
-                            return (
-                                <Star
-                                    key={i}
-                                    className={`w-6 h-6 transition-colors cursor-pointer ${ratingValue <= (hoverRating || userRating || 0) ? 'fill-current' : 'text-gray-300'}`}
-                                    onMouseEnter={() => setHoverRating(ratingValue)}
-                                    onClick={() => handleRating(ratingValue)}
-                                />
-                            );
-                        })}
+        <>
+            <div className="space-y-4">
+                <div className="flex justify-between items-start gap-4">
+                    <div>
+                        <p className="text-primary font-semibold mb-2">
+                            <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
+                        </p>
+                        <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
                     </div>
-                    <p className="text-sm text-muted-foreground ms-2">({ratingCount} تقييم)</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                         <Button variant="outline" onClick={handleAddToPlaylistClick}>
+                            <ListPlus className="w-5 h-5 me-2" />
+                            <span>إضافة لقائمة</span>
+                        </Button>
+                        <FavoriteButton lectureId={lecture.id} showLabel />
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                        <p className="text-lg font-bold text-foreground">{currentRating.toFixed(1)}</p>
+                        <div className="flex items-center text-yellow-400" onMouseLeave={() => setHoverRating(null)}>
+                            {[...Array(5)].map((_, i) => {
+                                const ratingValue = i + 1;
+                                return (
+                                    <Star
+                                        key={i}
+                                        className={`w-6 h-6 transition-colors cursor-pointer ${ratingValue <= (hoverRating || userRating || 0) ? 'fill-current' : 'text-gray-300'}`}
+                                        onMouseEnter={() => setHoverRating(ratingValue)}
+                                        onClick={() => handleRating(ratingValue)}
+                                    />
+                                );
+                            })}
+                        </div>
+                        <p className="text-sm text-muted-foreground ms-2">({ratingCount} تقييم)</p>
+                    </div>
                 </div>
             </div>
-        </div>
+            {user && (
+                <AddToPlaylistDialog
+                    isOpen={isPlaylistDialogOpen}
+                    onOpenChange={setIsPlaylistDialogOpen}
+                    lectureId={lecture.id}
+                    userPlaylists={playlists || []}
+                />
+            )}
+        </>
     );
 }

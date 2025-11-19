@@ -1,15 +1,15 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle } from "lucide-react";
+import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -108,13 +108,55 @@ function ListenHistorySection() {
 }
 
 function PlaylistsSection() {
-     return (
-        <Card className="text-center py-16">
-            <CardContent className="flex flex-col items-center gap-4">
-                <ListMusic className="w-16 h-16 text-muted-foreground" />
-                <p className="text-lg text-muted-foreground">ميزة قوائم التشغيل قادمة قريباً!</p>
-            </CardContent>
-        </Card>
+    const { user } = useUser();
+    const playlistsPath = user ? `users/${user.uid}/playlists` : null;
+    const { data: playlists, isLoading } = useCollection<Playlist>(playlistsPath, { orderBy: ['createdAt', 'desc'] });
+
+    if (isLoading) {
+        return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+                <Card key={i} className="h-[150px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+
+    return (
+        <div>
+            <div className="flex justify-end mb-4">
+                <Button asChild>
+                    <Link href="/profile/playlists">
+                        <Plus className="me-2 h-4 w-4" />
+                        إنشاء أو تعديل قائمة
+                    </Link>
+                </Button>
+            </div>
+            {playlists && playlists.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {playlists.map(playlist => (
+                        <Card key={playlist.id} className="hover:shadow-md transition-shadow">
+                            <CardHeader>
+                                <CardTitle className="truncate font-headline">
+                                    <Link href={`/playlists/${playlist.id}`} className="hover:underline">
+                                        {playlist.name}
+                                    </Link>
+                                </CardTitle>
+                                <CardDescription>{playlist.lectureIds?.length || 0} محاضرة</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{playlist.description || "لا يوجد وصف."}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <Card className="text-center py-16">
+                    <CardContent className="flex flex-col items-center gap-4">
+                        <ListMusic className="w-16 h-16 text-muted-foreground" />
+                        <p className="text-lg text-muted-foreground">لم تقم بإنشاء أي قوائم تشغيل بعد.</p>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     );
 }
 
