@@ -48,7 +48,7 @@ export default function Home() {
                   type="search"
                   name="search"
                   placeholder="ابحث عن محاضرة، سلسلة، كتاب..."
-                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300"
+                  className="w-full p-6 pe-12 text-lg rounded-md shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300"
                   aria-label="بحث"
                 />
                 <button type="submit" className="absolute top-1/2 end-4 -translate-y-1/2 text-muted-foreground">

@@ -18,7 +18,7 @@ export function SiteFooter() {
             <Input
               type="email"
               placeholder="أدخل بريدك الإلكتروني..."
-              className="flex-grow p-3 rounded-lg text-foreground focus:ring-2 focus:ring-ring"
+              className="flex-grow p-3 rounded-md text-foreground focus:ring-2 focus:ring-ring"
               aria-label="البريد الإلكتروني للنشرة البريدية"
             />
             <Button
