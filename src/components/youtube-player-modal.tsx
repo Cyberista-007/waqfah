@@ -48,7 +48,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-screen-lg w-full h-auto p-0 border-0 bg-black/80 backdrop-blur-sm shadow-none !rounded-lg overflow-hidden">
+      <DialogContent className="max-w-screen-xl w-full h-auto p-0 border-0 bg-black/80 backdrop-blur-sm shadow-none !rounded-lg overflow-hidden">
         <div className="absolute top-2 right-2 z-20 flex gap-2">
             <Button onClick={onClose} size="icon" variant="ghost" className="h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 text-white">
               <X className="h-8 w-8" />
@@ -61,7 +61,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
               <span className="sr-only">مشاركة</span>
             </Button>
         </div>
-        <div className="relative aspect-video mt-12">
+        <div className="relative aspect-video">
           <iframe
             width="100%"
             height="100%"
@@ -70,7 +70,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className="rounded-lg"
+            className="rounded-lg w-full h-full absolute top-0 left-0"
           ></iframe>
         </div>
       </DialogContent>
