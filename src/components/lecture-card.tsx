@@ -91,37 +91,41 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 </div>
             </CardDescription>
         </CardHeader>
-      <CardFooter className="p-4 flex items-center justify-end bg-card">
-        <div className="flex items-center gap-1 shrink-0 ms-2">
-            <FavoriteButton lectureId={lecture.id} />
-             {lecture.telegramUrl && (
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button asChild variant="ghost" size="icon">
-                                <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                    <SiTelegram size={18} />
-                                </a>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>تيليجرام</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-            {videoId && (
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
-                                <SiYoutube size={18} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>مشاهدة (يوتيوب)</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
-      </CardFooter>
+        <CardFooter className="p-4 flex items-center justify-between bg-card">
+            <Button onClick={handlePlay} variant="outline" size="sm">
+                <Play className="w-4 h-4 me-2" />
+                استماع
+            </Button>
+            <div className="flex items-center gap-1 shrink-0 ms-2">
+                <FavoriteButton lectureId={lecture.id} />
+                {lecture.telegramUrl && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button asChild variant="ghost" size="icon">
+                                    <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                                        <SiTelegram size={18} />
+                                    </a>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>تيليجرام</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+                {videoId && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                                    <SiYoutube size={18} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>مشاهدة (يوتيوب)</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
+        </CardFooter>
     </Card>
     {videoId && (
         <YoutubePlayerModal 

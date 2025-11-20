@@ -142,9 +142,6 @@ export function FloatingAudioPlayer() {
     if (track) {
       audioElement.src = track.audioSrc;
       audioElement.load();
-      if (isPlaying) {
-        audioElement.play().catch(e => console.error("Error playing audio:", e));
-      }
     }
 
     return () => {
@@ -315,4 +312,3 @@ export function FloatingAudioPlayer() {
     </div>
   );
 }
-
