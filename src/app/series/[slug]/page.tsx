@@ -76,10 +76,18 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
         }
 
         const lecturesCol = collection(firestore, 'lectures');
-        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesId), orderBy('createdAt', 'asc'));
+        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesId));
         const lecturesSnapshot = await getDocs(lecturesQuery);
         
         const lecturesData = lecturesSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+        
+        // Sort manually after fetching
+        lecturesData.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateA - dateB;
+        });
+
         setLecturesInSeries(lecturesData);
         setFilteredLectures(lecturesData);
 
