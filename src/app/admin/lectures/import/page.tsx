@@ -75,7 +75,7 @@ export default function AdminImportLecturesPage() {
                 }
 
                 const batch = writeBatch(firestore);
-                const seriesToUpdate = new Map<string, number>();
+                const seriesLectureCount: Record<string, number> = {};
 
                 for (const lectureData of lecturesToImport) {
                     const { title, description, seriesId, audioSrc, duration, youtubeUrl, pdfUrl, telegramUrl, soundcloudUrl } = lectureData;
@@ -124,13 +124,17 @@ export default function AdminImportLecturesPage() {
                     };
                     
                     batch.set(newLectureRef, newLecturePayload);
-                    seriesToUpdate.set(series.id, (seriesToUpdate.get(series.id) || 0) + 1);
+                    
+                    if (!seriesLectureCount[series.id]) {
+                        seriesLectureCount[series.id] = 0;
+                    }
+                    seriesLectureCount[series.id]++;
                 }
 
-                seriesToUpdate.forEach((count, id) => {
-                    const seriesRef = doc(firestore, 'series', id);
-                    batch.update(seriesRef, { lectureCount: increment(count) });
-                });
+                for (const seriesId in seriesLectureCount) {
+                    const seriesRef = doc(firestore, 'series', seriesId);
+                    batch.update(seriesRef, { lectureCount: increment(seriesLectureCount[seriesId]) });
+                }
                 
                 await batch.commit();
 

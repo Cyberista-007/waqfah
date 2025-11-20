@@ -7,17 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useUser, useAuth, useFirestore } from "@/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirebaseAuthErrorMessage } from "@/lib/firebase-errors";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 
 function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoading: boolean }) {
   return (
@@ -31,56 +27,6 @@ function SubmitButton({ isLoginMode, isLoading }: { isLoginMode: boolean, isLoad
   );
 }
 
-const countries = [
-    { value: "AF", label: "أفغانستان" },
-    { value: "AL", label: "ألبانيا" },
-    { value: "DZ", label: "الجزائر" },
-    { value: "AZ", label: "أذربيجان" },
-    { value: "BH", label: "البحرين" },
-    { value: "BD", label: "بنغلاديش" },
-    { value: "BN", label: "بروناي" },
-    { value: "BF", label: "بوركينا فاسو" },
-    { value: "TD", label: "تشاد" },
-    { value: "KM", label: "جزر القمر" },
-    { value: "DJ", label: "جيبوتي" },
-    { value: "EG", label: "مصر" },
-    { value: "GM", label: "غامبيا" },
-    { value: "GN", label: "غينيا" },
-    { value: "ID", label: "إندونيسيا" },
-    { value: "IR", label: "إيران" },
-    { value: "IQ", label: "العراق" },
-    { value: "JO", label: "الأردن" },
-    { value: "KZ", label: "كازاخستان" },
-    { value: "KW", label: "الكويت" },
-    { value: "KG", label: "قيرغيزستان" },
-    { value: "LB", label: "لبنان" },
-    { value: "LY", label: "ليبيا" },
-    { value: "MY", label: "ماليزيا" },
-    { value: "MV", label: "جزر المالديف" },
-    { value: "ML", label: "مالي" },
-    { value: "MR", label: "موريتانيا" },
-    { value: "MA", label: "المغرب" },
-    { value: "NE", label: "النيجر" },
-    { value: "NG", label: "نيجيريا" },
-    { value: "OM", label: "عمان" },
-    { value: "PK", label: "باكستان" },
-    { value: "PS", label: "فلسطين" },
-    { value: "QA", label: "قطر" },
-    { value: "SA", label: "المملكة العربية السعودية" },
-    { value: "SN", label: "السنغال" },
-    { value: "SL", label: "سيراليون" },
-    { value: "SO", label: "الصومال" },
-    { value: "SD", label: "السودان" },
-    { value: "SY", label: "سوريا" },
-    { value: "TJ", label: "طاجيكستان" },
-    { value: "TN", label: "تونس" },
-    { value: "TR", label: "تركيا" },
-    { value: "TM", label: "تركمانستان" },
-    { value: "AE", label: "الإمارات العربية المتحدة" },
-    { value: "UZ", label: "أوزبكستان" },
-    { value: "YE", label: "اليمن" }
-];
-
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -91,9 +37,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [countryOpen, setCountryOpen] = useState(false)
-  const [countryValue, setCountryValue] = useState("")
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -156,9 +99,6 @@ export default function LoginPage() {
                 email: newUser.email!,
                 firstName,
                 lastName,
-                country: countryValue,
-                gender: formData.get("gender") as string,
-                phone: formData.get("phone") as string,
                 createdAt: Timestamp.now(),
                 role: 'user',
             };
@@ -228,69 +168,6 @@ export default function LoginPage() {
                     <div className="space-y-2">
                         <Label htmlFor="email">البريد الإلكتروني</Label>
                         <Input id="email" name="email" type="email" required placeholder="أدخل بريدك الإلكتروني" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="gender">الجنس</Label>
-                            <Select name="gender">
-                                <SelectTrigger><SelectValue placeholder="اختر الجنس" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="male">ذكر</SelectItem>
-                                    <SelectItem value="female">أنثى</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="country">الدولة</Label>
-                             <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    aria-expanded={countryOpen}
-                                    className="w-full justify-between"
-                                    >
-                                    {countryValue
-                                        ? countries.find((country) => country.value.toLowerCase() === countryValue)?.label
-                                        : "اختر الدولة..."}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0">
-                                    <Command>
-                                        <CommandInput placeholder="ابحث عن الدولة..." />
-                                        <CommandList>
-                                            <CommandEmpty>لم يتم العثور على الدولة.</CommandEmpty>
-                                            <CommandGroup>
-                                                {countries.map((country) => (
-                                                <CommandItem
-                                                    key={country.value}
-                                                    value={country.label}
-                                                    onSelect={(currentValue) => {
-                                                        const selected = countries.find(c => c.label.toLowerCase() === currentValue.toLowerCase());
-                                                        setCountryValue(selected ? selected.value : "")
-                                                        setCountryOpen(false)
-                                                    }}
-                                                >
-                                                    <Check
-                                                    className={cn(
-                                                        "mr-2 h-4 w-4",
-                                                        countryValue === country.value ? "opacity-100" : "opacity-0"
-                                                    )}
-                                                    />
-                                                    {country.label}
-                                                </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
-                        <Input id="phone" name="phone" type="tel" placeholder="أدخل رقم الهاتف" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">كلمة المرور</Label>

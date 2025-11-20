@@ -29,7 +29,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   }
 
   const navItems = [
-    { href: '/admin/dashboard', label: 'لوحة التحكم', icon: Home },
+    { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
     { href: '/admin/sheikhs', label: 'المشايخ', icon: MicVocal },
     { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
     { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
@@ -87,7 +87,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         <div className="flex flex-col">
           <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
               <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
-                  <Users className="h-6 w-6" />
+                  <LayoutDashboard className="h-6 w-6" />
                   <span className="">لوحة التحكم</span>
               </Link>
           </header>
