@@ -102,8 +102,8 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button asChild variant="ghost" size="icon">
-                                    <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                                <Button asChild variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors h-8 w-8">
+                                    <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
                                         <SiTelegram size={18} />
                                     </a>
                                 </Button>
@@ -116,7 +116,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                                <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors h-8 w-8">
                                     <SiYoutube size={18} />
                                 </Button>
                             </TooltipTrigger>

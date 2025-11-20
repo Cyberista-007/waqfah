@@ -231,8 +231,8 @@ export default function LoginPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="gender">الجنس *</Label>
-                            <Select name="gender" required>
+                            <Label htmlFor="gender">الجنس</Label>
+                            <Select name="gender">
                                 <SelectTrigger><SelectValue placeholder="اختر الجنس" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="male">ذكر</SelectItem>
@@ -241,7 +241,7 @@ export default function LoginPage() {
                             </Select>
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="country">الدولة *</Label>
+                            <Label htmlFor="country">الدولة</Label>
                              <Popover open={countryOpen} onOpenChange={setCountryOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
