@@ -1,9 +1,8 @@
-
 "use client"
 
 import Link from "next/link"
 import Image from "next/image"
-import { Play, Share2, MicVocal, Clapperboard, ListVideo } from "lucide-react"
+import { Headphones, Play, Share2, MicVocal } from "lucide-react"
 import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
 import { useState } from "react"
 
@@ -13,11 +12,6 @@ import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
 import { cn } from "@/lib/utils"
@@ -89,11 +83,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (videoId) {
-      setIsModalOpen(true);
-    } else {
-      handlePlay();
-    }
+    handlePlay();
   };
 
   return (
@@ -139,7 +129,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             </h3>
             <div className="flex justify-start items-center gap-2 mt-2">
                 <Button onClick={handlePlay} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Play className="w-4 h-4" />
+                    <Headphones className="w-4 h-4" />
                 </Button>
                 {videoId && (
                   <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500">
