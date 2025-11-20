@@ -4,10 +4,11 @@ import { getDoc, doc, collection, query, where, getDocs, Timestamp } from 'fireb
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import type { Playlist, Lecture, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import LectureListItem from '@/components/lecture-list-item';
+import { LectureListItem } from '@/components/lecture-list-item';
 import { ListMusic, User } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { getInitials } from '@/lib/utils';
 
 async function getPlaylistData(playlistId: string) {
     const { serverFirestore } = initializeFirebaseOnServer();
@@ -44,7 +45,10 @@ async function getPlaylistData(playlistId: string) {
         }
     }
 
-    return { playlist, lecturesInPlaylist, userProfile };
+    // Since firestore 'in' query doesn't guarantee order, we sort it ourselves based on the original playlist order
+    const orderedLectures = playlist.lectureIds.map(id => lecturesInPlaylist.find(lecture => lecture.id === id)).filter((l): l is Lecture => !!l);
+
+    return { playlist, lecturesInPlaylist: orderedLectures, userProfile };
 }
 
 export default async function PlaylistPage({ params }: { params: { id: string } }) {
@@ -56,11 +60,6 @@ export default async function PlaylistPage({ params }: { params: { id: string } 
 
     const { playlist, lecturesInPlaylist, userProfile } = data;
     
-    const getInitials = (name: string | null | undefined) => {
-        if (!name) return 'U';
-        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    }
-
     return (
         <div className="space-y-8">
             <Card className="bg-muted/30">
