@@ -25,7 +25,6 @@ import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } f
 import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminLecturesPage() {
     const { toast } = useToast();
@@ -55,8 +54,7 @@ export default function AdminLecturesPage() {
                 description: `تم حذف محاضرة "${lectureToDelete.title}".`,
             });
         } catch (error: any) {
-            console.error("Error deleting lecture:", error);
-            // This is where we emit the specific error
+            // This is the critical change to handle permission errors correctly
             if (error.code === 'permission-denied') {
                 const permissionError = new FirestorePermissionError({
                     path: lectureRef.path,
@@ -64,10 +62,11 @@ export default function AdminLecturesPage() {
                 });
                 errorEmitter.emit('permission-error', permissionError);
             } else {
+                 console.error("Error deleting lecture:", error);
                  toast({
                     variant: "destructive",
                     title: "فشل الحذف",
-                    description: "لم نتمكن من حذف المحاضرة. قد يكون السبب مشكلة في الصلاحيات.",
+                    description: "لم نتمكن من حذف المحاضرة. قد يكون السبب مشكلة في الشبكة أو خطأ آخر.",
                 });
             }
         } finally {
