@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
+import { alegreya, sourceCodePro, cairo, notoSansArabic, lalezar, tajawal, amiri, markaziText, ibmPlexSansArabic, almarai, changa, elMessiri, reemKufi, mada, scheherazadeNew } from './fonts';
 
 export const metadata: Metadata = {
   title: 'منصة الدروس العلمية',
@@ -21,14 +22,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;700&family=Lalezar&family=Markazi+Text:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Tajawal:wght@400;700&family=Almarai:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Mada:wght@400;700&family=Reem+Kufi:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className={cn('min-h-screen bg-background font-body antialiased')}>
+      <body className={cn(
+        'min-h-screen bg-background font-body antialiased',
+        alegreya.variable,
+        sourceCodePro.variable,
+        cairo.variable,
+        notoSansArabic.variable,
+        lalezar.variable,
+        tajawal.variable,
+        amiri.variable,
+        markaziText.variable,
+        ibmPlexSansArabic.variable,
+        almarai.variable,
+        changa.variable,
+        elMessiri.variable,
+        reemKufi.variable,
+        mada.variable,
+        scheherazadeNew.variable
+      )}>
         <AppProviders>
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
