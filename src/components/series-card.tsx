@@ -1,11 +1,10 @@
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { getPlaceholderImage } from '@/lib/images';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { Series } from '@/lib/types';
-import { Play } from 'lucide-react';
+import { Play, MicVocal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 interface SeriesCardProps {
     series: Series;
@@ -13,37 +12,33 @@ interface SeriesCardProps {
 }
 
 export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
-    const placeholder = getPlaceholderImage(series.imageId);
     return (
         <Card
             key={series.id}
             className={cn(
-                "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl",
+                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}
         >
-            <Link href={`/series/${series.id}`} className="block relative">
-                <Image
-                    src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/400`}
-                    alt={series.title}
-                    width={600}
-                    height={400}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                    data-ai-hint={placeholder?.imageHint}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute top-2 left-2 bg-black/50 text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                    <span>{series.lectureCount || 0}</span>
-                    <Play className="h-3 w-3"/>
-                </div>
-            </Link>
-            <div className="p-4 bg-card">
-                <h3 className="font-headline text-lg font-bold">
+            <CardHeader>
+                <CardTitle className="font-headline text-xl">
                     <Link href={`/series/${series.id}`} className="hover:text-primary transition-colors">{series.title}</Link>
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">{series.sheikhName}</p>
-            </div>
+                </CardTitle>
+                <CardDescription className="flex items-center gap-2 pt-1">
+                    <MicVocal className="h-4 w-4" />
+                    <span>{series.sheikhName}</span>
+                </CardDescription>
+            </CardHeader>
+            <CardContent className='flex justify-between items-center'>
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Play className="h-4 w-4"/>
+                    <span>{series.lectureCount || 0} محاضرة</span>
+                </div>
+                 <Button asChild size="sm" variant="outline">
+                    <Link href={`/series/${series.id}`}>عرض السلسلة</Link>
+                </Button>
+            </CardContent>
         </Card>
     );
 }
