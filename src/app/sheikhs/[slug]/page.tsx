@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
@@ -8,8 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
-import { Clapperboard, ListVideo } from 'lucide-react';
+import { Clapperboard, ListVideo, Users } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
+import { FollowButton } from '@/components/follow-button';
 
 
 type SheikhDetailPageProps = {
@@ -60,9 +62,18 @@ export default async function SheikhDetailPage({ params }: SheikhDetailPageProps
             <AvatarImage src={placeholder?.imageUrl} alt={sheikh.name} />
             <AvatarFallback className="text-6xl">{getInitials(sheikh.name)}</AvatarFallback>
         </Avatar>
-        <div className="text-center md:text-right">
+        <div className="text-center md:text-right flex-grow">
           <h1 className="text-4xl lg:text-5xl font-extrabold mb-2 font-headline">{sheikh.name}</h1>
           <p className="text-lg text-muted-foreground max-w-3xl">{sheikh.bio}</p>
+        </div>
+        <div className="flex flex-col items-center gap-4">
+            <FollowButton sheikhId={sheikh.id} />
+             {sheikh.followerCount > 0 && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="w-4 h-4"/>
+                    <span>{sheikh.followerCount} متابع</span>
+                </div>
+            )}
         </div>
       </header>
 

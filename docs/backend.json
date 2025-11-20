@@ -11,7 +11,8 @@
         "name": { "type": "string", "description": "The full name of the sheikh." },
         "bio": { "type": "string", "description": "A short biography of the sheikh." },
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the sheikh." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the sheikh was added." }
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the sheikh was added." },
+        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this sheikh." }
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
     },
@@ -111,6 +112,18 @@
             "addedAt": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "lectureId", "addedAt"]
+    },
+    "Following": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Following",
+      "description": "Represents the relationship of a user following a sheikh.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "sheikhId": { "type": "string" },
+        "followedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "sheikhId", "followedAt"]
     },
     "Rating": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -244,6 +257,10 @@
       {
         "path": "/users/{userId}/favorites/{lectureId}",
         "definition": { "schema": { "$ref": "#/entities/Favorite" } }
+      },
+       {
+        "path": "/users/{userId}/following/{sheikhId}",
+        "definition": { "schema": { "$ref": "#/entities/Following" } }
       },
       {
         "path": "/users/{userId}/listenHistory/{lectureId}",

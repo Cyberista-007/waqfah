@@ -14,6 +14,7 @@ export type Sheikh = Serializable<{
   bio: string;
   imageId: string;
   createdAt: Timestamp;
+  followerCount?: number;
 }>;
 
 export type Lecture = Serializable<{
@@ -115,6 +116,12 @@ export type Favorite = Serializable<{
     userId: string;
     lectureId: string;
     addedAt: Timestamp;
+}>;
+
+export type Following = Serializable<{
+    id: string; // sheikhId
+    sheikhId: string;
+    followedAt: Timestamp;
 }>;
 
 export type Rating = Serializable<{

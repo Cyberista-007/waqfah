@@ -101,6 +101,11 @@ service cloud.firestore {
       allow read, write, delete: if isOwner(userId);
     }
     
+    match /users/{userId}/following/{sheikhId} {
+      // Users can only manage their own following list.
+      allow read, write, delete: if isOwner(userId);
+    }
+    
     match /users/{userId}/listenHistory/{lectureId} {
       // Users can only read and write to their own listening history.
       allow read, write: if isOwner(userId);
