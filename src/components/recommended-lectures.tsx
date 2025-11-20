@@ -72,10 +72,10 @@ export function RecommendedLectures() {
     return (
         <section>
             <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><BrainCircuit /> نرشح لك</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
                   <div key={i} className="space-y-2">
-                    <Skeleton className="h-48 w-full" />
+                    <Skeleton className="aspect-video w-full" />
                     <Skeleton className="h-6 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
                   </div>
@@ -92,7 +92,7 @@ export function RecommendedLectures() {
   return (
     <section>
         <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><BrainCircuit /> نرشح لك</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {recommendations.map(lecture => (
                 <LectureCard key={lecture.id} lecture={lecture} />
             ))}

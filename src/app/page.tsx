@@ -19,7 +19,7 @@ export default function Home() {
   const { user } = useUser();
 
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
-  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 8 });
+  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 4 });
   const { data: topSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'], limit: 4 });
 
 
@@ -87,7 +87,7 @@ export default function Home() {
 
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {latestLectures?.map((lecture, index) => (
               <LectureCard key={lecture.id} lecture={lecture} index={index}/>
             ))}
