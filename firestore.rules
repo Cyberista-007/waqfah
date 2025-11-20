@@ -121,6 +121,11 @@ service cloud.firestore {
       allow get: if isSignedIn() && resource.data.isPublic == true;
     }
     
+    match /users/{userId}/notes/{lectureId} {
+        // Users can only manage their own notes.
+        allow read, write, delete: if isOwner(userId);
+    }
+    
 
     // =====================================================================
     // Subcollections for Lectures

@@ -183,3 +183,11 @@ export type LectureClip = Serializable<{
     endTime: number; // in seconds
     createdAt: Timestamp;
 }>;
+
+export type LectureNote = Serializable<{
+    id: string; // lectureId
+    userId: string;
+    lectureId: string;
+    content: string;
+    updatedAt: Timestamp;
+}>;

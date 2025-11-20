@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getLectureBySlug, getRelatedLectures } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { YoutubePlayerModal } from '@/components/youtube-player-modal';
 import { SeriesPageSkeleton } from '@/components/skeletons';
+import { LectureNotes } from '@/components/lecture-notes';
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -183,6 +184,20 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
             </Button>
         </div>
       </section>
+
+      {user && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2">
+                    <Notebook className="h-6 w-6" />
+                    ملاحظاتي الخاصة
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <LectureNotes lectureId={lecture.id} userId={user.uid} />
+            </CardContent>
+        </Card>
+      )}
 
       {lecture.transcript && lecture.transcript.length > 0 && (
         <Card>

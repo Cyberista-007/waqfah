@@ -225,6 +225,19 @@
         "isLive": { "type": "boolean" }
       },
       "required": ["title", "dateTime", "isLive"]
+    },
+    "LectureNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LectureNote",
+      "description": "A user's private note on a specific lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lectureId": { "type": "string" },
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "lectureId", "content", "updatedAt"]
     }
   },
   "auth": {
@@ -269,6 +282,10 @@
       {
         "path": "/users/{userId}/playlists/{playlistId}",
         "definition": { "schema": { "$ref": "#/entities/Playlist" } }
+      },
+      {
+        "path": "/users/{userId}/notes/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/LectureNote" } }
       },
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",
