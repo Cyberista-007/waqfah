@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -289,3 +290,5 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   );
 }
  
+
+    
