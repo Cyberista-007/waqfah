@@ -25,7 +25,7 @@ export default function BooksPage() {
           {books.map((book) => {
             const placeholder = getPlaceholderImage(book.imageId);
             return (
-              <Card key={book.id} className="text-center p-4 transition-transform transform hover:-translate-y-1 flex flex-col">
+              <Card key={book.id} className="text-center p-4 transition-transform transform hover:-translate-y-1 flex flex-col rounded-xl">
                 <div className="flex-grow">
                   <Image
                     src={placeholder?.imageUrl || `https://picsum.photos/seed/${book.slug}/300/400`}
