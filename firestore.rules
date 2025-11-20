@@ -152,5 +152,14 @@ service cloud.firestore {
       // Only the owner of the clip can delete it.
       allow delete: if isResourceOwner();
     }
+    
+    match /lectures/{lectureId}/comments/{commentId} {
+      allow list: if true;
+      allow get: if true;
+      // Signed in users can create comments
+      allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid);
+      // Users can only update or delete their own comments
+      allow update, delete: if isSignedIn() && isResourceOwner();
+    }
   }
 }

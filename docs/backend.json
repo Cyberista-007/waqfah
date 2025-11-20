@@ -238,6 +238,20 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "lectureId", "content", "updatedAt"]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "description": "A user's comment on a lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhotoURL": { "type": "string", "format": "uri" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "text", "createdAt"]
     }
   },
   "auth": {
@@ -290,6 +304,10 @@
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",
         "definition": { "schema": { "$ref": "#/entities/Rating" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/comments/{commentId}",
+        "definition": { "schema": { "$ref": "#/entities/Comment" } }
       },
       {
         "path": "/topics/{topicId}",

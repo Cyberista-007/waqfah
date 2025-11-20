@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { YoutubePlayerModal } from '@/components/youtube-player-modal';
 import { SeriesPageSkeleton } from '@/components/skeletons';
 import { LectureNotes } from '@/components/lecture-notes';
+import { CommentsSection } from '@/components/comments-section';
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -209,6 +210,8 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
             </CardContent>
         </Card>
       )}
+
+      <CommentsSection lectureId={lecture.id} />
       
       {relatedLectures.length > 0 && (
         <section>

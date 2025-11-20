@@ -191,3 +191,12 @@ export type LectureNote = Serializable<{
     content: string;
     updatedAt: Timestamp;
 }>;
+
+export type Comment = Serializable<{
+    id: string;
+    userId: string;
+    userName: string;
+    userPhotoURL: string;
+    text: string;
+    createdAt: Timestamp;
+}>;
