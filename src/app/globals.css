@@ -506,6 +506,9 @@
     background-size: 400% 400%;
     animation: gradient-move 15s ease infinite;
   }
+  .animate-slide-in {
+      animation: slide-in 0.5s ease-out forwards;
+  }
 }
 
 @keyframes gradient-move {
@@ -518,4 +521,15 @@
   100% {
     background-position: 0% 50%;
   }
+}
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

@@ -1,27 +1,25 @@
+
 "use client"
 
 import type { Lecture } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play } from "lucide-react";
+import { Download, Play, Share2 } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { FavoriteButton } from "./favorite-button";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import { getPlaceholderImage } from "@/lib/images";
+import { cn } from "@/lib/utils";
+import { SiYoutube } from "@icons-pack/react-simple-icons";
 
 interface LectureListItemProps {
     lecture: Lecture;
     index: number;
 }
 
-export default function LectureListItem({ lecture, index }: LectureListItemProps) {
+export function LectureListItem({ lecture, index }: LectureListItemProps) {
     const { playTrack } = useAudioPlayer();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -34,7 +32,6 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
         const historySnap = await getDoc(historyRef);
         if (historySnap.exists()) {
           const data = historySnap.data();
-          // Start from beginning if less than 10s left or very close to start
           if (data.position && data.duration && (data.duration - data.position) > 10 && data.position > 5) {
             startTime = data.position;
              toast({
@@ -57,37 +54,44 @@ export default function LectureListItem({ lecture, index }: LectureListItemProps
       }, startTime);
     };
 
+    const placeholder = getPlaceholderImage(lecture.imageId);
+    const hasYoutube = lecture.youtubeUrl && lecture.youtubeUrl.length > 5;
+
     return (
-        <div className="bg-card text-card-foreground rounded-lg border p-4 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5">
-            <span className="text-xl font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
+        <div className="bg-card text-card-foreground rounded-lg border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
+            <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
+            <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
+                 <Image 
+                    src={placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/200/150`}
+                    alt={lecture.title}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={placeholder?.imageHint || "lecture content"}
+                 />
+                 <div 
+                    className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                    onClick={handlePlay}
+                 >
+                    <Play className="w-8 h-8 text-white fill-current" />
+                 </div>
+            </div>
             <div className="flex-grow">
-                <Link href={`/lectures/${lecture.slug}`} className="text-lg font-semibold text-foreground hover:text-primary hover:underline">
+                <Link href={`/lectures/${lecture.slug}`} className="text-md font-semibold text-foreground hover:text-primary hover:underline">
                     {lecture.title}
                 </Link>
-                <p className="text-sm text-muted-foreground">{lecture.duration} دقيقة</p>
+                <p className="text-sm text-muted-foreground">{lecture.seriesTitle}</p>
             </div>
-            <div className="flex items-center space-x-2 space-x-reverse">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button onClick={handlePlay} variant="ghost" size="icon" aria-label="استماع">
-                                <Play className="w-6 h-6 text-primary" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>استماع</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button asChild variant="ghost" size="icon" aria-label="تحميل">
-                                <a href={lecture.audioSrc} download>
-                                    <Download className="w-5 h-5 text-muted-foreground" />
-                                </a>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>تحميل</p></TooltipContent>
-                    </Tooltip>
-                    <FavoriteButton lectureId={lecture.id} />
-                </TooltipProvider>
+            <div className="flex flex-col md:flex-row items-center gap-2">
+                {hasYoutube && (
+                    <Button variant="ghost" size="icon" asChild>
+                        <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer">
+                            <SiYoutube className="w-5 h-5 text-red-500"/>
+                        </a>
+                    </Button>
+                )}
+                 <Button variant="ghost" size="icon">
+                    <Share2 className="w-5 h-5 text-muted-foreground" />
+                 </Button>
             </div>
         </div>
     );

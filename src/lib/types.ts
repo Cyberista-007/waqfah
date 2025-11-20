@@ -128,6 +128,7 @@ export type Rating = Serializable<{
 export type ListenHistoryItem = Serializable<{
     id: string; // lectureId
     lectureId: string;
+    seriesId: string; // Add seriesId to track progress per series
     position: number;
     duration: number;
     lastListened: Timestamp;
