@@ -122,7 +122,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
               </div>
           </div>
             
-          <button onClick={handleShare} className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center bg-black/50 rounded-md hover:bg-black/70 transition-colors">
+          <button onClick={handleShare} className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors">
             <Share2 className="w-4 h-4 text-white" />
           </button>
             
