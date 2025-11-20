@@ -2,7 +2,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal } from 'lucide-react';
@@ -15,13 +15,14 @@ import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { logoutAdmin } = useAdminAuth();
   
   const handleLogout = async () => {
-    if (user) {
-        await signOut(user.auth);
+    if (auth) {
+        await signOut(auth);
     }
     logoutAdmin();
     router.push('/');

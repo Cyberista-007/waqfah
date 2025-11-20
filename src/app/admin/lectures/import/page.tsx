@@ -172,9 +172,9 @@ export default function AdminImportLecturesPage() {
                     <ul className="list-disc list-inside space-y-1 text-sm">
                         <li>يجب أن يكون الملف بصيغة CSV.</li>
                         <li>
-                            الأعمدة الإلزامية: `title`, `description`, `seriesId`, `audioSrc`, `duration`.
+                            الأعمدة الإلزامية: `title`, `seriesId`, `audioSrc`, `duration`.
                         </li>
-                        <li>الأعمدة الاختيارية: `youtubeUrl`, `pdfUrl`, `telegramUrl`, `soundcloudUrl`.</li>
+                        <li>الأعمدة الاختيارية: `description`, `youtubeUrl`, `pdfUrl`, `telegramUrl`, `soundcloudUrl`.</li>
                          <li>تأكد من أن `seriesId` الموجود في الملف يطابق معرف سلسلة موجود بالفعل في قاعدة البيانات.</li>
                     </ul>
                 </div>
