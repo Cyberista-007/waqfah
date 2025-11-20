@@ -52,6 +52,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
   
   const videoId = getYoutubeVideoId(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
@@ -72,6 +73,19 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
       slug: lecture.slug,
     });
   };
+  
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const lectureUrl = `${window.location.origin}/lectures/${lecture.slug}`;
+    try {
+      await navigator.clipboard.writeText(lectureUrl);
+      toast({ title: 'تم نسخ رابط المحاضرة!' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
+    }
+  };
+
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -86,53 +100,64 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     <>
       <Card
         className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 group border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col rounded-xl",
+          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl",
           "animate-fade-in-up"
         )}
         style={{ animationDelay: `${index * 100}ms` }}
       >
-        <Link href={`/lectures/${lecture.slug}`} className="block">
-          <div className="relative aspect-video overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={lecture.title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div
-              className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={handleImageClick}
-            >
-              <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center cursor-pointer">
+        <div className="relative aspect-video overflow-hidden" onClick={handleImageClick}>
+          <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0">
+              <Image
+                src={imageUrl}
+                alt={lecture.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          </Link>
+            
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
               </div>
-            </div>
-            <div className="absolute top-2 right-2">
-                <FavoriteButton lectureId={lecture.id} />
-            </div>
           </div>
-        </Link>
-        <CardHeader className="flex-grow p-4">
-          <CardTitle className="font-headline text-lg mb-1 leading-snug">
-            <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors">{lecture.title}</Link>
-          </CardTitle>
-          <CardDescription className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <MicVocal className="w-3.5 h-3.5" />
-              <span>{lecture.sheikhName}</span>
+            
+          <button onClick={handleShare} className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center bg-black/50 rounded-md hover:bg-black/70 transition-colors">
+            <Share2 className="w-4 h-4 text-white" />
+          </button>
+            
+          <div className="absolute bottom-2 right-2 text-white text-xs font-semibold flex items-center gap-1">
+             <MicVocal className="w-3 h-3" />
+             <span>{lecture.sheikhName}</span>
+          </div>
+
+        </div>
+
+        <div className="p-4 bg-card flex-grow flex flex-col">
+            <h3 className="font-headline text-md mb-1 leading-snug flex-grow">
+                <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
+            </h3>
+            <div className="flex justify-start items-center gap-2 mt-2">
+                <Button onClick={handlePlay} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Play className="w-4 h-4" />
+                </Button>
+                {videoId && (
+                  <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500">
+                      <SiYoutube className="w-4 h-4" />
+                  </Button>
+                )}
+                 {lecture.telegramUrl && (
+                    <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-sky-500">
+                          <SiTelegram className="w-4 h-4" />
+                        </Button>
+                    </a>
+                 )}
+                 <div className="flex-grow"></div>
+                 <FavoriteButton lectureId={lecture.id} />
             </div>
-            <div className="flex items-center gap-2">
-              <ListVideo className="w-3.5 h-3.5" />
-              <Link href={`/series/${lecture.seriesId}`} className="hover:underline">{lecture.seriesTitle}</Link>
-            </div>
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="p-4 pt-0">
-            <Button onClick={handlePlay} className="w-full">
-                <Play className="w-4 h-4 me-2" />
-                استماع الآن
-            </Button>
-        </CardFooter>
+        </div>
+
       </Card>
       {videoId && (
         <YoutubePlayerModal

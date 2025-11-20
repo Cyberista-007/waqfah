@@ -26,7 +26,10 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
 
     const isFavorite = favorites?.some(fav => fav.id === lectureId) || false;
 
-    const handleFavorite = async () => {
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (!user || !firestore) {
             toast({
                 variant: "destructive",
@@ -54,16 +57,16 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
     
     const buttonContent = (
       <Button 
-          onClick={handleFavorite} 
+          onClick={handleFavoriteClick} 
           variant={showLabel ? "outline" : "ghost"} 
           size={showLabel ? "default" : "icon"} 
           className={cn(
-              !showLabel && "text-white bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-full h-10 w-10",
-              isFavorite && !showLabel && "text-red-500",
+              "h-8 w-8 text-muted-foreground hover:text-red-500",
+              isFavorite && "text-red-500",
           )}
           disabled={isUserLoading || favoritesLoading}
       >
-          <Heart className={cn("w-5 h-5 transition-colors", isFavorite && "fill-current text-red-500")} />
+          <Heart className={cn("w-4 h-4 transition-colors", isFavorite && "fill-current")} />
           {showLabel && <span className="ms-2"> {isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</span>}
       </Button>
     )
