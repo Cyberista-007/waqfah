@@ -3,7 +3,8 @@
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 interface YoutubePlayerModalProps {
@@ -18,6 +19,9 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerMo
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-screen-lg w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-none">
+        <DialogHeader>
+            <DialogTitle className="sr-only">مشغل فيديو يوتيوب</DialogTitle>
+        </DialogHeader>
         <div className="aspect-video">
           <iframe
             width="100%"
