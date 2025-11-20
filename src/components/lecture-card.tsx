@@ -62,16 +62,20 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     : placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/400/225`;
 
   const handlePlay = () => {
-    playTrack({
-      audioSrc: lecture.audioSrc,
-      title: lecture.title,
-      id: lecture.id,
-      seriesId: lecture.seriesId,
-      seriesSlug: lecture.seriesSlug,
-      seriesTitle: lecture.seriesTitle,
-      imageId: lecture.imageId,
-      slug: lecture.slug,
-    });
+    if (videoId) {
+        setIsModalOpen(true);
+    } else {
+        playTrack({
+          audioSrc: lecture.audioSrc,
+          title: lecture.title,
+          id: lecture.id,
+          seriesId: lecture.seriesId,
+          seriesSlug: lecture.seriesSlug,
+          seriesTitle: lecture.seriesTitle,
+          imageId: lecture.imageId,
+          slug: lecture.slug,
+        });
+    }
   };
   
   const handleShare = async (e: React.MouseEvent) => {
