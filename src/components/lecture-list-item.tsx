@@ -58,7 +58,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
     const hasYoutube = lecture.youtubeUrl && lecture.youtubeUrl.length > 5;
 
     return (
-        <div className="bg-card text-card-foreground rounded-lg border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
+        <div className="bg-card text-card-foreground rounded-xl border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
             <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
             <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
                  <Image 
