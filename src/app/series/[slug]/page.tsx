@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LectureListItem } from '@/components/lecture-list-item';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -42,6 +43,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 export default function SeriesDetailPage({ params }: { params: { slug: string } }) {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
   const [series, setSeries] = useState<Series | null>(null);
   const [lecturesInSeries, setLecturesInSeries] = useState<Lecture[]>([]);
   const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
@@ -123,6 +125,26 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
     if (!series || series.lectureCount === 0) return 0;
     return (completedLectures.length / series.lectureCount) * 100;
   }
+  
+  const handleShare = async () => {
+    const shareData = {
+        title: `سلسلة: ${series?.title}`,
+        text: `شاهد سلسلة "${series?.title}" على موقع وقفة`,
+        url: window.location.href,
+    };
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+             await navigator.clipboard.writeText(window.location.href);
+             toast({ title: 'تم نسخ الرابط!' });
+        }
+    } catch (error) {
+        console.error('Error sharing:', error);
+        await navigator.clipboard.writeText(window.location.href);
+        toast({ title: 'تم نسخ الرابط!' });
+    }
+  };
 
   if (isLoading) {
     return <SeriesPageSkeleton />;
@@ -180,7 +202,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
                         <Progress value={seriesProgress()} className="mb-4" />
                     </>
                 )}
-                <Button variant="secondary" size="lg" className="w-full md:w-auto">
+                <Button onClick={handleShare} variant="secondary" size="lg" className="w-full md:w-auto">
                     <Share2 className="w-5 h-5 me-2" />
                     مشاركة السلسلة
                 </Button>
@@ -214,6 +236,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           videoId={mainVideoId}
+          shareUrl={typeof window !== 'undefined' ? window.location.href : ''}
         />
       )}
     </>
