@@ -18,7 +18,7 @@ export function SheikhCard({ sheikh, index = 0 }: SheikhCardProps) {
         <Link href={`/sheikhs/${sheikh.slug}`} key={sheikh.id} className="block group">
             <Card 
                 className={cn(
-                    "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50",
+                    "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50 rounded-xl",
                     "animate-fade-in-up"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
