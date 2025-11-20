@@ -54,6 +54,28 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
       }, startTime);
     };
 
+    const handleShare = async () => {
+        const lectureUrl = `${window.location.origin}/lectures/${lecture.slug}`;
+        const shareData = {
+            title: `محاضرة: ${lecture.title}`,
+            text: `استمع إلى محاضرة "${lecture.title}" على موقع وقفة`,
+            url: lectureUrl,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                 await navigator.clipboard.writeText(lectureUrl);
+                 toast({ title: 'تم نسخ رابط المحاضرة!' });
+            }
+        } catch (error) {
+            console.error('Error sharing lecture:', error);
+            await navigator.clipboard.writeText(lectureUrl);
+            toast({ title: 'تم نسخ رابط المحاضرة!' });
+        }
+    };
+
+
     const placeholder = getPlaceholderImage(lecture.imageId);
     const hasYoutube = lecture.youtubeUrl && lecture.youtubeUrl.length > 5;
 
@@ -89,7 +111,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                         </a>
                     </Button>
                 )}
-                 <Button variant="ghost" size="icon">
+                 <Button variant="ghost" size="icon" onClick={handleShare}>
                     <Share2 className="w-5 h-5 text-muted-foreground" />
                  </Button>
             </div>
