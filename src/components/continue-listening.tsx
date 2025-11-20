@@ -47,7 +47,7 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
       })
       .filter((l): l is Lecture => !!l);
       
-    setInProgress(inProgressLectures.slice(0, isProfilePage ? 12 : 4)); // Show more on profile page
+    setInProgress(inProgressLectures.slice(0, isProfilePage ? 12 : 3)); // Show more on profile page
     setIsLoading(false);
 
   }, [listenHistory, allLectures, historyLoading, lecturesLoading, isProfilePage]);
@@ -56,8 +56,8 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
     return (
         <section>
             <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل الاستماع</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-2">
                     <Skeleton className="aspect-video w-full" />
                     <Skeleton className="h-6 w-3/4" />
@@ -87,7 +87,7 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
   return (
     <section>
         <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل الاستماع</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {inProgress.map(lecture => (
                 <LectureCard key={lecture.id} lecture={lecture} />
             ))}

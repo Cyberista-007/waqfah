@@ -74,15 +74,15 @@ function FavoritesSection() {
     }, [user, firestore]);
 
     if (isLoading) {
-         return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
+         return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
                <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
             ))}
         </div>
     }
 
     return favoriteLectures.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteLectures.map(lecture => <LectureCard key={lecture.id} lecture={lecture} />)}
         </div>
     ) : (

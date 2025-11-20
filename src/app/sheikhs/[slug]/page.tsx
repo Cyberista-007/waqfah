@@ -95,7 +95,7 @@ export default async function SheikhDetailPage({ params }: SheikhDetailPageProps
         
         <TabsContent value="lectures" className="mt-6">
             {lectures.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i}/>)}
                 </div>
             ) : (
