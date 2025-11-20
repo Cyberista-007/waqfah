@@ -404,29 +404,6 @@
     --ring: 210 100% 55%;
   }
 
-  /* 17. Studio Simpatico */
-  .theme-studio-simpatico {
-    --background: 225 37% 16%;
-    --foreground: 0 0% 98%;
-    --card: 225 37% 22%;
-    --card-foreground: 0 0% 98%;
-    --popover: 225 37% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 16 100% 62%; /* Orange */
-    --primary-foreground: 225 37% 10%;
-    --secondary: 231 80% 78%; /* Light Blue/Purple */
-    --secondary-foreground: 225 37% 10%;
-    --muted: 225 37% 25%;
-    --muted-foreground: 225 10% 75%;
-    --accent: 49 89% 72%; /* Yellow */
-    --accent-foreground: 225 37% 10%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 225 37% 25%;
-    --input: 225 37% 28%;
-    --ring: 16 100% 62%;
-  }
-
 }
 
 @layer base {
@@ -533,3 +510,5 @@
         transform: translateY(0);
     }
 }
+
+    

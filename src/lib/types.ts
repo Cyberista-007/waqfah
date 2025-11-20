@@ -40,6 +40,7 @@ export type Lecture = Serializable<{
   ratingCount: number;
   viewCount: number;
   createdAt: Timestamp; // Firestore timestamp
+  language?: string;
 }>;
 
 export type TranscriptItem = {
@@ -58,6 +59,7 @@ export type Series = Serializable<{
   sheikhName: string;
   sheikhSlug: string;
   createdAt: Timestamp;
+  language?: string;
 }>;
 
 export type Book = Serializable<{

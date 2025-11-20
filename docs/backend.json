@@ -30,7 +30,8 @@
         "sheikhId": { "type": "string" },
         "sheikhName": { "type": "string" },
         "sheikhSlug": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "language": { "type": "string", "description": "The language of the series content (e.g., 'ar', 'en')." }
       },
       "required": ["slug", "title", "description", "imageId", "lectureCount", "sheikhId", "sheikhName", "sheikhSlug", "createdAt"]
     },
@@ -58,7 +59,8 @@
         "rating": { "type": "number", "minimum": 0, "maximum": 5 },
         "ratingCount": { "type": "number", "minimum": 0 },
         "viewCount": { "type": "number", "minimum": 0 },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
       },
       "required": ["slug", "title", "sheikhId", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },
