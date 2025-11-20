@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import type { Lecture } from "@/lib/types";
@@ -105,6 +106,14 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
     const videoId = getYoutubeVideoId(lecture.youtubeUrl);
     const lectureUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${lecture.slug}` : '';
 
+    const handleImageClick = () => {
+        if (videoId) {
+            setIsModalOpen(true);
+        } else {
+            handlePlay();
+        }
+    }
+
     return (
         <>
         <div className="bg-card text-card-foreground rounded-xl border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
@@ -119,7 +128,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                  />
                  <div 
                     className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                    onClick={handlePlay}
+                    onClick={handleImageClick}
                  >
                     <Play className="w-8 h-8 text-white fill-current" />
                  </div>
