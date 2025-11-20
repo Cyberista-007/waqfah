@@ -5,7 +5,7 @@
 import Link from "next/link";
 import type { Lecture, Playlist } from "@/lib/types";
 import { Button } from "./ui/button";
-import { useAuth, useFirestore, useUser, useCollection } from "@/firebase";
+import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { Star, ListPlus } from "lucide-react";
@@ -124,9 +124,18 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
             });
 
             toast({ title: "شكراً لتقييمك!" });
-        } catch (e) {
-            console.error("Transaction failed: ", e);
-            toast({ variant: 'destructive', title: "حدث خطأ أثناء التقييم." });
+        } catch (e: any) {
+             if (e.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: ratingRef.path,
+                    operation: 'write', // 'set' can be create or update, so 'write' is safer
+                    requestResourceData: { value: ratingValue, userId: user.uid, lectureId: lecture.id }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                console.error("Transaction failed: ", e);
+                toast({ variant: 'destructive', title: "حدث خطأ أثناء التقييم." });
+            }
         } finally {
             setIsSubmitting(false);
         }

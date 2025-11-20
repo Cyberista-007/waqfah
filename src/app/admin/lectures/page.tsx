@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture } from "@/lib/types";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
@@ -41,7 +41,6 @@ export default function AdminLecturesPage() {
         const seriesRef = doc(firestore, 'series', lectureToDelete.seriesId);
         
         try {
-            // Use a transaction to delete the lecture and decrement the series count
             await runTransaction(firestore, async (transaction) => {
                 const seriesDoc = await transaction.get(seriesRef);
                 if (seriesDoc.exists() && (seriesDoc.data().lectureCount || 0) > 0) {
@@ -55,13 +54,22 @@ export default function AdminLecturesPage() {
                 title: "تم الحذف بنجاح",
                 description: `تم حذف محاضرة "${lectureToDelete.title}".`,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting lecture:", error);
-            toast({
-                variant: "destructive",
-                title: "فشل الحذف",
-                description: "لم نتمكن من حذف المحاضرة. قد يكون السبب مشكلة في الصلاحيات.",
-            });
+            // This is where we emit the specific error
+            if (error.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: lectureRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "فشل الحذف",
+                    description: "لم نتمكن من حذف المحاضرة. قد يكون السبب مشكلة في الصلاحيات.",
+                });
+            }
         } finally {
             setLectureToDelete(null); // Close the dialog
         }

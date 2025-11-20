@@ -4,7 +4,7 @@
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, useFirestore, useUser } from "@/firebase";
+import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { doc, runTransaction, increment, Timestamp, writeBatch } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
@@ -60,13 +60,22 @@ export function FollowButton({ sheikhId }: FollowButtonProps) {
                 title: isFollowing ? "تم إلغاء المتابعة" : "تمت المتابعة بنجاح",
             });
 
-        } catch (error) {
-            console.error("Error following/unfollowing sheikh:", error);
-            toast({
-                variant: "destructive",
-                title: "حدث خطأ",
-                description: "لم نتمكن من إتمام العملية. يرجى المحاولة مرة أخرى.",
-            });
+        } catch (error: any) {
+             if (error.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: followRef.path,
+                    operation: isFollowing ? 'delete' : 'create',
+                    requestResourceData: isFollowing ? undefined : { sheikhId: sheikhId, followedAt: 'server_timestamp' }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                console.error("Error following/unfollowing sheikh:", error);
+                toast({
+                    variant: "destructive",
+                    title: "حدث خطأ",
+                    description: "لم نتمكن من إتمام العملية. يرجى المحاولة مرة أخرى.",
+                });
+            }
         }
     };
 
