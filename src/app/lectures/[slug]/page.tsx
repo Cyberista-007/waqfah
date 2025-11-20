@@ -52,6 +52,7 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
 
   useEffect(() => {
@@ -73,6 +74,12 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
       }
     }
     fetchData();
+    
+    // Set the share URL on the client side
+    if (typeof window !== 'undefined') {
+        setShareUrl(window.location.href);
+    }
+
   }, [params.slug]);
   
   if (isLoading || !lecture) {
@@ -111,7 +118,6 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
 
 
   const seriesLink = `/series/${lecture.seriesId}`;
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://your-domain.com/lectures/${lecture.slug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ أمجد سمير`;
 
   return (
@@ -239,6 +245,7 @@ export default function LectureDetailPage({ params }: { params: { slug: string }
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         videoId={videoId}
+        shareUrl={shareUrl}
       />
     )}
     </>
