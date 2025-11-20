@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -83,7 +84,11 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handlePlay();
+    if (videoId) {
+        setIsModalOpen(true);
+    } else {
+        handlePlay();
+    }
   };
 
   return (
