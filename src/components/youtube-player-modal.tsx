@@ -3,9 +3,10 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from './ui/button';
+import { Share2, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface YoutubePlayerModalProps {
   isOpen: boolean;
@@ -14,15 +15,51 @@ interface YoutubePlayerModalProps {
 }
 
 export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerModalProps) {
+  const { toast } = useToast();
   if (!videoId) return null;
+
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'مشاهدة محاضرة',
+          url: youtubeUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(youtubeUrl);
+        toast({ title: 'تم نسخ الرابط بنجاح!' });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      try {
+        await navigator.clipboard.writeText(youtubeUrl);
+        toast({ title: 'تم نسخ الرابط بنجاح!' });
+      } catch (copyError) {
+        toast({
+          variant: 'destructive',
+          title: 'فشلت المشاركة والنسخ',
+          description: 'لم نتمكن من مشاركة أو نسخ الرابط.',
+        });
+      }
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-screen-lg w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-none">
-        <DialogHeader>
-            <DialogTitle className="sr-only">مشغل فيديو يوتيوب</DialogTitle>
-        </DialogHeader>
-        <div className="aspect-video">
+      <DialogContent className="max-w-screen-lg w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-lg overflow-hidden">
+        <div className="relative aspect-video">
+           <div className="absolute top-2 right-2 z-20 flex gap-2">
+              <Button onClick={handleShare} size="icon" variant="ghost" className="h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 text-white">
+                <Share2 className="h-6 w-6" />
+                <span className="sr-only">مشاركة</span>
+              </Button>
+              <Button onClick={onClose} size="icon" variant="ghost" className="h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 text-white">
+                <X className="h-8 w-8" />
+                <span className="sr-only">إغلاق</span>
+              </Button>
+          </div>
           <iframe
             width="100%"
             height="100%"
