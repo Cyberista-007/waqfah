@@ -102,9 +102,13 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
     };
 
 
-    const placeholder = getPlaceholderImage(lecture.imageId);
     const videoId = getYoutubeVideoId(lecture.youtubeUrl);
+    const placeholder = getPlaceholderImage(lecture.imageId);
     const lectureUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${lecture.slug}` : '';
+    
+    const imageUrl = videoId 
+      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      : placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/200/150`;
 
     const handleImageClick = () => {
         if (videoId) {
@@ -120,7 +124,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
             <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
             <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
                  <Image 
-                    src={placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/200/150`}
+                    src={imageUrl}
                     alt={lecture.title}
                     fill
                     className="object-cover"
