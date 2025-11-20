@@ -13,6 +13,30 @@ import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { SiYoutube } from "@icons-pack/react-simple-icons";
+import { useState } from "react";
+import { YoutubePlayerModal } from "./youtube-player-modal";
+
+
+function getYoutubeVideoId(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const videoUrl = new URL(url);
+    if (videoUrl.hostname === 'youtu.be') {
+      return videoUrl.pathname.slice(1);
+    }
+    if (videoUrl.hostname.includes('youtube.com')) {
+      const videoId = videoUrl.searchParams.get('v');
+      if (videoId) {
+        return videoId;
+      }
+    }
+  } catch (error) {
+    console.error("Invalid YouTube URL", error);
+    return null;
+  }
+  return null;
+}
+
 
 interface LectureListItemProps {
     lecture: Lecture;
@@ -24,6 +48,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handlePlay = async () => {
       let startTime = 0;
@@ -77,9 +102,11 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
 
 
     const placeholder = getPlaceholderImage(lecture.imageId);
-    const hasYoutube = lecture.youtubeUrl && lecture.youtubeUrl.length > 5;
+    const videoId = getYoutubeVideoId(lecture.youtubeUrl);
+    const lectureUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${lecture.slug}` : '';
 
     return (
+        <>
         <div className="bg-card text-card-foreground rounded-xl border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
             <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
             <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
@@ -104,11 +131,9 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                 <p className="text-sm text-muted-foreground">{lecture.seriesTitle}</p>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-2">
-                {hasYoutube && (
-                    <Button variant="ghost" size="icon" asChild>
-                        <a href={lecture.youtubeUrl} target="_blank" rel="noopener noreferrer">
-                            <SiYoutube className="w-5 h-5 text-red-500"/>
-                        </a>
+                {videoId && (
+                    <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
+                        <SiYoutube className="w-5 h-5 text-red-500"/>
                     </Button>
                 )}
                  <Button variant="ghost" size="icon" onClick={handleShare}>
@@ -116,5 +141,14 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                  </Button>
             </div>
         </div>
+         {videoId && (
+            <YoutubePlayerModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                videoId={videoId}
+                shareUrl={lectureUrl}
+            />
+        )}
+        </>
     );
 }
