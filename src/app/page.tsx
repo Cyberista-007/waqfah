@@ -6,12 +6,13 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useCollection, useUser } from '@/firebase';
-import type { Series, Lecture } from '@/lib/types';
+import type { Series, Lecture, Sheikh } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
+import { SheikhCard } from '@/components/sheikh-card';
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function Home() {
 
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 8 });
+  const { data: topSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'], limit: 4 });
+
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,7 +30,7 @@ export default function Home() {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  if (seriesLoading || lecturesLoading) {
+  if (seriesLoading || lecturesLoading || sheikhsLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -69,6 +72,15 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestSeries?.map((series, index) => (
               <SeriesCard key={series.id} series={series} index={index}/>
+            ))}
+          </div>
+        </section>
+        
+        <section>
+          <h2 className="text-3xl font-bold mb-6 font-headline">أبرز المشايخ</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+             {topSheikhs?.map((sheikh, index) => (
+                <SheikhCard sheikh={sheikh} key={sheikh.id} index={index}/>
             ))}
           </div>
         </section>
