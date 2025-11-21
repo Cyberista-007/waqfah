@@ -117,8 +117,8 @@ export default {
             }
         },
         'scroll-rtl': {
-          'from': { transform: 'translateX(-100%)' },
-          'to': { transform: 'translateX(0)' },
+          'from': { transform: 'translateX(0)' },
+          'to': { transform: 'translateX(-100%)' },
         },
       },
       animation: {
@@ -128,7 +128,16 @@ export default {
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'scroll-rtl': 'scroll-rtl 40s linear infinite',
       },
+       animationPlayState: {
+          'paused': 'paused',
+      },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    function ({ addVariant }: { addVariant: (name: string, definition: string) => void }) {
+      addVariant('pause', '&:hover');
+      addVariant('pause', '.group:hover &');
+    }
+  ],
 } satisfies Config;

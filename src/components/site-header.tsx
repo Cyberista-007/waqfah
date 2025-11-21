@@ -271,13 +271,22 @@ export function SiteHeader() {
         </div>
 
       </nav>
-        <div className="md:hidden overflow-hidden whitespace-nowrap">
-            <div className="inline-block hover:[animation-play-state:paused] animate-scroll-rtl">
-                {[...mainNavItems, ...mainNavItems].map((item, index) => (
-                    <Button asChild key={`${item.label}-${index}`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
-                        <Link href={item.href}>{item.label}</Link>
-                    </Button>
-                ))}
+        <div className="md:hidden w-full overflow-hidden whitespace-nowrap group">
+            <div className="w-[200%] flex animate-scroll-rtl group-hover:pause">
+                <div className="w-full flex-shrink-0 flex justify-around">
+                    {mainNavItems.map((item, index) => (
+                        <Button asChild key={`${item.label}-${index}-1`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
+                            <Link href={item.href}>{item.label}</Link>
+                        </Button>
+                    ))}
+                </div>
+                <div className="w-full flex-shrink-0 flex justify-around">
+                     {mainNavItems.map((item, index) => (
+                        <Button asChild key={`${item.label}-${index}-2`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
+                            <Link href={item.href}>{item.label}</Link>
+                        </Button>
+                    ))}
+                </div>
             </div>
         </div>
     </header>
