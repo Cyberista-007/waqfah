@@ -126,7 +126,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'gradient-move': 'gradient-move 15s ease infinite',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-        'scroll-rtl': 'scroll-rtl 20s linear infinite',
+        'scroll-rtl': 'scroll-rtl 40s linear infinite',
       },
     },
   },

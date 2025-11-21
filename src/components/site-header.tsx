@@ -271,17 +271,14 @@ export function SiteHeader() {
         </div>
 
       </nav>
-        <div className="md:hidden">
-            <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex w-max space-x-4 px-4 pb-2 animate-scroll-rtl flex-row-reverse hover:[animation-play-state:paused]">
-                    {[...mainNavItems].map((item) => (
-                        <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
-                            <Link href={item.href}>{item.label}</Link>
-                        </Button>
-                    ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="invisible" />
-            </ScrollArea>
+        <div className="md:hidden overflow-hidden">
+            <div className="flex w-max hover:[animation-play-state:paused] animate-scroll-rtl flex-row-reverse">
+                {[...mainNavItems, ...mainNavItems].map((item, index) => (
+                    <Button asChild key={`${item.label}-${index}`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
+                        <Link href={item.href}>{item.label}</Link>
+                    </Button>
+                ))}
+            </div>
         </div>
     </header>
     <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
