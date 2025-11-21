@@ -92,14 +92,42 @@ export function SiteHeader() {
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
     )}>
       <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-        <Link
-          href="/"
-          className="flex items-center space-x-2 space-x-reverse cursor-pointer"
-        >
-           <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
-            وقـــفــــة
-          </div>
-        </Link>
+        <div className="flex items-center gap-2">
+            <div className="md:hidden">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu className="h-6 w-6" />
+                            <span className="sr-only">فتح القائمة</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-3/4">
+                        <ScrollArea className="h-full">
+                           <div className="flex flex-col gap-4 p-4">
+                            <SheetClose asChild>
+                                <Link href="/" className="text-2xl font-bold font-headline mb-4">وقـــفــــة</Link>
+                            </SheetClose>
+                            {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
+                                <SheetClose asChild key={item.label}>
+                                    <Link href={item.href} className="text-lg py-2 font-medium text-foreground/80 hover:text-primary">
+                                        {item.label}
+                                    </Link>
+                                </SheetClose>
+                            ))}
+                             </div>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
+            </div>
+            <Link
+            href="/"
+            className="flex items-center space-x-2 space-x-reverse cursor-pointer"
+            >
+            <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
+                وقـــفــــة
+            </div>
+            </Link>
+        </div>
         
         <div className="hidden md:flex flex-grow justify-center items-center gap-2">
           {mainNavItems.map((item) => (
@@ -195,7 +223,7 @@ export function SiteHeader() {
         <div className="md:hidden">
             <ScrollArea className="w-full whitespace-nowrap">
                 <div className="flex w-max space-x-4 space-x-reverse px-4 pb-2">
-                    {[...mainNavItems, ...moreNavItems].map((item) => (
+                    {[...mainNavItems].map((item) => (
                         <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
                             <Link href={item.href}>{item.label}</Link>
                         </Button>
