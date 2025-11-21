@@ -64,7 +64,7 @@ export default function LecturesListPage() {
               return a.title.localeCompare(b.title, 'ar');
           case 'newest':
           default:
-              return dateB.getTime() - a.getTime();
+              return dateB.getTime() - dateA.getTime();
       }
     });
 
