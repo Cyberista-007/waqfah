@@ -271,8 +271,8 @@ export function SiteHeader() {
         </div>
 
       </nav>
-        <div className="md:hidden overflow-hidden">
-            <div className="flex w-max hover:[animation-play-state:paused] animate-scroll-rtl flex-row-reverse">
+        <div className="md:hidden overflow-hidden whitespace-nowrap">
+            <div className="inline-block hover:[animation-play-state:paused] animate-scroll-rtl">
                 {[...mainNavItems, ...mainNavItems].map((item, index) => (
                     <Button asChild key={`${item.label}-${index}`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
                         <Link href={item.href}>{item.label}</Link>
