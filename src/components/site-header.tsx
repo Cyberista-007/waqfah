@@ -271,7 +271,7 @@ export function SiteHeader() {
         </div>
 
       </nav>
-        <div className="md:hidden w-full overflow-hidden whitespace-nowrap group">
+        <ScrollArea className="md:hidden w-full whitespace-nowrap group">
             <div className="w-[200%] flex animate-scroll-rtl group-hover:pause">
                 <div className="w-full flex-shrink-0 flex justify-around">
                     {mainNavItems.map((item, index) => (
@@ -288,7 +288,8 @@ export function SiteHeader() {
                     ))}
                 </div>
             </div>
-        </div>
+          <ScrollBar orientation="horizontal" className="invisible" />
+        </ScrollArea>
     </header>
     <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
     <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
