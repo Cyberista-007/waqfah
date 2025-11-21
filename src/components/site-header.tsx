@@ -273,7 +273,7 @@ export function SiteHeader() {
       </nav>
         <div className="md:hidden">
             <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex w-max space-x-4 px-4 pb-2">
+                <div className="flex w-max space-x-4 px-4 pb-2 flex-row-reverse animate-scroll-rtl">
                     {[...mainNavItems].map((item) => (
                         <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
                             <Link href={item.href}>{item.label}</Link>
