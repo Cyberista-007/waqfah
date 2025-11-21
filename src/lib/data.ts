@@ -1,6 +1,6 @@
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile } from './types';
-import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist } from './types';
+import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
 
@@ -348,3 +348,53 @@ async function getDocumentsByIds<T>(collectionName: string, ids: string[] | unde
 
 export const getLecturesByIds = (ids: string[] | undefined) => getDocumentsByIds<Lecture>('lectures', ids);
 export const getSeriesByIds = (ids: string[] | undefined) => getDocumentsByIds<Series>('series', ids);
+
+
+// --- Playlists ---
+export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile?: UserProfile })[]> => {
+    const { db, isLive } = getDbSafe();
+    if (!isLive || !db) {
+        return [];
+    }
+
+    try {
+        const playlistsQuery = query(
+            collectionGroup(db, 'playlists'),
+            where('isPublic', '==', true),
+            orderBy('createdAt', 'desc')
+        );
+        const playlistsSnapshot = await getDocs(playlistsQuery);
+        
+        if (playlistsSnapshot.empty) {
+            return [];
+        }
+
+        const playlists = playlistsSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Playlist);
+
+        // Fetch user profiles for each playlist
+        const userIds = [...new Set(playlists.map(p => p.userId))];
+        const userProfiles: Record<string, UserProfile> = {};
+        
+        // Batch fetch users
+        for (let i = 0; i < userIds.length; i += 30) {
+            const chunk = userIds.slice(i, i + 30);
+            const usersQuery = query(collection(db, 'users'), where('__name__', 'in', chunk));
+            const usersSnapshot = await getDocs(usersQuery);
+            usersSnapshot.forEach(doc => {
+                userProfiles[doc.id] = toSerializable({ ...doc.data(), id: doc.id }) as UserProfile;
+            });
+        }
+        
+        // Attach user profiles to playlists
+        return playlists.map(playlist => ({
+            ...playlist,
+            userProfile: userProfiles[playlist.userId],
+        }));
+
+    } catch (error) {
+        console.error("Error fetching public playlists:", error);
+        return [];
+    }
+};
+
+    

@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Heart,
   Mail,
+  ListMusic,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -52,6 +53,7 @@ const mainNavItems = [
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/topics", label: "المواضيع" },
+  { href: "/playlists", label: "قوائم التشغيل" },
   { href: "/books", label: "الكتب" },
 ]
 
@@ -278,3 +280,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    
