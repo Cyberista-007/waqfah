@@ -117,10 +117,8 @@ export default {
             }
         },
         'scroll-rtl': {
-          '0%': { transform: 'translateX(0%)' },
-          '20%': { transform: 'translateX(-100%)' },
-          '80%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(0%)' },
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
       animation: {
@@ -128,7 +126,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'gradient-move': 'gradient-move 15s ease infinite',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-        'scroll-rtl': 'scroll-rtl 8s ease-in-out 1s 1',
+        'scroll-rtl': 'scroll-rtl 20s linear infinite',
       },
     },
   },
