@@ -3,11 +3,11 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, MicVocal } from "lucide-react"
+import { Headphones, Play, Share2, MicVocal, ListPlus } from "lucide-react"
 import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 
-import type { Lecture } from "@/lib/types"
+import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
@@ -18,6 +18,10 @@ import { FavoriteButton } from "./favorite-button"
 import { cn } from "@/lib/utils"
 import { YoutubePlayerModal } from "./youtube-player-modal"
 import { getPlaceholderImage } from "@/lib/images"
+import { useCollection, useFirestore, useUser } from "@/firebase"
+import { Progress } from "./ui/progress"
+import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
+import { useRouter } from "next/navigation"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -47,8 +51,18 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
+  const { data: listenHistory } = useCollection<ListenHistoryItem>(listenHistoryPath);
   
+  const playlistsPath = user ? `users/${user.uid}/playlists` : null;
+  const { data: playlists } = useCollection<Playlist>(playlistsPath);
+
   const videoId = getYoutubeVideoId(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
 
@@ -81,6 +95,16 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     }
   };
 
+  const handleAddToPlaylist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+        toast({ variant: "destructive", title: "يرجى تسجيل الدخول أولاً."});
+        router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
+        return;
+    }
+    setIsPlaylistDialogOpen(true);
+  }
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -90,6 +114,16 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
         handlePlay();
     }
   };
+
+  const lectureHistory = useMemo(() => 
+    listenHistory?.find(item => item.lectureId === lecture.id),
+    [listenHistory, lecture.id]
+  );
+  
+  const progress = useMemo(() => {
+    if (!lectureHistory || !lectureHistory.duration) return 0;
+    return (lectureHistory.position / lectureHistory.duration) * 100;
+  }, [lectureHistory]);
 
   return (
     <>
@@ -107,6 +141,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 alt={lecture.title}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
+                data-ai-hint={placeholder?.imageHint || 'lecture content'}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </Link>
@@ -125,6 +160,12 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
              <MicVocal className="w-3 h-3" />
              <span>{lecture.sheikhName}</span>
           </div>
+
+          {progress > 0 && progress < 95 && (
+              <div className="absolute bottom-0 left-0 right-0 h-1.5">
+                  <Progress value={progress} className="h-full rounded-none" />
+              </div>
+          )}
 
         </div>
 
@@ -149,6 +190,9 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                     </a>
                  )}
                  <div className="flex-grow"></div>
+                 <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
+                    <ListPlus className="w-5 h-5" />
+                 </Button>
                  <FavoriteButton lectureId={lecture.id} />
             </div>
         </div>
@@ -160,6 +204,14 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
           onClose={() => setIsModalOpen(false)}
           videoId={videoId}
           shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/lectures/${lecture.slug}`}
+        />
+      )}
+       {user && (
+        <AddToPlaylistDialog
+            isOpen={isPlaylistDialogOpen}
+            onOpenChange={setIsPlaylistDialogOpen}
+            lectureId={lecture.id}
+            userPlaylists={playlists || []}
         />
       )}
     </>
