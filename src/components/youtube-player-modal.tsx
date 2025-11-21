@@ -48,18 +48,16 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full h-auto p-0 border-0 bg-black/80 backdrop-blur-sm shadow-none !rounded-lg overflow-hidden">
-        <div className="absolute top-2 right-2 z-20 flex gap-2">
-            <Button onClick={onClose} size="icon" variant="ghost" className="h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 text-white">
-              <X className="h-8 w-8" />
-              <span className="sr-only">إغلاق</span>
-            </Button>
-        </div>
-        <div className="absolute top-2 left-2 z-20 flex gap-2">
-            <Button onClick={handleShare} size="icon" variant="ghost" className="h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 text-white">
+      <DialogContent className="max-w-4xl w-full h-auto p-2 border-0 bg-card/80 backdrop-blur-sm shadow-none !rounded-lg overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center px-2 pt-1">
+          <Button onClick={handleShare} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
               <Share2 className="h-6 w-6" />
               <span className="sr-only">مشاركة</span>
-            </Button>
+          </Button>
+          <Button onClick={onClose} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
+            <X className="h-8 w-8" />
+            <span className="sr-only">إغلاق</span>
+          </Button>
         </div>
         <div className="relative aspect-video">
           <iframe
