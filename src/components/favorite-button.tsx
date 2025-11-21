@@ -61,12 +61,12 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
           variant={showLabel ? "outline" : "ghost"} 
           size={showLabel ? "default" : "icon"} 
           className={cn(
-              "h-8 w-8 text-muted-foreground hover:text-red-500",
+              "h-10 w-10 text-muted-foreground hover:text-red-500",
               isFavorite && "text-red-500",
           )}
           disabled={isUserLoading || favoritesLoading}
       >
-          <Heart className={cn("w-4 h-4 transition-colors", isFavorite && "fill-current")} />
+          <Heart className={cn("w-5 h-5 transition-colors", isFavorite && "fill-current")} />
           {showLabel && <span className="ms-2"> {isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</span>}
       </Button>
     )

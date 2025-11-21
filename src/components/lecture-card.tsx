@@ -133,18 +133,18 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
             </h3>
             <div className="flex justify-start items-center gap-2 mt-2">
-                <Button onClick={handlePlay} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Headphones className="w-4 h-4" />
+                <Button onClick={handlePlay} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
+                    <Headphones className="w-5 h-5" />
                 </Button>
                 {videoId && (
-                  <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500">
-                      <SiYoutube className="w-4 h-4" />
+                  <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-red-500">
+                      <SiYoutube className="w-5 h-5" />
                   </Button>
                 )}
                  {lecture.telegramUrl && (
                     <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-sky-500">
-                          <SiTelegram className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-sky-500">
+                          <SiTelegram className="w-5 h-5" />
                         </Button>
                     </a>
                  )}
