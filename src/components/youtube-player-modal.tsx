@@ -47,17 +47,24 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full h-auto p-2 border-0 bg-card/80 backdrop-blur-sm shadow-none !rounded-lg overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center px-2 pt-1">
-          <Button onClick={handleShare} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
-              <Share2 className="h-6 w-6" />
-              <span className="sr-only">مشاركة</span>
-          </Button>
-          <Button onClick={onClose} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
-            <X className="h-8 w-8" />
-            <span className="sr-only">إغلاق</span>
-          </Button>
+    <Dialog open={isOpen}>
+      <DialogContent 
+        className="max-w-4xl w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-lg overflow-hidden flex flex-col gap-2"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        hideCloseButton={true}
+      >
+        <div className="flex justify-end items-center bg-card rounded-t-lg p-2">
+           <div className="flex items-center gap-1">
+             <Button onClick={handleShare} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
+                <Share2 className="h-5 w-5" />
+                <span className="sr-only">مشاركة</span>
+            </Button>
+            <Button onClick={onClose} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
+                <X className="h-6 w-6" />
+                <span className="sr-only">إغلاق</span>
+            </Button>
+           </div>
         </div>
         <div className="relative aspect-video">
           <iframe
@@ -68,7 +75,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className="rounded-lg w-full h-full absolute top-0 left-0"
+            className="rounded-b-lg w-full h-full absolute top-0 left-0"
           ></iframe>
         </div>
       </DialogContent>
