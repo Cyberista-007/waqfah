@@ -45,7 +45,7 @@ import { useState } from "react"
 import { ThemeSwitcherDialog } from "./theme-switcher"
 import { FontSwitcherDialog } from "./font-switcher"
 import { getInitials } from "@/lib/utils"
-import { ScrollArea } from "./ui/scroll-area"
+import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -145,8 +145,8 @@ export function SiteHeader() {
             </DropdownMenu>
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
-           <Link href="/search">
+        <div className="flex items-center gap-2">
+           <Link href="/search" className='hidden sm:inline-block'>
               <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
                 <Search className="h-5 w-5" />
                 <span className="sr-only">بحث</span>
@@ -156,7 +156,7 @@ export function SiteHeader() {
           <ThemeToggle />
 
           {isUserLoading ? (
-            <Skeleton className="w-24 h-10 rounded-full" />
+            <Skeleton className="w-10 h-10 rounded-full" />
           ) : (
             <>
               { user ? (
@@ -181,7 +181,7 @@ export function SiteHeader() {
                   </DropdownMenuContent>
               </DropdownMenu>
               ) : (
-                 <Button asChild>
+                 <Button asChild className='hidden sm:inline-flex'>
                   <Link href="/auth/login">
                     <span>تسجيل الدخول</span>
                   </Link>
@@ -191,94 +191,22 @@ export function SiteHeader() {
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-2">
-          <ThemeToggle />
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-background w-[280px] flex flex-col p-0">
-               <div className="p-6">
-                 <SheetClose asChild>
-                    <Link
-                    href="/"
-                    className="flex items-center space-x-2 space-x-reverse cursor-pointer mb-4"
-                    >
-                    <div className="text-3xl font-extrabold font-headline tracking-tight text-foreground">
-                        وقـــفــــة
-                    </div>
-                    </Link>
-                </SheetClose>
-               </div>
-               <ScrollArea className="flex-grow px-6">
-                    <div className="flex flex-col space-y-4">
-                        {[...mainNavItems, ...dynamicMoreNavItems].map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <SheetClose asChild key={item.label}>
-                            <Link href={item.href} className="block text-foreground/80 hover:text-primary py-2 font-medium">
-                                <span className='flex items-center gap-2'>
-                                    {Icon && <Icon className="h-4 w-4" />}
-                                    {item.label}
-                                </span>
-                            </Link>
-                            </SheetClose>
-                        )
-                        })}
-                    </div>
-               </ScrollArea>
-                <div className="border-t p-6 mt-auto space-y-4">
-                    <div className="space-y-2">
-                        <Button onClick={() => setIsThemeSwitcherOpen(true)} variant="outline" className="w-full justify-center">
-                            <Palette className="me-2 h-4 w-4" />
-                            <span>تغيير الثيم</span>
-                        </Button>
-                        <Button onClick={() => setIsFontSwitcherOpen(true)} variant="outline" className="w-full justify-center">
-                            <CaseSensitive className="me-2 h-4 w-4" />
-                            <span>تغيير الخط</span>
-                        </Button>
-                    </div>
-                    <div className="border-t border-border pt-4 space-y-3">
-                    {user ? (
-                        <>
-                        <SheetClose asChild>
-                            <Button asChild className="w-full justify-center">
-                                <Link href="/profile">الملف الشخصي</Link>
-                            </Button>
-                        </SheetClose>
-                        <Button onClick={handleLogout} variant="outline" className="w-full">
-                            تسجيل الخروج
-                        </Button>
-                        </>
-                    ) : (
-                        <SheetClose asChild>
-                        <Button asChild className="w-full justify-center">
-                            <Link href="/auth/login">تسجيل الدخول</Link>
-                        </Button>
-                        </SheetClose>
-                    )}
-                    <SheetClose asChild>
-                        <Link href="/search" className="w-full">
-                            <Button variant="outline" className="w-full">
-                                <Search className="h-5 w-5 me-2" />
-                                <span>بحث</span>
-                            </Button>
-                        </Link>
-                    </SheetClose>
-                    </div>
-                </div>
-            </SheetContent>
-          </Sheet>
-        </div>
       </nav>
+        <div className="md:hidden">
+            <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex w-max space-x-4 space-x-reverse px-4 pb-2">
+                    {[...mainNavItems, ...moreNavItems].map((item) => (
+                        <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
+                            <Link href={item.href}>{item.label}</Link>
+                        </Button>
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+        </div>
     </header>
     <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
     <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
     </>
   )
 }
-
-    
