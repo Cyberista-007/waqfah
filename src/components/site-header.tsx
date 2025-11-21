@@ -46,6 +46,7 @@ import { ThemeSwitcherDialog } from "./theme-switcher"
 import { FontSwitcherDialog } from "./font-switcher"
 import { getInitials } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "./ui/scroll-area"
+import { Separator } from "./ui/separator"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -101,20 +102,70 @@ export function SiteHeader() {
                             <span className="sr-only">فتح القائمة</span>
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="w-3/4">
+                    <SheetContent side="right" className="w-3/4 p-0">
                         <ScrollArea className="h-full">
-                           <div className="flex flex-col gap-4 p-4">
-                            <SheetClose asChild>
-                                <Link href="/" className="text-2xl font-bold font-headline mb-4">وقـــفــــة</Link>
-                            </SheetClose>
-                            {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
-                                <SheetClose asChild key={item.label}>
-                                    <Link href={item.href} className="text-lg py-2 font-medium text-foreground/80 hover:text-primary">
-                                        {item.label}
-                                    </Link>
+                           <div className="flex flex-col p-4">
+                              <SheetClose asChild>
+                                  <Link href="/" className="text-2xl font-bold font-headline mb-4 self-start">وقـــفــــة</Link>
+                              </SheetClose>
+                              
+                              <div className="flex flex-col gap-1">
+                                {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
+                                    <SheetClose asChild key={item.label}>
+                                        <Link href={item.href} className="text-lg py-3 px-2 rounded-md font-medium text-foreground/80 hover:bg-accent hover:text-primary">
+                                            {item.label}
+                                        </Link>
+                                    </SheetClose>
+                                ))}
+                              </div>
+                              
+                              <Separator className="my-4" />
+
+                              <div className="flex flex-col gap-2">
+                                <SheetClose asChild>
+                                    <Button variant="outline" className="justify-between" onClick={() => setIsThemeSwitcherOpen(true)}>
+                                      <span>تغيير الثيم</span>
+                                      <Palette className="h-4 w-4" />
+                                    </Button>
                                 </SheetClose>
-                            ))}
-                             </div>
+                                <SheetClose asChild>
+                                   <Button variant="outline" className="justify-between" onClick={() => setIsFontSwitcherOpen(true)}>
+                                      <span>تغيير الخط</span>
+                                      <CaseSensitive className="h-4 w-4" />
+                                   </Button>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                   <Button variant="outline" className="justify-between" asChild>
+                                      <Link href="/search">
+                                        <span>بحث</span>
+                                        <Search className="h-4 w-4" />
+                                      </Link>
+                                   </Button>
+                                </SheetClose>
+                              </div>
+                              
+                              <Separator className="my-4" />
+
+                              <div className="flex flex-col gap-2">
+                                {isUserLoading ? (
+                                    <Skeleton className="h-10 w-full" />
+                                ) : user ? (
+                                    <>
+                                        <SheetClose asChild>
+                                            <Button asChild><Link href="/profile">الملف الشخصي</Link></Button>
+                                        </SheetClose>
+                                         <SheetClose asChild>
+                                            <Button variant="secondary" onClick={handleLogout}>تسجيل الخروج</Button>
+                                        </SheetClose>
+                                    </>
+                                ) : (
+                                    <SheetClose asChild>
+                                        <Button asChild><Link href="/auth/login">تسجيل الدخول</Link></Button>
+                                    </SheetClose>
+                                )}
+                              </div>
+
+                           </div>
                         </ScrollArea>
                     </SheetContent>
                 </Sheet>
