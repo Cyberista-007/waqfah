@@ -1,5 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSession } from '@/lib/session';
+import { SignJWT } from 'jose';
+import { cookies } from 'next/headers';
+import { SESSION_COOKIE_NAME } from '@/lib/constants';
+
+const secret = process.env.SESSION_SECRET;
+if (!secret) {
+    throw new Error('SESSION_SECRET environment variable is not set');
+}
+const secretKey = new TextEncoder().encode(secret);
+
+async function createSession(username: string) {
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const session = await new SignJWT({ username })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('24h')
+        .sign(secretKey);
+
+    cookies().set(SESSION_COOKIE_NAME, session, {
+        expires,
+        httpOnly: true,
+        path: '/',
+    });
+}
+
 
 export async function POST(req: NextRequest) {
   try {
