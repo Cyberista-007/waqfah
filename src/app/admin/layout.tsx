@@ -3,30 +3,39 @@
 
 import { ReactNode } from 'react';
 import { useUser, useAuth } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
-  const { user } = useUser();
-  const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { logoutAdmin } = useAdminAuth();
+  const { isAdmin, isLoading, logoutAdmin } = useAdminAuth();
   
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-    }
     logoutAdmin();
     router.push('/');
   }
+  
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      router.push('/admin/login');
+    }
+  }, [isLoading, isAdmin, router]);
+
+  if (isLoading || !isAdmin) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    )
+  }
+
 
   const navItems = [
     { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
