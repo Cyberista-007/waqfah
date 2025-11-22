@@ -1,24 +1,28 @@
 
-"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, MessageSquare, ListVideo, Users, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal } from "lucide-react";
 import Link from "next/link";
-import { useCollection } from "@/firebase";
-import type { Lecture, Series, Book as BookType, Sheikh } from "@/lib/types";
+import { getAllLectures, getAllSeries, getAllBooks, getAllSheikhs } from "@/lib/data";
+import type { Lecture } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 import { StatCard } from "@/components/admin/StatCard";
 
-export default function AdminDashboardPage() {
-    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs');
-    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
-    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
-    const { data: allBooks, isLoading: booksLoading } = useCollection<BookType>('books');
-    const { data: popularLectures, isLoading: popularLecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['viewCount', 'desc'], limit: 5 });
+// This is now a Server Component
+export default async function AdminDashboardPage() {
+    // Fetch data on the server
+    const [allSheikhs, allLectures, allSeries, allBooks] = await Promise.all([
+        getAllSheikhs(),
+        getAllLectures(),
+        getAllSeries(),
+        getAllBooks(),
+    ]);
 
-    const isLoading = sheikhsLoading || lecturesLoading || seriesLoading || booksLoading || popularLecturesLoading;
+    const popularLectures = [...allLectures]
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        .slice(0, 5);
 
     return (
         <div className="space-y-8">
@@ -34,10 +38,10 @@ export default function AdminDashboardPage() {
             </header>
             
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="إجمالي المشايخ" value={allSheikhs?.length ?? 0} icon={MicVocal} isLoading={sheikhsLoading} />
-                <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={lecturesLoading} />
-                <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={seriesLoading} />
-                <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={booksLoading} />
+                <StatCard title="إجمالي المشايخ" value={allSheikhs?.length ?? 0} icon={MicVocal} isLoading={false} />
+                <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={false} />
+                <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={false} />
+                <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={false} />
             </section>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -80,9 +84,7 @@ export default function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {popularLecturesLoading ? (
-                                    <TableRow><TableCell colSpan={2} className="text-center"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
-                                ) : popularLectures?.map(lecture => (
+                                {popularLectures?.map(lecture => (
                                     <TableRow key={lecture.id}>
                                         <TableCell className="font-medium">
                                             <Link href={`/lectures/${lecture.slug}`} className="hover:underline" target="_blank">{lecture.title}</Link>
@@ -90,6 +92,11 @@ export default function AdminDashboardPage() {
                                         <TableCell>{lecture.viewCount || 0}</TableCell>
                                     </TableRow>
                                 ))}
+                                {popularLectures.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="text-center text-muted-foreground">لا توجد بيانات لعرضها.</TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
