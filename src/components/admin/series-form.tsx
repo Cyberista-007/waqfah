@@ -52,6 +52,7 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
+    const language = formData.get("language") as string;
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     
     const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
@@ -66,7 +67,7 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
         return;
     }
 
-    const seriesData: Partial<Series> & { imageId: string } = {
+    const seriesData: Partial<Series> & { imageId: string, language: string } = {
         title,
         slug,
         description,
@@ -74,6 +75,7 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
         sheikhName: sheikhData.name,
         sheikhSlug: sheikhData.slug,
         imageId: `series-${slug}`,
+        language: language || 'ar',
     };
     
     if(isEditMode && series) {
@@ -137,9 +139,23 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
             <Label htmlFor="description">وصف السلسلة</Label>
             <Textarea id="description" name="description" defaultValue={series?.description} required disabled={isSubmitting}/>
           </div>
-           <div>
-            <Label htmlFor="image">صورة الغلاف (اختياري)</Label>
-            <Input id="image" name="image" type="file" disabled={isSubmitting}/>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="language">اللغة</Label>
+              <Select name="language" defaultValue={series?.language || 'ar'}>
+                  <SelectTrigger>
+                      <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="ar">العربية</SelectItem>
+                      <SelectItem value="en">الإنجليزية</SelectItem>
+                  </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="image">صورة الغلاف (اختياري)</Label>
+              <Input id="image" name="image" type="file" disabled={isSubmitting}/>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting || !firestore}>

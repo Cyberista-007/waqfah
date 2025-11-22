@@ -92,6 +92,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     const description = formData.get("description") as string;
     const audioSrc = formData.get("audioSrc") as string;
     const duration = formData.get("duration") as string;
+    const language = formData.get("language") as string;
     
     const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
     const seriesData = filteredSeries?.find(s => s.id === selectedSeriesId);
@@ -125,6 +126,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         pdfUrl: formData.get("pdfUrl") as string || "",
         telegramUrl: formData.get("telegramUrl") as string || "",
         soundcloudUrl: formData.get("soundcloudUrl") as string || "",
+        language: language || 'ar',
     };
 
     try {
@@ -250,7 +252,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
             <Textarea id="description" name="description" defaultValue={lecture?.description} required rows={4} ref={descriptionRef}/>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="duration">المدة (بالدقائق)</Label>
               <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
@@ -258,6 +260,18 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
              <div>
               <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
               <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
+            </div>
+             <div>
+                <Label htmlFor="language">اللغة</Label>
+                <Select name="language" defaultValue={lecture?.language || 'ar'}>
+                    <SelectTrigger>
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ar">العربية</SelectItem>
+                        <SelectItem value="en">الإنجليزية</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
           </div>
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -290,5 +304,3 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   );
 }
  
-
-    

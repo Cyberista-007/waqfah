@@ -47,7 +47,7 @@ export function AddToPlaylistDialog({ isOpen, onOpenChange, lectureId, userPlayl
     if (!playlist) return;
 
     // Prevent adding duplicates
-    if (playlist.lectureIds?.includes(lectureId)) {
+    if (playlist.lectureIds && playlist.lectureIds.includes(lectureId)) {
         toast({ title: "المحاضرة موجودة بالفعل في هذه القائمة." });
         setIsSubmitting(false);
         onOpenChange(false);
