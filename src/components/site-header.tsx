@@ -210,14 +210,14 @@ export function SiteHeader() {
                     <DropdownMenuSeparator />
                      <DropdownMenuItem onSelect={() => setIsThemeSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
                         <div className="flex items-center gap-2">
-                           <Palette className="h-4 w-4" />
                            <span>تغيير الثيم</span>
+                           <Palette className="h-4 w-4" />
                         </div>
                     </DropdownMenuItem>
                      <DropdownMenuItem onSelect={() => setIsFontSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
                         <div className="flex items-center gap-2">
-                           <CaseSensitive className="h-4 w-4" />
                            <span>تغيير الخط</span>
+                           <CaseSensitive className="h-4 w-4" />
                         </div>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -252,6 +252,11 @@ export function SiteHeader() {
                       <DropdownMenuItem asChild>
                           <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                       </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem asChild>
+                            <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
                           <LogOut className="me-2 h-4 w-4" />
@@ -296,3 +301,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    
