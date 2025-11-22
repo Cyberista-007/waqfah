@@ -49,17 +49,16 @@ export async function deleteSession() {
 // we create API routes to get and clear the session state.
 
 export async function getSession() {
-    if (typeof window === 'undefined') {
-        return await getSessionPayload();
+    try {
+        const res = await fetch('/api/admin/session');
+        if (!res.ok) return null;
+        return await res.json();
+    } catch(e) {
+        console.error("Could not fetch session", e);
+        return null;
     }
-    const res = await fetch('/api/admin/session');
-    if (!res.ok) return null;
-    return await res.json();
 }
 
 export async function clearSession() {
-    if (typeof window === 'undefined') {
-        return await deleteSession();
-    }
     await fetch('/api/admin/logout', { method: 'POST' });
 }

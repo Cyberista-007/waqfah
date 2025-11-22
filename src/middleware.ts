@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSession } from '@/lib/session';
+import { getSessionPayload } from '@/lib/session';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = await getSession();
+  const session = await getSessionPayload();
 
   // Protect all /admin routes except for the login page itself
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {

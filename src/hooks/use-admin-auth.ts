@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+// IMPORTANT: Only import the client-safe functions
 import { getSession, clearSession } from '@/lib/session';
 
 
