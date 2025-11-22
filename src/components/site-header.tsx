@@ -68,7 +68,7 @@ const moreNavItems = [
 export function SiteHeader() {
   const scrolled = useScroll(50);
   const { user, isUserLoading } = useUser();
-  const { isAdmin, logoutAdmin } = useAdminAuth();
+  const { isAdmin } = useAdminAuth();
   const router = useRouter();
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
   const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
@@ -78,7 +78,6 @@ export function SiteHeader() {
     if (user) {
         await signOut(user.auth);
     }
-    logoutAdmin();
     router.push('/');
   }
   
@@ -301,5 +300,3 @@ export function SiteHeader() {
     </>
   )
 }
-
-    

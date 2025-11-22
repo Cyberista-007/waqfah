@@ -1,35 +1,30 @@
 
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2 } from 'lucide-react';
+import { ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
-  const pathname = usePathname();
-  const { isAdmin, isLoading, logoutAdmin } = useAdminAuth();
+  const { isAdmin, isLoading } = useAdminAuth();
+  const auth = useAuth();
   
-  useEffect(() => {
-    // When auth check is complete from the hook
-    if (!isLoading) {
-      // If user is not admin and not on the login page, redirect to login
-      if (!isAdmin && pathname !== '/admin/login') {
-        router.push('/admin/login');
-      }
-      // If user is admin and is on the login page, redirect to dashboard
-      else if (isAdmin && pathname === '/admin/login') {
-        router.push('/admin/dashboard');
-      }
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
     }
-  }, [isLoading, isAdmin, pathname, router]);
+    router.push('/');
+  }
 
-  // While checking auth on either server or client, show a full-screen loader
+  // While checking auth, show a full-screen loader
   if (isLoading) {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -38,11 +33,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  // If it's the login page, and we're done loading, let it render
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
-  
   // If we are done loading, and the user is an admin, show the layout
   if (isAdmin) {
       const navItems = [
@@ -91,7 +81,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   </nav>
                 </div>
                 <div className="mt-auto p-4 space-y-2">
-                      <Button onClick={() => logoutAdmin()} size="sm" variant="outline" className="w-full">
+                      <Button onClick={handleLogout} size="sm" variant="outline" className="w-full">
                         <LogOut className="mr-2 h-4 w-4" />
                         تسجيل الخروج
                       </Button>
@@ -116,12 +106,28 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       );
   }
 
-  // Fallback for non-admin users trying to access protected routes (before redirect kicks in)
+  // If not loading and not an admin, show access denied message
   return (
-    <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin" />
+    <div className="flex h-screen flex-col items-center justify-center text-center p-4">
+        <ShieldX className="w-24 h-24 text-destructive mb-4"/>
+        <h1 className="text-3xl font-bold font-headline mb-2">الوصول مرفوض</h1>
+        <p className="text-lg text-muted-foreground mb-6">
+            عذراً، هذه المنطقة مخصصة للمدير فقط.
+        </p>
+        <div className="flex gap-4">
+          <Button asChild>
+            <Link href="/">العودة إلى الصفحة الرئيسية</Link>
+          </Button>
+           <Button asChild variant="secondary">
+            <Link href="/auth/login">تسجيل الدخول</Link>
+          </Button>
+        </div>
     </div>
   );
 };
+
+// Dummy pathname for server-side check.
+// This is fine because we are not using it for active styling on the server.
+const pathname = "/";
 
 export default AdminLayout;

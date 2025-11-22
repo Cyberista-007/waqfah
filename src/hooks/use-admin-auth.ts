@@ -1,46 +1,24 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-// IMPORTANT: Only import the client-safe functions
-import { getSession, clearSession } from '@/lib/session';
+import { useState, useEffect } from 'react';
+import { useUser } from '@/firebase';
 
+const ADMIN_EMAIL = 'abdoreda6249@gmail.com';
 
 export function useAdminAuth() {
+  const { user, isUserLoading } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    const checkSession = async () => {
-      setIsLoading(true);
-      const session = await getSession();
-      setIsAdmin(!!session);
-      setIsLoading(false);
-    };
-    checkSession();
-  }, []);
-
-  const loginAdmin = useCallback(async (username, password) => {
-    const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-
-    if (response.ok) {
-        setIsAdmin(true);
-        return true;
+    // This effect runs whenever the user loading state or the user object itself changes.
+    if (!isUserLoading) {
+      // Once we know the auth state is resolved
+      setIsAdmin(user?.email === ADMIN_EMAIL);
+      setIsLoading(false); // We are no longer loading
     }
-    return false;
-  }, []);
+  }, [isUserLoading, user]);
 
-  const logoutAdmin = useCallback(async () => {
-     await fetch('/api/admin/logout', { method: 'POST' });
-     setIsAdmin(false);
-     clearSession(); // Immediately clear client-side state
-     router.push('/');
-  }, [router]);
-
-  return { isAdmin, isLoading, loginAdmin, logoutAdmin };
+  return { isAdmin, isLoading };
 }
