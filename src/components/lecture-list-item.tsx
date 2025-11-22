@@ -152,6 +152,11 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                  <Button variant="ghost" size="icon" onClick={handleShare}>
                     <Share2 className="w-5 h-5 text-muted-foreground" />
                  </Button>
+                 <Button asChild variant="ghost" size="icon">
+                    <a href={lecture.audioSrc} download>
+                        <Download className="w-5 h-5 text-muted-foreground" />
+                    </a>
+                 </Button>
             </div>
         </div>
          {videoId && (
