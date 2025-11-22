@@ -22,7 +22,6 @@ import type { Series } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { useState } from "react";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -32,7 +31,6 @@ import { doc } from "firebase/firestore";
 export default function AdminSeriesPage() {
   const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   const { toast } = useToast();
-  const router = useRouter();
   const firestore = useFirestore();
 
   const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null);
