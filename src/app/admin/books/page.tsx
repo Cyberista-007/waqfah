@@ -21,11 +21,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Book, Sheikh } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Book as BookIcon } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { BookForm } from "@/components/admin/book-form";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AdminBooksPage() {
     const { toast } = useToast();
@@ -40,17 +39,31 @@ export default function AdminBooksPage() {
 
     const handleDelete = async () => {
         if (!bookToDelete || !firestore) return;
-        
-        const bookRef = doc(firestore, 'books', bookToDelete.id);
-        
-        deleteDocumentNonBlocking(bookRef);
 
-        toast({
-            variant: "destructive",
-            title: "تم الحذف بنجاح",
-            description: `تم حذف كتاب "${bookToDelete.title}".`,
-        });
-        setBookToDelete(null); // Close the dialog
+        const bookRef = doc(firestore, 'books', bookToDelete.id);
+        const statsRef = doc(firestore, 'stats', 'global');
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                transaction.delete(bookRef);
+                transaction.update(statsRef, { books: increment(-1) });
+            });
+
+            toast({
+                variant: "destructive",
+                title: "تم الحذف بنجاح",
+                description: `تم حذف كتاب "${bookToDelete.title}".`,
+            });
+        } catch (error) {
+            console.error("Error deleting book:", error);
+            toast({
+                variant: "destructive",
+                title: "فشل الحذف",
+                description: "لم نتمكن من حذف الكتاب.",
+            });
+        } finally {
+            setBookToDelete(null);
+        }
     };
     
     const handleNew = () => {

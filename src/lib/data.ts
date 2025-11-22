@@ -1,5 +1,5 @@
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -19,6 +19,49 @@ export const getDbSafe = () => {
         // console.warn("Could not connect to live DB, falling back to dummy data.", e);
         return { db: null, isLive: false };
     }
+}
+
+// --- Dashboard Stats ---
+export const getDashboardStats = async (): Promise<Stats | null> => {
+    const { db, isLive } = getDbSafe();
+    if (isLive && db) {
+        try {
+            const statsRef = doc(db, 'stats', 'global');
+            const statsSnap = await getDoc(statsRef);
+            if (statsSnap.exists()) {
+                return statsSnap.data() as Stats;
+            }
+            // If stats doc doesn't exist, create it.
+            const statsData = { sheikhs: 0, lectures: 0, series: 0, books: 0 };
+            await statsRef.set(statsData);
+            return statsData;
+        } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+            return null;
+        }
+    }
+    return null;
+}
+
+export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
+    const { db, isLive } = getDbSafe();
+    if (isLive && db) {
+        try {
+            const lecturesCol = collection(db, 'lectures');
+            const q = query(lecturesCol, orderBy('viewCount', 'desc'), limit(count));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                return snapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+            }
+        } catch (error) {
+            console.error("Error fetching popular lectures, using fallback:", error);
+        }
+    }
+    // Fallback to dummy data, sorted by viewCount
+    return [...DUMMY_LECTURES]
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        .slice(0, count)
+        .map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
 }
 
 
@@ -396,5 +439,3 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
         return [];
     }
 };
-
-    

@@ -1,28 +1,21 @@
 
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal } from "lucide-react";
 import Link from "next/link";
-import { getAllLectures, getAllSeries, getAllBooks, getAllSheikhs } from "@/lib/data";
-import type { Lecture } from "@/lib/types";
+import { getDashboardStats, getPopularLectures } from "@/lib/data";
+import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 import { StatCard } from "@/components/admin/StatCard";
 
 // This is now a Server Component
 export default async function AdminDashboardPage() {
     // Fetch data on the server
-    const [allSheikhs, allLectures, allSeries, allBooks] = await Promise.all([
-        getAllSheikhs(),
-        getAllLectures(),
-        getAllSeries(),
-        getAllBooks(),
+    const [stats, popularLectures] = await Promise.all([
+        getDashboardStats(),
+        getPopularLectures(5),
     ]);
-
-    const popularLectures = [...allLectures]
-        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-        .slice(0, 5);
 
     return (
         <div className="space-y-8">
@@ -38,10 +31,10 @@ export default async function AdminDashboardPage() {
             </header>
             
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="إجمالي المشايخ" value={allSheikhs?.length ?? 0} icon={MicVocal} isLoading={false} />
-                <StatCard title="إجمالي المحاضرات" value={allLectures?.length ?? 0} icon={Clapperboard} isLoading={false} />
-                <StatCard title="إجمالي السلاسل" value={allSeries?.length ?? 0} icon={ListVideo} isLoading={false} />
-                <StatCard title="إجمالي الكتب" value={allBooks?.length ?? 0} icon={Book} isLoading={false} />
+                <StatCard title="إجمالي المشايخ" value={stats?.sheikhs ?? 0} icon={MicVocal} isLoading={!stats} />
+                <StatCard title="إجمالي المحاضرات" value={stats?.lectures ?? 0} icon={Clapperboard} isLoading={!stats} />
+                <StatCard title="إجمالي السلاسل" value={stats?.series ?? 0} icon={ListVideo} isLoading={!stats} />
+                <StatCard title="إجمالي الكتب" value={stats?.books ?? 0} icon={Book} isLoading={!stats} />
             </section>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,7 +77,12 @@ export default async function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {popularLectures?.map(lecture => (
+                                {popularLectures.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="text-center text-muted-foreground">لا توجد بيانات لعرضها.</TableCell>
+                                    </TableRow>
+                                )}
+                                {popularLectures.map(lecture => (
                                     <TableRow key={lecture.id}>
                                         <TableCell className="font-medium">
                                             <Link href={`/lectures/${lecture.slug}`} className="hover:underline" target="_blank">{lecture.title}</Link>
@@ -92,11 +90,7 @@ export default async function AdminDashboardPage() {
                                         <TableCell>{lecture.viewCount || 0}</TableCell>
                                     </TableRow>
                                 ))}
-                                {popularLectures.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="text-center text-muted-foreground">لا توجد بيانات لعرضها.</TableCell>
-                                    </TableRow>
-                                )}
+                               
                             </TableBody>
                         </Table>
                     </CardContent>

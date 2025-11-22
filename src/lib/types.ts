@@ -7,6 +7,13 @@ type Serializable<T> = {
   [P in keyof T]: T[P] extends Timestamp ? string : T[P];
 };
 
+export type Stats = {
+  sheikhs: number;
+  lectures: number;
+  series: number;
+  books: number;
+}
+
 export type Sheikh = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
@@ -202,5 +209,3 @@ export type Comment = Serializable<{
     text: string;
     createdAt: Timestamp;
 }>;
-
-    

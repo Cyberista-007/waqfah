@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
-import { collection, doc, Timestamp } from "firebase/firestore";
+import { collection, doc, runTransaction, increment } from "firebase/firestore";
 import type { Book, Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -81,8 +81,14 @@ export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
             description: `تم تحديث كتاب "${title}".`,
         });
       } else {
-        const booksCollection = collection(firestore, 'books');
-        addDocumentNonBlocking(booksCollection, bookData);
+        const newBookRef = doc(collection(firestore, 'books'));
+        const statsRef = doc(firestore, 'stats', 'global');
+
+        await runTransaction(firestore, async (transaction) => {
+            transaction.set(newBookRef, bookData);
+            transaction.update(statsRef, { books: increment(1) });
+        });
+
         toast({
             title: "تم الإنشاء بنجاح",
             description: `تمت إضافة كتاب "${title}" الجديد.`,

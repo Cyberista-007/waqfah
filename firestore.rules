@@ -42,6 +42,11 @@ service cloud.firestore {
     // Anyone can read, but write access is restricted.
     // =====================================================================
 
+    match /stats/{statsId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
     match /sheikhs/{sheikhId} {
       allow get, list: if true;
       allow write: if isAdmin(); // Only admins can modify.
@@ -172,5 +177,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

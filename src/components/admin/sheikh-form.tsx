@@ -15,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
-import { collection, doc, Timestamp } from "firebase/firestore";
+import { collection, doc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import type { Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
-import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 interface SheikhFormProps {
     sheikh?: Sheikh | null;
@@ -59,30 +59,47 @@ export function SheikhForm({ sheikh, onFormClose }: SheikhFormProps) {
         imageId: `sheikh-${slug}`, // Placeholder
     };
 
-    if (isEditMode && sheikh) {
-      const sheikhRef = doc(firestore, 'sheikhs', sheikh.id);
-      const updateData = {
-          ...sheikhData,
-      };
-      updateDocumentNonBlocking(sheikhRef, updateData);
-      toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث بيانات الشيخ "${name}".`,
-      });
-    } else {
-      const sheikhsCollection = collection(firestore, 'sheikhs');
-      const addData = {
-          ...sheikhData,
-          createdAt: Timestamp.now()
-      };
-      addDocumentNonBlocking(sheikhsCollection, addData);
-      toast({
-          title: "تم الإنشاء بنجاح",
-          description: `تمت إضافة الشيخ "${name}" الجديد.`,
-      });
+    try {
+        if (isEditMode && sheikh) {
+          const sheikhRef = doc(firestore, 'sheikhs', sheikh.id);
+          const updateData = {
+              ...sheikhData,
+          };
+          updateDocumentNonBlocking(sheikhRef, updateData);
+          toast({
+              title: "تم التحديث بنجاح",
+              description: `تم تحديث بيانات الشيخ "${name}".`,
+          });
+        } else {
+          const addData = {
+              ...sheikhData,
+              createdAt: Timestamp.now(),
+              followerCount: 0,
+          };
+          const newSheikhRef = doc(collection(firestore, 'sheikhs'));
+          const statsRef = doc(firestore, 'stats', 'global');
+
+          await runTransaction(firestore, async (transaction) => {
+              transaction.set(newSheikhRef, addData);
+              transaction.update(statsRef, { sheikhs: increment(1) });
+          });
+
+          toast({
+              title: "تم الإنشاء بنجاح",
+              description: `تمت إضافة الشيخ "${name}" الجديد.`,
+          });
+        }
+        onFormClose();
+    } catch (error) {
+        console.error("Error submitting sheikh:", error);
+        toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: "لم نتمكن من حفظ بيانات الشيخ.",
+        });
+    } finally {
+        setIsSubmitting(false);
     }
-    onFormClose();
-    setIsSubmitting(false);
   };
 
   return (

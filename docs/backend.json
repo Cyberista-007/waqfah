@@ -1,6 +1,18 @@
 
 {
   "entities": {
+    "Stats": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Stats",
+      "type": "object",
+      "description": "A singleton document to store global site statistics.",
+      "properties": {
+        "sheikhs": { "type": "number", "minimum": 0 },
+        "lectures": { "type": "number", "minimum": 0 },
+        "series": { "type": "number", "minimum": 0 },
+        "books": { "type": "number", "minimum": 0 }
+      }
+    },
     "Sheikh": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Sheikh",
@@ -264,6 +276,10 @@
   "firestore": {
     "structure": [
       {
+        "path": "/stats/{statsId}",
+        "definition": { "schema": { "$ref": "#/entities/Stats" } }
+      },
+      {
         "path": "/sheikhs/{sheikhId}",
         "definition": { "schema": { "$ref": "#/entities/Sheikh" } }
       },
@@ -330,5 +346,3 @@
     ]
   }
 }
-
-    

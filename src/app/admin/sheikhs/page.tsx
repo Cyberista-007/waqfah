@@ -21,11 +21,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Sheikh, Series, Lecture } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, MicVocal } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { SheikhForm } from "@/components/admin/sheikh-form";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { getInitials } from "@/lib/utils";
@@ -74,16 +73,28 @@ export default function AdminSheikhsPage() {
         if (!itemToDelete || !firestore) return;
         
         const itemRef = doc(firestore, 'sheikhs', itemToDelete.id);
-        
-        deleteDocumentNonBlocking(itemRef);
+        const statsRef = doc(firestore, 'stats', 'global');
 
-        toast({
-            variant: "destructive",
-            title: "تم الحذف بنجاح",
-            description: `تم حذف الشيخ "${itemToDelete.name}".`,
-        });
-        
-        setItemToDelete(null); // Close the dialog
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                transaction.delete(itemRef);
+                transaction.update(statsRef, { sheikhs: increment(-1) });
+            });
+            toast({
+                variant: "destructive",
+                title: "تم الحذف بنجاح",
+                description: `تم حذف الشيخ "${itemToDelete.name}".`,
+            });
+        } catch (error) {
+             console.error("Error deleting sheikh:", error);
+             toast({
+                variant: "destructive",
+                title: "فشل الحذف",
+                description: "لم نتمكن من حذف الشيخ.",
+            });
+        } finally {
+            setItemToDelete(null); // Close the dialog
+        }
     };
     
     const handleNew = () => {

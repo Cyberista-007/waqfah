@@ -24,9 +24,7 @@ import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { useState } from "react";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { doc } from "firebase/firestore";
-
+import { doc, runTransaction, increment } from "firebase/firestore";
 
 export default function AdminSeriesPage() {
   const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
@@ -52,13 +50,28 @@ export default function AdminSeriesPage() {
     if (!seriesToDelete || !firestore) return;
     
     const seriesRef = doc(firestore, 'series', seriesToDelete.id);
-    deleteDocumentNonBlocking(seriesRef);
+    const statsRef = doc(firestore, 'stats', 'global');
 
-    toast({
-        title: "تم الحذف بنجاح",
-        description: `تم حذف سلسلة "${seriesToDelete.title}".`,
-    });
-    setSeriesToDelete(null);
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            transaction.delete(seriesRef);
+            transaction.update(statsRef, { series: increment(-1) });
+        });
+
+        toast({
+            title: "تم الحذف بنجاح",
+            description: `تم حذف سلسلة "${seriesToDelete.title}".`,
+        });
+    } catch (error) {
+         console.error("Error deleting series:", error);
+         toast({
+            variant: "destructive",
+            title: "فشل الحذف",
+            description: "لم نتمكن من حذف السلسلة.",
+        });
+    } finally {
+        setSeriesToDelete(null);
+    }
   };
 
 
