@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, initializeAuth, indexedDBLocalPersistence, getAuth } from 'firebase/auth';
@@ -55,31 +55,31 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     userError: null,
   });
   
+  // This function ensures Firebase is initialized only once.
+  const getFirebaseServices = useCallback(() => {
+      if (getApps().length) {
+          const app = getApp();
+          const auth = getAuth(app);
+          const firestore = getFirestore(app);
+          const functions = getFunctions(app);
+          const storage = getStorage(app);
+          return { app, auth, firestore, functions, storage };
+      }
+
+      const app = initializeApp(firebaseConfig);
+      let auth: Auth;
+      try {
+          auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
+      } catch (e) {
+          auth = getAuth(app);
+      }
+      const firestore = getFirestore(app);
+      const functions = getFunctions(app);
+      const storage = getStorage(app);
+      return { app, auth, firestore, functions, storage };
+  }, []);
+
   useEffect(() => {
-    // This function ensures Firebase is initialized only once.
-    const getFirebaseServices = () => {
-        if (getApps().length) {
-            const app = getApp();
-            const auth = getAuth(app);
-            const firestore = getFirestore(app);
-            const functions = getFunctions(app);
-            const storage = getStorage(app);
-            return { app, auth, firestore, functions, storage };
-        }
-
-        const app = initializeApp(firebaseConfig);
-        let auth: Auth;
-        try {
-            auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
-        } catch (e) {
-            auth = getAuth(app);
-        }
-        const firestore = getFirestore(app);
-        const functions = getFunctions(app);
-        const storage = getStorage(app);
-        return { app, auth, firestore, functions, storage };
-    };
-
     const s = getFirebaseServices();
     setServices(s);
 
@@ -114,7 +114,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       }
     );
     return () => unsubscribe();
-  }, []);
+  }, [getFirebaseServices]);
 
   const contextValue = useMemo(() => {
     if (!services) {
