@@ -38,12 +38,12 @@ export default function AdminLoginPage() {
       router.push('/admin/dashboard');
     } else {
       toast({ variant: "destructive", title: "فشل تسجيل الدخول", description: "اسم المستخدم أو كلمة المرور غير صحيحة." });
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
-
-  if (isAuthLoading || isAdmin) {
+  
+  // This loader handles the initial check. If already admin, will be redirected by useEffect.
+  if (isAuthLoading) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-16 w-16 animate-spin" />
@@ -51,6 +51,7 @@ export default function AdminLoginPage() {
       )
   }
 
+  // If not loading and not admin, show the login form.
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40">
         <div className="w-full max-w-md">
@@ -70,11 +71,11 @@ export default function AdminLoginPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                     <Label htmlFor="username">اسم المستخدم</Label>
-                    <Input id="username" name="username" required placeholder="أدخل اسم المستخدم"/>
+                    <Input id="username" name="username" required placeholder="أدخل اسم المستخدم" disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password">كلمة المرور</Label>
-                    <Input id="password" name="password" type="password" required placeholder="أدخل كلمة المرور" />
+                    <Input id="password" name="password" type="password" required placeholder="أدخل كلمة المرور" disabled={isLoading}/>
                 </div>
                 <Button
                     type="submit"

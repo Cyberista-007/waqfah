@@ -1,10 +1,8 @@
 
 'use client';
 
-import { ReactNode, useEffect } from 'react';
-import { useUser, useAuth } from '@/firebase';
+import { ReactNode, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { signOut } from 'firebase/auth';
 import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,19 +15,42 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const { isAdmin, isLoading, logoutAdmin } = useAdminAuth();
   
-  const handleLogout = async () => {
-    logoutAdmin();
-    router.push('/');
-  }
+  // This state is to prevent flash of unstyled content or wrong layout
+  const [isClientLoading, setIsClientLoading] = useState(true);
   
   useEffect(() => {
-    if (!isLoading && !isAdmin) {
-      router.push('/admin/login');
+    // When auth check is complete
+    if (!isLoading) {
+      // If user is not admin, redirect to login, but not if they are already on the login page
+      if (!isAdmin && pathname !== '/admin/login') {
+        router.push('/admin/login');
+      }
+      // If user is admin and on login page, redirect to dashboard
+      else if (isAdmin && pathname === '/admin/login') {
+        router.push('/admin/dashboard');
+      }
+      // Finished all checks, stop client loading
+      setIsClientLoading(false);
     }
-  }, [isLoading, isAdmin, router]);
+  }, [isLoading, isAdmin, pathname, router]);
 
-  if (isLoading || !isAdmin) {
+  // While checking auth on either server or client, show loader
+  if (isLoading || isClientLoading) {
     return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    )
+  }
+
+  // If it's the login page, render it without the admin layout shell
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+  
+  // If not admin and not on login page (this should be brief before redirect kicks in)
+  if (!isAdmin) {
+     return (
         <div className="flex h-screen items-center justify-center">
             <Loader2 className="h-16 w-16 animate-spin" />
         </div>
@@ -83,7 +104,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               </nav>
             </div>
             <div className="mt-auto p-4 space-y-2">
-                  <Button onClick={handleLogout} size="sm" variant="outline" className="w-full">
+                  <Button onClick={() => logoutAdmin()} size="sm" variant="outline" className="w-full">
                     <LogOut className="mr-2 h-4 w-4" />
                     تسجيل الخروج
                   </Button>
