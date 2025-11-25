@@ -16,7 +16,7 @@ async function getChannelData(slug: string) {
     const channel = await getChannelBySlug(slug);
 
     if (!channel) {
-        return null;
+        return { channel: null, lectures: [] };
     }
     
     const lectures = await getLecturesByChannel(channel.id);
@@ -25,13 +25,12 @@ async function getChannelData(slug: string) {
 }
 
 export default async function ChannelPage({ params }: { params: { slug: string } }) {
-    const data = await getChannelData(params.slug);
+    const { channel, lectures } = await getChannelData(params.slug);
 
-    if (!data) {
+    if (!channel) {
         notFound();
     }
 
-    const { channel, lectures } = data;
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
     
