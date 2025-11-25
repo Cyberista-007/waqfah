@@ -40,7 +40,10 @@ service cloud.firestore {
 
     match /sheikhs/{sheikhId} {
       allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+      // Allow admins to do any write.
+      // Allow any signed-in user to update only the followerCount.
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
     
     match /series/{seriesId} {
