@@ -101,7 +101,8 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
 
             await runTransaction(firestore, async (transaction) => {
                 transaction.set(newSeriesRef, fullSeriesData);
-                transaction.update(statsRef, { series: increment(1) });
+                 // Use set with merge to avoid error if doc doesn't exist
+                transaction.set(statsRef, { series: increment(1) }, { merge: true });
             });
 
             toast({

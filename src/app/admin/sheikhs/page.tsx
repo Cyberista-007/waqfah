@@ -78,7 +78,8 @@ export default function AdminSheikhsPage() {
         try {
             await runTransaction(firestore, async (transaction) => {
                 transaction.delete(itemRef);
-                transaction.update(statsRef, { sheikhs: increment(-1) });
+                // Use set with merge to avoid error if doc doesn't exist
+                transaction.set(statsRef, { sheikhs: increment(-1) }, { merge: true });
             });
             toast({
                 variant: "destructive",

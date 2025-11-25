@@ -46,7 +46,8 @@ export default function AdminBooksPage() {
         try {
             await runTransaction(firestore, async (transaction) => {
                 transaction.delete(bookRef);
-                transaction.update(statsRef, { books: increment(-1) });
+                // Use set with merge to avoid error if doc doesn't exist
+                transaction.set(statsRef, { books: increment(-1) }, { merge: true });
             });
 
             toast({

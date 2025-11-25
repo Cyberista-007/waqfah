@@ -55,7 +55,8 @@ export default function AdminSeriesPage() {
     try {
         await runTransaction(firestore, async (transaction) => {
             transaction.delete(seriesRef);
-            transaction.update(statsRef, { series: increment(-1) });
+            // Use set with merge to avoid error if doc doesn't exist
+            transaction.set(statsRef, { series: increment(-1) }, { merge: true });
         });
 
         toast({

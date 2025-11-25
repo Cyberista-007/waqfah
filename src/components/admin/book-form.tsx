@@ -86,7 +86,8 @@ export function BookForm({ book, sheikhs, onFormClose }: BookFormProps) {
 
         await runTransaction(firestore, async (transaction) => {
             transaction.set(newBookRef, bookData);
-            transaction.update(statsRef, { books: increment(1) });
+            // Use set with merge to avoid error if doc doesn't exist
+            transaction.set(statsRef, { books: increment(1) }, { merge: true });
         });
 
         toast({

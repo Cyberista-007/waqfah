@@ -81,7 +81,8 @@ export function SheikhForm({ sheikh, onFormClose }: SheikhFormProps) {
 
           await runTransaction(firestore, async (transaction) => {
               transaction.set(newSheikhRef, addData);
-              transaction.update(statsRef, { sheikhs: increment(1) });
+              // Use set with merge to avoid error if doc doesn't exist
+              transaction.set(statsRef, { sheikhs: increment(1) }, { merge: true });
           });
 
           toast({

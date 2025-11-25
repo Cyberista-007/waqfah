@@ -1,6 +1,6 @@
 
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats } from './types';
-import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
 
@@ -31,16 +31,17 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
             if (statsSnap.exists()) {
                 return statsSnap.data() as Stats;
             }
-            // If stats doc doesn't exist, create it.
-            const statsData = { sheikhs: 0, lectures: 0, series: 0, books: 0 };
-            await statsRef.set(statsData);
+            // If stats doc doesn't exist, create it with initial values.
+            const statsData: Stats = { sheikhs: 0, lectures: 0, series: 0, books: 0 };
+            await setDoc(statsRef, statsData);
             return statsData;
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
             return null;
         }
     }
-    return null;
+    // Fallback for non-live environment
+    return { sheikhs: DUMMY_SHEIKHS.length, lectures: DUMMY_LECTURES.length, series: DUMMY_SERIES.length, books: 0 };
 }
 
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
