@@ -126,8 +126,8 @@ export async function POST(req: NextRequest) {
             videoId: item.id,
             title: item.snippet?.title || 'بدون عنوان',
             description: item.snippet?.description || '',
-            // Convert ISO 8601 duration to minutes
-            duration: item.contentDetails?.duration ? Math.ceil(parse(item.contentDetails.duration).seconds / 60) : 0,
+            // Convert ISO 8601 duration to seconds
+            durationInSeconds: item.contentDetails?.duration ? parse(item.contentDetails.duration).seconds : 0,
         }));
 
 

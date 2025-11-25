@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDuration } from "@/lib/utils";
 
 // A simple CSV parser
 const parseCSV = (text: string): Record<string, string>[] => {
@@ -50,7 +51,7 @@ interface FetchedVideo {
     videoId: string;
     title: string;
     description: string;
-    duration: number; // in minutes
+    durationInSeconds: number;
 }
 
 export default function AdminImportLecturesPage() {
@@ -134,7 +135,7 @@ export default function AdminImportLecturesPage() {
 
             const sheikh = series.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
             if (series.sheikhId && !sheikh) {
-                 throw new Error("الشيخ المرتبط بالسلسلة غير موجود أو تم حذفه.");
+                 console.warn(`Sheikh with ID ${series.sheikhId} not found, but importing anyway.`);
             }
 
             for (const video of videosToImport) {
@@ -152,7 +153,7 @@ export default function AdminImportLecturesPage() {
                     seriesSlug: series.slug,
                     seriesTitle: series.title,
                     audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
-                    duration: video.duration,
+                    duration: Math.ceil(video.durationInSeconds / 60),
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
                     pdfUrl: "",
@@ -361,7 +362,7 @@ export default function AdminImportLecturesPage() {
                                                         />
                                                     </TableHead>
                                                     <TableHead>عنوان الفيديو</TableHead>
-                                                    <TableHead>المدة (دقائق)</TableHead>
+                                                    <TableHead>المدة</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -378,7 +379,7 @@ export default function AdminImportLecturesPage() {
                                                             />
                                                         </TableCell>
                                                         <TableCell className="font-medium">{video.title}</TableCell>
-                                                        <TableCell>{video.duration}</TableCell>
+                                                        <TableCell>{formatDuration(video.durationInSeconds)}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
