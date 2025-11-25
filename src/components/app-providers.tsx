@@ -3,7 +3,7 @@
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
-import { FirebaseProvider } from '@/firebase';
+import { FirebaseClientProvider } from '@/firebase';
 import { FontProvider } from '@/components/font-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -37,12 +37,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           ]}
         >
           <FontProvider>
-            <FirebaseProvider>
+            <FirebaseClientProvider>
               <AudioPlayerProvider>
                 <FirebaseErrorListener />
                 {children}
               </AudioPlayerProvider>
-            </FirebaseProvider>
+            </FirebaseClientProvider>
           </FontProvider>
         </ThemeProvider>
     )

@@ -41,10 +41,18 @@ interface FirebaseProviderProps {
 
 /**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
- * It now handles its own initialization to prevent race conditions.
+ * It now assumes Firebase has been initialized by FirebaseClientProvider.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) => {
-  const [services, setServices] = useState<FirebaseServices | null>(null);
+  const services = useMemo(() => {
+      const app = getApp();
+      const auth = getAuth(app);
+      const firestore = getFirestore(app);
+      const functions = getFunctions(app);
+      const storage = getStorage(app);
+      return { app, auth, firestore, functions, storage };
+  }, []);
+
   const [authState, setAuthState] = useState<{
     user: User | null;
     isUserLoading: boolean;
@@ -54,40 +62,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     isUserLoading: true, // Start as loading
     userError: null,
   });
-  
-  // This function ensures Firebase is initialized only once.
-  const getFirebaseServices = useCallback(() => {
-      if (getApps().length) {
-          const app = getApp();
-          const auth = getAuth(app);
-          const firestore = getFirestore(app);
-          const functions = getFunctions(app);
-          const storage = getStorage(app);
-          return { app, auth, firestore, functions, storage };
-      }
-
-      const app = initializeApp(firebaseConfig);
-      let auth: Auth;
-      try {
-          auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
-      } catch (e) {
-          auth = getAuth(app);
-      }
-      const firestore = getFirestore(app);
-      const functions = getFunctions(app);
-      const storage = getStorage(app);
-      return { app, auth, firestore, functions, storage };
-  }, []);
 
   useEffect(() => {
-    const s = getFirebaseServices();
-    setServices(s);
-
     const unsubscribe = onAuthStateChanged(
-      s.auth,
+      services.auth,
       async (firebaseUser) => {
         if (firebaseUser) {
-          const userRef = doc(s.firestore, "users", firebaseUser.uid);
+          const userRef = doc(services.firestore, "users", firebaseUser.uid);
           try {
             const userSnap = await getDoc(userRef);
             if (!userSnap.exists()) {
@@ -114,25 +95,21 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
       }
     );
     return () => unsubscribe();
-  }, [getFirebaseServices]);
+  }, [services]);
 
-  const contextValue = useMemo(() => {
-    if (!services) {
-        return undefined; // Return undefined if services are not ready
-    }
-    return {
+  const contextValue = useMemo(() => ({
       services,
       ...authState,
-    };
-  }, [services, authState]);
+  }), [services, authState]);
 
-  // Render a loading state until both Firebase services and user auth are resolved.
-  if (!contextValue || contextValue.isUserLoading) {
+  // Render a loading state until user auth is resolved.
+  if (contextValue.isUserLoading) {
     return <HomePageSkeleton />;
   }
 
   return (
     <FirebaseContext.Provider value={contextValue}>
+      <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
