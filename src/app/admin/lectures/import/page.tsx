@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks } from "lucide-react";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Sheikh, Lecture, Channel } from "@/lib/types";
@@ -54,6 +54,12 @@ interface FetchedVideo {
     durationInSeconds: number;
 }
 
+interface FetchedPlaylist {
+    id: string;
+    title: string;
+    videoCount: number;
+}
+
 export default function AdminImportLecturesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
@@ -64,11 +70,15 @@ export default function AdminImportLecturesPage() {
 
     // YouTube State
     const [youtubeUrl, setYoutubeUrl] = useState("");
-    const [isFetchingPlaylist, setIsFetchingPlaylist] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const [fetchedVideos, setFetchedVideos] = useState<FetchedVideo[]>([]);
+    const [fetchedShorts, setFetchedShorts] = useState<FetchedVideo[]>([]);
+    const [fetchedPlaylists, setFetchedPlaylists] = useState<FetchedPlaylist[]>([]);
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+    const [selectedShorts, setSelectedShorts] = useState<string[]>([]);
     const [targetSeriesId, setTargetSeriesId] = useState<string>("");
     const [targetChannelId, setTargetChannelId] = useState<string>("");
+    const [activeTab, setActiveTab] = useState("youtube-videos");
 
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
     const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs');
@@ -81,27 +91,39 @@ export default function AdminImportLecturesPage() {
         }
     };
     
-    const handleSelectAllVideos = (checked: boolean) => {
-        if(checked) {
-            setSelectedVideos(fetchedVideos.map(v => v.videoId));
+    const handleSelectAll = (type: 'videos' | 'shorts') => (checked: boolean) => {
+        if (type === 'videos') {
+            setSelectedVideos(checked ? fetchedVideos.map(v => v.videoId) : []);
         } else {
-            setSelectedVideos([]);
+            setSelectedShorts(checked ? fetchedShorts.map(v => v.videoId) : []);
         }
     }
+    
+    const handleSelectItem = (type: 'videos' | 'shorts', videoId: string) => (checked: boolean) => {
+        const updater = type === 'videos' ? setSelectedVideos : setSelectedShorts;
+        updater(prev => checked ? [...prev, videoId] : prev.filter(id => id !== videoId));
+    }
 
-    const handleFetchFromYoutube = async () => {
-        if (!youtubeUrl) {
+
+    const handleFetchFromYoutube = async (urlToFetch?: string) => {
+        const finalUrl = urlToFetch || youtubeUrl;
+        if (!finalUrl) {
             toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أو قائمة التشغيل." });
             return;
         }
-        setIsFetchingPlaylist(true);
+        setIsFetching(true);
+        // Clear previous results
         setFetchedVideos([]);
+        setFetchedShorts([]);
+        setFetchedPlaylists([]);
         setSelectedVideos([]);
+        setSelectedShorts([]);
+
         try {
             const response = await fetch('/api/youtube-import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: youtubeUrl }),
+                body: JSON.stringify({ url: finalUrl }),
             });
 
             if (!response.ok) {
@@ -110,18 +132,30 @@ export default function AdminImportLecturesPage() {
             }
 
             const data = await response.json();
-            setFetchedVideos(data.videos);
-            toast({ title: `تم جلب ${data.videos.length} فيديو بنجاح.` });
+            
+            setFetchedVideos(data.videos || []);
+            setFetchedShorts(data.shorts || []);
+            setFetchedPlaylists(data.playlists || []);
+            
+            let message = "تم جلب البيانات بنجاح.";
+            if (data.videos?.length) message += ` ${data.videos.length} فيديو.`;
+            if (data.shorts?.length) message += ` ${data.shorts.length} فيديو قصير.`;
+            if (data.playlists?.length) message += ` ${data.playlists.length} قائمة تشغيل.`;
+            
+            toast({ title: message });
 
         } catch (error: any) {
             toast({ variant: "destructive", title: "خطأ", description: error.message });
         } finally {
-            setIsFetchingPlaylist(false);
+            setIsFetching(false);
         }
     }
     
-    const handleYoutubeImport = async () => {
-        if (selectedVideos.length === 0) {
+    const handleImportSelected = async () => {
+        const itemsToImport = activeTab === 'youtube-videos' ? selectedVideos : selectedShorts;
+        const sourceItems = activeTab === 'youtube-videos' ? fetchedVideos : fetchedShorts;
+
+        if (itemsToImport.length === 0) {
             toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
@@ -131,7 +165,7 @@ export default function AdminImportLecturesPage() {
         
         try {
             const batch = writeBatch(firestore);
-            const videosToImport = fetchedVideos.filter(v => selectedVideos.includes(v.videoId));
+            const videosToImport = sourceItems.filter(v => itemsToImport.includes(v.videoId));
 
             const series = targetSeriesId ? allSeries.find(s => s.id === targetSeriesId) : null;
             const sheikh = series?.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
@@ -180,8 +214,14 @@ export default function AdminImportLecturesPage() {
                 title: "تم الاستيراد بنجاح",
                 description: `تمت إضافة ${videosToImport.length} محاضرة بنجاح.`,
             });
-            setFetchedVideos([]);
-            setSelectedVideos([]);
+            
+            // Clear selections after import
+            if(activeTab === 'youtube-videos') {
+              setSelectedVideos([]);
+            } else {
+              setSelectedShorts([]);
+            }
+
 
         } catch (error: any) {
              toast({
@@ -302,6 +342,11 @@ export default function AdminImportLecturesPage() {
     };
 
     const isLoading = seriesLoading || sheikhsLoading || channelsLoading;
+    
+    const hasFetchedYoutubeData = fetchedVideos.length > 0 || fetchedShorts.length > 0 || fetchedPlaylists.length > 0;
+    
+    const itemsToImportCount = activeTab === 'youtube-videos' ? selectedVideos.length : selectedShorts.length;
+
 
     return (
         <Card>
@@ -315,7 +360,7 @@ export default function AdminImportLecturesPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Tabs defaultValue="youtube" className="w-full">
+                <Tabs defaultValue="youtube">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="youtube"><Youtube className="me-2"/>يوتيوب</TabsTrigger>
                         <TabsTrigger value="csv"><FileText className="me-2"/>ملف CSV</TabsTrigger>
@@ -331,79 +376,139 @@ export default function AdminImportLecturesPage() {
                                         placeholder="https://www.youtube.com/..."
                                         value={youtubeUrl}
                                         onChange={(e) => setYoutubeUrl(e.target.value)}
-                                        disabled={isFetchingPlaylist}
+                                        disabled={isFetching}
                                     />
-                                    <Button onClick={handleFetchFromYoutube} disabled={isFetchingPlaylist || !youtubeUrl}>
-                                        {isFetchingPlaylist ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
+                                    <Button onClick={() => handleFetchFromYoutube()} disabled={isFetching || !youtubeUrl}>
+                                        {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                                     </Button>
                                 </div>
                             </div>
-                            {fetchedVideos.length > 0 && (
-                                <div className="space-y-4 border p-4 rounded-lg">
-                                    <h3 className="font-bold flex items-center gap-2"><ListChecks /> الفيديوهات التي تم جلبها</h3>
-                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="target-series">اختر السلسلة (اختياري)</Label>
-                                            <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="اختر سلسلة..." />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                         <div>
-                                            <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
-                                            <Select value={targetChannelId} onValueChange={setTargetChannelId}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="اختر قناة..." />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                     </div>
-                                    <div className="max-h-80 overflow-y-auto">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[50px]">
-                                                         <Checkbox
-                                                            onCheckedChange={(checked) => handleSelectAllVideos(!!checked)}
-                                                            checked={selectedVideos.length === fetchedVideos.length && fetchedVideos.length > 0}
-                                                        />
-                                                    </TableHead>
-                                                    <TableHead>عنوان الفيديو</TableHead>
-                                                    <TableHead>المدة</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {fetchedVideos.map(video => (
-                                                    <TableRow key={video.videoId}>
-                                                        <TableCell>
-                                                            <Checkbox
-                                                                checked={selectedVideos.includes(video.videoId)}
-                                                                onCheckedChange={(checked) => {
-                                                                    setSelectedVideos(prev => 
-                                                                        checked ? [...prev, video.videoId] : prev.filter(id => id !== video.videoId)
-                                                                    )
-                                                                }}
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="font-medium">{video.title}</TableCell>
-                                                        <TableCell>{formatDuration(video.durationInSeconds)}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
+                            {hasFetchedYoutubeData && (
+                                 <Tabs defaultValue="youtube-videos" className="w-full mt-4" onValueChange={setActiveTab}>
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="youtube-videos" disabled={fetchedVideos.length === 0}>
+                                            <Clapperboard className="me-2"/>الفيديوهات ({fetchedVideos.length})
+                                        </TabsTrigger>
+                                        <TabsTrigger value="youtube-shorts" disabled={fetchedShorts.length === 0}>
+                                            <Video className="me-2"/>الفيديوهات القصيرة ({fetchedShorts.length})
+                                        </TabsTrigger>
+                                        <TabsTrigger value="youtube-playlists" disabled={fetchedPlaylists.length === 0}>
+                                            <ListVideo className="me-2"/>قوائم التشغيل ({fetchedPlaylists.length})
+                                        </TabsTrigger>
+                                    </TabsList>
+                                     <div className="space-y-4 border p-4 rounded-lg mt-4">
+                                        <h3 className="font-bold flex items-center gap-2"><ListChecks /> المحتوى الذي تم جلبه</h3>
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label htmlFor="target-series">اختر السلسلة (اختياري)</Label>
+                                                <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="اختر سلسلة..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                             <div>
+                                                <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
+                                                <Select value={targetChannelId} onValueChange={setTargetChannelId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="اختر قناة..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                         </div>
+                                        <TabsContent value="youtube-videos">
+                                           <div className="max-h-80 overflow-y-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead className="w-[50px]">
+                                                                <Checkbox onCheckedChange={handleSelectAll('videos')} checked={selectedVideos.length === fetchedVideos.length && fetchedVideos.length > 0}/>
+                                                            </TableHead>
+                                                            <TableHead>عنوان الفيديو</TableHead>
+                                                            <TableHead>المدة</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {fetchedVideos.map(video => (
+                                                            <TableRow key={video.videoId}>
+                                                                <TableCell>
+                                                                    <Checkbox checked={selectedVideos.includes(video.videoId)} onCheckedChange={handleSelectItem('videos', video.videoId)}/>
+                                                                </TableCell>
+                                                                <TableCell className="font-medium">{video.title}</TableCell>
+                                                                <TableCell>{formatDuration(video.durationInSeconds)}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </TabsContent>
+                                        <TabsContent value="youtube-shorts">
+                                           <div className="max-h-80 overflow-y-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead className="w-[50px]">
+                                                                 <Checkbox onCheckedChange={handleSelectAll('shorts')} checked={selectedShorts.length === fetchedShorts.length && fetchedShorts.length > 0}/>
+                                                            </TableHead>
+                                                            <TableHead>عنوان الفيديو</TableHead>
+                                                            <TableHead>المدة</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {fetchedShorts.map(video => (
+                                                            <TableRow key={video.videoId}>
+                                                                <TableCell>
+                                                                    <Checkbox checked={selectedShorts.includes(video.videoId)} onCheckedChange={handleSelectItem('shorts', video.videoId)}/>
+                                                                </TableCell>
+                                                                <TableCell className="font-medium">{video.title}</TableCell>
+                                                                <TableCell>{formatDuration(video.durationInSeconds)}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </TabsContent>
+                                         <TabsContent value="youtube-playlists">
+                                           <div className="max-h-80 overflow-y-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>عنوان قائمة التشغيل</TableHead>
+                                                            <TableHead>عدد الفيديوهات</TableHead>
+                                                            <TableHead></TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {fetchedPlaylists.map(playlist => (
+                                                            <TableRow key={playlist.id}>
+                                                                <TableCell className="font-medium">{playlist.title}</TableCell>
+                                                                <TableCell>{playlist.videoCount}</TableCell>
+                                                                <TableCell className="text-left">
+                                                                    <Button onClick={() => handleFetchFromYoutube(`https://www.youtube.com/playlist?list=${playlist.id}`)} size="sm" disabled={isFetching}>
+                                                                        {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب فيديوهات القائمة"}
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </TabsContent>
+                                        
+                                        {activeTab !== 'youtube-playlists' && (
+                                            <Button onClick={handleImportSelected} disabled={isSubmitting || itemsToImportCount === 0}>
+                                                {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin"/>}
+                                                استيراد {itemsToImportCount} محاضرة
+                                            </Button>
+                                        )}
                                     </div>
-                                    <Button onClick={handleYoutubeImport} disabled={isSubmitting || selectedVideos.length === 0}>
-                                        {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin"/>}
-                                        استيراد {selectedVideos.length} محاضرة
-                                    </Button>
-                                </div>
+                                </Tabs>
                             )}
                         </div>
                     </TabsContent>
@@ -454,3 +559,5 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
+
+    
