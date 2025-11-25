@@ -69,7 +69,13 @@ export default function LecturesListPage() {
     }
 
     if (searchTerm) {
-        lectures = lectures.filter(l => l.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        const lowercasedTerm = searchTerm.toLowerCase();
+        lectures = lectures.filter(l => 
+            l.title.toLowerCase().includes(lowercasedTerm) ||
+            l.description.toLowerCase().includes(lowercasedTerm) ||
+            l.sheikhName.toLowerCase().includes(lowercasedTerm) ||
+            l.seriesTitle.toLowerCase().includes(lowercasedTerm)
+        );
     }
     
     lectures.sort((a, b) => {
