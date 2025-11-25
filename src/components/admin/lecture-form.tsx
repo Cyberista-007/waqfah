@@ -52,7 +52,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   const audioSrcRef = useRef<HTMLInputElement>(null);
 
   const filteredSeries = useMemo(() => {
-      if (!selectedSheikhId) return [];
+      if (!selectedSheikhId) return seriesList; // Show all series if no sheikh is selected
       return seriesList.filter(s => s.sheikhId === selectedSheikhId);
   }, [selectedSheikhId, seriesList]);
   
@@ -95,15 +95,15 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     const language = formData.get("language") as string;
     
     const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
-    const seriesData = filteredSeries?.find(s => s.id === selectedSeriesId);
+    const seriesData = seriesList?.find(s => s.id === selectedSeriesId);
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    if (!title || !description || !selectedSeriesId || !audioSrc || !duration || !seriesData || !sheikhData) {
+    if (!title || !description || !selectedSeriesId || !audioSrc || !duration || !seriesData) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة واختيار شيخ وسلسلة صالحين.",
+            description: "يرجى ملء جميع الحقول المطلوبة واختيار سلسلة صالحة.",
         });
         setIsSubmitting(false);
         return;
@@ -113,9 +113,9 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         title,
         slug,
         description,
-        sheikhId: sheikhData.id,
-        sheikhName: sheikhData.name,
-        sheikhSlug: sheikhData.slug,
+        sheikhId: sheikhData?.id || "",
+        sheikhName: sheikhData?.name || "",
+        sheikhSlug: sheikhData?.slug || "",
         seriesId: seriesData.id,
         seriesSlug: seriesData.slug,
         seriesTitle: seriesData.title,
@@ -164,11 +164,13 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         };
         const seriesRef = doc(firestore, 'series', seriesData.id);
         const newLectureRef = doc(collection(firestore, 'lectures')); // Create a new doc ref with a generated ID
+        const statsRef = doc(firestore, 'stats', 'global');
         
         // Use a transaction to add lecture and increment series count atomically
         await runTransaction(firestore, async (transaction) => {
           transaction.set(newLectureRef, newLectureData);
           transaction.update(seriesRef, { lectureCount: increment(1) });
+          transaction.set(statsRef, { lectures: increment(1) }, { merge: true });
         });
 
         toast({
@@ -219,8 +221,8 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
               <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="sheikh">الشيخ</Label>
-                <Select onValueChange={setSelectedSheikhId} defaultValue={lecture?.sheikhId} required>
+                <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
+                <Select onValueChange={setSelectedSheikhId} defaultValue={lecture?.sheikhId}>
                     <SelectTrigger>
                         <SelectValue placeholder="اختر شيخًا..." />
                     </SelectTrigger>
@@ -235,9 +237,9 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
 
            <div className="space-y-2">
               <Label htmlFor="series">السلسلة</Label>
-              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId} required disabled={!selectedSheikhId}>
+              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId} required>
                   <SelectTrigger>
-                      <SelectValue placeholder={!selectedSheikhId ? "اختر شيخًا أولاً" : "اختر سلسلة..."} />
+                      <SelectValue placeholder={"اختر سلسلة..."} />
                   </SelectTrigger>
                   <SelectContent>
                       {filteredSeries.map(s => (
@@ -304,3 +306,5 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   );
 }
  
+
+    
