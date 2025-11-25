@@ -6,13 +6,14 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useCollection, useUser } from '@/firebase';
-import type { Series, Lecture, Sheikh } from '@/lib/types';
+import type { Series, Lecture, Sheikh, Channel } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { SheikhCard } from '@/components/sheikh-card';
+import { ChannelCard } from '@/components/channel-card';
 
 export default function Home() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function Home() {
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 3 });
   const { data: topSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'], limit: 4 });
+  const { data: topChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'], limit: 4 });
 
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
@@ -30,7 +32,7 @@ export default function Home() {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  if (seriesLoading || lecturesLoading || sheikhsLoading) {
+  if (seriesLoading || lecturesLoading || sheikhsLoading || channelsLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -81,6 +83,15 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
              {topSheikhs?.map((sheikh, index) => (
                 <SheikhCard sheikh={sheikh} key={sheikh.id} index={index}/>
+            ))}
+          </div>
+        </section>
+        
+        <section>
+          <h2 className="text-3xl font-bold mb-6 font-headline">أبرز القنوات</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+             {topChannels?.map((channel, index) => (
+                <ChannelCard channel={channel} key={channel.id} index={index}/>
             ))}
           </div>
         </section>
