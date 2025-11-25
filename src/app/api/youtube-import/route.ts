@@ -1,10 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
+import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
 
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
+  fetchChannelInfo: z.boolean().optional(),
 });
 
 function getPlaylistIdFromUrl(url: string): string | null {
@@ -17,7 +18,7 @@ function getPlaylistIdFromUrl(url: string): string | null {
     }
 }
 
-async function getChannelIdFromUrl(url: string, youtube: any): Promise<string | null> {
+async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Promise<string | null> {
     try {
         const parsedUrl = new URL(url);
         const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
@@ -27,7 +28,7 @@ async function getChannelIdFromUrl(url: string, youtube: any): Promise<string | 
         if (pathParts[0] === 'channel' && pathParts[1]) {
             channelId = pathParts[1];
         } else if (pathParts[0]?.startsWith('@')) {
-            const handle = pathParts[0].substring(1); // Remove "@"
+            const handle = pathParts[0]; // Keep "@"
             const response = await youtube.channels.list({
                 part: ['id'],
                 forHandle: handle,
@@ -61,7 +62,7 @@ function parseISO8601Duration(duration: string): number {
     return (hours * 3600) + (minutes * 60) + seconds;
 }
 
-async function fetchPlaylistVideos(youtube: any, playlistId: string) {
+async function fetchPlaylistVideos(youtube: youtube_v3.Youtube, playlistId: string) {
     let allVideos: any[] = [];
     let nextPageToken: string | undefined = undefined;
 
@@ -107,12 +108,39 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400 });
         }
         
-        const url = validation.data.url;
+        const { url, fetchChannelInfo } = validation.data;
 
         const youtube = google.youtube({
             version: 'v3',
             auth: apiKey,
         });
+        
+        const channelId = await getChannelIdFromUrl(url, youtube);
+        
+        if (!channelId) {
+             return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400 });
+        }
+        
+        // If the only goal is to fetch channel info for the form
+        if (fetchChannelInfo) {
+            const channelResponse = await youtube.channels.list({
+                part: ['snippet'],
+                id: [channelId]
+            });
+            const channelData = channelResponse.data.items?.[0];
+            if (channelData?.snippet) {
+                return NextResponse.json({ channelInfo: {
+                    name: channelData.snippet.title,
+                    description: channelData.snippet.description,
+                    imageUrl: channelData.snippet.thumbnails?.high?.url || channelData.snippet.thumbnails?.default?.url,
+                }});
+            } else {
+                 return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404 });
+            }
+        }
+
+
+        // --- Default behavior: Fetch videos and playlists ---
 
         let allVideos: any[] = [];
         let allPlaylists: any[] = [];
@@ -123,37 +151,31 @@ export async function POST(req: NextRequest) {
             // It's a playlist URL, fetch its videos
             allVideos = await fetchPlaylistVideos(youtube, playlistIdFromUrl);
         } else {
-            // Assume it's a channel URL
-            const channelId = await getChannelIdFromUrl(url, youtube);
-            if (channelId) {
-                 const channelResponse = await youtube.channels.list({
-                    part: ['contentDetails'],
-                    id: [channelId]
-                });
-                
-                const uploadsPlaylistId = channelResponse.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-                if (uploadsPlaylistId) {
-                    allVideos = await fetchPlaylistVideos(youtube, uploadsPlaylistId);
-                }
-
-                // Fetch channel's playlists
-                let nextPageToken: string | undefined = undefined;
-                do {
-                    const playlistsResponse = await youtube.playlists.list({
-                        part: ['snippet', 'contentDetails'],
-                        channelId: channelId,
-                        maxResults: 50,
-                        pageToken: nextPageToken,
-                    });
-                    if (playlistsResponse.data.items) {
-                        allPlaylists.push(...playlistsResponse.data.items);
-                    }
-                    nextPageToken = playlistsResponse.data.nextPageToken || undefined;
-                } while (nextPageToken);
-
-            } else {
-                 return NextResponse.json({ message: "لم يتم العثور على قناة أو قائمة تشغيل صالحة في الرابط." }, { status: 400 });
+            // It's a channel URL, fetch uploads and playlists
+             const channelResponse = await youtube.channels.list({
+                part: ['contentDetails'],
+                id: [channelId]
+            });
+            
+            const uploadsPlaylistId = channelResponse.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+            if (uploadsPlaylistId) {
+                allVideos = await fetchPlaylistVideos(youtube, uploadsPlaylistId);
             }
+
+            // Fetch channel's playlists
+            let nextPageToken: string | undefined = undefined;
+            do {
+                const playlistsResponse = await youtube.playlists.list({
+                    part: ['snippet', 'contentDetails'],
+                    channelId: channelId,
+                    maxResults: 50,
+                    pageToken: nextPageToken,
+                });
+                if (playlistsResponse.data.items) {
+                    allPlaylists.push(...playlistsResponse.data.items);
+                }
+                nextPageToken = playlistsResponse.data.nextPageToken || undefined;
+            } while (nextPageToken);
         }
         
         const videos: any[] = [];
@@ -168,7 +190,8 @@ export async function POST(req: NextRequest) {
                 durationInSeconds,
             };
 
-            if (durationInSeconds > 0 && durationInSeconds <= 60) {
+            // Heuristic to detect shorts, can be adjusted
+            if (durationInSeconds > 0 && durationInSeconds <= 90 && (item.snippet?.title?.includes('#shorts') || item.snippet?.description?.includes('#shorts'))) {
                 shorts.push(videoData);
             } else {
                 videos.push(videoData);
@@ -194,5 +217,3 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500 });
     }
 }
-
-    

@@ -30,6 +30,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     }
 
     const placeholder = getPlaceholderImage(channel.imageId);
+    // Use the channel's actual image URL if it exists, otherwise fall back to the placeholder
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
     
     // Using a generic banner for now
@@ -54,7 +55,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             <div className="px-4 sm:px-6 lg:px-8">
                  <div className="flex flex-col sm:flex-row items-start gap-6">
                     <Avatar className="h-24 w-24 sm:h-36 sm:w-36 border-4 border-background -mt-12 sm:-mt-20 shrink-0">
-                        <AvatarImage src={imageUrl} alt={channel.name} />
+                        {imageUrl && <AvatarImage src={imageUrl} alt={channel.name} />}
                         <AvatarFallback className="text-4xl">{getInitials(channel.name)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow pt-2">
