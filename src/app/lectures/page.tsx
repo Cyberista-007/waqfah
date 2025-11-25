@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Lecture, Series } from "@/lib/types";
+import type { Lecture, Series, Sheikh } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo } from "react";
 import { Dices } from "lucide-react";
@@ -23,17 +23,28 @@ export default function LecturesListPage() {
 
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
+  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+
 
   const seriesFilter = searchParams.get('series');
+  const sheikhFilter = searchParams.get('sheikh');
   const sortOrder = searchParams.get('sort') || 'newest';
 
-  const handleFilterChange = (type: 'series' | 'sort', value: string) => {
+  const handleFilterChange = (type: 'series' | 'sort' | 'sheikh', value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
     if (value === "all") {
       current.delete(type);
     } else {
       current.set(type, value);
+    }
+    
+    // if filtering by sheikh, remove series filter and vice-versa
+    if (type === 'sheikh' && value !== 'all') {
+        current.delete('series');
+    }
+    if (type === 'series' && value !== 'all') {
+        current.delete('sheikh');
     }
 
     const search = current.toString();
@@ -49,6 +60,10 @@ export default function LecturesListPage() {
     
     if (seriesFilter && seriesFilter !== 'all') {
       lectures = lectures.filter(l => l.seriesId === seriesFilter);
+    }
+
+    if (sheikhFilter && sheikhFilter !== 'all') {
+      lectures = lectures.filter(l => l.sheikhId === sheikhFilter);
     }
     
     lectures.sort((a, b) => {
@@ -70,7 +85,7 @@ export default function LecturesListPage() {
 
     return lectures;
 
-  }, [allLectures, seriesFilter, sortOrder]);
+  }, [allLectures, seriesFilter, sheikhFilter, sortOrder]);
 
   const pickRandomLecture = () => {
     if (!filteredLectures || filteredLectures.length === 0) return;
@@ -81,8 +96,10 @@ export default function LecturesListPage() {
     }
   }
 
+  const isLoading = lecturesLoading || seriesLoading || sheikhsLoading;
 
-  if (lecturesLoading || seriesLoading) {
+
+  if (isLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -96,9 +113,18 @@ export default function LecturesListPage() {
         </Button>
       </div>
 
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Select onValueChange={(value) => handleFilterChange("sheikh", value)} defaultValue={sheikhFilter || "all"}>
+          <SelectTrigger>
+            <SelectValue placeholder="فلترة حسب الشيخ" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل المشايخ</SelectItem>
+            {allSheikhs?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Select onValueChange={(value) => handleFilterChange("series", value)} defaultValue={seriesFilter || "all"}>
-          <SelectTrigger className="md:w-1/2">
+          <SelectTrigger>
             <SelectValue placeholder="فلترة حسب السلسلة" />
           </SelectTrigger>
           <SelectContent>
@@ -107,7 +133,7 @@ export default function LecturesListPage() {
           </SelectContent>
         </Select>
         <Select onValueChange={(value) => handleFilterChange("sort", value)} defaultValue={sortOrder}>
-          <SelectTrigger className="md:w-1/2">
+          <SelectTrigger>
             <SelectValue placeholder="فرز حسب" />
           </SelectTrigger>
           <SelectContent>
@@ -124,6 +150,11 @@ export default function LecturesListPage() {
           <LectureCard key={lecture.id} lecture={lecture} index={index} />
         ))}
       </div>
+       {!isLoading && filteredLectures.length === 0 && (
+         <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">لا توجد محاضرات تطابق خيارات الفلترة الحالية.</p>
+         </div>
+      )}
     </div>
   );
 }
