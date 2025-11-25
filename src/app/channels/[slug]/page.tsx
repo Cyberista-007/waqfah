@@ -131,5 +131,4 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             </Tabs>
         </div>
     );
-
-    
+}
