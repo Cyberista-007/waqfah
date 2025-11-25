@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Lecture, Series, Sheikh } from "@/lib/types";
+import type { Lecture, Series, Sheikh, Channel } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo, useState } from "react";
 import { Dices, Search } from "lucide-react";
@@ -25,14 +25,16 @@ export default function LecturesListPage() {
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+  const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
   const seriesFilter = searchParams.get('series');
   const sheikhFilter = searchParams.get('sheikh');
+  const channelFilter = searchParams.get('channel');
   const sortOrder = searchParams.get('sort') || 'newest';
   
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleFilterChange = (type: 'series' | 'sort' | 'sheikh', value: string) => {
+  const handleFilterChange = (type: 'series' | 'sort' | 'sheikh' | 'channel', value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
     if (value === "all") {
@@ -41,13 +43,20 @@ export default function LecturesListPage() {
       current.set(type, value);
     }
     
-    // if filtering by sheikh, remove series filter and vice-versa
+    // if filtering by one, remove other content filters
     if (type === 'sheikh' && value !== 'all') {
         current.delete('series');
+        current.delete('channel');
     }
     if (type === 'series' && value !== 'all') {
         current.delete('sheikh');
+        current.delete('channel');
     }
+    if (type === 'channel' && value !== 'all') {
+        current.delete('sheikh');
+        current.delete('series');
+    }
+
 
     const search = current.toString();
     const query = search ? `?${search}` : "";
@@ -66,6 +75,10 @@ export default function LecturesListPage() {
 
     if (sheikhFilter && sheikhFilter !== 'all') {
       lectures = lectures.filter(l => l.sheikhId === sheikhFilter);
+    }
+    
+    if (channelFilter && channelFilter !== 'all') {
+        lectures = lectures.filter(l => l.channelId === channelFilter);
     }
 
     if (searchTerm) {
@@ -91,13 +104,13 @@ export default function LecturesListPage() {
               return a.title.localeCompare(b.title, 'ar');
           case 'newest':
           default:
-              return dateB.getTime() - dateA.getTime();
+              return dateB.getTime() - a.getTime();
       }
     });
 
     return lectures;
 
-  }, [allLectures, seriesFilter, sheikhFilter, sortOrder, searchTerm]);
+  }, [allLectures, seriesFilter, sheikhFilter, channelFilter, sortOrder, searchTerm]);
 
   const pickRandomLecture = () => {
     if (!filteredLectures || filteredLectures.length === 0) return;
@@ -110,7 +123,7 @@ export default function LecturesListPage() {
     }
   }
 
-  const isLoading = lecturesLoading || seriesLoading || sheikhsLoading;
+  const isLoading = lecturesLoading || seriesLoading || sheikhsLoading || channelsLoading;
 
 
   if (isLoading) {
@@ -139,7 +152,7 @@ export default function LecturesListPage() {
       </div>
 
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Select onValueChange={(value) => handleFilterChange("sheikh", value)} defaultValue={sheikhFilter || "all"}>
           <SelectTrigger>
             <SelectValue placeholder="فلترة حسب الشيخ" />
@@ -156,6 +169,15 @@ export default function LecturesListPage() {
           <SelectContent>
             <SelectItem value="all">كل السلاسل</SelectItem>
             {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={(value) => handleFilterChange("channel", value)} defaultValue={channelFilter || "all"}>
+          <SelectTrigger>
+            <SelectValue placeholder="فلترة حسب القناة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل القنوات</SelectItem>
+            {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select onValueChange={(value) => handleFilterChange("sort", value)} defaultValue={sortOrder}>
