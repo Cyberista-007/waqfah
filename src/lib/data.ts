@@ -40,11 +40,7 @@ export async function getSeriesPageData(slug: string) {
             
             let seriesCreator: Sheikh | null = null;
             if (seriesData.sheikhId) {
-                const sheikhRef = doc(db, 'sheikhs', seriesData.sheikhId);
-                const sheikhSnap = await getDoc(sheikhRef);
-                if (sheikhSnap.exists()) {
-                    seriesCreator = toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
-                }
+                seriesCreator = await getSheikhById(seriesData.sheikhId);
             }
             
             const lecturesCol = collection(db, 'lectures');
@@ -157,6 +153,25 @@ export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined>
   const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
   if (dummySheikh) return toSerializable({...dummySheikh, id: dummySheikh.id, createdAt: new Date(dummySheikh.createdAt)}) as Sheikh;
   return undefined;
+}
+
+export const getSheikhById = async (id: string): Promise<Sheikh | null> => {
+    const { db, isLive } = getDbSafe();
+    if (isLive && db) {
+        try {
+            const sheikhRef = doc(db, 'sheikhs', id);
+            const sheikhSnap = await getDoc(sheikhRef);
+            if (sheikhSnap.exists()) {
+                return toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching sheikh by ID:", error);
+        }
+    }
+    const dummySheikh = DUMMY_SHEIKHS.find(s => s.id === id);
+    if(dummySheikh) return toSerializable({ ...dummySheikh, id: dummySheikh.id, createdAt: new Date(dummySheikh.createdAt) }) as Sheikh;
+    return null;
 }
 
 

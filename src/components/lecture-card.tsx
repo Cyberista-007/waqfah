@@ -204,9 +204,11 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             </div>
           )}
 
-          <div className="absolute bottom-2 right-2 text-white text-xs font-semibold flex items-center gap-1">
-             <MicVocal className="w-3 h-3" />
-             <span>{lecture.sheikhName}</span>
+          <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
+             <Link href={`/sheikhs/${lecture.sheikhSlug}`} className="flex items-center gap-1 hover:underline">
+                <MicVocal className="w-3 h-3" />
+                <span>{lecture.sheikhName}</span>
+             </Link>
           </div>
 
           {progress > 0 && progress < 95 && (

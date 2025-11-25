@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
 import { SiTelegram, SiSoundcloud } from '@icons-pack/react-simple-icons';
-import type { Lecture } from '@/lib/types';
+import type { Lecture, Sheikh } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -19,6 +19,7 @@ import { YoutubePlayerModal } from '@/components/youtube-player-modal';
 import { SeriesPageSkeleton } from '@/components/skeletons';
 import { LectureNotes } from '@/components/lecture-notes';
 import { CommentsSection } from '@/components/comments-section';
+import { LectureCard } from './lecture-card';
 
 function getYoutubeVideoId(url: string | undefined): string | null {
   if (!url) return null;
@@ -43,9 +44,10 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 interface LectureClientPageProps {
     lecture: Lecture;
     relatedLectures: Lecture[];
+    sheikh: Sheikh | null;
 }
 
-export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
+export function LectureClientPage({ lecture, relatedLectures, sheikh }: LectureClientPageProps) {
   const { playTrack } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -97,13 +99,13 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   };
 
 
-  const seriesLink = `/series/${lecture.seriesId}`;
-  const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ أمجد سمير`;
+  const seriesLink = `/series/${lecture.seriesSlug}`;
+  const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ ${sheikh?.name}`;
 
   return (
     <>
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
-      <LectureHeader lecture={lecture} seriesLink={seriesLink} />
+      <LectureHeader lecture={lecture} seriesLink={seriesLink} sheikh={sheikh}/>
 
       <Card className="shadow-lg">
         <CardContent className="p-4">
@@ -203,17 +205,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         <section>
             <h3 className="text-2xl font-semibold mb-4 font-headline">محاضرات ذات صلة</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedLectures.map(related => (
-                    <Card key={related.slug} className="overflow-hidden">
-                        <Link href={`/lectures/${related.slug}`}>
-                            <CardContent className="p-4">
-                                <h4 className="font-semibold font-headline hover:underline">
-                                    {related.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground">{related.seriesTitle}</p>
-                            </CardContent>
-                        </Link>
-                    </Card>
+                {relatedLectures.map((related, index) => (
+                    <LectureCard key={related.id} lecture={related} index={index} />
                 ))}
             </div>
         </section>

@@ -3,23 +3,27 @@
 "use client";
 
 import Link from "next/link";
-import type { Lecture, Playlist } from "@/lib/types";
+import type { Lecture, Playlist, Sheikh } from "@/lib/types";
 import { Button } from "./ui/button";
 import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
-import { Star, ListPlus } from "lucide-react";
+import { Star, ListPlus, MicVocal } from "lucide-react";
 import { FavoriteButton } from "./favorite-button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { getInitials } from "@/lib/utils";
+import { getPlaceholderImage } from "@/lib/images";
 
 interface LectureHeaderProps {
     lecture: Lecture;
     seriesLink: string;
+    sheikh: Sheikh | null;
 }
 
-export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
+export function LectureHeader({ lecture, seriesLink, sheikh }: LectureHeaderProps) {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
@@ -33,6 +37,8 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
 
     const playlistsPath = user ? `users/${user.uid}/playlists` : null;
     const { data: playlists } = useCollection<Playlist>(playlistsPath);
+    
+    const sheikhImage = sheikh ? getPlaceholderImage(sheikh.imageId) : null;
 
     useEffect(() => {
         const fetchRating = async () => {
@@ -150,6 +156,19 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                             <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
                         </p>
                         <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
+                         {sheikh && (
+                            <div className="mt-4 flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarImage src={sheikhImage?.imageUrl} alt={sheikh.name} />
+                                    <AvatarFallback>{getInitials(sheikh.name)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h2 className="font-semibold text-lg hover:underline">
+                                        <Link href={`/sheikhs/${sheikh.slug}`}>{sheikh.name}</Link>
+                                    </h2>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                          <Button variant="outline" onClick={handleAddToPlaylistClick}>
