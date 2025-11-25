@@ -143,6 +143,19 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     if (!lectureHistory || !lectureHistory.duration) return 0;
     return (lectureHistory.position / lectureHistory.duration) * 100;
   }, [lectureHistory]);
+  
+  // Smart duration calculation to handle old data (in minutes) vs new data (in seconds)
+  const displayDurationInSeconds = useMemo(() => {
+    const dur = lecture.duration || 0;
+    // Heuristic: If duration is less than an hour (3600), it's likely minutes from old data.
+    // This isn't perfect but handles most legacy cases.
+    if (dur > 0 && dur < 3600) {
+        // Assuming it's minutes, convert to seconds
+        return dur * 60;
+    }
+    // Otherwise, assume it's already in seconds
+    return dur;
+  }, [lecture.duration]);
 
   return (
     <>
@@ -195,10 +208,10 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             <Share2 className="w-4 h-4 text-white" />
           </button>
             
-          {lecture.duration > 300 && (
+          {displayDurationInSeconds > 0 && (
             <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
                 <Clock className="w-3 h-3" />
-                <span>{formatDuration(lecture.duration)}</span>
+                <span>{formatDuration(displayDurationInSeconds)}</span>
             </div>
           )}
 
