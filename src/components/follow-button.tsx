@@ -4,9 +4,10 @@
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from "@/firebase";
+import { useDoc, useFirestore, useUser, errorEmitter, FirestorePermissionError, useMemoFirebase } from "@/firebase";
 import { doc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 interface FollowButtonProps {
     sheikhId?: string;
@@ -20,17 +21,33 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
     const router = useRouter();
 
     const isSheikhFollow = !!sheikhId;
-    const isChannelFollow = !!channelId;
-
-    const followingPath = user ? (isSheikhFollow ? `users/${user.uid}/following` : `users/${user.uid}/followingChannels`) : null;
-    const { data: following, isLoading: followingLoading } = useCollection(followingPath);
-
-    const isFollowing = following?.some(f => f.id === (sheikhId || channelId)) || false;
-    const isLoading = isUserLoading || followingLoading;
     
+    const followDocPath = useMemo(() => {
+        if (!user) return null;
+        if (isSheikhFollow && sheikhId) {
+            return `users/${user.uid}/following/${sheikhId}`;
+        }
+        if (!isSheikhFollow && channelId) {
+            return `users/${user.uid}/followingChannels/${channelId}`;
+        }
+        return null;
+    }, [user, isSheikhFollow, sheikhId, channelId]);
+
+    const followDocRef = useMemoFirebase(
+      () => (firestore && followDocPath ? doc(firestore, followDocPath) : null),
+      [firestore, followDocPath]
+    );
+
+    const { data: followDoc, isLoading: isFollowDocLoading } = useDoc(followDocRef);
+    
+    const isFollowing = !!followDoc;
+    const isLoading = isUserLoading || (user && isFollowDocLoading);
+
     const handleFollow = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isLoading) return;
 
         if (!user || !firestore) {
             toast({
@@ -44,9 +61,7 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
 
         if (!sheikhId && !channelId) return;
 
-        const followRef = isSheikhFollow 
-            ? doc(firestore, 'users', user.uid, 'following', sheikhId!)
-            : doc(firestore, 'users', user.uid, 'followingChannels', channelId!);
+        const followRef = followDocRef!;
         
         const targetRef = isSheikhFollow
             ? doc(firestore, 'sheikhs', sheikhId!)
@@ -60,12 +75,12 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
                 }
 
                 if (isFollowing) {
-                    // Unfollow logic
                     transaction.delete(followRef);
                     transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
-                    // Follow logic
-                    const followData = { followedAt: Timestamp.now() };
+                    const followData = isSheikhFollow 
+                        ? { sheikhId, followedAt: Timestamp.now() } 
+                        : { channelId, followedAt: Timestamp.now() };
                     transaction.set(followRef, followData);
                     transaction.update(targetRef, { followerCount: increment(1) });
                 }
@@ -94,7 +109,7 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
         }
     };
 
-    if (isLoading) {
+    if (isLoading && user) {
         return <Button disabled size="lg" className="w-full"><Loader2 className="animate-spin" /></Button>;
     }
 
