@@ -7,7 +7,7 @@ import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
 import { Button } from '@/components/ui/button';
 import { Youtube, Bell, Check } from 'lucide-react';
-import { getChannelBySlug } from '@/lib/data';
+import { getChannelBySlug, getLecturesByChannel } from '@/lib/data';
 import Image from 'next/image';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -19,9 +19,7 @@ async function getChannelData(slug: string) {
         return null;
     }
     
-    // This is a placeholder for fetching lectures related to a channel.
-    // The current data model does not link lectures to channels.
-    const lectures: Lecture[] = [];
+    const lectures = await getLecturesByChannel(channel.id);
 
     return { channel, lectures };
 }
@@ -66,7 +64,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                              <span>@{channel.slug}</span>
                              <span>1.24 مليون مشترك</span>
-                             <span>359 فيديو</span>
+                             <span>{lectures.length} فيديو</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-2 max-w-xl line-clamp-2">{channel.description}</p>
                          <div className="mt-4 flex flex-wrap gap-2">
@@ -106,7 +104,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     ) : (
                         <div className="text-center py-16 border-2 border-dashed rounded-xl">
                             <p className="text-lg text-muted-foreground">
-                                سيتم عرض المحاضرات المرتبطة بهذه القناة هنا قريباً.
+                                لا توجد محاضرات مرتبطة بهذه القناة حالياً.
                             </p>
                         </div>
                     )}

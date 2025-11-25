@@ -169,6 +169,25 @@ export const getLecturesBySheikh = async (sheikhId: string): Promise<Lecture[]> 
   return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
 }
 
+export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const lecturesCol = collection(db, 'lectures');
+        const q = query(lecturesCol, where('channelId', '==', channelId), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+        }
+        return [];
+      } catch (error) {
+        console.error("Error fetching lectures by channel:", error);
+      }
+  }
+  return [];
+}
+
+
 export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => {
   const { db, isLive } = getDbSafe();
   if (isLive && db) {
