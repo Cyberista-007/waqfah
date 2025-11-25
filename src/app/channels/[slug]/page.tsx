@@ -1,18 +1,17 @@
 
 import { notFound } from 'next/navigation';
 import type { Channel, Lecture } from '@/lib/types';
-import { toSerializable } from '@/lib/data-helpers';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
 import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Youtube } from 'lucide-react';
 import { getChannelBySlug } from '@/lib/data';
 
 
 async function getChannelData(slug: string) {
+    // Use the safe data fetching function
     const channel = await getChannelBySlug(slug);
 
     if (!channel) {
