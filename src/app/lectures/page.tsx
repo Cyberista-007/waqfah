@@ -13,8 +13,9 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Lecture, Series, Sheikh } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
-import { useMemo } from "react";
-import { Dices } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Dices, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function LecturesListPage() {
   const router = useRouter();
@@ -25,10 +26,11 @@ export default function LecturesListPage() {
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
-
   const seriesFilter = searchParams.get('series');
   const sheikhFilter = searchParams.get('sheikh');
   const sortOrder = searchParams.get('sort') || 'newest';
+  
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleFilterChange = (type: 'series' | 'sort' | 'sheikh', value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -65,6 +67,10 @@ export default function LecturesListPage() {
     if (sheikhFilter && sheikhFilter !== 'all') {
       lectures = lectures.filter(l => l.sheikhId === sheikhFilter);
     }
+
+    if (searchTerm) {
+        lectures = lectures.filter(l => l.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
     
     lectures.sort((a, b) => {
       const dateA = new Date(a.createdAt as any);
@@ -85,14 +91,16 @@ export default function LecturesListPage() {
 
     return lectures;
 
-  }, [allLectures, seriesFilter, sheikhFilter, sortOrder]);
+  }, [allLectures, seriesFilter, sheikhFilter, sortOrder, searchTerm]);
 
   const pickRandomLecture = () => {
     if (!filteredLectures || filteredLectures.length === 0) return;
     const randomIndex = Math.floor(Math.random() * filteredLectures.length);
     const randomLecture = filteredLectures[randomIndex];
-    if (randomLecture) {
-      router.push(`/lectures/${randomLecture.slug}`);
+    if (randomLecture && randomLecture.id) {
+        // Use the slug for the URL, which is more SEO-friendly
+        const slug = randomLecture.slug || randomLecture.id;
+        router.push(`/lectures/${slug}`);
     }
   }
 
@@ -112,6 +120,18 @@ export default function LecturesListPage() {
           اختر لي محاضرة
         </Button>
       </div>
+      
+      <div className="mb-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input 
+            type="search"
+            placeholder="ابحث بالاسم عن محاضرة..."
+            className="w-full ps-10 h-12 text-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
 
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Select onValueChange={(value) => handleFilterChange("sheikh", value)} defaultValue={sheikhFilter || "all"}>
