@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Headphones, Play, Share2, MicVocal, ListPlus, Download } from "lucide-react"
 import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -52,6 +52,9 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
@@ -115,6 +118,22 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     }
   };
 
+  const handleMouseEnter = () => {
+      if (videoId) {
+          hoverTimeout.current = setTimeout(() => {
+              setIsHovering(true);
+          }, 500); // Delay before video starts playing
+      }
+  };
+
+  const handleMouseLeave = () => {
+      if (hoverTimeout.current) {
+          clearTimeout(hoverTimeout.current);
+      }
+      setIsHovering(false);
+  };
+
+
   const lectureHistory = useMemo(() => 
     listenHistory?.find(item => item.lectureId === lecture.id),
     [listenHistory, lecture.id]
@@ -133,24 +152,44 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
           "animate-fade-in-up"
         )}
         style={{ animationDelay: `${index * 100}ms` }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        <div className="relative aspect-video overflow-hidden" onClick={handleImageClick}>
-          <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0">
-              <Image
-                src={imageUrl}
-                alt={lecture.title}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint={placeholder?.imageHint || 'lecture content'}
+        <div className="relative aspect-video overflow-hidden" >
+            <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0" aria-hidden="true" tabIndex={-1} />
+             {isHovering && videoId ? (
+                <iframe
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}`}
+                    frameBorder="0"
+                    allow="autoplay; encrypted-media"
+                    className="w-full h-full absolute top-0 left-0"
+                ></iframe>
+            ) : (
+                <Image
+                    src={imageUrl}
+                    alt={lecture.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    data-ai-hint={placeholder?.imageHint || 'lecture content'}
+                />
+            )}
+
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+                onClick={handleImageClick}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          </Link>
-            
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          
+            <div 
+                className={cn(
+                    "absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer",
+                    isHovering ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+                )}
+                 onClick={handleImageClick}
+            >
               <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
               </div>
-          </div>
+            </div>
             
           <button onClick={handleShare} className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors">
             <Share2 className="w-4 h-4 text-white" />

@@ -136,7 +136,6 @@ export default {
   plugins: [
     require('tailwindcss-animate'),
     function ({ addVariant }: { addVariant: (name: string, definition: string) => void }) {
-      addVariant('pause', '&:hover');
       addVariant('pause', '.group:hover &');
     }
   ],
