@@ -63,7 +63,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <h1 className="text-3xl font-extrabold font-headline">{channel.name}</h1>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                              <span>@{channel.slug}</span>
-                             <span>1.24 مليون مشترك</span>
                              <span>{lectures.length} فيديو</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-2 max-w-xl line-clamp-2">{channel.description}</p>
