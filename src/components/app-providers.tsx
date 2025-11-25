@@ -32,7 +32,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             'theme-hekla-volcano',
             'theme-deep-space',
             'theme-oled',
-            'theme-studio-simpatico'
+            'theme-studio-simpatico',
+            'theme-digital-horizon'
           ]}
         >
           <FontProvider>
@@ -46,5 +47,3 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
     )
 }
-
-    

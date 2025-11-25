@@ -426,6 +426,29 @@
     --input: 225 37% 28%;
     --ring: 16 100% 62%;
   }
+
+  /* 18. Digital Horizon */
+  .theme-digital-horizon {
+    --background: 248 50% 6%; /* Deep Night Blue */
+    --foreground: 250 50% 95%; /* Off-white */
+    --card: 248 45% 10%;
+    --card-foreground: 250 50% 95%;
+    --popover: 248 45% 8%;
+    --popover-foreground: 250 50% 95%;
+    --primary: 320 100% 70%; /* Neon Pink */
+    --primary-foreground: 320 50% 5%;
+    --secondary: 220 100% 75%; /* Sky Blue */
+    --secondary-foreground: 220 50% 10%;
+    --muted: 248 40% 15%;
+    --muted-foreground: 250 30% 65%;
+    --accent: 270 90% 70%; /* Electric Violet */
+    --accent-foreground: 270 50% 98%;
+    --destructive: 0 80% 65%; /* Bright Red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 248 40% 20%;
+    --input: 248 40% 22%;
+    --ring: 320 100% 75%;
+  }
 }
 
 @layer base {
@@ -442,56 +465,43 @@
       font-family: var(--font-headline), sans-serif;
   }
   .font-cairo {
-    --font-body: 'Cairo';
-    --font-headline: 'Cairo';
+    font-family: var(--font-cairo);
   }
   .font-noto-sans-arabic {
-    --font-body: 'Noto Sans Arabic';
-    --font-headline: 'Noto Sans Arabic';
+    font-family: var(--font-noto-sans-arabic);
   }
   .font-lalezar {
-    --font-body: 'Lalezar';
-    --font-headline: 'Lalezar';
+    font-family: var(--font-lalezar);
   }
   .font-tajawal {
-    --font-body: 'Tajawal';
-    --font-headline: 'Tajawal';
+    font-family: var(--font-tajawal);
   }
   .font-amiri {
-    --font-body: 'Amiri';
-    --font-headline: 'Amiri';
+    font-family: var(--font-amiri);
   }
   .font-markazi-text {
-    --font-body: 'Markazi Text';
-    --font-headline: 'Markazi Text';
+    font-family: var(--font-markazi-text);
   }
   .font-ibm-plex-sans-arabic {
-    --font-body: 'IBM Plex Sans Arabic';
-    --font-headline: 'IBM Plex Sans Arabic';
+    font-family: var(--font-ibm-plex-sans-arabic);
   }
   .font-almarai {
-    --font-body: 'Almarai';
-    --font-headline: 'Almarai';
+    font-family: var(--font-almarai);
   }
   .font-changa {
-    --font-body: 'Changa';
-    --font-headline: 'Changa';
+    font-family: var(--font-changa);
   }
   .font-el-messiri {
-    --font-body: 'El Messiri';
-    --font-headline: 'El Messiri';
+    font-family: var(--font-el-messiri);
   }
   .font-reem-kufi {
-    --font-body: 'Reem Kufi';
-    --font-headline: 'Reem Kufi';
+    font-family: var(--font-reem-kufi);
   }
   .font-mada {
-    --font-body: 'Mada';
-    --font-headline: 'Mada';
+    font-family: var(--font-mada);
   }
   .font-scheherazade-new {
-    --font-body: 'Scheherazade New';
-    --font-headline: 'Scheherazade New';
+    font-family: var(--font-scheherazade-new);
   }
   .font-rubik-origami {
     font-family: var(--font-rubik-origami);
@@ -535,5 +545,3 @@
         transform: translateY(0);
     }
 }
-
-    
