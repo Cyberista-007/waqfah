@@ -18,7 +18,7 @@ import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc, runTransaction, increment } from "firebase/firestore";
 import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -77,7 +77,8 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
             if(descriptionRef.current) descriptionRef.current.value = data.channelInfo.description;
             setImagePreview(data.channelInfo.imageUrl);
             // We don't set imageFile here, we just use the URL. 
-            // The logic on submit will handle fetching and uploading the image if the URL is from youtube.
+            // The logic on submit will handle using the URL directly.
+            setImageFile(null); 
         }
         
         toast({ title: "تم جلب بيانات القناة بنجاح." });
@@ -111,22 +112,17 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
     }
     
     try {
-        let newImageUrl = item?.imageUrl || '';
+        let finalImageUrl = item?.imageUrl || '';
 
-        // If a file was manually selected, it takes precedence
+        // If a file was manually selected, it takes precedence and is uploaded.
         if (imageFile) {
             const imageRef = ref(storage, `channel-images/${slug}/${imageFile.name}`);
             const snapshot = await uploadBytes(imageRef, imageFile);
-            newImageUrl = await getDownloadURL(snapshot.ref);
+            finalImageUrl = await getDownloadURL(snapshot.ref);
         } 
-        // If there's a preview from YouTube and no file selected, and it's different from the original
-        else if (imagePreview && imagePreview.startsWith('http') && imagePreview !== item?.imageUrl) {
-            const response = await fetch(imagePreview);
-            const blob = await response.blob();
-            const fetchedFile = new File([blob], `${slug}-youtube-profile.jpg`, { type: blob.type });
-            const imageRef = ref(storage, `channel-images/${slug}/${fetchedFile.name}`);
-            const snapshot = await uploadBytes(imageRef, fetchedFile);
-            newImageUrl = await getDownloadURL(snapshot.ref);
+        // If there's a preview URL from YouTube and no new file was selected.
+        else if (imagePreview && imagePreview.startsWith('http')) {
+            finalImageUrl = imagePreview;
         }
 
         const itemData = {
@@ -134,8 +130,8 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
             slug,
             description,
             youtubeUrl,
-            imageUrl: newImageUrl,
-            imageId: item?.imageId || `channel-${slug}`, // Keep old imageId as fallback
+            imageUrl: finalImageUrl,
+            imageId: item?.imageId || `channel-${slug}`,
         };
 
         if (isEditMode && item) {
@@ -147,13 +143,12 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
           });
         } else {
             const newChannelRef = doc(collection(firestore, 'channels'));
-            await runTransaction(firestore, async (transaction) => {
-                transaction.set(newChannelRef, itemData);
-            });
-          toast({
+            // Using addDocumentNonBlocking for creation
+            await addDocumentNonBlocking(collection(firestore, 'channels'), itemData);
+            toast({
               title: "تم الإنشاء بنجاح",
               description: `تمت إضافة القناة "${name}" الجديدة.`,
-          });
+            });
         }
         onFormClose();
     } catch(e) {
