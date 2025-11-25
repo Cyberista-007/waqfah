@@ -69,9 +69,9 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
                 >
                   <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                          {theme.colors.map((color) => (
+                          {theme.colors.map((color, index) => (
                               <div
-                              key={color}
+                              key={`${color}-${index}`}
                               className="h-6 w-6 rounded-full border"
                               style={{ backgroundColor: color }}
                               />
