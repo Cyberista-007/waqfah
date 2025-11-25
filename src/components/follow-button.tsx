@@ -65,9 +65,7 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
                     transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
                     // Follow logic
-                    const followData = isSheikhFollow 
-                        ? { sheikhId: sheikhId, followedAt: Timestamp.now() }
-                        : { channelId: channelId, followedAt: Timestamp.now() };
+                    const followData = { followedAt: Timestamp.now() };
                     transaction.set(followRef, followData);
                     transaction.update(targetRef, { followerCount: increment(1) });
                 }
