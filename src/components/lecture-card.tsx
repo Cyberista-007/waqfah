@@ -144,18 +144,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
     return (lectureHistory.position / lectureHistory.duration) * 100;
   }, [lectureHistory]);
   
-  // Smart duration calculation to handle old data (in minutes) vs new data (in seconds)
-  const displayDurationInSeconds = useMemo(() => {
-    const dur = lecture.duration || 0;
-    // Heuristic: If duration is less than an hour (3600), it's likely minutes from old data.
-    // This isn't perfect but handles most legacy cases.
-    if (dur > 0 && dur < 3600) {
-        // Assuming it's minutes, convert to seconds
-        return dur * 60;
-    }
-    // Otherwise, assume it's already in seconds
-    return dur;
-  }, [lecture.duration]);
+  const displayDurationInSeconds = lecture.duration || 0;
 
   return (
     <>
