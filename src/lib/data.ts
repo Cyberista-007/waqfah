@@ -1,4 +1,5 @@
 
+
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
@@ -20,6 +21,59 @@ export const getDbSafe = () => {
         return { db: null, isLive: false };
     }
 }
+
+export async function getSeriesPageData(slug: string) {
+    const { db, isLive } = getDbSafe();
+
+    if (isLive && db) {
+        try {
+            const seriesCol = collection(db, 'series');
+            const seriesQuery = query(seriesCol, where("slug", "==", slug), limit(1));
+            const seriesSnapshot = await getDocs(seriesQuery);
+
+            if (seriesSnapshot.empty) {
+                return null; // No series found with this slug
+            }
+
+            const seriesDoc = seriesSnapshot.docs[0];
+            const seriesData = toSerializable({ ...seriesDoc.data(), id: seriesDoc.id }) as Series;
+            
+            let seriesCreator: Sheikh | null = null;
+            if (seriesData.sheikhId) {
+                const sheikhRef = doc(db, 'sheikhs', seriesData.sheikhId);
+                const sheikhSnap = await getDoc(sheikhRef);
+                if (sheikhSnap.exists()) {
+                    seriesCreator = toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
+                }
+            }
+            
+            const lecturesCol = collection(db, 'lectures');
+            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id), orderBy('createdAt', 'asc'));
+            const lecturesSnapshot = await getDocs(lecturesQuery);
+            const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+
+            return { series: seriesData, lecturesInSeries, seriesCreator };
+
+        } catch (error) {
+            console.error("Error fetching series page data:", error);
+            // Fall through to dummy data if DB query fails
+        }
+    }
+
+    // Fallback to dummy data
+    const series = DUMMY_SERIES.find(s => s.slug === slug);
+    if (!series) return null;
+
+    const seriesCreator = DUMMY_SHEIKHS.find(s => s.id === series.sheikhId) || null;
+    const lecturesInSeries = DUMMY_LECTURES.filter(l => l.seriesId === series.id);
+    
+    const serializableSeries = toSerializable({ ...series, createdAt: new Date(series.createdAt) });
+    const serializableLectures = lecturesInSeries.map(l => toSerializable({ ...l, createdAt: new Date(l.createdAt), transcript: [] }));
+    const serializableCreator = seriesCreator ? toSerializable({ ...seriesCreator, createdAt: new Date(seriesCreator.createdAt) }) : null;
+
+    return { series: serializableSeries, lecturesInSeries: serializableLectures, seriesCreator: serializableCreator };
+}
+
 
 // --- Dashboard Stats ---
 export const getDashboardStats = async (): Promise<Stats | null> => {
