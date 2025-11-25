@@ -217,7 +217,7 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
           </div>
           <div>
-            <Label htmlFor="sheikh">الشيخ المرتبط (للمتابعة)</Label>
+            <Label htmlFor="sheikh">الشيخ المرتبط بالقناة (مهم لوظيفة المتابعة)</Label>
               <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={item?.sheikhId} disabled={sheikhsLoading}>
                   <SelectTrigger>
                       <SelectValue placeholder="اختر شيخًا لربطه بهذه القناة..." />
