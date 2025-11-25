@@ -53,27 +53,27 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const language = formData.get("language") as string;
-    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     
-    const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
-
-    if (!title || !description || !sheikhData) {
+    if (!title) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة واختيار شيخ صالح.",
+            description: "عنوان السلسلة حقل مطلوب.",
         });
         setIsSubmitting(false);
         return;
     }
 
-    const seriesData: Partial<Series> & { imageId: string, language: string } = {
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
+
+    const seriesData: Partial<Series> & { imageId: string, language: string, title: string, slug: string } = {
         title,
         slug,
-        description,
-        sheikhId: sheikhData.id,
-        sheikhName: sheikhData.name,
-        sheikhSlug: sheikhData.slug,
+        description: description || "",
+        sheikhId: sheikhData?.id || "",
+        sheikhName: sheikhData?.name || "",
+        sheikhSlug: sheikhData?.slug || "",
         imageId: `series-${slug}`,
         language: language || 'ar',
     };
@@ -139,10 +139,10 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
             <Input id="title" name="title" defaultValue={series?.title} required disabled={isSubmitting} />
           </div>
            <div>
-            <Label htmlFor="sheikh">الشيخ</Label>
-              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={series?.sheikhId} required>
-                  <SelectTrigger disabled={sheikhs.length === 0}>
-                       <SelectValue placeholder={sheikhs.length === 0 ? "لا يوجد مشايخ، يرجى إضافة شيخ أولاً." : "اختر شيخًا..."} />
+            <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={series?.sheikhId} >
+                  <SelectTrigger>
+                       <SelectValue placeholder="اختر شيخًا..." />
                   </SelectTrigger>
                   <SelectContent>
                       {sheikhs?.map(s => (
@@ -152,8 +152,8 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
               </Select>
           </div>
           <div>
-            <Label htmlFor="description">وصف السلسلة</Label>
-            <Textarea id="description" name="description" defaultValue={series?.description} required disabled={isSubmitting}/>
+            <Label htmlFor="description">وصف السلسلة (اختياري)</Label>
+            <Textarea id="description" name="description" defaultValue={series?.description} disabled={isSubmitting}/>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

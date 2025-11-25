@@ -112,7 +112,7 @@ export default function AdminSeriesPage() {
               ): allSeries?.map((series) => (
                 <TableRow key={series.id}>
                   <TableCell className="font-medium">{series.title}</TableCell>
-                  <TableCell>{series.sheikhName}</TableCell>
+                  <TableCell>{series.sheikhName || 'غير محدد'}</TableCell>
                   <TableCell>{series.lectureCount || 0}</TableCell>
                   <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">

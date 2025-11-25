@@ -45,7 +45,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the series content (e.g., 'ar', 'en')." }
       },
-      "required": ["slug", "title", "description", "imageId", "lectureCount", "sheikhId", "sheikhName", "sheikhSlug", "createdAt"]
+      "required": ["slug", "title", "imageId", "lectureCount", "createdAt"]
     },
     "Lecture": {
       "$schema": "http://json-schema.org/draft-07/schema#",
