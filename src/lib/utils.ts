@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -23,7 +24,8 @@ export function formatDuration(totalSeconds: number): string {
   const formattedMinutes = minutes.toString().padStart(2, '0');
   
   if (hours > 0) {
-    return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+    const formattedHours = hours.toString().padStart(2, '0');
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   } else {
     return `${formattedMinutes}:${formattedSeconds}`;
   }
