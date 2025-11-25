@@ -1,11 +1,13 @@
 
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Channel } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
+import { Button } from './ui/button';
+import { UserPlus } from 'lucide-react';
 
 interface ChannelCardProps {
     channel: Channel;
@@ -17,25 +19,31 @@ export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
 
     return (
-        <Link href={`/channels/${channel.slug}`} key={channel.id} className="block group">
-            <Card 
-                className={cn(
-                    "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50 rounded-xl",
-                    "animate-fade-in-up"
-                )}
-                style={{ animationDelay: `${index * 100}ms` }}
-            >
-                <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors">
+        <Card 
+            className={cn(
+                "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-primary/50 rounded-xl",
+                "animate-fade-in-up"
+            )}
+            style={{ animationDelay: `${index * 100}ms` }}
+        >
+            <Link href={`/channels/${channel.slug}`} key={channel.id} className="block group w-full">
+                <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors mx-auto">
                     <AvatarImage src={imageUrl} alt={channel.name} />
                     <AvatarFallback className="text-4xl">{getInitials(channel.name)}</AvatarFallback>
                 </Avatar>
                 <CardHeader className="p-0">
-                    <CardTitle className="font-headline text-xl">{channel.name}</CardTitle>
+                    <CardTitle className="font-headline text-xl group-hover:text-primary transition-colors">{channel.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 mt-2">
+                <CardContent className="p-0 mt-2 flex-grow">
                     <CardDescription className="line-clamp-3">{channel.description}</CardDescription>
                 </CardContent>
-            </Card>
-        </Link>
+            </Link>
+            <CardFooter className="p-0 pt-4 mt-auto">
+                 <Button className="w-full">
+                    <UserPlus className="me-2 h-4 w-4" />
+                    متابعة
+                 </Button>
+            </CardFooter>
+        </Card>
     )
 }
