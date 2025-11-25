@@ -195,10 +195,12 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             <Share2 className="w-4 h-4 text-white" />
           </button>
             
-          <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-             <Clock className="w-3 h-3" />
-             <span>{formatDuration(lecture.duration)}</span>
-          </div>
+          {lecture.duration > 300 && (
+            <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+                <Clock className="w-3 h-3" />
+                <span>{formatDuration(lecture.duration)}</span>
+            </div>
+          )}
 
           <div className="absolute bottom-2 right-2 text-white text-xs font-semibold flex items-center gap-1">
              <MicVocal className="w-3 h-3" />
