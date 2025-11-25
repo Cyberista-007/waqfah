@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { z } from 'zod';
-import { parse } from 'iso8601-duration';
 
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
@@ -49,6 +48,18 @@ async function getChannelIdFromUrl(url: string, youtube: any): Promise<string | 
         console.error("Error parsing channel URL:", error);
         return null;
     }
+}
+
+// Custom function to parse ISO 8601 duration format from YouTube
+function parseISO8601Duration(duration: string): number {
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 0;
+    
+    const hours = parseInt(match[1] || '0', 10);
+    const minutes = parseInt(match[2] || '0', 10);
+    const seconds = parseInt(match[3] || '0', 10);
+    
+    return (hours * 3600) + (minutes * 60) + seconds;
 }
 
 
@@ -132,7 +143,7 @@ export async function POST(req: NextRequest) {
             title: item.snippet?.title || 'بدون عنوان',
             description: item.snippet?.description || '',
             // Convert ISO 8601 duration to seconds
-            durationInSeconds: item.contentDetails?.duration ? parse(item.contentDetails.duration).seconds : 0,
+            durationInSeconds: item.contentDetails?.duration ? parseISO8601Duration(item.contentDetails.duration) : 0,
         }));
         
         const responseData: any = { videos: formattedVideos };
