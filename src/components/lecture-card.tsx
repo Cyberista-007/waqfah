@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, MicVocal, ListPlus, Download } from "lucide-react"
+import { Headphones, Play, Share2, MicVocal, ListPlus, Download, Clock } from "lucide-react"
 import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
 import { useState, useMemo, useRef } from "react"
 
@@ -15,7 +15,7 @@ import {
   Card,
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
-import { cn } from "@/lib/utils"
+import { cn, formatDuration } from "@/lib/utils"
 import { YoutubePlayerModal } from "./youtube-player-modal"
 import { getPlaceholderImage } from "@/lib/images"
 import { useCollection, useFirestore, useUser } from "@/firebase"
@@ -195,6 +195,11 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             <Share2 className="w-4 h-4 text-white" />
           </button>
             
+          <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+             <Clock className="w-3 h-3" />
+             <span>{formatDuration(lecture.duration * 60)}</span>
+          </div>
+
           <div className="absolute bottom-2 right-2 text-white text-xs font-semibold flex items-center gap-1">
              <MicVocal className="w-3 h-3" />
              <span>{lecture.sheikhName}</span>
