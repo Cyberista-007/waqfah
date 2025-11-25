@@ -121,8 +121,8 @@ export default function AdminImportLecturesPage() {
     }
     
     const handleYoutubeImport = async () => {
-        if (selectedVideos.length === 0 || !targetSeriesId) {
-            toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار سلسلة وبعض الفيديوهات للاستيراد."});
+        if (selectedVideos.length === 0) {
+            toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
         if (!firestore || !allSeries || !allSheikhs) return;
@@ -133,13 +133,8 @@ export default function AdminImportLecturesPage() {
             const batch = writeBatch(firestore);
             const videosToImport = fetchedVideos.filter(v => selectedVideos.includes(v.videoId));
 
-            const series = allSeries.find(s => s.id === targetSeriesId);
-            if (!series) throw new Error("السلسلة المختارة غير موجودة.");
-
-            const sheikh = series.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
-            if (series.sheikhId && !sheikh) {
-                 console.warn(`Sheikh with ID ${series.sheikhId} not found, but importing anyway.`);
-            }
+            const series = targetSeriesId ? allSeries.find(s => s.id === targetSeriesId) : null;
+            const sheikh = series?.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
 
             for (const video of videosToImport) {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -152,9 +147,9 @@ export default function AdminImportLecturesPage() {
                     sheikhId: sheikh?.id || "",
                     sheikhName: sheikh?.name || "",
                     sheikhSlug: sheikh?.slug || "",
-                    seriesId: series.id,
-                    seriesSlug: series.slug,
-                    seriesTitle: series.title,
+                    seriesId: series?.id || "",
+                    seriesSlug: series?.slug || "",
+                    seriesTitle: series?.title || "",
                     channelId: targetChannelId || "",
                     audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
                     duration: Math.ceil(video.durationInSeconds / 60),
@@ -166,14 +161,16 @@ export default function AdminImportLecturesPage() {
                     ratingCount: 0,
                     viewCount: 0,
                     transcript: [],
-                    language: series.language || 'ar',
+                    language: series?.language || 'ar',
                 };
                 
                 batch.set(newLectureRef, newLecturePayload);
             }
             
-            const seriesRef = doc(firestore, 'series', targetSeriesId);
-            batch.update(seriesRef, { lectureCount: increment(videosToImport.length) });
+            if (series) {
+                const seriesRef = doc(firestore, 'series', series.id);
+                batch.update(seriesRef, { lectureCount: increment(videosToImport.length) });
+            }
 
             const statsRef = doc(firestore, 'stats', 'global');
             batch.set(statsRef, { lectures: increment(videosToImport.length) }, { merge: true });
@@ -346,7 +343,7 @@ export default function AdminImportLecturesPage() {
                                     <h3 className="font-bold flex items-center gap-2"><ListChecks /> الفيديوهات التي تم جلبها</h3>
                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <Label htmlFor="target-series">اختر السلسلة لإضافة المحاضرات إليها</Label>
+                                            <Label htmlFor="target-series">اختر السلسلة (اختياري)</Label>
                                             <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="اختر سلسلة..." />
@@ -402,7 +399,7 @@ export default function AdminImportLecturesPage() {
                                             </TableBody>
                                         </Table>
                                     </div>
-                                    <Button onClick={handleYoutubeImport} disabled={isSubmitting || selectedVideos.length === 0 || !targetSeriesId}>
+                                    <Button onClick={handleYoutubeImport} disabled={isSubmitting || selectedVideos.length === 0}>
                                         {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin"/>}
                                         استيراد {selectedVideos.length} محاضرة
                                     </Button>
@@ -457,5 +454,3 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
-
-    
