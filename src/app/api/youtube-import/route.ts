@@ -34,6 +34,13 @@ async function getChannelIdFromUrl(url: string, youtube: any): Promise<string | 
                 forHandle: handle,
             });
             channelId = response.data.items?.[0]?.id || null;
+        } else if (pathParts[0] === 'user' && pathParts[1]) {
+            const username = pathParts[1];
+            const response = await youtube.channels.list({
+                part: ['id'],
+                forUsername: username,
+            });
+            channelId = response.data.items?.[0]?.id || null;
         }
 
         return channelId;
@@ -68,22 +75,20 @@ export async function POST(req: NextRequest) {
         });
 
         let playlistId: string | null = getPlaylistIdFromUrl(url);
+        let channelDetails: any = null;
 
         // If it's not a playlist URL, try to treat it as a channel URL
         if (!playlistId) {
             const channelId = await getChannelIdFromUrl(url, youtube);
             if (channelId) {
-                // Every channel has a special "uploads" playlist. 
-                // Its ID is the channel ID with 'UC' replaced by 'UU'.
-                if (channelId.startsWith('UC')) {
-                    playlistId = channelId.replace('UC', 'UU');
-                } else {
-                     // Fallback for non-standard channel IDs: fetch the channel details
-                    const channelResponse = await youtube.channels.list({
-                        part: ['contentDetails'],
-                        id: [channelId]
-                    });
-                    playlistId = channelResponse.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads || null;
+                 const channelResponse = await youtube.channels.list({
+                    part: ['contentDetails', 'snippet'],
+                    id: [channelId]
+                });
+                
+                if (channelResponse.data.items && channelResponse.data.items.length > 0) {
+                    channelDetails = channelResponse.data.items[0];
+                    playlistId = channelDetails.contentDetails?.relatedPlaylists?.uploads || null;
                 }
             }
         }
@@ -129,9 +134,18 @@ export async function POST(req: NextRequest) {
             // Convert ISO 8601 duration to seconds
             durationInSeconds: item.contentDetails?.duration ? parse(item.contentDetails.duration).seconds : 0,
         }));
+        
+        const responseData: any = { videos: formattedVideos };
+        if (channelDetails) {
+            responseData.channelInfo = {
+                name: channelDetails.snippet.title,
+                description: channelDetails.snippet.description,
+                imageUrl: channelDetails.snippet.thumbnails.high?.url || channelDetails.snippet.thumbnails.default?.url,
+            };
+        }
 
 
-        return NextResponse.json({ videos: formattedVideos });
+        return NextResponse.json(responseData);
 
     } catch (error: any) {
         console.error("YouTube API Error:", error);

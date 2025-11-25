@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useFirestore, useStorage } from "@/firebase";
-import { collection, doc, runTransaction } from "firebase/firestore";
+import { collection, doc, runTransaction, increment } from "firebase/firestore";
 import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -33,9 +33,14 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
   const firestore = useFirestore();
   const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
   
+  const nameRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const youtubeUrlRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = !!item;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,16 +51,53 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
       }
   }
 
+  const handleFetchFromYoutube = async () => {
+    const url = youtubeUrlRef.current?.value;
+    if (!url) {
+        toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أولاً." });
+        return;
+    }
+    setIsFetching(true);
+    try {
+        const response = await fetch('/api/youtube-import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "فشل في جلب بيانات يوتيوب.");
+        }
+
+        const data = await response.json();
+        
+        if (data.channelInfo) {
+            if(nameRef.current) nameRef.current.value = data.channelInfo.name;
+            if(descriptionRef.current) descriptionRef.current.value = data.channelInfo.description;
+            setImagePreview(data.channelInfo.imageUrl);
+            // We don't set imageFile here, we just use the URL. 
+            // The logic on submit will handle fetching and uploading the image if the URL is from youtube.
+        }
+        
+        toast({ title: "تم جلب بيانات القناة بنجاح." });
+
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "خطأ", description: error.message });
+    } finally {
+        setIsFetching(false);
+    }
+  }
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore || !storage) return;
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const youtubeUrl = formData.get("youtubeUrl") as string;
+    const name = nameRef.current?.value || "";
+    const description = descriptionRef.current?.value || "";
+    const youtubeUrl = youtubeUrlRef.current?.value || "";
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     if (!name || !youtubeUrl) {
@@ -71,9 +113,19 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
     try {
         let newImageUrl = item?.imageUrl || '';
 
+        // If a file was manually selected, it takes precedence
         if (imageFile) {
             const imageRef = ref(storage, `channel-images/${slug}/${imageFile.name}`);
             const snapshot = await uploadBytes(imageRef, imageFile);
+            newImageUrl = await getDownloadURL(snapshot.ref);
+        } 
+        // If there's a preview from YouTube and no file selected, and it's different from the original
+        else if (imagePreview && imagePreview.startsWith('http') && imagePreview !== item?.imageUrl) {
+            const response = await fetch(imagePreview);
+            const blob = await response.blob();
+            const fetchedFile = new File([blob], `${slug}-youtube-profile.jpg`, { type: blob.type });
+            const imageRef = ref(storage, `channel-images/${slug}/${fetchedFile.name}`);
+            const snapshot = await uploadBytes(imageRef, fetchedFile);
             newImageUrl = await getDownloadURL(snapshot.ref);
         }
 
@@ -88,14 +140,14 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
 
         if (isEditMode && item) {
           const itemRef = doc(firestore, 'channels', item.id);
-          updateDocumentNonBlocking(itemRef, itemData);
+          await updateDocumentNonBlocking(itemRef, itemData);
           toast({
               title: "تم التحديث بنجاح",
               description: `تم تحديث بيانات القناة "${name}".`,
           });
         } else {
+            const newChannelRef = doc(collection(firestore, 'channels'));
             await runTransaction(firestore, async (transaction) => {
-                const newChannelRef = doc(collection(firestore, 'channels'));
                 transaction.set(newChannelRef, itemData);
             });
           toast({
@@ -121,7 +173,7 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
       <CardHeader>
         <CardTitle className="font-headline">{isEditMode ? `تعديل القناة: ${item?.name}` : 'إضافة قناة جديدة'}</CardTitle>
         <CardDescription>
-          املأ الحقول أدناه لإنشاء أو تعديل قناة.
+          املأ الحقول أدناه لإنشاء أو تعديل قناة. يمكنك جلب البيانات تلقائيًا من يوتيوب.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -129,7 +181,7 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
           <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-24 w-24">
                   <AvatarImage src={imagePreview || undefined} />
-                  <AvatarFallback className="text-3xl">{getInitials(item?.name)}</AvatarFallback>
+                  <AvatarFallback className="text-3xl">{getInitials(item?.name || nameRef.current?.value)}</AvatarFallback>
               </Avatar>
               <div>
                 <Label htmlFor="image">صورة القناة</Label>
@@ -144,16 +196,21 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
               </div>
           </div>
           <div>
-            <Label htmlFor="name">اسم القناة</Label>
-            <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} />
+            <Label htmlFor="youtubeUrl">رابط قناة يوتيوب</Label>
+            <div className="flex gap-2">
+                <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={item?.youtubeUrl} required disabled={isSubmitting} ref={youtubeUrlRef} />
+                <Button type="button" onClick={handleFetchFromYoutube} disabled={isFetching || isSubmitting}>
+                    {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
+                </Button>
+            </div>
           </div>
           <div>
-            <Label htmlFor="youtubeUrl">رابط قناة يوتيوب</Label>
-            <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={item?.youtubeUrl} required disabled={isSubmitting} />
+            <Label htmlFor="name">اسم القناة</Label>
+            <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
           </div>
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>
-            <Textarea id="description" name="description" defaultValue={item?.description} disabled={isSubmitting} rows={4} />
+            <Textarea id="description" name="description" defaultValue={item?.description} disabled={isSubmitting} rows={4} ref={descriptionRef}/>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
