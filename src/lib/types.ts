@@ -167,6 +167,15 @@ export type Topic = Serializable<{
     seriesIds: string[];
 }>;
 
+export type Channel = Serializable<{
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    imageId: string;
+    youtubeUrl: string;
+}>;
+
 export type Challenge = Serializable<{
     id: string;
     title: string;

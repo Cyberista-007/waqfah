@@ -191,6 +191,20 @@
       },
       "required": ["name", "slug", "description"]
     },
+    "Channel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Channel",
+      "description": "Represents a YouTube channel or other content source.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "youtubeUrl": { "type": "string", "format": "uri" }
+      },
+      "required": ["name", "slug", "youtubeUrl"]
+    },
     "Challenge": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Challenge",
@@ -289,6 +303,10 @@
       {
         "path": "/books/{bookId}",
         "definition": { "schema": { "$ref": "#/entities/Book" } }
+      },
+      {
+        "path": "/channels/{channelId}",
+        "definition": { "schema": { "$ref": "#/entities/Channel" } }
       },
       {
         "path": "/users/{userId}",
