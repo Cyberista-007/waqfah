@@ -62,7 +62,7 @@ export default function AdminImportLecturesPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // YouTube State
-    const [playlistUrl, setPlaylistUrl] = useState("");
+    const [youtubeUrl, setYoutubeUrl] = useState("");
     const [isFetchingPlaylist, setIsFetchingPlaylist] = useState(false);
     const [fetchedVideos, setFetchedVideos] = useState<FetchedVideo[]>([]);
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
@@ -85,9 +85,9 @@ export default function AdminImportLecturesPage() {
         }
     }
 
-    const handleFetchPlaylist = async () => {
-        if (!playlistUrl) {
-            toast({ variant: "destructive", title: "الرجاء إدخال رابط قائمة التشغيل." });
+    const handleFetchFromYoutube = async () => {
+        if (!youtubeUrl) {
+            toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أو قائمة التشغيل." });
             return;
         }
         setIsFetchingPlaylist(true);
@@ -97,12 +97,12 @@ export default function AdminImportLecturesPage() {
             const response = await fetch('/api/youtube-import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playlistUrl }),
+                body: JSON.stringify({ url: youtubeUrl }),
             });
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || "فشل في جلب بيانات قائمة التشغيل.");
+                throw new Error(error.message || "فشل في جلب بيانات يوتيوب.");
             }
 
             const data = await response.json();
@@ -134,10 +134,8 @@ export default function AdminImportLecturesPage() {
 
             const sheikh = series.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
             if (series.sheikhId && !sheikh) {
-                // Only throw error if sheikhId is present but not found
                  throw new Error("الشيخ المرتبط بالسلسلة غير موجود أو تم حذفه.");
             }
-
 
             for (const video of videosToImport) {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -153,7 +151,7 @@ export default function AdminImportLecturesPage() {
                     seriesId: series.id,
                     seriesSlug: series.slug,
                     seriesTitle: series.title,
-                    audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder, should be updated manually or via backend
+                    audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
                     duration: video.duration,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
@@ -234,7 +232,7 @@ export default function AdminImportLecturesPage() {
                         continue;
                     }
                     const sheikh = allSheikhs.find(sh => sh.id === series.sheikhId);
-                     if (!sheikh) {
+                     if (series.sheikhId && !sheikh) {
                          console.warn(`Skipping row: Sheikh for series "${series.title}" not found.`);
                         continue;
                     }
@@ -246,9 +244,9 @@ export default function AdminImportLecturesPage() {
                         title,
                         slug,
                         description: description || "",
-                        sheikhId: sheikh.id,
-                        sheikhName: sheikh.name,
-                        sheikhSlug: sheikh.slug,
+                        sheikhId: sheikh?.id || "",
+                        sheikhName: sheikh?.name || "",
+                        sheikhSlug: sheikh?.slug || "",
                         seriesId: series.id,
                         seriesSlug: series.slug,
                         seriesTitle: series.title,
@@ -323,17 +321,17 @@ export default function AdminImportLecturesPage() {
                     <TabsContent value="youtube" className="mt-6">
                         <div className="space-y-4">
                             <div>
-                                <Label htmlFor="playlist-url">رابط قائمة تشغيل يوتيوب</Label>
+                                <Label htmlFor="youtube-url">رابط قناة أو قائمة تشغيل يوتيوب</Label>
                                 <div className="flex gap-2">
                                     <Input
-                                        id="playlist-url"
+                                        id="youtube-url"
                                         type="url"
-                                        placeholder="https://www.youtube.com/playlist?list=..."
-                                        value={playlistUrl}
-                                        onChange={(e) => setPlaylistUrl(e.target.value)}
+                                        placeholder="https://www.youtube.com/..."
+                                        value={youtubeUrl}
+                                        onChange={(e) => setYoutubeUrl(e.target.value)}
                                         disabled={isFetchingPlaylist}
                                     />
-                                    <Button onClick={handleFetchPlaylist} disabled={isFetchingPlaylist || !playlistUrl}>
+                                    <Button onClick={handleFetchFromYoutube} disabled={isFetchingPlaylist || !youtubeUrl}>
                                         {isFetchingPlaylist ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                                     </Button>
                                 </div>
@@ -441,5 +439,3 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
-
-    
