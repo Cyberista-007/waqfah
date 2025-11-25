@@ -1,5 +1,5 @@
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -347,6 +347,26 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
   }
   return undefined;
 };
+
+// --- Channels ---
+export const getChannelBySlug = async (slug: string): Promise<Channel | undefined> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const channelsCol = collection(db, 'channels');
+        const q = query(channelsCol, where("slug", "==", slug), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const docSnap = snapshot.docs[0];
+            return toSerializable({ ...docSnap.data(), id: docSnap.id }) as Channel;
+        }
+      } catch (error) {
+        console.error("Error fetching channel by slug:", error);
+      }
+  }
+  return undefined;
+}
+
 
 async function getDocumentsByIds<T>(collectionName: string, ids: string[] | undefined): Promise<T[]> {
     if (!ids || ids.length === 0) return [];

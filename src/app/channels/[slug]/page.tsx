@@ -1,7 +1,5 @@
 
 import { notFound } from 'next/navigation';
-import { getDoc, doc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import type { Channel, Lecture } from '@/lib/types';
 import { toSerializable } from '@/lib/data-helpers';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -11,19 +9,15 @@ import { LectureCard } from '@/components/lecture-card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Youtube } from 'lucide-react';
+import { getChannelBySlug } from '@/lib/data';
+
 
 async function getChannelData(slug: string) {
-    const { serverFirestore } = initializeFirebaseOnServer();
-    
-    const channelsCol = collection(serverFirestore, 'channels');
-    const channelQuery = query(channelsCol, where('slug', '==', slug), limit(1));
-    const channelSnap = await getDocs(channelQuery);
+    const channel = await getChannelBySlug(slug);
 
-    if (channelSnap.empty) {
+    if (!channel) {
         return null;
     }
-    
-    const channel = toSerializable({ ...channelSnap.docs[0].data(), id: channelSnap.docs[0].id }) as Channel;
     
     // This is a placeholder for fetching lectures related to a channel.
     // The current data model does not link lectures to channels.
