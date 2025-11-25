@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, FileText, Youtube, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Series, Sheikh, Lecture } from "@/lib/types";
+import type { Series, Sheikh, Lecture, Channel } from "@/lib/types";
 import { writeBatch, doc, collection, Timestamp, increment } from "firebase/firestore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -68,9 +68,12 @@ export default function AdminImportLecturesPage() {
     const [fetchedVideos, setFetchedVideos] = useState<FetchedVideo[]>([]);
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [targetSeriesId, setTargetSeriesId] = useState<string>("");
+    const [targetChannelId, setTargetChannelId] = useState<string>("");
 
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
     const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs');
+    const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels');
+
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -152,6 +155,7 @@ export default function AdminImportLecturesPage() {
                     seriesId: series.id,
                     seriesSlug: series.slug,
                     seriesTitle: series.title,
+                    channelId: targetChannelId || "",
                     audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
                     duration: Math.ceil(video.durationInSeconds / 60),
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
@@ -300,7 +304,7 @@ export default function AdminImportLecturesPage() {
         reader.readAsText(selectedFile);
     };
 
-    const isLoading = seriesLoading || sheikhsLoading;
+    const isLoading = seriesLoading || sheikhsLoading || channelsLoading;
 
     return (
         <Card>
@@ -340,16 +344,29 @@ export default function AdminImportLecturesPage() {
                             {fetchedVideos.length > 0 && (
                                 <div className="space-y-4 border p-4 rounded-lg">
                                     <h3 className="font-bold flex items-center gap-2"><ListChecks /> الفيديوهات التي تم جلبها</h3>
-                                     <div>
-                                        <Label htmlFor="target-series">اختر السلسلة لإضافة المحاضرات إليها</Label>
-                                        <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="اختر سلسلة..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="target-series">اختر السلسلة لإضافة المحاضرات إليها</Label>
+                                            <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="اختر سلسلة..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                         <div>
+                                            <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
+                                            <Select value={targetChannelId} onValueChange={setTargetChannelId}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="اختر قناة..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                      </div>
                                     <div className="max-h-80 overflow-y-auto">
                                         <Table>
@@ -440,3 +457,5 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
+
+    
