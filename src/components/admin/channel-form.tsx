@@ -15,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useFirestore, useStorage } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, runTransaction } from "firebase/firestore";
 import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
-import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -94,8 +94,10 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
               description: `تم تحديث بيانات القناة "${name}".`,
           });
         } else {
-          const collectionRef = collection(firestore, 'channels');
-          addDocumentNonBlocking(collectionRef, itemData);
+            await runTransaction(firestore, async (transaction) => {
+                const newChannelRef = doc(collection(firestore, 'channels'));
+                transaction.set(newChannelRef, itemData);
+            });
           toast({
               title: "تم الإنشاء بنجاح",
               description: `تمت إضافة القناة "${name}" الجديدة.`,
