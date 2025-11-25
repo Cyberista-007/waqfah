@@ -4,8 +4,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import type { Series, Lecture, ListenHistoryItem, UserProfile } from '@/lib/types';
-import { doc, getDoc, collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import type { Series, Lecture, ListenHistoryItem, UserProfile, Sheikh } from '@/lib/types';
+import { doc, getDoc, collection, getDocs, query, where, orderBy, Timestamp, limit } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import { SeriesPageSkeleton } from '@/components/skeletons';
 import { toSerializable } from '@/lib/data-helpers';
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { LectureListItem } from '@/components/lecture-list-item';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { getSheikhBySlug } from '@/lib/data';
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -47,7 +48,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
   const [series, setSeries] = useState<Series | null>(null);
   const [lecturesInSeries, setLecturesInSeries] = useState<Lecture[]>([]);
   const [filteredLectures, setFilteredLectures] = useState<Lecture[]>([]);
-  const [seriesCreator, setSeriesCreator] = useState<UserProfile | null>(null);
+  const [seriesCreator, setSeriesCreator] = useState<Sheikh | null>(null);
   const [listenHistory, setListenHistory] = useState<ListenHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
 
         if (seriesSnapshot.empty) {
           setSeries(null);
+          setIsLoading(false);
           return;
         }
         
@@ -74,25 +76,20 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
         const serializableSeries = toSerializable({ ...seriesData, id: seriesDoc.id }) as Series;
         setSeries(serializableSeries);
         
-        const sheikhRef = doc(firestore, 'sheikhs', serializableSeries.sheikhId);
-        const sheikhSnap = await getDoc(sheikhRef);
-        if(sheikhSnap.exists()) {
-            setSeriesCreator(toSerializable(sheikhSnap.data()) as UserProfile)
+        if (serializableSeries.sheikhId) {
+            const sheikhRef = doc(firestore, 'sheikhs', serializableSeries.sheikhId);
+            const sheikhSnap = await getDoc(sheikhRef);
+            if(sheikhSnap.exists()) {
+                setSeriesCreator(toSerializable(sheikhSnap.data()) as Sheikh)
+            }
         }
 
         const lecturesCol = collection(firestore, 'lectures');
-        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id));
+        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id), orderBy('createdAt', 'asc'));
         const lecturesSnapshot = await getDocs(lecturesQuery);
         
         const lecturesData = lecturesSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
         
-        // Sort manually after fetching
-        lecturesData.sort((a, b) => {
-            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return dateA - dateB;
-        });
-
         setLecturesInSeries(lecturesData);
         setFilteredLectures(lecturesData);
 
@@ -113,7 +110,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
     }
     
     getSeriesData();
-    if(user) getListenHistory();
+    if(user && series?.id) getListenHistory();
 
   }, [firestore, seriesSlug, user, series?.id]);
 
@@ -226,7 +223,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
             {filteredLectures.map((lecture, index) => (
               <LectureListItem key={lecture.id} lecture={lecture} index={index + 1} />
             ))}
-             {filteredLectures.length === 0 && (
+             {filteredLectures.length === 0 && !isLoading && (
                 <div className="text-center py-12">
                     <p className="text-muted-foreground">لا توجد محاضرات تطابق بحثك.</p>
                 </div>
