@@ -4,6 +4,8 @@
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { Share2, X } from 'lucide-react';
@@ -54,6 +56,9 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideCloseButton={true}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>مشغل فيديو يوتيوب</DialogTitle>
+        </DialogHeader>
         <div className="flex justify-end items-center bg-card rounded-t-2xl p-2">
            <div className="flex items-center gap-1">
              <Button onClick={handleShare} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
