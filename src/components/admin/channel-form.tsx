@@ -14,11 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { getInitials } from "@/lib/utils";
 
 interface ChannelFormProps {
     item?: Channel | null;
@@ -28,13 +31,25 @@ interface ChannelFormProps {
 export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
   
   const isEditMode = !!item;
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+      }
+  }
+
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore) return;
+    if (!firestore || !storage) return;
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -52,32 +67,51 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
         setIsSubmitting(false);
         return;
     }
+    
+    try {
+        let newImageUrl = item?.imageUrl || '';
 
-    const itemData = {
-        name,
-        slug,
-        description,
-        youtubeUrl,
-        imageId: `channel-${slug}`, // Placeholder
-    };
+        if (imageFile) {
+            const imageRef = ref(storage, `channel-images/${slug}/${imageFile.name}`);
+            const snapshot = await uploadBytes(imageRef, imageFile);
+            newImageUrl = await getDownloadURL(snapshot.ref);
+        }
 
-    if (isEditMode && item) {
-      const itemRef = doc(firestore, 'channels', item.id);
-      updateDocumentNonBlocking(itemRef, itemData);
-      toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث بيانات القناة "${name}".`,
-      });
-    } else {
-      const collectionRef = collection(firestore, 'channels');
-      addDocumentNonBlocking(collectionRef, itemData);
-      toast({
-          title: "تم الإنشاء بنجاح",
-          description: `تمت إضافة القناة "${name}" الجديدة.`,
-      });
+        const itemData = {
+            name,
+            slug,
+            description,
+            youtubeUrl,
+            imageUrl: newImageUrl,
+            imageId: item?.imageId || `channel-${slug}`, // Keep old imageId as fallback
+        };
+
+        if (isEditMode && item) {
+          const itemRef = doc(firestore, 'channels', item.id);
+          updateDocumentNonBlocking(itemRef, itemData);
+          toast({
+              title: "تم التحديث بنجاح",
+              description: `تم تحديث بيانات القناة "${name}".`,
+          });
+        } else {
+          const collectionRef = collection(firestore, 'channels');
+          addDocumentNonBlocking(collectionRef, itemData);
+          toast({
+              title: "تم الإنشاء بنجاح",
+              description: `تمت إضافة القناة "${name}" الجديدة.`,
+          });
+        }
+        onFormClose();
+    } catch(e) {
+        console.error("Error submitting channel form: ", e);
+         toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "فشل حفظ بيانات القناة.",
+        });
+    } finally {
+        setIsSubmitting(false);
     }
-    onFormClose();
-    setIsSubmitting(false);
   };
 
   return (
@@ -90,6 +124,23 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-col items-center space-y-4">
+              <Avatar className="h-24 w-24">
+                  <AvatarImage src={imagePreview || undefined} />
+                  <AvatarFallback className="text-3xl">{getInitials(item?.name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <Label htmlFor="image">صورة القناة</Label>
+                <Input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={isSubmitting}
+                />
+              </div>
+          </div>
           <div>
             <Label htmlFor="name">اسم القناة</Label>
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} />
@@ -101,10 +152,6 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>
             <Textarea id="description" name="description" defaultValue={item?.description} disabled={isSubmitting} rows={4} />
-          </div>
-           <div>
-            <Label htmlFor="image">صورة القناة (اختياري)</Label>
-            <Input id="image" name="image" type="file" disabled={isSubmitting}/>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>

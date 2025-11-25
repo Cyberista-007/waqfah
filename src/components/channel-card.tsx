@@ -14,6 +14,8 @@ interface ChannelCardProps {
 
 export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
     const placeholder = getPlaceholderImage(channel.imageId);
+    const imageUrl = channel.imageUrl || placeholder?.imageUrl;
+
     return (
         <Link href={`/channels/${channel.slug}`} key={channel.id} className="block group">
             <Card 
@@ -24,7 +26,7 @@ export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
                 style={{ animationDelay: `${index * 100}ms` }}
             >
                 <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors">
-                    <AvatarImage src={placeholder?.imageUrl} alt={channel.name} />
+                    <AvatarImage src={imageUrl} alt={channel.name} />
                     <AvatarFallback className="text-4xl">{getInitials(channel.name)}</AvatarFallback>
                 </Avatar>
                 <CardHeader className="p-0">

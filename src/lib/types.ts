@@ -173,6 +173,7 @@ export type Channel = Serializable<{
     slug: string;
     description?: string;
     imageId: string;
+    imageUrl?: string;
     youtubeUrl: string;
 }>;
 

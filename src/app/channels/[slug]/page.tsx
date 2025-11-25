@@ -35,12 +35,13 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
     const { channel, lectures } = data;
     const placeholder = getPlaceholderImage(channel.imageId);
+    const imageUrl = channel.imageUrl || placeholder?.imageUrl;
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8 space-y-12">
             <header className="flex flex-col md:flex-row items-center gap-8">
                 <Avatar className="h-40 w-40 border-4 border-primary">
-                    <AvatarImage src={placeholder?.imageUrl} alt={channel.name} />
+                    <AvatarImage src={imageUrl} alt={channel.name} />
                     <AvatarFallback className="text-6xl">{getInitials(channel.name)}</AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-right flex-grow">

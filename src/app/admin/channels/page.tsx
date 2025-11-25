@@ -105,13 +105,14 @@ export default function AdminChannelsPage() {
                     </TableCell>
                   </TableRow>
                 ) : allItems?.map((item) => {
-                    const image = getPlaceholderImage(item.imageId);
+                    const placeholder = getPlaceholderImage(item.imageId);
+                    const imageUrl = item.imageUrl || placeholder?.imageUrl;
                     return(
                         <TableRow key={item.id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
-                                        <AvatarImage src={image?.imageUrl || ''} alt={item.name} />
+                                        <AvatarImage src={imageUrl || ''} alt={item.name} />
                                         <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <span>{item.name}</span>
