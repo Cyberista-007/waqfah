@@ -41,7 +41,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
         { href: '/admin/books', label: 'الكتب', icon: Book },
-        { href: '/admin/channels', label: 'القنوات', icon: Youtube },
         { href: '/admin/topics', label: 'المواضيع', icon: Hash },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
         { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },

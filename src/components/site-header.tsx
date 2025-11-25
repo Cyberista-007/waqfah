@@ -55,7 +55,6 @@ const mainNavItems = [
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/topics", label: "المواضيع" },
-  { href: "/channels", label: "القنوات" },
   { href: "/playlists", label: "قوائم التشغيل" },
   { href: "/books", label: "الكتب" },
 ]
