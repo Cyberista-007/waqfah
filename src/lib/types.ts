@@ -35,7 +35,7 @@ export type Lecture = Serializable<{
   seriesSlug: string;
   seriesTitle: string; 
   channelId?: string;
-  duration: number; // in minutes
+  duration: number; // in seconds
   audioSrc: string;
   imageId: string;
   youtubeUrl?: string;
@@ -215,5 +215,3 @@ export type Comment = Serializable<{
     text: string;
     createdAt: Timestamp;
 }>;
-
-    

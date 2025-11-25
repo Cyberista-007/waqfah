@@ -197,7 +197,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             
           <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
              <Clock className="w-3 h-3" />
-             <span>{formatDuration(lecture.duration * 60)}</span>
+             <span>{formatDuration(lecture.duration)}</span>
           </div>
 
           <div className="absolute bottom-2 right-2 text-white text-xs font-semibold flex items-center gap-1">

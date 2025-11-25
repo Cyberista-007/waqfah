@@ -152,7 +152,7 @@ export default function AdminImportLecturesPage() {
                     seriesTitle: series?.title || "",
                     channelId: targetChannelId || "",
                     audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
-                    duration: Math.ceil(video.durationInSeconds / 60),
+                    duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
                     pdfUrl: "",
@@ -413,7 +413,7 @@ export default function AdminImportLecturesPage() {
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>يجب أن يكون الملف بصيغة CSV.</li>
                                 <li>
-                                    الأعمدة الإلزامية: `title`, `seriesId`, `audioSrc`, `duration`.
+                                    الأعمدة الإلزامية: `title`, `seriesId`, `audioSrc`, `duration` (بالثواني).
                                 </li>
                                 <li>الأعمدة الاختيارية: `description`, `youtubeUrl`, `pdfUrl`.</li>
                                 <li>تأكد من أن `seriesId` الموجود في الملف يطابق معرف سلسلة موجود بالفعل في قاعدة البيانات.</li>

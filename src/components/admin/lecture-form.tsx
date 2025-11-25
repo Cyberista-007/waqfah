@@ -256,7 +256,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="duration">المدة (بالدقائق)</Label>
+              <Label htmlFor="duration">المدة (بالثواني)</Label>
               <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
             </div>
              <div>
@@ -306,5 +306,3 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   );
 }
  
-
-    
