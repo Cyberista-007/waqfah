@@ -33,6 +33,7 @@ export default {
         'reem-kufi': ['var(--font-reem-kufi)'],
         'mada': ['var(--font-mada)'],
         'scheherazade-new': ['var(--font-scheherazade-new)'],
+        'rubik-origami': ['var(--font-rubik-origami)'],
       },
       colors: {
         background: 'hsl(var(--background))',

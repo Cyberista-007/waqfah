@@ -28,6 +28,7 @@ export const fonts = [
   { name: "Reem Kufi", value: "font-reem-kufi" },
   { name: "Mada", value: "font-mada" },
   { name: "Scheherazade New", value: "font-scheherazade-new" },
+  { name: "اوريغامي", value: "font-rubik-origami" },
 ];
 
 interface FontSwitcherDialogProps {

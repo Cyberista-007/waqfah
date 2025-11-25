@@ -471,6 +471,9 @@
     --font-body: 'Scheherazade New';
     --font-headline: 'Scheherazade New';
   }
+  .font-rubik-origami {
+    font-family: var(--font-rubik-origami);
+  }
 
   .animated-gradient {
     background: linear-gradient(
@@ -510,5 +513,3 @@
         transform: translateY(0);
     }
 }
-
-    

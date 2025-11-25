@@ -15,6 +15,7 @@ import {
   Mada,
   Scheherazade_New,
   Source_Code_Pro,
+  Rubik_Origami,
 } from 'next/font/google';
 
 export const alegreya = Alegreya({
@@ -26,6 +27,12 @@ export const sourceCodePro = Source_Code_Pro({
   subsets: ['latin'],
   variable: '--font-code',
 });
+
+export const rubikOrigami = Rubik_Origami({
+    subsets: ['latin'],
+    weight: '400',
+    variable: '--font-rubik-origami'
+})
 
 export const cairo = Cairo({
   subsets: ['arabic'],
