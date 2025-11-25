@@ -176,6 +176,7 @@ export type Channel = Serializable<{
     imageId: string;
     imageUrl?: string;
     youtubeUrl: string;
+    sheikhId?: string; // Add sheikhId to Channel
 }>;
 
 export type Challenge = Serializable<{

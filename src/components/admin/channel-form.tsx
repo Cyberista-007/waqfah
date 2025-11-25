@@ -14,14 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
-import { useFirestore, useStorage } from "@/firebase";
+import { useCollection, useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
-import type { Channel } from "@/lib/types";
+import type { Channel, Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface ChannelFormProps {
     item?: Channel | null;
@@ -43,10 +44,13 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(item?.sheikhId || "");
   
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const youtubeUrlRef = useRef<HTMLInputElement>(null);
+
+  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   const isEditMode = !!item;
 
@@ -134,13 +138,14 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
             finalImageUrl = imagePreview;
         }
 
-        const itemData = {
+        const itemData: Omit<Channel, 'id'> = {
             name,
             slug,
             description,
             youtubeUrl,
             imageUrl: finalImageUrl,
             imageId: item?.imageId || `channel-${slug}`,
+            sheikhId: selectedSheikhId || undefined,
         };
 
         if (isEditMode && item) {
@@ -210,6 +215,20 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
           <div>
             <Label htmlFor="name">اسم القناة</Label>
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
+          </div>
+          <div>
+            <Label htmlFor="sheikh">الشيخ المرتبط (للمتابعة)</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={item?.sheikhId} disabled={sheikhsLoading}>
+                  <SelectTrigger>
+                      <SelectValue placeholder="اختر شيخًا لربطه بهذه القناة..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="none">بدون شيخ مرتبط</SelectItem>
+                      {allSheikhs?.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
           </div>
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>

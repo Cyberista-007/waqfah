@@ -24,7 +24,10 @@ export function FollowButton({ sheikhId }: FollowButtonProps) {
     const isFollowing = following?.some(f => f.id === sheikhId) || false;
     const isLoading = isUserLoading || followingLoading;
     
-    const handleFollow = async () => {
+    const handleFollow = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (!user || !firestore) {
             toast({
                 variant: "destructive",
@@ -80,11 +83,11 @@ export function FollowButton({ sheikhId }: FollowButtonProps) {
     };
 
     if (isLoading) {
-        return <Button disabled size="lg"><Loader2 className="animate-spin" /></Button>;
+        return <Button disabled size="lg" className="w-full"><Loader2 className="animate-spin" /></Button>;
     }
 
     return (
-        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"}>
+        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full">
             {isFollowing ? (
                 <>
                     <UserCheck className="me-2 h-5 w-5" />

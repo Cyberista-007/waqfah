@@ -6,11 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Channel } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
-import { Button } from './ui/button';
+import { FollowButton } from './follow-button';
 import { UserPlus } from 'lucide-react';
 
 interface ChannelCardProps {
-    channel: Channel;
+    channel: Channel & { sheikhId?: string }; // Assume sheikhId might be on channel
     index?: number;
 }
 
@@ -38,11 +38,12 @@ export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
                     <CardDescription className="line-clamp-3">{channel.description}</CardDescription>
                 </CardContent>
             </Link>
-            <CardFooter className="p-0 pt-4 mt-auto">
-                 <Button className="w-full">
-                    <UserPlus className="me-2 h-4 w-4" />
-                    متابعة
-                 </Button>
+            <CardFooter className="p-0 pt-4 mt-auto w-full">
+                 {channel.sheikhId ? (
+                    <FollowButton sheikhId={channel.sheikhId} />
+                 ) : (
+                    <span className="text-xs text-muted-foreground">غير قابل للمتابعة</span>
+                 )}
             </CardFooter>
         </Card>
     )
