@@ -51,12 +51,12 @@ import { Separator } from "./ui/separator"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
+  { href: "/channels", label: "القنوات" },
   { href: "/sheikhs", label: "المشايخ" },
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/topics", label: "المواضيع" },
   { href: "/playlists", label: "قوائم التشغيل" },
-  { href: "/channels", label: "القنوات" },
   { href: "/books", label: "الكتب" },
 ]
 
