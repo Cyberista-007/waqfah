@@ -16,6 +16,7 @@ import {
   Heart,
   Mail,
   ListMusic,
+  Youtube,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -54,6 +55,7 @@ const mainNavItems = [
   { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/topics", label: "المواضيع" },
+  { href: "/channels", label: "القنوات" },
   { href: "/playlists", label: "قوائم التشغيل" },
   { href: "/books", label: "الكتب" },
 ]
@@ -300,3 +302,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    
