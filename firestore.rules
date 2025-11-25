@@ -60,7 +60,10 @@ service cloud.firestore {
 
     match /channels/{channelId} {
       allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+      // Allow admins to do any write.
+      // Allow any signed-in user to update only the followerCount.
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
     
     match /question_answers/{qaId} {
@@ -106,6 +109,11 @@ service cloud.firestore {
     
     match /users/{userId}/following/{sheikhId} {
       // Users can only manage their own following list.
+      allow read, write, delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/followingChannels/{channelId} {
+      // Users can only manage their own following list for channels.
       allow read, write, delete: if isOwner(userId);
     }
     

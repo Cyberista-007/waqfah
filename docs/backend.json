@@ -135,6 +135,18 @@
       },
       "required": ["userId", "sheikhId", "followedAt"]
     },
+    "FollowingChannel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FollowingChannel",
+      "description": "Represents the relationship of a user following a channel.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "channelId": { "type": "string" },
+        "followedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "channelId", "followedAt"]
+    },
     "Rating": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Rating",
@@ -201,7 +213,8 @@
         "slug": { "type": "string" },
         "description": { "type": "string" },
         "imageId": { "type": "string" },
-        "youtubeUrl": { "type": "string", "format": "uri" }
+        "youtubeUrl": { "type": "string", "format": "uri" },
+        "followerCount": { "type": "number", "minimum": 0 }
       },
       "required": ["name", "slug", "youtubeUrl"]
     },
@@ -319,6 +332,10 @@
        {
         "path": "/users/{userId}/following/{sheikhId}",
         "definition": { "schema": { "$ref": "#/entities/Following" } }
+      },
+      {
+        "path": "/users/{userId}/followingChannels/{channelId}",
+        "definition": { "schema": { "$ref": "#/entities/FollowingChannel" } }
       },
       {
         "path": "/users/{userId}/listenHistory/{lectureId}",

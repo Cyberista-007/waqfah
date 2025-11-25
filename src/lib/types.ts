@@ -129,6 +129,12 @@ export type Following = Serializable<{
     followedAt: Timestamp;
 }>;
 
+export type FollowingChannel = Serializable<{
+    id: string; // channelId
+    channelId: string;
+    followedAt: Timestamp;
+}>
+
 export type Rating = Serializable<{
     id: string; // combination of userId_lectureId
     userId: string;
@@ -177,6 +183,7 @@ export type Channel = Serializable<{
     imageUrl?: string;
     youtubeUrl: string;
     sheikhId?: string; // Add sheikhId to Channel
+    followerCount?: number;
 }>;
 
 export type Challenge = Serializable<{

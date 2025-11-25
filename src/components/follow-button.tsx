@@ -5,23 +5,27 @@ import { UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, runTransaction, increment, Timestamp, writeBatch } from "firebase/firestore";
+import { doc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 interface FollowButtonProps {
-    sheikhId: string;
+    sheikhId?: string;
+    channelId?: string;
 }
 
-export function FollowButton({ sheikhId }: FollowButtonProps) {
+export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
 
-    const followingPath = user ? `users/${user.uid}/following` : null;
+    const isSheikhFollow = !!sheikhId;
+    const isChannelFollow = !!channelId;
+
+    const followingPath = user ? (isSheikhFollow ? `users/${user.uid}/following` : `users/${user.uid}/followingChannels`) : null;
     const { data: following, isLoading: followingLoading } = useCollection(followingPath);
 
-    const isFollowing = following?.some(f => f.id === sheikhId) || false;
+    const isFollowing = following?.some(f => f.id === (sheikhId || channelId)) || false;
     const isLoading = isUserLoading || followingLoading;
     
     const handleFollow = async (e: React.MouseEvent) => {
@@ -32,30 +36,40 @@ export function FollowButton({ sheikhId }: FollowButtonProps) {
             toast({
                 variant: "destructive",
                 title: "يرجى تسجيل الدخول",
-                description: "يجب عليك تسجيل الدخول أولاً لتتمكن من متابعة المشايخ.",
+                description: "يجب عليك تسجيل الدخول أولاً لتتمكن من المتابعة.",
             });
             router.push('/auth/login');
             return;
         }
 
-        const followRef = doc(firestore, 'users', user.uid, 'following', sheikhId);
-        const sheikhRef = doc(firestore, 'sheikhs', sheikhId);
+        if (!sheikhId && !channelId) return;
+
+        const followRef = isSheikhFollow 
+            ? doc(firestore, 'users', user.uid, 'following', sheikhId!)
+            : doc(firestore, 'users', user.uid, 'followingChannels', channelId!);
+        
+        const targetRef = isSheikhFollow
+            ? doc(firestore, 'sheikhs', sheikhId!)
+            : doc(firestore, 'channels', channelId!);
 
         try {
             await runTransaction(firestore, async (transaction) => {
-                const sheikhDoc = await transaction.get(sheikhRef);
-                if (!sheikhDoc.exists()) {
-                    throw "Sheikh does not exist!";
+                const targetDoc = await transaction.get(targetRef);
+                if (!targetDoc.exists()) {
+                    throw isSheikhFollow ? "Sheikh does not exist!" : "Channel does not exist!";
                 }
 
                 if (isFollowing) {
                     // Unfollow logic
                     transaction.delete(followRef);
-                    transaction.update(sheikhRef, { followerCount: increment(-1) });
+                    transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
                     // Follow logic
-                    transaction.set(followRef, { sheikhId: sheikhId, followedAt: Timestamp.now() });
-                    transaction.update(sheikhRef, { followerCount: increment(1) });
+                    const followData = isSheikhFollow 
+                        ? { sheikhId: sheikhId, followedAt: Timestamp.now() }
+                        : { channelId: channelId, followedAt: Timestamp.now() };
+                    transaction.set(followRef, followData);
+                    transaction.update(targetRef, { followerCount: increment(1) });
                 }
             });
 
@@ -68,11 +82,11 @@ export function FollowButton({ sheikhId }: FollowButtonProps) {
                 const permissionError = new FirestorePermissionError({
                     path: followRef.path,
                     operation: isFollowing ? 'delete' : 'create',
-                    requestResourceData: isFollowing ? undefined : { sheikhId: sheikhId, followedAt: 'server_timestamp' }
+                    requestResourceData: isFollowing ? undefined : { followedAt: 'server_timestamp' }
                 });
                 errorEmitter.emit('permission-error', permissionError);
             } else {
-                console.error("Error following/unfollowing sheikh:", error);
+                console.error("Error following/unfollowing:", error);
                 toast({
                     variant: "destructive",
                     title: "حدث خطأ",

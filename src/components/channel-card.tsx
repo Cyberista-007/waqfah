@@ -10,7 +10,7 @@ import { FollowButton } from './follow-button';
 import { UserPlus } from 'lucide-react';
 
 interface ChannelCardProps {
-    channel: Channel & { sheikhId?: string }; // Assume sheikhId might be on channel
+    channel: Channel;
     index?: number;
 }
 
@@ -39,11 +39,7 @@ export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
                 </CardContent>
             </Link>
             <CardFooter className="p-0 pt-4 mt-auto w-full">
-                 {channel.sheikhId ? (
-                    <FollowButton sheikhId={channel.sheikhId} />
-                 ) : (
-                    <span className="text-xs text-muted-foreground">غير قابل للمتابعة</span>
-                 )}
+                 <FollowButton channelId={channel.id} />
             </CardFooter>
         </Card>
     )

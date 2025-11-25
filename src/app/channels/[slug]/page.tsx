@@ -6,9 +6,10 @@ import { getPlaceholderImage } from '@/lib/images';
 import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
 import { Button } from '@/components/ui/button';
-import { Bell, Check } from 'lucide-react';
+import { Bell, Check, Users } from 'lucide-react';
 import { getChannelBySlug, getLecturesByChannel } from '@/lib/data';
 import Image from 'next/image';
+import { FollowButton } from '@/components/follow-button';
 
 async function getChannelData(slug: string) {
     const channel = await getChannelBySlug(slug);
@@ -30,10 +31,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     }
 
     const placeholder = getPlaceholderImage(channel.imageId);
-    // Use the channel's actual image URL if it exists, otherwise fall back to the placeholder
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
     
-    // Using a generic banner for now
     const bannerUrl = "https://picsum.photos/seed/channel-banner/1600/400";
 
 
@@ -64,19 +63,19 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                              <span>@{channel.slug}</span>
                              <span className="hidden sm:inline">·</span>
                              <span>{lectures.length} محاضرة</span>
+                             {channel.followerCount && channel.followerCount > 0 && (
+                                <>
+                                  <span className="hidden sm:inline">·</span>
+                                  <div className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    <span>{channel.followerCount} متابع</span>
+                                  </div>
+                                </>
+                             )}
                         </div>
                         <p className="text-base text-muted-foreground mt-3 max-w-xl line-clamp-3">{channel.description}</p>
                          <div className="mt-6 flex flex-wrap gap-2">
-                             <Button size="lg" className="rounded-full">
-                                <div className="flex items-center">
-                                   <Check className="me-1 h-5 w-5" />
-                                   <span>تم الاشتراك</span>
-                                </div>
-                            </Button>
-                             <Button size="lg" variant="secondary" className="rounded-full">
-                                <Bell className="me-2 h-5 w-5" />
-                                تفعيل الإشعارات
-                            </Button>
+                             <FollowButton channelId={channel.id} />
                          </div>
                     </div>
                 </div>
