@@ -28,10 +28,10 @@ async function getChannelIdFromUrl(url: string, youtube: any): Promise<string | 
         if (pathParts[0] === 'channel' && pathParts[1]) {
             channelId = pathParts[1];
         } else if (pathParts[0]?.startsWith('@')) {
-            const handle = pathParts[0];
+            const handle = pathParts[0].substring(1); // Remove "@"
             const response = await youtube.channels.list({
                 part: ['id'],
-                forUsername: handle,
+                forHandle: handle,
             });
             channelId = response.data.items?.[0]?.id || null;
         }
