@@ -56,6 +56,7 @@ const mainNavItems = [
   { href: "/lectures", label: "كل المحاضرات" },
   { href: "/topics", label: "المواضيع" },
   { href: "/playlists", label: "قوائم التشغيل" },
+  { href: "/channels", label: "القنوات" },
   { href: "/books", label: "الكتب" },
 ]
 
@@ -301,5 +302,3 @@ export function SiteHeader() {
     </>
   )
 }
-
-    
