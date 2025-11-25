@@ -67,15 +67,15 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
 
-    const seriesData: Partial<Series> & { imageId: string, language: string, title: string, slug: string } = {
+    const seriesData = {
         title,
         slug,
         description: description || "",
+        imageId: `series-${slug}`,
+        language: language || 'ar',
         sheikhId: sheikhData?.id || "",
         sheikhName: sheikhData?.name || "",
         sheikhSlug: sheikhData?.slug || "",
-        imageId: `series-${slug}`,
-        language: language || 'ar',
     };
     
     try {
@@ -112,12 +112,12 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
 
         router.push("/admin/series");
         router.refresh();
-    } catch(error) {
+    } catch(error: any) {
         console.error("Error submitting series:", error);
         toast({
             variant: "destructive",
             title: "حدث خطأ",
-            description: "لم نتمكن من حفظ السلسلة.",
+            description: error.message || "لم نتمكن من حفظ السلسلة.",
         });
     } finally {
         setIsSubmitting(false);
