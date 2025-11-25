@@ -23,6 +23,7 @@ import { User, updateProfile } from 'firebase/auth';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { getInitials } from '@/lib/utils';
 
 interface EditProfileFormProps {
   user: User;
@@ -37,7 +38,7 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
   const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(user.photoURL);
+  const [imagePreview, setImagePreview] = useState<string | null>(user.photoURL || userProfile.photoURL || null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
@@ -110,7 +111,7 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
             <div className="flex flex-col items-center space-y-4">
                 <Avatar className="h-24 w-24">
                     <AvatarImage src={imagePreview || undefined} />
-                    <AvatarFallback className="text-3xl">{user.displayName?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <Label htmlFor="photoFile">تغيير الصورة</Label>

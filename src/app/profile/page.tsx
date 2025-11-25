@@ -20,7 +20,7 @@ import { EditProfileForm } from "@/components/profile/edit-profile-form";
 import { ContinueListening } from "@/components/continue-listening";
 import { getInitials } from "@/lib/utils";
 
-function StatCard({ title, value, icon: Icon }: { title: string, value: string, icon: React.ElementType }) {
+function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
         <Card className="text-center">
             <CardContent className="p-4">

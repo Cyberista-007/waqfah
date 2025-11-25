@@ -1,24 +1,35 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useState, useEffect, useMemo } from 'react';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
-const ADMIN_EMAIL = 'abdoreda6249@gmail.com';
 
 export function useAdminAuth() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const isLoading = isAuthLoading || isProfileLoading;
 
   useEffect(() => {
-    // This effect runs whenever the user loading state or the user object itself changes.
-    if (!isUserLoading) {
-      // Once we know the auth state is resolved
-      setIsAdmin(user?.email === ADMIN_EMAIL);
-      setIsLoading(false); // We are no longer loading
+    if (!isLoading && userProfile) {
+      setIsAdmin(userProfile.role === 'admin');
+    } else if (!isLoading && !user) {
+      // If user is not logged in, they are not an admin
+      setIsAdmin(false);
     }
-  }, [isUserLoading, user]);
+  }, [isLoading, userProfile, user]);
 
   return { isAdmin, isLoading };
 }

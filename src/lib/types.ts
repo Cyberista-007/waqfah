@@ -100,18 +100,13 @@ export type UserProfile = Serializable<{
     id: string;
     email: string;
     name: string;
-    firstName?: string;
-    lastName?: string;
-    gender?: string;
-    country?: string;
-    phone?: string;
     photoURL?: string;
     createdAt: Timestamp;
     bio?: string;
     minutesListened?: number;
     lecturesCompleted?: number;
     seriesCompleted?: number;
-    role?: 'user' | 'admin';
+    role: 'user' | 'admin';
 }>;
 
 export type EditProfileForm = {

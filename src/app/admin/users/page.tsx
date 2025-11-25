@@ -23,10 +23,12 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { getInitials } from "@/lib/utils";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 
 export default function AdminUsersPage() {
     const { user: currentUser } = useUser();
+    const { isAdmin } = useAdminAuth();
     const { data: allUsers, isLoading } = useCollection<UserProfile>('users', { orderBy: ['createdAt', 'desc'] });
 
     return (
@@ -46,13 +48,14 @@ export default function AdminUsersPage() {
                 <TableRow>
                     <TableHead>المستخدم</TableHead>
                     <TableHead>البريد الإلكتروني</TableHead>
+                    <TableHead>الدور</TableHead>
                     <TableHead>تاريخ التسجيل</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center">
+                    <TableCell colSpan={4} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
@@ -69,6 +72,12 @@ export default function AdminUsersPage() {
                         </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                        {user.role === 'admin' 
+                            ? <Badge>مدير</Badge> 
+                            : <Badge variant="outline">مستخدم</Badge>
+                        }
+                    </TableCell>
                     <TableCell>
                         {user.createdAt ? format(user.createdAt.toDate(), 'yyyy/MM/dd') : 'غير معروف'}
                     </TableCell>

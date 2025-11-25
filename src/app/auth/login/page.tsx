@@ -37,6 +37,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState('');
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,10 +45,8 @@ export default function LoginPage() {
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
-    const fullName = `${firstName} ${lastName}`;
+    const fullName = formData.get("name") as string;
     
     const redirectTo = searchParams.get('redirect_to') || '/';
 
@@ -77,7 +76,7 @@ export default function LoginPage() {
         }
     } else {
         // --- Registration Logic ---
-        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !password || !confirmPassword) {
             toast({ variant: "destructive", title: "حقول ناقصة", description: "يرجى ملء جميع الحقول الإلزامية." });
             setIsLoading(false);
             return;
@@ -97,10 +96,8 @@ export default function LoginPage() {
             const newUserProfile: Omit<UserProfile, 'id'> = {
                 name: fullName,
                 email: newUser.email!,
-                firstName,
-                lastName,
                 createdAt: Timestamp.now(),
-                role: 'user',
+                role: 'user', // Default role
             };
             await setDoc(userRef, newUserProfile, { merge: true });
 
@@ -155,15 +152,9 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="firstName">الاسم الأول</Label>
-                            <Input id="firstName" name="firstName" type="text" required placeholder="الاسم الأول"/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="lastName">الاسم الأخير</Label>
-                            <Input id="lastName" name="lastName" type="text" required placeholder="الاسم الأخير"/>
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="name">الاسم الكامل</Label>
+                        <Input id="name" name="name" type="text" required placeholder="الاسم الكامل"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="email">البريد الإلكتروني</Label>
