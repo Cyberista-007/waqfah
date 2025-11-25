@@ -23,7 +23,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         >
             <CardHeader>
                 <CardTitle className="font-headline text-xl">
-                    <Link href={`/series/${series.id}`} className="hover:text-primary transition-colors">{series.title}</Link>
+                    <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 pt-1">
                     <MicVocal className="h-4 w-4" />
@@ -36,7 +36,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
                     <span>{series.lectureCount || 0} محاضرة</span>
                 </div>
                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/series/${series.id}`}>عرض السلسلة</Link>
+                    <Link href={`/series/${series.slug}`}>عرض السلسلة</Link>
                 </Button>
             </CardContent>
         </Card>

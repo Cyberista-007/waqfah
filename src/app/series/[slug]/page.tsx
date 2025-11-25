@@ -52,23 +52,26 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const seriesId = params.slug;
+  const seriesSlug = params.slug;
 
   useEffect(() => {
     const getSeriesData = async () => {
-      if (!firestore || !seriesId) return;
+      if (!firestore || !seriesSlug) return;
 
       try {
-        const seriesDocRef = doc(firestore, 'series', seriesId);
-        const seriesSnap = await getDoc(seriesDocRef);
+        const seriesCol = collection(firestore, 'series');
+        const seriesQuery = query(seriesCol, where("slug", "==", seriesSlug), limit(1));
+        const seriesSnapshot = await getDocs(seriesQuery);
 
-        if (!seriesSnap.exists()) {
+
+        if (seriesSnapshot.empty) {
           setSeries(null);
           return;
         }
         
-        const seriesData = seriesSnap.data();
-        const serializableSeries = toSerializable({ ...seriesData, id: seriesSnap.id }) as Series;
+        const seriesDoc = seriesSnapshot.docs[0];
+        const seriesData = seriesDoc.data();
+        const serializableSeries = toSerializable({ ...seriesData, id: seriesDoc.id }) as Series;
         setSeries(serializableSeries);
         
         const sheikhRef = doc(firestore, 'sheikhs', serializableSeries.sheikhId);
@@ -78,7 +81,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
         }
 
         const lecturesCol = collection(firestore, 'lectures');
-        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesId));
+        const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id));
         const lecturesSnapshot = await getDocs(lecturesQuery);
         
         const lecturesData = lecturesSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
@@ -101,9 +104,9 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
     };
 
     const getListenHistory = async () => {
-        if (!user || !firestore) return;
+        if (!user || !firestore || !series?.id) return;
         const historyCol = collection(firestore, 'users', user.uid, 'listenHistory');
-        const historyQuery = query(historyCol, where('seriesId', '==', seriesId));
+        const historyQuery = query(historyCol, where('seriesId', '==', series.id));
         const historySnapshot = await getDocs(historyQuery);
         const historyData = historySnapshot.docs.map(doc => toSerializable(doc.data()) as ListenHistoryItem);
         setListenHistory(historyData);
@@ -112,7 +115,7 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
     getSeriesData();
     if(user) getListenHistory();
 
-  }, [firestore, seriesId, user]);
+  }, [firestore, seriesSlug, user, series?.id]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value.toLowerCase();

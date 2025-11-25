@@ -5,21 +5,40 @@ import { notFound } from 'next/navigation';
 import type { Series, Sheikh } from '@/lib/types';
 import { SeriesForm } from '@/components/admin/series-form';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { useEffect, useState } from 'react';
 
 export default function AdminEditSeriesPage({ params }: { params: { slug: string } }) {
-  // The 'slug' param from the URL is actually the document ID
   const firestore = useFirestore();
   const slug = params.slug;
 
+  const [series, setSeries] = useState<Series | null>(null);
+  const [seriesLoading, setSeriesLoading] = useState(true);
+
   const { data: sheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
-  const seriesDocRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, "series", slug) : null),
-    [firestore, slug]
-  );
-  const { data: series, isLoading: seriesLoading } = useDoc<Series>(seriesDocRef);
+  useEffect(() => {
+    if (!firestore || !slug) return;
+
+    const getSeries = async () => {
+        setSeriesLoading(true);
+        const seriesCol = collection(firestore, 'series');
+        const q = query(seriesCol, where("slug", "==", slug), limit(1));
+        const seriesSnap = await getDocs(q);
+
+        if (seriesSnap.empty) {
+            setSeries(null);
+        } else {
+            const doc = seriesSnap.docs[0];
+            setSeries({ ...doc.data(), id: doc.id } as Series);
+        }
+        setSeriesLoading(false);
+    }
+    getSeries();
+
+  }, [firestore, slug]);
+
 
   const isLoading = sheikhsLoading || seriesLoading;
 

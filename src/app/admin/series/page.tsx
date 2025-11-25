@@ -118,7 +118,7 @@ export default function AdminSeriesPage() {
                   <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/series/${series.id}/edit`}>
+                        <Link href={`/admin/series/${series.slug}/edit`}>
                           <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
