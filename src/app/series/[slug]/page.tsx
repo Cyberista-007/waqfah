@@ -42,6 +42,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 }
 
 export default function SeriesDetailPage({ params }: { params: { slug: string } }) {
+  const { slug: seriesSlug } = params;
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -53,7 +54,6 @@ export default function SeriesDetailPage({ params }: { params: { slug: string } 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const seriesSlug = params.slug;
 
   useEffect(() => {
     const getSeriesData = async () => {
