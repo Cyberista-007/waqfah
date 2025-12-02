@@ -31,9 +31,9 @@ export type Lecture = Serializable<{
   sheikhId: string; // Document ID of the sheikh
   sheikhName: string;
   sheikhSlug: string;
-  seriesId: string; // Document ID of the series
-  seriesSlug: string;
-  seriesTitle: string; 
+  seriesId?: string; // Document ID of the series
+  seriesSlug?: string;
+  seriesTitle?: string; 
   channelId?: string;
   channelName?: string;
   channelSlug?: string;

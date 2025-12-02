@@ -125,11 +125,11 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    if (!title || !description || !selectedSeriesId || !audioSrc || !duration || !seriesData) {
+    if (!title || !description || !audioSrc || !duration) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة واختيار سلسلة صالحة.",
+            description: "يرجى ملء جميع الحقول المطلوبة.",
         });
         setIsSubmitting(false);
         return;
@@ -142,9 +142,9 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         sheikhId: sheikhData?.id || "",
         sheikhName: sheikhData?.name || "",
         sheikhSlug: sheikhData?.slug || "",
-        seriesId: seriesData.id,
-        seriesSlug: seriesData.slug,
-        seriesTitle: seriesData.title,
+        seriesId: seriesData?.id || "",
+        seriesSlug: seriesData?.slug || "",
+        seriesTitle: seriesData?.title || "",
         channelId: channelData?.id || "",
         channelName: channelData?.name || "",
         channelSlug: channelData?.slug || "",
@@ -168,11 +168,15 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
           transaction.update(lectureRef, lectureData);
 
           // If series was changed, decrement old count and increment new count
-          if (previousSeriesId !== seriesData.id) {
-            const oldSeriesRef = doc(firestore, 'series', previousSeriesId);
-            const newSeriesRef = doc(firestore, 'series', seriesData.id);
-            transaction.update(oldSeriesRef, { lectureCount: increment(-1) });
-            transaction.update(newSeriesRef, { lectureCount: increment(1) });
+          if (previousSeriesId !== seriesData?.id) {
+            if (previousSeriesId) {
+                const oldSeriesRef = doc(firestore, 'series', previousSeriesId);
+                transaction.update(oldSeriesRef, { lectureCount: increment(-1) });
+            }
+            if (seriesData) {
+                const newSeriesRef = doc(firestore, 'series', seriesData.id);
+                transaction.update(newSeriesRef, { lectureCount: increment(1) });
+            }
           }
         });
 
@@ -191,15 +195,18 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
             transcript: [],
             createdAt: Timestamp.now(),
         };
-        const seriesRef = doc(firestore, 'series', seriesData.id);
+        
         const newLectureRef = doc(collection(firestore, 'lectures')); // Create a new doc ref with a generated ID
         const statsRef = doc(firestore, 'stats', 'global');
         
-        // Use a transaction to add lecture and increment series count atomically
         await runTransaction(firestore, async (transaction) => {
           transaction.set(newLectureRef, newLectureData);
-          transaction.update(seriesRef, { lectureCount: increment(1) });
           transaction.set(statsRef, { lectures: increment(1) }, { merge: true });
+          
+          if(seriesData) {
+              const seriesRef = doc(firestore, 'series', seriesData.id);
+              transaction.update(seriesRef, { lectureCount: increment(1) });
+          }
         });
 
         toast({
@@ -279,12 +286,13 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
                 </Select>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="series">السلسلة</Label>
-              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId} required>
+              <Label htmlFor="series">السلسلة (اختياري)</Label>
+              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
                   <SelectTrigger>
                       <SelectValue placeholder={"اختر سلسلة..."} />
                   </SelectTrigger>
                   <SelectContent>
+                      <SelectItem value="">بدون سلسلة</SelectItem>
                       {filteredSeries.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
                       ))}
