@@ -23,6 +23,7 @@ export default function Home() {
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 3 });
   const { data: topSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'], limit: 4 });
   const { data: topChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'], limit: 4 });
+  const { data: allChannels, isLoading: allChannelsLoading } = useCollection<Channel>('channels');
 
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
@@ -32,7 +33,7 @@ export default function Home() {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  if (seriesLoading || lecturesLoading || sheikhsLoading || channelsLoading) {
+  if (seriesLoading || lecturesLoading || sheikhsLoading || channelsLoading || allChannelsLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -81,9 +82,12 @@ export default function Home() {
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestLectures?.map((lecture, index) => (
-              <LectureCard key={lecture.id} lecture={lecture} index={index}/>
-            ))}
+            {latestLectures?.map((lecture, index) => {
+                const channel = allChannels?.find(c => c.id === lecture.channelId);
+                return (
+                    <LectureCard key={lecture.id} lecture={lecture} channel={channel} index={index}/>
+                )
+            })}
           </div>
         </section>
 
