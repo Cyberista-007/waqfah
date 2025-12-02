@@ -16,7 +16,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         <Card
             key={series.id}
             className={cn(
-                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-none",
+                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}

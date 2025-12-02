@@ -175,7 +175,7 @@ export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
     <>
       <Card
         className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-none",
+          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl",
           "animate-fade-in-up"
         )}
         style={{ animationDelay: `${index * 100}ms` }}
