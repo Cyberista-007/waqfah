@@ -1,15 +1,16 @@
 
+
 "use client";
 
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle, Plus } from "lucide-react";
+import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle, Plus, Youtube } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile, Playlist } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist, FollowingChannel, Channel } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -19,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { EditProfileForm } from "@/components/profile/edit-profile-form";
 import { ContinueListening } from "@/components/continue-listening";
 import { getInitials } from "@/lib/utils";
+import { ChannelCard } from "@/components/channel-card";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -155,6 +157,68 @@ function PlaylistsSection() {
     );
 }
 
+
+function FollowedChannelsSection() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [followedChannels, setFollowedChannels] = useState<Channel[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const followingPath = user ? `users/${user.uid}/followingChannels` : null;
+    const { data: following, isLoading: followingLoading } = useCollection<FollowingChannel>(followingPath);
+
+    useEffect(() => {
+        const fetchChannels = async () => {
+            if (followingLoading || !firestore) return;
+            if (!following || following.length === 0) {
+                setIsLoading(false);
+                setFollowedChannels([]);
+                return;
+            }
+            
+            try {
+                const channelIds = following.map(f => f.channelId);
+                const channelsData: Channel[] = [];
+                for (let i = 0; i < channelIds.length; i += 30) {
+                    const chunk = channelIds.slice(i, i + 30);
+                    const channelsQuery = query(collection(firestore, 'channels'), where('__name__', 'in', chunk));
+                    const channelsSnap = await getDocs(channelsQuery);
+                    channelsData.push(...channelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel)));
+                }
+                setFollowedChannels(channelsData);
+            } catch (error) {
+                console.error("Error fetching followed channels:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchChannels();
+    }, [following, followingLoading, firestore]);
+
+     if (isLoading) {
+         return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+               <Card key={i} className="h-[280px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+
+    return followedChannels.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {followedChannels.map((channel, index) => <ChannelCard key={channel.id} channel={channel} index={index} />)}
+        </div>
+    ) : (
+        <Card className="text-center py-16">
+            <CardContent className="flex flex-col items-center gap-4">
+                <Youtube className="w-16 h-16 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">لم تقم بمتابعة أي قنوات بعد.</p>
+                <Button asChild><Link href="/channels">تصفح القنوات</Link></Button>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
@@ -233,10 +297,11 @@ export default function ProfilePage() {
             <Separator />
 
             <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="history"><History className="me-2"/>أكمل الاستماع</TabsTrigger>
                 <TabsTrigger value="favorites"><Heart className="me-2"/>المفضلة</TabsTrigger>
                 <TabsTrigger value="playlists"><ListMusic className="me-2"/>قوائم التشغيل</TabsTrigger>
+                <TabsTrigger value="following"><Youtube className="me-2"/>القنوات المتابعة</TabsTrigger>
               </TabsList>
               <TabsContent value="history" className="mt-6">
                 <ListenHistorySection />
@@ -246,6 +311,9 @@ export default function ProfilePage() {
               </TabsContent>
               <TabsContent value="playlists" className="mt-6">
                 <PlaylistsSection />
+              </TabsContent>
+              <TabsContent value="following" className="mt-6">
+                <FollowedChannelsSection />
               </TabsContent>
             </Tabs>
         </div>

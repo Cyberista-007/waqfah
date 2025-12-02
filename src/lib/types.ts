@@ -1,4 +1,5 @@
 
+
 import type { Timestamp } from 'firebase/firestore';
 
 // When passing data from server to client, Timestamps are serialized to strings.
