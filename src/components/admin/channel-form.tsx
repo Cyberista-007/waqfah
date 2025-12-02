@@ -154,8 +154,11 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
             youtubeUrl,
             imageUrl: finalImageUrl,
             imageId: item?.imageId || `channel-${slug}`,
-            sheikhId: selectedSheikhId || undefined,
         };
+        
+        if (selectedSheikhId && selectedSheikhId !== 'none') {
+            itemData.sheikhId = selectedSheikhId;
+        }
 
         if (isEditMode && item) {
           const itemRef = doc(firestore, 'channels', item.id);
