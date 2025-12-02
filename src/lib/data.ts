@@ -22,19 +22,14 @@ export async function getSeriesPageData(slug: string) {
 
     if (isLive && db) {
         try {
-            const seriesCol = collection(db, 'series');
-            const seriesQuery = query(seriesCol, where("slug", "==", slug), limit(1));
-            const seriesSnapshot = await getDocs(seriesQuery);
+            const seriesData = await getSeriesBySlug(slug);
 
-            if (seriesSnapshot.empty) {
+            if (!seriesData) {
                 return null; // No series found with this slug
             }
 
-            const seriesDoc = seriesSnapshot.docs[0];
-            const seriesData = toSerializable({ ...seriesDoc.data(), id: seriesDoc.id }) as Series;
-            
             const lecturesCol = collection(db, 'lectures');
-            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id), orderBy('createdAt', 'asc'));
+            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id), orderBy('createdAt', 'asc'));
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
 
@@ -60,27 +55,29 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [lectures, series, books] = await Promise.all([
+            const [lectures, series, books, channels] = await Promise.all([
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
+                getDocs(collection(db, 'channels')),
             ]);
-            const statsData: Stats = { 
+            const statsData: Stats = {
                 sheikhs: 0,
                 lectures: lectures.size, 
                 series: series.size, 
-                books: books.size
+                books: books.size,
+                channels: channels.size,
             };
             await setDoc(statsRef, statsData);
             return statsData;
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
             // In case of error, return a default object to avoid crashing the page.
-            return { sheikhs: 0, lectures: 0, series: 0, books: 0 };
+            return { sheikhs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
         }
     }
     // Fallback for non-live/error environment
-    return { sheikhs: 0, lectures: 0, series: 0, books: 0 };
+    return { sheikhs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
 }
 
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
@@ -346,6 +343,24 @@ export const getChannelBySlug = async (slug: string): Promise<Channel | undefine
         }
       } catch (error) {
         console.error("Error fetching channel by slug:", error);
+      }
+  }
+  return undefined;
+}
+
+export const getSeriesBySlug = async (slug: string): Promise<Series | undefined> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const seriesCol = collection(db, 'series');
+        const q = query(seriesCol, where("slug", "==", slug), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const docSnap = snapshot.docs[0];
+            return toSerializable({ ...docSnap.data(), id: docSnap.id }) as Series;
+        }
+      } catch (error) {
+        console.error("Error fetching series by slug:", error);
       }
   }
   return undefined;
