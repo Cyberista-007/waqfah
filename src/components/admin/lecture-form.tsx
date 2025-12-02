@@ -47,7 +47,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
   const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
-  const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "");
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -64,7 +64,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   // Effect to clear series selection if sheikh changes and selected series is no longer valid
   useEffect(() => {
     if(!filteredSeries.find(s => s.id === selectedSeriesId)) {
-        setSelectedSeriesId("");
+        setSelectedSeriesId("none");
     }
   }, [selectedSheikhId, filteredSeries, selectedSeriesId]);
 
@@ -120,7 +120,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     const language = formData.get("language") as string;
     
     const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
-    const seriesData = seriesList?.find(s => s.id === selectedSeriesId);
+    const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -292,7 +292,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
                       <SelectValue placeholder={"اختر سلسلة..."} />
                   </SelectTrigger>
                   <SelectContent>
-                      <SelectItem value="">بدون سلسلة</SelectItem>
+                      <SelectItem value="none">بدون سلسلة</SelectItem>
                       {filteredSeries.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
                       ))}
