@@ -50,7 +50,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         return;
     }
     
-    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const slug = title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     const bookData: Omit<Book, 'id'> = {
         slug,

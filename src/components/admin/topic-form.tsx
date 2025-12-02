@@ -57,7 +57,7 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
     const formData = new FormData(event.currentTarget);
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const slug = name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     if (!name || !description) {
         toast({

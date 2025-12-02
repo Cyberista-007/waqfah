@@ -129,7 +129,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
         return;
     }
     
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const slug = name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     try {
         let finalImageUrl = item?.imageUrl || '';
