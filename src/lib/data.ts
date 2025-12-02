@@ -1,4 +1,5 @@
 
+
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
@@ -73,13 +74,14 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [lectures, series, books] = await Promise.all([
+            const [lectures, series, books, sheikhs] = await Promise.all([
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
+                getDocs(collection(db, 'sheikhs')),
             ]);
             const statsData: Stats = { 
-                sheikhs: 0,
+                sheikhs: sheikhs.size,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size
@@ -104,7 +106,11 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
             const q = query(lecturesCol, orderBy('viewCount', 'desc'), limit(count));
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
-                return snapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+                return snapshot.docs.map(d => toSerializable({
+                    ...d.data(),
+                    id: d.id,
+                    createdAt: d.data().createdAt || Timestamp.now()
+                }) as Lecture);
             }
         } catch (error) {
             console.error("Error fetching popular lectures:", error);
@@ -415,7 +421,8 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
         const playlistsQuery = query(
             collectionGroup(db, 'playlists'),
             where('isPublic', '==', true),
-            orderBy('createdAt', 'desc')
+            orderBy('createdAt', 'desc'),
+            limit(30)
         );
         const playlistsSnapshot = await getDocs(playlistsQuery);
         
