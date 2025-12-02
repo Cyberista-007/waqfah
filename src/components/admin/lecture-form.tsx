@@ -25,7 +25,7 @@ import {
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Sheikh, Channel } from "@/lib/types";
+import type { Series, Lecture, Channel } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -118,7 +118,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         return;
     }
     
-    const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript'> = {
+    const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript' | 'sheikhId' | 'sheikhName' | 'sheikhSlug'> = {
         title,
         slug,
         description,

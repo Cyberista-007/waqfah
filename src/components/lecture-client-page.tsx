@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
 import { SiTelegram, SiSoundcloud } from '@icons-pack/react-simple-icons';
-import type { Lecture, Sheikh } from '@/lib/types';
+import type { Lecture } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -44,10 +44,9 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 interface LectureClientPageProps {
     lecture: Lecture;
     relatedLectures: Lecture[];
-    sheikh: Sheikh | null;
 }
 
-export function LectureClientPage({ lecture, relatedLectures, sheikh }: LectureClientPageProps) {
+export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
   const { playTrack } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -100,12 +99,12 @@ export function LectureClientPage({ lecture, relatedLectures, sheikh }: LectureC
 
 
   const seriesLink = `/series/${lecture.seriesSlug}`;
-  const shareText = `استمع إلى محاضرة "${lecture.title}" للشيخ ${sheikh?.name}`;
+  const shareText = `استمع إلى محاضرة "${lecture.title}"`;
 
   return (
     <>
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
-      <LectureHeader lecture={lecture} seriesLink={seriesLink} sheikh={sheikh}/>
+      <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
       <Card className="shadow-lg">
         <CardContent className="p-4">

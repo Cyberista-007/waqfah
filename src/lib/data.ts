@@ -1,6 +1,5 @@
 
-
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -252,9 +251,9 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     return [];
 }
 
-export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], sheikhs: Sheikh[] }> {
+export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[] }> {
     if (!searchTerm) {
-        return { lectures: [], series: [], sheikhs: [] };
+        return { lectures: [], series: [] };
     }
     
     const searchTermLower = searchTerm.toLowerCase();
@@ -265,13 +264,19 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
           getAllSeries(),
         ]);
 
-        const lectures = allLectures.filter(l => l.title.toLowerCase().includes(searchTermLower));
-        const series = allSeries.filter(s => s.title.toLowerCase().includes(searchTermLower));
+        const lectures = allLectures.filter(l => 
+            l.title.toLowerCase().includes(searchTermLower) || 
+            (l.description && l.description.toLowerCase().includes(searchTermLower))
+        );
+        const series = allSeries.filter(s => 
+            s.title.toLowerCase().includes(searchTermLower) ||
+            (s.description && s.description.toLowerCase().includes(searchTermLower))
+        );
 
-        return { lectures, series, sheikhs: [] };
+        return { lectures, series };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { lectures: [], series: [], sheikhs: [] };
+        return { lectures: [], series: [] };
     }
 }
 

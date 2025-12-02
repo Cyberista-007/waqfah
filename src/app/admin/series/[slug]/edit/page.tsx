@@ -2,7 +2,7 @@
 "use client";
 
 import { notFound } from 'next/navigation';
-import type { Series, Sheikh } from '@/lib/types';
+import type { Series } from '@/lib/types';
 import { SeriesForm } from '@/components/admin/series-form';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -15,8 +15,6 @@ export default function AdminEditSeriesPage({ params }: { params: { slug: string
 
   const [series, setSeries] = useState<Series | null>(null);
   const [seriesLoading, setSeriesLoading] = useState(true);
-
-  const { data: sheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   useEffect(() => {
     if (!firestore || !slug) return;
@@ -40,9 +38,7 @@ export default function AdminEditSeriesPage({ params }: { params: { slug: string
   }, [firestore, slug]);
 
 
-  const isLoading = sheikhsLoading || seriesLoading;
-
-  if (isLoading) {
+  if (seriesLoading) {
       return <HomePageSkeleton />;
   }
 
@@ -51,6 +47,6 @@ export default function AdminEditSeriesPage({ params }: { params: { slug: string
   }
 
   return (
-    <SeriesForm series={series} sheikhs={sheikhs || []} />
+    <SeriesForm series={series} />
   );
 }

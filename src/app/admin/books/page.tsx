@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Book, Sheikh } from "@/lib/types";
+import type { Book } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Book as BookIcon } from "lucide-react";
@@ -34,7 +34,6 @@ export default function AdminBooksPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const { data: allBooks, isLoading: booksLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc'] });
-    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
 
     const handleDelete = async () => {
@@ -83,10 +82,10 @@ export default function AdminBooksPage() {
     }
 
     if (isFormOpen) {
-      return <BookForm book={bookToEdit} sheikhs={allSheikhs || []} onFormClose={handleFormClose} />
+      return <BookForm book={bookToEdit} onFormClose={handleFormClose} />
     }
     
-    const pageIsLoading = booksLoading || sheikhsLoading;
+    const pageIsLoading = booksLoading;
 
     return (
         <>
@@ -122,7 +121,7 @@ export default function AdminBooksPage() {
                 ) : allBooks?.map((book) => (
                 <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.title}</TableCell>
-                    <TableCell>{book.sheikhName}</TableCell>
+                    <TableCell>{book.sheikhName || 'غير محدد'}</TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                         <Button onClick={() => handleEdit(book)} variant="outline" size="sm">

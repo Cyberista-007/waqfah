@@ -3,7 +3,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Lecture, Playlist, Sheikh } from "@/lib/types";
+import type { Lecture, Playlist } from "@/lib/types";
 import { Button } from "./ui/button";
 import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useState, useEffect } from "react";
@@ -20,7 +20,6 @@ import { getPlaceholderImage } from "@/lib/images";
 interface LectureHeaderProps {
     lecture: Lecture;
     seriesLink?: string;
-    sheikh: Sheikh | null;
 }
 
 export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {

@@ -52,7 +52,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         return;
     }
 
-    const bookData = {
+    const bookData: Omit<Book, 'id' | 'sheikhId' | 'sheikhName' | 'sheikhSlug'> = {
         slug,
         title,
         pdfUrl,

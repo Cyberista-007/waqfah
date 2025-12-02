@@ -2,7 +2,7 @@
 "use client";
 
 import { LectureForm } from '@/components/admin/lecture-form';
-import type { Series, Lecture, Sheikh } from '@/lib/types';
+import type { Series, Lecture } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -14,7 +14,6 @@ export default function AdminEditLecturePage({ params }: { params: { slug: strin
   const slug = params.slug;
 
   const { data: series, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
-  const { data: sheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   const lectureDocRef = useMemoFirebase(
     () => (firestore ? doc(firestore, "lectures", slug) : null),
@@ -22,7 +21,7 @@ export default function AdminEditLecturePage({ params }: { params: { slug: strin
   );
   const { data: lecture, isLoading: lectureLoading } = useDoc<Lecture>(lectureDocRef);
 
-  const isLoading = seriesLoading || sheikhsLoading || lectureLoading;
+  const isLoading = seriesLoading || lectureLoading;
 
   if (isLoading) {
     return <HomePageSkeleton />;
@@ -33,6 +32,6 @@ export default function AdminEditLecturePage({ params }: { params: { slug: strin
   }
 
   return (
-    <LectureForm seriesList={series || []} sheikhsList={sheikhs || []} lecture={lecture} />
+    <LectureForm seriesList={series || []} lecture={lecture} />
   );
 }

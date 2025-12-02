@@ -15,20 +15,13 @@ export type Stats = {
   books: number;
 }
 
-export type Sheikh = Serializable<{
-  id: string; // Document ID from Firestore
-  slug: string;
-  name: string;
-  bio: string;
-  imageId: string;
-  createdAt: Timestamp;
-  followerCount?: number;
-}>;
-
 export type Lecture = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
+  sheikhId?: string;
+  sheikhName?: string;
+  sheikhSlug?: string;
   seriesId?: string; // Document ID of the series
   seriesSlug?: string;
   seriesTitle?: string; 
@@ -63,6 +56,9 @@ export type Series = Serializable<{
   description: string;
   lectureCount: number;
   imageId: string;
+  sheikhId?: string;
+  sheikhName?: string;
+  sheikhSlug?: string;
   createdAt: Timestamp;
   language?: string;
 }>;
@@ -73,6 +69,9 @@ export type Book = Serializable<{
   title: string;
   pdfUrl: string;
   imageId: string;
+  sheikhId?: string;
+  sheikhName?: string;
+  sheikhSlug?: string;
 }>;
 
 export type ScheduleItem = Serializable<{
