@@ -21,11 +21,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Channel } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, writeBatch, collection, query, where, getDocs, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Youtube } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ChannelForm } from "@/components/admin/channel-form";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { useSearchParams } from "next/navigation";
@@ -45,17 +44,48 @@ export default function AdminChannelsPage() {
     const handleDelete = async () => {
         if (!itemToDelete || !firestore) return;
         
-        const itemRef = doc(firestore, 'channels', itemToDelete.id);
-        
-        deleteDocumentNonBlocking(itemRef);
+        const channelRef = doc(firestore, 'channels', itemToDelete.id);
+        const lecturesRef = collection(firestore, 'lectures');
+        const q = query(lecturesRef, where("channelId", "==", itemToDelete.id));
+        const statsRef = doc(firestore, 'stats', 'global');
 
-        toast({
-            variant: "destructive",
-            title: "تم الحذف بنجاح",
-            description: `تم حذف قناة "${itemToDelete.name}".`,
-        });
+        try {
+            const lecturesSnapshot = await getDocs(q);
+            const lecturesToDeleteCount = lecturesSnapshot.size;
+
+            const batch = writeBatch(firestore);
+
+            // Delete all lectures in the channel
+            lecturesSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            // Delete the channel itself
+            batch.delete(channelRef);
+
+            // Update stats
+            if (lecturesToDeleteCount > 0) {
+              batch.set(statsRef, { lectures: increment(-lecturesToDeleteCount) }, { merge: true });
+            }
+            
+            await batch.commit();
+
+            toast({
+                variant: "destructive",
+                title: "تم الحذف بنجاح",
+                description: `تم حذف قناة "${itemToDelete.name}" وجميع محاضراتها (${lecturesToDeleteCount}).`,
+            });
         
-        setItemToDelete(null);
+        } catch (error) {
+            console.error("Error deleting channel and its lectures:", error);
+            toast({
+                variant: "destructive",
+                title: "فشل الحذف",
+                description: "لم نتمكن من حذف القناة والمحاضرات المرتبطة بها.",
+            });
+        } finally {
+            setItemToDelete(null);
+        }
     };
     
     const handleNew = () => {
@@ -149,7 +179,7 @@ export default function AdminChannelsPage() {
           onClose={() => setItemToDelete(null)}
           onConfirm={handleDelete}
           title="حذف القناة"
-          description={`هل أنت متأكد من رغبتك في حذف قناة "${itemToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+          description={`هل أنت متأكد من رغبتك في حذف قناة "${itemToDelete?.name}"؟ سيتم حذف جميع المحاضرات المرتبطة بها بشكل دائم.`}
         />
       </>
     );
