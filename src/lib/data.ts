@@ -5,10 +5,6 @@ import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timesta
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
 
-// Dummy data imports
-import DUMMY_SERIES from '@/../docs/dummy-data/series.json';
-import DUMMY_LECTURES from '@/../docs/dummy-data/lectures.json';
-
 // This file now interacts with Firestore instead of mock data.
 export const getDbSafe = () => {
     try {
@@ -46,20 +42,10 @@ export async function getSeriesPageData(slug: string) {
 
         } catch (error) {
             console.error("Error fetching series page data:", error);
-            // Fall through to dummy data if DB query fails
+            return null;
         }
     }
-
-    // Fallback to dummy data
-    const series = DUMMY_SERIES.find(s => s.slug === slug);
-    if (!series) return null;
-
-    const lecturesInSeries = DUMMY_LECTURES.filter(l => l.seriesId === series.id);
-    
-    const serializableSeries = toSerializable({ ...series, createdAt: new Date(series.createdAt) });
-    const serializableLectures = lecturesInSeries.map(l => toSerializable({ ...l, createdAt: new Date(l.createdAt), transcript: [] }));
-
-    return { series: serializableSeries, lecturesInSeries: serializableLectures, seriesCreator: null };
+    return null;
 }
 
 
@@ -115,7 +101,6 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
             console.error("Error fetching popular lectures:", error);
         }
     }
-    // No longer fall back to dummy data. If Firestore fails, return empty.
     return [];
 }
 
@@ -132,10 +117,10 @@ export const getAllSeries = async (): Promise<Series[]> => {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
         }
       } catch (error) {
-        console.error("Error fetching all series, using fallback:", error);
+        console.error("Error fetching all series:", error);
       }
   }
-  return DUMMY_SERIES.map(s => toSerializable({...s, id: s.id, createdAt: new Date(s.createdAt)})) as Series[];
+  return [];
 };
 
 
@@ -157,11 +142,9 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
             }) as Lecture;
         }
       } catch (error) {
-          console.error("Error fetching lecture by slug, using fallback:", error);
+          console.error("Error fetching lecture by slug:", error);
       }
   }
-  const dummyLecture = DUMMY_LECTURES.find(l => l.slug === slug);
-  if (dummyLecture) return toSerializable({...dummyLecture, id: dummyLecture.id, createdAt: new Date(dummyLecture.createdAt), transcript: []}) as Lecture;
   return undefined;
 };
 
@@ -263,10 +246,10 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
                 return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
             }
         } catch (e) {
-            console.error("Error fetching related lectures, using fallback:", e);
+            console.error("Error fetching related lectures:", e);
         }
     }
-    return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0, 3).map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
+    return [];
 }
 
 export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], sheikhs: Sheikh[] }> {
@@ -303,10 +286,10 @@ const getAllLectures = async (): Promise<Lecture[]> => {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
         }
       } catch (error) {
-        console.error("Error fetching all lectures, using fallback:", error);
+        console.error("Error fetching all lectures:", error);
       }
   }
-  return DUMMY_LECTURES.map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
+  return [];
 }
 
 
@@ -389,20 +372,7 @@ async function getDocumentsByIds<T>(collectionName: string, ids: string[] | unde
              console.error(`Error fetching docs from ${collectionName}, using fallback`, e);
         }
     }
-
-    // Fallback to dummy data
-    let dummyData: any[] = [];
-    if (collectionName === 'lectures') {
-        dummyData = DUMMY_LECTURES;
-    } else if (collectionName === 'series') {
-        dummyData = DUMMY_SERIES;
-    }
-    
-    return dummyData.filter(item => ids.includes(item.id)).map(item => toSerializable({
-        ...item,
-        id: item.id,
-        createdAt: new Date(item.createdAt)
-    })) as T[];
+    return [];
 }
 
 export const getLecturesByIds = (ids: string[] | undefined) => getDocumentsByIds<Lecture>('lectures', ids);

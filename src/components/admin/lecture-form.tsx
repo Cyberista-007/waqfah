@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import {
@@ -123,9 +122,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         title,
         slug,
         description,
-        sheikhId: seriesData?.sheikhId || "",
-        sheikhName: seriesData?.sheikhName || "",
-        sheikhSlug: seriesData?.sheikhSlug || "",
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
@@ -328,4 +324,3 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     </Card>
   );
 }
- 

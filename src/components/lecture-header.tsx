@@ -23,7 +23,7 @@ interface LectureHeaderProps {
     sheikh: Sheikh | null;
 }
 
-export function LectureHeader({ lecture, seriesLink, sheikh }: LectureHeaderProps) {
+export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
