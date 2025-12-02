@@ -26,8 +26,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
                     <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 pt-1">
-                    
-                    <span>{series.sheikhName}</span>
+                    {series.description}
                 </CardDescription>
             </CardHeader>
             <CardContent className='flex justify-between items-center'>
@@ -42,3 +41,5 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         </Card>
     );
 }
+
+    

@@ -56,9 +56,6 @@ export type Series = Serializable<{
   description: string;
   lectureCount: number;
   imageId: string;
-  sheikhId?: string;
-  sheikhName?: string;
-  sheikhSlug?: string;
   createdAt: Timestamp;
   language?: string;
 }>;
@@ -216,3 +213,5 @@ export type Comment = Serializable<{
     text: string;
     createdAt: Timestamp;
 }>;
+
+    

@@ -39,9 +39,6 @@
         "description": { "type": "string" },
         "imageId": { "type": "string" },
         "lectureCount": { "type": "number", "minimum": 0 },
-        "sheikhId": { "type": "string" },
-        "sheikhName": { "type": "string" },
-        "sheikhSlug": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the series content (e.g., 'ar', 'en')." }
       },

@@ -37,6 +37,7 @@ export async function getSeriesPageData(slug: string) {
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
 
+            // The series creator (sheikh) logic is removed as it's no longer part of the data model for series.
             return { series: seriesData, lecturesInSeries, seriesCreator: null };
 
         } catch (error) {
@@ -432,5 +433,7 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
     }
 };
 
+
+    
 
     
