@@ -19,7 +19,7 @@ export const fonts = [
   { name: "Noto Sans Arabic", value: "font-noto-sans-arabic" },
   { name: "Lalezar", value: "font-lalezar" },
   { name: "Tajawal", value: "font-tajawal" },
-  { name: "Amiri", value: "font-amiri" },
+  { name: "Amiri (عثماني)", value: "font-amiri" },
   { name: "Markazi Text", value: "font-markazi-text" },
   { name: "IBM Plex Sans Arabic", value: "font-ibm-plex-sans-arabic" },
   { name: "Almarai", value: "font-almarai" },
