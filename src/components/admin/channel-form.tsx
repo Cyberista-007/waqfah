@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useRef, useEffect } from "react";
 import { useCollection, useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
-import type { Channel, Sheikh } from "@/lib/types";
+import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -45,13 +45,10 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
   const [isFetching, setIsFetching] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string | undefined>(item?.sheikhId);
   
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const youtubeUrlRef = useRef<HTMLInputElement>(null);
-
-  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   const isEditMode = !!item;
 
@@ -156,9 +153,6 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
             imageId: item?.imageId || `channel-${slug}`,
         };
         
-        if (selectedSheikhId && selectedSheikhId !== 'none') {
-            itemData.sheikhId = selectedSheikhId;
-        }
 
         if (isEditMode && item) {
           const itemRef = doc(firestore, 'channels', item.id);
@@ -227,20 +221,6 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
           <div>
             <Label htmlFor="name">اسم القناة</Label>
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
-          </div>
-           <div>
-            <Label htmlFor="sheikhId">الشيخ (لربط المحتوى)</Label>
-            <Select onValueChange={setSelectedSheikhId} defaultValue={selectedSheikhId} disabled={sheikhsLoading}>
-                <SelectTrigger>
-                    <SelectValue placeholder="اختر شيخًا لربط محاضراته بهذه القناة..." />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="none">بدون شيخ مرتبط</SelectItem>
-                    {allSheikhs?.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
           </div>
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>

@@ -37,7 +37,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   if (isAdmin) {
       const navItems = [
         { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-        { href: '/admin/sheikhs', label: 'المشايخ', icon: MicVocal },
         { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
         { href: '/admin/channels', label: 'القنوات', icon: Youtube },

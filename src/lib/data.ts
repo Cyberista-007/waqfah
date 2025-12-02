@@ -5,7 +5,6 @@ import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
 
 // Dummy data imports
-import DUMMY_SHEIKHS from '@/../docs/dummy-data/sheikhs.json';
 import DUMMY_SERIES from '@/../docs/dummy-data/series.json';
 import DUMMY_LECTURES from '@/../docs/dummy-data/lectures.json';
 
@@ -37,17 +36,12 @@ export async function getSeriesPageData(slug: string) {
             const seriesDoc = seriesSnapshot.docs[0];
             const seriesData = toSerializable({ ...seriesDoc.data(), id: seriesDoc.id }) as Series;
             
-            let seriesCreator: Sheikh | null = null;
-            if (seriesData.sheikhId) {
-                seriesCreator = await getSheikhById(seriesData.sheikhId);
-            }
-            
             const lecturesCol = collection(db, 'lectures');
             const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesDoc.id), orderBy('createdAt', 'asc'));
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
 
-            return { series: seriesData, lecturesInSeries, seriesCreator };
+            return { series: seriesData, lecturesInSeries, seriesCreator: null };
 
         } catch (error) {
             console.error("Error fetching series page data:", error);
@@ -59,14 +53,12 @@ export async function getSeriesPageData(slug: string) {
     const series = DUMMY_SERIES.find(s => s.slug === slug);
     if (!series) return null;
 
-    const seriesCreator = DUMMY_SHEIKHS.find(s => s.id === series.sheikhId) || null;
     const lecturesInSeries = DUMMY_LECTURES.filter(l => l.seriesId === series.id);
     
     const serializableSeries = toSerializable({ ...series, createdAt: new Date(series.createdAt) });
     const serializableLectures = lecturesInSeries.map(l => toSerializable({ ...l, createdAt: new Date(l.createdAt), transcript: [] }));
-    const serializableCreator = seriesCreator ? toSerializable({ ...seriesCreator, createdAt: new Date(seriesCreator.createdAt) }) : null;
 
-    return { series: serializableSeries, lecturesInSeries: serializableLectures, seriesCreator: serializableCreator };
+    return { series: serializableSeries, lecturesInSeries: serializableLectures, seriesCreator: null };
 }
 
 
@@ -81,14 +73,13 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [sheikhs, lectures, series, books] = await Promise.all([
-                getDocs(collection(db, 'sheikhs')),
+            const [lectures, series, books] = await Promise.all([
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
             ]);
             const statsData: Stats = { 
-                sheikhs: sheikhs.size, 
+                sheikhs: 0,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size
@@ -121,65 +112,6 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
     }
     // No longer fall back to dummy data. If Firestore fails, return empty.
     return [];
-}
-
-
-// --- Sheikhs ---
-export const getAllSheikhs = async (): Promise<Sheikh[]> => {
-  const { db, isLive } = getDbSafe();
-  if (isLive && db) {
-      try {
-        const sheikhsCol = collection(db, 'sheikhs');
-        const q = query(sheikhsCol, orderBy('name'));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Sheikh);
-        }
-      } catch (error) {
-          console.error("Error fetching all sheikhs, using fallback:", error);
-      }
-  }
-  // Fallback to dummy data
-  return DUMMY_SHEIKHS.map(s => toSerializable({...s, id: s.id, createdAt: new Date(s.createdAt)})) as Sheikh[];
-}
-
-export const getSheikhBySlug = async (slug: string): Promise<Sheikh | undefined> => {
-  const { db, isLive } = getDbSafe();
-  if (isLive && db) {
-      try {
-        const sheikhsCol = collection(db, 'sheikhs');
-        const q = query(sheikhsCol, where("slug", "==", slug), limit(1));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            const docSnap = snapshot.docs[0];
-            return toSerializable({ ...docSnap.data(), id: docSnap.id }) as Sheikh;
-        }
-      } catch (error) {
-        console.error("Error fetching sheikh by slug, using fallback:", error);
-      }
-  }
-  const dummySheikh = DUMMY_SHEIKHS.find(s => s.slug === slug);
-  if (dummySheikh) return toSerializable({...dummySheikh, id: dummySheikh.id, createdAt: new Date(dummySheikh.createdAt)}) as Sheikh;
-  return undefined;
-}
-
-export const getSheikhById = async (id: string): Promise<Sheikh | null> => {
-    const { db, isLive } = getDbSafe();
-    if (isLive && db) {
-        try {
-            const sheikhRef = doc(db, 'sheikhs', id);
-            const sheikhSnap = await getDoc(sheikhRef);
-            if (sheikhSnap.exists()) {
-                return toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
-            }
-            return null;
-        } catch (error) {
-            console.error("Error fetching sheikh by ID:", error);
-        }
-    }
-    const dummySheikh = DUMMY_SHEIKHS.find(s => s.id === id);
-    if(dummySheikh) return toSerializable({ ...dummySheikh, id: dummySheikh.id, createdAt: new Date(dummySheikh.createdAt) }) as Sheikh;
-    return null;
 }
 
 
@@ -228,24 +160,6 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
   return undefined;
 };
 
-export const getLecturesBySheikh = async (sheikhId: string): Promise<Lecture[]> => {
-  const { db, isLive } = getDbSafe();
-  if (isLive && db) {
-      try {
-        const lecturesCol = collection(db, 'lectures');
-        const q = query(lecturesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-        }
-        return []; // Return empty if sheikh exists but has no lectures in DB
-      } catch (error) {
-        console.error("Error fetching lectures by sheikh, using fallback:", error);
-      }
-  }
-  return DUMMY_LECTURES.filter(l => l.sheikhId === sheikhId).map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
-}
-
 export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]> => {
   const { db, isLive } = getDbSafe();
   if (isLive && db) {
@@ -264,24 +178,6 @@ export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]
   return [];
 }
 
-
-export const getSeriesBySheikh = async (sheikhId: string): Promise<Series[]> => {
-  const { db, isLive } = getDbSafe();
-  if (isLive && db) {
-      try {
-        const seriesCol = collection(db, 'series');
-        const q = query(seriesCol, where('sheikhId', '==', sheikhId), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
-        }
-        return []; // Return empty if sheikh exists but has no series in DB
-      } catch (error) {
-        console.error("Error fetching series by sheikh, using fallback:", error);
-      }
-  }
-  return DUMMY_SERIES.filter(s => s.sheikhId === sheikhId).map(s => toSerializable({...s, id: s.id, createdAt: new Date(s.createdAt)})) as Series[];
-}
 
 // --- Books, Schedule, Q&A ---
 
@@ -344,7 +240,7 @@ export const getAllQAPairs = async (): Promise<QAPair[]> => {
     return []; // No dummy data for Q&A yet
 }
 
-export const getRelatedLectures = async (currentLectureId: string, seriesId: string): Promise<Lecture[]> => {
+export const getRelatedLectures = async (currentLectureId: string, seriesId?: string): Promise<Lecture[]> => {
     if (!seriesId) return [];
     const { db, isLive } = getDbSafe();
     if (isLive && db) {
@@ -376,17 +272,15 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
     const searchTermLower = searchTerm.toLowerCase();
 
     try {
-        const [allLectures, allSeries, allSheikhs] = await Promise.all([
+        const [allLectures, allSeries] = await Promise.all([
           getAllLectures(),
           getAllSeries(),
-          getAllSheikhs()
         ]);
 
         const lectures = allLectures.filter(l => l.title.toLowerCase().includes(searchTermLower));
         const series = allSeries.filter(s => s.title.toLowerCase().includes(searchTermLower));
-        const sheikhs = allSheikhs.filter(s => s.name.toLowerCase().includes(searchTermLower));
 
-        return { lectures, series, sheikhs };
+        return { lectures, series, sheikhs: [] };
     } catch (error) {
         console.error("Error searching content:", error);
         return { lectures: [], series: [], sheikhs: [] };

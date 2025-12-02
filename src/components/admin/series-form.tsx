@@ -20,7 +20,7 @@ import { collection, Timestamp, doc, runTransaction, increment } from "firebase/
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { Series, Sheikh } from "@/lib/types";
+import type { Series } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -32,18 +32,15 @@ import {
 
 interface SeriesFormProps {
     series?: Series | null;
-    sheikhs: Sheikh[];
 }
 
-export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
+export function SeriesForm({ series }: SeriesFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!series;
   
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(series?.sheikhId || "");
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
@@ -65,7 +62,6 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
     }
 
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const sheikhData = sheikhs.find(s => s.id === selectedSheikhId);
 
     const seriesData = {
         title,
@@ -73,9 +69,6 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
         description: description || "",
         imageId: `series-${slug}`,
         language: language || 'ar',
-        sheikhId: sheikhData?.id || "",
-        sheikhName: sheikhData?.name || "",
-        sheikhSlug: sheikhData?.slug || "",
     };
     
     try {
@@ -138,19 +131,6 @@ export function SeriesForm({ series, sheikhs }: SeriesFormProps) {
           <div>
             <Label htmlFor="title">عنوان السلسلة</Label>
             <Input id="title" name="title" defaultValue={series?.title} required disabled={isSubmitting} />
-          </div>
-           <div>
-            <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
-              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={series?.sheikhId} >
-                  <SelectTrigger>
-                       <SelectValue placeholder="اختر شيخًا..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {sheikhs?.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
           </div>
           <div>
             <Label htmlFor="description">وصف السلسلة (اختياري)</Label>

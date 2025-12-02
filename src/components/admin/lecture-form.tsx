@@ -31,11 +31,10 @@ import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
     seriesList: Series[];
-    sheikhsList: Sheikh[];
     lecture?: Lecture | any; // 'any' to handle serialized date from server
 }
 
-export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormProps) {
+export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
@@ -46,7 +45,6 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
 
   const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
 
@@ -54,19 +52,6 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const audioSrcRef = useRef<HTMLInputElement>(null);
   const durationRef = useRef<HTMLInputElement>(null);
-
-
-  const filteredSeries = useMemo(() => {
-      if (!selectedSheikhId) return seriesList; // Show all series if no sheikh is selected
-      return seriesList.filter(s => s.sheikhId === selectedSheikhId);
-  }, [selectedSheikhId, seriesList]);
-  
-  // Effect to clear series selection if sheikh changes and selected series is no longer valid
-  useEffect(() => {
-    if(!filteredSeries.find(s => s.id === selectedSeriesId)) {
-        setSelectedSeriesId("none");
-    }
-  }, [selectedSheikhId, filteredSeries, selectedSeriesId]);
 
 
   const handleFetchMetadata = async () => {
@@ -119,7 +104,6 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     const duration = formData.get("duration") as string;
     const language = formData.get("language") as string;
     
-    const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
     
@@ -139,9 +123,9 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         title,
         slug,
         description,
-        sheikhId: sheikhData?.id || "",
-        sheikhName: sheikhData?.name || "",
-        sheikhSlug: sheikhData?.slug || "",
+        sheikhId: seriesData?.sheikhId || "",
+        sheikhName: seriesData?.sheikhName || "",
+        sheikhSlug: seriesData?.sheikhSlug || "",
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
@@ -272,19 +256,6 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-                <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
-                <Select onValueChange={setSelectedSheikhId} defaultValue={lecture?.sheikhId}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="اختر شيخًا..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {sheikhsList?.map(s => (
-                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
              <div className="space-y-2">
               <Label htmlFor="series">السلسلة (اختياري)</Label>
               <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
@@ -293,7 +264,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
                   </SelectTrigger>
                   <SelectContent>
                       <SelectItem value="none">بدون سلسلة</SelectItem>
-                      {filteredSeries.map(s => (
+                      {seriesList.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
                       ))}
                   </SelectContent>

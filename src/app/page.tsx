@@ -12,7 +12,6 @@ import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
-import { SheikhCard } from '@/components/sheikh-card';
 import { ChannelCard } from '@/components/channel-card';
 
 export default function Home() {
@@ -21,7 +20,6 @@ export default function Home() {
 
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 3 });
-  const { data: topSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'], limit: 4 });
   const { data: topChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'], limit: 4 });
   const { data: allChannels, isLoading: allChannelsLoading } = useCollection<Channel>('channels');
 
@@ -33,7 +31,7 @@ export default function Home() {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  if (seriesLoading || lecturesLoading || sheikhsLoading || channelsLoading || allChannelsLoading) {
+  if (seriesLoading || lecturesLoading || channelsLoading || allChannelsLoading) {
     return <HomePageSkeleton />;
   }
 
@@ -45,7 +43,7 @@ export default function Home() {
             العلم الشرعي بين يديك
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            منصة شاملة لمحاضرات ودروس نخبة من المشايخ. تصفح، استمع، وتعلم.
+            منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.
           </p>
           <div className="max-w-xl mx-auto">
             <form onSubmit={handleSearch}>
@@ -96,15 +94,6 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestSeries?.map((series, index) => (
               <SeriesCard key={series.id} series={series} index={index}/>
-            ))}
-          </div>
-        </section>
-        
-        <section>
-          <h2 className="text-3xl font-bold mb-6 font-headline">أبرز المشايخ</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-             {topSheikhs?.map((sheikh, index) => (
-                <SheikhCard sheikh={sheikh} key={sheikh.id} index={index}/>
             ))}
           </div>
         </section>

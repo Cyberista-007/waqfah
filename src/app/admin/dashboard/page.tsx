@@ -30,8 +30,7 @@ export default async function AdminDashboardPage() {
             </div>
             </header>
             
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="إجمالي المشايخ" value={stats?.sheikhs ?? 0} icon={MicVocal} isLoading={!stats} />
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard title="إجمالي المحاضرات" value={stats?.lectures ?? 0} icon={Clapperboard} isLoading={!stats} />
                 <StatCard title="إجمالي السلاسل" value={stats?.series ?? 0} icon={ListVideo} isLoading={!stats} />
                 <StatCard title="إجمالي الكتب" value={stats?.books ?? 0} icon={Book} isLoading={!stats} />
@@ -52,7 +51,6 @@ export default async function AdminDashboardPage() {
                         <CardDescription>روابط سريعة للتحكم بالموقع</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3">
-                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/sheikhs"><span>إدارة المشايخ</span><MicVocal /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures"><span>إدارة المحاضرات</span><Clapperboard /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/series"><span>إدارة السلاسل</span><ListVideo /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/channels"><span>إدارة القنوات</span><Youtube /></Link></Button>

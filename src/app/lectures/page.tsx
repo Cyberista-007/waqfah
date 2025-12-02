@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Lecture, Series, Sheikh, Channel } from "@/lib/types";
+import type { Lecture, Series, Channel } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo, useState } from "react";
 import { Dices, Search } from "lucide-react";
@@ -24,17 +24,15 @@ export default function LecturesListPage() {
 
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
-  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
   const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
   const seriesFilter = searchParams.get('series');
-  const sheikhFilter = searchParams.get('sheikh');
   const channelFilter = searchParams.get('channel');
   const sortOrder = searchParams.get('sort') || 'newest';
   
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleFilterChange = (type: 'series' | 'sort' | 'sheikh' | 'channel', value: string) => {
+  const handleFilterChange = (type: 'series' | 'sort' | 'channel', value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
     if (value === "all") {
@@ -44,16 +42,10 @@ export default function LecturesListPage() {
     }
     
     // if filtering by one, remove other content filters
-    if (type === 'sheikh' && value !== 'all') {
-        current.delete('series');
-        current.delete('channel');
-    }
     if (type === 'series' && value !== 'all') {
-        current.delete('sheikh');
         current.delete('channel');
     }
     if (type === 'channel' && value !== 'all') {
-        current.delete('sheikh');
         current.delete('series');
     }
 
@@ -73,10 +65,6 @@ export default function LecturesListPage() {
       lectures = lectures.filter(l => l.seriesId === seriesFilter);
     }
 
-    if (sheikhFilter && sheikhFilter !== 'all') {
-      lectures = lectures.filter(l => l.sheikhId === sheikhFilter);
-    }
-    
     if (channelFilter && channelFilter !== 'all') {
         lectures = lectures.filter(l => l.channelId === channelFilter);
     }
@@ -86,8 +74,8 @@ export default function LecturesListPage() {
         lectures = lectures.filter(l => 
             l.title.toLowerCase().includes(lowercasedTerm) ||
             l.description.toLowerCase().includes(lowercasedTerm) ||
-            l.sheikhName.toLowerCase().includes(lowercasedTerm) ||
-            l.seriesTitle.toLowerCase().includes(lowercasedTerm)
+            (l.sheikhName && l.sheikhName.toLowerCase().includes(lowercasedTerm)) ||
+            (l.seriesTitle && l.seriesTitle.toLowerCase().includes(lowercasedTerm))
         );
     }
     
@@ -110,7 +98,7 @@ export default function LecturesListPage() {
 
     return lectures;
 
-  }, [allLectures, seriesFilter, sheikhFilter, channelFilter, sortOrder, searchTerm]);
+  }, [allLectures, seriesFilter, channelFilter, sortOrder, searchTerm]);
 
   const pickRandomLecture = () => {
     if (!filteredLectures || filteredLectures.length === 0) return;
@@ -123,7 +111,7 @@ export default function LecturesListPage() {
     }
   }
 
-  const isLoading = lecturesLoading || seriesLoading || sheikhsLoading || channelsLoading;
+  const isLoading = lecturesLoading || seriesLoading || channelsLoading;
 
 
   if (isLoading) {
@@ -152,16 +140,7 @@ export default function LecturesListPage() {
       </div>
 
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Select onValueChange={(value) => handleFilterChange("sheikh", value)} defaultValue={sheikhFilter || "all"}>
-          <SelectTrigger>
-            <SelectValue placeholder="فلترة حسب الشيخ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل المشايخ</SelectItem>
-            {allSheikhs?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Select onValueChange={(value) => handleFilterChange("series", value)} defaultValue={seriesFilter || "all"}>
           <SelectTrigger>
             <SelectValue placeholder="فلترة حسب السلسلة" />

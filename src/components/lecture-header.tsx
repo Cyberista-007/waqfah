@@ -19,7 +19,7 @@ import { getPlaceholderImage } from "@/lib/images";
 
 interface LectureHeaderProps {
     lecture: Lecture;
-    seriesLink: string;
+    seriesLink?: string;
     sheikh: Sheikh | null;
 }
 
@@ -38,8 +38,6 @@ export function LectureHeader({ lecture, seriesLink, sheikh }: LectureHeaderProp
     const playlistsPath = user ? `users/${user.uid}/playlists` : null;
     const { data: playlists } = useCollection<Playlist>(playlistsPath);
     
-    const sheikhImage = sheikh ? getPlaceholderImage(sheikh.imageId) : null;
-
     useEffect(() => {
         const fetchRating = async () => {
             if (user && firestore) {
@@ -152,23 +150,12 @@ export function LectureHeader({ lecture, seriesLink, sheikh }: LectureHeaderProp
             <div className="space-y-4">
                 <div className="flex justify-between items-start gap-4">
                     <div>
-                        <p className="text-primary font-semibold mb-2">
-                            <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
-                        </p>
-                        <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
-                         {sheikh && (
-                            <div className="mt-4 flex items-center gap-3">
-                                <Avatar>
-                                    <AvatarImage src={sheikhImage?.imageUrl} alt={sheikh.name} />
-                                    <AvatarFallback>{getInitials(sheikh.name)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <h2 className="font-semibold text-lg hover:underline">
-                                        <Link href={`/sheikhs/${sheikh.slug}`}>{sheikh.name}</Link>
-                                    </h2>
-                                </div>
-                            </div>
+                        {lecture.seriesTitle && seriesLink && (
+                            <p className="text-primary font-semibold mb-2">
+                                <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
+                            </p>
                         )}
+                        <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                          <Button variant="outline" onClick={handleAddToPlaylistClick}>
