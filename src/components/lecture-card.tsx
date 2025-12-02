@@ -99,6 +99,26 @@ export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
     }
   };
 
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = lecture.audioSrc;
+    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+      const newUrl = "ss" + url.substring(url.indexOf('youtube.com'));
+      window.open(newUrl, '_blank');
+    } else if (url) {
+      // Fallback for non-YouTube links
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = lecture.title || 'lecture';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+        toast({ variant: 'destructive', title: 'رابط التحميل غير متوفر' });
+    }
+  };
+
   const handleAddToPlaylist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -247,10 +267,8 @@ export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
                         </Button>
                     </a>
                  )}
-                 <Button asChild variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
-                    <a href={lecture.audioSrc} download>
-                        <Download className="w-5 h-5" />
-                    </a>
+                 <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
+                    <Download className="w-5 h-5" />
                  </Button>
                  <div className="flex-grow"></div>
                  <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
