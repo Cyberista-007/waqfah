@@ -1,5 +1,4 @@
 
-
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Sheikh, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
@@ -81,8 +80,19 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
             if (statsSnap.exists()) {
                 return statsSnap.data() as Stats;
             }
-            // If stats doc doesn't exist, create it with initial values.
-            const statsData: Stats = { sheikhs: 0, lectures: 0, series: 0, books: 0 };
+            // If stats doc doesn't exist, create it with initial values from actual data.
+            const [sheikhs, lectures, series, books] = await Promise.all([
+                getDocs(collection(db, 'sheikhs')),
+                getDocs(collection(db, 'lectures')),
+                getDocs(collection(db, 'series')),
+                getDocs(collection(db, 'books')),
+            ]);
+            const statsData: Stats = { 
+                sheikhs: sheikhs.size, 
+                lectures: lectures.size, 
+                series: series.size, 
+                books: books.size
+            };
             await setDoc(statsRef, statsData);
             return statsData;
         } catch (error) {
@@ -106,14 +116,11 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
                 return snapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
             }
         } catch (error) {
-            console.error("Error fetching popular lectures, using fallback:", error);
+            console.error("Error fetching popular lectures:", error);
         }
     }
-    // Fallback to dummy data, sorted by viewCount
-    return [...DUMMY_LECTURES]
-        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-        .slice(0, count)
-        .map(l => toSerializable({...l, id: l.id, createdAt: new Date(l.createdAt), transcript: []})) as Lecture[];
+    // No longer fall back to dummy data. If Firestore fails, return empty.
+    return [];
 }
 
 
@@ -549,3 +556,6 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
         return [];
     }
 };
+
+
+    
