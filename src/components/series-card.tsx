@@ -16,7 +16,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         <Card
             key={series.id}
             className={cn(
-                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between",
+                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-none",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}
@@ -26,7 +26,7 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
                     <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 pt-1">
-                    <MicVocal className="h-4 w-4" />
+                    
                     <span>{series.sheikhName}</span>
                 </CardDescription>
             </CardHeader>
