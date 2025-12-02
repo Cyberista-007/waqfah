@@ -44,7 +44,7 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(item?.sheikhId || "");
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string | undefined>(item?.sheikhId);
   
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -216,19 +216,19 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
             <Label htmlFor="name">اسم القناة</Label>
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
           </div>
-          <div>
-            <Label htmlFor="sheikh">الشيخ المرتبط بالقناة (مهم لوظيفة المتابعة)</Label>
-              <Select name="sheikh" onValueChange={setSelectedSheikhId} defaultValue={item?.sheikhId} disabled={sheikhsLoading}>
-                  <SelectTrigger>
-                      <SelectValue placeholder="اختر شيخًا لربطه بهذه القناة..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="none">بدون شيخ مرتبط</SelectItem>
-                      {allSheikhs?.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
+           <div>
+            <Label htmlFor="sheikhId">الشيخ (لربط المحتوى)</Label>
+            <Select onValueChange={setSelectedSheikhId} defaultValue={selectedSheikhId} disabled={sheikhsLoading}>
+                <SelectTrigger>
+                    <SelectValue placeholder="اختر شيخًا لربط محاضراته بهذه القناة..." />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">بدون شيخ مرتبط</SelectItem>
+                    {allSheikhs?.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>
