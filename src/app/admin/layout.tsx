@@ -99,7 +99,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                       <span className="">لوحة التحكم</span>
                   </Link>
               </header>
-              <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20">
+              <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20 rounded-xl">
                 {children}
               </main>
             </div>
