@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useCollection, useUser } from '@/firebase';
-import type { Series, Lecture, Sheikh, Channel } from '@/lib/types';
+import type { Series, Lecture, Channel } from '@/lib/types';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
@@ -64,13 +64,11 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="py-8 space-y-16">
-        <div className="container">
-          {user && <ContinueListening />}
-          {user && <RecommendedLectures />}
-        </div>
+      <div className="container py-8 space-y-16">
+        {user && <ContinueListening />}
+        {user && <RecommendedLectures />}
         
-        <section className="container">
+        <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أبرز القنوات</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
              {topChannels?.map((channel, index) => (
@@ -80,10 +78,8 @@ export default function Home() {
         </section>
 
         <section>
-          <div className="container">
-            <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
+          <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestLectures?.map((lecture, index) => {
                 const channel = allChannels?.find(c => c.id === lecture.channelId);
                 return (
@@ -94,10 +90,8 @@ export default function Home() {
         </section>
 
         <section>
-          <div className="container">
-            <h2 className="text-3xl font-bold mb-6 font-headline">أحدث السلاسل</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
+          <h2 className="text-3xl font-bold mb-6 font-headline">أحدث السلاسل</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestSeries?.map((series, index) => (
               <SeriesCard key={series.id} series={series} index={index}/>
             ))}
