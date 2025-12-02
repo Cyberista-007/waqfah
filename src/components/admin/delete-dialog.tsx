@@ -10,15 +10,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 interface DeleteConfirmationDialogProps {
-    isOpen: boolean;
-    onClose: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
     onConfirm: () => void;
     title: string;
     description: string;
+    children?: React.ReactNode; // To wrap a trigger button
+    confirmButtonText?: string;
 }
 
 export function DeleteConfirmationDialog({
@@ -26,12 +29,13 @@ export function DeleteConfirmationDialog({
     onClose,
     onConfirm,
     title,
-    description
+    description,
+    children,
+    confirmButtonText = "نعم، قم بالحذف"
 }: DeleteConfirmationDialogProps) {
 
-  return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent dir="rtl">
+  const content = (
+    <AlertDialogContent dir="rtl">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -41,10 +45,27 @@ export function DeleteConfirmationDialog({
             <Button variant="outline" onClick={onClose}>إلغاء</Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={onConfirm}>نعم، قم بالحذف</Button>
+            <Button variant="destructive" onClick={onConfirm}>{confirmButtonText}</Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialog>
+  );
+
+  if (children) {
+    return (
+      <AlertDialog open={isOpen} onOpenChange={onClose}>
+        <AlertDialogTrigger asChild>
+            {children}
+        </AlertDialogTrigger>
+        {content}
+      </AlertDialog>
+    )
+  }
+
+  // For controlled dialogs without an explicit trigger
+  return (
+      <AlertDialog open={isOpen} onOpenChange={onClose}>
+        {content}
+      </AlertDialog>
   );
 }
