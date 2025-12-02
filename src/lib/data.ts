@@ -74,14 +74,13 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [lectures, series, books, sheikhs] = await Promise.all([
+            const [lectures, series, books] = await Promise.all([
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
-                getDocs(collection(db, 'sheikhs')),
             ]);
             const statsData: Stats = { 
-                sheikhs: sheikhs.size,
+                sheikhs: 0,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size

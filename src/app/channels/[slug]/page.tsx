@@ -7,7 +7,7 @@ import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
 import { Button } from '@/components/ui/button';
 import { Bell, Check, Users } from 'lucide-react';
-import { getChannelBySlug, getLecturesBySheikh } from '@/lib/data';
+import { getChannelBySlug, getLecturesByChannel } from '@/lib/data';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 
@@ -18,8 +18,8 @@ async function getChannelData(slug: string) {
         return { channel: null, lectures: [] };
     }
     
-    // Fetch lectures by the associated sheikhId
-    const lectures = channel.sheikhId ? await getLecturesBySheikh(channel.sheikhId) : [];
+    // Fetch lectures by the channelId
+    const lectures = await getLecturesByChannel(channel.id);
 
     return { channel, lectures };
 }
