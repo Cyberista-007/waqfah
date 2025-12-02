@@ -106,8 +106,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
     
-    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
     if (!title || !description || !audioSrc || !duration) {
         toast({
             variant: "destructive",
@@ -118,7 +116,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         return;
     }
     
-    const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript' | 'sheikhId' | 'sheikhName' | 'sheikhSlug'> = {
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
+    const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript'> = {
         title,
         slug,
         description,
@@ -130,7 +130,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         channelSlug: channelData?.slug || "",
         audioSrc,
         duration: parseInt(duration, 10), 
-        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
+        imageId: lecture?.imageId || `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
         youtubeUrl: formData.get("youtubeUrl") as string || "",
         pdfUrl: formData.get("pdfUrl") as string || "",
         telegramUrl: formData.get("telegramUrl") as string || "",

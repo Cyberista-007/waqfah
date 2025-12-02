@@ -118,8 +118,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
     const name = nameRef.current?.value || "";
     const description = descriptionRef.current?.value || "";
     const youtubeUrl = youtubeUrlRef.current?.value || "";
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
+    
     if (!name || !youtubeUrl) {
         toast({
             variant: "destructive",
@@ -130,6 +129,8 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
         return;
     }
     
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
     try {
         let finalImageUrl = item?.imageUrl || '';
 
@@ -151,6 +152,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
             youtubeUrl,
             imageUrl: finalImageUrl,
             imageId: item?.imageId || `channel-${slug}`,
+            followerCount: item?.followerCount || 0,
         };
         
 

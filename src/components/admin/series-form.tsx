@@ -63,11 +63,11 @@ export function SeriesForm({ series }: SeriesFormProps) {
 
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    const seriesData: Omit<Series, 'id' | 'lectureCount' | 'createdAt' | 'sheikhId' | 'sheikhName' | 'sheikhSlug'> = {
+    const seriesData: Omit<Series, 'id' | 'lectureCount' | 'createdAt'> = {
         title,
         slug,
         description: description || "",
-        imageId: `series-${slug}`,
+        imageId: series?.imageId || `series-${slug}`,
         language: language || 'ar',
     };
     

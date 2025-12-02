@@ -39,8 +39,6 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const pdfUrl = formData.get("pdfUrl") as string;
-    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
 
     if (!title || !pdfUrl) {
         toast({
@@ -51,12 +49,14 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         setIsSubmitting(false);
         return;
     }
+    
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    const bookData: Omit<Book, 'id' | 'sheikhId' | 'sheikhName' | 'sheikhSlug'> = {
+    const bookData: Omit<Book, 'id'> = {
         slug,
         title,
         pdfUrl,
-        imageId: `book-cover-${Math.floor(Math.random() * 3) + 1}`,
+        imageId: book?.imageId || `book-cover-${Math.floor(Math.random() * 3) + 1}`,
     };
 
     try {
