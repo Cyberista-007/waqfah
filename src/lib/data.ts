@@ -87,11 +87,12 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
             return statsData;
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
-            return null;
+            // In case of error, return a default object to avoid crashing the page.
+            return { sheikhs: 0, lectures: 0, series: 0, books: 0 };
         }
     }
-    // Fallback for non-live environment
-    return { sheikhs: DUMMY_SHEIKHS.length, lectures: DUMMY_LECTURES.length, series: DUMMY_SERIES.length, books: 0 };
+    // Fallback for non-live/error environment
+    return { sheikhs: 0, lectures: 0, series: 0, books: 0 };
 }
 
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
