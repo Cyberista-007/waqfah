@@ -53,6 +53,8 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const audioSrcRef = useRef<HTMLInputElement>(null);
+  const durationRef = useRef<HTMLInputElement>(null);
+
 
   const filteredSeries = useMemo(() => {
       if (!selectedSheikhId) return seriesList; // Show all series if no sheikh is selected
@@ -67,7 +69,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   }, [selectedSheikhId, filteredSeries, selectedSeriesId]);
 
 
-  const handleFetchMetadata = () => {
+  const handleFetchMetadata = async () => {
     const url = audioSrcRef.current?.value;
     if (!url) {
       toast({ variant: 'destructive', title: 'الرجاء إدخال رابط أولاً.' });
@@ -75,14 +77,34 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     }
     
     setIsFetching(true);
-    // --- Mock implementation ---
-    // In a real app, this would be a server action calling a service like yt-dlp
-    setTimeout(() => {
-        if (titleRef.current) titleRef.current.value = "عنوان مستخلص من الرابط (مثال)";
-        if (descriptionRef.current) descriptionRef.current.value = "وصف تم استخلاصه تلقائياً من الرابط (مثال).";
-        toast({ title: 'تم استخلاص البيانات بنجاح (محاكاة)' });
+     try {
+        const response = await fetch('/api/youtube-import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url, fetchVideoInfo: true }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "فشل في جلب بيانات يوتيوب.");
+        }
+
+        const data = await response.json();
+        
+        if (data.videoInfo) {
+            if (titleRef.current) titleRef.current.value = data.videoInfo.title;
+            if (descriptionRef.current) descriptionRef.current.value = data.videoInfo.description;
+            if (durationRef.current) durationRef.current.value = data.videoInfo.durationInSeconds.toString();
+            toast({ title: "تم جلب بيانات الفيديو بنجاح." });
+        } else {
+             toast({ variant: "destructive", title: "خطأ", description: "لم يتم العثور على معلومات الفيديو. يرجى التحقق من أن الرابط هو رابط فيديو صالح." });
+        }
+
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "خطأ", description: error.message });
+    } finally {
         setIsFetching(false);
-    }, 1500);
+    }
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -279,7 +301,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="duration">المدة (بالثواني)</Label>
-              <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required />
+              <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required ref={durationRef}/>
             </div>
              <div>
               <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>

@@ -1,4 +1,5 @@
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
@@ -6,6 +7,7 @@ import { z } from 'zod';
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
   fetchChannelInfo: z.boolean().optional(),
+  fetchVideoInfo: z.boolean().optional(),
 });
 
 function getPlaylistIdFromUrl(url: string): string | null {
@@ -17,6 +19,25 @@ function getPlaylistIdFromUrl(url: string): string | null {
         return null;
     }
 }
+
+function getVideoIdFromUrl(url: string): string | null {
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.hostname === 'youtu.be') {
+          return parsedUrl.pathname.slice(1);
+        }
+        if (parsedUrl.hostname.includes('youtube.com')) {
+          const videoId = parsedUrl.searchParams.get('v');
+          if (videoId) {
+            return videoId;
+          }
+        }
+    } catch (error) {
+        console.error("Invalid YouTube video URL", error);
+    }
+    return null;
+}
+
 
 async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Promise<string | null> {
     try {
@@ -108,13 +129,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400 });
         }
         
-        const { url, fetchChannelInfo } = validation.data;
+        const { url, fetchChannelInfo, fetchVideoInfo } = validation.data;
 
         const youtube = google.youtube({
             version: 'v3',
             auth: apiKey,
         });
         
+        // Handle single video info fetch
+        if (fetchVideoInfo) {
+            const videoId = getVideoIdFromUrl(url);
+            if (!videoId) {
+                return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400 });
+            }
+            const videoResponse = await youtube.videos.list({
+                part: ['snippet', 'contentDetails'],
+                id: [videoId],
+            });
+            const videoData = videoResponse.data.items?.[0];
+            if (videoData) {
+                return NextResponse.json({ videoInfo: {
+                    title: videoData.snippet?.title,
+                    description: videoData.snippet?.description,
+                    durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0,
+                }});
+            } else {
+                return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404 });
+            }
+        }
+
         const channelId = await getChannelIdFromUrl(url, youtube);
         
         if (!channelId) {
