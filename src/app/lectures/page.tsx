@@ -194,9 +194,12 @@ export default function LecturesListPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLectures?.map((lecture, index) => (
-          <LectureCard key={lecture.id} lecture={lecture} index={index} />
-        ))}
+        {filteredLectures?.map((lecture, index) => {
+          const channel = allChannels?.find(c => c.id === lecture.channelId);
+          return (
+            <LectureCard key={lecture.id} lecture={lecture} channel={channel} index={index} />
+          )
+        })}
       </div>
        {!isLoading && filteredLectures.length === 0 && (
          <div className="text-center py-16">
