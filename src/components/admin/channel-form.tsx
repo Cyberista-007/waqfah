@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCollection, useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import type { Channel, Sheikh } from "@/lib/types";
@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface ChannelFormProps {
     item?: Channel | null;
     onFormClose: () => void;
+    initialYoutubeUrl?: string;
 }
 
 // Simplified Youtube Info type
@@ -36,7 +37,7 @@ interface YoutubeChannelInfo {
     imageUrl: string;
 }
 
-export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
+export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const storage = useStorage();
@@ -102,6 +103,14 @@ export function ChannelForm({ item, onFormClose }: ChannelFormProps) {
         setIsFetching(false);
     }
   }
+
+  useEffect(() => {
+    if (initialYoutubeUrl && youtubeUrlRef.current) {
+        youtubeUrlRef.current.value = initialYoutubeUrl;
+        handleFetchFromYoutube();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialYoutubeUrl]);
 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

@@ -28,13 +28,17 @@ import { ChannelForm } from "@/components/admin/channel-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
+import { useSearchParams } from "next/navigation";
 
 export default function AdminChannelsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
+    const searchParams = useSearchParams();
+    const youtubeUrl = searchParams.get('youtubeUrl');
+
     const [itemToDelete, setItemToDelete] = useState<Channel | null>(null);
     const [itemToEdit, setItemToEdit] = useState<Channel | null>(null);
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(!!youtubeUrl);
 
     const { data: allItems, isLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
@@ -70,7 +74,7 @@ export default function AdminChannelsPage() {
     }
 
     if (isFormOpen) {
-      return <ChannelForm item={itemToEdit} onFormClose={handleFormClose} />
+      return <ChannelForm item={itemToEdit} onFormClose={handleFormClose} initialYoutubeUrl={youtubeUrl || undefined} />
     }
 
     return (

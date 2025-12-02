@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo } from "lucide-react";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Sheikh, Lecture, Channel } from "@/lib/types";
@@ -30,6 +30,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDuration } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 // A simple CSV parser
 const parseCSV = (text: string): Record<string, string>[] => {
@@ -62,6 +63,7 @@ interface FetchedPlaylist {
 
 export default function AdminImportLecturesPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -111,6 +113,14 @@ export default function AdminImportLecturesPage() {
             toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أو قائمة التشغيل." });
             return;
         }
+
+        const channelExists = allChannels?.some(c => c.youtubeUrl === finalUrl);
+        if (!channelExists && !urlToFetch) { // Don't show this if fetching from a playlist link inside the component
+            router.push(`/admin/channels?youtubeUrl=${encodeURIComponent(finalUrl)}`);
+            return;
+        }
+
+
         setIsFetching(true);
         // Clear previous results
         setFetchedVideos([]);
@@ -382,6 +392,7 @@ export default function AdminImportLecturesPage() {
                                         {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                                     </Button>
                                 </div>
+                                <p className="text-sm text-muted-foreground mt-2">إذا كانت القناة غير مضافة، سيتم توجيهك لإضافتها أولاً.</p>
                             </div>
                             {hasFetchedYoutubeData && (
                                  <Tabs defaultValue="youtube-videos" className="w-full mt-4" onValueChange={setActiveTab}>
@@ -559,5 +570,3 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
-
-    
