@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { Series } from '@/lib/types';
-import { Play, MicVocal } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
@@ -41,5 +41,3 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         </Card>
     );
 }
-
-    

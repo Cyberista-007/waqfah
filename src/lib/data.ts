@@ -1,4 +1,5 @@
 
+
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
@@ -37,7 +38,6 @@ export async function getSeriesPageData(slug: string) {
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
 
-            // The series creator (sheikh) logic is removed as it's no longer part of the data model for series.
             return { series: seriesData, lecturesInSeries, seriesCreator: null };
 
         } catch (error) {
@@ -432,8 +432,3 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
         return [];
     }
 };
-
-
-    
-
-    

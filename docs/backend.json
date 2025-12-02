@@ -32,7 +32,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Series",
       "type": "object",
-      "description": "Represents a series of lectures by a specific sheikh.",
+      "description": "Represents a series of lectures.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
@@ -48,12 +48,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Lecture",
       "type": "object",
-      "description": "Represents a single lecture by a specific sheikh.",
+      "description": "Represents a single lecture.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "sheikhId": { "type": "string" },
         "sheikhName": { "type": "string" },
         "sheikhSlug": { "type": "string" },
         "seriesId": { "type": "string" },
@@ -72,23 +71,20 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
       },
-      "required": ["slug", "title", "sheikhId", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
+      "required": ["slug", "title", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Book",
       "type": "object",
-      "description": "Represents a book or publication by a specific sheikh.",
+      "description": "Represents a book or publication.",
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "pdfUrl": { "type": "string", "format": "uri" },
-        "imageId": { "type": "string" },
-        "sheikhId": { "type": "string" },
-        "sheikhName": { "type": "string" },
-        "sheikhSlug": { "type": "string" }
+        "imageId": { "type": "string" }
       },
-      "required": ["slug", "title", "pdfUrl", "imageId", "sheikhId", "sheikhName", "sheikhSlug"]
+      "required": ["slug", "title", "pdfUrl", "imageId"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -373,5 +369,3 @@
     ]
   }
 }
-
-    
