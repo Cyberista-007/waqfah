@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -53,7 +54,9 @@ service cloud.firestore {
 
     match /lectures/{lectureId} {
       allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+      // Admins can perform any write operation.
+      // This also implicitly allows batched deletes by admins.
+      allow write: if isAdmin();
     }
 
     match /books/{bookId} {

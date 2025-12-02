@@ -18,13 +18,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
-import type { Series } from "@/lib/types";
+import type { Lecture, Series } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { useState } from "react";
-import { doc, runTransaction, increment } from "firebase/firestore";
+import { doc, runTransaction, increment, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 
 export default function AdminSeriesPage() {
   const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
@@ -34,15 +34,6 @@ export default function AdminSeriesPage() {
   const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null);
 
   const handleDeleteAttempt = (series: Series) => {
-    if (series.lectureCount && series.lectureCount > 0) {
-      toast({
-        variant: "destructive",
-        title: "لا يمكن حذف السلسلة",
-        description: `سلسلة "${series.title}" تحتوي على ${series.lectureCount} محاضرة. يجب حذف المحاضرات أولاً.`,
-      });
-      return;
-    }
-    // If lectureCount is 0, show confirmation dialog
     setSeriesToDelete(series);
   };
   
@@ -51,24 +42,42 @@ export default function AdminSeriesPage() {
     
     const seriesRef = doc(firestore, 'series', seriesToDelete.id);
     const statsRef = doc(firestore, 'stats', 'global');
+    const lecturesRef = collection(firestore, 'lectures');
+    const q = query(lecturesRef, where("seriesId", "==", seriesToDelete.id));
 
     try {
-        await runTransaction(firestore, async (transaction) => {
-            transaction.delete(seriesRef);
-            // Use set with merge to avoid error if doc doesn't exist
-            transaction.set(statsRef, { series: increment(-1) }, { merge: true });
+        const lecturesSnapshot = await getDocs(q);
+        const lecturesToDeleteCount = lecturesSnapshot.size;
+
+        const batch = writeBatch(firestore);
+
+        // Delete all lectures in the series
+        lecturesSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
         });
+
+        // Delete the series itself
+        batch.delete(seriesRef);
+
+        // Update stats
+        batch.set(statsRef, { 
+            series: increment(-1),
+            lectures: increment(-lecturesToDeleteCount) 
+        }, { merge: true });
+
+        await batch.commit();
 
         toast({
             title: "تم الحذف بنجاح",
-            description: `تم حذف سلسلة "${seriesToDelete.title}".`,
+            description: `تم حذف سلسلة "${seriesToDelete.title}" وجميع محاضراتها البالغ عددها ${lecturesToDeleteCount}.`,
         });
+
     } catch (error) {
-         console.error("Error deleting series:", error);
+         console.error("Error deleting series and its lectures:", error);
          toast({
             variant: "destructive",
             title: "فشل الحذف",
-            description: "لم نتمكن من حذف السلسلة.",
+            description: "لم نتمكن من حذف السلسلة والمحاضرات المرتبطة بها.",
         });
     } finally {
         setSeriesToDelete(null);
@@ -145,7 +154,7 @@ export default function AdminSeriesPage() {
           onClose={() => setSeriesToDelete(null)}
           onConfirm={handleDeleteConfirm}
           title="حذف السلسلة"
-          description={`هل أنت متأكد من رغبتك في حذف سلسلة "${seriesToDelete?.title}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+          description={`هل أنت متأكد من رغبتك في حذف سلسلة "${seriesToDelete?.title}"؟ سيتم حذف جميع المحاضرات المرتبطة بها بشكل دائم. لا يمكن التراجع عن هذا الإجراء.`}
         />
     </>
   );
