@@ -3,8 +3,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, MicVocal, ListPlus, Download, Clock } from "lucide-react"
-import { SiTelegram, SiYoutube } from "@icons-pack/react-simple-icons"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock } from "lucide-react"
+import { SiTelegram } from "@icons-pack/react-simple-icons"
 import { useState, useMemo, useRef } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -204,12 +204,15 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
             </div>
           )}
 
-          <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
-             <Link href={`/sheikhs/${lecture.sheikhSlug}`} className="flex items-center gap-1 hover:underline">
-                <MicVocal className="w-3 h-3" />
-                <span>{lecture.sheikhName}</span>
-             </Link>
-          </div>
+          {lecture.channelName && lecture.channelSlug && (
+             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
+                <Link href={`/channels/${lecture.channelSlug}`} className="flex items-center gap-1 hover:underline">
+                    <Youtube className="w-3 h-3" />
+                    <span>{lecture.channelName}</span>
+                </Link>
+            </div>
+          )}
+
 
           {progress > 0 && progress < 95 && (
               <div className="absolute bottom-0 left-0 right-0 h-1.5">
@@ -229,7 +232,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                 </Button>
                 {videoId && (
                   <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-red-500">
-                      <SiYoutube className="w-5 h-5" />
+                      <Youtube className="w-5 h-5" />
                   </Button>
                 )}
                  {lecture.telegramUrl && (

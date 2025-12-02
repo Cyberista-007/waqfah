@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -169,7 +170,7 @@ export default function AdminImportLecturesPage() {
             toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
-        if (!firestore || !allSeries || !allSheikhs) return;
+        if (!firestore || !allSeries || !allSheikhs || !allChannels) return;
         
         setIsSubmitting(true);
         
@@ -179,6 +180,7 @@ export default function AdminImportLecturesPage() {
 
             const series = targetSeriesId ? allSeries.find(s => s.id === targetSeriesId) : null;
             const sheikh = series?.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
+            const channel = targetChannelId ? allChannels.find(c => c.id === targetChannelId) : null;
 
             for (const video of videosToImport) {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -194,7 +196,9 @@ export default function AdminImportLecturesPage() {
                     seriesId: series?.id || "",
                     seriesSlug: series?.slug || "",
                     seriesTitle: series?.title || "",
-                    channelId: targetChannelId || "",
+                    channelId: channel?.id || "",
+                    channelName: channel?.name || "",
+                    channelSlug: channel?.slug || "",
                     audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
                     duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
@@ -422,7 +426,7 @@ export default function AdminImportLecturesPage() {
                                                 </Select>
                                             </div>
                                              <div>
-                                                <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
+                                                <Label htmlFor="target-channel">اختر القناة</Label>
                                                 <Select value={targetChannelId} onValueChange={setTargetChannelId}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="اختر قناة..." />

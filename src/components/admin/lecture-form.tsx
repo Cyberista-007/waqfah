@@ -24,9 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useRef, useMemo, useEffect } from "react";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Sheikh } from "@/lib/types";
+import type { Series, Lecture, Sheikh, Channel } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -44,8 +44,11 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
   
   const isEditMode = !!lecture;
 
+  const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
+
   const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "");
+  const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -96,6 +99,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
     
     const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
     const seriesData = seriesList?.find(s => s.id === selectedSeriesId);
+    const channelData = channelsList?.find(c => c.id === selectedChannelId);
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
@@ -119,6 +123,9 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
         seriesId: seriesData.id,
         seriesSlug: seriesData.slug,
         seriesTitle: seriesData.title,
+        channelId: channelData?.id || "",
+        channelName: channelData?.name || "",
+        channelSlug: channelData?.slug || "",
         audioSrc,
         duration: parseInt(duration, 10), 
         imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
@@ -221,6 +228,22 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
               <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
             </div>
             <div className="space-y-2">
+                <Label htmlFor="channel">القناة (اختياري)</Label>
+                <Select onValueChange={setSelectedChannelId} defaultValue={lecture?.channelId}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="اختر قناة..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {channelsList?.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
                 <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
                 <Select onValueChange={setSelectedSheikhId} defaultValue={lecture?.sheikhId}>
                     <SelectTrigger>
@@ -233,9 +256,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
                     </SelectContent>
                 </Select>
             </div>
-          </div>
-
-           <div className="space-y-2">
+             <div className="space-y-2">
               <Label htmlFor="series">السلسلة</Label>
               <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId} required>
                   <SelectTrigger>
@@ -248,6 +269,7 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
                   </SelectContent>
               </Select>
             </div>
+          </div>
           
           <div>
             <Label htmlFor="description">وصف المحاضرة</Label>
@@ -292,8 +314,8 @@ export function LectureForm({ seriesList, sheikhsList, lecture }: LectureFormPro
           </div>
 
           <div className="flex gap-2 pt-4 border-t">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || channelsLoading}>
+                {(isSubmitting || channelsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إضافة المحاضرة'}
             </Button>
             <Button asChild variant="outline" type="button">

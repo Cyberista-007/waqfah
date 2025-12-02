@@ -35,6 +35,8 @@ export type Lecture = Serializable<{
   seriesSlug: string;
   seriesTitle: string; 
   channelId?: string;
+  channelName?: string;
+  channelSlug?: string;
   duration: number; // in seconds
   audioSrc: string;
   imageId: string;
