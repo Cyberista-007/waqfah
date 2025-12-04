@@ -33,6 +33,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     } else {
         document.body.classList.add('body-background'); // Fallback to default
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSetFont = (newFont: string) => {

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useFont } from "./font-provider"
+import { useAppearance } from "./appearance-provider"
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,7 @@ interface FontSwitcherDialogProps {
 }
 
 export function FontSwitcherDialog({ isOpen, onOpenChange }: FontSwitcherDialogProps) {
-  const { font: activeFont, setFont } = useFont()
+  const { font: activeFont, setFont } = useAppearance()
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

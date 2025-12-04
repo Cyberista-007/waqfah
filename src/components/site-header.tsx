@@ -17,6 +17,7 @@ import {
   Mail,
   ListMusic,
   Youtube,
+  Image as ImageIcon,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -27,7 +28,6 @@ import {
   SheetTrigger,
   SheetClose
 } from "@/components/ui/sheet"
-import { ThemeToggle } from "./theme-toggle"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -43,11 +43,13 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useState } from "react"
-import { ThemeSwitcherDialog } from "./theme-switcher"
+import { ThemeSwitcherDialog, themes } from "./theme-switcher"
 import { FontSwitcherDialog } from "./font-switcher"
 import { getInitials } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 import { Separator } from "./ui/separator"
+import { useTheme } from "next-themes"
+import { AppearanceManager } from "./appearance-manager"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -73,6 +75,16 @@ export function SiteHeader() {
   const router = useRouter();
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
   const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    const currentIndex = themes.findIndex((t) => t.value === theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const nextTheme = themes[nextIndex]?.value;
+    if (nextTheme) {
+      setTheme(nextTheme);
+    }
+  };
 
 
   const handleLogout = async () => {
@@ -88,6 +100,7 @@ export function SiteHeader() {
   
   return (
     <>
+    <AppearanceManager />
     <header className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
@@ -220,6 +233,12 @@ export function SiteHeader() {
                            <CaseSensitive className="h-4 w-4" />
                         </div>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => document.getElementById('background-uploader-input')?.click()} className="focus:bg-primary/10 focus:text-primary justify-end">
+                      <div className="flex items-center gap-2">
+                         <span>تغيير الخلفية</span>
+                         <ImageIcon className="h-4 w-4" />
+                      </div>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -232,7 +251,16 @@ export function SiteHeader() {
               </Button>
            </Link>
           
-          <ThemeToggle openThemeSwitcher={() => setIsThemeSwitcherOpen(true)} />
+          <Button
+            onClick={toggleTheme}
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle theme"
+            className="text-foreground/70 hover:text-primary"
+          >
+            <Palette className="h-5 w-5" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
 
           {isUserLoading ? (
             <Skeleton className="w-10 h-10 rounded-full" />
