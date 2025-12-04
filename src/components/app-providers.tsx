@@ -24,6 +24,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             'theme-mecca-nights',
             'theme-medina-green',
             'theme-andalusian-sunset',
+            'theme-sunset-flare',
             'theme-light-academia',
             'theme-parchment',
             'theme-classic-dark',

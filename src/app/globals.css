@@ -234,7 +234,30 @@
     --input: 30 25% 33%;
     --ring: 20 100% 76%;
   }
-  
+
+  /* NEW THEME: Sunset Flare */
+  .theme-sunset-flare {
+    --background: 220 45% 10%; /* Deep Navy Blue */
+    --foreground: 35 100% 96%; /* Cream White */
+    --card: 0 45% 18%; /* Dark Red */
+    --card-foreground: 35 100% 96%;
+    --popover: 220 45% 8%;
+    --popover-foreground: 35 100% 96%;
+    --primary: 20 90% 60%; /* Vibrant Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 30% 25%;
+    --secondary-foreground: 35 100% 96%;
+    --muted: 0 30% 20%;
+    --muted-foreground: 35 20% 75%;
+    --accent: 35 100% 90%; /* Light Cream */
+    --accent-foreground: 220 45% 10%;
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 30% 25%;
+    --input: 0 30% 25%;
+    --ring: 20 90% 60%;
+  }
+
   /* 9. Light Academia */
   .theme-light-academia {
     --background: 45 40% 98%;
