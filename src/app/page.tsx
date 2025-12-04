@@ -13,6 +13,8 @@ import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { ChannelCard } from '@/components/channel-card';
+import Image from 'next/image';
+import { getPlaceholderImage } from '@/lib/images';
 
 export default function Home() {
   const router = useRouter();
@@ -35,14 +37,27 @@ export default function Home() {
     return <HomePageSkeleton />;
   }
 
+  const heroImage = getPlaceholderImage('hero-background');
+
   return (
     <div className="space-y-12">
-      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center animated-gradient rounded-b-3xl">
+      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center text-white rounded-b-3xl overflow-hidden">
+        {heroImage && (
+            <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                fill
+                className="object-cover"
+                priority
+                data-ai-hint={heroImage.imageHint}
+            />
+        )}
+        <div className="absolute inset-0 bg-black/50" />
         <div className="container relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight text-foreground">
+          <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight">
             العلم الشرعي بين يديك
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
             منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.
           </p>
           <div className="max-w-xl mx-auto">
@@ -52,7 +67,7 @@ export default function Home() {
                   type="search"
                   name="search"
                   placeholder="ابحث عن محاضرة، سلسلة، كتاب..."
-                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300"
+                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300 text-foreground"
                   aria-label="بحث"
                 />
                 <button type="submit" className="absolute top-1/2 end-4 -translate-y-1/2 text-muted-foreground">
