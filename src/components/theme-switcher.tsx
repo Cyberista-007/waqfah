@@ -18,7 +18,6 @@ export const themes = [
   { name: "الافتراضي (فاتح)", value: "theme-default-light", colors: ["#ffffff", "#09090b", "#f4f4f5"] },
   { name: "استوديو سيمباتيكو", value: "theme-studio-simpatico", colors: ["#292A5E", "#FF6B2E", "#BCA5FF", "#FDE245"] },
   { name: "الأفق الرقمي", value: "theme-digital-horizon", colors: ["#0C0B26", "#F278DE", "#83B4FF", "#A47DFF", "#2E2A4F", "#0C0B26", "#F04A4A"] },
-  { name: "وهج الغروب", value: "theme-sunset-flare", colors: ["#1C2A53", "#FF6F00", "#FFF5D1", "#C70039"] },
   { name: "المسجد الزمردي", value: "theme-emerald-mosque", colors: ["#081412", "#a3f7b5", "#213d36"] },
   { name: "ليالي الصحراء", value: "theme-desert-night", colors: ["#171311", "#fde0c8", "#2c2624"] },
   { name: "الأزرق الملكي", value: "theme-royal-blue", colors: ["#0f172a", "#a9d7ff", "#293952"] },
@@ -92,5 +91,3 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
     </Dialog>
   )
 }
-
-    

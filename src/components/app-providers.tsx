@@ -33,8 +33,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             'theme-deep-space',
             'theme-oled',
             'theme-studio-simpatico',
-            'theme-digital-horizon',
-            'theme-sunset-flare'
+            'theme-digital-horizon'
           ]}
         >
           <FontProvider>
@@ -48,5 +47,3 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
     )
 }
-
-    
