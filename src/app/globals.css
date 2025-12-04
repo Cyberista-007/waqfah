@@ -480,6 +480,15 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .body-background {
+    background-image: url('https://images.unsplash.com/photo-1536440136628-849c177E76a1?q=80&w=1920&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
   .font-body {
     font-family: var(--font-body), sans-serif;
   }

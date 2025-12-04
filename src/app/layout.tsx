@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={cn(
-        'min-h-screen bg-background font-body antialiased',
+        'min-h-screen bg-background font-body antialiased body-background',
         alegreya.variable,
         sourceCodePro.variable,
         cairo.variable,
