@@ -232,7 +232,7 @@ export function SiteHeader() {
               </Button>
            </Link>
           
-          <ThemeToggle />
+          <ThemeToggle openThemeSwitcher={() => setIsThemeSwitcherOpen(true)} />
 
           {isUserLoading ? (
             <Skeleton className="w-10 h-10 rounded-full" />
