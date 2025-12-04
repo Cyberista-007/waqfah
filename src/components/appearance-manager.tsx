@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useAppearance } from './appearance-provider';
 import { useToast } from '@/hooks/use-toast';
 
