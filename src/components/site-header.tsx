@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -35,6 +34,11 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
 import { useScroll } from "@/hooks/use-scroll"
 import { useUser } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -201,46 +205,44 @@ export function SiteHeader() {
               </Link>
             </Button>
           ))}
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            <HoverCard>
+                <HoverCardTrigger asChild>
                     <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
                         <span>المزيد</span>
                         <ChevronDown className="h-4 w-4 ms-1"/>
                     </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-background border-border">
-                    {dynamicMoreNavItems.map((item) => {
-                      const Icon = item.icon;
-                      return(
-                        <DropdownMenuItem key={item.label} asChild className="focus:bg-primary/10 focus:text-primary justify-end">
-                            <Link href={item.href} className="flex justify-end w-full items-center gap-2">
-                                <span>{item.label}</span>
-                                {Icon && <Icon className="h-4 w-4" />}
-                            </Link>
-                        </DropdownMenuItem>
-                      )
-                    })}
-                    <DropdownMenuSeparator />
-                     <DropdownMenuItem onSelect={() => setIsThemeSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
-                        <div className="flex items-center gap-2">
-                           <span>تغيير الثيم</span>
-                           <Palette className="h-4 w-4" />
-                        </div>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem onSelect={() => setIsFontSwitcherOpen(true)} className="focus:bg-primary/10 focus:text-primary justify-end">
-                        <div className="flex items-center gap-2">
-                           <span>تغيير الخط</span>
-                           <CaseSensitive className="h-4 w-4" />
-                        </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => document.getElementById('background-uploader-input')?.click()} className="focus:bg-primary/10 focus:text-primary justify-end">
-                      <div className="flex items-center gap-2">
-                         <span>تغيير الخلفية</span>
-                         <ImageIcon className="h-4 w-4" />
-                      </div>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-60 p-2 bg-background border-border">
+                    <div className="flex flex-col space-y-1">
+                      {dynamicMoreNavItems.map((item) => {
+                        const Icon = item.icon;
+                        return(
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none"
+                          >
+                              <span>{item.label}</span>
+                              {Icon && <Icon className="h-4 w-4" />}
+                          </Link>
+                        )
+                      })}
+                      <Separator className="my-1" />
+                       <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                         <span>تغيير الثيم</span>
+                         <Palette className="h-4 w-4" />
+                      </button>
+                       <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                         <span>تغيير الخط</span>
+                         <CaseSensitive className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => document.getElementById('background-uploader-input')?.click()} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                        <span>تغيير الخلفية</span>
+                        <ImageIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                </HoverCardContent>
+            </HoverCard>
         </div>
 
         <div className="flex items-center gap-2">
