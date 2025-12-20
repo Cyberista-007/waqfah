@@ -27,8 +27,7 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
         requestResourceData: data,
       })
     )
-  })
-  // Execution continues immediately
+  }).catch(() => {}); // Catch any subsequent errors to prevent unhandled rejection
 }
 
 
@@ -48,7 +47,7 @@ export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
           requestResourceData: data,
         })
       )
-    });
+    }).catch(() => {}); // Catch any subsequent errors to prevent unhandled rejection
   return promise;
 }
 
@@ -68,7 +67,7 @@ export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) 
           requestResourceData: data,
         })
       )
-    });
+    }).catch(() => {}); // Catch any subsequent errors to prevent unhandled rejection
 }
 
 
@@ -86,5 +85,5 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
           operation: 'delete',
         })
       )
-    });
+    }).catch(() => {}); // Catch any subsequent errors to prevent unhandled rejection
 }
