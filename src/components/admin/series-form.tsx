@@ -15,12 +15,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { Series } from "@/lib/types";
+import type { Series, Sheikh } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,10 @@ export function SeriesForm({ series }: SeriesFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!series;
   
+  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(series?.sheikhId || "none");
+
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
@@ -51,6 +55,9 @@ export function SeriesForm({ series }: SeriesFormProps) {
     const description = formData.get("description") as string;
     const language = formData.get("language") as string;
     
+    const sheikhData = selectedSheikhId !== 'none' ? allSheikhs?.find(s => s.id === selectedSheikhId) : null;
+
+
     if (!title) {
         toast({
             variant: "destructive",
@@ -68,6 +75,9 @@ export function SeriesForm({ series }: SeriesFormProps) {
         slug,
         description: description || "",
         imageId: series?.imageId || `series-${slug}`,
+        sheikhId: sheikhData?.id || "",
+        sheikhName: sheikhData?.name || "",
+        sheikhSlug: sheikhData?.slug || "",
         language: language || 'ar',
     };
     
@@ -132,6 +142,20 @@ export function SeriesForm({ series }: SeriesFormProps) {
             <Label htmlFor="title">عنوان السلسلة</Label>
             <Input id="title" name="title" defaultValue={series?.title} required disabled={isSubmitting} />
           </div>
+           <div>
+              <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhId} value={selectedSheikhId} disabled={sheikhsLoading}>
+                  <SelectTrigger>
+                      <SelectValue placeholder={"اختر شيخًا..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="none">بدون شيخ</SelectItem>
+                      {allSheikhs?.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
           <div>
             <Label htmlFor="description">وصف السلسلة (اختياري)</Label>
             <Textarea id="description" name="description" defaultValue={series?.description} disabled={isSubmitting}/>
@@ -155,8 +179,8 @@ export function SeriesForm({ series }: SeriesFormProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting || !firestore}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+            <Button type="submit" disabled={isSubmitting || !firestore || sheikhsLoading}>
+                {(isSubmitting || sheikhsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء السلسلة'}
             </Button>
             <Button asChild variant="outline" type="button">

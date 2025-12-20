@@ -1,6 +1,6 @@
 
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel, Sheikh } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -32,8 +32,17 @@ export async function getSeriesPageData(slug: string) {
             const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id), orderBy('createdAt', 'asc'));
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+            
+            let seriesCreator: Sheikh | null = null;
+            if (seriesData.sheikhId) {
+                const sheikhRef = doc(db, 'sheikhs', seriesData.sheikhId);
+                const sheikhSnap = await getDoc(sheikhRef);
+                if (sheikhSnap.exists()) {
+                    seriesCreator = toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
+                }
+            }
 
-            return { series: seriesData, lecturesInSeries, seriesCreator: null };
+            return { series: seriesData, lecturesInSeries, seriesCreator };
 
         } catch (error) {
             console.error("Error fetching series page data:", error);
@@ -55,14 +64,15 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [lectures, series, books, channels] = await Promise.all([
+            const [sheikhs, lectures, series, books, channels] = await Promise.all([
+                getDocs(collection(db, 'sheikhs')),
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
                 getDocs(collection(db, 'channels')),
             ]);
             const statsData: Stats = {
-                sheikhs: 0,
+                sheikhs: sheikhs.size,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size,

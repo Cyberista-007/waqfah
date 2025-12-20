@@ -2,7 +2,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { signOut } from 'firebase/auth';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAdmin, isLoading } = useAdminAuth();
   const auth = useAuth();
   
@@ -37,6 +38,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   if (isAdmin) {
       const navItems = [
         { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
+        { href: '/admin/sheikhs', label: 'المشايخ', icon: MicVocal },
         { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
         { href: '/admin/channels', label: 'القنوات', icon: Youtube },
@@ -125,9 +127,5 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     </div>
   );
 };
-
-// Dummy pathname for server-side check.
-// This is fine because we are not using it for active styling on the server.
-const pathname = "/";
 
 export default AdminLayout;

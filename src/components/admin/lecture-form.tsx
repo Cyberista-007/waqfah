@@ -25,7 +25,7 @@ import {
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Channel } from "@/lib/types";
+import type { Series, Lecture, Channel, Sheikh } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -43,14 +43,28 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const isEditMode = !!lecture;
 
   const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
+  const { data: sheikhsList, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
+  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const audioSrcRef = useRef<HTMLInputElement>(null);
   const durationRef = useRef<HTMLInputElement>(null);
+
+  // Update selected sheikh when series changes
+  useEffect(() => {
+      if (selectedSeriesId !== 'none') {
+          const series = seriesList.find(s => s.id === selectedSeriesId);
+          if (series?.sheikhId) {
+              setSelectedSheikhId(series.sheikhId);
+          } else {
+              setSelectedSheikhId("");
+          }
+      }
+  }, [selectedSeriesId, seriesList]);
 
 
   const handleFetchMetadata = async () => {
@@ -105,6 +119,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
+    const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
     
     if (!title || !description || !audioSrc || !duration) {
         toast({
@@ -122,6 +137,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         title,
         slug,
         description,
+        sheikhId: sheikhData?.id || "",
+        sheikhName: sheikhData?.name || "",
+        sheikhSlug: sheikhData?.slug || "",
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
@@ -209,6 +227,8 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
       setIsSubmitting(false);
     }
   };
+  
+  const isLoading = channelsLoading || sheikhsLoading;
 
   return (
     <Card>
@@ -238,7 +258,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="channel">القناة (اختياري)</Label>
-                <Select onValueChange={setSelectedChannelId} defaultValue={lecture?.channelId}>
+                <Select onValueChange={setSelectedChannelId} defaultValue={lecture?.channelId} disabled={isLoading}>
                     <SelectTrigger>
                         <SelectValue placeholder="اختر قناة..." />
                     </SelectTrigger>
@@ -262,6 +282,20 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                       <SelectItem value="none">بدون سلسلة</SelectItem>
                       {seriesList.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhId} value={selectedSheikhId} disabled={isLoading || selectedSeriesId !== 'none'}>
+                  <SelectTrigger>
+                      <SelectValue placeholder={"اختر شيخًا..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="">محاضرة مستقلة</SelectItem>
+                      {sheikhsList?.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
                   </SelectContent>
               </Select>
@@ -311,8 +345,8 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           </div>
 
           <div className="flex gap-2 pt-4 border-t">
-            <Button type="submit" disabled={isSubmitting || channelsLoading}>
-                {(isSubmitting || channelsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إضافة المحاضرة'}
             </Button>
             <Button asChild variant="outline" type="button">

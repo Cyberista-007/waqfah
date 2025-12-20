@@ -13,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { useFirestore } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, doc, runTransaction, increment } from "firebase/firestore";
-import type { Book } from "@/lib/types";
+import type { Book, Sheikh } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface BookFormProps {
     book?: Book | null;
@@ -30,6 +31,8 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const isEditMode = !!book;
+  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+  const [selectedSheikhName, setSelectedSheikhName] = useState<string>(book?.sheikhName || "");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,6 +59,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         slug,
         title,
         pdfUrl,
+        sheikhName: selectedSheikhName,
         imageId: book?.imageId || `book-cover-${Math.floor(Math.random() * 3) + 1}`,
     };
 
@@ -109,6 +113,20 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
             <Label htmlFor="title">عنوان الكتاب</Label>
             <Input id="title" name="title" defaultValue={book?.title} required disabled={isSubmitting} />
           </div>
+           <div>
+              <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
+              <Select name="sheikh" onValueChange={setSelectedSheikhName} value={selectedSheikhName} disabled={sheikhsLoading}>
+                  <SelectTrigger>
+                      <SelectValue placeholder={"اختر شيخًا..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="">بدون شيخ</SelectItem>
+                      {allSheikhs?.map(s => (
+                          <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
           <div>
             <Label htmlFor="pdfUrl">رابط الكتاب (PDF)</Label>
             <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={book?.pdfUrl} required disabled={isSubmitting} />
@@ -118,8 +136,8 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
             <Input id="image" name="image" type="file" disabled={isSubmitting}/>
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || sheikhsLoading}>
+                {(isSubmitting || sheikhsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء الكتاب'}
             </Button>
             <Button type="button" onClick={onFormClose} variant="outline">
