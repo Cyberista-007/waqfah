@@ -131,10 +131,14 @@ service cloud.firestore {
     match /users/{userId}/playlists/{playlistId} {
       // A user can create their own playlist.
       allow create: if isCreatingOwnResource(request.resource.data.userId);
-      // Users can read, update, and delete their own playlists.
-      allow read, update, delete: if isResourceOwner();
       
-      // Any signed-in user can read public playlists.
+      // A user can list their own playlists.
+      allow list: if isOwner(userId);
+
+      // Users can get, update, and delete their own playlists.
+      allow get, update, delete: if isResourceOwner();
+      
+      // Any signed-in user can also get a public playlist.
       allow get: if isSignedIn() && resource.data.isPublic == true;
     }
     
