@@ -136,7 +136,8 @@
       "properties": {
         "userId": { "type": "string" },
         "channelId": { "type": "string" },
-        "followedAt": { "type": "string", "format": "date-time" }
+        "followedAt": { "type": "string", "format": "date-time" },
+        "notificationsEnabled": { "type": "boolean" }
       },
       "required": ["userId", "channelId", "followedAt"]
     },

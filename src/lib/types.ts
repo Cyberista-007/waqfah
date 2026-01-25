@@ -134,6 +134,7 @@ export type FollowingChannel = Serializable<{
     id: string; // channelId
     channelId: string;
     followedAt: Timestamp;
+    notificationsEnabled?: boolean;
 }>
 
 export type Rating = Serializable<{
