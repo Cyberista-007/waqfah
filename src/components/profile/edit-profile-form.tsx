@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useAuth, useFirestore, useStorage } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import type { UserProfile, EditProfileForm } from '@/lib/types';
+import type { UserProfile, EditProfileForm as EditProfileFormType } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { User, updateProfile } from 'firebase/auth';
@@ -54,7 +54,7 @@ export function EditProfileForm({ user, userProfile, onClose }: EditProfileFormP
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formData.entries()) as Omit<EditProfileForm, 'photoURL'> & { name: string; bio: string };
+    const data = Object.fromEntries(formData.entries()) as Omit<EditProfileFormType, 'photoURL'> & { name: string; bio: string };
     
     let newPhotoURL = user.photoURL || userProfile.photoURL || '';
 
