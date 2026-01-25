@@ -32,17 +32,17 @@ import {
   SheetClose
 } from "@/components/ui/sheet"
 import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
 import { useScroll } from "@/hooks/use-scroll"
 import { useUser } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -81,8 +81,8 @@ const moreNavItems = [
 
 const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
-    { href: '/series', icon: ListVideo, label: 'السلاسل' },
     { href: '/search', icon: Search, label: 'بحث' },
+    { href: '/series', icon: ListVideo, label: 'السلاسل' },
     { href: '/profile', icon: UserIcon, label: 'حسابي' }
 ];
 
