@@ -83,6 +83,7 @@ export function FloatingAudioPlayer() {
 
                 transaction.set(historyRef, {
                     lectureId: track.id,
+                    seriesId: track.seriesId,
                     position: currentTime,
                     duration: duration,
                     lastListened: Timestamp.now(),
