@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -20,6 +19,7 @@ import {
   ImageIcon,
   Home,
   ListVideo,
+  Settings,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -83,7 +83,8 @@ const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
     { href: '/search', icon: Search, label: 'بحث' },
     { href: '/series', icon: ListVideo, label: 'السلاسل' },
-    { href: '/profile', icon: UserIcon, label: 'حسابي' }
+    { href: '/profile', icon: UserIcon, label: 'حسابي' },
+    { href: '/settings', icon: Settings, label: 'الإعدادات'}
 ];
 
 export function SiteHeader() {
@@ -225,6 +226,9 @@ export function SiteHeader() {
                         <DropdownMenuItem asChild>
                             <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                         </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/settings"><Settings className="me-2 h-4 w-4" />الإعدادات</Link>
+                        </DropdownMenuItem>
                         {isAdmin && (
                           <DropdownMenuItem asChild>
                               <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
@@ -255,7 +259,7 @@ export function SiteHeader() {
         <div className="grid h-full grid-cols-5 mx-auto">
             {mobileNavLinks.map((item) => {
                 const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
-                const href = (item.href === '/profile' && !user) ? '/auth/login' : item.href;
+                const href = ((item.href === '/profile' || item.href === '/settings') && !user) ? `/auth/login?redirect_to=${item.href}` : item.href;
                 return (
                     <Link key={item.label} href={href} className="inline-flex flex-col items-center justify-center px-2 hover:bg-accent group rounded-lg">
                         <item.icon className={cn("w-6 h-6 mb-1 text-muted-foreground group-hover:text-primary", isActive && "text-primary")} />
@@ -263,83 +267,6 @@ export function SiteHeader() {
                     </Link>
                 );
             })}
-             <Sheet>
-                <SheetTrigger asChild>
-                    <button className="inline-flex flex-col items-center justify-center px-2 hover:bg-accent group rounded-lg">
-                        <Menu className="w-6 h-6 mb-1 text-muted-foreground group-hover:text-primary"/>
-                        <span className="text-xs text-muted-foreground group-hover:text-primary">المزيد</span>
-                    </button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-3/4 p-0">
-                  <ScrollArea className="h-full">
-                    <div className="flex flex-col p-4">
-                        <SheetClose asChild>
-                            <Link href="/" className="text-2xl font-bold font-headline mb-4 self-start">وقـــفــــة</Link>
-                        </SheetClose>
-                        
-                        <div className="flex flex-col gap-1">
-                          {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
-                              <SheetClose asChild key={item.label}>
-                                  <Link href={item.href} className="text-lg py-3 px-2 rounded-md font-medium text-foreground/80 hover:bg-accent hover:text-primary">
-                                      {item.label}
-                                  </Link>
-                              </SheetClose>
-                          ))}
-                        </div>
-                        
-                        <Separator className="my-4" />
-
-                        <div className="flex flex-col gap-2">
-                          <SheetClose asChild>
-                              <Button variant="outline" className="justify-between" onClick={() => setIsThemeSwitcherOpen(true)}>
-                                <span>تغيير الثيم</span>
-                                <Palette className="h-4 w-4" />
-                              </Button>
-                          </SheetClose>
-                          <SheetClose asChild>
-                            <Button variant="outline" className="justify-between" onClick={() => setIsFontSwitcherOpen(true)}>
-                                <span>تغيير الخط</span>
-                                <CaseSensitive className="h-4 w-4" />
-                            </Button>
-                          </SheetClose>
-                          <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                            <Label htmlFor="background-toggle-mobile" className="text-base">إظهار الخلفية</Label>
-                            <Switch
-                              id="background-toggle-mobile"
-                              checked={isBackgroundShown}
-                              onCheckedChange={toggleBackground}
-                            />
-                          </div>
-                           <SheetClose asChild>
-                                <Button variant="outline" className="justify-between" onClick={() => document.getElementById('background-uploader-input')?.click()}>
-                                    <span>تغيير الخلفية</span>
-                                    <ImageIcon className="h-4 w-4" />
-                                </Button>
-                            </SheetClose>
-                        </div>
-                        
-                        <Separator className="my-4" />
-
-                        <div className="flex flex-col gap-2">
-                          {isUserLoading ? (
-                              <Skeleton className="h-10 w-full" />
-                          ) : user ? (
-                              <>
-                                  <SheetClose asChild>
-                                      <Button variant="secondary" onClick={handleLogout}>تسجيل الخروج</Button>
-                                  </SheetClose>
-                              </>
-                          ) : (
-                              <SheetClose asChild>
-                                  <Button asChild><Link href="/auth/login">تسجيل الدخول</Link></Button>
-                              </SheetClose>
-                          )}
-                        </div>
-
-                    </div>
-                  </ScrollArea>
-              </SheetContent>
-            </Sheet>
         </div>
       </div>
 
