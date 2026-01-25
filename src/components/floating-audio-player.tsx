@@ -109,6 +109,58 @@ export function FloatingAudioPlayer() {
     }
   }
 
+  const handleEnded = useCallback(() => {
+    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    
+    if (user && firestore && track && audioRef.current) {
+        const userRef = doc(firestore, 'users', user.uid);
+        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
+        const currentTime = audioRef.current.currentTime;
+        const duration = audioRef.current.duration;
+
+        runTransaction(firestore, async (transaction) => {
+            const historyDoc = await transaction.get(historyRef);
+            const userDoc = await transaction.get(userRef);
+            
+            if (!userDoc.exists()) {
+                throw "User document does not exist!";
+            }
+            
+            const lastPosition = historyDoc.exists() ? historyDoc.data().position : 0;
+            const timeListened = currentTime - lastPosition;
+
+            // 1. Update listen history to mark as complete
+            transaction.set(historyRef, {
+                lectureId: track.id,
+                seriesId: track.seriesId,
+                position: currentTime,
+                duration: duration,
+                lastListened: Timestamp.now(),
+            }, { merge: true });
+
+            // 2. Prepare user profile updates
+            const userProfileUpdates: { [key: string]: any } = {
+                lecturesCompleted: increment(1)
+            };
+            
+            // 3. Add last bit of listening time
+            if (timeListened > 0 && timeListened < 20) { // Safety check
+                userProfileUpdates.minutesListened = increment(timeListened / 60);
+            }
+            
+            // 4. Commit all user updates in one go
+            transaction.update(userRef, userProfileUpdates);
+
+        }).catch(error => {
+            console.error("Transaction failed on lecture end:", error);
+        });
+    }
+
+    closePlayer();
+    clearSleepTimer();
+  }, [user, firestore, track, audioRef, closePlayer]);
+
+
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -123,19 +175,6 @@ export function FloatingAudioPlayer() {
       updateListenHistory();
     };
     
-    const handleEnded = () => {
-      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-      updateListenHistory();
-      
-       if (user && firestore && track) {
-            const userRef = doc(firestore, 'users', user.uid);
-            setDoc(userRef, { lecturesCompleted: increment(1) }, { merge: true });
-        }
-
-      closePlayer();
-      clearSleepTimer();
-    };
-
     audioElement.addEventListener('play', handlePlay);
     audioElement.addEventListener('pause', handlePause);
     audioElement.addEventListener('ended', handleEnded);
@@ -154,8 +193,7 @@ export function FloatingAudioPlayer() {
       }
       clearSleepTimer();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioRef, track, updateListenHistory, closePlayer, user, firestore]);
+  }, [audioRef, track, updateListenHistory, handleEnded]);
   
    useEffect(() => {
         const audioElement = audioRef.current;

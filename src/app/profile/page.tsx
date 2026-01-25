@@ -225,9 +225,11 @@ function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.floor(totalSeconds % 60);
     const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const lecturesCompleted = userProfile?.lecturesCompleted || 0;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
             <StatCard title="الدقائق التي استخدمت فيها التطبيق" value={formattedTime} icon={Clock} />
             <StatCard title="أطول مداومة مستمرة دون انقطاع" value="1" icon={Flame} />
         </div>
@@ -274,8 +276,6 @@ export default function ProfilePage() {
             />
         );
     }
-    
-    const lecturesCompleted = userProfile?.lecturesCompleted || 0;
 
     return (
         <div className="space-y-8">
@@ -299,13 +299,6 @@ export default function ProfilePage() {
                 </div>
             </header>
 
-            <section>
-                <h2 className="text-2xl font-bold mb-4 font-headline">إحصائياتي</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
-                </div>
-            </section>
-            
             <Separator />
 
             <Tabs defaultValue="history" className="w-full">

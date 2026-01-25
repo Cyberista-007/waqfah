@@ -161,6 +161,7 @@
         "properties": {
             "userId": { "type": "string" },
             "lectureId": { "type": "string" },
+            "seriesId": { "type": "string", "description": "The ID of the series this lecture belongs to, if any." },
             "position": { "type": "number", "minimum": 0 },
             "duration": { "type": "number", "minimum": 0 },
             "lastListened": { "type": "string", "format": "date-time" }
