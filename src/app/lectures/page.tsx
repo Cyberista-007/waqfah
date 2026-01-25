@@ -14,7 +14,7 @@ import { useCollection, useFirestore } from "@/firebase";
 import type { Lecture, Series, Channel } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo, useState } from "react";
-import { Dices, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function LecturesListPage() {
@@ -100,17 +100,6 @@ export default function LecturesListPage() {
 
   }, [allLectures, seriesFilter, channelFilter, sortOrder, searchTerm]);
 
-  const pickRandomLecture = () => {
-    if (!filteredLectures || filteredLectures.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * filteredLectures.length);
-    const randomLecture = filteredLectures[randomIndex];
-    if (randomLecture && randomLecture.id) {
-        // Use the slug for the URL, which is more SEO-friendly
-        const slug = randomLecture.slug || randomLecture.id;
-        router.push(`/lectures/${slug}`);
-    }
-  }
-
   const isLoading = lecturesLoading || seriesLoading || channelsLoading;
 
 
@@ -120,13 +109,7 @@ export default function LecturesListPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold font-headline">كل المحاضرات</h1>
-        <Button onClick={pickRandomLecture} variant="outline" size="lg" className="shrink-0">
-          <Dices className="me-2" />
-          اختر لي محاضرة
-        </Button>
-      </div>
+      <h1 className="text-4xl font-bold font-headline mb-8">كل المحاضرات</h1>
       
       <div className="mb-4 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
