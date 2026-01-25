@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -17,7 +18,10 @@ import {
   ListMusic,
   Youtube,
   Image as ImageIcon,
+  Home,
+  ListVideo,
 } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -72,11 +76,19 @@ const moreNavItems = [
   { href: "/contact", label: "تواصل معنا", icon: Mail },
 ]
 
+const mobileNavLinks = [
+    { href: '/', icon: Home, label: 'الرئيسية' },
+    { href: '/series', icon: ListVideo, label: 'السلاسل' },
+    { href: '/search', icon: Search, label: 'بحث' },
+    { href: '/profile', icon: UserIcon, label: 'حسابي' }
+];
+
 export function SiteHeader() {
   const scrolled = useScroll(50);
   const { user, isUserLoading } = useUser();
   const { isAdmin } = useAdminAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
   const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -104,89 +116,13 @@ export function SiteHeader() {
   
   return (
     <>
-    <AppearanceManager />
-    <header className={cn(
-        "sticky top-0 z-50 transition-all duration-300",
-        scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
-    )}>
-      <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-            <div className="md:hidden">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu className="h-6 w-6" />
-                            <span className="sr-only">فتح القائمة</span>
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="w-3/4 p-0">
-                        <ScrollArea className="h-full">
-                           <div className="flex flex-col p-4">
-                              <SheetClose asChild>
-                                  <Link href="/" className="text-2xl font-bold font-headline mb-4 self-start">وقـــفــــة</Link>
-                              </SheetClose>
-                              
-                              <div className="flex flex-col gap-1">
-                                {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
-                                    <SheetClose asChild key={item.label}>
-                                        <Link href={item.href} className="text-lg py-3 px-2 rounded-md font-medium text-foreground/80 hover:bg-accent hover:text-primary">
-                                            {item.label}
-                                        </Link>
-                                    </SheetClose>
-                                ))}
-                              </div>
-                              
-                              <Separator className="my-4" />
-
-                              <div className="flex flex-col gap-2">
-                                <SheetClose asChild>
-                                    <Button variant="outline" className="justify-between" onClick={() => setIsThemeSwitcherOpen(true)}>
-                                      <span>تغيير الثيم</span>
-                                      <Palette className="h-4 w-4" />
-                                    </Button>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                   <Button variant="outline" className="justify-between" onClick={() => setIsFontSwitcherOpen(true)}>
-                                      <span>تغيير الخط</span>
-                                      <CaseSensitive className="h-4 w-4" />
-                                   </Button>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                   <Button variant="outline" className="justify-between" asChild>
-                                      <Link href="/search">
-                                        <span>بحث</span>
-                                        <Search className="h-4 w-4" />
-                                      </Link>
-                                   </Button>
-                                </SheetClose>
-                              </div>
-                              
-                              <Separator className="my-4" />
-
-                              <div className="flex flex-col gap-2">
-                                {isUserLoading ? (
-                                    <Skeleton className="h-10 w-full" />
-                                ) : user ? (
-                                    <>
-                                        <SheetClose asChild>
-                                            <Button asChild><Link href="/profile">الملف الشخصي</Link></Button>
-                                        </SheetClose>
-                                         <SheetClose asChild>
-                                            <Button variant="secondary" onClick={handleLogout}>تسجيل الخروج</Button>
-                                        </SheetClose>
-                                    </>
-                                ) : (
-                                    <SheetClose asChild>
-                                        <Button asChild><Link href="/auth/login">تسجيل الدخول</Link></Button>
-                                    </SheetClose>
-                                )}
-                              </div>
-
-                           </div>
-                        </ScrollArea>
-                    </SheetContent>
-                </Sheet>
-            </div>
+      <AppearanceManager />
+      {/* Desktop Header */}
+      <header className={cn(
+          "sticky top-0 z-50 transition-all duration-300 hidden md:block",
+          scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
+      )}>
+        <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
             <Link
             href="/"
             className="flex items-center space-x-2 space-x-reverse cursor-pointer"
@@ -195,139 +131,204 @@ export function SiteHeader() {
                 وقـــفــــة
             </div>
             </Link>
-        </div>
-        
-        <div className="hidden md:flex flex-grow justify-center items-center gap-2">
-          {mainNavItems.map((item) => (
-            <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
-              <Link href={item.href}>
-                {item.label}
-              </Link>
-            </Button>
-          ))}
-            <HoverCard>
-                <HoverCardTrigger asChild>
-                    <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
-                        <span>المزيد</span>
-                        <ChevronDown className="h-4 w-4 ms-1"/>
-                    </Button>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-60 p-2 bg-background border-border">
-                    <div className="flex flex-col space-y-1">
-                      {dynamicMoreNavItems.map((item) => {
-                        const Icon = item.icon;
-                        return(
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none"
-                          >
-                              <span>{item.label}</span>
-                              {Icon && <Icon className="h-4 w-4" />}
-                          </Link>
-                        )
-                      })}
-                      <Separator className="my-1" />
-                       <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
-                         <span>تغيير الثيم</span>
-                         <Palette className="h-4 w-4" />
-                      </button>
-                       <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
-                         <span>تغيير الخط</span>
-                         <CaseSensitive className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => document.getElementById('background-uploader-input')?.click()} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
-                        <span>تغيير الخلفية</span>
-                        <ImageIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                </HoverCardContent>
-            </HoverCard>
-        </div>
-
-        <div className="flex items-center gap-2">
-           <Link href="/search" className='hidden sm:inline-block'>
-              <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
-                <Search className="h-5 w-5" />
-                <span className="sr-only">بحث</span>
-              </Button>
-           </Link>
           
-          <Button
-            onClick={toggleTheme}
-            variant="ghost"
-            size="icon"
-            aria-label="Toggle theme"
-            className="text-foreground/70 hover:text-primary"
-          >
-            <Palette className="h-5 w-5" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-
-          {isUserLoading ? (
-            <Skeleton className="w-10 h-10 rounded-full" />
-          ) : (
-            <>
-              { user ? (
-              <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                        <Avatar>
-                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
-                          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                        </Avatar>
+          <div className="flex flex-grow justify-center items-center gap-2">
+            {mainNavItems.map((item) => (
+              <Button asChild key={item.label} variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
+                <Link href={item.href}>
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+              <HoverCard>
+                  <HoverCardTrigger asChild>
+                      <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold">
+                          <span>المزيد</span>
+                          <ChevronDown className="h-4 w-4 ms-1"/>
                       </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-background border-border">
-                      <DropdownMenuItem asChild>
-                          <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
-                      </DropdownMenuItem>
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                            <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                          <LogOut className="me-2 h-4 w-4" />
-                          تسجيل الخروج
-                      </DropdownMenuItem>
-                  </DropdownMenuContent>
-              </DropdownMenu>
-              ) : (
-                 <Button asChild className='hidden sm:inline-flex'>
-                  <Link href="/auth/login">
-                    <span>تسجيل الدخول</span>
-                  </Link>
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-60 p-2 bg-background border-border">
+                      <div className="flex flex-col space-y-1">
+                        {dynamicMoreNavItems.map((item) => {
+                          const Icon = item.icon;
+                          return(
+                            <Link
+                              key={item.label}
+                              href={item.href}
+                              className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none"
+                            >
+                                <span>{item.label}</span>
+                                {Icon && <Icon className="h-4 w-4" />}
+                            </Link>
+                          )
+                        })}
+                        <Separator className="my-1" />
+                        <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                          <span>تغيير الثيم</span>
+                          <Palette className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                          <span>تغيير الخط</span>
+                          <CaseSensitive className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => document.getElementById('background-uploader-input')?.click()} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
+                          <span>تغيير الخلفية</span>
+                          <ImageIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                  </HoverCardContent>
+              </HoverCard>
+          </div>
 
-      </nav>
-        <ScrollArea className="md:hidden w-full whitespace-nowrap group">
-            <div className="w-[200%] flex animate-scroll-rtl group-hover:pause">
-                <div className="w-full flex-shrink-0 flex justify-around">
-                    {mainNavItems.map((item, index) => (
-                        <Button asChild key={`${item.label}-${index}-1`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
-                            <Link href={item.href}>{item.label}</Link>
+          <div className="flex items-center gap-2">
+            <Link href="/search">
+                <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-primary">
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">بحث</span>
+                </Button>
+            </Link>
+            
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="icon"
+              aria-label="Toggle theme"
+              className="text-foreground/70 hover:text-primary"
+            >
+              <Palette className="h-5 w-5" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+
+            {isUserLoading ? (
+              <Skeleton className="w-10 h-10 rounded-full" />
+            ) : (
+              <>
+                { user ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                          <Avatar>
+                            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
+                            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                          </Avatar>
                         </Button>
-                    ))}
-                </div>
-                <div className="w-full flex-shrink-0 flex justify-around">
-                     {mainNavItems.map((item, index) => (
-                        <Button asChild key={`${item.label}-${index}-2`} variant="ghost" className="text-foreground/80 hover:text-primary font-bold px-4">
-                            <Link href={item.href}>{item.label}</Link>
-                        </Button>
-                    ))}
-                </div>
-            </div>
-          <ScrollBar orientation="horizontal" className="invisible" />
-        </ScrollArea>
-    </header>
-    <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
-    <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-background border-border">
+                        <DropdownMenuItem asChild>
+                            <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
+                        </DropdownMenuItem>
+                        {isAdmin && (
+                          <DropdownMenuItem asChild>
+                              <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="me-2 h-4 w-4" />
+                            تسجيل الخروج
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                ) : (
+                  <Button asChild>
+                    <Link href="/auth/login">
+                      <span>تسجيل الدخول</span>
+                    </Link>
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        </nav>
+      </header>
+      
+      {/* Mobile Bottom Nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-background/95 border-t backdrop-blur-sm">
+        <div className="grid h-full grid-cols-5 mx-auto">
+            {mobileNavLinks.map((item) => {
+                const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
+                const href = (item.href === '/profile' && !user) ? '/auth/login' : item.href;
+                return (
+                    <Link key={item.label} href={href} className="inline-flex flex-col items-center justify-center px-2 hover:bg-accent group rounded-lg">
+                        <item.icon className={cn("w-6 h-6 mb-1 text-muted-foreground group-hover:text-primary", isActive && "text-primary")} />
+                        <span className={cn("text-xs text-muted-foreground group-hover:text-primary", isActive && "text-primary")}>{item.label}</span>
+                    </Link>
+                );
+            })}
+             <Sheet>
+                <SheetTrigger asChild>
+                    <button className="inline-flex flex-col items-center justify-center px-2 hover:bg-accent group rounded-lg">
+                        <Menu className="w-6 h-6 mb-1 text-muted-foreground group-hover:text-primary"/>
+                        <span className="text-xs text-muted-foreground group-hover:text-primary">المزيد</span>
+                    </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-3/4 p-0">
+                  <ScrollArea className="h-full">
+                    <div className="flex flex-col p-4">
+                        <SheetClose asChild>
+                            <Link href="/" className="text-2xl font-bold font-headline mb-4 self-start">وقـــفــــة</Link>
+                        </SheetClose>
+                        
+                        <div className="flex flex-col gap-1">
+                          {[...mainNavItems, ...dynamicMoreNavItems].map((item) => (
+                              <SheetClose asChild key={item.label}>
+                                  <Link href={item.href} className="text-lg py-3 px-2 rounded-md font-medium text-foreground/80 hover:bg-accent hover:text-primary">
+                                      {item.label}
+                                  </Link>
+                              </SheetClose>
+                          ))}
+                        </div>
+                        
+                        <Separator className="my-4" />
+
+                        <div className="flex flex-col gap-2">
+                          <SheetClose asChild>
+                              <Button variant="outline" className="justify-between" onClick={() => setIsThemeSwitcherOpen(true)}>
+                                <span>تغيير الثيم</span>
+                                <Palette className="h-4 w-4" />
+                              </Button>
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <Button variant="outline" className="justify-between" onClick={() => setIsFontSwitcherOpen(true)}>
+                                <span>تغيير الخط</span>
+                                <CaseSensitive className="h-4 w-4" />
+                            </Button>
+                          </SheetClose>
+                           <SheetClose asChild>
+                                <Button variant="outline" className="justify-between" onClick={() => document.getElementById('background-uploader-input')?.click()}>
+                                    <span>تغيير الخلفية</span>
+                                    <ImageIcon className="h-4 w-4" />
+                                </Button>
+                            </SheetClose>
+                        </div>
+                        
+                        <Separator className="my-4" />
+
+                        <div className="flex flex-col gap-2">
+                          {isUserLoading ? (
+                              <Skeleton className="h-10 w-full" />
+                          ) : user ? (
+                              <>
+                                  <SheetClose asChild>
+                                      <Button variant="secondary" onClick={handleLogout}>تسجيل الخروج</Button>
+                                  </SheetClose>
+                              </>
+                          ) : (
+                              <SheetClose asChild>
+                                  <Button asChild><Link href="/auth/login">تسجيل الدخول</Link></Button>
+                              </SheetClose>
+                          )}
+                        </div>
+
+                    </div>
+                  </ScrollArea>
+              </SheetContent>
+            </Sheet>
+        </div>
+      </div>
+
+      <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
+      <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
     </>
   )
 }

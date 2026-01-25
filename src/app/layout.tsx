@@ -44,7 +44,7 @@ export default function RootLayout({
         <AppProviders>
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
-              <main className="flex-1 container py-8">
+              <main className="flex-1 container py-8 pb-24 md:pb-8">
                 {children}
               </main>
               <SiteFooter />
