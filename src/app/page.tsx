@@ -1,13 +1,5 @@
 
-"use client";
-
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import type { FormEvent } from 'react';
-import { useCollection, useUser } from '@/firebase';
-import type { Series, Lecture, Channel } from '@/lib/types';
-import { HomePageSkeleton } from '@/components/skeletons';
+import { HomeSearch } from '@/components/home-search';
 import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
@@ -15,32 +7,46 @@ import { LectureCard } from '@/components/lecture-card';
 import { ChannelCard } from '@/components/channel-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
+import { getDbSafe } from '@/lib/data';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import type { Series, Lecture, Channel } from '@/lib/types';
+import { toSerializable } from '@/lib/data-helpers';
+import { Suspense } from 'react';
+import { HomePageSkeleton } from '@/components/skeletons';
 
-export default function Home() {
-  const router = useRouter();
-  const { user } = useUser();
+async function getHomePageData() {
+    const { db, isLive } = getDbSafe();
+    if (!isLive || !db) {
+        return { latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+    }
 
-  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
-  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 3 });
-  const { data: topChannels, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'], limit: 4 });
-  const { data: allChannels, isLoading: allChannelsLoading } = useCollection<Channel>('channels');
+    try {
+        const [seriesSnap, lecturesSnap, topChannelsSnap, allChannelsSnap] = await Promise.all([
+            getDocs(query(collection(db, 'series'), orderBy('createdAt', 'desc'), limit(3))),
+            getDocs(query(collection(db, 'lectures'), orderBy('createdAt', 'desc'), limit(3))),
+            getDocs(query(collection(db, 'channels'), orderBy('followerCount', 'desc'), limit(4))),
+            getDocs(query(collection(db, 'channels'))),
+        ]);
 
+        const latestSeries = seriesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+        const latestLectures = lecturesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+        const topChannels = topChannelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+        const allChannels = allChannelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
 
-  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const searchQuery = formData.get('search') as string;
-    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-  };
+        return { latestSeries, latestLectures, topChannels, allChannels };
+    } catch (error) {
+        console.error("Error fetching home page data:", error);
+        return { latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+    }
+}
 
-  if (seriesLoading || lecturesLoading || channelsLoading || allChannelsLoading) {
-    return <HomePageSkeleton />;
-  }
-
-  const heroImage = getPlaceholderImage('hero-background');
+export default async function Home() {
+    const { latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
+    const heroImage = getPlaceholderImage('hero-background');
 
   return (
-    <div className="space-y-12">
+    <Suspense fallback={<HomePageSkeleton />}>
+      <div className="space-y-12">
       <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center text-white rounded-b-3xl overflow-hidden">
         {heroImage && (
             <Image
@@ -60,28 +66,17 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
             منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.
           </p>
-          <div className="max-w-xl mx-auto">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Input
-                  type="search"
-                  name="search"
-                  placeholder="ابحث عن محاضرة، سلسلة، كتاب..."
-                  className="w-full p-6 pe-12 text-lg rounded-full shadow-lg focus:ring-2 focus:ring-ring border-2 border-transparent focus:border-primary transition-all duration-300 text-foreground"
-                  aria-label="بحث"
-                />
-                <button type="submit" className="absolute top-1/2 end-4 -translate-y-1/2 text-muted-foreground">
-                  <Search className="w-6 h-6" />
-                </button>
-              </div>
-            </form>
-          </div>
+          <HomeSearch />
         </div>
       </section>
 
       <div className="container py-8 space-y-16">
-        {user && <ContinueListening />}
-        {user && <RecommendedLectures />}
+        <Suspense>
+          <ContinueListening />
+        </Suspense>
+        <Suspense>
+          <RecommendedLectures />
+        </Suspense>
         
         <section>
           <h2 className="text-3xl font-bold mb-6 font-headline">أبرز القنوات</h2>
@@ -115,5 +110,6 @@ export default function Home() {
 
       </div>
     </div>
+    </Suspense>
   );
 }

@@ -1,5 +1,4 @@
 
-
 import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel, Sheikh } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
@@ -340,6 +339,23 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
 };
 
 // --- Channels ---
+export const getAllChannels = async (): Promise<Channel[]> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const channelsCol = collection(db, 'channels');
+        const q = query(channelsCol, orderBy('name', 'asc'));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+        }
+      } catch (error) {
+        console.error("Error fetching all channels:", error);
+      }
+  }
+  return [];
+};
+
 export const getChannelBySlug = async (slug: string): Promise<Channel | undefined> => {
   const { db, isLive } = getDbSafe();
   if (isLive && db) {
