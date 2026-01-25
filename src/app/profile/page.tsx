@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
@@ -256,8 +255,8 @@ export default function ProfilePage() {
             <h1 className="text-4xl font-bold font-headline flex items-center gap-3"><ListMusic className="h-9 w-9" />مكتبتي</h1>
 
             <Tabs defaultValue="history" className="w-full">
-              <div className="flex justify-center">
-                <TabsList className="h-auto p-1.5">
+              <div className="flex justify-center overflow-x-auto pb-2">
+                <TabsList className="h-auto p-1.5 shrink-0">
                   <TabsTrigger value="history" className="px-4 py-2 rounded-full flex items-center gap-2"><History className="h-5 w-5"/>أكمل الاستماع</TabsTrigger>
                   <TabsTrigger value="favorites" className="px-4 py-2 rounded-full flex items-center gap-2"><Heart className="h-5 w-5"/>المفضلة</TabsTrigger>
                   <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
