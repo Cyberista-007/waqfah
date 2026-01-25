@@ -14,6 +14,9 @@ import {
   Sparkles,
   User as UserIcon,
   Edit,
+  Book,
+  ListMusic,
+  Youtube,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -85,6 +88,10 @@ const SectionTitle = ({ title }: { title: string }) => (
 );
 
 function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void; onSelectNewEpisodes: () => void; }) {
+    const [newPrograms, setNewPrograms] = useState(true);
+    const [newPlaylists, setNewPlaylists] = useState(false);
+    const [newBooks, setNewBooks] = useState(true);
+
     return (
         <div>
             <SettingsHeader title="الإشعارات" onBack={onBack} />
@@ -99,6 +106,42 @@ function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void
                         <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                     </div>
                 </button>
+                <Separator />
+                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                    <Label htmlFor="switch-new-programs" className="text-lg cursor-pointer flex items-center gap-3">
+                        <Youtube className="w-6 h-6 me-4 text-muted-foreground" />
+                        عند صدور برامج جديدة
+                    </Label>
+                    <Switch
+                        id="switch-new-programs"
+                        checked={newPrograms}
+                        onCheckedChange={setNewPrograms}
+                    />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                    <Label htmlFor="switch-new-playlists" className="text-lg cursor-pointer flex items-center gap-3">
+                        <ListMusic className="w-6 h-6 me-4 text-muted-foreground" />
+                        عند صدور قوائم تشغيل جديدة
+                    </Label>
+                    <Switch
+                        id="switch-new-playlists"
+                        checked={newPlaylists}
+                        onCheckedChange={setNewPlaylists}
+                    />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                    <Label htmlFor="switch-new-books" className="text-lg cursor-pointer flex items-center gap-3">
+                        <Book className="w-6 h-6 me-4 text-muted-foreground" />
+                        عند صدور كتب جديدة
+                    </Label>
+                    <Switch
+                        id="switch-new-books"
+                        checked={newBooks}
+                        onCheckedChange={setNewBooks}
+                    />
+                </div>
             </div>
         </div>
     );
@@ -279,3 +322,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
