@@ -8,14 +8,23 @@ import {
   Headphones,
   History,
   Loader2,
+  LogOut,
   Sparkles,
-  User,
+  User as UserIcon,
+  Edit,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+import { getInitials } from '@/lib/utils';
+import { EditProfileForm } from '@/components/profile/edit-profile-form';
+import { signOut } from 'firebase/auth';
 
 const SettingsItem = ({
   icon: Icon,
@@ -46,7 +55,14 @@ const SectionTitle = ({ title }: { title: string }) => (
 
 export default function SettingsPage() {
     const { user, isUserLoading } = useUser();
+    const auth = useAuth();
+    const firestore = useFirestore();
     const router = useRouter();
+
+    const [isEditing, setIsEditing] = useState(false);
+
+    const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -54,12 +70,29 @@ export default function SettingsPage() {
         }
     }, [user, isUserLoading, router]);
 
-    if (isUserLoading || !user) {
+    const onLogout = async () => {
+        if (auth) {
+            await signOut(auth);
+            router.push('/');
+        }
+    }
+
+    if (isUserLoading || isProfileLoading || !user || !userProfile) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin" />
             </div>
         )
+    }
+
+    if (isEditing) {
+        return (
+            <EditProfileForm 
+                user={user} 
+                userProfile={userProfile}
+                onClose={() => setIsEditing(false)}
+            />
+        );
     }
 
   return (
@@ -68,7 +101,27 @@ export default function SettingsPage() {
         الإعدادات
       </h1>
 
-      <div className="space-y-2">
+      <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl">
+        <Avatar className="h-24 w-24">
+            <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
+            <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
+        </Avatar>
+        <div className="text-center sm:text-right">
+            <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+            <p className="text-muted-foreground">{user.email}</p>
+            {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
+            <div className="flex gap-2 mt-4 justify-center sm:justify-start">
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
+                </Button>
+                <Button onClick={onLogout} variant="secondary" size="sm">
+                    <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
+                </Button>
+            </div>
+        </div>
+      </header>
+
+      <div className="space-y-2 mt-8">
         <SectionTitle title="عام" />
         <div className="bg-card rounded-xl p-2">
           <SettingsItem icon={Bell} label="الإشعارات" />
@@ -82,8 +135,6 @@ export default function SettingsPage() {
 
         <SectionTitle title="الحساب" />
         <div className="bg-card rounded-xl p-2">
-          <SettingsItem icon={User} label="إعدادات الحساب" href="/profile" />
-          <Separator />
           <SettingsItem icon={Sparkles} label="اشتراك ثمانية" />
           <Separator />
           <SettingsItem icon={History} label="الإستيراد" />
