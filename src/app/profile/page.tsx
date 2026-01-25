@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
@@ -255,13 +256,15 @@ export default function ProfilePage() {
             <h1 className="text-4xl font-bold font-headline flex items-center gap-3"><ListMusic className="h-9 w-9" />مكتبتي</h1>
 
             <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="history"><History className="me-2"/>أكمل الاستماع</TabsTrigger>
-                <TabsTrigger value="favorites"><Heart className="me-2"/>المفضلة</TabsTrigger>
-                <TabsTrigger value="reports"><FileText className="me-2"/>تقارير</TabsTrigger>
-                <TabsTrigger value="playlists"><ListMusic className="me-2"/>قوائم التشغيل</TabsTrigger>
-                <TabsTrigger value="following"><Youtube className="me-2"/>القنوات المتابعة</TabsTrigger>
-              </TabsList>
+              <div className="flex justify-center">
+                <TabsList className="h-auto p-1.5">
+                  <TabsTrigger value="history" className="px-4 py-2 rounded-full flex items-center gap-2"><History className="h-5 w-5"/>أكمل الاستماع</TabsTrigger>
+                  <TabsTrigger value="favorites" className="px-4 py-2 rounded-full flex items-center gap-2"><Heart className="h-5 w-5"/>المفضلة</TabsTrigger>
+                  <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
+                  <TabsTrigger value="playlists" className="px-4 py-2 rounded-full flex items-center gap-2"><ListMusic className="h-5 w-5"/>قوائم التشغيل</TabsTrigger>
+                  <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Youtube className="h-5 w-5"/>القنوات المتابعة</TabsTrigger>
+                </TabsList>
+              </div>
               <TabsContent value="history" className="mt-6">
                 <ListenHistorySection />
               </TabsContent>

@@ -32,6 +32,7 @@ export default function AdminLecturesPage() {
     const firestore = useFirestore();
     const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
     const [selectedLectures, setSelectedLectures] = useState<string[]>([]);
+    const [isBatchConfirmOpen, setIsBatchConfirmOpen] = useState(false);
 
     const { data: allLectures, isLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
     const { data: allSeries } = useCollection<Series>('series');
@@ -162,19 +163,10 @@ export default function AdminLecturesPage() {
             </div>
             <div className="flex items-center gap-2">
                  {selectedLectures.length > 0 && (
-                    <DeleteConfirmationDialog 
-                      isOpen={true}
-                      onClose={() => {}}
-                      onConfirm={handleDeleteSelected}
-                      title={`حذف ${selectedLectures.length} محاضرة`}
-                      description={`هل أنت متأكد من رغبتك في حذف المحاضرات المحددة؟ لا يمكن التراجع عن هذا الإجراء.`}
-                      confirmButtonText="نعم، قم بالحذف"
-                    >
-                      <Button variant="destructive">
+                    <Button variant="destructive" onClick={() => setIsBatchConfirmOpen(true)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         حذف المحدد ({selectedLectures.length})
-                      </Button>
-                    </DeleteConfirmationDialog>
+                    </Button>
                 )}
                 <Button asChild>
                 <Link href="/admin/lectures/new">
@@ -253,6 +245,17 @@ export default function AdminLecturesPage() {
             )}
         </CardContent>
         </Card>
+        <DeleteConfirmationDialog 
+            isOpen={isBatchConfirmOpen}
+            onClose={() => setIsBatchConfirmOpen(false)}
+            onConfirm={async () => {
+                await handleDeleteSelected();
+                setIsBatchConfirmOpen(false);
+            }}
+            title={`حذف ${selectedLectures.length} محاضرة`}
+            description={`هل أنت متأكد من رغبتك في حذف المحاضرات المحددة؟ لا يمكن التراجع عن هذا الإجراء.`}
+            confirmButtonText="نعم، قم بالحذف"
+        />
       </>
     );
 }
