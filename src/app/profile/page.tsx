@@ -4,7 +4,7 @@
 
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle, Plus, Youtube } from "lucide-react";
+import { Loader2, User as UserIcon, Heart, LogOut, Edit, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -219,6 +219,21 @@ function FollowedChannelsSection() {
     );
 }
 
+function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
+    const totalSeconds = Math.floor((userProfile?.minutesListened || 0) * 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StatCard title="الدقائق التي استخدمت فيها التطبيق" value={formattedTime} icon={Clock} />
+            <StatCard title="أطول مداومة مستمرة دون انقطاع" value="1" icon={Flame} />
+        </div>
+    )
+}
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
@@ -260,8 +275,6 @@ export default function ProfilePage() {
         );
     }
     
-    const minutesListened = Math.floor(userProfile?.minutesListened || 0);
-    const hoursListened = (minutesListened / 60).toFixed(1);
     const lecturesCompleted = userProfile?.lecturesCompleted || 0;
 
     return (
@@ -289,7 +302,6 @@ export default function ProfilePage() {
             <section>
                 <h2 className="text-2xl font-bold mb-4 font-headline">إحصائياتي</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard title="ساعة استماع" value={hoursListened} icon={Clock} />
                     <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
                 </div>
             </section>
@@ -297,9 +309,10 @@ export default function ProfilePage() {
             <Separator />
 
             <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="history"><History className="me-2"/>أكمل الاستماع</TabsTrigger>
                 <TabsTrigger value="favorites"><Heart className="me-2"/>المفضلة</TabsTrigger>
+                <TabsTrigger value="reports"><FileText className="me-2"/>تقارير</TabsTrigger>
                 <TabsTrigger value="playlists"><ListMusic className="me-2"/>قوائم التشغيل</TabsTrigger>
                 <TabsTrigger value="following"><Youtube className="me-2"/>القنوات المتابعة</TabsTrigger>
               </TabsList>
@@ -308,6 +321,9 @@ export default function ProfilePage() {
               </TabsContent>
               <TabsContent value="favorites" className="mt-6">
                 <FavoritesSection />
+              </TabsContent>
+               <TabsContent value="reports" className="mt-6">
+                <ReportsSection userProfile={userProfile} />
               </TabsContent>
               <TabsContent value="playlists" className="mt-6">
                 <PlaylistsSection />

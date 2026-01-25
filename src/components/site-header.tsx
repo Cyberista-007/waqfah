@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -83,7 +84,7 @@ const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
     { href: '/channels', icon: Youtube, label: 'البرامج' },
     { href: '/search', icon: Search, label: 'بحث' },
-    { href: '/profile', icon: UserIcon, label: 'مكتبتي' },
+    { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
     { href: '/settings', icon: Settings, label: 'الإعدادات'}
 ];
 
