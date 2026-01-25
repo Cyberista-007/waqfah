@@ -17,7 +17,7 @@ import {
   Mail,
   ListMusic,
   Youtube,
-  Image as ImageIcon,
+  ImageIcon,
   Home,
   ListVideo,
 } from "lucide-react"
@@ -58,6 +58,9 @@ import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 import { Separator } from "./ui/separator"
 import { useTheme } from "next-themes"
 import { AppearanceManager } from "./appearance-manager"
+import { useAppearance } from "./appearance-provider"
+import { Switch } from "./ui/switch"
+import { Label } from "./ui/label"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -92,6 +95,7 @@ export function SiteHeader() {
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
   const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { isBackgroundShown, toggleBackground } = useAppearance();
 
   const toggleTheme = () => {
     const currentIndex = themes.findIndex((t) => t.value === theme);
@@ -171,6 +175,10 @@ export function SiteHeader() {
                           <span>تغيير الخط</span>
                           <CaseSensitive className="h-4 w-4" />
                         </button>
+                        <div className="flex justify-end w-full items-center gap-2 p-2 rounded-md">
+                            <Label htmlFor="desktop-bg-switch" className="cursor-pointer">إظهار الخلفية</Label>
+                            <Switch id="desktop-bg-switch" checked={isBackgroundShown} onCheckedChange={toggleBackground} />
+                        </div>
                         <button onClick={() => document.getElementById('background-uploader-input')?.click()} className="flex justify-end w-full items-center gap-2 p-2 rounded-md hover:bg-accent focus:bg-accent focus:outline-none">
                           <span>تغيير الخلفية</span>
                           <ImageIcon className="h-4 w-4" />
@@ -294,6 +302,14 @@ export function SiteHeader() {
                                 <CaseSensitive className="h-4 w-4" />
                             </Button>
                           </SheetClose>
+                          <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                            <Label htmlFor="background-toggle-mobile" className="text-base">إظهار الخلفية</Label>
+                            <Switch
+                              id="background-toggle-mobile"
+                              checked={isBackgroundShown}
+                              onCheckedChange={toggleBackground}
+                            />
+                          </div>
                            <SheetClose asChild>
                                 <Button variant="outline" className="justify-between" onClick={() => document.getElementById('background-uploader-input')?.click()}>
                                     <span>تغيير الخلفية</span>

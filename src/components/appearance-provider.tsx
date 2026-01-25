@@ -1,13 +1,14 @@
-
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 
 type AppearanceContextType = {
   font: string;
   setFont: (font: string) => void;
   background: string | null;
   setBackground: (background: string | null) => void;
+  isBackgroundShown: boolean;
+  toggleBackground: (shown: boolean) => void;
 };
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -15,26 +16,35 @@ const AppearanceContext = createContext<AppearanceContextType | undefined>(undef
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [font, setFont] = useState("font-body");
   const [background, setBackground] = useState<string | null>(null);
+  const [isBackgroundShown, setIsBackgroundShown] = useState(true);
 
-  useEffect(() => {
-    // Load font from localStorage
-    const storedFont = localStorage.getItem("site-font");
-    if (storedFont) {
-      setFont(storedFont);
-      document.body.classList.add(storedFont);
+  const applyBackground = useCallback(() => {
+    const customBg = localStorage.getItem("site-background");
+    if (customBg) {
+      document.body.style.backgroundImage = `url(${customBg})`;
+      document.body.classList.remove('body-background');
+      setBackground(customBg);
     } else {
-      document.body.classList.add(font);
+      document.body.style.backgroundImage = '';
+      document.body.classList.add('body-background');
+      setBackground(null);
     }
-
-    // Load background from localStorage
-    const storedBackground = localStorage.getItem("site-background");
-    if (storedBackground) {
-        handleSetBackground(storedBackground);
-    } else {
-        document.body.classList.add('body-background'); // Fallback to default
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const clearBackground = useCallback(() => {
+    document.body.style.backgroundImage = '';
+    document.body.classList.remove('body-background');
+  }, []);
+
+  const toggleBackground = useCallback((shown: boolean) => {
+    if (shown) {
+      applyBackground();
+    } else {
+      clearBackground();
+    }
+    setIsBackgroundShown(shown);
+    localStorage.setItem("site-background-shown", shown ? "true" : "false");
+  }, [applyBackground, clearBackground]);
 
   const handleSetFont = (newFont: string) => {
     // Remove old font class
@@ -51,16 +61,44 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
           document.body.style.backgroundImage = `url(${newBg})`;
           document.body.classList.remove('body-background');
           localStorage.setItem("site-background", newBg);
+          setBackground(newBg);
       } else {
-          document.body.style.backgroundImage = '';
-          document.body.classList.add('body-background');
+          // This case is now for restoring default, which applyBackground does.
           localStorage.removeItem("site-background");
+          applyBackground();
       }
-      setBackground(newBg);
-  }
+      // When a new background is set, always ensure it's shown
+      if (!isBackgroundShown) {
+        toggleBackground(true);
+      }
+  };
+
+  useEffect(() => {
+    // FONT
+    const storedFont = localStorage.getItem("site-font");
+    if (storedFont) {
+      setFont(storedFont);
+      document.body.classList.add(storedFont);
+    } else {
+      document.body.classList.add("font-body");
+    }
+
+    // BACKGROUND
+    const storedIsShown = localStorage.getItem("site-background-shown");
+    const show = storedIsShown !== "false"; // default to true
+    
+    if (show) {
+      setIsBackgroundShown(true);
+      applyBackground();
+    } else {
+      setIsBackgroundShown(false);
+      clearBackground();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground }}>
+    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground }}>
       {children}
     </AppearanceContext.Provider>
   );
