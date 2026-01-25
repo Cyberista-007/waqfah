@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, updateDocumentNonBlocking, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -279,4 +279,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
