@@ -16,6 +16,7 @@ import {
   Book,
   ListMusic,
   Youtube,
+  ImageIcon,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -285,7 +286,9 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3 justify-center sm:justify-start">
                 <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
                 {userProfile.role === 'admin' && (
-                    <Badge variant="destructive">وضع المدير</Badge>
+                  <Link href="/admin/dashboard">
+                    <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/80">وضع المدير</Badge>
+                  </Link>
                 )}
             </div>
             <p className="text-muted-foreground">{user.email}</p>
