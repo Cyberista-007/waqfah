@@ -9,8 +9,7 @@
     "build": "rimraf .next && NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "patch-package"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
@@ -51,9 +50,8 @@
     "googleapis": "^140.0.1",
     "jose": "^5.6.3",
     "lucide-react": "^0.475.0",
-    "next": "^16.1.4",
+    "next": "^14.2.4",
     "next-themes": "^0.3.0",
-    "patch-package": "^8.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.1",
