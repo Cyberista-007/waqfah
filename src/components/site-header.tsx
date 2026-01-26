@@ -117,7 +117,7 @@ export function SiteHeader() {
   }
   
   const dynamicMoreNavItems = isAdmin
-    ? [...moreNavItems, { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard }]
+    ? [...moreNavItems, { href: "/admin/dashboard", label: "لوحة التحكم", icon: LayoutDashboard }]
     : moreNavItems;
   
   return (
@@ -232,7 +232,7 @@ export function SiteHeader() {
                         </DropdownMenuItem>
                         {isAdmin && (
                           <DropdownMenuItem asChild>
-                              <Link href="/admin"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                              <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
@@ -276,3 +276,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    
