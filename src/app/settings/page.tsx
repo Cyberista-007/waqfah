@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -33,6 +32,7 @@ import { signOut } from 'firebase/auth';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
     <div className="flex items-center gap-2 mb-4">
@@ -282,7 +282,12 @@ export default function SettingsPage() {
             <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
         </Avatar>
         <div className="text-center sm:text-right">
-            <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+            <div className="flex items-center gap-3 justify-center sm:justify-start">
+                <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+                {userProfile.role === 'admin' && (
+                    <Badge variant="destructive">وضع المدير</Badge>
+                )}
+            </div>
             <p className="text-muted-foreground">{user.email}</p>
             {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
             <div className="flex gap-2 mt-4 justify-center sm:justify-start">
@@ -322,5 +327,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
