@@ -111,7 +111,7 @@ export default function AdminImportLecturesPage() {
     const handleFetchFromYoutube = async (urlToFetch?: string) => {
         const finalUrl = urlToFetch || youtubeUrl;
         if (!finalUrl) {
-            toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أو قائمة التشغيل." });
+            toast({ variant: "destructive", title: "الرجاء إدخال رابط البرنامج أو قائمة التشغيل." });
             return;
         }
 
@@ -382,7 +382,7 @@ export default function AdminImportLecturesPage() {
                     <TabsContent value="youtube" className="mt-6">
                         <div className="space-y-4">
                             <div>
-                                <Label htmlFor="youtube-url">رابط قناة أو قائمة تشغيل يوتيوب</Label>
+                                <Label htmlFor="youtube-url">رابط برنامج أو قائمة تشغيل يوتيوب</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         id="youtube-url"
@@ -396,7 +396,7 @@ export default function AdminImportLecturesPage() {
                                         {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                                     </Button>
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-2">إذا كانت القناة غير مضافة، سيتم توجيهك لإضافتها أولاً.</p>
+                                <p className="text-sm text-muted-foreground mt-2">إذا كان البرنامج غير مضاف، سيتم توجيهك لإضافته أولاً.</p>
                             </div>
                             {hasFetchedYoutubeData && (
                                  <Tabs defaultValue="youtube-videos" className="w-full mt-4" onValueChange={setActiveTab}>
@@ -426,10 +426,10 @@ export default function AdminImportLecturesPage() {
                                                 </Select>
                                             </div>
                                              <div>
-                                                <Label htmlFor="target-channel">اختر القناة</Label>
+                                                <Label htmlFor="target-channel">اختر البرنامج</Label>
                                                 <Select value={targetChannelId} onValueChange={setTargetChannelId}>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="اختر قناة..." />
+                                                        <SelectValue placeholder="اختر برنامج..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}

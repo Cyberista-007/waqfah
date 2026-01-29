@@ -161,14 +161,14 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
           await updateDocumentNonBlocking(itemRef, itemData);
           toast({
               title: "تم التحديث بنجاح",
-              description: `تم تحديث بيانات القناة "${name}".`,
+              description: `تم تحديث بيانات البرنامج "${name}".`,
           });
         } else {
             // Using addDocumentNonBlocking for creation
             await addDocumentNonBlocking(collection(firestore, 'channels'), itemData);
             toast({
               title: "تم الإنشاء بنجاح",
-              description: `تمت إضافة القناة "${name}" الجديدة.`,
+              description: `تمت إضافة البرنامج "${name}" الجديد.`,
             });
         }
         onFormClose();
@@ -177,7 +177,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
          toast({
             variant: "destructive",
             title: "خطأ",
-            description: "فشل حفظ بيانات القناة.",
+            description: "فشل حفظ بيانات البرنامج.",
         });
     } finally {
         setIsSubmitting(false);
@@ -187,9 +187,9 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">{isEditMode ? `تعديل القناة: ${item?.name}` : 'إضافة قناة جديدة'}</CardTitle>
+        <CardTitle className="font-headline">{isEditMode ? `تعديل البرنامج: ${item?.name}` : 'إضافة برنامج جديد'}</CardTitle>
         <CardDescription>
-          املأ الحقول أدناه لإنشاء أو تعديل قناة. يمكنك جلب البيانات تلقائيًا من يوتيوب.
+          املأ الحقول أدناه لإنشاء أو تعديل برنامج. يمكنك جلب البيانات تلقائيًا من يوتيوب.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -200,7 +200,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
                   <AvatarFallback className="text-3xl">{getInitials(item?.name || nameRef.current?.value)}</AvatarFallback>
               </Avatar>
               <div>
-                <Label htmlFor="image">صورة القناة</Label>
+                <Label htmlFor="image">صورة البرنامج</Label>
                 <Input
                   id="image"
                   name="image"
@@ -221,17 +221,17 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
             </div>
           </div>
           <div>
-            <Label htmlFor="name">اسم القناة</Label>
+            <Label htmlFor="name">اسم البرنامج</Label>
             <Input id="name" name="name" defaultValue={item?.name} required disabled={isSubmitting} ref={nameRef} />
           </div>
           <div>
-            <Label htmlFor="description">وصف القناة (اختياري)</Label>
+            <Label htmlFor="description">وصف البرنامج (اختياري)</Label>
             <Textarea id="description" name="description" defaultValue={item?.description} disabled={isSubmitting} rows={4} ref={descriptionRef}/>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditMode ? 'حفظ التغييرات' : 'إنشاء القناة'}
+                {isEditMode ? 'حفظ التغييرات' : 'إنشاء البرنامج'}
             </Button>
             <Button type="button" onClick={onFormClose} variant="outline">
               إلغاء
