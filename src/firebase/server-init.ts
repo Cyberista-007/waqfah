@@ -15,10 +15,17 @@ interface FirebaseAdminConfig extends AppOptions {
 let serverApp: FirebaseApp | null = null;
 let initError: Error | null = null;
 
-// Determine if credentials are available at the module level.
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+let serviceAccount: any;
+try {
+    serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
         ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
         : undefined;
+} catch (e) {
+    // If JSON parsing fails, we immediately know the env var is malformed.
+    // Throw a specific, helpful error.
+    initError = new Error(`Failed to parse FIREBASE_SERVICE_ACCOUNT. Please ensure it is a valid, single-line JSON string. Raw value starts with: "${(process.env.FIREBASE_SERVICE_ACCOUNT || '').substring(0, 50)}..."`);
+}
+
 const credentialsAvailable = !!serviceAccount || !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 

@@ -9,10 +9,9 @@ export const getDbSafe = () => {
     try {
         // This can throw if credentials are not available.
         const { serverFirestore } = initializeFirebaseOnServer();
-        return { db: serverFirestore, isLive: true };
-    } catch(e) {
-        // console.warn("Could not connect to live DB, falling back to dummy data.", e);
-        return { db: null, isLive: false };
+        return { db: serverFirestore, isLive: true, error: null };
+    } catch(e: any) {
+        return { db: null, isLive: false, error: e.message || 'An unknown error occurred during Firebase server initialization.' };
     }
 }
 
@@ -263,13 +262,13 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     return [];
 }
 
-export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[] }> {
-    const { isLive } = getDbSafe();
+export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[], error: string | null }> {
+    const { isLive, error } = getDbSafe();
     if (!isLive) {
-      return { isLive: false, lectures: [], series: [], programs: [], channels: [], books: [] };
+      return { isLive: false, lectures: [], series: [], programs: [], channels: [], books: [], error };
     }
     if (!searchTerm) {
-        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [] };
+        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [], error: null };
     }
     
     const searchTermLower = searchTerm.toLowerCase();
@@ -310,10 +309,10 @@ export async function searchContent(searchTerm: string): Promise<{ isLive: boole
             (b.title || '').toLowerCase().includes(searchTermLower)
         );
 
-        return { isLive: true, lectures, series, programs, channels, books };
+        return { isLive: true, lectures, series, programs, channels, books, error: null };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [] };
+        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [], error: (error as Error).message };
     }
 }
 

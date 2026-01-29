@@ -8,21 +8,27 @@ import { SeriesCard } from "@/components/series-card";
 import { ProgramCard } from "@/components/program-card";
 import { ChannelCard } from "@/components/channel-card";
 import { BookCard } from "@/components/book-card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { isLive, lectures, series, programs, channels, books } = await searchContent(searchTerm);
+    const { isLive, lectures, series, programs, channels, books, error } = await searchContent(searchTerm);
 
     if (!isLive) {
         return (
              <div className="container py-8 text-center">
-                <div className="p-8 bg-destructive/10 border border-destructive rounded-lg">
-                    <h2 className="text-2xl font-bold text-destructive">خطأ في الاتصال بقاعدة البيانات</h2>
-                    <p className="text-destructive/80 mt-2">
-                        فشل الخادم في الاتصال بـ Firebase. يرجى التأكد من تعيين متغير البيئة `FIREBASE_SERVICE_ACCOUNT` بشكل صحيح.
-                        <br />
-                        راجع ملف `DEPLOYMENT.md` للحصول على الإرشادات.
-                    </p>
-                </div>
+                <Card className="p-8 bg-destructive/10 border-destructive">
+                    <CardHeader>
+                        <CardTitle className="text-destructive font-headline">خطأ في الاتصال بقاعدة البيانات</CardTitle>
+                        <CardDescription className="text-destructive/80 space-y-4">
+                           <p>فشل الخادم في الاتصال بـ Firebase. هذا يعني عادةً أن متغير البيئة `FIREBASE_SERVICE_ACCOUNT` غير معين بشكل صحيح.</p>
+                           <p><strong>الخطأ المحدد هو:</strong></p>
+                           <pre className="p-4 bg-black/50 rounded-md text-left text-white font-code whitespace-pre-wrap text-sm">
+                            {error}
+                           </pre>
+                           <p>يرجى مراجعة ملف `DEPLOYMENT.md` للحصول على الإرشادات التفصيلية حول كيفية إعداد حساب الخدمة.</p>
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
             </div>
         )
     }

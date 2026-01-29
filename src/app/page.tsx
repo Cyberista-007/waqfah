@@ -16,9 +16,9 @@ import { HomePageSkeleton } from '@/components/skeletons';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 async function getHomePageData() {
-    const { db, isLive } = getDbSafe();
+    const { db, isLive, error } = getDbSafe();
     if (!isLive || !db) {
-        return { isLive, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+        return { isLive, error, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
     }
 
     try {
@@ -45,15 +45,15 @@ async function getHomePageData() {
             .sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0))
             .slice(0, 4);
 
-        return { isLive, latestSeries, latestLectures, topChannels, allChannels };
+        return { isLive, error: null, latestSeries, latestLectures, topChannels, allChannels };
     } catch (error) {
         console.error("Error fetching home page data:", error);
-        return { isLive: true, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+        return { isLive: true, error: (error as Error).message, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
     }
 }
 
 export default async function Home() {
-    const { isLive, latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
+    const { isLive, error, latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
 
     if (!isLive) {
@@ -62,10 +62,13 @@ export default async function Home() {
                 <Card className="p-8 bg-destructive/10 border-destructive">
                     <CardHeader>
                         <CardTitle className="text-destructive font-headline">خطأ في الاتصال بقاعدة البيانات</CardTitle>
-                        <CardDescription className="text-destructive/80">
-                            فشل الخادم في الاتصال بـ Firebase. يرجى التأكد من تعيين متغير البيئة `FIREBASE_SERVICE_ACCOUNT` بشكل صحيح.
-                            <br />
-                            راجع ملف `DEPLOYMENT.md` للحصول على الإرشادات.
+                        <CardDescription className="text-destructive/80 space-y-4">
+                           <p>فشل الخادم في الاتصال بـ Firebase. هذا يعني عادةً أن متغير البيئة `FIREBASE_SERVICE_ACCOUNT` غير معين بشكل صحيح.</p>
+                           <p><strong>الخطأ المحدد هو:</strong></p>
+                           <pre className="p-4 bg-black/50 rounded-md text-left text-white font-code whitespace-pre-wrap text-sm">
+                            {error}
+                           </pre>
+                           <p>يرجى مراجعة ملف `DEPLOYMENT.md` للحصول على الإرشادات التفصيلية حول كيفية إعداد حساب الخدمة.</p>
                         </CardDescription>
                     </CardHeader>
                 </Card>
