@@ -209,18 +209,19 @@ export const getDbSafe = () => {
 }
 
 export async function getHomePageData() {
-    const [allSeries, allLectures, allChannels] = await Promise.all([
+    const [allSeries, allLectures, allPrograms, allChannels] = await Promise.all([
         getAllSeries(),
         getAllLectures(),
+        getAllPrograms(),
         getAllChannels(),
     ]);
 
     // Sorting is already handled in the getAll... functions
     const latestSeries = allSeries.slice(0, 3);
     const latestLectures = allLectures.slice(0, 3);
-    const topChannels = allChannels.slice(0, 4);
+    const topPrograms = allPrograms.slice(0, 4);
 
-    return { latestSeries, latestLectures, topChannels, allChannels };
+    return { latestSeries, latestLectures, topPrograms, allChannels };
 }
 
 

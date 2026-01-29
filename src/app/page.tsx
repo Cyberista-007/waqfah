@@ -4,7 +4,7 @@ import { RecommendedLectures } from '@/components/recommended-lectures';
 import { ContinueListening } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
-import { ChannelCard } from '@/components/channel-card';
+import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { getHomePageData } from '@/lib/data';
@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
 
 export default async function Home() {
-    const { latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
+    const { latestSeries, latestLectures, topPrograms, allChannels } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
 
   return (
@@ -50,10 +50,10 @@ export default async function Home() {
         </Suspense>
         
         <section>
-          <h2 className="text-3xl font-bold mb-6 font-headline">أبرز القنوات</h2>
+          <h2 className="text-3xl font-bold mb-6 font-headline">أبرز البرامج</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-             {topChannels?.map((channel, index) => (
-                <ChannelCard channel={channel} key={channel.id} index={index}/>
+             {topPrograms?.map((program, index) => (
+                <ProgramCard program={program} key={program.id} index={index}/>
             ))}
           </div>
         </section>
