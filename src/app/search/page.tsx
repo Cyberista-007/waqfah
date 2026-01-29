@@ -8,7 +8,31 @@ import { ProgramCard } from "@/components/program-card";
 import { BookCard } from "@/components/book-card";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { lectures, series, programs, books } = await searchContent(searchTerm);
+    const { lectures, series, programs, books, isLive, error } = await searchContent(searchTerm);
+
+    if (!isLive) {
+    return (
+      <div className="container py-10">
+        <div className="rounded-lg border text-card-foreground shadow-sm p-8 bg-destructive/10 border-destructive">
+          <h2 className="text-2xl font-bold text-destructive-foreground font-headline mb-4">
+            خطأ في الاتصال بقاعدة البيانات
+          </h2>
+          <p className="text-destructive-foreground/90 mb-4">
+            فشل الخادم في الاتصال بـ Firebase. هذا يعني أن وظيفة البحث ستعمل على البيانات التجريبية فقط.
+          </p>
+          <div className="bg-destructive/20 p-4 rounded-md text-destructive-foreground">
+            <h3 className="font-bold mb-2">الخطأ الفني:</h3>
+            <pre className="whitespace-pre-wrap font-mono text-sm">
+              {error || 'No specific error message available.'}
+            </pre>
+          </div>
+          <p className="mt-4 text-destructive-foreground/90">
+            للاتصال بقاعدة البيانات الحقيقية، يرجى التأكد من تعيين متغير البيئة <code className="font-mono bg-destructive/30 px-1 py-0.5 rounded">FIREBASE_SERVICE_ACCOUNT</code> بشكل صحيح.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
     const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || books.length > 0;
 
