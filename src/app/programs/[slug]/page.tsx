@@ -1,5 +1,6 @@
+'use client';
 
-import { notFound } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import type { Program, Lecture, Series } from '@/lib/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
@@ -8,30 +9,46 @@ import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
-import { getProgramBySlug, getLecturesByProgram, getSeriesByProgram } from '@/lib/data';
-import { Users } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
+import { useCollection } from '@/firebase';
+import { useMemo } from 'react';
+import { HomePageSkeleton } from '@/components/skeletons';
 
+export default function ProgramPage() {
+    const params = useParams();
+    const slug = params.slug as string;
 
-async function getProgramData(slug: string) {
-    const program = await getProgramBySlug(slug);
+    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
 
-    if (!program) {
-        return { program: null, lectures: [], series: [] };
+    const isLoading = programsLoading || lecturesLoading || seriesLoading;
+
+    const { program, lectures, series } = useMemo(() => {
+        if (isLoading || !allPrograms || !allLectures || !allSeries) {
+            return { program: null, lectures: [], series: [] };
+        }
+        
+        const currentProgram = allPrograms.find(p => p.slug === slug);
+
+        if (!currentProgram) {
+            return { program: null, lectures: [], series: [] };
+        }
+
+        const programLectures = allLectures.filter(l => l.programId === currentProgram.id);
+        const programSeries = allSeries.filter(s => s.programId === currentProgram.id);
+
+        return { program: currentProgram, lectures: programLectures, series: programSeries };
+
+    }, [isLoading, allPrograms, allLectures, allSeries, slug]);
+
+    if (isLoading) {
+        return <HomePageSkeleton />;
     }
-    
-    const [lectures, series] = await Promise.all([
-        getLecturesByProgram(program.id),
-        getSeriesByProgram(program.id),
-    ]);
-
-    return { program, lectures, series };
-}
-
-export default async function ProgramPage({ params }: { params: { slug: string } }) {
-    const { program, lectures, series } = await getProgramData(params.slug);
 
     if (!program) {
         notFound();
+        return null;
     }
 
     const placeholder = getPlaceholderImage(program.imageId);

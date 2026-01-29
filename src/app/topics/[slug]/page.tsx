@@ -1,38 +1,53 @@
+'use client';
 
-import { notFound } from 'next/navigation';
-import { getTopicBySlug, getLecturesByIds, getSeriesByIds } from '@/lib/data';
+import { useParams, notFound } from 'next/navigation';
+import { useCollection } from '@/firebase';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
-import { Hash } from 'lucide-react';
+import { Hash, Loader2 } from 'lucide-react';
+import type { Topic, Lecture, Series } from '@/lib/types';
+import { useMemo } from 'react';
+import { HomePageSkeleton } from '@/components/skeletons';
 
-type TopicDetailPageProps = {
-  params: {
-    slug: string;
-  };
-};
+export default function TopicDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
 
-export async function generateMetadata({ params }: TopicDetailPageProps) {
-  const topic = await getTopicBySlug(params.slug);
-  if (!topic) {
-    return { title: 'الموضوع غير موجود' };
+  const { data: allTopics, isLoading: topicsLoading } = useCollection<Topic>('topics');
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+
+  const isLoading = topicsLoading || lecturesLoading || seriesLoading;
+
+  const { topic, lectures, series } = useMemo(() => {
+    if (isLoading || !allTopics || !allLectures || !allSeries) {
+      return { topic: null, lectures: [], series: [] };
+    }
+
+    const currentTopic = allTopics.find(t => t.slug === slug);
+    if (!currentTopic) {
+      return { topic: null, lectures: [], series: [] };
+    }
+
+    const topicLectures = (currentTopic.lectureIds || [])
+      .map(id => allLectures.find(l => l.id === id))
+      .filter((l): l is Lecture => !!l);
+      
+    const topicSeries = (currentTopic.seriesIds || [])
+      .map(id => allSeries.find(s => s.id === id))
+      .filter((s): s is Series => !!s);
+
+    return { topic: currentTopic, lectures: topicLectures, series: topicSeries };
+  }, [isLoading, allTopics, allLectures, allSeries, slug]);
+
+  if (isLoading) {
+    return <HomePageSkeleton />;
   }
-  return {
-    title: `موضوع: ${topic.name}`,
-    description: topic.description,
-  };
-}
-
-export default async function TopicDetailPage({ params }: TopicDetailPageProps) {
-  const topic = await getTopicBySlug(params.slug);
 
   if (!topic) {
     notFound();
+    return null;
   }
-
-  const [lectures, series] = await Promise.all([
-    getLecturesByIds(topic.lectureIds),
-    getSeriesByIds(topic.seriesIds),
-  ]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-12">

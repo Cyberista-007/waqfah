@@ -1,26 +1,55 @@
-import { getAllPublicPlaylists } from '@/lib/data';
+'use client';
 import type { Playlist, UserProfile } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { ListMusic, User, Play } from 'lucide-react';
+import { ListMusic, Play, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-
-export const metadata = {
-  title: 'قوائم التشغيل العامة',
-  description: 'اكتشف قوائم التشغيل التي أنشأها المستخدمون الآخرون.',
-};
-
-// Revalidate this page every 15 minutes
-export const revalidate = 900;
+import { useCollection } from '@/firebase';
+import { useMemo } from 'react';
 
 interface PublicPlaylist extends Playlist {
     userProfile?: UserProfile;
 }
 
-export default async function PublicPlaylistsPage() {
-    const playlists: PublicPlaylist[] = await getAllPublicPlaylists();
+function PublicPlaylistsSkeleton() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+                <Card key={i} className="rounded-xl flex flex-col justify-between">
+                    <CardHeader>
+                        <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                         <div className="flex items-center gap-2 pt-1">
+                            <div className="h-6 w-6 rounded-full bg-muted"></div>
+                            <div className="h-4 bg-muted rounded w-1/4"></div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className='flex justify-between items-center'>
+                       <div className="h-4 bg-muted rounded w-1/3"></div>
+                       <div className="h-9 w-24 bg-muted rounded-full"></div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    )
+}
+
+export default function PublicPlaylistsPage() {
+    const { data: playlists, isLoading: playlistsLoading } = useCollection<Playlist>(null, { where: ['isPublic', '==', true], limit: 30 });
+    const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users');
+    
+    const playlistsWithUsers = useMemo(() => {
+        if (!playlists || !users) return [];
+        const userMap = new Map(users.map(u => [u.id, u]));
+        return playlists.map(p => ({
+            ...p,
+            userProfile: userMap.get(p.userId)
+        })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    }, [playlists, users]);
+
+    const isLoading = playlistsLoading || usersLoading;
 
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
@@ -29,9 +58,11 @@ export default async function PublicPlaylistsPage() {
                 قوائم التشغيل العامة
             </h1>
             
-            {playlists.length > 0 ? (
+            {isLoading ? (
+                <PublicPlaylistsSkeleton />
+            ) : playlistsWithUsers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {playlists.map((playlist, index) => (
+                    {playlistsWithUsers.map((playlist, index) => (
                         <Card 
                             key={playlist.id} 
                             className="transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
@@ -71,5 +102,3 @@ export default async function PublicPlaylistsPage() {
         </div>
     );
 }
-
-    

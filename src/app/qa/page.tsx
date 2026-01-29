@@ -1,3 +1,4 @@
+'use client';
 import {
   Accordion,
   AccordionContent,
@@ -9,17 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { getAllQAPairs } from '@/lib/data';
+import type { QAPair } from '@/lib/types';
+import { useCollection } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
-export const metadata = {
-    title: 'سؤال وجواب',
-};
-
-// Revalidate this page every hour
-export const revalidate = 3600;
-
-export default async function QAPage() {
-  const qanda = await getAllQAPairs();
+export default function QAPage() {
+  const { data: qanda, isLoading } = useCollection<QAPair>('question_answers');
 
   return (
     <div>
@@ -48,16 +44,24 @@ export default async function QAPage() {
 
         <div className="space-y-2">
           <h2 className="text-3xl font-bold mb-4 font-headline">الأسئلة الشائعة</h2>
-          <Accordion type="single" collapsible className="w-full">
-            {qanda.map(item => (
-              <AccordionItem value={item.id} key={item.id}>
-                <AccordionTrigger className="text-lg text-right font-semibold font-headline">{item.question}</AccordionTrigger>
-                <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+            {isLoading ? (
+                <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+            ) : (
+              <Accordion type="single" collapsible className="w-full">
+                {qanda && qanda.length > 0 ? (
+                    qanda.map(item => (
+                      <AccordionItem value={item.id} key={item.id}>
+                        <AccordionTrigger className="text-lg text-right font-semibold font-headline">{item.question}</AccordionTrigger>
+                        <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))
+                ) : (
+                    <p className="text-muted-foreground text-center py-8">لا توجد أسئلة شائعة حالياً.</p>
+                )}
+              </Accordion>
+            )}
         </div>
       </div>
     </div>

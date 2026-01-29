@@ -1,3 +1,4 @@
+'use client';
 
 import { HomeSearch } from '@/components/home-search';
 import { RecommendedLectures } from '@/components/recommended-lectures';
@@ -7,17 +8,25 @@ import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import { getHomePageData } from '@/lib/data';
 import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { ConnectionWarning } from '@/components/connection-warning';
+import { useCollection } from '@/firebase';
+import type { Lecture, Series, Program } from '@/lib/types';
 
-export default async function Home() {
-    const { latestSeries, latestLectures, topPrograms, isLive, error } = await getHomePageData();
+export default function Home() {
     const heroImage = getPlaceholderImage('hero-background');
 
-  return (
-    <Suspense fallback={<HomePageSkeleton />}>
+    const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 3 });
+    const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 3 });
+    const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 4 });
+
+    const isLoading = seriesLoading || lecturesLoading || programsLoading;
+
+    if (isLoading) {
+        return <HomePageSkeleton />;
+    }
+
+    return (
       <div className="space-y-12">
       <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center text-white rounded-b-3xl overflow-hidden">
         {heroImage && (
@@ -41,8 +50,6 @@ export default async function Home() {
           <HomeSearch />
         </div>
       </section>
-
-      {!isLive && <ConnectionWarning error={error} />}
 
       <div className="container py-8 space-y-16">
         <Suspense>
@@ -83,6 +90,5 @@ export default async function Home() {
 
       </div>
     </div>
-    </Suspense>
-  );
+    );
 }

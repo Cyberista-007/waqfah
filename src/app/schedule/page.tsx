@@ -1,22 +1,19 @@
+'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { getAllScheduleItems } from '@/lib/data';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Loader2 } from 'lucide-react';
 import type { ScheduleItem } from '@/lib/types';
-
-export const metadata = {
-    title: 'جدول الدروس',
-};
-
-// Revalidate this page every hour
-export const revalidate = 3600;
+import { useCollection } from '@/firebase';
 
 function generateICSLink(item: ScheduleItem) {
-    if (!item.dateTime?.toDate) return '#';
+    if (!item.dateTime) return '#';
 
-    const startTime = item.dateTime.toDate();
+    // Assuming dateTime is a string, convert to Date object
+    const startTime = new Date(item.dateTime);
+    if (isNaN(startTime.getTime())) return '#'; // Invalid date
+
     const endTime = new Date(startTime.getTime() + (item.duration || 60) * 60 * 1000); // Default to 60 minutes if no duration
 
     const toICSFormat = (date: Date) => {
@@ -38,9 +35,18 @@ function generateICSLink(item: ScheduleItem) {
     return `data:text/calendar;charset=utf8,${event}`;
 }
 
+export default function SchedulePage() {
+  const { data: scheduleItems, isLoading } = useCollection<ScheduleItem>('scheduled_lessons', { orderBy: ['dateTime', 'desc']});
 
-export default async function SchedulePage() {
-  const scheduleItems = await getAllScheduleItems();
+  const formattedItems = scheduleItems?.map(item => {
+    if (!item.dateTime) return { ...item, date: 'غير محدد', time: '' };
+    const date = new Date(item.dateTime);
+    return {
+        ...item,
+        date: date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        time: date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+    }
+  });
 
   return (
     <div>
@@ -52,34 +58,37 @@ export default async function SchedulePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {scheduleItems.map((item, index) => (
-              <div key={item.id}>
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4">
-                    <div>
-                        <h3 className="text-xl font-bold text-foreground font-headline">{item.title}</h3>
-                        <p className="text-muted-foreground">{item.date}</p>
-                        <p className="text-muted-foreground">{item.time}</p>
-                         {item.isLive && (
-                           <span className="inline-flex items-center mt-2">
-                             <span className="relative flex h-3 w-3">
-                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                               <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                             </span>
-                             <span className="ms-2 text-sm font-semibold text-destructive">بث مباشر الآن</span>
-                           </span>
-                        )}
+            {isLoading ? (
+                 <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+            ) : formattedItems && formattedItems.length > 0 ? (
+                formattedItems.map((item, index) => (
+                    <div key={item.id}>
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-foreground font-headline">{item.title}</h3>
+                                <p className="text-muted-foreground">{item.date}</p>
+                                <p className="text-muted-foreground">{item.time}</p>
+                                 {item.isLive && (
+                                   <span className="inline-flex items-center mt-2">
+                                     <span className="relative flex h-3 w-3">
+                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                                       <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                     </span>
+                                     <span className="ms-2 text-sm font-semibold text-destructive">بث مباشر الآن</span>
+                                   </span>
+                                )}
+                            </div>
+                            <Button asChild>
+                                <a href={generateICSLink(item)} download={`${item.title}.ics`}>
+                                    <CalendarPlus className="me-2"/>
+                                    أضف إلى التقويم
+                                </a>
+                            </Button>
+                        </div>
+                        {index < formattedItems.length - 1 && <Separator />}
                     </div>
-                    <Button asChild>
-                        <a href={generateICSLink(item)} download={`${item.title}.ics`}>
-                            <CalendarPlus className="me-2"/>
-                            أضف إلى التقويم
-                        </a>
-                    </Button>
-                </div>
-                {index < scheduleItems.length - 1 && <Separator />}
-              </div>
-            ))}
-             {!scheduleItems || scheduleItems.length === 0 && (
+                ))
+            ) : (
                 <p className="text-center text-muted-foreground py-8">لا توجد دروس مجدولة حالياً.</p>
             )}
           </div>
@@ -88,4 +97,3 @@ export default async function SchedulePage() {
     </div>
   );
 }
-

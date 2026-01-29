@@ -1,23 +1,47 @@
+'use client';
 
-
-import { notFound } from 'next/navigation';
-import { getLectureBySlug, getRelatedLectures } from '@/lib/data';
+import { useParams, notFound } from 'next/navigation';
+import { useCollection } from '@/firebase';
+import type { Lecture } from '@/lib/types';
 import { LectureClientPage } from '@/components/lecture-client-page';
+import { LecturePageSkeleton } from '@/components/skeletons';
+import { useMemo } from 'react';
 
-// This is now a Server Component
-export default async function LectureDetailPage({ params }: { params: { slug: string } }) {
+export default function LectureDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+
+  const { lecture, relatedLectures } = useMemo(() => {
+    if (lecturesLoading || !allLectures) {
+      return { lecture: null, relatedLectures: [] };
+    }
+
+    const currentLecture = allLectures.find(l => l.slug === slug);
+
+    if (!currentLecture) {
+        return { lecture: null, relatedLectures: [] };
+    }
+
+    const related = currentLecture.seriesId
+      ? allLectures
+          .filter(l => l.seriesId === currentLecture.seriesId && l.id !== currentLecture.id)
+          .slice(0, 3)
+      : [];
+      
+    return { lecture: currentLecture, relatedLectures: related };
+
+  }, [lecturesLoading, allLectures, slug]);
   
-  const lecture = await getLectureBySlug(params.slug);
+  if (lecturesLoading) {
+    return <LecturePageSkeleton />;
+  }
 
   if (!lecture) {
     notFound();
+    return null;
   }
-
-  // Fetch related lectures on the server as well
-  const relatedLectures = await getRelatedLectures(lecture.id, lecture.seriesId);
-
-  // Pass server-fetched data to the Client Component
-  return (
-    <LectureClientPage lecture={lecture} relatedLectures={relatedLectures} />
-  );
+  
+  return <LectureClientPage lecture={lecture} relatedLectures={relatedLectures || []} />;
 }

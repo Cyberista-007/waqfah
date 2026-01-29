@@ -1,64 +1,45 @@
+'use client';
 
-import { notFound } from 'next/navigation';
-import { getDoc, doc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { initializeFirebaseOnServer } from '@/firebase/server-init';
+import { useParams, notFound } from 'next/navigation';
+import { useCollection, useDoc } from '@/firebase';
 import type { Playlist, Lecture, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureListItem } from '@/components/lecture-list-item';
-import { ListMusic, User } from 'lucide-react';
+import { ListMusic, Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { getInitials } from '@/lib/utils';
+import { useMemo } from 'react';
+import { HomePageSkeleton } from '@/components/skeletons';
 
-async function getPlaylistData(playlistId: string) {
-    const { serverFirestore } = initializeFirebaseOnServer();
-    const playlistDocRef = doc(serverFirestore, 'users', playlistId.split('_')[0], 'playlists', playlistId);
+export default function PlaylistPage() {
+    const params = useParams();
+    const playlistId = params.id as string;
+    const userId = playlistId.split('_')[0];
+
+    const { data: playlist, isLoading: playlistLoading } = useDoc<Playlist>(`users/${userId}/playlists/${playlistId}`);
+    const { data: userProfile, isLoading: userLoading } = useDoc<UserProfile>(`users/${userId}`);
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     
-    const playlistSnap = await getDoc(playlistDocRef);
+    const isLoading = playlistLoading || userLoading || lecturesLoading;
 
-    if (!playlistSnap.exists()) {
+    const lecturesInPlaylist = useMemo(() => {
+        if (!playlist || !allLectures) return [];
+
+        const lectureMap = new Map(allLectures.map(l => [l.id, l]));
+        return (playlist.lectureIds || [])
+            .map(id => lectureMap.get(id))
+            .filter((l): l is Lecture => !!l);
+    }, [playlist, allLectures]);
+
+    if (isLoading) {
+        return <HomePageSkeleton />;
+    }
+
+    if (!playlist) {
+        notFound();
         return null;
     }
-
-    const playlist = { ...playlistSnap.data(), id: playlistSnap.id } as Playlist;
-
-    const userDocRef = doc(serverFirestore, 'users', playlist.userId);
-    const userSnap = await getDoc(userDocRef);
-    const userProfile = userSnap.exists() ? { ...userSnap.data(), id: userSnap.id } as UserProfile : null;
-    
-    let lecturesInPlaylist: Lecture[] = [];
-    if (playlist.lectureIds && playlist.lectureIds.length > 0) {
-        const lecturesCol = collection(serverFirestore, 'lectures');
-        // Firestore 'in' query is limited to 30 items per query
-        for (let i = 0; i < playlist.lectureIds.length; i += 30) {
-            const chunk = playlist.lectureIds.slice(i, i + 30);
-            const lecturesQuery = query(lecturesCol, where('__name__', 'in', chunk));
-            const lecturesSnapshot = await getDocs(lecturesQuery);
-            lecturesInPlaylist.push(...lecturesSnapshot.docs.map(doc => {
-                 const data = doc.data();
-                 return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now()
-                 } as Lecture
-            }));
-        }
-    }
-
-    // Since firestore 'in' query doesn't guarantee order, we sort it ourselves based on the original playlist order
-    const orderedLectures = playlist.lectureIds.map(id => lecturesInPlaylist.find(lecture => lecture.id === id)).filter((l): l is Lecture => !!l);
-
-    return { playlist, lecturesInPlaylist: orderedLectures, userProfile };
-}
-
-export default async function PlaylistPage({ params }: { params: { id: string } }) {
-    const data = await getPlaylistData(params.id);
-
-    if (!data) {
-        notFound();
-    }
-
-    const { playlist, lecturesInPlaylist, userProfile } = data;
     
     return (
         <div className="space-y-8">
@@ -74,7 +55,7 @@ export default async function PlaylistPage({ params }: { params: { id: string } 
                                 <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm text-muted-foreground">
-                                قائمة تشغيل بواسطة <Link href={`/profile/${userProfile.id}`} className="font-semibold text-foreground hover:underline">{userProfile.name}</Link>
+                                قائمة تشغيل بواسطة <span className="font-semibold text-foreground">{userProfile.name}</span>
                             </span>
                         </div>
                     )}

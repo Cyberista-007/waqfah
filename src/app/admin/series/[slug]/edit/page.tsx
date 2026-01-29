@@ -1,25 +1,27 @@
+'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import type { Series } from '@/lib/types';
 import { SeriesForm } from '@/components/admin/series-form';
-import { getSeriesBySlug } from '@/lib/data';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { Suspense } from 'react';
+import { useCollection } from '@/firebase';
 
-async function SeriesEditForm({ slug }: { slug: string }) {
-  const series = await getSeriesBySlug(slug);
+export default function AdminEditSeriesPage() {
+    const params = useParams();
+    const slug = params.slug as string;
 
-  if (!series) {
-    notFound();
-  }
+    const { data: allSeries, isLoading } = useCollection<Series>('series');
+
+    if (isLoading) {
+        return <HomePageSkeleton />;
+    }
+
+    const seriesToEdit = allSeries?.find(s => s.slug === slug);
+
+    if (!seriesToEdit) {
+        notFound();
+        return null;
+    }
   
-  return <SeriesForm series={series} />;
-}
-
-export default function AdminEditSeriesPage({ params }: { params: { slug: string } }) {
-  return (
-    <Suspense fallback={<HomePageSkeleton />}>
-      <SeriesEditForm slug={params.slug} />
-    </Suspense>
-  );
+  return <SeriesForm series={seriesToEdit} />;
 }

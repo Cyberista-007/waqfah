@@ -1,21 +1,18 @@
+'use client'
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast } from "lucide-react";
 import Link from "next/link";
-import { getDashboardStats, getPopularLectures } from "@/lib/data";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 import { StatCard } from "@/components/admin/StatCard";
+import { useCollection, useDoc } from "@/firebase";
 
-// This is now a Server Component
-export default async function AdminDashboardPage() {
-    // Fetch data on the server
-    const [stats, popularLectures] = await Promise.all([
-        getDashboardStats(),
-        getPopularLectures(5),
-    ]);
+export default function AdminDashboardPage() {
+    const { data: stats, isLoading: statsLoading } = useDoc<Stats>('stats/global');
+    const { data: popularLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['viewCount', 'desc'], limit: 5 });
 
     return (
         <div className="space-y-8">
@@ -31,10 +28,10 @@ export default async function AdminDashboardPage() {
             </header>
             
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="إجمالي البرامج" value={stats?.programs ?? 0} icon={Podcast} isLoading={!stats} />
-                <StatCard title="إجمالي المحاضرات" value={stats?.lectures ?? 0} icon={Clapperboard} isLoading={!stats} />
-                <StatCard title="إجمالي السلاسل" value={stats?.series ?? 0} icon={ListVideo} isLoading={!stats} />
-                <StatCard title="إجمالي الكتب" value={stats?.books ?? 0} icon={Book} isLoading={!stats} />
+                <StatCard title="إجمالي البرامج" value={stats?.programs ?? 0} icon={Podcast} isLoading={statsLoading} />
+                <StatCard title="إجمالي المحاضرات" value={stats?.lectures ?? 0} icon={Clapperboard} isLoading={statsLoading} />
+                <StatCard title="إجمالي السلاسل" value={stats?.series ?? 0} icon={ListVideo} isLoading={statsLoading} />
+                <StatCard title="إجمالي الكتب" value={stats?.books ?? 0} icon={Book} isLoading={statsLoading} />
             </section>
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -77,19 +74,23 @@ export default async function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {popularLectures.length === 0 && (
+                                {lecturesLoading ? (
+                                     <TableRow>
+                                        <TableCell colSpan={2} className="text-center text-muted-foreground"><Loader2 className="animate-spin mx-auto my-4" /></TableCell>
+                                    </TableRow>
+                                ) : popularLectures?.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={2} className="text-center text-muted-foreground">لا توجد بيانات لعرضها.</TableCell>
                                     </TableRow>
-                                )}
-                                {popularLectures.map(lecture => (
+                                ) : (
+                                    popularLectures?.map(lecture => (
                                     <TableRow key={lecture.id}>
                                         <TableCell className="font-medium">
                                             <Link href={`/lectures/${lecture.slug}`} className="hover:underline" target="_blank">{lecture.title}</Link>
                                         </TableCell>
                                         <TableCell>{lecture.viewCount || 0}</TableCell>
                                     </TableRow>
-                                ))}
+                                )))}
                                
                             </TableBody>
                         </Table>

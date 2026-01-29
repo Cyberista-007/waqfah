@@ -1,11 +1,11 @@
+'use client';
 
-import { Podcast } from 'lucide-react';
+import { Podcast, Loader2 } from 'lucide-react';
 import type { Program } from '@/lib/types';
 import { ProgramCard } from '@/components/program-card';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllPrograms } from '@/lib/data';
-import { Suspense } from 'react';
+import { useCollection } from '@/firebase';
 
 function ProgramsListSkeleton() {
     return (
@@ -22,8 +22,13 @@ function ProgramsListSkeleton() {
     )
 }
 
-async function ProgramsList() {
-    const programs = await getAllPrograms();
+function ProgramsList() {
+    const { data: programs, isLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc']});
+    
+    if (isLoading) {
+        return <ProgramsListSkeleton />;
+    }
+
     return (
         <>
             {programs && programs.length > 0 ? (
@@ -48,9 +53,7 @@ export default function ProgramsPage() {
                 <Podcast className="h-10 w-10" />
                 البرامج
             </h1>
-            <Suspense fallback={<ProgramsListSkeleton />}>
-                <ProgramsList />
-            </Suspense>
+            <ProgramsList />
         </div>
     )
 }
