@@ -8,16 +8,17 @@ import { ChannelCard } from '@/components/channel-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { getDbSafe } from '@/lib/data';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import type { Series, Lecture, Channel } from '@/lib/types';
 import { toSerializable } from '@/lib/data-helpers';
 import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 async function getHomePageData() {
     const { db, isLive } = getDbSafe();
     if (!isLive || !db) {
-        return { latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+        return { isLive, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
     }
 
     try {
@@ -44,16 +45,33 @@ async function getHomePageData() {
             .sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0))
             .slice(0, 4);
 
-        return { latestSeries, latestLectures, topChannels, allChannels };
+        return { isLive, latestSeries, latestLectures, topChannels, allChannels };
     } catch (error) {
         console.error("Error fetching home page data:", error);
-        return { latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
+        return { isLive: true, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
     }
 }
 
 export default async function Home() {
-    const { latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
+    const { isLive, latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
+
+    if (!isLive) {
+        return (
+            <div className="container py-8 text-center">
+                <Card className="p-8 bg-destructive/10 border-destructive">
+                    <CardHeader>
+                        <CardTitle className="text-destructive font-headline">خطأ في الاتصال بقاعدة البيانات</CardTitle>
+                        <CardDescription className="text-destructive/80">
+                            فشل الخادم في الاتصال بـ Firebase. يرجى التأكد من تعيين متغير البيئة `FIREBASE_SERVICE_ACCOUNT` بشكل صحيح.
+                            <br />
+                            راجع ملف `DEPLOYMENT.md` للحصول على الإرشادات.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        )
+    }
 
   return (
     <Suspense fallback={<HomePageSkeleton />}>

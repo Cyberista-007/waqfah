@@ -10,7 +10,22 @@ import { ChannelCard } from "@/components/channel-card";
 import { BookCard } from "@/components/book-card";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { lectures, series, programs, channels, books } = await searchContent(searchTerm);
+    const { isLive, lectures, series, programs, channels, books } = await searchContent(searchTerm);
+
+    if (!isLive) {
+        return (
+             <div className="container py-8 text-center">
+                <div className="p-8 bg-destructive/10 border border-destructive rounded-lg">
+                    <h2 className="text-2xl font-bold text-destructive">خطأ في الاتصال بقاعدة البيانات</h2>
+                    <p className="text-destructive/80 mt-2">
+                        فشل الخادم في الاتصال بـ Firebase. يرجى التأكد من تعيين متغير البيئة `FIREBASE_SERVICE_ACCOUNT` بشكل صحيح.
+                        <br />
+                        راجع ملف `DEPLOYMENT.md` للحصول على الإرشادات.
+                    </p>
+                </div>
+            </div>
+        )
+    }
 
     const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || channels.length > 0 || books.length > 0;
 

@@ -120,7 +120,8 @@ export const getAllSeries = async (): Promise<Series[]> => {
         const seriesCol = collection(db, 'series');
         const snapshot = await getDocs(seriesCol);
         if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+            return docs.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         }
       } catch (error) {
         console.error("Error fetching all series:", error);
@@ -262,9 +263,13 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     return [];
 }
 
-export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[] }> {
+export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[] }> {
+    const { isLive } = getDbSafe();
+    if (!isLive) {
+      return { isLive: false, lectures: [], series: [], programs: [], channels: [], books: [] };
+    }
     if (!searchTerm) {
-        return { lectures: [], series: [], programs: [], channels: [], books: [] };
+        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [] };
     }
     
     const searchTermLower = searchTerm.toLowerCase();
@@ -305,10 +310,10 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
             (b.title || '').toLowerCase().includes(searchTermLower)
         );
 
-        return { lectures, series, programs, channels, books };
+        return { isLive: true, lectures, series, programs, channels, books };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { lectures: [], series: [], programs: [], channels: [], books: [] };
+        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [] };
     }
 }
 
@@ -319,7 +324,8 @@ const getAllLectures = async (): Promise<Lecture[]> => {
         const lecturesCol = collection(db, 'lectures');
         const snapshot = await getDocs(lecturesCol);
         if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            return docs.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         }
       } catch (error) {
         console.error("Error fetching all lectures:", error);
@@ -370,7 +376,8 @@ export const getAllChannels = async (): Promise<Channel[]> => {
         const channelsCol = collection(db, 'channels');
         const snapshot = await getDocs(channelsCol);
         if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+            return docs.sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0));
         }
       } catch (error) {
         console.error("Error fetching all channels:", error);
@@ -508,7 +515,8 @@ export const getAllPrograms = async (): Promise<Program[]> => {
         const programsCol = collection(db, 'programs');
         const snapshot = await getDocs(programsCol);
         if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
+            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
+            return docs.sort((a,b) => (b.followerCount || 0) - (a.followerCount || 0));
         }
       } catch (error) {
         console.error("Error fetching all programs:", error);
