@@ -1,6 +1,6 @@
-
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
-import { Share2, X } from 'lucide-react';
+import { Share2, X, PictureInPicture } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface YoutubePlayerModalProps {
   isOpen: boolean;
@@ -20,7 +21,19 @@ interface YoutubePlayerModalProps {
 
 export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: YoutubePlayerModalProps) {
   const { toast } = useToast();
+  const [isPip, setIsPip] = useState(false);
+
   if (!videoId) return null;
+
+  const handlePipToggle = () => {
+    setIsPip(prev => !prev);
+  };
+  
+  const handleClose = () => {
+    setIsPip(false);
+    onClose();
+  };
+
 
   const handleShare = async () => {
     try {
@@ -49,23 +62,35 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose} modal={!isPip}>
       <DialogContent 
-        className="max-w-4xl w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-2xl overflow-hidden flex flex-col gap-2"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        className={cn(
+          "w-full h-auto p-0 border-0 bg-transparent shadow-none !rounded-2xl overflow-hidden flex flex-col gap-2",
+          isPip 
+            ? "fixed bottom-5 right-5 w-[380px] h-auto translate-x-0 translate-y-0 z-[60] shadow-2xl aspect-video bg-black"
+            : "max-w-4xl"
+        )}
+        onInteractOutside={(e) => {
+          if (!isPip) {
+            e.preventDefault();
+          }
+        }}
         hideCloseButton={true}
       >
         <DialogHeader className="sr-only">
           <DialogTitle>مشغل فيديو يوتيوب</DialogTitle>
         </DialogHeader>
-        <div className="flex justify-end items-center bg-card rounded-t-2xl p-2">
+        <div className={cn("flex justify-end items-center bg-card rounded-t-2xl p-2", isPip && "hidden")}>
            <div className="flex items-center gap-1">
+             <Button onClick={handlePipToggle} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
+                <PictureInPicture className="h-5 w-5" />
+                <span className="sr-only">صورة داخل صورة</span>
+             </Button>
              <Button onClick={handleShare} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
                 <Share2 className="h-5 w-5" />
                 <span className="sr-only">مشاركة</span>
             </Button>
-            <Button onClick={onClose} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
+            <Button onClick={handleClose} size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground">
                 <X className="h-6 w-6" />
                 <span className="sr-only">إغلاق</span>
             </Button>
@@ -80,7 +105,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className="rounded-b-2xl w-full h-full absolute top-0 left-0"
+            className={cn("w-full h-full absolute top-0 left-0", isPip ? "rounded-2xl" : "rounded-b-2xl")}
           ></iframe>
         </div>
       </DialogContent>
