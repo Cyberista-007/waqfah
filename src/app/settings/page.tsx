@@ -38,6 +38,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 
@@ -339,6 +341,9 @@ export default function SettingsPage() {
 
        <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogContent className="p-0 border-0 max-w-2xl bg-transparent">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>تعديل الملف الشخصي</DialogTitle>
+                </DialogHeader>
                 <EditProfileForm 
                     user={user} 
                     userProfile={userProfile}

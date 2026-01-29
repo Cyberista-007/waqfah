@@ -3,6 +3,8 @@
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import Image from 'next/image';
 
@@ -21,6 +23,9 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt }: ImageModalProps) 
       <DialogContent 
         className="max-w-4xl w-full p-0 border-0 bg-transparent shadow-none"
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>{alt}</DialogTitle>
+        </DialogHeader>
         <div className="relative aspect-video">
           <Image
             src={imageUrl}
