@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -39,7 +38,7 @@ service cloud.firestore {
       allow write: if isAdmin(); // Only admins can modify.
     }
 
-    match /sheikhs/{sheikhId} {
+    match /programs/{programId} {
       allow get, list: if true;
       // Allow admins to do any write.
       // Allow any signed-in user to update only the followerCount.
@@ -113,7 +112,7 @@ service cloud.firestore {
       allow read, write, delete: if isOwner(userId);
     }
     
-    match /users/{userId}/following/{sheikhId} {
+    match /users/{userId}/following/{programId} {
       // Users can only manage their own following list.
       allow read, write, delete: if isOwner(userId);
     }
