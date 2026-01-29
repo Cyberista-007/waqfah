@@ -13,9 +13,10 @@ import { useRouter } from "next/navigation";
 interface FavoriteButtonProps {
     lectureId: string;
     showLabel?: boolean;
+    className?: string;
 }
 
-export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonProps) {
+export function FavoriteButton({ lectureId, showLabel = false, className }: FavoriteButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -63,6 +64,7 @@ export function FavoriteButton({ lectureId, showLabel = false }: FavoriteButtonP
           className={cn(
               "h-10 w-10 text-muted-foreground hover:text-red-500",
               isFavorite && "text-red-500",
+              className
           )}
           disabled={isUserLoading || favoritesLoading}
       >

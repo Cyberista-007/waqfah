@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -246,34 +245,38 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
 
         </div>
 
-        <div className="p-4 bg-card flex-grow flex flex-col">
-            <h3 className="font-headline text-md mb-1 leading-snug flex-grow">
+        <div className="p-3 bg-card flex-grow flex flex-col">
+            <h3 className="font-headline text-lg mb-2 leading-tight">
                 <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
             </h3>
-            <div className="flex justify-start items-center gap-2 mt-2">
-                <Button onClick={handlePlay} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
-                    <Headphones className="w-5 h-5" />
-                </Button>
-                {videoId && (
-                  <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-red-500">
-                      <Youtube className="w-5 h-5" />
-                  </Button>
-                )}
-                 {lecture.telegramUrl && (
-                    <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-sky-500">
-                          <SiTelegram className="w-5 h-5" />
+            <div className="flex justify-between items-center mt-auto pt-1">
+                <div className="flex items-center">
+                    <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                        <Headphones className="w-5 h-5" />
+                    </Button>
+                    {videoId && (
+                        <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
+                            <Youtube className="w-5 h-5" />
                         </Button>
-                    </a>
-                 )}
-                 <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
-                    <Download className="w-5 h-5" />
-                 </Button>
-                 <div className="flex-grow"></div>
-                 <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
-                    <ListPlus className="w-5 h-5" />
-                 </Button>
-                 <FavoriteButton lectureId={lecture.id} />
+                    )}
+                    {lecture.telegramUrl && (
+                        <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
+                                <SiTelegram className="w-5 h-5" />
+                            </Button>
+                        </a>
+                    )}
+                    <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                        <Download className="w-5 h-5" />
+                    </Button>
+                </div>
+                
+                <div className="flex items-center">
+                    <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                        <ListPlus className="w-5 h-5" />
+                    </Button>
+                    <FavoriteButton lectureId={lecture.id} className="h-9 w-9" />
+                </div>
             </div>
         </div>
 
