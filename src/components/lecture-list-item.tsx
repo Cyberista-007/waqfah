@@ -15,6 +15,7 @@ import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { useState } from "react";
 import { YoutubePlayerModal } from "./youtube-player-modal";
 import { ImageModal } from "./image-modal";
+import { LectureCard } from "./lecture-card";
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -49,7 +50,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handlePlay = async () => {
       let startTime = 0;
@@ -117,10 +118,11 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
             handlePlay();
         }
     }
+    
+    if (isExpanded) {
+        return <LectureCard lecture={lecture} index={index} onCollapse={() => setIsExpanded(false)} />;
+    }
 
-    const handleExpandImage = () => {
-        setIsImageModalOpen(true);
-    };
 
     return (
         <>
@@ -164,9 +166,9 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                         <Download className="w-5 h-5 text-muted-foreground" />
                     </a>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={handleExpandImage}>
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(true)}>
                     <Maximize2 className="h-5 w-5 text-muted-foreground" />
-                    <span className="sr-only">تكبير الصورة</span>
+                    <span className="sr-only">توسيع</span>
                 </Button>
             </div>
         </div>
@@ -178,12 +180,6 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                 shareUrl={lectureUrl}
             />
         )}
-        <ImageModal
-            isOpen={isImageModalOpen}
-            onClose={() => setIsImageModalOpen(false)}
-            imageUrl={imageUrl}
-            alt={lecture.title}
-        />
         </>
     );
 }

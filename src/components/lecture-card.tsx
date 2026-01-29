@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock } from "lucide-react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2 } from "lucide-react"
 import { SiTelegram } from "@icons-pack/react-simple-icons"
 import { useState, useMemo, useRef } from "react"
 
@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation"
 interface LectureCardProps {
   lecture: Lecture
   index?: number
+  onCollapse?: () => void;
 }
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -47,7 +48,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
   return null;
 }
 
-export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
+export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps) {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
@@ -216,9 +217,24 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
               </div>
             </div>
             
-          <button onClick={handleShare} className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors">
-            <Share2 className="w-4 h-4 text-white" />
-          </button>
+            <div className="absolute top-2 right-2 flex items-center gap-1">
+                {onCollapse && (
+                    <button
+                        onClick={onCollapse}
+                        className="h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                        aria-label="Collapse"
+                    >
+                        <Minimize2 className="w-4 h-4 text-white" />
+                    </button>
+                )}
+                <button
+                    onClick={handleShare}
+                    className="h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                    aria-label="Share"
+                >
+                    <Share2 className="w-4 h-4 text-white" />
+                </button>
+            </div>
             
           {displayDurationInSeconds > 0 && (
             <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
@@ -246,11 +262,13 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
         </div>
 
         <div className="p-3 bg-card flex-grow flex flex-col">
-            <h3 className="font-headline text-lg mb-2 leading-tight">
-                <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
-            </h3>
-            <div className="flex justify-between items-center mt-auto pt-1">
-                <div className="flex items-center">
+            <div className="flex-grow">
+                <h3 className="font-headline text-lg mb-2 leading-tight">
+                    <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
+                </h3>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2">
+                <div className="flex items-center gap-1">
                     <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
                         <Headphones className="w-5 h-5" />
                     </Button>
@@ -271,7 +289,7 @@ export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
                     </Button>
                 </div>
                 
-                <div className="flex items-center">
+                <div className="flex items-center gap-1">
                     <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
                         <ListPlus className="w-5 h-5" />
                     </Button>
