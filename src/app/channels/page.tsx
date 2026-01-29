@@ -1,11 +1,11 @@
+'use client';
 
-import { Youtube } from 'lucide-react';
+import { Youtube, Loader2 } from 'lucide-react';
 import type { Channel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllChannels } from '@/lib/data';
-import { Suspense } from 'react';
+import { useCollection } from '@/firebase';
 
 function ChannelsListSkeleton() {
     return (
@@ -19,15 +19,20 @@ function ChannelsListSkeleton() {
                 </Card>
             ))}
         </div>
-    )
+    );
 }
 
-async function ChannelsList() {
-    const channels = await getAllChannels();
+function ChannelsList() {
+    const { data: channels, isLoading } = useCollection<Channel>('channels', { orderBy: ['followerCount', 'desc'] });
+
+    if (isLoading) {
+        return <ChannelsListSkeleton />;
+    }
+
     return (
         <>
             {channels && channels.length > 0 ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                     {channels.map((channel, index) => (
                         <ChannelCard channel={channel} key={channel.id} index={index} />
                     ))}
@@ -38,7 +43,7 @@ async function ChannelsList() {
                 </div>
             )}
         </>
-    )
+    );
 }
 
 export default function ChannelsPage() {
@@ -48,9 +53,7 @@ export default function ChannelsPage() {
                 <Youtube className="h-10 w-10" />
                 القنوات
             </h1>
-            <Suspense fallback={<ChannelsListSkeleton />}>
-                <ChannelsList />
-            </Suspense>
+            <ChannelsList />
         </div>
-    )
+    );
 }
