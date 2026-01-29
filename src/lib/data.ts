@@ -195,10 +195,7 @@ export async function getHomePageData() {
     const { db, isLive, error } = getDbSafe();
 
     if (!isLive) {
-        const latestSeries = [...DUMMY_SERIES].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
-        const latestLectures = [...DUMMY_LECTURES].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
-        const topPrograms = [...DUMMY_PROGRAMS].sort((a,b) => (b.followerCount || 0) - (a.followerCount || 0)).slice(0, 4);
-        return { latestSeries, latestLectures, topPrograms, isLive, error };
+        return { latestSeries: [], latestLectures: [], topPrograms: [], isLive, error };
     }
     
     const [allSeries, allLectures, allPrograms] = await Promise.all([
@@ -219,16 +216,7 @@ export async function getSeriesPageData(slug: string) {
     const { db, isLive } = getDbSafe();
 
     if (!isLive) {
-        const seriesData = DUMMY_SERIES.find(s => s.slug === slug);
-        if (!seriesData) return null;
-        
-        const lecturesInSeries = DUMMY_LECTURES
-            .filter(l => l.seriesId === seriesData.id)
-            .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
-            
-        const seriesCreator = seriesData.programId ? DUMMY_PROGRAMS.find(p => p.id === seriesData.programId) || null : null;
-        
-        return { series: seriesData, lecturesInSeries, seriesCreator };
+        return null;
     }
 
     if (db) {
@@ -269,12 +257,7 @@ export async function getSeriesPageData(slug: string) {
 export const getDashboardStats = async (): Promise<Stats | null> => {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return {
-            programs: DUMMY_PROGRAMS.length,
-            lectures: DUMMY_LECTURES.length,
-            series: DUMMY_SERIES.length,
-            books: DUMMY_BOOKS.length,
-        }
+        return { programs: 0, lectures: 0, series: 0, books: 0 };
     }
     if (db) {
         try {
@@ -309,9 +292,7 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return [...DUMMY_LECTURES]
-            .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-            .slice(0, count);
+        return [];
     }
     if (db) {
         try {
@@ -331,7 +312,7 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
 export const getAllSeries = async (dbInstance?: any): Promise<Series[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if (!isLive) {
-      return [...DUMMY_SERIES].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      return [];
   }
   if (db) {
       try {
@@ -351,7 +332,7 @@ export const getAllSeries = async (dbInstance?: any): Promise<Series[]> => {
 export const getLectureBySlug = async (slug: string): Promise<Lecture | undefined> => {
   const { db, isLive } = getDbSafe();
   if (!isLive) {
-    return DUMMY_LECTURES.find(l => l.slug === slug);
+    return undefined;
   }
   if (db) {
       try {
@@ -378,7 +359,7 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
 
 export const getAllBooks = async (dbInstance?: any): Promise<Book[]> => {
     const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-    if (!isLive) return DUMMY_BOOKS;
+    if (!isLive) return [];
     if (db) {
         try {
             const booksCol = collection(db, 'books');
@@ -393,7 +374,7 @@ export const getAllBooks = async (dbInstance?: any): Promise<Book[]> => {
 
 export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
     const { db, isLive } = getDbSafe();
-    if (!isLive) return DUMMY_SCHEDULE;
+    if (!isLive) return [];
     if (db) {
         try {
             const scheduleCol = collection(db, 'scheduled_lessons');
@@ -418,7 +399,7 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
 
 export const getAllQAPairs = async (): Promise<QAPair[]> => {
     const { db, isLive } = getDbSafe();
-    if (!isLive) return DUMMY_QA;
+    if (!isLive) return [];
     if (db) {
         try {
             const qaCol = collection(db, 'question_answers');
@@ -435,9 +416,7 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     if (!seriesId) return [];
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return DUMMY_LECTURES
-            .filter(l => l.seriesId === seriesId && l.id !== currentLectureId)
-            .slice(0, 3);
+        return [];
     }
     if (db) {
         try {
@@ -501,7 +480,7 @@ export async function searchContent(searchTerm: string): Promise<{ isLive: boole
 const getAllLectures = async (dbInstance?: any): Promise<Lecture[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if(!isLive) {
-    return [...DUMMY_LECTURES].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return [];
   }
   if(db) {
       try {
@@ -520,7 +499,7 @@ const getAllLectures = async (dbInstance?: any): Promise<Lecture[]> => {
 // --- Topics ---
 export const getAllTopics = async (): Promise<Topic[]> => {
   const { db, isLive } = getDbSafe();
-  if (!isLive) return DUMMY_TOPICS;
+  if (!isLive) return [];
   if (db) {
       try {
         const topicsCol = collection(db, 'topics');
@@ -536,7 +515,7 @@ export const getAllTopics = async (): Promise<Topic[]> => {
 
 export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> => {
   const { db, isLive } = getDbSafe();
-  if (!isLive) return DUMMY_TOPICS.find(t => t.slug === slug);
+  if (!isLive) return undefined;
   if (db) {
       try {
         const topicsCol = collection(db, 'topics');
@@ -554,7 +533,7 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
 
 export const getSeriesBySlug = async (slug: string, dbInstance?: any): Promise<Series | undefined> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-  if (!isLive) return DUMMY_SERIES.find(s => s.slug === slug);
+  if (!isLive) return undefined;
   if (db) {
       try {
         const seriesCol = collection(db, 'series');
@@ -577,7 +556,7 @@ async function getDocumentsByIds<T extends {id: string}>(collectionName: string,
     
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return dummyData.filter(item => ids.includes(item.id));
+        return [];
     }
     if (db) {
         try {
@@ -659,7 +638,7 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
 export const getAllPrograms = async (dbInstance?: any): Promise<Program[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if (!isLive) {
-    return [...DUMMY_PROGRAMS].sort((a,b) => (b.followerCount || 0) - (a.followerCount || 0));
+    return [];
   }
   if (db) {
       try {
@@ -676,7 +655,7 @@ export const getAllPrograms = async (dbInstance?: any): Promise<Program[]> => {
 
 export const getProgramBySlug = async (slug: string, dbInstance?: any): Promise<Program | undefined> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-  if (!isLive) return DUMMY_PROGRAMS.find(p => p.slug === slug);
+  if (!isLive) return undefined;
   if (db) {
       try {
         const programsCol = collection(db, 'programs');
@@ -696,9 +675,7 @@ export const getProgramBySlug = async (slug: string, dbInstance?: any): Promise<
 export async function getLecturesByProgram(programId: string): Promise<Lecture[]> {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return DUMMY_LECTURES
-            .filter(l => l.programId === programId)
-            .sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        return [];
     }
     if (db) {
         try {
@@ -717,9 +694,7 @@ export async function getLecturesByProgram(programId: string): Promise<Lecture[]
 export async function getSeriesByProgram(programId: string): Promise<Series[]> {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return DUMMY_SERIES
-            .filter(s => s.programId === programId)
-            .sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        return [];
     }
     if (db) {
         try {
@@ -734,3 +709,5 @@ export async function getSeriesByProgram(programId: string): Promise<Series[]> {
     }
     return [];
 }
+
+    
