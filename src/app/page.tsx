@@ -21,17 +21,28 @@ async function getHomePageData() {
     }
 
     try {
-        const [seriesSnap, lecturesSnap, topChannelsSnap, allChannelsSnap] = await Promise.all([
-            getDocs(query(collection(db, 'series'), orderBy('createdAt', 'desc'), limit(3))),
-            getDocs(query(collection(db, 'lectures'), orderBy('createdAt', 'desc'), limit(3))),
-            getDocs(query(collection(db, 'channels'), orderBy('followerCount', 'desc'), limit(4))),
-            getDocs(query(collection(db, 'channels'))),
+        const [seriesSnap, lecturesSnap, channelsSnap] = await Promise.all([
+            getDocs(collection(db, 'series')),
+            getDocs(collection(db, 'lectures')),
+            getDocs(collection(db, 'channels')),
         ]);
 
-        const latestSeries = seriesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
-        const latestLectures = lecturesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-        const topChannels = topChannelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
-        const allChannels = allChannelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+        const allSeries = seriesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+        const allLectures = lecturesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+        const allChannels = channelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
+
+        // Sort and limit in code
+        const latestSeries = [...allSeries]
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .slice(0, 3);
+            
+        const latestLectures = [...allLectures]
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .slice(0, 3);
+
+        const topChannels = [...allChannels]
+            .sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0))
+            .slice(0, 4);
 
         return { latestSeries, latestLectures, topChannels, allChannels };
     } catch (error) {

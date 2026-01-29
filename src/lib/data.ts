@@ -28,9 +28,10 @@ export async function getSeriesPageData(slug: string) {
             }
 
             const lecturesCol = collection(db, 'lectures');
-            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id), orderBy('createdAt', 'asc'));
+            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id));
             const lecturesSnapshot = await getDocs(lecturesQuery);
-            const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+            const lecturesInSeriesRaw = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
+            const lecturesInSeries = lecturesInSeriesRaw.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
             
             let seriesCreator: Program | null = null;
             if (seriesData.programId) {
@@ -94,14 +95,14 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
     if (isLive && db) {
         try {
             const lecturesCol = collection(db, 'lectures');
-            const q = query(lecturesCol, orderBy('viewCount', 'desc'), limit(count));
-            const snapshot = await getDocs(q);
+            const snapshot = await getDocs(lecturesCol);
             if (!snapshot.empty) {
-                return snapshot.docs.map(d => toSerializable({
+                const lectures = snapshot.docs.map(d => toSerializable({
                     ...d.data(),
                     id: d.id,
                     createdAt: d.data().createdAt || Timestamp.now()
                 }) as Lecture);
+                return lectures.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, count);
             }
         } catch (error) {
             console.error("Error fetching popular lectures:", error);
@@ -158,10 +159,11 @@ export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]
   if (isLive && db) {
       try {
         const lecturesCol = collection(db, 'lectures');
-        const q = query(lecturesCol, where('channelId', '==', channelId), orderBy('createdAt', 'desc'));
+        const q = query(lecturesCol, where('channelId', '==', channelId));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            const lectures = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            return lectures.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         }
         return [];
       } catch (error) {
@@ -195,10 +197,14 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
     if (isLive && db) {
         try {
             const scheduleCol = collection(db, 'scheduled_lessons');
-            const q = query(scheduleCol, orderBy('dateTime', 'desc'));
-            const snapshot = await getDocs(q);
+            const snapshot = await getDocs(scheduleCol);
             if (!snapshot.empty) {
-                return snapshot.docs.map(docSnap => {
+                const sortedDocs = snapshot.docs.sort((a, b) => {
+                    const timeA = (a.data().dateTime as Timestamp)?.toMillis() || 0;
+                    const timeB = (b.data().dateTime as Timestamp)?.toMillis() || 0;
+                    return timeB - timeA;
+                });
+                return sortedDocs.map(docSnap => {
                     const data = docSnap.data();
                     const date = data.dateTime.toDate();
                     return { 
@@ -329,9 +335,9 @@ export const getAllTopics = async (): Promise<Topic[]> => {
   if (isLive && db) {
       try {
         const topicsCol = collection(db, 'topics');
-        const q = query(topicsCol, orderBy('name'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Topic);
+        const snapshot = await getDocs(topicsCol);
+        const topics = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Topic);
+        return topics.sort((a,b) => a.name.localeCompare(b.name));
       } catch (error) {
         console.error("Error fetching all topics:", error);
       }
@@ -453,9 +459,7 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
     try {
         const playlistsQuery = query(
             collectionGroup(db, 'playlists'),
-            where('isPublic', '==', true),
-            orderBy('createdAt', 'desc'),
-            limit(30)
+            where('isPublic', '==', true)
         );
         const playlistsSnapshot = await getDocs(playlistsQuery);
         
@@ -463,7 +467,13 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
             return [];
         }
 
-        const playlists = playlistsSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Playlist);
+        let playlists = playlistsSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Playlist);
+
+        // Sort and limit in JS
+        playlists = playlists
+            .sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .slice(0, 30);
+
 
         // Fetch user profiles for each playlist
         const userIds = [...new Set(playlists.map(p => p.userId))];
@@ -530,9 +540,10 @@ export async function getLecturesByProgram(programId: string): Promise<Lecture[]
     if (isLive && db) {
         try {
             const lecturesCol = collection(db, 'lectures');
-            const q = query(lecturesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
+            const q = query(lecturesCol, where('programId', '==', programId));
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            const lectures = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+            return lectures.sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         } catch (error) {
             console.error("Error fetching lectures by program:", error);
         }
@@ -545,9 +556,10 @@ export async function getSeriesByProgram(programId: string): Promise<Series[]> {
     if (isLive && db) {
         try {
             const seriesCol = collection(db, 'series');
-            const q = query(seriesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
+            const q = query(seriesCol, where('programId', '==', programId));
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+            const series = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+            return series.sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         } catch (error) {
             console.error("Error fetching series by program:", error);
         }

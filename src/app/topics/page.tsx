@@ -36,7 +36,7 @@ export default async function TopicsPage() {
                     width={400}
                     height={200}
                     className="w-full h-40 object-cover"
-                    data-ai-hint={placeholder?.imageHint}
+                    data-ai-hint={placeholder?.imageHint || 'abstract'}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-4 right-4">
@@ -59,4 +59,3 @@ export default async function TopicsPage() {
     </div>
   );
 }
-
