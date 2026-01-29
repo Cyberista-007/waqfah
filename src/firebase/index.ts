@@ -12,3 +12,4 @@ export * from './auth/useUser';
 export * from './errors';
 export * from './error-emitter';
 export * from './config';
+export * from './non-blocking-updates';
