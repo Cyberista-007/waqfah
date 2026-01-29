@@ -1,7 +1,8 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useCollection, useDoc } from '@/firebase';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { Playlist, Lecture, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureListItem } from '@/components/lecture-list-item';
@@ -14,11 +15,22 @@ import { HomePageSkeleton } from '@/components/skeletons';
 
 export default function PlaylistPage() {
     const params = useParams();
+    const firestore = useFirestore();
     const playlistId = params.id as string;
     const userId = playlistId.split('_')[0];
 
-    const { data: playlist, isLoading: playlistLoading } = useDoc<Playlist>(`users/${userId}/playlists/${playlistId}`);
-    const { data: userProfile, isLoading: userLoading } = useDoc<UserProfile>(`users/${userId}`);
+    const playlistDocRef = useMemoFirebase(
+      () => (firestore && userId && playlistId ? doc(firestore, 'users', userId, 'playlists', playlistId) : null),
+      [firestore, userId, playlistId]
+    );
+    const { data: playlist, isLoading: playlistLoading } = useDoc<Playlist>(playlistDocRef);
+
+    const userDocRef = useMemoFirebase(
+      () => (firestore && userId ? doc(firestore, 'users', userId) : null),
+      [firestore, userId]
+    );
+    const { data: userProfile, isLoading: userLoading } = useDoc<UserProfile>(userDocRef);
+
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     
     const isLoading = playlistLoading || userLoading || lecturesLoading;
