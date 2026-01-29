@@ -277,7 +277,9 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
         const lectures = allLectures.filter(l => 
             l.title.toLowerCase().includes(searchTermLower) || 
             (l.description && l.description.toLowerCase().includes(searchTermLower)) ||
-            (l.programName && l.programName.toLowerCase().includes(searchTermLower))
+            (l.programName && l.programName.toLowerCase().includes(searchTermLower)) ||
+            (l.seriesTitle && l.seriesTitle.toLowerCase().includes(searchTermLower)) ||
+            (l.channelName && l.channelName.toLowerCase().includes(searchTermLower))
         );
         const series = allSeries.filter(s => 
             s.title.toLowerCase().includes(searchTermLower) ||
