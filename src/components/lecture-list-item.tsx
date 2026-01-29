@@ -1,11 +1,9 @@
-
-
 "use client"
 
 import type { Lecture } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2 } from "lucide-react";
+import { Download, Play, Share2, ChevronDown } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -16,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { useState } from "react";
 import { YoutubePlayerModal } from "./youtube-player-modal";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -120,46 +119,62 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
 
     return (
         <>
-        <div className="bg-card text-card-foreground rounded-xl border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in" style={{animationDelay: `${index * 50}ms`, animationFillMode: 'backwards'}}>
-            <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
-            <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
-                 <Image 
-                    src={imageUrl}
-                    alt={lecture.title}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={placeholder?.imageHint || "lecture content"}
-                 />
-                 <div 
-                    className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                    onClick={handleImageClick}
-                 >
-                    <Play className="w-8 h-8 text-white fill-current" />
-                 </div>
-            </div>
-            <div className="flex-grow">
-                <Link href={`/lectures/${lecture.slug}`} className="text-md font-semibold text-foreground hover:text-primary hover:underline">
-                    {lecture.title}
-                </Link>
-                <p className="text-sm text-muted-foreground">{lecture.seriesTitle}</p>
-            </div>
-            <div className="flex flex-col md:flex-row items-center gap-2">
-                {videoId && (
-                    <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
-                        <SiYoutube className="w-5 h-5 text-red-500"/>
+        <Collapsible
+            className="bg-card text-card-foreground rounded-xl border transition-all hover:border-primary/50 hover:bg-primary/5 animate-slide-in"
+            style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
+        >
+            <div className="p-3 flex items-center gap-4">
+                <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
+                <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
+                    <Image 
+                        src={imageUrl}
+                        alt={lecture.title}
+                        fill
+                        className="object-cover"
+                        data-ai-hint={placeholder?.imageHint || "lecture content"}
+                    />
+                    <div 
+                        className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={handleImageClick}
+                    >
+                        <Play className="w-8 h-8 text-white fill-current" />
+                    </div>
+                </div>
+                <div className="flex-grow">
+                    <Link href={`/lectures/${lecture.slug}`} className="text-md font-semibold text-foreground hover:text-primary hover:underline">
+                        {lecture.title}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">{lecture.seriesTitle}</p>
+                </div>
+                <div className="flex flex-col md:flex-row items-center gap-1">
+                    {videoId && (
+                        <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
+                            <SiYoutube className="w-5 h-5 text-red-500"/>
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={handleShare}>
+                        <Share2 className="w-5 h-5 text-muted-foreground" />
                     </Button>
-                )}
-                 <Button variant="ghost" size="icon" onClick={handleShare}>
-                    <Share2 className="w-5 h-5 text-muted-foreground" />
-                 </Button>
-                 <Button asChild variant="ghost" size="icon">
-                    <a href={lecture.audioSrc} download>
-                        <Download className="w-5 h-5 text-muted-foreground" />
-                    </a>
-                 </Button>
+                    <Button asChild variant="ghost" size="icon">
+                        <a href={lecture.audioSrc} download>
+                            <Download className="w-5 h-5 text-muted-foreground" />
+                        </a>
+                    </Button>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                            <span className="sr-only">Toggle Description</span>
+                        </Button>
+                    </CollapsibleTrigger>
+                </div>
             </div>
-        </div>
-         {videoId && (
+            <CollapsibleContent>
+                <div className="px-4 pb-3 text-sm text-muted-foreground">
+                    <p className="line-clamp-3">{lecture.description || "لا يوجد وصف لهذه المحاضرة."}</p>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
+        {videoId && (
             <YoutubePlayerModal 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
