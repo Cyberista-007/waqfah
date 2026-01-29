@@ -275,30 +275,30 @@ export async function searchContent(searchTerm: string): Promise<{ lectures: Lec
         ]);
 
         const lectures = allLectures.filter(l => 
-            l.title.toLowerCase().includes(searchTermLower) || 
-            (l.description && l.description.toLowerCase().includes(searchTermLower)) ||
-            (l.programName && l.programName.toLowerCase().includes(searchTermLower)) ||
-            (l.seriesTitle && l.seriesTitle.toLowerCase().includes(searchTermLower)) ||
-            (l.channelName && l.channelName.toLowerCase().includes(searchTermLower))
+            (l.title || '').toLowerCase().includes(searchTermLower) || 
+            (l.description || '').toLowerCase().includes(searchTermLower) ||
+            (l.programName || '').toLowerCase().includes(searchTermLower) ||
+            (l.seriesTitle || '').toLowerCase().includes(searchTermLower) ||
+            (l.channelName || '').toLowerCase().includes(searchTermLower)
         );
         const series = allSeries.filter(s => 
-            s.title.toLowerCase().includes(searchTermLower) ||
-            (s.description && s.description.toLowerCase().includes(searchTermLower)) ||
-            (s.programName && s.programName.toLowerCase().includes(searchTermLower))
+            (s.title || '').toLowerCase().includes(searchTermLower) ||
+            (s.description || '').toLowerCase().includes(searchTermLower) ||
+            (s.programName || '').toLowerCase().includes(searchTermLower)
         );
 
         const programs = allPrograms.filter(p => 
-            p.name.toLowerCase().includes(searchTermLower) ||
-            (p.bio && p.bio.toLowerCase().includes(searchTermLower))
+            (p.name || '').toLowerCase().includes(searchTermLower) ||
+            (p.bio || '').toLowerCase().includes(searchTermLower)
         );
 
         const channels = allChannels.filter(c => 
-            c.name.toLowerCase().includes(searchTermLower) ||
-            (c.description && c.description.toLowerCase().includes(searchTermLower))
+            (c.name || '').toLowerCase().includes(searchTermLower) ||
+            (c.description || '').toLowerCase().includes(searchTermLower)
         );
 
         const books = allBooks.filter(b => 
-            b.title.toLowerCase().includes(searchTermLower)
+            (b.title || '').toLowerCase().includes(searchTermLower)
         );
 
         return { lectures, series, programs, channels, books };

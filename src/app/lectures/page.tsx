@@ -72,10 +72,11 @@ export default function LecturesListPage() {
     if (searchTerm) {
         const lowercasedTerm = searchTerm.toLowerCase();
         lectures = lectures.filter(l => 
-            l.title.toLowerCase().includes(lowercasedTerm) ||
-            l.description.toLowerCase().includes(lowercasedTerm) ||
-            (l.sheikhName && l.sheikhName.toLowerCase().includes(lowercasedTerm)) ||
-            (l.seriesTitle && l.seriesTitle.toLowerCase().includes(lowercasedTerm))
+            (l.title || '').toLowerCase().includes(lowercasedTerm) ||
+            (l.description || '').toLowerCase().includes(lowercasedTerm) ||
+            (l.programName || '').toLowerCase().includes(lowercasedTerm) ||
+            (l.seriesTitle || '').toLowerCase().includes(lowercasedTerm) ||
+            (l.channelName || '').toLowerCase().includes(lowercasedTerm)
         );
     }
     
