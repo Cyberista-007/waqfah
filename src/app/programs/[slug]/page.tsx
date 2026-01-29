@@ -35,7 +35,7 @@ export default async function ProgramPage({ params }: { params: { slug: string }
     }
 
     const placeholder = getPlaceholderImage(program.imageId);
-    const imageUrl = placeholder?.imageUrl;
+    const imageUrl = program.imageUrl || placeholder?.imageUrl;
     
     const bannerUrl = "https://picsum.photos/seed/program-banner/1600/400";
 
@@ -81,7 +81,7 @@ export default async function ProgramPage({ params }: { params: { slug: string }
                         </div>
                         <p className="text-base text-muted-foreground mt-3 max-w-xl line-clamp-3">{program.bio}</p>
                          <div className="mt-6 flex flex-wrap gap-2">
-                             <FollowButton sheikhId={program.id} />
+                             <FollowButton programId={program.id} />
                          </div>
                     </div>
                 </div>

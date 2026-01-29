@@ -12,7 +12,6 @@ export type Stats = {
   lectures: number;
   series: number;
   books: number;
-  channels: number;
 }
 
 export type Program = Serializable<{
@@ -21,6 +20,8 @@ export type Program = Serializable<{
   name: string;
   bio: string;
   imageId: string;
+  imageUrl?: string;
+  youtubeUrl?: string;
   createdAt: Timestamp;
   followerCount: number;
 }>
@@ -35,9 +36,6 @@ export type Lecture = Serializable<{
   seriesId?: string; // Document ID of the series
   seriesSlug?: string;
   seriesTitle?: string; 
-  channelId?: string;
-  channelName?: string;
-  channelSlug?: string;
   duration: number; // in seconds
   audioSrc: string;
   imageId: string;
@@ -124,18 +122,12 @@ export type Favorite = Serializable<{
     addedAt: Timestamp;
 }>;
 
-export type FollowingProgram = Serializable<{
+export type Following = Serializable<{
     id: string; // programId
     programId: string;
     followedAt: Timestamp;
-}>;
-
-export type FollowingChannel = Serializable<{
-    id: string; // channelId
-    channelId: string;
-    followedAt: Timestamp;
     notificationsEnabled?: boolean;
-}>
+}>;
 
 export type Rating = Serializable<{
     id: string; // combination of userId_lectureId
@@ -174,17 +166,6 @@ export type Topic = Serializable<{
     imageId: string;
     lectureIds: string[];
     seriesIds: string[];
-}>;
-
-export type Channel = Serializable<{
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    imageId: string;
-    imageUrl?: string;
-    youtubeUrl: string;
-    followerCount?: number;
 }>;
 
 export type Challenge = Serializable<{

@@ -25,7 +25,7 @@ import {
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Channel, Program } from "@/lib/types";
+import type { Series, Lecture, Program } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -42,11 +42,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   
   const isEditMode = !!lecture;
 
-  const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
   const { data: programsList, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
-  const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -118,7 +116,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     const language = formData.get("language") as string;
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
-    const channelData = channelsList?.find(c => c.id === selectedChannelId);
     const programData = selectedProgramId !== 'none' ? programsList?.find(p => p.id === selectedProgramId) : null;
     
     if (!title || !description || !audioSrc || !duration) {
@@ -143,9 +140,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
-        channelId: channelData?.id || "",
-        channelName: channelData?.name || "",
-        channelSlug: channelData?.slug || "",
         audioSrc,
         duration: parseInt(duration, 10), 
         imageId: lecture?.imageId || `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
@@ -228,7 +222,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     }
   };
   
-  const isLoading = channelsLoading || programsLoading;
+  const isLoading = programsLoading;
 
   return (
     <Card>
@@ -257,36 +251,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
               <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="channel">القناة (اختياري)</Label>
-                <Select onValueChange={setSelectedChannelId} defaultValue={lecture?.channelId} disabled={isLoading}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="اختر قناة..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {channelsList?.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div className="space-y-2">
-              <Label htmlFor="series">السلسلة (اختياري)</Label>
-              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
-                  <SelectTrigger>
-                      <SelectValue placeholder={"اختر سلسلة..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="none">بدون سلسلة</SelectItem>
-                      {seriesList.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
               <Label htmlFor="program">البرنامج (اختياري)</Label>
               <Select name="program" onValueChange={setSelectedProgramId} value={selectedProgramId} disabled={isLoading || selectedSeriesId !== 'none'}>
                   <SelectTrigger>
@@ -300,6 +264,21 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                   </SelectContent>
               </Select>
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="series">السلسلة (اختياري)</Label>
+            <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
+                <SelectTrigger>
+                    <SelectValue placeholder={"اختر سلسلة..."} />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">بدون سلسلة</SelectItem>
+                    {seriesList.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           
           <div>

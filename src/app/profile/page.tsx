@@ -1,18 +1,19 @@
+
 "use client";
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile, Playlist, FollowingChannel, Channel } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContinueListening } from "@/components/continue-listening";
-import { ChannelCard } from "@/components/channel-card";
+import { ProgramCard } from "@/components/program-card";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -150,42 +151,42 @@ function PlaylistsSection() {
 }
 
 
-function FollowedChannelsSection() {
+function FollowedProgramsSection() {
     const { user } = useUser();
     const firestore = useFirestore();
-    const [followedChannels, setFollowedChannels] = useState<Channel[]>([]);
+    const [followedPrograms, setFollowedPrograms] = useState<Program[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const followingPath = user ? `users/${user.uid}/followingChannels` : null;
-    const { data: following, isLoading: followingLoading } = useCollection<FollowingChannel>(followingPath);
+    const followingPath = user ? `users/${user.uid}/following` : null;
+    const { data: following, isLoading: followingLoading } = useCollection<Following>(followingPath);
 
     useEffect(() => {
-        const fetchChannels = async () => {
+        const fetchPrograms = async () => {
             if (followingLoading || !firestore) return;
             if (!following || following.length === 0) {
                 setIsLoading(false);
-                setFollowedChannels([]);
+                setFollowedPrograms([]);
                 return;
             }
             
             try {
-                const channelIds = following.map(f => f.channelId);
-                const channelsData: Channel[] = [];
-                for (let i = 0; i < channelIds.length; i += 30) {
-                    const chunk = channelIds.slice(i, i + 30);
-                    const channelsQuery = query(collection(firestore, 'channels'), where('__name__', 'in', chunk));
-                    const channelsSnap = await getDocs(channelsQuery);
-                    channelsData.push(...channelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel)));
+                const programIds = following.map(f => f.programId);
+                const programsData: Program[] = [];
+                for (let i = 0; i < programIds.length; i += 30) {
+                    const chunk = programIds.slice(i, i + 30);
+                    const programsQuery = query(collection(firestore, 'programs'), where('__name__', 'in', chunk));
+                    const programsSnap = await getDocs(programsQuery);
+                    programsData.push(...programsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Program)));
                 }
-                setFollowedChannels(channelsData);
+                setFollowedPrograms(programsData);
             } catch (error) {
-                console.error("Error fetching followed channels:", error);
+                console.error("Error fetching followed programs:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchChannels();
+        fetchPrograms();
     }, [following, followingLoading, firestore]);
 
      if (isLoading) {
@@ -196,16 +197,16 @@ function FollowedChannelsSection() {
         </div>
     }
 
-    return followedChannels.length > 0 ? (
+    return followedPrograms.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {followedChannels.map((channel, index) => <ChannelCard key={channel.id} channel={channel} index={index} />)}
+            {followedPrograms.map((program, index) => <ProgramCard key={program.id} program={program} index={index} />)}
         </div>
     ) : (
         <Card className="text-center py-16">
             <CardContent className="flex flex-col items-center gap-4">
-                <Youtube className="w-16 h-16 text-muted-foreground" />
-                <p className="text-lg text-muted-foreground">لم تقم بمتابعة أي قنوات بعد.</p>
-                <Button asChild><Link href="/channels">تصفح القنوات</Link></Button>
+                <Podcast className="w-16 h-16 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">لم تقم بمتابعة أي برامج بعد.</p>
+                <Button asChild><Link href="/programs">تصفح البرامج</Link></Button>
             </CardContent>
         </Card>
     );
@@ -261,7 +262,7 @@ export default function ProfilePage() {
                   <TabsTrigger value="favorites" className="px-4 py-2 rounded-full flex items-center gap-2"><Heart className="h-5 w-5"/>المفضلة</TabsTrigger>
                   <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
                   <TabsTrigger value="playlists" className="px-4 py-2 rounded-full flex items-center gap-2"><ListMusic className="h-5 w-5"/>قوائم التشغيل</TabsTrigger>
-                  <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Youtube className="h-5 w-5"/>القنوات المتابعة</TabsTrigger>
+                  <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Podcast className="h-5 w-5"/>البرامج المتابعة</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="history" className="mt-6">
@@ -277,7 +278,7 @@ export default function ProfilePage() {
                 <PlaylistsSection />
               </TabsContent>
               <TabsContent value="following" className="mt-6">
-                <FollowedChannelsSection />
+                <FollowedProgramsSection />
               </TabsContent>
             </Tabs>
         </div>

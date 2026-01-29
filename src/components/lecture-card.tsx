@@ -7,7 +7,7 @@ import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock } from "lu
 import { SiTelegram } from "@icons-pack/react-simple-icons"
 import { useState, useMemo, useRef } from "react"
 
-import type { Lecture, ListenHistoryItem, Playlist, Channel } from "@/lib/types"
+import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
@@ -25,7 +25,6 @@ import { useRouter } from "next/navigation"
 
 interface LectureCardProps {
   lecture: Lecture
-  channel?: Channel
   index?: number
 }
 
@@ -49,7 +48,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
   return null;
 }
 
-export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
+export function LectureCard({ lecture, index = 0 }: LectureCardProps) {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
@@ -167,8 +166,8 @@ export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
   
   const displayDurationInSeconds = lecture.duration || 0;
 
-  const finalChannelName = lecture.channelName || channel?.name;
-  const finalChannelSlug = lecture.channelSlug || channel?.slug;
+  const finalProgramName = lecture.programName;
+  const finalProgramSlug = lecture.programSlug;
 
 
   return (
@@ -229,11 +228,11 @@ export function LectureCard({ lecture, channel, index = 0 }: LectureCardProps) {
             </div>
           )}
 
-          {finalChannelName && finalChannelSlug && (
+          {finalProgramName && finalProgramSlug && (
              <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
-                <Link href={`/channels/${finalChannelSlug}`} className="flex items-center gap-1 hover:underline">
+                <Link href={`/programs/${finalProgramSlug}`} className="flex items-center gap-1 hover:underline">
                     <Youtube className="w-3 h-3" />
-                    <span>{finalChannelName}</span>
+                    <span>{finalProgramName}</span>
                 </Link>
             </div>
           )}

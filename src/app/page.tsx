@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
 
 export default async function Home() {
-    const { latestSeries, latestLectures, topPrograms, allChannels } = await getHomePageData();
+    const { latestSeries, latestLectures, topPrograms } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
 
   return (
@@ -62,9 +62,8 @@ export default async function Home() {
           <h2 className="text-3xl font-bold mb-6 font-headline">أحدث المحاضرات</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestLectures?.map((lecture, index) => {
-                const channel = allChannels?.find(c => c.id === lecture.channelId);
                 return (
-                    <LectureCard key={lecture.id} lecture={lecture} channel={channel} index={index}/>
+                    <LectureCard key={lecture.id} lecture={lecture} index={index}/>
                 )
             })}
           </div>

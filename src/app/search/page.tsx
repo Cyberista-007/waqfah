@@ -1,18 +1,16 @@
 
-
 import { searchContent } from "@/lib/data";
 import { Suspense } from "react";
-import { Loader2, SearchIcon, Podcast, Book as BookIcon, Youtube } from "lucide-react";
+import { Loader2, SearchIcon, Podcast, Book as BookIcon } from "lucide-react";
 import { LectureCard } from "@/components/lecture-card";
 import { SeriesCard } from "@/components/series-card";
 import { ProgramCard } from "@/components/program-card";
-import { ChannelCard } from "@/components/channel-card";
 import { BookCard } from "@/components/book-card";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { lectures, series, programs, channels, books } = await searchContent(searchTerm);
+    const { lectures, series, programs, books } = await searchContent(searchTerm);
 
-    const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || channels.length > 0 || books.length > 0;
+    const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || books.length > 0;
 
     if (!hasResults) {
         return (
@@ -31,14 +29,6 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
                     <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><Podcast /> البرامج</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                        {programs.map((p, index) => <ProgramCard key={p.id} program={p} index={index} />)}
-                    </div>
-                </section>
-            )}
-            {channels.length > 0 && (
-                <section>
-                    <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><Youtube /> القنوات</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                       {channels.map((c, index) => <ChannelCard key={c.id} channel={c} index={index} />)}
                     </div>
                 </section>
             )}

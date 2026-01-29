@@ -67,7 +67,6 @@ import { Label } from "./ui/label"
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/programs", label: "البرامج" },
-  { href: "/channels", label: "القنوات" },
   { href: "/lectures", label: "المحاضرات" },
   { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },

@@ -15,7 +15,7 @@ interface ProgramCardProps {
 
 export function ProgramCard({ program, index = 0 }: ProgramCardProps) {
     const placeholder = getPlaceholderImage(program.imageId);
-    const imageUrl = placeholder?.imageUrl;
+    const imageUrl = program.imageUrl || placeholder?.imageUrl;
 
     return (
         <Card 
@@ -38,7 +38,7 @@ export function ProgramCard({ program, index = 0 }: ProgramCardProps) {
                 </CardContent>
             </Link>
             <CardFooter className="p-0 pt-4 mt-auto w-full">
-                 <FollowButton sheikhId={program.id} />
+                 <FollowButton programId={program.id} />
             </CardFooter>
         </Card>
     )

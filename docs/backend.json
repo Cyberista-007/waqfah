@@ -23,6 +23,8 @@
         "name": { "type": "string", "description": "The full name of the program." },
         "bio": { "type": "string", "description": "A short biography of the program." },
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
+        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
       },
@@ -58,7 +60,6 @@
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
-        "channelId": { "type": "string" },
         "audioSrc": { "type": "string", "format": "uri" },
         "youtubeUrl": { "type": "string", "format": "uri" },
         "pdfUrl": { "type": "string", "format": "uri" },
@@ -129,19 +130,6 @@
       },
       "required": ["userId", "programId", "followedAt"]
     },
-    "FollowingChannel": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FollowingChannel",
-      "description": "Represents the relationship of a user following a channel.",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
-        "channelId": { "type": "string" },
-        "followedAt": { "type": "string", "format": "date-time" },
-        "notificationsEnabled": { "type": "boolean" }
-      },
-      "required": ["userId", "channelId", "followedAt"]
-    },
     "Rating": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Rating",
@@ -199,20 +187,6 @@
         "seriesIds": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["name", "slug", "description"]
-    },
-    "Channel": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Channel",
-      "description": "Represents a YouTube channel or other content source.",
-      "properties": {
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "description": { "type": "string" },
-        "imageId": { "type": "string" },
-        "youtubeUrl": { "type": "string", "format": "uri" },
-        "followerCount": { "type": "number", "minimum": 0 }
-      },
-      "required": ["name", "slug", "youtubeUrl"]
     },
     "Challenge": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -314,10 +288,6 @@
         "definition": { "schema": { "$ref": "#/entities/Book" } }
       },
       {
-        "path": "/channels/{channelId}",
-        "definition": { "schema": { "$ref": "#/entities/Channel" } }
-      },
-      {
         "path": "/users/{userId}",
         "definition": { "schema": { "$ref": "#/entities/UserProfile" } }
       },
@@ -328,10 +298,6 @@
        {
         "path": "/users/{userId}/following/{programId}",
         "definition": { "schema": { "$ref": "#/entities/Following" } }
-      },
-      {
-        "path": "/users/{userId}/followingChannels/{channelId}",
-        "definition": { "schema": { "$ref": "#/entities/FollowingChannel" } }
       },
       {
         "path": "/users/{userId}/listenHistory/{lectureId}",

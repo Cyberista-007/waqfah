@@ -28,13 +28,18 @@ import { ProgramForm } from "@/components/admin/program-form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { getInitials } from "@/lib/utils";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function AdminProgramsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const youtubeUrl = searchParams.get('youtubeUrl');
+
     const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
     const [programToEdit, setProgramToEdit] = useState<Program | null>(null);
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(!!youtubeUrl);
 
     const { data: allPrograms, isLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
 
@@ -103,10 +108,12 @@ export default function AdminProgramsPage() {
     const handleFormClose = () => {
       setIsFormOpen(false);
       setProgramToEdit(null);
+      // Remove the query param from URL if it exists
+      router.replace('/admin/programs', { scroll: false });
     }
 
     if (isFormOpen) {
-      return <ProgramForm program={programToEdit} onFormClose={handleFormClose} />
+      return <ProgramForm program={programToEdit} onFormClose={handleFormClose} initialYoutubeUrl={youtubeUrl || undefined} />
     }
 
     return (
@@ -142,12 +149,13 @@ export default function AdminProgramsPage() {
                   </TableRow>
                 ) : allPrograms?.map((program) => {
                     const placeholder = getPlaceholderImage(program.imageId);
+                    const imageUrl = program.imageUrl || placeholder?.imageUrl;
                     return (
                         <TableRow key={program.id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
-                                        <AvatarImage src={placeholder?.imageUrl} alt={program.name} />
+                                        <AvatarImage src={imageUrl} alt={program.name} />
                                         <AvatarFallback>{getInitials(program.name)}</AvatarFallback>
                                     </Avatar>
                                     <span>{program.name}</span>

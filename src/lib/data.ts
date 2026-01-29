@@ -1,5 +1,5 @@
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel, Program } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Program } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -14,6 +14,7 @@ const DUMMY_PROGRAMS_RAW = [
         "name": "أمجد سمير",
         "bio": "باحث متخصص في علوم الحديث والعقيدة، له العديد من السلاسل العلمية المنهجية.",
         "imageId": "sheikh-1",
+        "youtubeUrl": "https://www.youtube.com/@AmgedSamir",
         "createdAt": "2023-01-15T10:00:00Z"
     },
     {
@@ -22,6 +23,7 @@ const DUMMY_PROGRAMS_RAW = [
         "name": "محمد حسان",
         "bio": "داعية إسلامي معروف، يتميز بأسلوبه العاطفي والمؤثر في الدعوة إلى الله.",
         "imageId": "sheikh-2",
+        "youtubeUrl": "https://www.youtube.com/channel/UCi-tPtgJ9aJFibfJ3-2_wEA",
         "createdAt": "2023-02-20T12:00:00Z"
     },
     {
@@ -30,6 +32,7 @@ const DUMMY_PROGRAMS_RAW = [
         "name": "أبو إسحاق الحويني",
         "bio": "محدث العصر، علامة في علوم الحديث والجرح والتعديل، وله مؤلفات قيمة.",
         "imageId": "sheikh-3",
+        "youtubeUrl": "https://www.youtube.com/channel/UCu3Npy42s5a5Daj5V-sA2tQ",
         "createdAt": "2023-03-10T14:30:00Z"
     }
 ];
@@ -42,9 +45,9 @@ const DUMMY_SERIES_RAW = [
         "description": "سلسلة علمية متكاملة لشرح كتاب 'شرح السنة' للإمام البربهاري، والذي يعد من أهم متون العقيدة السلفية.",
         "lectureCount": 15,
         "imageId": "series-aqidah",
-        "sheikhId": "amged-samir",
-        "sheikhName": "أمجد سمير",
-        "sheikhSlug": "amged-samir",
+        "programId": "amged-samir",
+        "programName": "أمجد سمير",
+        "programSlug": "amged-samir",
         "createdAt": "2023-05-01T10:00:00Z"
     },
     {
@@ -54,9 +57,9 @@ const DUMMY_SERIES_RAW = [
         "description": "سلسلة مؤثرة تتناول أحوال الناس يوم القيامة، من البعث والحشر إلى الحساب والميزان والصراط.",
         "lectureCount": 10,
         "imageId": "series-fiqh",
-        "sheikhId": "mohamed-hassan",
-        "sheikhName": "محمد حسان",
-        "sheikhSlug": "mohamed-hassan",
+        "programId": "mohamed-hassan",
+        "programName": "محمد حسان",
+        "programSlug": "mohamed-hassan",
         "createdAt": "2023-06-15T18:00:00Z"
     },
     {
@@ -66,9 +69,9 @@ const DUMMY_SERIES_RAW = [
         "description": "شرح ماتع ومفصل للأربعين حديثًا التي جمعها الإمام النووي رحمه الله، والتي تعد من جوامع كلم النبي صلى الله عليه وسلم.",
         "lectureCount": 20,
         "imageId": "series-hadith",
-        "sheikhId": "abu-ishaq",
-        "sheikhName": "أبو إسحاق الحويني",
-        "sheikhSlug": "abu-ishaq",
+        "programId": "abu-ishaq",
+        "programName": "أبو إسحاق الحويني",
+        "programSlug": "abu-ishaq",
         "createdAt": "2023-04-22T14:00:00Z"
     }
 ];
@@ -78,9 +81,9 @@ const DUMMY_LECTURES_RAW = [
         "id": "sharh-sona-1",
         "slug": "sharh-sona-1",
         "title": "مقدمة في أهمية لزوم السنة",
-        "sheikhId": "amged-samir",
-        "sheikhName": "أمجد سمير",
-        "sheikhSlug": "amged-samir",
+        "programId": "amged-samir",
+        "programName": "أمجد سمير",
+        "programSlug": "amged-samir",
         "seriesId": "sharh-sona",
         "seriesSlug": "sharh-sona",
         "seriesTitle": "شرح السنة للبربهاري",
@@ -97,9 +100,9 @@ const DUMMY_LECTURES_RAW = [
         "id": "sharh-sona-2",
         "slug": "sharh-sona-2",
         "title": "شرح قول المصنف: 'والسنة هي الإسلام'",
-        "sheikhId": "amged-samir",
-        "sheikhName": "أمجد سمير",
-        "sheikhSlug": "amged-samir",
+        "programId": "amged-samir",
+        "programName": "أمجد سمير",
+        "programSlug": "amged-samir",
         "seriesId": "sharh-sona",
         "seriesSlug": "sharh-sona",
         "seriesTitle": "شرح السنة للبربهاري",
@@ -116,9 +119,9 @@ const DUMMY_LECTURES_RAW = [
         "id": "ahwal-nass-1",
         "slug": "ahwal-nass-1",
         "title": "يوم ينفخ في الصور",
-        "sheikhId": "mohamed-hassan",
-        "sheikhName": "محمد حسان",
-        "sheikhSlug": "mohamed-hassan",
+        "programId": "mohamed-hassan",
+        "programName": "محمد حسان",
+        "programSlug": "mohamed-hassan",
         "seriesId": "ahwal-nass",
         "seriesSlug": "ahwal-nass",
         "seriesTitle": "أحوال الناس",
@@ -135,9 +138,9 @@ const DUMMY_LECTURES_RAW = [
         "id": "sharh-hadith-1",
         "slug": "sharh-hadith-1",
         "title": "شرح حديث 'إنما الأعمال بالنيات'",
-        "sheikhId": "abu-ishaq",
-        "sheikhName": "أبو إسحاق الحويني",
-        "sheikhSlug": "abu-ishaq",
+        "programId": "abu-ishaq",
+        "programName": "أبو إسحاق الحويني",
+        "programSlug": "abu-ishaq",
         "seriesId": "sharh-hadith",
         "seriesSlug": "sharh-hadith",
         "seriesTitle": "شرح الأربعين النووية",
@@ -159,20 +162,11 @@ const DUMMY_PROGRAMS: Program[] = DUMMY_PROGRAMS_RAW.map(p => ({
 
 const DUMMY_SERIES: Series[] = DUMMY_SERIES_RAW.map(s => ({
     ...(s as any),
-    programId: (s as any).sheikhId,
-    programName: (s as any).sheikhName,
-    programSlug: (s as any).sheikhSlug,
     createdAt: new Date(s.createdAt).toISOString()
 }));
 
 const DUMMY_LECTURES: Lecture[] = DUMMY_LECTURES_RAW.map((l, index) => ({
     ...(l as any),
-    programId: (l as any).sheikhId,
-    programName: (l as any).sheikhName,
-    programSlug: (l as any).sheikhSlug,
-    channelId: index % 2 === 0 ? 'dummy-channel-1' : undefined,
-    channelName: index % 2 === 0 ? 'قناة وهمية' : undefined,
-    channelSlug: index % 2 === 0 ? 'dummy-channel-1' : undefined,
     createdAt: new Date(l.createdAt).toISOString(),
     viewCount: (l as any).viewCount || Math.floor(Math.random() * 10000),
     rating: (l as any).rating || (Math.random() * (5 - 3.5) + 3.5),
@@ -181,17 +175,6 @@ const DUMMY_LECTURES: Lecture[] = DUMMY_LECTURES_RAW.map((l, index) => ({
 }));
 
 const DUMMY_BOOKS: Book[] = [];
-const DUMMY_CHANNELS: Channel[] = [
-    {
-        id: 'dummy-channel-1',
-        name: 'قناة وهمية',
-        slug: 'dummy-channel-1',
-        description: 'هذه قناة تجريبية لعرض المحتوى عند عدم وجود اتصال بقاعدة البيانات.',
-        imageId: 'lecture-thumbnail-2',
-        youtubeUrl: '#',
-        followerCount: 1234
-    }
-];
 const DUMMY_TOPICS: Topic[] = [];
 const DUMMY_QA: QAPair[] = [];
 const DUMMY_SCHEDULE: ScheduleItem[] = [];
@@ -209,11 +192,10 @@ export const getDbSafe = () => {
 }
 
 export async function getHomePageData() {
-    const [allSeries, allLectures, allPrograms, allChannels] = await Promise.all([
+    const [allSeries, allLectures, allPrograms] = await Promise.all([
         getAllSeries(),
         getAllLectures(),
         getAllPrograms(),
-        getAllChannels(),
     ]);
 
     // Sorting is already handled in the getAll... functions
@@ -221,7 +203,7 @@ export async function getHomePageData() {
     const latestLectures = allLectures.slice(0, 3);
     const topPrograms = allPrograms.slice(0, 4);
 
-    return { latestSeries, latestLectures, topPrograms, allChannels };
+    return { latestSeries, latestLectures, topPrograms };
 }
 
 
@@ -283,7 +265,6 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
             lectures: DUMMY_LECTURES.length,
             series: DUMMY_SERIES.length,
             books: DUMMY_BOOKS.length,
-            channels: DUMMY_CHANNELS.length,
         }
     }
     if (db) {
@@ -294,28 +275,26 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [programs, lectures, series, books, channels] = await Promise.all([
+            const [programs, lectures, series, books] = await Promise.all([
                 getDocs(collection(db, 'programs')),
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
-                getDocs(collection(db, 'channels')),
             ]);
             const statsData: Stats = {
                 programs: programs.size,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size,
-                channels: channels.size,
             };
             await setDoc(statsRef, statsData);
             return statsData;
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
-            return { programs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
+            return { programs: 0, lectures: 0, series: 0, books: 0 };
         }
     }
-    return { programs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
+    return { programs: 0, lectures: 0, series: 0, books: 0 };
 }
 
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
@@ -392,27 +371,6 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
   }
   return undefined;
 };
-
-export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]> => {
-  const { db, isLive } = getDbSafe();
-  if (!isLive) {
-      return DUMMY_LECTURES
-          .filter(l => l.channelId === channelId)
-          .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-  }
-  if (db) {
-      try {
-        const lecturesCol = collection(db, 'lectures');
-        const q = query(lecturesCol, where('channelId', '==', channelId), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-      } catch (error) {
-        console.error("Error fetching lectures by channel:", error);
-      }
-  }
-  return [];
-}
-
 
 // --- Books, Schedule, Q&A ---
 
@@ -505,19 +463,18 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     return [];
 }
 
-export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[], error: string | null }> {
+export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], books: Book[], error: string | null }> {
     const { isLive, error } = getDbSafe();
 
     if (!searchTerm) {
-        return { isLive, lectures: [], series: [], programs: [], channels: [], books: [], error: null };
+        return { isLive, lectures: [], series: [], programs: [], books: [], error: null };
     }
     
     // The individual getAll functions will handle the isLive fallback.
-    const [allLectures, allSeries, allPrograms, allChannels, allBooks] = await Promise.all([
+    const [allLectures, allSeries, allPrograms, allBooks] = await Promise.all([
       getAllLectures(),
       getAllSeries(),
       getAllPrograms(),
-      getAllChannels(),
       getAllBooks(),
     ]);
 
@@ -527,8 +484,7 @@ export async function searchContent(searchTerm: string): Promise<{ isLive: boole
         (l.title || '').toLowerCase().includes(searchTermLower) || 
         (l.description || '').toLowerCase().includes(searchTermLower) ||
         (l.programName || '').toLowerCase().includes(searchTermLower) ||
-        (l.seriesTitle || '').toLowerCase().includes(searchTermLower) ||
-        (l.channelName || '').toLowerCase().includes(searchTermLower)
+        (l.seriesTitle || '').toLowerCase().includes(searchTermLower)
     );
     const series = allSeries.filter(s => 
         (s.title || '').toLowerCase().includes(searchTermLower) ||
@@ -541,16 +497,11 @@ export async function searchContent(searchTerm: string): Promise<{ isLive: boole
         (p.bio || '').toLowerCase().includes(searchTermLower)
     );
 
-    const channels = allChannels.filter(c => 
-        (c.name || '').toLowerCase().includes(searchTermLower) ||
-        (c.description || '').toLowerCase().includes(searchTermLower)
-    );
-
     const books = allBooks.filter(b => 
         (b.title || '').toLowerCase().includes(searchTermLower)
     );
 
-    return { isLive, lectures, series, programs, channels, books, error: isLive ? null : error };
+    return { isLive, lectures, series, programs, books, error: isLive ? null : error };
 }
 
 const getAllLectures = async (): Promise<Lecture[]> => {
@@ -608,46 +559,6 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
   }
   return undefined;
 };
-
-// --- Channels ---
-export const getAllChannels = async (): Promise<Channel[]> => {
-  const { db, isLive } = getDbSafe();
-  if (!isLive) {
-      return [...DUMMY_CHANNELS].sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0));
-  }
-  if (db) {
-      try {
-        const channelsCol = collection(db, 'channels');
-        const q = query(channelsCol, orderBy('followerCount', 'desc'));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
-        }
-      } catch (error) {
-        console.error("Error fetching all channels:", error);
-      }
-  }
-  return [];
-};
-
-export const getChannelBySlug = async (slug: string): Promise<Channel | undefined> => {
-  const { db, isLive } = getDbSafe();
-  if (!isLive) return DUMMY_CHANNELS.find(c => c.slug === slug);
-  if (db) {
-      try {
-        const channelsCol = collection(db, 'channels');
-        const q = query(channelsCol, where("slug", "==", slug), limit(1));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            const docSnap = snapshot.docs[0];
-            return toSerializable({ ...docSnap.data(), id: docSnap.id }) as Channel;
-        }
-      } catch (error) {
-        console.error("Error fetching channel by slug:", error);
-      }
-  }
-  return undefined;
-}
 
 export const getSeriesBySlug = async (slug: string): Promise<Series | undefined> => {
   const { db, isLive } = getDbSafe();

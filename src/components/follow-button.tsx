@@ -10,28 +10,19 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 interface FollowButtonProps {
-    sheikhId?: string;
-    channelId?: string;
+    programId: string;
 }
 
-export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
+export function FollowButton({ programId }: FollowButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
 
-    const isSheikhFollow = !!sheikhId;
-    
     const followDocPath = useMemo(() => {
-        if (!user) return null;
-        if (isSheikhFollow && sheikhId) {
-            return `users/${user.uid}/following/${sheikhId}`;
-        }
-        if (!isSheikhFollow && channelId) {
-            return `users/${user.uid}/followingChannels/${channelId}`;
-        }
-        return null;
-    }, [user, isSheikhFollow, sheikhId, channelId]);
+        if (!user || !programId) return null;
+        return `users/${user.uid}/following/${programId}`;
+    }, [user, programId]);
 
     const followDocRef = useMemoFirebase(
       () => (firestore && followDocPath ? doc(firestore, followDocPath) : null),
@@ -59,28 +50,23 @@ export function FollowButton({ sheikhId, channelId }: FollowButtonProps) {
             return;
         }
 
-        if (!sheikhId && !channelId) return;
+        if (!programId) return;
 
         const followRef = followDocRef!;
-        
-        const targetRef = isSheikhFollow
-            ? doc(firestore, 'sheikhs', sheikhId!)
-            : doc(firestore, 'channels', channelId!);
+        const targetRef = doc(firestore, 'programs', programId);
 
         try {
             await runTransaction(firestore, async (transaction) => {
                 const targetDoc = await transaction.get(targetRef);
                 if (!targetDoc.exists()) {
-                    throw isSheikhFollow ? "Sheikh does not exist!" : "Channel does not exist!";
+                    throw "Program does not exist!";
                 }
 
                 if (isFollowing) {
                     transaction.delete(followRef);
                     transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
-                    const followData = isSheikhFollow 
-                        ? { sheikhId, followedAt: Timestamp.now() } 
-                        : { channelId, followedAt: Timestamp.now() };
+                    const followData = { programId, followedAt: Timestamp.now() };
                     transaction.set(followRef, followData);
                     transaction.update(targetRef, { followerCount: increment(1) });
                 }

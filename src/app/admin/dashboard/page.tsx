@@ -55,7 +55,6 @@ export default async function AdminDashboardPage() {
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/programs"><span>إدارة البرامج</span><Podcast /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures"><span>إدارة المحاضرات</span><Clapperboard /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/series"><span>إدارة السلاسل</span><ListVideo /></Link></Button>
-                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/channels"><span>إدارة القنوات</span><Youtube /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/topics"><span>إدارة المواضيع</span><Hash /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/schedule"><span>جدول الدروس</span><CalendarClock /></Link></Button>
