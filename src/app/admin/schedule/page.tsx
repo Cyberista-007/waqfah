@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -93,8 +92,8 @@ export default function AdminSchedulePage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>عنوان الدرس</TableHead>
-                <TableHead>التاريخ والوقت</TableHead>
-                <TableHead>الحالة</TableHead>
+                <TableHead className="hidden md:table-cell">التاريخ والوقت</TableHead>
+                <TableHead className="hidden md:table-cell">الحالة</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
@@ -108,10 +107,10 @@ export default function AdminSchedulePage() {
                 ) : allItems?.map((item) => (
                 <TableRow key={item.id}>
                     <TableCell className="font-medium max-w-sm truncate">{item.title}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                         {item.dateTime?.toDate ? item.dateTime.toDate().toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' }) : 'غير محدد'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                         {item.isLive && <Badge variant="destructive" className="animate-pulse">بث مباشر</Badge>}
                     </TableCell>
                     <TableCell className="text-left">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -107,8 +106,8 @@ export default function AdminSeriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>عنوان السلسلة</TableHead>
-                <TableHead>البرنامج</TableHead>
-                <TableHead>عدد المحاضرات</TableHead>
+                <TableHead className="hidden md:table-cell">البرنامج</TableHead>
+                <TableHead className="hidden md:table-cell">عدد المحاضرات</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
@@ -122,8 +121,8 @@ export default function AdminSeriesPage() {
               ): allSeries?.map((series) => (
                 <TableRow key={series.id}>
                   <TableCell className="font-medium">{series.title}</TableCell>
-                  <TableCell>{series.programName || 'غير محدد'}</TableCell>
-                  <TableCell>{series.lectureCount || 0}</TableCell>
+                  <TableCell className="hidden md:table-cell">{series.programName || 'غير محدد'}</TableCell>
+                  <TableCell className="hidden md:table-cell">{series.lectureCount || 0}</TableCell>
                   <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                       <Button asChild variant="outline" size="sm">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -136,7 +135,7 @@ export default function AdminProgramsPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>البرنامج</TableHead>
-                <TableHead>النبذة التعريفية</TableHead>
+                <TableHead className="hidden md:table-cell">النبذة التعريفية</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
@@ -161,7 +160,7 @@ export default function AdminProgramsPage() {
                                     <span>{program.name}</span>
                                 </div>
                             </TableCell>
-                            <TableCell className="max-w-sm truncate text-muted-foreground">{program.bio}</TableCell>
+                            <TableCell className="hidden md:table-cell max-w-sm truncate text-muted-foreground">{program.bio}</TableCell>
                             <TableCell className="text-left">
                             <div className="flex gap-2 justify-end">
                                 <Button onClick={() => handleEdit(program)} variant="outline" size="sm">

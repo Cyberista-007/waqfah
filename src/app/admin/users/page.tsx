@@ -47,9 +47,9 @@ export default function AdminUsersPage() {
             <TableHeader>
                 <TableRow>
                     <TableHead>المستخدم</TableHead>
-                    <TableHead>البريد الإلكتروني</TableHead>
+                    <TableHead className="hidden md:table-cell">البريد الإلكتروني</TableHead>
                     <TableHead>الدور</TableHead>
-                    <TableHead>تاريخ التسجيل</TableHead>
+                    <TableHead className="hidden md:table-cell">تاريخ التسجيل</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -71,14 +71,14 @@ export default function AdminUsersPage() {
                              {user.id === currentUser?.uid && <Badge variant="secondary" className="mt-1">أنت</Badge>}
                         </div>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">{user.email}</TableCell>
                     <TableCell>
                         {user.role === 'admin' 
                             ? <Badge>مدير</Badge> 
                             : <Badge variant="outline">مستخدم</Badge>
                         }
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                         {user.createdAt ? format(user.createdAt.toDate(), 'yyyy/MM/dd') : 'غير معروف'}
                     </TableCell>
                 </TableRow>

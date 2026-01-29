@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -92,8 +91,8 @@ export default function AdminTopicsPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>اسم الموضوع</TableHead>
-                <TableHead>عدد المحاضرات</TableHead>
-                <TableHead>عدد السلاسل</TableHead>
+                <TableHead className="hidden md:table-cell">عدد المحاضرات</TableHead>
+                <TableHead className="hidden md:table-cell">عدد السلاسل</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
@@ -107,8 +106,8 @@ export default function AdminTopicsPage() {
                 ) : allItems?.map((item) => (
                 <TableRow key={item.id}>
                     <TableCell className="font-medium max-w-sm truncate">{item.name}</TableCell>
-                    <TableCell>{item.lectureIds?.length || 0}</TableCell>
-                    <TableCell>{item.seriesIds?.length || 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">{item.lectureIds?.length || 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">{item.seriesIds?.length || 0}</TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                         <Button onClick={() => handleEdit(item)} variant="outline" size="sm">

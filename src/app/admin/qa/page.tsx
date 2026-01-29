@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -92,7 +91,7 @@ export default function AdminQAPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>السؤال</TableHead>
-                <TableHead>الإجابة</TableHead>
+                <TableHead className="hidden md:table-cell">الإجابة</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
@@ -106,7 +105,7 @@ export default function AdminQAPage() {
                 ) : allItems?.map((item) => (
                 <TableRow key={item.id}>
                     <TableCell className="font-medium max-w-sm truncate">{item.question}</TableCell>
-                    <TableCell className="max-w-sm truncate text-muted-foreground">{item.answer}</TableCell>
+                    <TableCell className="hidden md:table-cell max-w-sm truncate text-muted-foreground">{item.answer}</TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                         <Button onClick={() => handleEdit(item)} variant="outline" size="sm">
