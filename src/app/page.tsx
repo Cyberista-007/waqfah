@@ -10,9 +10,10 @@ import { getPlaceholderImage } from '@/lib/images';
 import { getHomePageData } from '@/lib/data';
 import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { ConnectionWarning } from '@/components/connection-warning';
 
 export default async function Home() {
-    const { latestSeries, latestLectures, topPrograms } = await getHomePageData();
+    const { latestSeries, latestLectures, topPrograms, isLive, error } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
 
   return (
@@ -40,6 +41,8 @@ export default async function Home() {
           <HomeSearch />
         </div>
       </section>
+
+      {!isLive && <ConnectionWarning error={error} />}
 
       <div className="container py-8 space-y-16">
         <Suspense>

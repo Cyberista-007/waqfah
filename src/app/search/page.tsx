@@ -6,25 +6,18 @@ import { LectureCard } from "@/components/lecture-card";
 import { SeriesCard } from "@/components/series-card";
 import { ProgramCard } from "@/components/program-card";
 import { BookCard } from "@/components/book-card";
+import { ConnectionWarning } from "@/components/connection-warning";
 
 async function SearchResults({ searchTerm }: { searchTerm: string }) {
-    const { lectures, series, programs, books } = await searchContent(searchTerm);
+    const { lectures, series, programs, books, isLive, error } = await searchContent(searchTerm);
 
     const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || books.length > 0;
 
-    if (!hasResults) {
-        return (
-            <div className="text-center py-16">
-                <p className="text-lg text-muted-foreground">
-                    لم يتم العثور على نتائج للبحث عن: <span className="font-bold text-foreground">"{searchTerm}"</span>
-                </p>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-12">
-             {programs.length > 0 && (
+            {!isLive && <ConnectionWarning error={error} />}
+
+            {programs.length > 0 && (
                 <section>
                     <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><Podcast /> البرامج</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -55,6 +48,14 @@ async function SearchResults({ searchTerm }: { searchTerm: string }) {
                        {books.map((b, index) => <BookCard key={b.id} book={b} index={index} />)}
                     </div>
                 </section>
+            )}
+
+            {!hasResults && (
+                 <div className="text-center py-16">
+                    <p className="text-lg text-muted-foreground">
+                        لم يتم العثور على نتائج للبحث عن: <span className="font-bold text-foreground">"{searchTerm}"</span>
+                    </p>
+                </div>
             )}
         </div>
     );

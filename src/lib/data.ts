@@ -195,7 +195,13 @@ export async function getHomePageData() {
     const { db, isLive, error } = getDbSafe();
 
     if (!isLive) {
-        return { latestSeries: [], latestLectures: [], topPrograms: [], isLive, error };
+        return { 
+            latestSeries: DUMMY_SERIES.slice(0, 3), 
+            latestLectures: DUMMY_LECTURES.slice(0, 3), 
+            topPrograms: DUMMY_PROGRAMS.slice(0, 4), 
+            isLive, 
+            error 
+        };
     }
     
     const [allSeries, allLectures, allPrograms] = await Promise.all([
@@ -292,7 +298,7 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return [];
+        return DUMMY_LECTURES.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, count);
     }
     if (db) {
         try {
@@ -312,7 +318,7 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
 export const getAllSeries = async (dbInstance?: any): Promise<Series[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if (!isLive) {
-      return [];
+      return DUMMY_SERIES;
   }
   if (db) {
       try {
@@ -332,7 +338,7 @@ export const getAllSeries = async (dbInstance?: any): Promise<Series[]> => {
 export const getLectureBySlug = async (slug: string): Promise<Lecture | undefined> => {
   const { db, isLive } = getDbSafe();
   if (!isLive) {
-    return undefined;
+    return DUMMY_LECTURES.find(l => l.slug === slug);
   }
   if (db) {
       try {
@@ -359,7 +365,7 @@ export const getLectureBySlug = async (slug: string): Promise<Lecture | undefine
 
 export const getAllBooks = async (dbInstance?: any): Promise<Book[]> => {
     const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-    if (!isLive) return [];
+    if (!isLive) return DUMMY_BOOKS;
     if (db) {
         try {
             const booksCol = collection(db, 'books');
@@ -374,7 +380,7 @@ export const getAllBooks = async (dbInstance?: any): Promise<Book[]> => {
 
 export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
     const { db, isLive } = getDbSafe();
-    if (!isLive) return [];
+    if (!isLive) return DUMMY_SCHEDULE;
     if (db) {
         try {
             const scheduleCol = collection(db, 'scheduled_lessons');
@@ -399,7 +405,7 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
 
 export const getAllQAPairs = async (): Promise<QAPair[]> => {
     const { db, isLive } = getDbSafe();
-    if (!isLive) return [];
+    if (!isLive) return DUMMY_QA;
     if (db) {
         try {
             const qaCol = collection(db, 'question_answers');
@@ -416,7 +422,7 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     if (!seriesId) return [];
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return [];
+        return DUMMY_LECTURES.filter(l => l.seriesId === seriesId && l.id !== currentLectureId).slice(0,3);
     }
     if (db) {
         try {
@@ -437,18 +443,18 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
 }
 
 export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], books: Book[], error: string | null }> {
-    const { db, isLive, error } = getDbSafe();
+    const { isLive, error } = getDbSafe();
 
     if (!searchTerm) {
         return { isLive, lectures: [], series: [], programs: [], books: [], error: null };
     }
     
-    // The individual getAll functions will handle the isLive fallback.
+    // The individual getAll functions will now correctly return dummy data if not live.
     const [allLectures, allSeries, allPrograms, allBooks] = await Promise.all([
-      getAllLectures(db),
-      getAllSeries(db),
-      getAllPrograms(db),
-      getAllBooks(db),
+      getAllLectures(),
+      getAllSeries(),
+      getAllPrograms(),
+      getAllBooks(),
     ]);
 
     const searchTermLower = searchTerm.toLowerCase();
@@ -480,7 +486,7 @@ export async function searchContent(searchTerm: string): Promise<{ isLive: boole
 const getAllLectures = async (dbInstance?: any): Promise<Lecture[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if(!isLive) {
-    return [];
+    return DUMMY_LECTURES;
   }
   if(db) {
       try {
@@ -499,7 +505,7 @@ const getAllLectures = async (dbInstance?: any): Promise<Lecture[]> => {
 // --- Topics ---
 export const getAllTopics = async (): Promise<Topic[]> => {
   const { db, isLive } = getDbSafe();
-  if (!isLive) return [];
+  if (!isLive) return DUMMY_TOPICS;
   if (db) {
       try {
         const topicsCol = collection(db, 'topics');
@@ -533,7 +539,7 @@ export const getTopicBySlug = async (slug: string): Promise<Topic | undefined> =
 
 export const getSeriesBySlug = async (slug: string, dbInstance?: any): Promise<Series | undefined> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-  if (!isLive) return undefined;
+  if (!isLive) return DUMMY_SERIES.find(s => s.slug === slug);
   if (db) {
       try {
         const seriesCol = collection(db, 'series');
@@ -591,7 +597,7 @@ export const getSeriesByIds = (ids: string[] | undefined) => getDocumentsByIds<S
 export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile?: UserProfile })[]> => {
     const { db, isLive } = getDbSafe();
     if (!isLive || !db) {
-        return [];
+        return DUMMY_PLAYLISTS;
     }
 
     try {
@@ -638,7 +644,7 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
 export const getAllPrograms = async (dbInstance?: any): Promise<Program[]> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
   if (!isLive) {
-    return [];
+    return DUMMY_PROGRAMS;
   }
   if (db) {
       try {
@@ -655,7 +661,7 @@ export const getAllPrograms = async (dbInstance?: any): Promise<Program[]> => {
 
 export const getProgramBySlug = async (slug: string, dbInstance?: any): Promise<Program | undefined> => {
   const { db, isLive } = dbInstance ? { db: dbInstance, isLive: true } : getDbSafe();
-  if (!isLive) return undefined;
+  if (!isLive) return DUMMY_PROGRAMS.find(p => p.slug === slug);
   if (db) {
       try {
         const programsCol = collection(db, 'programs');
@@ -675,7 +681,7 @@ export const getProgramBySlug = async (slug: string, dbInstance?: any): Promise<
 export async function getLecturesByProgram(programId: string): Promise<Lecture[]> {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return [];
+        return DUMMY_LECTURES.filter(l => l.programId === programId);
     }
     if (db) {
         try {
@@ -694,7 +700,7 @@ export async function getLecturesByProgram(programId: string): Promise<Lecture[]
 export async function getSeriesByProgram(programId: string): Promise<Series[]> {
     const { db, isLive } = getDbSafe();
     if (!isLive) {
-        return [];
+        return DUMMY_SERIES.filter(s => s.programId === programId);
     }
     if (db) {
         try {
