@@ -84,6 +84,7 @@ const moreNavItems = [
 
 const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
+    { href: '/programs', icon: Podcast, label: 'البرامج' },
     { href: '/search', icon: Search, label: 'بحث' },
     { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
     { href: '/settings', icon: Settings, label: 'الإعدادات'}
