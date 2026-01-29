@@ -117,8 +117,7 @@ export const getAllSeries = async (): Promise<Series[]> => {
   if (isLive && db) {
       try {
         const seriesCol = collection(db, 'series');
-        const q = query(seriesCol, orderBy('title'));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(seriesCol);
         if (!snapshot.empty) {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
         }
@@ -180,8 +179,7 @@ export const getAllBooks = async (): Promise<Book[]> => {
     if (isLive && db) {
         try {
             const booksCol = collection(db, 'books');
-            const q = query(booksCol, orderBy('title', 'asc'));
-            const snapshot = await getDocs(q);
+            const snapshot = await getDocs(booksCol);
             if(!snapshot.empty) {
               return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Book);
             }
@@ -189,7 +187,7 @@ export const getAllBooks = async (): Promise<Book[]> => {
             console.error("Error fetching books:", e);
         }
     }
-    return []; // No dummy data for books yet
+    return [];
 }
 
 export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
@@ -215,7 +213,7 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
             console.error("Error fetching schedule items:", e);
         }
     }
-    return []; // No dummy data for schedule yet
+    return [];
 }
 
 export const getAllQAPairs = async (): Promise<QAPair[]> => {
@@ -231,7 +229,7 @@ export const getAllQAPairs = async (): Promise<QAPair[]> => {
             console.error("Error fetching Q&A pairs:", e);
         }
     }
-    return []; // No dummy data for Q&A yet
+    return [];
 }
 
 export const getRelatedLectures = async (currentLectureId: string, seriesId?: string): Promise<Lecture[]> => {
@@ -313,8 +311,7 @@ const getAllLectures = async (): Promise<Lecture[]> => {
   if(isLive && db) {
       try {
         const lecturesCol = collection(db, 'lectures');
-        const q = query(lecturesCol, orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(lecturesCol);
         if (!snapshot.empty) {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
         }
@@ -365,8 +362,7 @@ export const getAllChannels = async (): Promise<Channel[]> => {
   if (isLive && db) {
       try {
         const channelsCol = collection(db, 'channels');
-        const q = query(channelsCol, orderBy('name', 'asc'));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(channelsCol);
         if (!snapshot.empty) {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
         }
@@ -500,8 +496,7 @@ export const getAllPrograms = async (): Promise<Program[]> => {
   if (isLive && db) {
       try {
         const programsCol = collection(db, 'programs');
-        const q = query(programsCol, orderBy('name', 'asc'));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(programsCol);
         if (!snapshot.empty) {
             return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
         }
