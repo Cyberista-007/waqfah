@@ -79,9 +79,9 @@ export default function AdminImportLecturesPage() {
     const [fetchedPlaylists, setFetchedPlaylists] = useState<FetchedPlaylist[]>([]);
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [selectedShorts, setSelectedShorts] = useState<string[]>([]);
-    const [targetSeriesId, setTargetSeriesId] = useState<string>("");
-    const [targetProgramId, setTargetProgramId] = useState<string>("");
-    const [targetChannelId, setTargetChannelId] = useState<string>("");
+    const [targetSeriesId, setTargetSeriesId] = useState<string>("none");
+    const [targetProgramId, setTargetProgramId] = useState<string>("none");
+    const [targetChannelId, setTargetChannelId] = useState<string>("none");
     const [activeTab, setActiveTab] = useState("youtube-videos");
 
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -94,10 +94,10 @@ export default function AdminImportLecturesPage() {
             if (series?.programId) {
                 setTargetProgramId(series.programId);
             } else {
-                setTargetProgramId("");
+                setTargetProgramId("none");
             }
         } else if (targetSeriesId === 'none') {
-             setTargetProgramId("");
+             setTargetProgramId("none");
         }
     }, [targetSeriesId, allSeries]);
 
@@ -192,9 +192,9 @@ export default function AdminImportLecturesPage() {
             const batch = writeBatch(firestore);
             const videosToImport = sourceItems.filter(v => itemsToImport.includes(v.videoId));
 
-            const series = targetSeriesId ? allSeries.find(s => s.id === targetSeriesId) : null;
-            const program = targetProgramId ? allPrograms.find(p => p.id === targetProgramId) : null;
-            const channel = targetChannelId ? allChannels.find(c => c.id === targetChannelId) : null;
+            const series = (targetSeriesId && targetSeriesId !== 'none') ? allSeries.find(s => s.id === targetSeriesId) : null;
+            const program = (targetProgramId && targetProgramId !== 'none') ? allPrograms.find(p => p.id === targetProgramId) : null;
+            const channel = (targetChannelId && targetChannelId !== 'none') ? allChannels.find(c => c.id === targetChannelId) : null;
 
             for (const video of videosToImport) {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -447,7 +447,7 @@ export default function AdminImportLecturesPage() {
                                                         <SelectValue placeholder="اختر برنامج..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="">بدون برنامج</SelectItem>
+                                                        <SelectItem value="none">بدون برنامج</SelectItem>
                                                         {allPrograms?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                                                     </SelectContent>
                                                 </Select>
@@ -459,7 +459,7 @@ export default function AdminImportLecturesPage() {
                                                         <SelectValue placeholder="اختر قناة..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                         <SelectItem value="">بدون قناة</SelectItem>
+                                                         <SelectItem value="none">بدون قناة</SelectItem>
                                                         {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                                     </SelectContent>
                                                 </Select>
