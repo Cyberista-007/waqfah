@@ -77,7 +77,7 @@ export type Book = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
-  sheikhName?: string;
+  programName?: string;
   pdfUrl: string;
   imageId: string;
 }>;

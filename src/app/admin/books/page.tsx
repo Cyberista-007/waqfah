@@ -107,7 +107,7 @@ export default function AdminBooksPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>عنوان الكتاب</TableHead>
-                <TableHead>الشيخ</TableHead>
+                <TableHead>البرنامج</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
             </TableHeader>
@@ -121,7 +121,7 @@ export default function AdminBooksPage() {
                 ) : allBooks?.map((book) => (
                 <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.title}</TableCell>
-                    <TableCell>{book.sheikhName || 'غير محدد'}</TableCell>
+                    <TableCell>{book.programName || 'غير محدد'}</TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                         <Button onClick={() => handleEdit(book)} variant="outline" size="sm">

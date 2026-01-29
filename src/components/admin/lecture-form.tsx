@@ -47,7 +47,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
-  const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "");
+  const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -61,7 +61,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           if (series?.programId) {
               setSelectedProgramId(series.programId);
           } else {
-              setSelectedProgramId("");
+              setSelectedProgramId("none");
           }
       }
   }, [selectedSeriesId, seriesList]);
@@ -119,7 +119,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
-    const programData = programsList?.find(p => p.id === selectedProgramId);
+    const programData = selectedProgramId !== 'none' ? programsList?.find(p => p.id === selectedProgramId) : null;
     
     if (!title || !description || !audioSrc || !duration) {
         toast({
@@ -293,7 +293,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                       <SelectValue placeholder={"اختر برنامجًا..."} />
                   </SelectTrigger>
                   <SelectContent>
-                      <SelectItem value="">محاضرة مستقلة</SelectItem>
+                      <SelectItem value="none">محاضرة مستقلة</SelectItem>
                       {programsList?.map(p => (
                           <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}

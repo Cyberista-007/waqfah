@@ -7,24 +7,24 @@
       "type": "object",
       "description": "A singleton document to store global site statistics.",
       "properties": {
-        "sheikhs": { "type": "number", "minimum": 0 },
+        "programs": { "type": "number", "minimum": 0 },
         "lectures": { "type": "number", "minimum": 0 },
         "series": { "type": "number", "minimum": 0 },
         "books": { "type": "number", "minimum": 0 }
       }
     },
-    "Sheikh": {
+    "Program": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Sheikh",
+      "title": "Program",
       "type": "object",
-      "description": "Represents a Sheikh or author on the platform.",
+      "description": "Represents a Program or author on the platform.",
       "properties": {
-        "slug": { "type": "string", "description": "A URL-friendly identifier for the sheikh." },
-        "name": { "type": "string", "description": "The full name of the sheikh." },
-        "bio": { "type": "string", "description": "A short biography of the sheikh." },
-        "imageId": { "type": "string", "description": "An ID for a placeholder image for the sheikh." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the sheikh was added." },
-        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this sheikh." }
+        "slug": { "type": "string", "description": "A URL-friendly identifier for the program." },
+        "name": { "type": "string", "description": "The full name of the program." },
+        "bio": { "type": "string", "description": "A short biography of the program." },
+        "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
+        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
     },
@@ -53,8 +53,8 @@
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "sheikhName": { "type": "string" },
-        "sheikhSlug": { "type": "string" },
+        "programName": { "type": "string" },
+        "programSlug": { "type": "string" },
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
@@ -71,7 +71,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
       },
-      "required": ["slug", "title", "sheikhName", "sheikhSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
+      "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -81,6 +81,7 @@
       "properties": {
         "slug": { "type": "string" },
         "title": { "type": "string" },
+        "programName": { "type": "string", "description": "The name of the program authoring this book, if any." },
         "pdfUrl": { "type": "string", "format": "uri" },
         "imageId": { "type": "string" }
       },
@@ -119,14 +120,14 @@
     "Following": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Following",
-      "description": "Represents the relationship of a user following a sheikh.",
+      "description": "Represents the relationship of a user following a program.",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "sheikhId": { "type": "string" },
+        "programId": { "type": "string" },
         "followedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "sheikhId", "followedAt"]
+      "required": ["userId", "programId", "followedAt"]
     },
     "FollowingChannel": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -297,8 +298,8 @@
         "definition": { "schema": { "$ref": "#/entities/Stats" } }
       },
       {
-        "path": "/sheikhs/{sheikhId}",
-        "definition": { "schema": { "$ref": "#/entities/Sheikh" } }
+        "path": "/programs/{programId}",
+        "definition": { "schema": { "$ref": "#/entities/Program" } }
       },
       {
         "path": "/series/{seriesId}",
@@ -325,7 +326,7 @@
         "definition": { "schema": { "$ref": "#/entities/Favorite" } }
       },
        {
-        "path": "/users/{userId}/following/{sheikhId}",
+        "path": "/users/{userId}/following/{programId}",
         "definition": { "schema": { "$ref": "#/entities/Following" } }
       },
       {
