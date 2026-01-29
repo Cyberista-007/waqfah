@@ -188,7 +188,7 @@ export default function AdminLecturesPage() {
                     />
                 </TableHead>
                 <TableHead>عنوان المحاضرة</TableHead>
-                <TableHead>الشيخ</TableHead>
+                <TableHead>البرنامج</TableHead>
                 <TableHead>السلسلة</TableHead>
                 <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
@@ -211,7 +211,7 @@ export default function AdminLecturesPage() {
                         />
                     </TableCell>
                     <TableCell className="font-medium">{lecture.title}</TableCell>
-                    <TableCell>{lecture.sheikhName || 'غير محدد'}</TableCell>
+                    <TableCell>{lecture.programName || 'غير محدد'}</TableCell>
                     <TableCell>{lecture.seriesTitle || 'محاضرة مستقلة'}</TableCell>
                     <TableCell className="hidden md:table-cell">
                         {new Date(lecture.createdAt as any).toLocaleDateString('ar-EG')}

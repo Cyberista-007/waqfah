@@ -1,5 +1,5 @@
 
-import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel, Sheikh } from './types';
+import type { Lecture, Series, Book, ScheduleItem, QAPair, Topic, ListenHistoryItem, UserProfile, Playlist, Stats, Channel, Program } from './types';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit, where, Timestamp, collectionGroup, setDoc } from 'firebase/firestore';
 import { initializeFirebaseOnServer } from '@/firebase/server-init';
 import { toSerializable } from './data-helpers';
@@ -32,12 +32,12 @@ export async function getSeriesPageData(slug: string) {
             const lecturesSnapshot = await getDocs(lecturesQuery);
             const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
             
-            let seriesCreator: Sheikh | null = null;
-            if (seriesData.sheikhId) {
-                const sheikhRef = doc(db, 'sheikhs', seriesData.sheikhId);
-                const sheikhSnap = await getDoc(sheikhRef);
-                if (sheikhSnap.exists()) {
-                    seriesCreator = toSerializable({ ...sheikhSnap.data(), id: sheikhSnap.id }) as Sheikh;
+            let seriesCreator: Program | null = null;
+            if (seriesData.programId) {
+                const programRef = doc(db, 'programs', seriesData.programId);
+                const programSnap = await getDoc(programRef);
+                if (programSnap.exists()) {
+                    seriesCreator = toSerializable({ ...programSnap.data(), id: programSnap.id }) as Program;
                 }
             }
 
@@ -63,15 +63,15 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
                 return statsSnap.data() as Stats;
             }
             // If stats doc doesn't exist, create it with initial values from actual data.
-            const [sheikhs, lectures, series, books, channels] = await Promise.all([
-                getDocs(collection(db, 'sheikhs')),
+            const [programs, lectures, series, books, channels] = await Promise.all([
+                getDocs(collection(db, 'programs')),
                 getDocs(collection(db, 'lectures')),
                 getDocs(collection(db, 'series')),
                 getDocs(collection(db, 'books')),
                 getDocs(collection(db, 'channels')),
             ]);
             const statsData: Stats = {
-                sheikhs: sheikhs.size,
+                programs: programs.size,
                 lectures: lectures.size, 
                 series: series.size, 
                 books: books.size,
@@ -82,11 +82,11 @@ export const getDashboardStats = async (): Promise<Stats | null> => {
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
             // In case of error, return a default object to avoid crashing the page.
-            return { sheikhs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
+            return { programs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
         }
     }
     // Fallback for non-live/error environment
-    return { sheikhs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
+    return { programs: 0, lectures: 0, series: 0, books: 0, channels: 0 };
 }
 
 export const getPopularLectures = async (count: number): Promise<Lecture[]> => {

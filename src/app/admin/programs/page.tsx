@@ -19,35 +19,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Sheikh } from "@/lib/types";
+import type { Program } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { doc, runTransaction, increment, writeBatch, collection, query, where, getDocs } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle, MicVocal } from "lucide-react";
+import { Loader2, Trash2, Edit, PlusCircle, Podcast } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { SheikhForm } from "@/components/admin/sheikh-form";
+import { ProgramForm } from "@/components/admin/program-form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { getInitials } from "@/lib/utils";
 
-export default function AdminSheikhsPage() {
+export default function AdminProgramsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
-    const [sheikhToDelete, setSheikhToDelete] = useState<Sheikh | null>(null);
-    const [sheikhToEdit, setSheikhToEdit] = useState<Sheikh | null>(null);
+    const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
+    const [programToEdit, setProgramToEdit] = useState<Program | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const { data: allSheikhs, isLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+    const { data: allPrograms, isLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
 
     const handleDelete = async () => {
-        if (!sheikhToDelete || !firestore) return;
+        if (!programToDelete || !firestore) return;
         
-        const sheikhRef = doc(firestore, 'sheikhs', sheikhToDelete.id);
+        const programRef = doc(firestore, 'programs', programToDelete.id);
         const statsRef = doc(firestore, 'stats', 'global');
         const seriesRef = collection(firestore, 'series');
         const lecturesRef = collection(firestore, 'lectures');
 
-        const seriesQuery = query(seriesRef, where("sheikhId", "==", sheikhToDelete.id));
-        const lecturesQuery = query(lecturesRef, where("sheikhId", "==", sheikhToDelete.id));
+        const seriesQuery = query(seriesRef, where("programId", "==", programToDelete.id));
+        const lecturesQuery = query(lecturesRef, where("programId", "==", programToDelete.id));
         
         try {
             const [seriesSnapshot, lecturesSnapshot] = await Promise.all([
@@ -62,10 +62,10 @@ export default function AdminSheikhsPage() {
 
             seriesSnapshot.forEach(doc => batch.delete(doc.ref));
             lecturesSnapshot.forEach(doc => batch.delete(doc.ref));
-            batch.delete(sheikhRef);
+            batch.delete(programRef);
 
             batch.set(statsRef, { 
-                sheikhs: increment(-1),
+                programs: increment(-1),
                 series: increment(-seriesToDeleteCount),
                 lectures: increment(-lecturesToDeleteCount),
             }, { merge: true });
@@ -75,38 +75,38 @@ export default function AdminSheikhsPage() {
             toast({
                 variant: "destructive",
                 title: "تم الحذف بنجاح",
-                description: `تم حذف الشيخ "${sheikhToDelete.name}" وجميع سلاسله ومحاضراته.`,
+                description: `تم حذف البرنامج "${programToDelete.name}" وجميع سلاسله ومحاضراته.`,
             });
         
         } catch (error) {
-            console.error("Error deleting sheikh and related content:", error);
+            console.error("Error deleting program and related content:", error);
             toast({
                 variant: "destructive",
                 title: "فشل الحذف",
-                description: "لم نتمكن من حذف الشيخ والمحتوى المرتبط به.",
+                description: "لم نتمكن من حذف البرنامج والمحتوى المرتبط به.",
             });
         } finally {
-            setSheikhToDelete(null);
+            setProgramToDelete(null);
         }
     };
     
     const handleNew = () => {
-      setSheikhToEdit(null);
+      setProgramToEdit(null);
       setIsFormOpen(true);
     }
     
-    const handleEdit = (sheikh: Sheikh) => {
-        setSheikhToEdit(sheikh);
+    const handleEdit = (program: Program) => {
+        setProgramToEdit(program);
         setIsFormOpen(true);
     }
     
     const handleFormClose = () => {
       setIsFormOpen(false);
-      setSheikhToEdit(null);
+      setProgramToEdit(null);
     }
 
     if (isFormOpen) {
-      return <SheikhForm sheikh={sheikhToEdit} onFormClose={handleFormClose} />
+      return <ProgramForm program={programToEdit} onFormClose={handleFormClose} />
     }
 
     return (
@@ -114,21 +114,21 @@ export default function AdminSheikhsPage() {
         <Card>
         <CardHeader className="flex flex-row justify-between items-start">
             <div>
-            <CardTitle className="text-2xl font-headline flex items-center gap-2"><MicVocal/>إدارة المشايخ</CardTitle>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2"><Podcast/>إدارة البرامج</CardTitle>
             <CardDescription>
-                أضف أو عدّل أو احذف المشايخ في الموقع.
+                أضف أو عدّل أو احذف البرامج في الموقع.
             </CardDescription>
             </div>
             <Button onClick={handleNew} disabled={isLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              إضافة شيخ جديد
+              إضافة برنامج جديد
             </Button>
         </CardHeader>
         <CardContent>
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>الشيخ</TableHead>
+                <TableHead>البرنامج</TableHead>
                 <TableHead>النبذة التعريفية</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
@@ -140,26 +140,26 @@ export default function AdminSheikhsPage() {
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
-                ) : allSheikhs?.map((sheikh) => {
-                    const placeholder = getPlaceholderImage(sheikh.imageId);
+                ) : allPrograms?.map((program) => {
+                    const placeholder = getPlaceholderImage(program.imageId);
                     return (
-                        <TableRow key={sheikh.id}>
+                        <TableRow key={program.id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
-                                        <AvatarImage src={placeholder?.imageUrl} alt={sheikh.name} />
-                                        <AvatarFallback>{getInitials(sheikh.name)}</AvatarFallback>
+                                        <AvatarImage src={placeholder?.imageUrl} alt={program.name} />
+                                        <AvatarFallback>{getInitials(program.name)}</AvatarFallback>
                                     </Avatar>
-                                    <span>{sheikh.name}</span>
+                                    <span>{program.name}</span>
                                 </div>
                             </TableCell>
-                            <TableCell className="max-w-sm truncate text-muted-foreground">{sheikh.bio}</TableCell>
+                            <TableCell className="max-w-sm truncate text-muted-foreground">{program.bio}</TableCell>
                             <TableCell className="text-left">
                             <div className="flex gap-2 justify-end">
-                                <Button onClick={() => handleEdit(sheikh)} variant="outline" size="sm">
+                                <Button onClick={() => handleEdit(program)} variant="outline" size="sm">
                                 <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button onClick={() => setSheikhToDelete(sheikh)} variant="destructive" size="sm">
+                                <Button onClick={() => setProgramToDelete(program)} variant="destructive" size="sm">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -169,18 +169,18 @@ export default function AdminSheikhsPage() {
                 })}
             </TableBody>
             </Table>
-            {!isLoading && !allSheikhs?.length && (
-              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي مشايخ بعد.</p>
+            {!isLoading && !allPrograms?.length && (
+              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي برامج بعد.</p>
             )}
         </CardContent>
         </Card>
         
         <DeleteConfirmationDialog 
-          isOpen={!!sheikhToDelete}
-          onClose={() => setSheikhToDelete(null)}
+          isOpen={!!programToDelete}
+          onClose={() => setProgramToDelete(null)}
           onConfirm={handleDelete}
-          title="حذف الشيخ"
-          description={`هل أنت متأكد من رغبتك في حذف الشيخ "${sheikhToDelete?.name}"؟ سيتم حذف جميع المحاضرات والسلاسل المرتبطة به بشكل دائم.`}
+          title="حذف البرنامج"
+          description={`هل أنت متأكد من رغبتك في حذف البرنامج "${programToDelete?.name}"؟ سيتم حذف جميع المحاضرات والسلاسل المرتبطة به بشكل دائم.`}
         />
       </>
     );

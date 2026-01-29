@@ -3,7 +3,7 @@
 
 import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX, Youtube } from 'lucide-react';
+import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX, Youtube, Podcast } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -38,10 +38,10 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   if (isAdmin) {
       const navItems = [
         { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-        { href: '/admin/sheikhs', label: 'المشايخ', icon: MicVocal },
+        { href: '/admin/programs', label: 'البرامج', icon: Podcast },
         { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
-        { href: '/admin/channels', label: 'البرامج', icon: Youtube },
+        { href: '/admin/channels', label: 'القنوات', icon: Youtube },
         { href: '/admin/books', label: 'الكتب', icon: Book },
         { href: '/admin/topics', label: 'المواضيع', icon: Hash },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },

@@ -25,7 +25,7 @@ import {
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Channel, Sheikh } from "@/lib/types";
+import type { Series, Lecture, Channel, Program } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -43,25 +43,25 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const isEditMode = !!lecture;
 
   const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
-  const { data: sheikhsList, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
+  const { data: programsList, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "");
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(lecture?.sheikhId || "");
+  const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "");
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const audioSrcRef = useRef<HTMLInputElement>(null);
   const durationRef = useRef<HTMLInputElement>(null);
 
-  // Update selected sheikh when series changes
+  // Update selected program when series changes
   useEffect(() => {
       if (selectedSeriesId !== 'none') {
           const series = seriesList.find(s => s.id === selectedSeriesId);
-          if (series?.sheikhId) {
-              setSelectedSheikhId(series.sheikhId);
+          if (series?.programId) {
+              setSelectedProgramId(series.programId);
           } else {
-              setSelectedSheikhId("");
+              setSelectedProgramId("");
           }
       }
   }, [selectedSeriesId, seriesList]);
@@ -119,7 +119,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const channelData = channelsList?.find(c => c.id === selectedChannelId);
-    const sheikhData = sheikhsList?.find(s => s.id === selectedSheikhId);
+    const programData = programsList?.find(p => p.id === selectedProgramId);
     
     if (!title || !description || !audioSrc || !duration) {
         toast({
@@ -137,9 +137,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         title,
         slug,
         description,
-        sheikhId: sheikhData?.id || "",
-        sheikhName: sheikhData?.name || "",
-        sheikhSlug: sheikhData?.slug || "",
+        programId: programData?.id || "",
+        programName: programData?.name || "",
+        programSlug: programData?.slug || "",
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
@@ -228,7 +228,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     }
   };
   
-  const isLoading = channelsLoading || sheikhsLoading;
+  const isLoading = channelsLoading || programsLoading;
 
   return (
     <Card>
@@ -287,15 +287,15 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
               </Select>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
-              <Select name="sheikh" onValueChange={setSelectedSheikhId} value={selectedSheikhId} disabled={isLoading || selectedSeriesId !== 'none'}>
+              <Label htmlFor="program">البرنامج (اختياري)</Label>
+              <Select name="program" onValueChange={setSelectedProgramId} value={selectedProgramId} disabled={isLoading || selectedSeriesId !== 'none'}>
                   <SelectTrigger>
-                      <SelectValue placeholder={"اختر شيخًا..."} />
+                      <SelectValue placeholder={"اختر برنامجًا..."} />
                   </SelectTrigger>
                   <SelectContent>
                       <SelectItem value="">محاضرة مستقلة</SelectItem>
-                      {sheikhsList?.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      {programsList?.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                   </SelectContent>
               </Select>

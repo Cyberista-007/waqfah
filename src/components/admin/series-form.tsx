@@ -20,7 +20,7 @@ import { collection, Timestamp, doc, runTransaction, increment } from "firebase/
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { Series, Sheikh } from "@/lib/types";
+import type { Series, Program } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -41,8 +41,8 @@ export function SeriesForm({ series }: SeriesFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!series;
   
-  const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs', { orderBy: ['name', 'asc'] });
-  const [selectedSheikhId, setSelectedSheikhId] = useState<string>(series?.sheikhId || "none");
+  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+  const [selectedProgramId, setSelectedProgramId] = useState<string>(series?.programId || "none");
 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -55,7 +55,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
     const description = formData.get("description") as string;
     const language = formData.get("language") as string;
     
-    const sheikhData = selectedSheikhId !== 'none' ? allSheikhs?.find(s => s.id === selectedSheikhId) : null;
+    const programData = selectedProgramId !== 'none' ? allPrograms?.find(p => p.id === selectedProgramId) : null;
 
 
     if (!title) {
@@ -75,9 +75,9 @@ export function SeriesForm({ series }: SeriesFormProps) {
         slug,
         description: description || "",
         imageId: series?.imageId || `series-${slug}`,
-        sheikhId: sheikhData?.id || "",
-        sheikhName: sheikhData?.name || "",
-        sheikhSlug: sheikhData?.slug || "",
+        programId: programData?.id || "",
+        programName: programData?.name || "",
+        programSlug: programData?.slug || "",
         language: language || 'ar',
     };
     
@@ -143,15 +143,15 @@ export function SeriesForm({ series }: SeriesFormProps) {
             <Input id="title" name="title" defaultValue={series?.title} required disabled={isSubmitting} />
           </div>
            <div>
-              <Label htmlFor="sheikh">الشيخ (اختياري)</Label>
-              <Select name="sheikh" onValueChange={setSelectedSheikhId} value={selectedSheikhId} disabled={sheikhsLoading}>
+              <Label htmlFor="program">البرنامج (اختياري)</Label>
+              <Select name="program" onValueChange={setSelectedProgramId} value={selectedProgramId} disabled={programsLoading}>
                   <SelectTrigger>
-                      <SelectValue placeholder={"اختر شيخًا..."} />
+                      <SelectValue placeholder={"اختر برنامجًا..."} />
                   </SelectTrigger>
                   <SelectContent>
-                      <SelectItem value="none">بدون شيخ</SelectItem>
-                      {allSheikhs?.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      <SelectItem value="none">بدون برنامج</SelectItem>
+                      {allPrograms?.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                   </SelectContent>
               </Select>
@@ -179,8 +179,8 @@ export function SeriesForm({ series }: SeriesFormProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting || !firestore || sheikhsLoading}>
-                {(isSubmitting || sheikhsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+            <Button type="submit" disabled={isSubmitting || !firestore || programsLoading}>
+                {(isSubmitting || programsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء السلسلة'}
             </Button>
             <Button asChild variant="outline" type="button">

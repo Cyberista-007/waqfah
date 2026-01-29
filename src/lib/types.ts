@@ -8,14 +8,14 @@ type Serializable<T> = {
 };
 
 export type Stats = {
-  sheikhs: number;
+  programs: number;
   lectures: number;
   series: number;
   books: number;
   channels: number;
 }
 
-export type Sheikh = Serializable<{
+export type Program = Serializable<{
   id: string; // Document ID
   slug: string;
   name: string;
@@ -29,9 +29,9 @@ export type Lecture = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
   title: string;
-  sheikhId?: string;
-  sheikhName?: string;
-  sheikhSlug?: string;
+  programId?: string;
+  programName?: string;
+  programSlug?: string;
   seriesId?: string; // Document ID of the series
   seriesSlug?: string;
   seriesTitle?: string; 
@@ -64,9 +64,9 @@ export type Series = Serializable<{
   slug: string;
   title:string;
   description: string;
-  sheikhId?: string;
-  sheikhName?: string;
-  sheikhSlug?: string;
+  programId?: string;
+  programName?: string;
+  programSlug?: string;
   lectureCount: number;
   imageId: string;
   createdAt: Timestamp;
@@ -124,9 +124,9 @@ export type Favorite = Serializable<{
     addedAt: Timestamp;
 }>;
 
-export type Following = Serializable<{
-    id: string; // sheikhId
-    sheikhId: string;
+export type FollowingProgram = Serializable<{
+    id: string; // programId
+    programId: string;
     followedAt: Timestamp;
 }>;
 

@@ -73,7 +73,7 @@ export default function AdminChannelsPage() {
             toast({
                 variant: "destructive",
                 title: "تم الحذف بنجاح",
-                description: `تم حذف برنامج "${itemToDelete.name}" وجميع محاضراته (${lecturesToDeleteCount}).`,
+                description: `تم حذف القناة "${itemToDelete.name}" وجميع محاضراتها (${lecturesToDeleteCount}).`,
             });
         
         } catch (error) {
@@ -81,7 +81,7 @@ export default function AdminChannelsPage() {
             toast({
                 variant: "destructive",
                 title: "فشل الحذف",
-                description: "لم نتمكن من حذف البرنامج والمحاضرات المرتبطة به.",
+                description: "لم نتمكن من حذف القناة والمحاضرات المرتبطة بها.",
             });
         } finally {
             setItemToDelete(null);
@@ -112,21 +112,21 @@ export default function AdminChannelsPage() {
         <Card>
         <CardHeader className="flex flex-row justify-between items-start">
             <div>
-            <CardTitle className="text-2xl font-headline flex items-center gap-2"><Youtube/>إدارة البرامج</CardTitle>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2"><Youtube/>إدارة القنوات</CardTitle>
             <CardDescription>
-                أضف أو عدّل أو احذف البرامج في الموقع.
+                أضف أو عدّل أو احذف القنوات في الموقع.
             </CardDescription>
             </div>
             <Button onClick={handleNew} disabled={isLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              إضافة برنامج جديد
+              إضافة قناة جديدة
             </Button>
         </CardHeader>
         <CardContent>
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>البرنامج</TableHead>
+                <TableHead>القناة</TableHead>
                 <TableHead>الوصف</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
@@ -169,7 +169,7 @@ export default function AdminChannelsPage() {
             </TableBody>
             </Table>
             {!isLoading && !allItems?.length && (
-              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي برامج بعد.</p>
+              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي قنوات بعد.</p>
             )}
         </CardContent>
         </Card>
@@ -178,8 +178,8 @@ export default function AdminChannelsPage() {
           isOpen={!!itemToDelete}
           onClose={() => setItemToDelete(null)}
           onConfirm={handleDelete}
-          title="حذف البرنامج"
-          description={`هل أنت متأكد من رغبتك في حذف برنامج "${itemToDelete?.name}"؟ سيتم حذف جميع المحاضرات المرتبطة به بشكل دائم.`}
+          title="حذف القناة"
+          description={`هل أنت متأكد من رغبتك في حذف قناة "${itemToDelete?.name}"؟ سيتم حذف جميع المحاضرات المرتبطة بها بشكل دائم.`}
         />
       </>
     );
