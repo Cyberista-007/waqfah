@@ -208,6 +208,22 @@ export const getDbSafe = () => {
     }
 }
 
+export async function getHomePageData() {
+    const [allSeries, allLectures, allChannels] = await Promise.all([
+        getAllSeries(),
+        getAllLectures(),
+        getAllChannels(),
+    ]);
+
+    // Sorting is already handled in the getAll... functions
+    const latestSeries = allSeries.slice(0, 3);
+    const latestLectures = allLectures.slice(0, 3);
+    const topChannels = allChannels.slice(0, 4);
+
+    return { latestSeries, latestLectures, topChannels, allChannels };
+}
+
+
 export async function getSeriesPageData(slug: string) {
     const { db, isLive } = getDbSafe();
 
@@ -233,10 +249,9 @@ export async function getSeriesPageData(slug: string) {
             }
 
             const lecturesCol = collection(db, 'lectures');
-            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id));
+            const lecturesQuery = query(lecturesCol, where('seriesId', '==', seriesData.id), orderBy('createdAt', 'asc'));
             const lecturesSnapshot = await getDocs(lecturesQuery);
-            const lecturesInSeriesRaw = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
-            const lecturesInSeries = lecturesInSeriesRaw.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+            const lecturesInSeries = lecturesSnapshot.docs.map(d => toSerializable({ ...d.data(), id: d.id }) as Lecture);
             
             let seriesCreator: Program | null = null;
             if (seriesData.programId) {
@@ -312,14 +327,13 @@ export const getPopularLectures = async (count: number): Promise<Lecture[]> => {
     if (db) {
         try {
             const lecturesCol = collection(db, 'lectures');
-            const snapshot = await getDocs(lecturesCol);
+            const q = query(lecturesCol, orderBy('viewCount', 'desc'), limit(count));
+            const snapshot = await getDocs(q);
             if (!snapshot.empty) {
-                const lectures = snapshot.docs.map(d => toSerializable({
+                return snapshot.docs.map(d => toSerializable({
                     ...d.data(),
                     id: d.id,
-                    createdAt: d.data().createdAt || Timestamp.now()
                 }) as Lecture);
-                return lectures.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, count);
             }
         } catch (error) {
             console.error("Error fetching popular lectures:", error);
@@ -338,10 +352,10 @@ export const getAllSeries = async (): Promise<Series[]> => {
   if (db) {
       try {
         const seriesCol = collection(db, 'series');
-        const snapshot = await getDocs(seriesCol);
+        const q = query(seriesCol, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
-            return docs.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
         }
       } catch (error) {
         console.error("Error fetching all series:", error);
@@ -388,10 +402,9 @@ export const getLecturesByChannel = async (channelId: string): Promise<Lecture[]
   if (db) {
       try {
         const lecturesCol = collection(db, 'lectures');
-        const q = query(lecturesCol, where('channelId', '==', channelId));
+        const q = query(lecturesCol, where('channelId', '==', channelId), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
-        const lectures = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-        return lectures.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
       } catch (error) {
         console.error("Error fetching lectures by channel:", error);
       }
@@ -425,14 +438,10 @@ export const getAllScheduleItems = async (): Promise<ScheduleItem[]> => {
     if (db) {
         try {
             const scheduleCol = collection(db, 'scheduled_lessons');
-            const snapshot = await getDocs(scheduleCol);
+            const q = query(scheduleCol, orderBy('dateTime', 'desc'));
+            const snapshot = await getDocs(q);
             if (!snapshot.empty) {
-                const sortedDocs = snapshot.docs.sort((a, b) => {
-                    const timeA = (a.data().dateTime as Timestamp)?.toMillis() || 0;
-                    const timeB = (b.data().dateTime as Timestamp)?.toMillis() || 0;
-                    return timeB - timeA;
-                });
-                return sortedDocs.map(docSnap => {
+                return snapshot.docs.map(docSnap => {
                     const data = docSnap.data();
                     const date = data.dateTime.toDate();
                     return { 
@@ -496,86 +505,51 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
 }
 
 export async function searchContent(searchTerm: string): Promise<{ isLive: boolean, lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[], error: string | null }> {
-    const { isLive, error, db } = getDbSafe();
-    if (!isLive) {
-      if (!searchTerm) {
-          return { isLive: false, lectures: [], series: [], programs: [], channels: [], books: [], error: null };
-      }
-      const searchTermLower = searchTerm.toLowerCase();
-
-      const lectures = DUMMY_LECTURES.filter(l => 
-          (l.title || '').toLowerCase().includes(searchTermLower) || 
-          (l.description || '').toLowerCase().includes(searchTermLower) ||
-          (l.programName || '').toLowerCase().includes(searchTermLower) ||
-          (l.seriesTitle || '').toLowerCase().includes(searchTermLower) ||
-          (l.channelName || '').toLowerCase().includes(searchTermLower)
-      );
-      const series = DUMMY_SERIES.filter(s => 
-          (s.title || '').toLowerCase().includes(searchTermLower) ||
-          (s.description || '').toLowerCase().includes(searchTermLower) ||
-          (s.programName || '').toLowerCase().includes(searchTermLower)
-      );
-      const programs = DUMMY_PROGRAMS.filter(p => 
-          (p.name || '').toLowerCase().includes(searchTermLower) ||
-          (p.bio || '').toLowerCase().includes(searchTermLower)
-      );
-      const channels = DUMMY_CHANNELS.filter(c => (c.name || '').toLowerCase().includes(searchTermLower) || (c.description || '').toLowerCase().includes(searchTermLower));
-      const books = DUMMY_BOOKS.filter(b => (b.title || '').toLowerCase().includes(searchTermLower));
-
-      return { isLive: false, lectures, series, programs, channels, books, error: null };
-    }
-
-    if (!db) {
-         return { isLive: false, lectures: [], series: [], programs: [], channels: [], books: [], error };
-    }
+    const { isLive, error } = getDbSafe();
 
     if (!searchTerm) {
-        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [], error: null };
+        return { isLive, lectures: [], series: [], programs: [], channels: [], books: [], error: null };
     }
     
+    // The individual getAll functions will handle the isLive fallback.
+    const [allLectures, allSeries, allPrograms, allChannels, allBooks] = await Promise.all([
+      getAllLectures(),
+      getAllSeries(),
+      getAllPrograms(),
+      getAllChannels(),
+      getAllBooks(),
+    ]);
+
     const searchTermLower = searchTerm.toLowerCase();
 
-    try {
-        const [allLectures, allSeries, allPrograms, allChannels, allBooks] = await Promise.all([
-          getAllLectures(),
-          getAllSeries(),
-          getAllPrograms(),
-          getAllChannels(),
-          getAllBooks(),
-        ]);
+    const lectures = allLectures.filter(l => 
+        (l.title || '').toLowerCase().includes(searchTermLower) || 
+        (l.description || '').toLowerCase().includes(searchTermLower) ||
+        (l.programName || '').toLowerCase().includes(searchTermLower) ||
+        (l.seriesTitle || '').toLowerCase().includes(searchTermLower) ||
+        (l.channelName || '').toLowerCase().includes(searchTermLower)
+    );
+    const series = allSeries.filter(s => 
+        (s.title || '').toLowerCase().includes(searchTermLower) ||
+        (s.description || '').toLowerCase().includes(searchTermLower) ||
+        (s.programName || '').toLowerCase().includes(searchTermLower)
+    );
 
-        const lectures = allLectures.filter(l => 
-            (l.title || '').toLowerCase().includes(searchTermLower) || 
-            (l.description || '').toLowerCase().includes(searchTermLower) ||
-            (l.programName || '').toLowerCase().includes(searchTermLower) ||
-            (l.seriesTitle || '').toLowerCase().includes(searchTermLower) ||
-            (l.channelName || '').toLowerCase().includes(searchTermLower)
-        );
-        const series = allSeries.filter(s => 
-            (s.title || '').toLowerCase().includes(searchTermLower) ||
-            (s.description || '').toLowerCase().includes(searchTermLower) ||
-            (s.programName || '').toLowerCase().includes(searchTermLower)
-        );
+    const programs = allPrograms.filter(p => 
+        (p.name || '').toLowerCase().includes(searchTermLower) ||
+        (p.bio || '').toLowerCase().includes(searchTermLower)
+    );
 
-        const programs = allPrograms.filter(p => 
-            (p.name || '').toLowerCase().includes(searchTermLower) ||
-            (p.bio || '').toLowerCase().includes(searchTermLower)
-        );
+    const channels = allChannels.filter(c => 
+        (c.name || '').toLowerCase().includes(searchTermLower) ||
+        (c.description || '').toLowerCase().includes(searchTermLower)
+    );
 
-        const channels = allChannels.filter(c => 
-            (c.name || '').toLowerCase().includes(searchTermLower) ||
-            (c.description || '').toLowerCase().includes(searchTermLower)
-        );
+    const books = allBooks.filter(b => 
+        (b.title || '').toLowerCase().includes(searchTermLower)
+    );
 
-        const books = allBooks.filter(b => 
-            (b.title || '').toLowerCase().includes(searchTermLower)
-        );
-
-        return { isLive: true, lectures, series, programs, channels, books, error: null };
-    } catch (searchError) {
-        console.error("Error searching content:", searchError);
-        return { isLive: true, lectures: [], series: [], programs: [], channels: [], books: [], error: (searchError as Error).message };
-    }
+    return { isLive, lectures, series, programs, channels, books, error: isLive ? null : error };
 }
 
 const getAllLectures = async (): Promise<Lecture[]> => {
@@ -586,10 +560,10 @@ const getAllLectures = async (): Promise<Lecture[]> => {
   if(db) {
       try {
         const lecturesCol = collection(db, 'lectures');
-        const snapshot = await getDocs(lecturesCol);
+        const q = query(lecturesCol, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-            return docs.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
         }
       } catch (error) {
         console.error("Error fetching all lectures:", error);
@@ -606,9 +580,9 @@ export const getAllTopics = async (): Promise<Topic[]> => {
   if (db) {
       try {
         const topicsCol = collection(db, 'topics');
-        const snapshot = await getDocs(topicsCol);
-        const topics = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Topic);
-        return topics.sort((a,b) => a.name.localeCompare(b.name));
+        const q = query(topicsCol, orderBy('name', 'asc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Topic);
       } catch (error) {
         console.error("Error fetching all topics:", error);
       }
@@ -643,10 +617,10 @@ export const getAllChannels = async (): Promise<Channel[]> => {
   if (db) {
       try {
         const channelsCol = collection(db, 'channels');
-        const snapshot = await getDocs(channelsCol);
+        const q = query(channelsCol, orderBy('followerCount', 'desc'));
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
-            return docs.sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0));
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
         }
       } catch (error) {
         console.error("Error fetching all channels:", error);
@@ -740,7 +714,9 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
     try {
         const playlistsQuery = query(
             collectionGroup(db, 'playlists'),
-            where('isPublic', '==', true)
+            where('isPublic', '==', true),
+            orderBy('createdAt', 'desc'),
+            limit(30)
         );
         const playlistsSnapshot = await getDocs(playlistsQuery);
         
@@ -748,13 +724,7 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
             return [];
         }
 
-        let playlists = playlistsSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Playlist);
-
-        // Sort and limit in JS
-        playlists = playlists
-            .sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-            .slice(0, 30);
-
+        const playlists = playlistsSnapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Playlist);
 
         // Fetch user profiles for each playlist
         const userIds = [...new Set(playlists.map(p => p.userId))];
@@ -790,10 +760,10 @@ export const getAllPrograms = async (): Promise<Program[]> => {
   if (db) {
       try {
         const programsCol = collection(db, 'programs');
-        const snapshot = await getDocs(programsCol);
+        const q = query(programsCol, orderBy('followerCount', 'desc'));
+        const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-            const docs = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
-            return docs.sort((a,b) => (b.followerCount || 0) - (a.followerCount || 0));
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
         }
       } catch (error) {
         console.error("Error fetching all programs:", error);
@@ -831,10 +801,9 @@ export async function getLecturesByProgram(programId: string): Promise<Lecture[]
     if (db) {
         try {
             const lecturesCol = collection(db, 'lectures');
-            const q = query(lecturesCol, where('programId', '==', programId));
+            const q = query(lecturesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
-            const lectures = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-            return lectures.sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
         } catch (error) {
             console.error("Error fetching lectures by program:", error);
         }
@@ -852,10 +821,9 @@ export async function getSeriesByProgram(programId: string): Promise<Series[]> {
     if (db) {
         try {
             const seriesCol = collection(db, 'series');
-            const q = query(seriesCol, where('programId', '==', programId));
+            const q = query(seriesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
-            const series = snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
-            return series.sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
         } catch (error) {
             console.error("Error fetching series by program:", error);
         }

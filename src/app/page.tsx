@@ -7,74 +7,13 @@ import { LectureCard } from '@/components/lecture-card';
 import { ChannelCard } from '@/components/channel-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import { getDbSafe } from '@/lib/data';
-import { collection, getDocs } from 'firebase/firestore';
-import type { Series, Lecture, Channel } from '@/lib/types';
-import { toSerializable } from '@/lib/data-helpers';
+import { getHomePageData } from '@/lib/data';
 import { Suspense } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-async function getHomePageData() {
-    const { db, isLive, error } = getDbSafe();
-    if (!isLive || !db) {
-        return { isLive, error, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
-    }
-
-    try {
-        const [seriesSnap, lecturesSnap, channelsSnap] = await Promise.all([
-            getDocs(collection(db, 'series')),
-            getDocs(collection(db, 'lectures')),
-            getDocs(collection(db, 'channels')),
-        ]);
-
-        const allSeries = seriesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
-        const allLectures = lecturesSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
-        const allChannels = channelsSnap.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Channel);
-
-        // Sort and limit in code
-        const latestSeries = [...allSeries]
-            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-            .slice(0, 3);
-            
-        const latestLectures = [...allLectures]
-            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-            .slice(0, 3);
-
-        const topChannels = [...allChannels]
-            .sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0))
-            .slice(0, 4);
-
-        return { isLive, error: null, latestSeries, latestLectures, topChannels, allChannels };
-    } catch (error) {
-        console.error("Error fetching home page data:", error);
-        return { isLive: true, error: (error as Error).message, latestSeries: [], latestLectures: [], topChannels: [], allChannels: [] };
-    }
-}
 
 export default async function Home() {
-    const { isLive, error, latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
+    const { latestSeries, latestLectures, topChannels, allChannels } = await getHomePageData();
     const heroImage = getPlaceholderImage('hero-background');
-
-    if (!isLive) {
-        return (
-            <div className="container py-8 text-center">
-                <Card className="p-8 bg-destructive/10 border-destructive">
-                    <CardHeader>
-                        <CardTitle className="text-destructive font-headline">خطأ في الاتصال بقاعدة البيانات</CardTitle>
-                        <CardDescription className="text-destructive/80 space-y-4">
-                           <p>فشل الخادم في الاتصال بـ Firebase. هذا يعني عادةً أن متغير البيئة `FIREBASE_SERVICE_ACCOUNT` غير معين بشكل صحيح.</p>
-                           <p><strong>الخطأ المحدد هو:</strong></p>
-                           <pre className="p-4 bg-black/50 rounded-md text-left text-white font-code whitespace-pre-wrap text-sm">
-                            {error}
-                           </pre>
-                           <p>يرجى مراجعة ملف `DEPLOYMENT.md` للحصول على الإرشادات التفصيلية حول كيفية إعداد حساب الخدمة.</p>
-                        </CardDescription>
-                    </CardHeader>
-                </Card>
-            </div>
-        )
-    }
 
   return (
     <Suspense fallback={<HomePageSkeleton />}>
