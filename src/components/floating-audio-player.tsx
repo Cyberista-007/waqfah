@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -89,7 +90,7 @@ export function FloatingAudioPlayer() {
                     lastListened: Timestamp.now(),
                 }, { merge: true });
 
-                if (timeListened > 0 && timeListened < 20) { 
+                if (timeListened > 0 && timeListened < 300) { 
                     transaction.update(userRef, {
                         minutesListened: increment(timeListened / 60)
                     });
@@ -144,7 +145,7 @@ export function FloatingAudioPlayer() {
             };
             
             // 3. Add last bit of listening time
-            if (timeListened > 0 && timeListened < 20) { // Safety check
+            if (timeListened > 0 && timeListened < 300) { // Safety check
                 userProfileUpdates.minutesListened = increment(timeListened / 60);
             }
             

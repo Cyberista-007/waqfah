@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
@@ -77,6 +78,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
                 email: firebaseUser.email!,
                 photoURL: firebaseUser.photoURL || '',
                 createdAt: Timestamp.now(),
+                minutesListened: 0,
+                lecturesCompleted: 0,
               };
               await setDoc(userRef, {
                 ...newUserProfile,
