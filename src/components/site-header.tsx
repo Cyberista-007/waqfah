@@ -21,6 +21,7 @@ import {
   Home,
   ListVideo,
   Settings,
+  Podcast,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -65,7 +66,8 @@ import { Label } from "./ui/label"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
-  { href: "/channels", label: "البرامج" },
+  { href: "/programs", label: "البرامج" },
+  { href: "/channels", label: "القنوات" },
   { href: "/lectures", label: "المحاضرات" },
   { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },
@@ -82,7 +84,6 @@ const moreNavItems = [
 
 const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
-    { href: '/channels', icon: Youtube, label: 'البرامج' },
     { href: '/search', icon: Search, label: 'بحث' },
     { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
     { href: '/settings', icon: Settings, label: 'الإعدادات'}
@@ -276,5 +277,3 @@ export function SiteHeader() {
     </>
   )
 }
-
-    

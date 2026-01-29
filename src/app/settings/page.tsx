@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -34,6 +35,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
+
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
     <div className="flex items-center gap-2 mb-4">
@@ -255,16 +261,6 @@ export default function SettingsPage() {
             </div>
         )
     }
-
-    if (isEditing) {
-        return (
-            <EditProfileForm 
-                user={user} 
-                userProfile={userProfile}
-                onClose={() => setIsEditing(false)}
-            />
-        );
-    }
     
     if (view === 'notifications') {
         return <NotificationsView onBack={() => setView('main')} onSelectNewEpisodes={() => setView('newEpisodes')} />;
@@ -327,6 +323,16 @@ export default function SettingsPage() {
           <SettingsItem icon={History} label="الإستيراد" />
         </div>
       </div>
+
+       <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogContent className="p-0 border-0 max-w-2xl bg-transparent">
+                <EditProfileForm 
+                    user={user} 
+                    userProfile={userProfile}
+                    onClose={() => setIsEditing(false)}
+                />
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

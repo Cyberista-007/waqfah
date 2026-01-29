@@ -258,32 +258,51 @@ export const getRelatedLectures = async (currentLectureId: string, seriesId?: st
     return [];
 }
 
-export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[] }> {
+export async function searchContent(searchTerm: string): Promise<{ lectures: Lecture[], series: Series[], programs: Program[], channels: Channel[], books: Book[] }> {
     if (!searchTerm) {
-        return { lectures: [], series: [] };
+        return { lectures: [], series: [], programs: [], channels: [], books: [] };
     }
     
     const searchTermLower = searchTerm.toLowerCase();
 
     try {
-        const [allLectures, allSeries] = await Promise.all([
+        const [allLectures, allSeries, allPrograms, allChannels, allBooks] = await Promise.all([
           getAllLectures(),
           getAllSeries(),
+          getAllPrograms(),
+          getAllChannels(),
+          getAllBooks(),
         ]);
 
         const lectures = allLectures.filter(l => 
             l.title.toLowerCase().includes(searchTermLower) || 
-            (l.description && l.description.toLowerCase().includes(searchTermLower))
+            (l.description && l.description.toLowerCase().includes(searchTermLower)) ||
+            (l.programName && l.programName.toLowerCase().includes(searchTermLower))
         );
         const series = allSeries.filter(s => 
             s.title.toLowerCase().includes(searchTermLower) ||
-            (s.description && s.description.toLowerCase().includes(searchTermLower))
+            (s.description && s.description.toLowerCase().includes(searchTermLower)) ||
+            (s.programName && s.programName.toLowerCase().includes(searchTermLower))
         );
 
-        return { lectures, series };
+        const programs = allPrograms.filter(p => 
+            p.name.toLowerCase().includes(searchTermLower) ||
+            (p.bio && p.bio.toLowerCase().includes(searchTermLower))
+        );
+
+        const channels = allChannels.filter(c => 
+            c.name.toLowerCase().includes(searchTermLower) ||
+            (c.description && c.description.toLowerCase().includes(searchTermLower))
+        );
+
+        const books = allBooks.filter(b => 
+            b.title.toLowerCase().includes(searchTermLower)
+        );
+
+        return { lectures, series, programs, channels, books };
     } catch (error) {
         console.error("Error searching content:", error);
-        return { lectures: [], series: [] };
+        return { lectures: [], series: [], programs: [], channels: [], books: [] };
     }
 }
 
@@ -473,3 +492,68 @@ export const getAllPublicPlaylists = async (): Promise<(Playlist & { userProfile
         return [];
     }
 };
+
+export const getAllPrograms = async (): Promise<Program[]> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const programsCol = collection(db, 'programs');
+        const q = query(programsCol, orderBy('name', 'asc'));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Program);
+        }
+      } catch (error) {
+        console.error("Error fetching all programs:", error);
+      }
+  }
+  return [];
+};
+
+export const getProgramBySlug = async (slug: string): Promise<Program | undefined> => {
+  const { db, isLive } = getDbSafe();
+  if (isLive && db) {
+      try {
+        const programsCol = collection(db, 'programs');
+        const q = query(programsCol, where("slug", "==", slug), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const docSnap = snapshot.docs[0];
+            return toSerializable({ ...docSnap.data(), id: docSnap.id }) as Program;
+        }
+      } catch (error) {
+        console.error("Error fetching program by slug:", error);
+      }
+  }
+  return undefined;
+}
+
+export async function getLecturesByProgram(programId: string): Promise<Lecture[]> {
+    const { db, isLive } = getDbSafe();
+    if (isLive && db) {
+        try {
+            const lecturesCol = collection(db, 'lectures');
+            const q = query(lecturesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Lecture);
+        } catch (error) {
+            console.error("Error fetching lectures by program:", error);
+        }
+    }
+    return [];
+}
+
+export async function getSeriesByProgram(programId: string): Promise<Series[]> {
+    const { db, isLive } = getDbSafe();
+    if (isLive && db) {
+        try {
+            const seriesCol = collection(db, 'series');
+            const q = query(seriesCol, where('programId', '==', programId), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => toSerializable({ ...doc.data(), id: doc.id }) as Series);
+        } catch (error) {
+            console.error("Error fetching series by program:", error);
+        }
+    }
+    return [];
+}
