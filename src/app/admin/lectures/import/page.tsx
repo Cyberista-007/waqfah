@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,10 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink } from "lucide-react";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Series, Sheikh, Lecture, Channel } from "@/lib/types";
+import type { Series, Program, Lecture, Channel } from "@/lib/types";
 import { writeBatch, doc, collection, Timestamp, increment } from "firebase/firestore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -80,12 +80,26 @@ export default function AdminImportLecturesPage() {
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [selectedShorts, setSelectedShorts] = useState<string[]>([]);
     const [targetSeriesId, setTargetSeriesId] = useState<string>("");
+    const [targetProgramId, setTargetProgramId] = useState<string>("");
     const [targetChannelId, setTargetChannelId] = useState<string>("");
     const [activeTab, setActiveTab] = useState("youtube-videos");
 
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
-    const { data: allSheikhs, isLoading: sheikhsLoading } = useCollection<Sheikh>('sheikhs');
+    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
     const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels');
+    
+    useEffect(() => {
+        if (targetSeriesId && targetSeriesId !== 'none' && allSeries) {
+            const series = allSeries.find(s => s.id === targetSeriesId);
+            if (series?.programId) {
+                setTargetProgramId(series.programId);
+            } else {
+                setTargetProgramId("");
+            }
+        } else if (targetSeriesId === 'none') {
+             setTargetProgramId("");
+        }
+    }, [targetSeriesId, allSeries]);
 
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +184,7 @@ export default function AdminImportLecturesPage() {
             toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
-        if (!firestore || !allSeries || !allSheikhs || !allChannels) return;
+        if (!firestore || !allSeries || !allPrograms || !allChannels) return;
         
         setIsSubmitting(true);
         
@@ -179,7 +193,7 @@ export default function AdminImportLecturesPage() {
             const videosToImport = sourceItems.filter(v => itemsToImport.includes(v.videoId));
 
             const series = targetSeriesId ? allSeries.find(s => s.id === targetSeriesId) : null;
-            const sheikh = series?.sheikhId ? allSheikhs.find(sh => sh.id === series.sheikhId) : null;
+            const program = targetProgramId ? allPrograms.find(p => p.id === targetProgramId) : null;
             const channel = targetChannelId ? allChannels.find(c => c.id === targetChannelId) : null;
 
             for (const video of videosToImport) {
@@ -190,9 +204,9 @@ export default function AdminImportLecturesPage() {
                     title: video.title,
                     slug,
                     description: video.description || "",
-                    sheikhId: sheikh?.id || "",
-                    sheikhName: sheikh?.name || "",
-                    sheikhSlug: sheikh?.slug || "",
+                    programId: program?.id || "",
+                    programName: program?.name || "",
+                    programSlug: program?.slug || "",
                     seriesId: series?.id || "",
                     seriesSlug: series?.slug || "",
                     seriesTitle: series?.title || "",
@@ -250,7 +264,7 @@ export default function AdminImportLecturesPage() {
 
     const handleCSVSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!selectedFile || !firestore || !allSeries || !allSheikhs) {
+        if (!selectedFile || !firestore || !allSeries || !allPrograms) {
             toast({
                 variant: "destructive",
                 title: "خطأ",
@@ -287,9 +301,9 @@ export default function AdminImportLecturesPage() {
                          console.warn(`Skipping row: Series with ID "${seriesId}" not found for lecture "${title}".`);
                         continue;
                     }
-                    const sheikh = allSheikhs.find(sh => sh.id === series.sheikhId);
-                     if (series.sheikhId && !sheikh) {
-                         console.warn(`Skipping row: Sheikh for series "${series.title}" not found.`);
+                    const program = series.programId ? allPrograms.find(p => p.id === series.programId) : null;
+                     if (series.programId && !program) {
+                         console.warn(`Skipping row: Program for series "${series.title}" not found.`);
                         continue;
                     }
 
@@ -300,9 +314,9 @@ export default function AdminImportLecturesPage() {
                         title,
                         slug,
                         description: description || "",
-                        sheikhId: sheikh?.id || "",
-                        sheikhName: sheikh?.name || "",
-                        sheikhSlug: sheikh?.slug || "",
+                        programId: program?.id || "",
+                        programName: program?.name || "",
+                        programSlug: program?.slug || "",
                         seriesId: series.id,
                         seriesSlug: series.slug,
                         seriesTitle: series.title,
@@ -355,7 +369,7 @@ export default function AdminImportLecturesPage() {
         reader.readAsText(selectedFile);
     };
 
-    const isLoading = seriesLoading || sheikhsLoading || channelsLoading;
+    const isLoading = seriesLoading || programsLoading || channelsLoading;
     
     const hasFetchedYoutubeData = fetchedVideos.length > 0 || fetchedShorts.length > 0 || fetchedPlaylists.length > 0;
     
@@ -413,7 +427,7 @@ export default function AdminImportLecturesPage() {
                                     </TabsList>
                                      <div className="space-y-4 border p-4 rounded-lg mt-4">
                                         <h3 className="font-bold flex items-center gap-2"><ListChecks /> المحتوى الذي تم جلبه</h3>
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <Label htmlFor="target-series">اختر السلسلة (اختياري)</Label>
                                                 <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
@@ -421,17 +435,31 @@ export default function AdminImportLecturesPage() {
                                                         <SelectValue placeholder="اختر سلسلة..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        <SelectItem value="none">بدون سلسلة</SelectItem>
                                                         {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
                                              <div>
-                                                <Label htmlFor="target-channel">اختر البرنامج</Label>
-                                                <Select value={targetChannelId} onValueChange={setTargetChannelId}>
+                                                <Label htmlFor="target-program">اختر البرنامج (اختياري)</Label>
+                                                <Select value={targetProgramId} onValueChange={setTargetProgramId} disabled={programsLoading || (!!targetSeriesId && targetSeriesId !== 'none')}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="اختر برنامج..." />
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        <SelectItem value="">بدون برنامج</SelectItem>
+                                                        {allPrograms?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                             </div>
+                                             <div>
+                                                <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
+                                                <Select value={targetChannelId} onValueChange={setTargetChannelId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="اختر قناة..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                         <SelectItem value="">بدون قناة</SelectItem>
                                                         {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                                     </SelectContent>
                                                 </Select>
