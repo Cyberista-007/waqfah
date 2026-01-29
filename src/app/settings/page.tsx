@@ -27,7 +27,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { doc, collection } from 'firebase/firestore';
-import type { UserProfile, Program as FollowingChannel, Program } from '@/lib/types';
+import type { UserProfile, Following, Program, NotificationSettings } from '@/lib/types';
 import { getInitials } from '@/lib/utils';
 import { EditProfileForm } from '@/components/profile/edit-profile-form';
 import { signOut } from 'firebase/auth';
@@ -94,10 +94,21 @@ const SectionTitle = ({ title }: { title: string }) => (
   </h2>
 );
 
-function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void; onSelectNewEpisodes: () => void; }) {
-    const [newPrograms, setNewPrograms] = useState(true);
-    const [newPlaylists, setNewPlaylists] = useState(false);
-    const [newBooks, setNewBooks] = useState(true);
+function NotificationsView({ onBack, onSelectNewEpisodes, userProfile, userId }: { onBack: () => void; onSelectNewEpisodes: () => void; userProfile: UserProfile; userId: string; }) {
+    const firestore = useFirestore();
+
+    const handleSettingChange = (setting: keyof NotificationSettings, value: boolean) => {
+        if (!firestore) return;
+
+        const userRef = doc(firestore, 'users', userId);
+        updateDocumentNonBlocking(userRef, {
+            [`notificationSettings.${setting}`]: value
+        });
+    };
+    
+    const newPrograms = userProfile?.notificationSettings?.newPrograms ?? true;
+    const newPlaylists = userProfile?.notificationSettings?.newPlaylists ?? false;
+    const newBooks = userProfile?.notificationSettings?.newBooks ?? true;
 
     return (
         <div>
@@ -124,7 +135,7 @@ function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void
                     <Switch
                         id="switch-new-programs"
                         checked={newPrograms}
-                        onCheckedChange={setNewPrograms}
+                        onCheckedChange={(value) => handleSettingChange('newPrograms', value)}
                     />
                 </div>
                 <Separator />
@@ -136,7 +147,7 @@ function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void
                     <Switch
                         id="switch-new-playlists"
                         checked={newPlaylists}
-                        onCheckedChange={setNewPlaylists}
+                        onCheckedChange={(value) => handleSettingChange('newPlaylists', value)}
                     />
                 </div>
                 <Separator />
@@ -148,7 +159,7 @@ function NotificationsView({ onBack, onSelectNewEpisodes }: { onBack: () => void
                     <Switch
                         id="switch-new-books"
                         checked={newBooks}
-                        onCheckedChange={setNewBooks}
+                        onCheckedChange={(value) => handleSettingChange('newBooks', value)}
                     />
                 </div>
             </div>
@@ -161,7 +172,7 @@ function NewEpisodesView({ onBack }: { onBack: () => void; }) {
     const firestore = useFirestore();
 
     const followingPath = user ? `users/${user.uid}/following` : null;
-    const { data: following, isLoading: followingLoading } = useCollection<FollowingChannel>(followingPath);
+    const { data: following, isLoading: followingLoading } = useCollection<Following>(followingPath);
 
     const [followedPrograms, setFollowedPrograms] = useState<Program[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -265,7 +276,7 @@ export default function SettingsPage() {
     }
     
     if (view === 'notifications') {
-        return <NotificationsView onBack={() => setView('main')} onSelectNewEpisodes={() => setView('newEpisodes')} />;
+        return <NotificationsView onBack={() => setView('main')} onSelectNewEpisodes={() => setView('newEpisodes')} userProfile={userProfile} userId={user.uid} />;
     }
 
     if (view === 'newEpisodes') {

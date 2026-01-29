@@ -102,7 +102,16 @@
         "lecturesCompleted": { "type": "number", "minimum": 0 },
         "seriesCompleted": { "type": "number", "minimum": 0 },
         "role": { "type": "string", "enum": ["user", "admin"], "default": "user" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notificationSettings": {
+          "type": "object",
+          "description": "User's notification preferences.",
+          "properties": {
+            "newPrograms": { "type": "boolean", "description": "Notify on new programs." },
+            "newPlaylists": { "type": "boolean", "description": "Notify on new public playlists." },
+            "newBooks": { "type": "boolean", "description": "Notify on new books." }
+          }
+        }
       },
       "required": ["email", "name", "createdAt", "role"]
     },

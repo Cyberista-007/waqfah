@@ -7,6 +7,12 @@ type Serializable<T> = {
   [P in keyof T]: T[P] extends Timestamp ? string : T[P];
 };
 
+export type NotificationSettings = {
+    newPrograms?: boolean;
+    newPlaylists?: boolean;
+    newBooks?: boolean;
+};
+
 export type Stats = {
   programs: number;
   lectures: number;
@@ -24,7 +30,7 @@ export type Program = Serializable<{
   youtubeUrl?: string;
   createdAt: Timestamp;
   followerCount: number;
-}>
+}>;
 
 export type Lecture = Serializable<{
   id: string; // Document ID from Firestore
@@ -107,6 +113,7 @@ export type UserProfile = Serializable<{
     lecturesCompleted?: number;
     seriesCompleted?: number;
     role: 'user' | 'admin';
+    notificationSettings?: NotificationSettings;
 }>;
 
 export type EditProfileForm = {
