@@ -1,9 +1,10 @@
+
 "use client"
 
 import type { Lecture } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2, Maximize2 } from "lucide-react";
+import { Download, Play, Share2, Maximize2, Youtube } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -11,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { cn } from "@/lib/utils";
-import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { useState } from "react";
 import { YoutubePlayerModal } from "./youtube-player-modal";
 import { ImageModal } from "./image-modal";
@@ -78,6 +78,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
           seriesTitle: lecture.seriesTitle,
           imageId: lecture.imageId,
           slug: lecture.slug,
+          programName: lecture.programName,
       }, startTime);
     };
 
@@ -155,7 +156,7 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
             <div className="flex flex-col md:flex-row items-center gap-1">
                 {videoId && (
                     <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
-                        <SiYoutube className="w-5 h-5 text-red-500"/>
+                        <Youtube className="w-5 h-5 text-red-500"/>
                     </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={handleShare}>
