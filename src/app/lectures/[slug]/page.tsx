@@ -11,30 +11,31 @@ export default function LectureDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  // 1. Fetch the current lecture by slug
+  const { data: lectures, isLoading: lectureLoading } = useCollection<Lecture>(
+      'lectures', 
+      { where: ['slug', '==', slug], limit: 1 }
+  );
+  const lecture = lectures?.[0];
+  const seriesId = lecture?.seriesId;
 
-  const { lecture, relatedLectures } = useMemo(() => {
-    if (lecturesLoading || !allLectures) {
-      return { lecture: null, relatedLectures: [] };
-    }
+  // 2. Fetch related lectures from the same series
+  const { data: allRelatedLectures, isLoading: relatedLoading } = useCollection<Lecture>(
+      seriesId ? 'lectures' : null,
+      { where: ['seriesId', '==', seriesId], limit: 4 } // Fetch a few more to ensure we have 3 others
+  );
 
-    const currentLecture = allLectures.find(l => l.slug === slug);
-
-    if (!currentLecture) {
-        return { lecture: null, relatedLectures: [] };
-    }
-
-    const related = currentLecture.seriesId
-      ? allLectures
-          .filter(l => l.seriesId === currentLecture.seriesId && l.id !== currentLecture.id)
-          .slice(0, 3)
-      : [];
-      
-    return { lecture: currentLecture, relatedLectures: related };
-
-  }, [lecturesLoading, allLectures, slug]);
+  // 3. Filter out the current lecture from related list and take 3
+  const relatedLectures = useMemo(() => {
+      if (!allRelatedLectures || !lecture) return [];
+      return allRelatedLectures
+          .filter(l => l.id !== lecture.id)
+          .slice(0, 3);
+  }, [allRelatedLectures, lecture]);
   
-  if (lecturesLoading) {
+  const isLoading = lectureLoading || (seriesId && relatedLoading);
+  
+  if (isLoading) {
     return <LecturePageSkeleton />;
   }
 
@@ -43,5 +44,5 @@ export default function LectureDetailPage() {
     return null;
   }
   
-  return <LectureClientPage lecture={lecture} relatedLectures={relatedLectures || []} />;
+  return <LectureClientPage lecture={lecture} relatedLectures={relatedLectures} />;
 }

@@ -11,36 +11,32 @@ import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 import { Users, Loader2 } from 'lucide-react';
 import { useCollection } from '@/firebase';
-import { useMemo } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
 
 export default function ProgramPage() {
     const params = useParams();
     const slug = params.slug as string;
 
-    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
-    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
-    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+    // 1. Fetch the program by slug
+    const { data: programs, isLoading: programsLoading } = useCollection<Program>('programs', {
+        where: ['slug', '==', slug],
+        limit: 1
+    });
 
-    const isLoading = programsLoading || lecturesLoading || seriesLoading;
+    const program = programs?.[0];
+    const programId = program?.id;
 
-    const { program, lectures, series } = useMemo(() => {
-        if (isLoading || !allPrograms || !allLectures || !allSeries) {
-            return { program: null, lectures: [], series: [] };
-        }
-        
-        const currentProgram = allPrograms.find(p => p.slug === slug);
+    // 2. Fetch lectures and series for this program ID, only if programId exists
+    const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
+        programId ? 'lectures' : null, 
+        { where: ['programId', '==', programId] }
+    );
+    const { data: series, isLoading: seriesLoading } = useCollection<Series>(
+        programId ? 'series' : null, 
+        { where: ['programId', '==', programId] }
+    );
 
-        if (!currentProgram) {
-            return { program: null, lectures: [], series: [] };
-        }
-
-        const programLectures = allLectures.filter(l => l.programId === currentProgram.id);
-        const programSeries = allSeries.filter(s => s.programId === currentProgram.id);
-
-        return { program: currentProgram, lectures: programLectures, series: programSeries };
-
-    }, [isLoading, allPrograms, allLectures, allSeries, slug]);
+    const isLoading = programsLoading || (programId !== undefined && (lecturesLoading || seriesLoading));
 
     if (isLoading) {
         return <HomePageSkeleton />;
@@ -83,9 +79,9 @@ export default function ProgramPage() {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-2">
                              <span>@{program.slug}</span>
                              <span className="hidden sm:inline">·</span>
-                             <span>{series.length} سلسلة</span>
+                             <span>{series?.length || 0} سلسلة</span>
                              <span className="hidden sm:inline">·</span>
-                             <span>{lectures.length} محاضرة</span>
+                             <span>{lectures?.length || 0} محاضرة</span>
                              {program.followerCount && program.followerCount > 0 && (
                                 <>
                                   <span className="hidden sm:inline">·</span>
@@ -104,25 +100,25 @@ export default function ProgramPage() {
                 </div>
             </div>
 
-            {series.length > 0 && (
+            {(series?.length || 0) > 0 && (
                 <section className="px-4 sm:px-6 lg:px-8">
                     <h2 className="text-2xl font-bold mb-6 font-headline">السلاسل</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {series.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
+                        {series!.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
                     </div>
                 </section>
             )}
 
-            {lectures.length > 0 && (
+            {(lectures?.length || 0) > 0 && (
                  <section className="px-4 sm:px-6 lg:px-8">
                      <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                        {lectures!.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                     </div>
                 </section>
             )}
 
-            {lectures.length === 0 && series.length === 0 && (
+            {(lectures?.length || 0) === 0 && (series?.length || 0) === 0 && (
                  <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20">
                     <p className="text-lg text-muted-foreground">
                         لا يوجد محتوى في هذا البرنامج حالياً.
