@@ -65,7 +65,6 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    e.preventDefault();
     setIsDragging(true);
     const { x, y } = getEventCoords(e.nativeEvent);
     interactionStartRef.current = {
@@ -76,7 +75,6 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   };
 
   const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation(); // Prevent drag from firing
     setIsResizing(true);
     const { x, y } = getEventCoords(e.nativeEvent);
@@ -89,6 +87,11 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   };
   
   const handleInteractionMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (isDragging || isResizing) {
+        // This is crucial to prevent page scrolling on mobile while dragging
+        e.preventDefault();
+    }
+
     if (!interactionStartRef.current) return;
     const { x, y } = getEventCoords(e);
     
@@ -128,15 +131,16 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   }, []);
 
   useEffect(() => {
+    const touchMoveOptions = { passive: false };
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleInteractionMove);
-      document.addEventListener('touchmove', handleInteractionMove);
+      document.addEventListener('touchmove', handleInteractionMove, touchMoveOptions);
       document.addEventListener('mouseup', handleInteractionEnd);
       document.addEventListener('touchend', handleInteractionEnd);
     }
     return () => {
       document.removeEventListener('mousemove', handleInteractionMove);
-      document.removeEventListener('touchmove', handleInteractionMove);
+      document.removeEventListener('touchmove', handleInteractionMove, touchMoveOptions);
       document.removeEventListener('mouseup', handleInteractionEnd);
       document.removeEventListener('touchend', handleInteractionEnd);
     };
