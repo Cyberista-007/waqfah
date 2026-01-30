@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -195,7 +196,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             </Button>
            </div>
         </div>
-        <div className="relative w-full h-full flex-grow">
+        <div className="relative w-full flex-grow aspect-video">
           <iframe
             width="100%"
             height="100%"
@@ -204,7 +205,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className={cn("w-full h-full absolute top-0 left-0 pointer-events-none", isPip ? "" : "rounded-b-2xl")}
+            className={cn("w-full h-full absolute top-0 left-0", isPip ? "" : "rounded-b-2xl")}
           ></iframe>
            {isPip && (
               <div 
