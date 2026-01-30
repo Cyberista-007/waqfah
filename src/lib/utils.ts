@@ -29,3 +29,26 @@ export function formatDuration(totalSeconds: number): string {
     return `${formattedMinutes}:${formattedSeconds}`;
   }
 }
+
+export function formatTotalDuration(totalSeconds: number): string {
+  if (isNaN(totalSeconds) || totalSeconds <= 0) {
+    return '';
+  }
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  const parts = [];
+  if (hours > 0) {
+    parts.push(`${hours} ساعة`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} دقيقة`);
+  }
+  
+  if (parts.length === 0 && totalSeconds > 0) {
+      return `أقل من دقيقة`;
+  }
+
+  return parts.join(' و ');
+}

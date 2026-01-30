@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -6,10 +7,10 @@ import { doc } from 'firebase/firestore';
 import type { Playlist, Lecture, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureListItem } from '@/components/lecture-list-item';
-import { ListMusic, Loader2 } from 'lucide-react';
+import { ListMusic, Loader2, Clock } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { getInitials } from '@/lib/utils';
+import { getInitials, formatTotalDuration } from '@/lib/utils';
 import { useMemo } from 'react';
 import { HomePageSkeleton } from '@/components/skeletons';
 
@@ -35,13 +36,17 @@ export default function PlaylistPage() {
     
     const isLoading = playlistLoading || userLoading || lecturesLoading;
 
-    const lecturesInPlaylist = useMemo(() => {
-        if (!playlist || !allLectures) return [];
+    const { lecturesInPlaylist, totalDuration } = useMemo(() => {
+        if (!playlist || !allLectures) return { lecturesInPlaylist: [], totalDuration: 0 };
 
         const lectureMap = new Map(allLectures.map(l => [l.id, l]));
-        return (playlist.lectureIds || [])
+        const lectures = (playlist.lectureIds || [])
             .map(id => lectureMap.get(id))
             .filter((l): l is Lecture => !!l);
+        
+        const duration = lectures.reduce((acc, lecture) => acc + (lecture.duration || 0), 0);
+
+        return { lecturesInPlaylist: lectures, totalDuration: duration };
     }, [playlist, allLectures]);
 
     if (isLoading) {
@@ -60,17 +65,25 @@ export default function PlaylistPage() {
                     <ListMusic className="w-10 h-10 text-primary mb-2" />
                     <CardTitle className="text-4xl font-headline">{playlist.name}</CardTitle>
                     {playlist.description && <CardDescription className="text-lg">{playlist.description}</CardDescription>}
-                    {userProfile && (
-                        <div className="flex items-center gap-2 pt-4">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={userProfile.photoURL} alt={userProfile.name} />
-                                <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm text-muted-foreground">
-                                قائمة تشغيل بواسطة <span className="font-semibold text-foreground">{userProfile.name}</span>
-                            </span>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-x-6 gap-y-2 pt-4 flex-wrap">
+                        {userProfile && (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={userProfile.photoURL} alt={userProfile.name} />
+                                    <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-muted-foreground">
+                                    قائمة تشغيل بواسطة <span className="font-semibold text-foreground">{userProfile.name}</span>
+                                </span>
+                            </div>
+                        )}
+                         {totalDuration > 0 && (
+                             <div className="flex items-center gap-2">
+                                 <Clock className="h-5 w-5 text-muted-foreground" />
+                                 <span className="text-sm font-semibold text-foreground">{formatTotalDuration(totalDuration)}</span>
+                             </div>
+                         )}
+                    </div>
                 </CardHeader>
             </Card>
 

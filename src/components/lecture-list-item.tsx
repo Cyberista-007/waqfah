@@ -4,14 +4,14 @@
 import type { Lecture } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2, Maximize2, Youtube } from "lucide-react";
+import { Download, Play, Share2, Maximize2, Youtube, Clock } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { useState } from "react";
 import { YoutubePlayerModal } from "./youtube-player-modal";
 import { ImageModal } from "./image-modal";
@@ -151,7 +151,16 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
                 <Link href={`/lectures/${lecture.slug}`} className="text-md font-semibold text-foreground hover:text-primary hover:underline">
                     {lecture.title}
                 </Link>
-                <p className="text-sm text-muted-foreground">{lecture.seriesTitle}</p>
+                 <div className="flex items-center gap-x-3 text-sm text-muted-foreground mt-1">
+                    {lecture.seriesTitle && <span>{lecture.seriesTitle}</span>}
+                    {lecture.duration > 0 && lecture.seriesTitle && <span className="text-xs">●</span>}
+                    {lecture.duration > 0 && (
+                        <div className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{formatDuration(lecture.duration)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-1">
                 {videoId && (
