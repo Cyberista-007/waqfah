@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
 import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program } from "@/lib/types";
@@ -123,18 +122,26 @@ function PlaylistsSection() {
             {playlists && playlists.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {playlists.map(playlist => (
-                        <Card key={playlist.id} className="hover:shadow-md transition-shadow">
-                            <CardHeader>
-                                <CardTitle className="truncate font-headline">
+                        <Card key={playlist.id} className="hover:shadow-lg transition-shadow flex flex-col justify-between rounded-xl">
+                            <CardHeader className="flex-grow">
+                                <CardTitle className="font-headline text-xl">
                                     <Link href={`/playlists/${playlist.id}`} className="hover:underline">
                                         {playlist.name}
                                     </Link>
                                 </CardTitle>
-                                <CardDescription>{playlist.lectureIds?.length || 0} محاضرة</CardDescription>
+                                {playlist.description && (
+                                    <CardDescription className="pt-2 line-clamp-2">{playlist.description}</CardDescription>
+                                )}
                             </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground line-clamp-2">{playlist.description || "لا يوجد وصف."}</p>
-                            </CardContent>
+                            <CardFooter className="flex justify-between items-center pt-4 mt-auto">
+                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <Play className="h-4 w-4" />
+                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
+                                </div>
+                                <Button asChild size="sm" variant="outline">
+                                    <Link href={`/playlists/${playlist.id}`}>عرض</Link>
+                                </Button>
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>
