@@ -1,9 +1,9 @@
+
 "use client"
 
 import Link from "next/link"
 import Image from "next/image"
 import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2 } from "lucide-react"
-import { SiTelegram } from "@icons-pack/react-simple-icons"
 import { useState, useMemo, useRef } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -83,6 +83,7 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
       seriesTitle: lecture.seriesTitle,
       imageId: lecture.imageId,
       slug: lecture.slug,
+      programName: lecture.programName,
     });
   };
   
@@ -253,8 +254,8 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
         </div>
 
         <div className="p-3 bg-card flex-grow flex flex-col">
-            <div className="flex-grow">
-                <h3 className="font-headline text-lg mb-2 leading-tight">
+            <div className="flex-grow pb-2">
+                <h3 className="font-headline text-lg mb-1 leading-tight">
                     <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
                 </h3>
             </div>
@@ -271,7 +272,7 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
                     {lecture.telegramUrl && (
                         <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
-                                <SiTelegram className="w-5 h-5" />
+                                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
                             </Button>
                         </a>
                     )}
@@ -287,7 +288,7 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
                     <FavoriteButton lectureId={lecture.id} className="h-9 w-9" />
                     {onCollapse && (
                         <Button onClick={onCollapse} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                            <Minimize2 className="w-5 h-5" />
+                            <Minimize2 className="h-5 w-5" />
                         </Button>
                     )}
                 </div>

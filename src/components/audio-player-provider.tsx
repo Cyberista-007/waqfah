@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useState, useRef } from "react";
 import type { Lecture } from "@/lib/types";
 
-export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug'>;
+export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
 
 
 type AudioPlayerContextType = {

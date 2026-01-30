@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import YouTube, { YouTubeProps } from 'react-youtube';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,8 @@ interface YoutubePlayerModalProps {
 export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: YoutubePlayerModalProps) {
   const { toast } = useToast();
   const [isPip, setIsPip] = useState(false);
+  const playerRef = useRef<any>(null); // Use 'any' for the YouTube player object
+  const [startTime, setStartTime] = useState(0);
 
   // State for draggable/resizable PiP
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -104,14 +107,19 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
     };
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
-
-  if (!videoId) return null;
+  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
+    playerRef.current = event.target;
+  };
 
   const handlePipToggle = () => {
+    const currentTime = playerRef.current?.getCurrentTime() || 0;
+    setStartTime(currentTime);
     setIsPip(prev => !prev);
   };
   
   const handleClose = () => {
+    setStartTime(0);
+    playerRef.current?.pauseVideo();
     setIsPip(false);
     onClose();
   };
@@ -151,10 +159,24 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
     height: 'auto', // Let aspect ratio control height
     transform: 'none',
   } : {};
+  
+  const opts: YouTubeProps['opts'] = {
+    height: '100%',
+    width: '100%',
+    playerVars: {
+      autoplay: 1,
+      rel: 0,
+      start: Math.floor(startTime),
+    },
+  };
+
+
+  if (!videoId) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose} modal={!isPip}>
       <DialogContent 
+        key={isPip ? `pip-${startTime}` : 'modal'} // Force re-render with new start time on toggle
         ref={pipRef}
         style={pipStyle}
         className={cn(
@@ -196,17 +218,13 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
             </Button>
            </div>
         </div>
-        <div className="relative w-full flex-grow aspect-video">
-          <iframe
-            width="100%"
-            height="100%"
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className={cn("w-full h-full absolute top-0 left-0", isPip ? "" : "rounded-b-2xl")}
-          ></iframe>
+        <div className="relative w-full flex-grow bg-black aspect-video">
+           <YouTube
+             videoId={videoId}
+             opts={opts}
+             onReady={onPlayerReady}
+             className={cn("w-full h-full absolute top-0 left-0", isPip ? "" : "rounded-b-2xl")}
+           />
            {isPip && (
               <div 
                   onMouseDown={handleResizeMouseDown}

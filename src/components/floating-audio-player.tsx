@@ -3,7 +3,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, Maximize2, FastForward } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -205,10 +205,68 @@ export function FloatingAudioPlayer() {
             audioElement.pause();
         }
     }, [isPlaying, audioRef]);
+    
+  // Media Session API Integration
+  useEffect(() => {
+    if (!track) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      }
+      return;
+    }
+    
+    const artworkUrl = getPlaceholderImage(track.imageId)?.imageUrl || `https://picsum.photos/seed/${track.slug}/512/512`;
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.programName || track.seriesTitle || "محاضرات متنوعة",
+        album: 'منصة الدروس العلمية',
+        artwork: [
+          { src: artworkUrl, sizes: '96x96', type: 'image/jpeg' },
+          { src: artworkUrl, sizes: '128x128', type: 'image/jpeg' },
+          { src: artworkUrl, sizes: '192x192', type: 'image/jpeg' },
+          { src: artworkUrl, sizes: '256x256', type: 'image/jpeg' },
+          { src: artworkUrl, sizes: '384x384', type: 'image/jpeg' },
+          { src: artworkUrl, sizes: '512x512', type: 'image/jpeg' },
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioRef.current) {
+          playTrack(track, audioRef.current.currentTime);
+        }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        pauseTrack();
+      });
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
+        }
+      });
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + (details.seekOffset || 10));
+        }
+      });
+    }
+  }, [track, playTrack, pauseTrack, audioRef, duration]);
+
 
   const handleRewind = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+    }
+  };
+
+  const handleFastForward = () => {
+    if (audioRef.current && duration) {
+      audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10);
     }
   };
 
@@ -334,8 +392,8 @@ export function FloatingAudioPlayer() {
                 <Button onClick={togglePlayPause} variant="ghost" size="icon" className="h-12 w-12 text-foreground hover:bg-foreground/10">
                     {isPlaying ? <Pause className="w-8 h-8"/> : <Play className="w-8 h-8"/>}
                 </Button>
-                <Button variant="ghost" size="icon" disabled>
-                   {/* Placeholder for forward button */}
+                 <Button onClick={handleFastForward} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
+                    <FastForward className="w-6 h-6" />
                 </Button>
            </div>
 
