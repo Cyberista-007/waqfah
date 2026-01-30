@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -17,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { collection, doc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import type { Playlist, Lecture } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,10 +37,15 @@ export function PlaylistForm({ playlist, allLectures, onFormClose, userId }: Pla
 
   const [selectedLectures, setSelectedLectures] = useState<string[]>(playlist?.lectureIds || []);
   const [isPublic, setIsPublic] = useState<boolean>(playlist?.isPublic || false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
     setSelectedLectures(prev => checked ? [...prev, id] : prev.filter(item => item !== id));
   };
+  
+  const filteredLectures = allLectures.filter(lecture =>
+    lecture.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,7 +66,6 @@ export function PlaylistForm({ playlist, allLectures, onFormClose, userId }: Pla
       return;
     }
     
-    // Use a composite ID for playlists to ensure uniqueness if needed, or use Firestore's auto-ID
     const playlistId = isEditMode ? playlist.id : `${userId}_${Date.now()}`;
 
     const playlistData = {
@@ -132,23 +135,38 @@ export function PlaylistForm({ playlist, allLectures, onFormClose, userId }: Pla
             </div>
             <div>
               <Label>اختر المحاضرات</Label>
-              <ScrollArea className="h-72 rounded-md border p-4">
-                {allLectures.length === 0 && <p className="text-muted-foreground">لا توجد محاضرات متاحة.</p>}
-                {allLectures.map(lecture => (
-                  <div key={lecture.id} className="flex items-center space-x-2 space-x-reverse mb-2">
-                    <Checkbox
-                      id={`lecture-${lecture.id}`}
-                      checked={selectedLectures.includes(lecture.id)}
-                      onCheckedChange={(checked) => handleCheckboxChange(lecture.id, !!checked)}
-                    />
-                    <label
-                      htmlFor={`lecture-${lecture.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {lecture.title}
-                    </label>
-                  </div>
-                ))}
+               <div className="relative mb-2">
+                  <Input
+                      type="search"
+                      placeholder="ابحث عن محاضرة..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                  />
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+              <ScrollArea className="h-64 rounded-md border p-4">
+                {filteredLectures.length > 0 ? (
+                  filteredLectures.map(lecture => (
+                    <div key={lecture.id} className="flex items-center space-x-2 space-x-reverse mb-2">
+                      <Checkbox
+                        id={`lecture-${lecture.id}`}
+                        checked={selectedLectures.includes(lecture.id)}
+                        onCheckedChange={(checked) => handleCheckboxChange(lecture.id, !!checked)}
+                      />
+                      <label
+                        htmlFor={`lecture-${lecture.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {lecture.title}
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-center">
+                    {allLectures.length === 0 ? 'لا توجد محاضرات متاحة.' : 'لا توجد محاضرات تطابق بحثك.'}
+                  </p>
+                )}
               </ScrollArea>
             </div>
           </div>
