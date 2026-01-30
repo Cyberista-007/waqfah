@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -33,79 +32,116 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const pipRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ initialX: 0, initialY: 0, mouseX: 0, mouseY: 0 });
-  const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  
+  const interactionStartRef = useRef<{
+      x: number;
+      y: number;
+      initialX: number;
+      initialY: number;
+      width: number;
+      height: number;
+  } | null>(null);
+
   
   // Effect to set initial PiP position
   useEffect(() => {
     if (isPip && position.x === 0 && position.y === 0) {
+        const initialWidth = window.innerWidth > 400 ? 380 : 320;
+        const initialHeight = initialWidth * (9/16);
+        setSize({width: initialWidth, height: initialHeight});
         setPosition({
-            x: window.innerWidth - size.width - 20,
-            y: window.innerHeight - size.height - 20,
+            x: window.innerWidth - initialWidth - 20,
+            y: window.innerHeight - initialHeight - 80, // 80 to avoid mobile nav
         });
     }
-  }, [isPip, position.x, position.y, size.width, size.height]);
+  }, [isPip, position.x, position.y]);
 
+  const getEventCoords = (e: MouseEvent | TouchEvent) => {
+    return 'touches' in e ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+  };
 
-  const handleDragMouseDown = (e: React.MouseEvent) => {
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Only drag, don't prevent default for buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
     e.preventDefault();
     setIsDragging(true);
-    dragStartRef.current = {
-      initialX: position.x,
-      initialY: position.y,
-      mouseX: e.clientX,
-      mouseY: e.clientY,
+    const { x, y } = getEventCoords(e.nativeEvent);
+    interactionStartRef.current = {
+      x, y,
+      initialX: position.x, initialY: position.y,
+      width: 0, height: 0 // Not needed for dragging
     };
   };
 
-  const handleResizeMouseDown = (e: React.MouseEvent) => {
+  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent drag from firing
     setIsResizing(true);
-    resizeStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
+    const { x, y } = getEventCoords(e.nativeEvent);
+    interactionStartRef.current = {
+      x, y,
+      initialX: 0, initialY: 0, // Not needed
       width: size.width,
       height: size.height,
     };
   };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  
+  const handleInteractionMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!interactionStartRef.current) return;
+    const { x, y } = getEventCoords(e);
+    
     if (isDragging) {
-      const dx = e.clientX - dragStartRef.current.mouseX;
-      const dy = e.clientY - dragStartRef.current.mouseY;
+      const dx = x - interactionStartRef.current.x;
+      const dy = y - interactionStartRef.current.y;
+      
+      const newX = interactionStartRef.current.initialX + dx;
+      const newY = interactionStartRef.current.initialY + dy;
+
+      // Boundary checks
+      const boundedX = Math.max(0, Math.min(newX, window.innerWidth - size.width));
+      const boundedY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
+
       setPosition({
-        x: dragStartRef.current.initialX + dx,
-        y: dragStartRef.current.initialY + dy,
+        x: boundedX,
+        y: boundedY,
       });
     }
+    
     if (isResizing) {
-      const dx = e.clientX - resizeStartRef.current.x;
-      const newWidth = resizeStartRef.current.width + dx;
-      if (newWidth >= 250 && newWidth <= 800) { // Min/Max width
+      const dx = x - interactionStartRef.current.x;
+      const newWidth = interactionStartRef.current.width + dx;
+      if (newWidth >= 200 && newWidth <= 800) { // Min/Max width
         setSize({
           width: newWidth,
-          height: newWidth * (9 / 16), // Maintain 16:9 aspect ratio
+          height: newWidth * (9 / 16),
         });
       }
     }
-  }, [isDragging, isResizing]);
+  }, [isDragging, isResizing, size.width, size.height]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleInteractionEnd = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
+    interactionStartRef.current = null;
   }, []);
 
   useEffect(() => {
     if (isDragging || isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousemove', handleInteractionMove);
+      document.addEventListener('touchmove', handleInteractionMove);
+      document.addEventListener('mouseup', handleInteractionEnd);
+      document.addEventListener('touchend', handleInteractionEnd);
     }
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleInteractionMove);
+      document.removeEventListener('touchmove', handleInteractionMove);
+      document.removeEventListener('mouseup', handleInteractionEnd);
+      document.removeEventListener('touchend', handleInteractionEnd);
     };
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handleInteractionMove, handleInteractionEnd]);
+
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -197,8 +233,9 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
           <DialogTitle>مشغل فيديو يوتيوب</DialogTitle>
         </DialogHeader>
         <div 
-          className={cn("flex justify-between items-center bg-card rounded-t-2xl p-2", isPip && "cursor-grab")}
-          onMouseDown={isPip ? handleDragMouseDown : undefined}
+          className={cn("flex justify-between items-center bg-card rounded-t-2xl p-2 touch-none", isPip && "cursor-grab")}
+          onMouseDown={isPip ? handleDragStart : undefined}
+          onTouchStart={isPip ? handleDragStart : undefined}
         >
            <div className={cn("flex items-center gap-1 text-muted-foreground", !isPip && "hidden")}>
              <Grab className="h-5 w-5" />
@@ -227,8 +264,9 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
            />
            {isPip && (
               <div 
-                  onMouseDown={handleResizeMouseDown}
-                  className="absolute -bottom-1 -right-1 w-4 h-4 cursor-nwse-resize z-10"
+                  onMouseDown={handleResizeStart}
+                  onTouchStart={handleResizeStart}
+                  className="absolute -bottom-2 -right-2 w-6 h-6 cursor-nwse-resize z-10"
               />
            )}
         </div>
