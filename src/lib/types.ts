@@ -20,6 +20,17 @@ export type Stats = {
   books: number;
 }
 
+export type Channel = Serializable<{
+  id: string; // Document ID
+  slug: string;
+  name: string;
+  description: string;
+  imageId: string;
+  imageUrl?: string;
+  youtubeUrl?: string;
+  followerCount: number;
+}>;
+
 export type Program = Serializable<{
   id: string; // Document ID
   slug: string;
@@ -39,6 +50,9 @@ export type Lecture = Serializable<{
   programId?: string;
   programName?: string;
   programSlug?: string;
+  channelId?: string;
+  channelName?: string;
+  channelSlug?: string;
   seriesId?: string; // Document ID of the series
   seriesSlug?: string;
   seriesTitle?: string; 

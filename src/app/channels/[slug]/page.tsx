@@ -1,34 +1,45 @@
 
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useParams, notFound } from 'next/navigation';
 import type { Channel, Lecture } from '@/lib/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
 import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
-import { Button } from '@/components/ui/button';
-import { Bell, Check, Users } from 'lucide-react';
-import { getChannelBySlug, getLecturesByChannel } from '@/lib/data';
+import { Users } from 'lucide-react';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
+import { useCollection } from '@/firebase';
+import { HomePageSkeleton } from '@/components/skeletons';
 
-async function getChannelData(slug: string) {
-    const channel = await getChannelBySlug(slug);
+export default function ChannelPage() {
+    const params = useParams();
+    const slug = params.slug as string;
 
-    if (!channel) {
-        return { channel: null, lectures: [] };
+    // 1. Fetch the channel by slug
+    const { data: channels, isLoading: channelsLoading } = useCollection<Channel>('channels', {
+        where: ['slug', '==', slug],
+        limit: 1
+    });
+    const channel = channels?.[0];
+    const channelId = channel?.id;
+
+    // 2. Fetch lectures for this channel ID, only if channelId exists
+    const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
+        channelId ? 'lectures' : null, 
+        { where: ['channelId', '==', channelId] }
+    );
+
+    const isLoading = channelsLoading || (channelId !== undefined && lecturesLoading);
+
+    if (isLoading) {
+        return <HomePageSkeleton />;
     }
-    
-    // Fetch lectures by the channelId
-    const lectures = await getLecturesByChannel(channel.id);
-
-    return { channel, lectures };
-}
-
-export default async function ChannelPage({ params }: { params: { slug: string } }) {
-    const { channel, lectures } = await getChannelData(params.slug);
 
     if (!channel) {
         notFound();
+        return null;
     }
 
     const placeholder = getPlaceholderImage(channel.imageId);
@@ -63,7 +74,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-2">
                              <span>@{channel.slug}</span>
                              <span className="hidden sm:inline">·</span>
-                             <span>{lectures.length} محاضرة</span>
+                             <span>{lectures?.length || 0} محاضرة</span>
                              {channel.followerCount && channel.followerCount > 0 && (
                                 <>
                                   <span className="hidden sm:inline">·</span>
@@ -76,7 +87,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         </div>
                         <p className="text-base text-muted-foreground mt-3 max-w-xl line-clamp-3">{channel.description}</p>
                          <div className="mt-6 flex flex-wrap gap-2">
-                             <FollowButton channelId={channel.id} />
+                             {/* The FollowButton for channels is not implemented yet, so we'll use the program one as a placeholder */}
+                             {/* <FollowButton channelId={channel.id} /> */}
                          </div>
                     </div>
                 </div>
@@ -85,7 +97,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {/* Lectures Section */}
             <section className="px-4 sm:px-6 lg:px-8">
                  <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
-                {lectures.length > 0 ? (
+                {lectures && lectures.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                     </div>

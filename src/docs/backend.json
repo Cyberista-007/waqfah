@@ -1,0 +1,372 @@
+
+{
+  "entities": {
+    "Stats": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Stats",
+      "type": "object",
+      "description": "A singleton document to store global site statistics.",
+      "properties": {
+        "programs": { "type": "number", "minimum": 0 },
+        "lectures": { "type": "number", "minimum": 0 },
+        "series": { "type": "number", "minimum": 0 },
+        "books": { "type": "number", "minimum": 0 }
+      }
+    },
+    "Program": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Program",
+      "type": "object",
+      "description": "Represents a Program or author on the platform.",
+      "properties": {
+        "slug": { "type": "string", "description": "A URL-friendly identifier for the program." },
+        "name": { "type": "string", "description": "The full name of the program." },
+        "bio": { "type": "string", "description": "A short biography of the program." },
+        "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
+        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
+        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
+      },
+      "required": ["slug", "name", "bio", "imageId", "createdAt"]
+    },
+    "Channel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Channel",
+      "type": "object",
+      "description": "Represents a YouTube Channel that provides lectures.",
+      "properties": {
+        "slug": { "type": "string", "description": "A URL-friendly identifier for the channel." },
+        "name": { "type": "string", "description": "The full name of the channel." },
+        "description": { "type": "string", "description": "A short description of the channel." },
+        "imageId": { "type": "string", "description": "An ID for a placeholder image for the channel." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the channel's image." },
+        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the channel's YouTube channel." },
+        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this channel." }
+      },
+      "required": ["slug", "name", "imageId", "youtubeUrl", "followerCount"]
+    },
+    "Series": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Series",
+      "type": "object",
+      "description": "Represents a series of lectures.",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "lectureCount": { "type": "number", "minimum": 0 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "language": { "type": "string", "description": "The language of the series content (e.g., 'ar', 'en')." }
+      },
+      "required": ["slug", "title", "imageId", "lectureCount", "createdAt"]
+    },
+    "Lecture": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Lecture",
+      "type": "object",
+      "description": "Represents a single lecture.",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "programName": { "type": "string" },
+        "programSlug": { "type": "string" },
+        "channelId": { "type": "string" },
+        "channelName": { "type": "string" },
+        "channelSlug": { "type": "string" },
+        "seriesId": { "type": "string" },
+        "seriesSlug": { "type": "string" },
+        "seriesTitle": { "type": "string" },
+        "audioSrc": { "type": "string", "format": "uri" },
+        "youtubeUrl": { "type": "string", "format": "uri" },
+        "pdfUrl": { "type": "string", "format": "uri" },
+        "imageId": { "type": "string" },
+        "duration": { "type": "number" },
+        "transcript": { "type": "array" },
+        "rating": { "type": "number", "minimum": 0, "maximum": 5 },
+        "ratingCount": { "type": "number", "minimum": 0 },
+        "viewCount": { "type": "number", "minimum": 0 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
+      },
+      "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
+    },
+    "Book": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Book",
+      "type": "object",
+      "description": "Represents a book or publication.",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "programName": { "type": "string", "description": "The name of the program authoring this book, if any." },
+        "pdfUrl": { "type": "string", "format": "uri" },
+        "imageId": { "type": "string" }
+      },
+      "required": ["slug", "title", "pdfUrl", "imageId"]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "photoURL": { "type": "string", "format": "uri" },
+        "bio": { "type": "string" },
+        "minutesListened": { "type": "number", "minimum": 0 },
+        "lecturesCompleted": { "type": "number", "minimum": 0 },
+        "seriesCompleted": { "type": "number", "minimum": 0 },
+        "role": { "type": "string", "enum": ["user", "admin"], "default": "user" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notificationSettings": {
+          "type": "object",
+          "description": "User's notification preferences.",
+          "properties": {
+            "newPrograms": { "type": "boolean", "description": "Notify on new programs." },
+            "newPlaylists": { "type": "boolean", "description": "Notify on new public playlists." },
+            "newBooks": { "type": "boolean", "description": "Notify on new books." }
+          }
+        }
+      },
+      "required": ["email", "name", "createdAt", "role"]
+    },
+    "Favorite": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Favorite",
+        "type": "object",
+        "description": "Represents a user's favorited lecture.",
+        "properties": {
+            "userId": { "type": "string" },
+            "lectureId": { "type": "string" },
+            "addedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "lectureId", "addedAt"]
+    },
+    "Following": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Following",
+      "description": "Represents the relationship of a user following a program.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "programId": { "type": "string" },
+        "followedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "programId", "followedAt"]
+    },
+    "Rating": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Rating",
+        "type": "object",
+        "description": "A user's rating for a lecture.",
+        "properties": {
+            "userId": { "type": "string" },
+            "lectureId": { "type": "string" },
+            "value": { "type": "number", "minimum": 1, "maximum": 5 },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "lectureId", "value", "createdAt"]
+    },
+    "ListenHistory": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ListenHistory",
+        "type": "object",
+        "description": "Tracks a user's listening progress for a lecture.",
+        "properties": {
+            "userId": { "type": "string" },
+            "lectureId": { "type": "string" },
+            "seriesId": { "type": "string", "description": "The ID of the series this lecture belongs to, if any." },
+            "position": { "type": "number", "minimum": 0 },
+            "duration": { "type": "number", "minimum": 0 },
+            "lastListened": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "lectureId", "position", "duration", "lastListened"]
+    },
+    "Playlist": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Playlist",
+        "type": "object",
+        "description": "A user-created playlist of lectures.",
+        "properties": {
+            "userId": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "lectureIds": { "type": "array", "items": { "type": "string" } },
+            "isPublic": { "type": "boolean", "default": false },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "name", "lectureIds", "isPublic", "createdAt"]
+    },
+    "Topic": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Topic",
+      "description": "Represents a subject or category grouping various content.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "lectureIds": { "type": "array", "items": { "type": "string" } },
+        "seriesIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "slug", "description"]
+    },
+    "Challenge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Challenge",
+      "description": "A listening challenge for users to complete.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "lectureIds": { "type": "array", "items": { "type": "string" } },
+        "seriesId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["title", "description", "lectureIds", "startDate", "endDate", "isActive"]
+    },
+    "LectureClip": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LectureClip",
+      "description": "A short, shareable clip from a lecture.",
+      "type": "object",
+      "properties": {
+        "lectureId": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "startTime": { "type": "number" },
+        "endTime": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["lectureId", "userId", "title", "startTime", "endTime", "createdAt"]
+    },
+    "ScheduleItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ScheduleItem",
+      "description": "An item in the lesson schedule.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "dateTime": { "type": "string", "format": "date-time" },
+        "duration": { "type": "number" },
+        "isLive": { "type": "boolean" }
+      },
+      "required": ["title", "dateTime", "isLive"]
+    },
+    "LectureNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LectureNote",
+      "description": "A user's private note on a specific lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lectureId": { "type": "string" },
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "lectureId", "content", "updatedAt"]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "description": "A user's comment on a lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhotoURL": { "type": "string", "format": "uri" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "text", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/stats/{statsId}",
+        "definition": { "schema": { "$ref": "#/entities/Stats" } }
+      },
+      {
+        "path": "/programs/{programId}",
+        "definition": { "schema": { "$ref": "#/entities/Program" } }
+      },
+       {
+        "path": "/channels/{channelId}",
+        "definition": { "schema": { "$ref": "#/entities/Channel" } }
+      },
+      {
+        "path": "/series/{seriesId}",
+        "definition": { "schema": { "$ref": "#/entities/Series" } }
+      },
+      {
+        "path": "/lectures/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/Lecture" } }
+      },
+      {
+        "path": "/books/{bookId}",
+        "definition": { "schema": { "$ref": "#/entities/Book" } }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": { "schema": { "$ref": "#/entities/UserProfile" } }
+      },
+      {
+        "path": "/users/{userId}/favorites/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/Favorite" } }
+      },
+       {
+        "path": "/users/{userId}/following/{programId}",
+        "definition": { "schema": { "$ref": "#/entities/Following" } }
+      },
+      {
+        "path": "/users/{userId}/listenHistory/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/ListenHistory" } }
+      },
+      {
+        "path": "/users/{userId}/playlists/{playlistId}",
+        "definition": { "schema": { "$ref": "#/entities/Playlist" } }
+      },
+      {
+        "path": "/users/{userId}/notes/{lectureId}",
+        "definition": { "schema": { "$ref": "#/entities/LectureNote" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/ratings/{userId}",
+        "definition": { "schema": { "$ref": "#/entities/Rating" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/comments/{commentId}",
+        "definition": { "schema": { "$ref": "#/entities/Comment" } }
+      },
+      {
+        "path": "/topics/{topicId}",
+        "definition": { "schema": { "$ref": "#/entities/Topic" } }
+      },
+      {
+        "path": "/challenges/{challengeId}",
+        "definition": { "schema": { "$ref": "#/entities/Challenge" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/clips/{clipId}",
+        "definition": { "schema": { "$ref": "#/entities/LectureClip" } }
+      },
+      {
+        "path": "/scheduled_lessons/{lessonId}",
+        "definition": { "schema": { "$ref": "#/entities/ScheduleItem" } }
+      }
+    ]
+  }
+}

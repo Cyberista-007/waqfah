@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2 } from "lucide-react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast } from "lucide-react"
 import { useState, useMemo, useRef } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -167,9 +167,7 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
   
   const displayDurationInSeconds = lecture.duration || 0;
 
-  const finalProgramName = lecture.programName;
-  const finalProgramSlug = lecture.programSlug;
-
+  const hasChannel = lecture.channelName && lecture.channelSlug;
 
   return (
     <>
@@ -235,11 +233,18 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
             </div>
           )}
 
-          {finalProgramName && finalProgramSlug && (
-             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
-                <Link href={`/programs/${finalProgramSlug}`} className="flex items-center gap-1 hover:underline">
+          {hasChannel ? (
+            <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
+                <Link href={`/channels/${lecture.channelSlug}`} className="flex items-center gap-1 hover:underline">
                     <Youtube className="w-3 h-3" />
-                    <span>{finalProgramName}</span>
+                    <span>{lecture.channelName}</span>
+                </Link>
+            </div>
+          ) : lecture.programName && lecture.programSlug && (
+             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
+                <Link href={`/programs/${lecture.programSlug}`} className="flex items-center gap-1 hover:underline">
+                    <Podcast className="w-3 h-3" />
+                    <span>{lecture.programName}</span>
                 </Link>
             </div>
           )}

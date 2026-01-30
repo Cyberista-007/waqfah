@@ -1,0 +1,188 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================================
+    // Helper Functions
+    // =====================================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isCreatingOwnResource(userId) {
+      return isOwner(userId) && request.resource.data.userId == userId;
+    }
+
+    function isResourceOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Check if the user has the 'admin' role in their user profile document.
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // =====================================================================
+    // Public Content Collections 
+    // Anyone can read, but write access is restricted.
+    // =====================================================================
+
+    match /stats/{statsId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
+    match /programs/{programId} {
+      allow get, list: if true;
+      // Allow admins to do any write.
+      // Allow any signed-in user to update only the followerCount.
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
+    }
+
+    match /channels/{channelId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
+    }
+    
+    match /series/{seriesId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
+    match /lectures/{lectureId} {
+      allow get, list: if true;
+      // Admins can perform any write operation.
+      // This also implicitly allows batched deletes by admins.
+      allow write: if isAdmin();
+    }
+
+    match /books/{bookId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+    
+    match /question_answers/{qaId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
+    match /scheduled_lessons/{lessonId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+    
+    match /topics/{topicId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+    
+    match /challenges/{challengeId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
+
+    // =====================================================================
+    // User-Specific Data
+    // =====================================================================
+
+    match /users/{userId} {
+      // A user can create their own profile document.
+      allow create: if isOwner(userId);
+      // Users can only read and update their own profile. No one can list all users.
+      allow get, update: if isOwner(userId) || isAdmin();
+      // Admins can list all users.
+      allow list: if isAdmin();
+      // No one can delete user profiles for now.
+      allow delete: if false;
+    }
+
+    match /users/{userId}/favorites/{lectureId} {
+      // Users can only manage their own favorites.
+      allow read, write, delete: if isOwner(userId);
+    }
+    
+    match /users/{userId}/following/{programId} {
+      // Users can only manage their own following list.
+      allow read, write, delete: if isOwner(userId);
+    }
+    
+    match /users/{userId}/listenHistory/{lectureId} {
+      // Users can only read and write to their own listening history.
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/playlists/{playlistId} {
+      // A user can create their own playlist.
+      allow create: if isCreatingOwnResource(request.resource.data.userId);
+      
+      // A user can list their own playlists.
+      allow list: if isOwner(userId);
+
+      // Users can get, update, and delete their own playlists.
+      allow get, update, delete: if isResourceOwner();
+      
+      // Any signed-in user can also get a public playlist.
+      allow get: if isSignedIn() && resource.data.isPublic == true;
+    }
+    
+    match /users/{userId}/notes/{lectureId} {
+        // Users can only manage their own notes.
+        allow read, write, delete: if isOwner(userId);
+    }
+    
+
+    // =====================================================================
+    // Subcollections for Lectures
+    // =====================================================================
+
+    match /lectures/{lectureId}/ratings/{userId} {
+      // Anyone can read ratings for a lecture.
+      allow get, list: if true;
+
+      // A user can create or update their own rating.
+      // The document ID must be the user's ID to enforce one rating per user.
+      allow create, update: if isCreatingOwnResource(userId) &&
+                      request.resource.data.lectureId == lectureId &&
+                      request.resource.data.value >= 1 &&
+                      request.resource.data.value <= 5;
+      // Users cannot delete ratings.
+      allow delete: if false;
+    }
+    
+    match /lectures/{lectureId}/clips/{clipId} {
+      allow get, list: if true;
+      // User must be creator to create a clip.
+      allow create: if isCreatingOwnResource(request.resource.data.userId);
+      // Only the owner of the clip can delete it.
+      allow delete: if isResourceOwner();
+    }
+    
+    match /lectures/{lectureId}/comments/{commentId} {
+      allow list: if true;
+      allow get: if true;
+      // Signed in users can create comments
+      allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid);
+      // Users can only update or delete their own comments
+      allow update, delete: if isSignedIn() && isResourceOwner();
+    }
+    
+    // =====================================================================
+    // Collection Group Queries
+    // =====================================================================
+
+    // Allow signed-in users to query all public playlists across all users.
+    match /{path=**}/playlists/{playlistId} {
+      allow list: if isSignedIn() && request.query.limit <= 30 && request.query.offset == null && request.query.orderBy.size() == 1 && request.query.orderBy[0].field == "createdAt" && request.query.orderBy[0].direction == "desc" && resource.data.isPublic == true;
+    }
+  }
+}
