@@ -58,7 +58,7 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
             }
         }
     }
-  }, [resolvedTheme, customHexColor, particleSettings.lineDistance]);
+  }, [resolvedTheme, customHexColor, particleSettings]);
   
   const toRgba = (hex: string, alpha: number) => {
     if (!/^#[0-9A-F]{6}$/i.test(hex)) {

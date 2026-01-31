@@ -170,16 +170,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     const storedEffect = localStorage.getItem("site-background-effect") as BackgroundEffect | null;
     if (storedEffect && ['none', 'particles'].includes(storedEffect)) {
       setBackgroundEffectState(storedEffect);
-    } else if (storedEffect === 'trianglify') {
-        setBackgroundEffectState('none');
     } else {
-        // Migration from old isParticlesEnabled
-        const storedParticles = localStorage.getItem("site-particles-enabled");
-        if (storedParticles === "true") {
-            setBackgroundEffectState('particles');
-        } else {
-            setBackgroundEffectState('none');
-        }
+        setBackgroundEffectState('none');
     }
 
     const storedParticleColor = localStorage.getItem("site-particle-color");

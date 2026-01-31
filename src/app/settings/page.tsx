@@ -399,6 +399,10 @@ export default function SettingsPage() {
                         <Label htmlFor="p-speed">سرعة الحركة: {particleSettings.speed.toFixed(1)}</Label>
                         <Slider id="p-speed" min={0.1} max={2} step={0.1} value={[particleSettings.speed]} onValueChange={(v) => setParticleSettings({ speed: v[0] })} />
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="p-distance">مسافة الربط: {particleSettings.lineDistance}</Label>
+                        <Slider id="p-distance" min={50} max={250} step={10} value={[particleSettings.lineDistance]} onValueChange={(v) => setParticleSettings({ lineDistance: v[0] })} />
+                    </div>
                 </div>
             )}
 
