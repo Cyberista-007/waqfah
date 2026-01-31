@@ -77,7 +77,7 @@ export default function LecturesListPage() {
               return a.title.localeCompare(b.title, 'ar');
           case 'newest':
           default:
-              return dateB.getTime() - dateA.getTime();
+              return dateB.getTime() - a.createdAt.getTime();
       }
     });
 
@@ -131,7 +131,7 @@ export default function LecturesListPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredLectures?.map((lecture, index) => {
           return (
             <LectureCard key={lecture.id} lecture={lecture} index={index} />
