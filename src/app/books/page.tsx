@@ -5,10 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Book } from '@/lib/types';
-import { Book as BookIcon, Loader2 } from 'lucide-react';
-import { Suspense } from 'react';
+import { Book as BookIcon, Loader2, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCollection } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
+
+import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { doc, runTransaction, increment } from 'firebase/firestore';
+
 
 function BooksListSkeleton() {
     return (
@@ -26,18 +32,63 @@ function BooksListSkeleton() {
 
 function BooksList() {
     const { data: books, isLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc']});
+    const { isAdmin } = useAdminAuth();
+    const { toast } = useToast();
+    const firestore = useFirestore();
+    const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
+
+    const handleDelete = async () => {
+        if (!bookToDelete || !firestore) return;
+
+        const bookRef = doc(firestore, 'books', bookToDelete.id);
+        const statsRef = doc(firestore, 'stats', 'global');
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                transaction.delete(bookRef);
+                transaction.set(statsRef, { books: increment(-1) }, { merge: true });
+            });
+
+            toast({
+                variant: "destructive",
+                title: "تم الحذف بنجاح",
+                description: `تم حذف كتاب "${bookToDelete.title}".`,
+            });
+        } catch (error) {
+            console.error("Error deleting book:", error);
+            toast({
+                variant: "destructive",
+                title: "فشل الحذف",
+                description: "لم نتمكن من حذف الكتاب.",
+            });
+        } finally {
+            setBookToDelete(null);
+        }
+    };
+
 
     if (isLoading) {
         return <BooksListSkeleton />;
     }
 
     return (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
             {books && books.length > 0 ? (
                 books.map((book) => {
                     const placeholder = getPlaceholderImage(book.imageId);
                     return (
-                      <Card key={book.id} className="text-center p-4 transition-transform transform hover:-translate-y-1 flex flex-col rounded-xl">
+                      <Card key={book.id} className="relative group text-center p-4 transition-transform transform hover:-translate-y-1 flex flex-col rounded-xl">
+                        {isAdmin && (
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2 h-8 w-8 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => setBookToDelete(book)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        )}
                         <div className="flex-grow">
                           <Image
                             src={placeholder?.imageUrl || `https://picsum.photos/seed/${book.slug}/300/400`}
@@ -63,6 +114,14 @@ function BooksList() {
                 </div>
             )}
         </div>
+        <DeleteConfirmationDialog 
+          isOpen={!!bookToDelete}
+          onClose={() => setBookToDelete(null)}
+          onConfirm={handleDelete}
+          title="حذف الكتاب"
+          description={`هل أنت متأكد من رغبتك في حذف كتاب "${bookToDelete?.title}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+        />
+      </>
     )
 }
 
