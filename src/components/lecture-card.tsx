@@ -20,6 +20,7 @@ import { useCollection, useFirestore, useUser } from "@/firebase"
 import { Progress } from "./ui/progress"
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
 import { useRouter } from "next/navigation"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -259,9 +260,18 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
 
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
-                <h3 className="font-headline text-lg mb-1 leading-tight">
-                    <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
-                </h3>
+                <TooltipProvider delayDuration={500}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h3 className="font-headline text-lg mb-1 leading-tight">
+                          <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
+                      </h3>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{lecture.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2">
                 <div className="flex items-center gap-1">
@@ -292,7 +302,7 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
                     <FavoriteButton lectureId={lecture.id} className="h-9 w-9" />
                     {onCollapse && (
                         <Button onClick={onCollapse} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                            <Minimize2 className="h-5 w-5" />
+                            <Minimize2 className="h-5 h-5" />
                         </Button>
                     )}
                 </div>
