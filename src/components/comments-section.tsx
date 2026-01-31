@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -21,7 +20,25 @@ interface CommentsSectionProps {
 }
 
 function CommentItem({ comment }: { comment: Comment }) {
-  const commentDate = comment.createdAt ? new Date(comment.createdAt) : new Date();
+    // Firestore timestamps can be serialized into objects with `seconds` and `nanoseconds`.
+    // This function safely converts various formats into a JavaScript Date object.
+    const toDate = (timestamp: any): Date => {
+        if (!timestamp) {
+        return new Date();
+        }
+        // Check if it's a Firestore Timestamp object with a toDate method
+        if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        return timestamp.toDate();
+        }
+        // Check if it's a serialized object
+        if (typeof timestamp === 'object' && timestamp.seconds) {
+        return new Date(timestamp.seconds * 1000);
+        }
+        // Fallback for ISO strings or other native Date constructor formats
+        return new Date(timestamp);
+    };
+
+    const commentDate = toDate(comment.createdAt);
   
   return (
     <div className="flex gap-4">
@@ -33,7 +50,10 @@ function CommentItem({ comment }: { comment: Comment }) {
         <div className="flex items-center gap-2">
             <span className="font-bold">{comment.userName}</span>
             <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(commentDate, { addSuffix: true, locale: ar })}
+                {!isNaN(commentDate.getTime())
+                    ? formatDistanceToNow(commentDate, { addSuffix: true, locale: ar })
+                    : 'قبل فترة'
+                }
             </span>
         </div>
         <p className="text-foreground/90 whitespace-pre-wrap">{comment.text}</p>
