@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -311,34 +309,46 @@ export function FloatingAudioPlayer() {
 
   return (
     <div className={cn(
-      "sticky bottom-4 inset-x-4 max-w-md mx-auto z-50 rounded-lg shadow-xl transition-transform duration-300",
+      "sticky bottom-8 inset-x-4 max-w-xs mx-auto z-50 rounded-2xl shadow-xl transition-transform duration-300",
       "bg-background/80 backdrop-blur-md border border-border",
       track ? "translate-y-0" : "translate-y-[200%]"
     )}>
       <audio ref={audioRef} src={track.audioSrc} preload="metadata" className="hidden" />
 
-      <div className="p-4 flex flex-col gap-3">
-        {/* Top Section: Info and Close */}
+      <div className="flex flex-col p-4 gap-3">
         <div className="flex items-center gap-4">
             <Image 
                 src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/100/100`}
                 alt={track.title}
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-md object-cover"
+                width={64}
+                height={64}
+                className="w-16 h-16 rounded-md object-cover"
             />
             <div className="flex-grow min-w-0">
-                <p className="text-sm font-bold truncate">{track.title}</p>
+                <p className="text-sm font-bold truncate">
+                    <Link href={`/lectures/${track.slug}`} className="hover:underline">{track.title}</Link>
+                </p>
                 <p className="text-xs text-muted-foreground truncate">
-                    <Link href={`/series/${track.seriesId}`} className="hover:underline">{track.seriesTitle}</Link>
+                    <Link href={`/series/${track.seriesSlug}`} className="hover:underline">{track.seriesTitle}</Link>
                 </p>
             </div>
-            <Button onClick={closePlayer} variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground shrink-0">
-                <X className="w-5 h-5" />
+            <Button onClick={closePlayer} variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
+                <X className="w-4 h-4" />
             </Button>
         </div>
 
-        {/* Middle Section: Progress Bar */}
+        <div className="flex items-center justify-center gap-2">
+            <Button onClick={handleRewind} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-foreground/10">
+                <Rewind className="w-5 h-5" />
+            </Button>
+            <Button onClick={togglePlayPause} variant="ghost" size="icon" className="h-14 w-14 text-foreground hover:bg-foreground/10">
+                {isPlaying ? <Pause className="w-8 h-8"/> : <Play className="w-8 h-8"/>}
+            </Button>
+            <Button onClick={handleFastForward} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-foreground/10">
+                <FastForward className="w-5 h-5" />
+            </Button>
+        </div>
+
         <div className="flex items-center gap-2">
             <span className="text-xs font-mono text-muted-foreground w-10 text-center">{formatTime(progress)}</span>
             <Slider
@@ -349,62 +359,6 @@ export function FloatingAudioPlayer() {
                 className="flex-grow"
             />
             <span className="text-xs font-mono text-muted-foreground w-10 text-center">{formatTime(duration)}</span>
-        </div>
-
-        {/* Bottom Section: Controls */}
-        <div className="flex items-center justify-between">
-           <div className="flex items-center gap-1">
-                 <Select defaultValue="1" onValueChange={handleSpeedChange}>
-                    <SelectTrigger id="global-speed-select" className="h-9 w-[70px] text-xs focus:outline-none bg-transparent border-0 text-foreground">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-border text-foreground">
-                        <SelectItem value="0.75">0.75x</SelectItem>
-                        <SelectItem value="1">1x</SelectItem>
-                        <SelectItem value="1.5">1.5x</SelectItem>
-                        <SelectItem value="2">2x</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("text-foreground hover:bg-foreground/10", sleepTimerDuration > 0 && "text-primary")}>
-                            <Timer className="w-5 h-5" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56 bg-background border-border text-foreground" align="center">
-                        <div className="grid gap-4">
-                            <h4 className="font-medium leading-none">مؤقت النوم</h4>
-                            <div className="grid gap-2">
-                                <Button onClick={() => setSleepTimer(15)} variant={sleepTimerDuration === 15 ? 'default' : 'outline'}>بعد 15 دقيقة</Button>
-                                <Button onClick={() => setSleepTimer(30)} variant={sleepTimerDuration === 30 ? 'default' : 'outline'}>بعد 30 دقيقة</Button>
-                                <Button onClick={() => setSleepTimer(60)} variant={sleepTimerDuration === 60 ? 'default' : 'outline'}>بعد 60 دقيقة</Button>
-                                {sleepTimerDuration > 0 && <Button onClick={() => setSleepTimer(0)} variant="destructive">إلغاء المؤقت</Button>}
-                            </div>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-           </div>
-           
-           <div className="flex items-center justify-center gap-1">
-                <Button onClick={handleRewind} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
-                    <Rewind className="w-6 h-6" />
-                </Button>
-                <Button onClick={togglePlayPause} variant="ghost" size="icon" className="h-12 w-12 text-foreground hover:bg-foreground/10">
-                    {isPlaying ? <Pause className="w-8 h-8"/> : <Play className="w-8 h-8"/>}
-                </Button>
-                 <Button onClick={handleFastForward} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
-                    <FastForward className="w-6 h-6" />
-                </Button>
-           </div>
-
-            <div className="flex items-center gap-1">
-                <Button onClick={toggleMute} variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
-                    {isMuted ? <VolumeX className="w-5 h-5"/> : <Volume2 className="w-5 h-5"/>}
-                </Button>
-                <Button asChild variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
-                    <Link href={`/lectures/${track.slug}`}><Maximize2 className="w-5 h-5"/></Link>
-                </Button>
-            </div>
         </div>
       </div>
     </div>
