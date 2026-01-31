@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
-import { useTheme } from 'next-themes';
 import { useAppearance } from './appearance-provider';
 
 const seededRandom = (seed: number) => {
@@ -19,7 +18,6 @@ interface TrianglifyBackgroundProps {
 
 export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { resolvedTheme } = useTheme();
   const { trianglifySettings } = useAppearance();
 
   const mouse = useRef({ x: 0, y: 0 });
@@ -38,21 +36,19 @@ export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ clas
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const cellSize = trianglifySettings.cellSize;
-    const variance = trianglifySettings.variance;
-    const seed = trianglifySettings.interaction ? mouse.current.x + mouse.current.y : 1;
+    const { cellSize, variance, palette, interaction } = trianglifySettings;
+    const seed = interaction ? mouse.current.x + mouse.current.y : 1;
     
-    // Palette changes based on theme
-    const palette = resolvedTheme?.includes('dark') || resolvedTheme?.includes('night')
-      ? ['#2e0c4d', '#3f1161', '#511676', '#621a8a', '#741f9e']
-      : ['#fde8ff', '#f8d9ff', '#f3caff', '#eebcff', '#e9afff'];
-
     const rand = seededRandom(seed);
 
     const width = canvas.width;
     const height = canvas.height;
 
     ctx.clearRect(0, 0, width, height);
+    
+    if (!palette || palette.length === 0) {
+        return; // Don't draw if there is no palette
+    }
 
     const vertices: [number, number][][] = [];
 
@@ -94,7 +90,7 @@ export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ clas
       }
     }
 
-  }, [resolvedTheme, trianglifySettings]);
+  }, [trianglifySettings]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

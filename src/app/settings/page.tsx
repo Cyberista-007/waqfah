@@ -424,6 +424,25 @@ export default function SettingsPage() {
                         <Label htmlFor="t-variance">عشوائية الشكل: {trianglifySettings.variance.toFixed(2)}</Label>
                         <Slider id="t-variance" min={0} max={1.5} step={0.05} value={[trianglifySettings.variance]} onValueChange={(v) => setTrianglifySettings({ variance: v[0] })} />
                     </div>
+                     <div className="space-y-2 pt-2">
+                        <Label>لوحة الألوان</Label>
+                        <div className="flex gap-2 flex-wrap">
+                            {trianglifySettings.palette.map((color, index) => (
+                                <Input
+                                    key={index}
+                                    type="color"
+                                    value={color}
+                                    onChange={(e) => {
+                                        const newPalette = [...trianglifySettings.palette];
+                                        newPalette[index] = e.target.value;
+                                        setTrianglifySettings({ palette: newPalette });
+                                    }}
+                                    className="w-12 h-10 p-1"
+                                    aria-label={`Color ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
             
