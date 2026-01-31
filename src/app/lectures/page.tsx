@@ -1,4 +1,3 @@
-
 "use client";
 import {
   Select,
@@ -65,8 +64,13 @@ export default function LecturesListPage() {
     }
     
     lectures.sort((a, b) => {
-      const dateA = new Date(a.createdAt as any);
-      const dateB = new Date(b.createdAt as any);
+      const toDate = (ts: any) => ts && typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+      const dateA = toDate(a.createdAt);
+      const dateB = toDate(b.createdAt);
+      
+      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+        return 0;
+      }
 
       switch (sortOrder) {
           case 'oldest':
@@ -77,7 +81,7 @@ export default function LecturesListPage() {
               return a.title.localeCompare(b.title, 'ar');
           case 'newest':
           default:
-              return dateB.getTime() - a.createdAt.getTime();
+              return dateB.getTime() - dateA.getTime();
       }
     });
 
