@@ -91,7 +91,9 @@ export function useCollection<T = any>(
         constraints.push(limit(options.limit));
     }
 
-    const isCollectionGroup = !path.includes('/');
+    // This is the fix: Only 'playlists' is a collection group query.
+    // All others, including top-level ones like 'lectures', are standard collection queries.
+    const isCollectionGroup = path === 'playlists';
     const ref = isCollectionGroup ? collectionGroup(firestore, path) : collection(firestore, path);
     const q = query(ref, ...constraints);
 
