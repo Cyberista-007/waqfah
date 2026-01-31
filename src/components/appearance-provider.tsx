@@ -21,7 +21,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const applyBackground = useCallback(() => {
     const customBg = localStorage.getItem("site-background");
     if (customBg) {
-      document.body.style.backgroundImage = `url(${customBg})`;
+      const bgValue = customBg.startsWith('url(') ? customBg : `url(${customBg})`;
+      document.body.style.backgroundImage = bgValue;
       document.body.style.backgroundAttachment = 'fixed';
       document.body.style.backgroundPosition = 'center';
       document.body.style.backgroundRepeat = 'no-repeat';
@@ -70,7 +71,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   
   const handleSetBackground = (newBg: string | null) => {
       if (newBg) {
-          document.body.style.backgroundImage = `url(${newBg})`;
+          const bgValue = newBg.startsWith('url(') ? newBg : `url(${newBg})`;
+          document.body.style.backgroundImage = bgValue;
           document.body.style.backgroundAttachment = 'fixed';
           document.body.style.backgroundPosition = 'center';
           document.body.style.backgroundRepeat = 'no-repeat';

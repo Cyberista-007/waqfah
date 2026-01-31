@@ -20,6 +20,7 @@ import {
   ImageIcon,
   Palette,
   CaseSensitive,
+  Grid,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -46,6 +47,7 @@ import {
 import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
 import { useAppearance } from '@/components/appearance-provider';
+import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -260,6 +262,7 @@ export default function SettingsPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
+    const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -347,6 +350,8 @@ export default function SettingsPage() {
             <Separator />
             <SettingsItem icon={ImageIcon} label="تغيير صورة الخلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
+             <SettingsItem icon={Grid} label="تغيير النمط" onClick={() => setIsPatternSwitcherOpen(true)} />
+            <Separator />
             <div className="flex items-center justify-between p-3 rounded-lg">
                 <Label htmlFor="bg-switch" className="text-lg cursor-pointer flex items-center gap-4">
                     <ImageIcon className="w-6 h-6 text-muted-foreground" />
@@ -383,6 +388,7 @@ export default function SettingsPage() {
 
         <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
         <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
+        <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
     </div>
   );
 }
