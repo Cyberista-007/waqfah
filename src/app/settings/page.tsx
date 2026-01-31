@@ -48,6 +48,7 @@ import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
 import { useAppearance } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
+import { Input } from '@/components/ui/input';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -256,7 +257,7 @@ export default function SettingsPage() {
     const auth = useAuth();
     const firestore = useFirestore();
     const router = useRouter();
-    const { isBackgroundShown, toggleBackground } = useAppearance();
+    const { isBackgroundShown, toggleBackground, isParticlesEnabled, toggleParticles, particleColor, setParticleColor } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
     const [isEditing, setIsEditing] = useState(false);
@@ -347,15 +348,38 @@ export default function SettingsPage() {
             <SettingsItem icon={Palette} label="تغيير الثيم" onClick={() => setIsThemeSwitcherOpen(true)} />
             <Separator />
             <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
+        </div>
+        
+        <SectionTitle title="الخلفية" />
+        <div className="bg-card rounded-xl p-2 space-y-1">
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                <Label htmlFor="particles-switch" className="text-lg cursor-pointer flex items-center gap-4">
+                    <Sparkles className="w-6 h-6 text-muted-foreground" />
+                    <span>تفعيل خلفية الجزيئات</span>
+                </Label>
+                <Switch
+                    id="particles-switch"
+                    checked={isParticlesEnabled}
+                    onCheckedChange={toggleParticles}
+                />
+            </div>
+            {isParticlesEnabled && (
+                <div className="p-3 pr-14">
+                    <div className='flex items-center gap-4'>
+                        <Label htmlFor="particle-color">لون الجزيئات</Label>
+                        <Input id="particle-color" type="color" value={particleColor} onChange={(e) => setParticleColor(e.target.value)} className="w-16 h-10 p-1" />
+                    </div>
+                </div>
+            )}
             <Separator />
-            <SettingsItem icon={ImageIcon} label="تغيير صورة الخلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
+            <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
-             <SettingsItem icon={Grid} label="تغيير النمط" onClick={() => setIsPatternSwitcherOpen(true)} />
+            <SettingsItem icon={Grid} label="اختيار نمط خلفية" onClick={() => setIsPatternSwitcherOpen(true)} />
             <Separator />
-            <div className="flex items-center justify-between p-3 rounded-lg">
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
                 <Label htmlFor="bg-switch" className="text-lg cursor-pointer flex items-center gap-4">
                     <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                    <span>إظهار صورة الخلفية</span>
+                    <span>إظهار الخلفية (صورة أو نمط)</span>
                 </Label>
                 <Switch
                     id="bg-switch"

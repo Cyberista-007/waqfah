@@ -1,3 +1,4 @@
+
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
@@ -15,6 +16,10 @@ type AppearanceContextType = {
   setBackground: (background: BackgroundState | null) => void;
   isBackgroundShown: boolean;
   toggleBackground: (shown: boolean) => void;
+  isParticlesEnabled: boolean;
+  toggleParticles: (enabled: boolean) => void;
+  particleColor: string;
+  setParticleColor: (color: string) => void;
 };
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -23,6 +28,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [font, setFont] = useState("font-body");
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
+  const [isParticlesEnabled, setIsParticlesEnabled] = useState(false);
+  const [particleColor, setParticleColor] = useState('#FFFFFF');
 
   const applyBackground = useCallback(() => {
     const customBgImage = localStorage.getItem("site-background-image");
@@ -72,6 +79,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("site-background-shown", shown ? "true" : "false");
   }, [applyBackground, clearBackgroundStyles]);
 
+  const toggleParticles = useCallback((enabled: boolean) => {
+    setIsParticlesEnabled(enabled);
+    localStorage.setItem("site-particles-enabled", enabled ? "true" : "false");
+  }, []);
+
   const handleSetFont = (newFont: string) => {
     document.body.classList.remove(font);
     document.body.classList.add(newFont);
@@ -106,6 +118,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleSetParticleColor = (color: string) => {
+    setParticleColor(color);
+    localStorage.setItem("site-particle-color", color);
+  };
+
   useEffect(() => {
     const storedFont = localStorage.getItem("site-font");
     if (storedFont) {
@@ -124,11 +141,19 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     } else {
       clearBackgroundStyles();
     }
+    
+    const storedParticles = localStorage.getItem("site-particles-enabled");
+    setIsParticlesEnabled(storedParticles === "true");
+
+    const storedParticleColor = localStorage.getItem("site-particle-color");
+    if (storedParticleColor) {
+      setParticleColor(storedParticleColor);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground }}>
+    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, isParticlesEnabled, toggleParticles, particleColor, setParticleColor: handleSetParticleColor }}>
       {children}
     </AppearanceContext.Provider>
   );

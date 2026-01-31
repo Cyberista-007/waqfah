@@ -9,6 +9,7 @@ import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
+import { SiteBackground } from '@/components/site-background';
 
 export const metadata: Metadata = {
   title: 'منصة الدروس العلمية',
@@ -30,6 +31,7 @@ export default function RootLayout({
         amiri.variable
       )}>
         <AppProviders>
+            <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
               <main className="flex-1 container py-8 pb-24 md:pb-8">
