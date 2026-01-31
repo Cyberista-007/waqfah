@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 type BackgroundState = {
   image: string | null;
   color: string | null;
+  type?: 'image' | 'pattern';
 };
 
 type AppearanceContextType = {
@@ -20,21 +21,29 @@ const AppearanceContext = createContext<AppearanceContextType | undefined>(undef
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [font, setFont] = useState("font-body");
-  const [background, setBackground] = useState<BackgroundState>({ image: null, color: null });
+  const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
 
   const applyBackground = useCallback(() => {
     const customBgImage = localStorage.getItem("site-background-image");
     const customBgColor = localStorage.getItem("site-background-color");
-    
+    const customBgType = localStorage.getItem("site-background-type") as 'image' | 'pattern' | null;
+
     document.body.style.backgroundImage = customBgImage || '';
     document.body.style.backgroundColor = customBgColor || '';
 
     if (customBgImage || customBgColor) {
-      document.body.style.backgroundAttachment = 'fixed';
-      document.body.style.backgroundPosition = 'center';
-      document.body.style.backgroundRepeat = 'no-repeat';
-      document.body.style.backgroundSize = 'cover';
+      if (customBgType === 'pattern' && customBgImage) {
+        document.body.style.backgroundAttachment = 'scroll';
+        document.body.style.backgroundPosition = '0 0';
+        document.body.style.backgroundRepeat = 'repeat';
+        document.body.style.backgroundSize = 'auto';
+      } else { // 'image' or not set (legacy for images)
+        document.body.style.backgroundAttachment = 'fixed';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundSize = 'cover';
+      }
       document.body.classList.remove('body-background');
     } else {
       document.body.style.backgroundAttachment = '';
@@ -44,7 +53,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       document.body.classList.add('body-background');
     }
 
-    setBackground({ image: customBgImage, color: customBgColor });
+    setBackground({ image: customBgImage, color: customBgColor, type: customBgType || 'image' });
   }, []);
 
   const clearBackgroundStyles = useCallback(() => {
@@ -82,6 +91,13 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.removeItem("site-background-color");
       }
+    
+      if (newBg?.type) {
+        localStorage.setItem("site-background-type", newBg.type);
+      } else {
+        localStorage.removeItem("site-background-type");
+      }
+
 
     // Apply the new background immediately
     applyBackground();

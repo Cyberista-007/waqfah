@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRef, useCallback, useEffect } from 'react';
@@ -27,7 +26,7 @@ export function AppearanceManager() {
         reader.onload = (e) => {
             const result = e.target?.result;
             if (typeof result === 'string') {
-                setBackground({ image: `url(${result})`, color: null });
+                setBackground({ image: `url(${result})`, color: null, type: 'image' });
                 toast({
                     title: 'تم تغيير الخلفية بنجاح!',
                 });

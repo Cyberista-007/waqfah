@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useAppearance } from "./appearance-provider"
@@ -46,7 +45,7 @@ const generateBambooSvg = (color: string, opacity: number, size: number) => {
     const encodedColor = encodeURIComponent(color);
     const height = (size / 80) * 105;
     // The viewBox is kept constant (0 0 80 105) so the pattern scales correctly within the new width/height.
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${height}' viewBox='0 0 80 105'><g fill-rule='evenodd'><g id='death-star' fill='${encodedColor}' fill-opacity='${opacity}'><path d='M20 10a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V10zm15 35a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zM20 75a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V75zm30-65a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V10zm0 65a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V75zM35 10a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10zM5 45a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zm0-35a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10zm60 35a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zm0-35a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10z' /></g></g></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${height}' viewBox='0 0 80 105'><g fill-rule='evenodd'><g id='death-star' fill='${encodedColor}' fill-opacity='${opacity}'><path d='M20 10a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V10zm15 35a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zM20 75a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V75zm30-65a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V10zm0 65a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V75zM35 10a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10zM5 45a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zm0-35a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10zm60 35a5 5 0 0 1 10 0v50a5 5 0 0 1-10 0V45zm0-35a5 5 0 0 1 10 0v20a5 5 0 0 1-10 0V10z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E`;
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 };
 
@@ -77,7 +76,7 @@ export function PatternSwitcherDialog({ isOpen, onOpenChange }: PatternSwitcherD
         }
         setView('customize');
     } else {
-        setBackground({ image: pattern.value, color: pattern.color || null });
+        setBackground({ image: pattern.value, color: pattern.color || null, type: 'pattern' });
     }
   }
 
@@ -90,7 +89,7 @@ export function PatternSwitcherDialog({ isOpen, onOpenChange }: PatternSwitcherD
   useEffect(() => {
     if (view === 'customize' && customizingPattern?.id === 'bamboo') {
         const newPatternImage = generateBambooSvg(patternColor, patternOpacity, patternSize);
-        setBackground({ image: newPatternImage, color: patternBgColor });
+        setBackground({ image: newPatternImage, color: patternBgColor, type: 'pattern' });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, customizingPattern, patternColor, patternOpacity, patternSize, patternBgColor]);
