@@ -8,9 +8,11 @@ import {
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
+  doc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useFirestore } from '../provider';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -30,22 +32,22 @@ export interface UseDocResult<T> {
  * Handles nullable references.
  *
  * @template T Optional type for document data. Defaults to any.
- * @param {DocumentReference<DocumentData> | null | undefined} docRef -
- * The Firestore DocumentReference. Waits if null/undefined.
+ * @param {string | DocumentReference<DocumentData> | null | undefined} pathOrRef -
+ * The Firestore path string or DocumentReference. Waits if null/undefined.
  * @returns {UseDocResult<T>} Object with data, isLoading, error.
  */
 export function useDoc<T = any>(
-  docRef: DocumentReference<DocumentData> | null | undefined,
+  pathOrRef: string | DocumentReference<DocumentData> | null | undefined,
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
-
+  
+  const firestore = useFirestore();
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If the doc ref is not ready, set loading to false and clear data/errors.
-    if (!docRef) {
+    if (!pathOrRef) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -54,6 +56,20 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
+
+    let docRef: DocumentReference<DocumentData>;
+    try {
+        if (typeof pathOrRef === 'string') {
+            docRef = doc(firestore, pathOrRef);
+        } else {
+            docRef = pathOrRef;
+        }
+    } catch (e: any) {
+        setError(e);
+        setIsLoading(false);
+        return;
+    }
+
 
     const unsubscribe = onSnapshot(
       docRef,
@@ -83,7 +99,7 @@ export function useDoc<T = any>(
     );
 
     return () => unsubscribe();
-  }, [docRef]);
+  }, [firestore, pathOrRef]);
 
   return { data, isLoading, error };
 }
