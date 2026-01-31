@@ -21,7 +21,6 @@ import {
   Palette,
   CaseSensitive,
   Grid,
-  Shapes,
   XCircle,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -48,7 +47,7 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance, BackgroundEffect, ParticleSettings, TrianglifySettings } from '@/components/appearance-provider';
+import { useAppearance, BackgroundEffect, ParticleSettings } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -270,8 +269,6 @@ export default function SettingsPage() {
         setBackgroundEffect,
         particleSettings,
         setParticleSettings,
-        trianglifySettings,
-        setTrianglifySettings
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
@@ -380,9 +377,6 @@ export default function SettingsPage() {
                         <SelectItem value="particles">
                             <div className="flex items-center gap-2"><Sparkles className="h-5 w-5"/><span>جزيئات</span></div>
                         </SelectItem>
-                        <SelectItem value="trianglify">
-                            <div className="flex items-center gap-2"><Shapes className="h-5 w-5"/><span>مثلثات</span></div>
-                        </SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -408,44 +402,6 @@ export default function SettingsPage() {
                 </div>
             )}
 
-             {backgroundEffect === 'trianglify' && (
-                <div className="p-3 pt-0 border-t mt-2 space-y-4">
-                    <div className='flex items-center justify-between mt-4'>
-                        <Label htmlFor="t-interaction">التفاعل مع الفأرة</Label>
-                        <Switch id="t-interaction" checked={trianglifySettings.interaction} onCheckedChange={(checked) => setTrianglifySettings({ interaction: checked })} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="t-cell-size">حجم الخلية: {trianglifySettings.cellSize}</Label>
-                        <Slider id="t-cell-size" min={20} max={200} step={5} value={[trianglifySettings.cellSize]} onValueChange={(v) => setTrianglifySettings({ cellSize: v[0] })} />
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <Label htmlFor="t-variance">عشوائية الشكل: {trianglifySettings.variance.toFixed(2)}</Label>
-                        <Slider id="t-variance" min={0} max={1.5} step={0.05} value={[trianglifySettings.variance]} onValueChange={(v) => setTrianglifySettings({ variance: v[0] })} />
-                    </div>
-                     <div className="space-y-2 pt-2">
-                        <Label>لوحة الألوان</Label>
-                        <div className="flex gap-2 flex-wrap">
-                            {trianglifySettings.palette.map((color, index) => (
-                                <Input
-                                    key={index}
-                                    type="color"
-                                    value={color}
-                                    onChange={(e) => {
-                                        const newPalette = [...trianglifySettings.palette];
-                                        newPalette[index] = e.target.value;
-                                        setTrianglifySettings({ palette: newPalette });
-                                    }}
-                                    className="w-12 h-10 p-1"
-                                    aria-label={`Color ${index + 1}`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-            
             <Separator />
             
             <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
@@ -9,20 +8,13 @@ type BackgroundState = {
   type?: 'image' | 'pattern';
 };
 
-export type BackgroundEffect = 'none' | 'particles' | 'trianglify';
+export type BackgroundEffect = 'none' | 'particles';
 
 export type ParticleSettings = {
   interaction: boolean;
   count: number;
   speed: number;
   lineDistance: number;
-};
-
-export type TrianglifySettings = {
-  interaction: boolean;
-  cellSize: number;
-  variance: number;
-  palette: string[];
 };
 
 type AppearanceContextType = {
@@ -38,8 +30,6 @@ type AppearanceContextType = {
   setParticleColor: (color: string) => void;
   particleSettings: ParticleSettings;
   setParticleSettings: (settings: Partial<ParticleSettings>) => void;
-  trianglifySettings: TrianglifySettings;
-  setTrianglifySettings: (settings: Partial<TrianglifySettings>) => void;
 };
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -56,13 +46,6 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     count: 80,
     speed: 0.3,
     lineDistance: 120,
-  });
-
-  const [trianglifySettings, setTrianglifySettingsState] = useState<TrianglifySettings>({
-    interaction: true,
-    cellSize: 75,
-    variance: 0.75,
-    palette: ['#fde74c', '#f8961e', '#e75480', '#9d4edd', '#3c096c'],
   });
 
   const applyBackground = useCallback(() => {
@@ -165,14 +148,6 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setTrianglifySettings = useCallback((newSettings: Partial<TrianglifySettings>) => {
-    setTrianglifySettingsState(prev => {
-        const updated = {...prev, ...newSettings};
-        localStorage.setItem("site-trianglify-settings", JSON.stringify(updated));
-        return updated;
-    });
-  }, []);
-
   useEffect(() => {
     const storedFont = localStorage.getItem("site-font");
     if (storedFont) {
@@ -193,8 +168,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     }
     
     const storedEffect = localStorage.getItem("site-background-effect") as BackgroundEffect | null;
-    if (storedEffect && ['none', 'particles', 'trianglify'].includes(storedEffect)) {
+    if (storedEffect && ['none', 'particles'].includes(storedEffect)) {
       setBackgroundEffectState(storedEffect);
+    } else if (storedEffect === 'trianglify') {
+        setBackgroundEffectState('none');
     } else {
         // Migration from old isParticlesEnabled
         const storedParticles = localStorage.getItem("site-particles-enabled");
@@ -216,18 +193,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setParticleSettingsState(prev => ({...prev, ...JSON.parse(storedParticleSettings)}));
       } catch (e) { console.error("Failed to parse particle settings", e) }
     }
-    
-    const storedTrianglifySettings = localStorage.getItem("site-trianglify-settings");
-    if (storedTrianglifySettings) {
-      try {
-        setTrianglifySettingsState(prev => ({...prev, ...JSON.parse(storedTrianglifySettings)}));
-      } catch (e) { console.error("Failed to parse trianglify settings", e) }
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, trianglifySettings, setTrianglifySettings }}>
+    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>
       {children}
     </AppearanceContext.Provider>
   );
