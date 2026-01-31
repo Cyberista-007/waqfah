@@ -1,23 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
-import type { Lecture } from '@/lib/types';
+import type { Lecture, LectureClip } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { YoutubePlayerModal } from '@/components/youtube-player-modal';
-import { SeriesPageSkeleton } from '@/components/skeletons';
 import { LectureNotes } from '@/components/lecture-notes';
 import { CommentsSection } from '@/components/comments-section';
 import { LectureCard } from './lecture-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClipCreationDialog } from './clip-creation-dialog';
+import { ClipsSection } from './clips-section';
 
 function getYoutubeVideoId(url: string | undefined): string | null {
   if (!url) return null;
@@ -49,15 +50,45 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
+  const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
 
 
   useEffect(() => {
     // Set the share URL on the client side
     if (typeof window !== 'undefined') {
-        setShareUrl(window.location.href);
+        setShareUrl(window.location.href.split('?')[0]);
     }
+    
+    // This effect runs only once on the client after hydration to check for a clip
+    const searchParams = new URLSearchParams(window.location.search);
+    const clipId = searchParams.get('clip');
+
+    if (clipId && firestore) {
+      const fetchAndPlayClip = async () => {
+        try {
+          const clipRef = doc(firestore, 'lectures', lecture.id, 'clips', clipId);
+          const clipSnap = await getDoc(clipRef);
+          if (clipSnap.exists()) {
+            const clip = clipSnap.data() as LectureClip;
+            playTrack(lecture, clip.startTime, clip.endTime);
+            toast({
+              title: `تشغيل مقطع: ${clip.title}`,
+              description: "سيبدأ تشغيل المقطع المحدد تلقائيًا.",
+            });
+          } else {
+             toast({ variant: 'destructive', title: "المقطع غير موجود." });
+          }
+        } catch(e) {
+           console.error("Error fetching clip:", e);
+           toast({ variant: 'destructive', title: "خطأ في جلب المقطع." });
+        }
+      };
+      fetchAndPlayClip();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   if (!lecture) {
@@ -125,6 +156,19 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       handleCopyLink();
     }
   }, [shareText, shareUrl, handleCopyLink]);
+  
+  const handleCreateClip = () => {
+      if (!user) {
+          toast({
+              variant: "destructive",
+              title: "يرجى تسجيل الدخول أولاً.",
+              description: "يجب أن تسجل دخولك لتتمكن من إنشاء المقاطع."
+          });
+          router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
+          return;
+      }
+      setIsClipCreationOpen(true);
+  }
 
   return (
     <>
@@ -153,6 +197,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <span>تحميل صوت (MP3)</span>
             </a>
           </Button>
+           <Button onClick={handleCreateClip}>
+              <Clapperboard className="w-5 h-5 me-2" />
+              <span>إنشاء مقطع</span>
+            </Button>
           {videoId && (
             <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
               <Youtube />
@@ -212,30 +260,56 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         </div>
       </section>
 
-      {user && (
-        <Card>
+      <Tabs defaultValue="transcript" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="transcript">التفريغ النصي</TabsTrigger>
+          <TabsTrigger value="clips">المقاطع</TabsTrigger>
+          <TabsTrigger value="notes" disabled={!user}>ملاحظاتي</TabsTrigger>
+        </TabsList>
+        <TabsContent value="transcript">
+          <Card>
             <CardHeader>
-                <CardTitle className="font-headline flex items-center gap-2">
-                    <Notebook className="h-6 w-6" />
-                    ملاحظاتي الخاصة
-                </CardTitle>
+              <CardTitle className="font-headline">عن المحاضرة (تفريغ تفاعلي)</CardTitle>
             </CardHeader>
             <CardContent>
-                <LectureNotes lectureId={lecture.id} userId={user.uid} />
+              <InteractiveTranscript transcript={lecture.transcript || []} />
             </CardContent>
-        </Card>
-      )}
+          </Card>
+        </TabsContent>
+        <TabsContent value="clips">
+             <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2">
+                        <Clapperboard className="h-6 w-6" />
+                        مقاطع من المحاضرة
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ClipsSection lecture={lecture} />
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="notes">
+          {user ? (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2">
+                        <Notebook className="h-6 w-6" />
+                        ملاحظاتي الخاصة
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <LectureNotes lectureId={lecture.id} userId={user.uid} />
+                </CardContent>
+            </Card>
+          ) : (
+            <Card className="text-center p-8">
+              <p className="text-muted-foreground">الرجاء تسجيل الدخول لكتابة الملاحظات.</p>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
-      {lecture.transcript && lecture.transcript.length > 0 && (
-        <Card>
-            <CardHeader>
-            <CardTitle className="font-headline">عن المحاضرة (تفريغ تفاعلي)</CardTitle>
-            </CardHeader>
-            <CardContent>
-            <InteractiveTranscript transcript={lecture.transcript || []} />
-            </CardContent>
-        </Card>
-      )}
 
       <CommentsSection lectureId={lecture.id} />
       
@@ -259,6 +333,12 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         shareUrl={shareUrl}
       />
     )}
+     <ClipCreationDialog 
+        isOpen={isClipCreationOpen} 
+        onOpenChange={setIsClipCreationOpen} 
+        lectureId={lecture.id}
+        lectureDuration={lecture.duration}
+    />
     </>
   );
 }

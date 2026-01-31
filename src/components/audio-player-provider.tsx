@@ -1,8 +1,7 @@
-
 "use client"
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useRef } from "react";
+import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Lecture } from "@/lib/types";
 
 export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
@@ -12,7 +11,8 @@ type AudioPlayerContextType = {
   track: Track | null;
   isPlaying: boolean;
   audioRef: React.RefObject<HTMLAudioElement>;
-  playTrack: (track: Track, startTime?: number) => void;
+  clipEndTime: number | null;
+  playTrack: (track: Track, startTime?: number, endTime?: number | null) => void;
   pauseTrack: () => void;
   closePlayer: () => void;
   togglePlayPause: () => void;
@@ -23,9 +23,17 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(und
 export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [track, setTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [clipEndTime, setClipEndTime] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const playTrack = (newTrack: Track, startTime: number = 0) => {
+  const pauseTrack = useCallback(() => {
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  }, []);
+
+  const playTrack = (newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
     // If it's a new track, update the state and the audio element's src
     if (track?.id !== newTrack.id) {
         setTrack(newTrack);
@@ -34,6 +42,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.load();
         }
     }
+    
+    setClipEndTime(endTime);
     
     // Use a timeout to ensure the audio element is ready for playback, especially for new tracks
     setTimeout(() => {
@@ -47,13 +57,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
 
-  const pauseTrack = () => {
-    setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-  };
-  
   const togglePlayPause = () => {
     if (isPlaying) {
       pauseTrack();
@@ -66,10 +69,30 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const closePlayer = () => {
     pauseTrack();
     setTrack(null);
+    setClipEndTime(null);
   };
 
+  // Effect to handle auto-pause at the end of a clip
+  useEffect(() => {
+      const audioElement = audioRef.current;
+      if (!audioElement) return;
+
+      const handleTimeUpdate = () => {
+          if (clipEndTime && audioElement.currentTime >= clipEndTime) {
+              pauseTrack();
+              setClipEndTime(null); // Clear the clip end time
+          }
+      };
+
+      audioElement.addEventListener('timeupdate', handleTimeUpdate);
+      return () => {
+          audioElement.removeEventListener('timeupdate', handleTimeUpdate);
+      };
+  }, [audioRef, clipEndTime, pauseTrack]);
+
+
   return (
-    <AudioPlayerContext.Provider value={{ track, isPlaying, audioRef, playTrack, pauseTrack, closePlayer, togglePlayPause }}>
+    <AudioPlayerContext.Provider value={{ track, isPlaying, audioRef, playTrack, pauseTrack, closePlayer, togglePlayPause, clipEndTime }}>
       {children}
     </AudioPlayerContext.Provider>
   );
