@@ -18,22 +18,10 @@ export default {
     extend: {
       fontFamily: {
         body: ['var(--font-body)', 'sans-serif'],
-        headline: ['var(--font-headline)', 'sans-serif'],
+        headline: ['var(--font-body)', 'sans-serif'],
         code: ['var(--font-code)'],
-        'cairo': ['var(--font-cairo)'],
-        'noto-sans-arabic': ['var(--font-noto-sans-arabic)'],
-        'lalezar': ['var(--font-lalezar)'],
         'tajawal': ['var(--font-tajawal)'],
         'amiri': ['var(--font-amiri)'],
-        'markazi-text': ['var(--font-markazi-text)'],
-        'ibm-plex-sans-arabic': ['var(--font-ibm-plex-sans-arabic)'],
-        'almarai': ['var(--font-almarai)'],
-        'changa': ['var(--font-changa)'],
-        'el-messiri': ['var(--font-el-messiri)'],
-        'reem-kufi': ['var(--font-reem-kufi)'],
-        'mada': ['var(--font-mada)'],
-        'scheherazade-new': ['var(--font-scheherazade-new)'],
-        'rubik-origami': ['var(--font-rubik-origami)'],
       },
       colors: {
         background: 'hsl(var(--background))',

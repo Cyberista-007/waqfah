@@ -14,21 +14,9 @@ import { Check } from "lucide-react"
 import { ScrollArea } from "./ui/scroll-area"
 
 export const fonts = [
-  { name: "الافتراضي (Alegreya)", value: "font-body" },
-  { name: "Cairo", value: "font-cairo" },
-  { name: "Noto Sans Arabic", value: "font-noto-sans-arabic" },
-  { name: "Lalezar", value: "font-lalezar" },
+  { name: "الافتراضي (Cairo)", value: "font-body" },
   { name: "Tajawal", value: "font-tajawal" },
   { name: "Amiri (عثماني)", value: "font-amiri" },
-  { name: "Markazi Text", value: "font-markazi-text" },
-  { name: "IBM Plex Sans Arabic", value: "font-ibm-plex-sans-arabic" },
-  { name: "Almarai", value: "font-almarai" },
-  { name: "Changa", value: "font-changa" },
-  { name: "El Messiri", value: "font-el-messiri" },
-  { name: "Reem Kufi", value: "font-reem-kufi" },
-  { name: "Mada", value: "font-mada" },
-  { name: "Scheherazade New", value: "font-scheherazade-new" },
-  { name: "اوريغامي", value: "font-rubik-origami" },
 ];
 
 interface FontSwitcherDialogProps {
