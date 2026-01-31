@@ -213,7 +213,7 @@ export default function AdminLecturesPage() {
                     <TableCell className="hidden md:table-cell">{lecture.programName || 'غير محدد'}</TableCell>
                     <TableCell className="hidden md:table-cell">{lecture.seriesTitle || 'محاضرة مستقلة'}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                        {new Date(lecture.createdAt as any).toLocaleDateString('ar-EG')}
+                        {(lecture.createdAt as any)?.toDate?.().toLocaleDateString('ar-EG') || 'غير محدد'}
                     </TableCell>
                     <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
