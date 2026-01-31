@@ -18,6 +18,8 @@ import {
   ListMusic,
   Youtube,
   ImageIcon,
+  Palette,
+  CaseSensitive,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -41,6 +43,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ThemeSwitcherDialog } from '@/components/theme-switcher';
+import { FontSwitcherDialog } from '@/components/font-switcher';
+import { useAppearance } from '@/components/appearance-provider';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -249,9 +254,12 @@ export default function SettingsPage() {
     const auth = useAuth();
     const firestore = useFirestore();
     const router = useRouter();
+    const { isBackgroundShown, toggleBackground } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
     const [isEditing, setIsEditing] = useState(false);
+    const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
+    const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -331,6 +339,27 @@ export default function SettingsPage() {
           <SettingsItem icon={Download} label="إعدادات التحميل" />
         </div>
 
+        <SectionTitle title="المظهر" />
+        <div className="bg-card rounded-xl p-2">
+            <SettingsItem icon={Palette} label="تغيير الثيم" onClick={() => setIsThemeSwitcherOpen(true)} />
+            <Separator />
+            <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
+            <Separator />
+            <SettingsItem icon={ImageIcon} label="تغيير صورة الخلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
+            <Separator />
+            <div className="flex items-center justify-between p-3 rounded-lg">
+                <Label htmlFor="bg-switch" className="text-lg cursor-pointer flex items-center gap-4">
+                    <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                    <span>إظهار صورة الخلفية</span>
+                </Label>
+                <Switch
+                    id="bg-switch"
+                    checked={isBackgroundShown}
+                    onCheckedChange={toggleBackground}
+                />
+            </div>
+        </div>
+
         <SectionTitle title="الحساب" />
         <div className="bg-card rounded-xl p-2">
           <SettingsItem icon={Sparkles} label="اشتراك ثمانية" />
@@ -351,6 +380,9 @@ export default function SettingsPage() {
                 />
             </DialogContent>
         </Dialog>
+
+        <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
+        <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
     </div>
   );
 }
