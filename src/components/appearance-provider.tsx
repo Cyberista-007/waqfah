@@ -99,12 +99,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       }
 
 
-    // Apply the new background immediately
-    applyBackground();
-    
-    // If the background was hidden, show it now that a new one is set.
-    if (!isBackgroundShown) {
-      toggleBackground(true);
+    if (!isBackgroundShown && (newBg?.image || newBg?.color)) {
+        toggleBackground(true);
+    } else if (isBackgroundShown) {
+        applyBackground();
     }
   };
 
