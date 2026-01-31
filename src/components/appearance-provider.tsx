@@ -2,11 +2,16 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 
+type BackgroundState = {
+  image: string | null;
+  color: string | null;
+};
+
 type AppearanceContextType = {
   font: string;
   setFont: (font: string) => void;
-  background: string | null;
-  setBackground: (background: string | null) => void;
+  background: BackgroundState;
+  setBackground: (background: BackgroundState | null) => void;
   isBackgroundShown: boolean;
   toggleBackground: (shown: boolean) => void;
 };
@@ -15,84 +20,79 @@ const AppearanceContext = createContext<AppearanceContextType | undefined>(undef
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [font, setFont] = useState("font-body");
-  const [background, setBackground] = useState<string | null>(null);
+  const [background, setBackground] = useState<BackgroundState>({ image: null, color: null });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
 
   const applyBackground = useCallback(() => {
-    const customBg = localStorage.getItem("site-background");
-    if (customBg) {
-      const bgValue = customBg.startsWith('url(') ? customBg : `url(${customBg})`;
-      document.body.style.backgroundImage = bgValue;
+    const customBgImage = localStorage.getItem("site-background-image");
+    const customBgColor = localStorage.getItem("site-background-color");
+    
+    document.body.style.backgroundImage = customBgImage || '';
+    document.body.style.backgroundColor = customBgColor || '';
+
+    if (customBgImage || customBgColor) {
       document.body.style.backgroundAttachment = 'fixed';
       document.body.style.backgroundPosition = 'center';
       document.body.style.backgroundRepeat = 'no-repeat';
       document.body.style.backgroundSize = 'cover';
       document.body.classList.remove('body-background');
-      setBackground(customBg);
     } else {
-      document.body.style.backgroundImage = '';
       document.body.style.backgroundAttachment = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundRepeat = '';
       document.body.style.backgroundSize = '';
       document.body.classList.add('body-background');
-      setBackground(null);
     }
+
+    setBackground({ image: customBgImage, color: customBgColor });
   }, []);
 
-  const clearBackground = useCallback(() => {
+  const clearBackgroundStyles = useCallback(() => {
     document.body.style.backgroundImage = '';
-    document.body.style.backgroundAttachment = '';
-    document.body.style.backgroundPosition = '';
-    document.body.style.backgroundRepeat = '';
-    document.body.style.backgroundSize = '';
-    document.body.classList.remove('body-background');
+    document.body.style.backgroundColor = '';
+    document.body.classList.add('body-background');
   }, []);
 
   const toggleBackground = useCallback((shown: boolean) => {
     if (shown) {
       applyBackground();
     } else {
-      clearBackground();
+      clearBackgroundStyles();
     }
     setIsBackgroundShown(shown);
     localStorage.setItem("site-background-shown", shown ? "true" : "false");
-  }, [applyBackground, clearBackground]);
+  }, [applyBackground, clearBackgroundStyles]);
 
   const handleSetFont = (newFont: string) => {
-    // Remove old font class
     document.body.classList.remove(font);
-    // Add new font class
     document.body.classList.add(newFont);
-    // Persist new font
     localStorage.setItem("site-font", newFont);
     setFont(newFont);
   };
   
-  const handleSetBackground = (newBg: string | null) => {
-      if (newBg) {
-          const bgValue = newBg.startsWith('url(') ? newBg : `url(${newBg})`;
-          document.body.style.backgroundImage = bgValue;
-          document.body.style.backgroundAttachment = 'fixed';
-          document.body.style.backgroundPosition = 'center';
-          document.body.style.backgroundRepeat = 'no-repeat';
-          document.body.style.backgroundSize = 'cover';
-          document.body.classList.remove('body-background');
-          localStorage.setItem("site-background", newBg);
-          setBackground(newBg);
+  const handleSetBackground = (newBg: BackgroundState | null) => {
+      if (newBg?.image) {
+        localStorage.setItem("site-background-image", newBg.image);
       } else {
-          // This case is now for restoring default, which applyBackground does.
-          localStorage.removeItem("site-background");
-          applyBackground();
+        localStorage.removeItem("site-background-image");
       }
-      // When a new background is set, always ensure it's shown
-      if (!isBackgroundShown) {
-        toggleBackground(true);
+      
+      if (newBg?.color) {
+        localStorage.setItem("site-background-color", newBg.color);
+      } else {
+        localStorage.removeItem("site-background-color");
       }
+
+    // Apply the new background immediately
+    applyBackground();
+    
+    // If the background was hidden, show it now that a new one is set.
+    if (!isBackgroundShown) {
+      toggleBackground(true);
+    }
   };
 
   useEffect(() => {
-    // FONT
     const storedFont = localStorage.getItem("site-font");
     if (storedFont) {
       setFont(storedFont);
@@ -101,19 +101,17 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       document.body.classList.add("font-body");
     }
 
-    // BACKGROUND
     const storedIsShown = localStorage.getItem("site-background-shown");
-    const show = storedIsShown !== "false"; // default to true
+    const show = storedIsShown !== "false";
     
+    setIsBackgroundShown(show);
     if (show) {
-      setIsBackgroundShown(true);
       applyBackground();
     } else {
-      setIsBackgroundShown(false);
-      clearBackground();
+      clearBackgroundStyles();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, []);
 
   return (
     <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground }}>

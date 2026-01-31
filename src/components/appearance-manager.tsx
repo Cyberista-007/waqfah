@@ -27,7 +27,7 @@ export function AppearanceManager() {
         reader.onload = (e) => {
             const result = e.target?.result;
             if (typeof result === 'string') {
-                setBackground(result);
+                setBackground({ image: `url(${result})`, color: null });
                 toast({
                     title: 'تم تغيير الخلفية بنجاح!',
                 });
