@@ -62,7 +62,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     interaction: true,
     cellSize: 75,
     variance: 0.75,
-    palette: ['#2e0c4d', '#3f1161', '#511676', '#621a8a', '#741f9e'],
+    palette: ['#fde74c', '#f8961e', '#e75480', '#9d4edd', '#3c096c'],
   });
 
   const applyBackground = useCallback(() => {
