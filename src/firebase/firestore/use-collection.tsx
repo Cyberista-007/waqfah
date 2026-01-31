@@ -52,6 +52,8 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  
+  const memoizedOptionsJSON = useMemo(() => JSON.stringify(options), [options]);
 
   useEffect(() => {
     // If path is not ready, do nothing and reset state.
@@ -104,7 +106,7 @@ export function useCollection<T = any>(
 
     return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, path, options?.orderBy?.[0], options?.orderBy?.[1], options?.limit, options?.where?.[0], options?.where?.[1], options?.where?.[2]]);
+  }, [firestore, path, memoizedOptionsJSON]);
 
   return { data, isLoading, error };
 }
