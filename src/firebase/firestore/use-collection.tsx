@@ -9,6 +9,7 @@ import {
   FirestoreError,
   QuerySnapshot,
   collection,
+  collectionGroup,
   query,
   orderBy,
   limit,
@@ -75,8 +76,9 @@ export function useCollection<T = any>(
         constraints.push(limit(options.limit));
     }
 
-    const colRef = collection(firestore, path);
-    const q = query(colRef, ...constraints);
+    const isCollectionGroup = !path.includes('/');
+    const ref = isCollectionGroup ? collectionGroup(firestore, path) : collection(firestore, path);
+    const q = query(ref, ...constraints);
 
     const unsubscribe = onSnapshot(
       q,

@@ -1,3 +1,4 @@
+
 'use client';
 import type { Playlist, UserProfile } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -36,7 +37,7 @@ function PublicPlaylistsSkeleton() {
 }
 
 export default function PublicPlaylistsPage() {
-    const { data: playlists, isLoading: playlistsLoading } = useCollection<Playlist>(null, { where: ['isPublic', '==', true], limit: 30 });
+    const { data: playlists, isLoading: playlistsLoading } = useCollection<Playlist>('playlists', { where: ['isPublic', '==', true], orderBy: ['createdAt', 'desc'], limit: 30 });
     const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users');
     
     const playlistsWithUsers = useMemo(() => {
@@ -45,7 +46,7 @@ export default function PublicPlaylistsPage() {
         return playlists.map(p => ({
             ...p,
             userProfile: userMap.get(p.userId)
-        })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }));
 
     }, [playlists, users]);
 

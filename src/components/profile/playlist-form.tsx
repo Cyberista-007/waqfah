@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -16,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { collection, doc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import type { Playlist, Lecture } from '@/lib/types';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, ArrowRight } from 'lucide-react';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -109,12 +110,20 @@ export function PlaylistForm({ playlist, allLectures, onFormClose, userId }: Pla
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">
-          {isEditMode ? `تعديل قائمة: ${playlist?.name}` : 'إنشاء قائمة تشغيل جديدة'}
-        </CardTitle>
-        <CardDescription>
-          اختر المحاضرات التي تريد إضافتها إلى قائمتك.
-        </CardDescription>
+        <div className="flex justify-between items-start">
+            <div>
+                <CardTitle className="font-headline">
+                  {isEditMode ? `تعديل قائمة: ${playlist?.name}` : 'إنشاء قائمة تشغيل جديدة'}
+                </CardTitle>
+                <CardDescription>
+                  اختر المحاضرات التي تريد إضافتها إلى قائمتك.
+                </CardDescription>
+            </div>
+            <Button variant="outline" onClick={onFormClose}>
+                <ArrowRight className="ml-2 h-4 w-4" />
+                رجوع
+            </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
