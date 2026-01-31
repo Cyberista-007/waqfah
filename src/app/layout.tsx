@@ -12,8 +12,23 @@ import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
 import { SiteBackground } from '@/components/site-background';
 
 export const metadata: Metadata = {
-  title: 'منصة الدروس العلمية',
-  description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ.',
+  title: {
+    default: 'منصة الدروس العلمية',
+    template: '%s | منصة الدروس العلمية',
+  },
+  description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث.',
+  openGraph: {
+    title: 'منصة الدروس العلمية',
+    description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
+    type: 'website',
+    locale: 'ar_SA',
+    siteName: 'منصة الدروس العلمية',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'منصة الدروس العلمية',
+    description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
+  },
 };
 
 export default function RootLayout({
