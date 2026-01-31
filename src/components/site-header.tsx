@@ -66,7 +66,7 @@ import { Label } from "./ui/label"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
-  { href: "/programs", label: "البرامج" },
+  { href: "/programs", label: "القنوات" },
   { href: "/lectures", label: "المحاضرات" },
   { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },
@@ -83,7 +83,7 @@ const moreNavItems = [
 
 const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
-    { href: '/programs', icon: Podcast, label: 'البرامج' },
+    { href: '/programs', icon: Youtube, label: 'القنوات' },
     { href: '/search', icon: Search, label: 'بحث' },
     { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
     { href: '/settings', icon: Settings, label: 'الإعدادات'}
