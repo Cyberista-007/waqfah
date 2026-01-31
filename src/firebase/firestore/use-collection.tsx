@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -50,7 +49,8 @@ export function useCollection<T = any>(
 
   const firestore = useFirestore();
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Set initial loading state based on whether a path is provided.
+  const [isLoading, setIsLoading] = useState<boolean>(!!path);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
   const memoizedOptionsJSON = useMemo(() => JSON.stringify(options), [options]);
@@ -64,7 +64,11 @@ export function useCollection<T = any>(
       return;
     }
 
-    setIsLoading(true);
+    // Only show loading skeleton if there's no data yet.
+    // This prevents the UI from flashing a loading state on re-renders.
+    if (!data) {
+        setIsLoading(true);
+    }
     setError(null);
     
     const constraints: QueryConstraint[] = [];
@@ -72,6 +76,13 @@ export function useCollection<T = any>(
         constraints.push(orderBy(...options.orderBy));
     }
     if (options?.where) {
+        // Prevent crashes from invalid queries where the value is undefined
+        if (options.where[2] === undefined) {
+            setData(null);
+            setIsLoading(false);
+            setError(new Error("Invalid query: 'where' condition value is undefined."));
+            return;
+        }
         constraints.push(where(...options.where));
     }
     if (options?.limit) {
@@ -106,7 +117,7 @@ export function useCollection<T = any>(
 
     return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, path, memoizedOptionsJSON]);
+  }, [firestore, path, memoizedOptionsJSON]); // `data` is intentionally not in the dependency array
 
   return { data, isLoading, error };
 }
