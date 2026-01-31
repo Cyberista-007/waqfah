@@ -22,10 +22,18 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     const customBg = localStorage.getItem("site-background");
     if (customBg) {
       document.body.style.backgroundImage = `url(${customBg})`;
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.body.style.backgroundSize = 'cover';
       document.body.classList.remove('body-background');
       setBackground(customBg);
     } else {
       document.body.style.backgroundImage = '';
+      document.body.style.backgroundAttachment = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundRepeat = '';
+      document.body.style.backgroundSize = '';
       document.body.classList.add('body-background');
       setBackground(null);
     }
@@ -33,6 +41,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 
   const clearBackground = useCallback(() => {
     document.body.style.backgroundImage = '';
+    document.body.style.backgroundAttachment = '';
+    document.body.style.backgroundPosition = '';
+    document.body.style.backgroundRepeat = '';
+    document.body.style.backgroundSize = '';
     document.body.classList.remove('body-background');
   }, []);
 
@@ -59,6 +71,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const handleSetBackground = (newBg: string | null) => {
       if (newBg) {
           document.body.style.backgroundImage = `url(${newBg})`;
+          document.body.style.backgroundAttachment = 'fixed';
+          document.body.style.backgroundPosition = 'center';
+          document.body.style.backgroundRepeat = 'no-repeat';
+          document.body.style.backgroundSize = 'cover';
           document.body.classList.remove('body-background');
           localStorage.setItem("site-background", newBg);
           setBackground(newBg);
