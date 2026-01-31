@@ -78,9 +78,11 @@ export function useCollection<T = any>(
     if (options?.where) {
         // Prevent crashes from invalid queries where the value is undefined
         if (options.where[2] === undefined) {
+            // This is not an error, but the query is not ready yet.
+            // We can return an empty loading state.
             setData(null);
-            setIsLoading(false);
-            setError(new Error("Invalid query: 'where' condition value is undefined."));
+            setIsLoading(true); // Keep loading until the condition is valid
+            setError(null);
             return;
         }
         constraints.push(where(...options.where));
@@ -102,6 +104,8 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
+        // The raw error from onSnapshot might be an internal assertion.
+        // We wrap it in a more helpful permission error for the developer.
         const contextualError = new FirestorePermissionError({
             operation: 'list',
             path: path,
@@ -111,6 +115,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
 
+        // This allows the global error listener to display it in development.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
