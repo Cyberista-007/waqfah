@@ -9,6 +9,8 @@ type BackgroundState = {
   type?: 'image' | 'pattern';
 };
 
+export type BackgroundEffect = 'none' | 'particles' | 'trianglify';
+
 type AppearanceContextType = {
   font: string;
   setFont: (font: string) => void;
@@ -16,8 +18,8 @@ type AppearanceContextType = {
   setBackground: (background: BackgroundState | null) => void;
   isBackgroundShown: boolean;
   toggleBackground: (shown: boolean) => void;
-  isParticlesEnabled: boolean;
-  toggleParticles: (enabled: boolean) => void;
+  backgroundEffect: BackgroundEffect;
+  setBackgroundEffect: (effect: BackgroundEffect) => void;
   particleColor: string;
   setParticleColor: (color: string) => void;
 };
@@ -28,7 +30,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [font, setFont] = useState("font-body");
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
-  const [isParticlesEnabled, setIsParticlesEnabled] = useState(false);
+  const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
   const [particleColor, setParticleColor] = useState('#FFFFFF');
 
   const applyBackground = useCallback(() => {
@@ -69,6 +71,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     document.body.classList.add('body-background');
   }, []);
 
+  const setBackgroundEffect = useCallback((effect: BackgroundEffect) => {
+    setBackgroundEffectState(effect);
+    localStorage.setItem("site-background-effect", effect);
+  }, []);
+
   const toggleBackground = useCallback((shown: boolean) => {
     if (shown) {
       applyBackground();
@@ -78,11 +85,6 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     setIsBackgroundShown(shown);
     localStorage.setItem("site-background-shown", shown ? "true" : "false");
   }, [applyBackground, clearBackgroundStyles]);
-
-  const toggleParticles = useCallback((enabled: boolean) => {
-    setIsParticlesEnabled(enabled);
-    localStorage.setItem("site-particles-enabled", enabled ? "true" : "false");
-  }, []);
 
   const handleSetFont = (newFont: string) => {
     document.body.classList.remove(font);
@@ -142,8 +144,18 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       clearBackgroundStyles();
     }
     
-    const storedParticles = localStorage.getItem("site-particles-enabled");
-    setIsParticlesEnabled(storedParticles === "true");
+    const storedEffect = localStorage.getItem("site-background-effect") as BackgroundEffect | null;
+    if (storedEffect && ['none', 'particles', 'trianglify'].includes(storedEffect)) {
+      setBackgroundEffectState(storedEffect);
+    } else {
+        // Migration from old isParticlesEnabled
+        const storedParticles = localStorage.getItem("site-particles-enabled");
+        if (storedParticles === "true") {
+            setBackgroundEffectState('particles');
+        } else {
+            setBackgroundEffectState('none');
+        }
+    }
 
     const storedParticleColor = localStorage.getItem("site-particle-color");
     if (storedParticleColor) {
@@ -153,7 +165,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, isParticlesEnabled, toggleParticles, particleColor, setParticleColor: handleSetParticleColor }}>
+    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor }}>
       {children}
     </AppearanceContext.Provider>
   );

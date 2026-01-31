@@ -21,6 +21,8 @@ import {
   Palette,
   CaseSensitive,
   Grid,
+  Shapes,
+  XCircle,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -46,9 +48,10 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance } from '@/components/appearance-provider';
+import { useAppearance, BackgroundEffect } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -257,7 +260,14 @@ export default function SettingsPage() {
     const auth = useAuth();
     const firestore = useFirestore();
     const router = useRouter();
-    const { isBackgroundShown, toggleBackground, isParticlesEnabled, toggleParticles, particleColor, setParticleColor } = useAppearance();
+    const { 
+        isBackgroundShown, 
+        toggleBackground, 
+        particleColor, 
+        setParticleColor,
+        backgroundEffect,
+        setBackgroundEffect
+    } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
     const [isEditing, setIsEditing] = useState(false);
@@ -350,28 +360,39 @@ export default function SettingsPage() {
             <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
         </div>
         
-        <SectionTitle title="الخلفية" />
+        <SectionTitle title="تأثيرات الخلفية" />
         <div className="bg-card rounded-xl p-2 space-y-1">
-            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                <Label htmlFor="particles-switch" className="text-lg cursor-pointer flex items-center gap-4">
-                    <Sparkles className="w-6 h-6 text-muted-foreground" />
-                    <span>تفعيل خلفية الجزيئات</span>
-                </Label>
-                <Switch
-                    id="particles-switch"
-                    checked={isParticlesEnabled}
-                    onCheckedChange={toggleParticles}
-                />
+            <div className="p-3">
+                <Label htmlFor="bg-effect-select" className="text-lg">تأثير الخلفية المتحركة</Label>
+                <Select value={backgroundEffect} onValueChange={(value: BackgroundEffect) => setBackgroundEffect(value)}>
+                    <SelectTrigger id="bg-effect-select" className="mt-2">
+                        <SelectValue placeholder="اختر تأثيرًا..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">
+                            <div className="flex items-center gap-2"><XCircle className="h-5 w-5"/><span>بدون تأثير</span></div>
+                        </SelectItem>
+                        <SelectItem value="particles">
+                            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5"/><span>جزيئات</span></div>
+                        </SelectItem>
+                        <SelectItem value="trianglify">
+                            <div className="flex items-center gap-2"><Shapes className="h-5 w-5"/><span>مثلثات</span></div>
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
-            {isParticlesEnabled && (
-                <div className="p-3 pr-14">
+            
+            {backgroundEffect === 'particles' && (
+                <div className="p-3 pt-0 pr-10">
                     <div className='flex items-center gap-4'>
                         <Label htmlFor="particle-color">لون الجزيئات</Label>
                         <Input id="particle-color" type="color" value={particleColor} onChange={(e) => setParticleColor(e.target.value)} className="w-16 h-10 p-1" />
                     </div>
                 </div>
             )}
+            
             <Separator />
+            
             <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
             <SettingsItem icon={Grid} label="اختيار نمط خلفية" onClick={() => setIsPatternSwitcherOpen(true)} />
