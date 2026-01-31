@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
-import { Star, ListPlus, MicVocal } from "lucide-react";
+import { Star, ListPlus, MicVocal, ArrowRight } from "lucide-react";
 import { FavoriteButton } from "./favorite-button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -147,6 +147,10 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     return (
         <>
             <div className="space-y-4">
+                 <Button variant="ghost" onClick={() => router.back()} className="mb-4 text-muted-foreground">
+                    <ArrowRight className="w-5 h-5 me-2" />
+                    <span>رجوع</span>
+                </Button>
                 <div className="flex justify-between items-start gap-4">
                     <div>
                         {lecture.seriesTitle && seriesLink && (
