@@ -12,6 +12,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isBanned() {
+      // ban_expires is a custom claim set in seconds since epoch.
+      // request.time is a Timestamp object.
+      return request.auth.token.ban_expires != null && request.auth.token.ban_expires > request.time.toMillis() / 1000;
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
@@ -43,6 +49,12 @@ service cloud.firestore {
       allow get, list: if true;
       // Allow admins to do any write.
       // Allow any signed-in user to update only the followerCount.
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
+    }
+
+    match /channels/{channelId} {
+      allow get, list: if true;
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
@@ -164,10 +176,10 @@ service cloud.firestore {
     match /lectures/{lectureId}/comments/{commentId} {
       allow list: if true;
       allow get: if true;
-      // Signed in users can create comments
-      allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid);
-      // Users can only update or delete their own comments
-      allow update, delete: if isSignedIn() && isResourceOwner();
+      // Signed in users can create comments, if they are not banned
+      allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid) && !isBanned();
+      // Users can only update or delete their own comments, Admins can delete any.
+      allow update, delete: if isSignedIn() && (isResourceOwner() || isAdmin());
     }
     
     // =====================================================================
@@ -176,7 +188,7 @@ service cloud.firestore {
 
     // Allow signed-in users to query all public playlists across all users.
     match /{path=**}/playlists/{playlistId} {
-      allow list: if isSignedIn() && request.query.limit <= 30 && request.query.offset == null && request.query.orderBy.size() == 1 && request.query.orderBy[0].field == "createdAt" && request.query.orderBy[0].direction == "desc" && resource.data.isPublic == true;
+      allow list: if isSignedIn() && request.query.limit <= 30 && request.query.offset == null && request.query.orderBy.size() == 1 && request.query.orderBy[0].field == "createdAt" && request.query.orderBy[0].direction == "desc";
     }
   }
 }
