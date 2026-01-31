@@ -1,11 +1,10 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
@@ -101,6 +100,32 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const seriesLink = `/series/${lecture.seriesSlug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}"`;
 
+  const handleCopyLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: 'تم نسخ الرابط!' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
+    }
+  }, [shareUrl, toast]);
+
+  const handleGenericShare = useCallback(async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // This can happen if user cancels the share dialog.
+        console.log('Share was cancelled or failed.', error);
+      }
+    } else {
+      // Fallback for browsers that don't support navigator.share
+      handleCopyLink();
+    }
+  }, [shareText, shareUrl, handleCopyLink]);
+
   return (
     <>
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
@@ -169,6 +194,20 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
             </Button>
              <Button asChild variant="outline">
                 <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><Twitter/><span className="ms-2">تويتر</span></a>
+            </Button>
+            <Button asChild variant="outline">
+              <a href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`} data-action="share/whatsapp/share" target="_blank" rel="noopener noreferrer">
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 me-2" fill="currentColor"><path d="M16.75 13.96c-.25-.12-1.48-.72-1.71-.81-.23-.08-.39-.12-.56.12-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.23-.75-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.43s-.65-1.56-.88-2.15c-.23-.58-.47-.5-.65-.51-.17-.01-.37-.01-.56-.01s-.47.06-.72.31c-.25.25-.97.95-1.19 2.16-.22 1.21.36 2.39.41 2.56.05.17.97 1.57 2.38 2.98 1.41 1.41 2.5 1.88 3.29 2.2.79.32 1.48.29 2.01.18.53-.12 1.48-.6 1.69-.97.21-.37.21-.69.14-.81-.07-.12-.23-.19-.48-.31zM12 2.04c-5.5 0-9.96 4.46-9.96 9.96 0 1.95.56 3.81 1.59 5.39L2 22.04l5.66-1.56C9.17 21.43 10.54 22 12 22c5.5 0 9.96-4.46 9.96-9.96S17.5 2.04 12 2.04zm0 18.25c-1.85 0-3.6-.56-5.08-1.59l-.36-.21-3.69.97.98-3.6-.23-.38c-1.08-1.76-1.65-3.79-1.65-5.91 0-4.57 3.71-8.28 8.28-8.28 4.57 0 8.28 3.71 8.28 8.28.01 4.57-3.7 8.28-8.27 8.28z"/></svg>
+                <span className="ms-2">واتساب</span>
+              </a>
+            </Button>
+            <Button variant="outline" onClick={handleCopyLink}>
+              <Copy className="h-5 w-5 me-2" />
+              <span>نسخ الرابط</span>
+            </Button>
+            <Button variant="outline" onClick={handleGenericShare}>
+              <Share2 className="h-5 w-5 me-2" />
+              <span>المزيد</span>
             </Button>
         </div>
       </section>
