@@ -12,18 +12,24 @@ interface ParticlesBackgroundProps {
 export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { resolvedTheme } = useTheme();
-  const { particleColor: customHexColor } = useAppearance();
+  const { particleColor: customHexColor, particleSettings } = useAppearance();
 
-  const toRgba = (hex: string, alpha: number) => {
-    // Handle invalid hex colors
-    if (!/^#[0-9A-F]{6}$/i.test(hex)) {
-        return `rgba(255, 255, 255, ${alpha})`; // Default to white
-    }
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const mouse = useRef({
+    x: null as number | null,
+    y: null as number | null,
+    radius: 150,
+  });
+
+  const handleMouseMove = (event: MouseEvent) => {
+    mouse.current.x = event.x;
+    mouse.current.y = event.y;
   };
+  
+  const handleMouseOut = () => {
+    mouse.current.x = null;
+    mouse.current.y = null;
+  };
+
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, particlesArray: any[]) => {
     const defaultColor = resolvedTheme?.includes('dark') || resolvedTheme?.includes('night') ? '#FFFFFF' : '#000000';
@@ -36,12 +42,13 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
       particlesArray[i].draw(finalColor);
     }
     
+    const connectDistance = particleSettings.lineDistance;
     for (let i = 0; i < particlesArray.length; i++) {
         for(let j = i; j < particlesArray.length; j++) {
             const dx = particlesArray[i].x - particlesArray[j].x;
             const dy = particlesArray[i].y - particlesArray[j].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 100) {
+            if (distance < connectDistance) {
                 ctx.beginPath();
                 ctx.strokeStyle = finalColor;
                 ctx.lineWidth = 0.2;
@@ -51,7 +58,17 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
             }
         }
     }
-  }, [resolvedTheme, customHexColor]);
+  }, [resolvedTheme, customHexColor, particleSettings.lineDistance]);
+  
+  const toRgba = (hex: string, alpha: number) => {
+    if (!/^#[0-9A-F]{6}$/i.test(hex)) {
+        return `rgba(255, 255, 255, ${alpha})`;
+    }
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,6 +78,11 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
 
     let animationFrameId: number;
     const particlesArray: any[] = [];
+    
+    if (particleSettings.interaction) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseout', handleMouseOut);
+    }
     
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -90,6 +112,16 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
       }
 
       update() {
+        if (particleSettings.interaction && mouse.current.x !== null && mouse.current.y !== null) {
+          let dx = mouse.current.x - this.x;
+          let dy = mouse.current.y - this.y;
+          let distance = Math.sqrt(dx*dx + dy*dy);
+          if (distance < mouse.current.radius) {
+            this.x -= dx / 20;
+            this.y -= dy / 20;
+          }
+        }
+
         if (this.x > this.ctx.canvas.width || this.x < 0) {
           this.directionX = -this.directionX;
         }
@@ -103,13 +135,14 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
 
     function init() {
       particlesArray.length = 0;
-      const numberOfParticles = (canvas.height * canvas.width) / 9000;
-      for (let i = 0; i < Math.min(150, numberOfParticles); i++) { // Capped at 150 particles
+      const numberOfParticles = particleSettings.count;
+      for (let i = 0; i < numberOfParticles; i++) {
         const size = (Math.random() * 2) + 1;
         const x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
         const y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-        const directionX = (Math.random() * .4) - .2;
-        const directionY = (Math.random() * .4) - .2;
+        const speed = particleSettings.speed || 0.3;
+        const directionX = (Math.random() * speed * 2) - speed;
+        const directionY = (Math.random() * speed * 2) - speed;
         particlesArray.push(new Particle(x, y, directionX, directionY, size, ctx));
       }
     }
@@ -133,8 +166,12 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
     return () => {
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
+      if (particleSettings.interaction) {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseout', handleMouseOut);
+      }
     };
-  }, [draw]);
+  }, [draw, particleSettings]);
 
   return <canvas ref={canvasRef} className={className} />;
 };

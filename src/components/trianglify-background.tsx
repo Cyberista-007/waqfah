@@ -1,7 +1,9 @@
+
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
+import { useAppearance } from './appearance-provider';
 
 const seededRandom = (seed: number) => {
   let s = seed;
@@ -18,6 +20,17 @@ interface TrianglifyBackgroundProps {
 export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { resolvedTheme } = useTheme();
+  const { trianglifySettings } = useAppearance();
+
+  const mouse = useRef({ x: 0, y: 0 });
+
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (trianglifySettings.interaction) {
+        mouse.current.x = event.x;
+        mouse.current.y = event.y;
+        draw();
+    }
+  }, [trianglifySettings.interaction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -25,9 +38,9 @@ export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ clas
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const cellSize = 75;
-    const variance = 0.75;
-    const seed = 1;
+    const cellSize = trianglifySettings.cellSize;
+    const variance = trianglifySettings.variance;
+    const seed = trianglifySettings.interaction ? mouse.current.x + mouse.current.y : 1;
     
     // Palette changes based on theme
     const palette = resolvedTheme?.includes('dark') || resolvedTheme?.includes('night')
@@ -81,7 +94,7 @@ export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ clas
       }
     }
 
-  }, [resolvedTheme]);
+  }, [resolvedTheme, trianglifySettings]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,10 +109,17 @@ export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ clas
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
+    if (trianglifySettings.interaction) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+    
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+       if (trianglifySettings.interaction) {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
     };
-  }, [draw]);
+  }, [draw, trianglifySettings.interaction, handleMouseMove]);
 
   // Redraw when theme changes
   useEffect(() => {

@@ -48,10 +48,11 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance, BackgroundEffect } from '@/components/appearance-provider';
+import { useAppearance, BackgroundEffect, ParticleSettings, TrianglifySettings } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -266,7 +267,11 @@ export default function SettingsPage() {
         particleColor, 
         setParticleColor,
         backgroundEffect,
-        setBackgroundEffect
+        setBackgroundEffect,
+        particleSettings,
+        setParticleSettings,
+        trianglifySettings,
+        setTrianglifySettings
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
@@ -383,10 +388,41 @@ export default function SettingsPage() {
             </div>
             
             {backgroundEffect === 'particles' && (
-                <div className="p-3 pt-0 pr-10">
-                    <div className='flex items-center gap-4'>
+                <div className="p-3 pt-0 border-t mt-2 space-y-4">
+                    <div className='flex items-center gap-4 mt-4'>
                         <Label htmlFor="particle-color">لون الجزيئات</Label>
                         <Input id="particle-color" type="color" value={particleColor} onChange={(e) => setParticleColor(e.target.value)} className="w-16 h-10 p-1" />
+                    </div>
+                    <div className='flex items-center justify-between'>
+                        <Label htmlFor="p-interaction">التفاعل مع الفأرة</Label>
+                        <Switch id="p-interaction" checked={particleSettings.interaction} onCheckedChange={(checked) => setParticleSettings({ interaction: checked })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="p-count">عدد الجزيئات: {particleSettings.count}</Label>
+                        <Slider id="p-count" min={10} max={200} step={5} value={[particleSettings.count]} onValueChange={(v) => setParticleSettings({ count: v[0] })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="p-speed">سرعة الحركة: {particleSettings.speed.toFixed(1)}</Label>
+                        <Slider id="p-speed" min={0.1} max={2} step={0.1} value={[particleSettings.speed]} onValueChange={(v) => setParticleSettings({ speed: v[0] })} />
+                    </div>
+                </div>
+            )}
+
+             {backgroundEffect === 'trianglify' && (
+                <div className="p-3 pt-0 border-t mt-2 space-y-4">
+                    <div className='flex items-center justify-between mt-4'>
+                        <Label htmlFor="t-interaction">التفاعل مع الفأرة</Label>
+                        <Switch id="t-interaction" checked={trianglifySettings.interaction} onCheckedChange={(checked) => setTrianglifySettings({ interaction: checked })} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="t-cell-size">حجم الخلية: {trianglifySettings.cellSize}</Label>
+                        <Slider id="t-cell-size" min={20} max={200} step={5} value={[trianglifySettings.cellSize]} onValueChange={(v) => setTrianglifySettings({ cellSize: v[0] })} />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <Label htmlFor="t-variance">عشوائية الشكل: {trianglifySettings.variance.toFixed(2)}</Label>
+                        <Slider id="t-variance" min={0} max={1.5} step={0.05} value={[trianglifySettings.variance]} onValueChange={(v) => setTrianglifySettings({ variance: v[0] })} />
                     </div>
                 </div>
             )}
