@@ -7,13 +7,14 @@ import type { Program } from '@/lib/types';
 import { cn, getInitials } from '@/lib/utils';
 import { FollowButton } from './follow-button';
 import { Podcast } from 'lucide-react';
+import { memo } from 'react';
 
 interface ProgramCardProps {
     program: Program;
     index?: number;
 }
 
-export function ProgramCard({ program, index = 0 }: ProgramCardProps) {
+const ProgramCardComponent = ({ program, index = 0 }: ProgramCardProps) => {
     const placeholder = getPlaceholderImage(program.imageId);
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
 
@@ -43,3 +44,5 @@ export function ProgramCard({ program, index = 0 }: ProgramCardProps) {
         </Card>
     )
 }
+
+export const ProgramCard = memo(ProgramCardComponent);

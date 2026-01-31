@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast } from "lucide-react"
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, memo } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -48,7 +48,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
   return null;
 }
 
-export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps) {
+const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
@@ -329,3 +329,4 @@ export function LectureCard({ lecture, index = 0, onCollapse }: LectureCardProps
     </>
   )
 }
+export const LectureCard = memo(LectureCardComponent)

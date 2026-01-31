@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { Lecture } from "@/lib/types";
@@ -12,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { cn, formatDuration } from "@/lib/utils";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { YoutubePlayerModal } from "./youtube-player-modal";
 import { ImageModal } from "./image-modal";
 import { LectureCard } from "./lecture-card";
@@ -44,7 +43,7 @@ interface LectureListItemProps {
     index: number;
 }
 
-export function LectureListItem({ lecture, index }: LectureListItemProps) {
+const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
     const { playTrack } = useAudioPlayer();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -193,3 +192,5 @@ export function LectureListItem({ lecture, index }: LectureListItemProps) {
         </>
     );
 }
+
+export const LectureListItem = memo(LectureListItemComponent);

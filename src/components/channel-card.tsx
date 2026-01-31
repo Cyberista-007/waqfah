@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/utils';
 import { FollowButton } from './follow-button';
 import { UserPlus } from 'lucide-react';
+import { memo } from 'react';
 
 interface ChannelCardProps {
     channel: Channel;
     index?: number;
 }
 
-export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
+const ChannelCardComponent = ({ channel, index = 0 }: ChannelCardProps) => {
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
 
@@ -44,3 +45,5 @@ export function ChannelCard({ channel, index = 0 }: ChannelCardProps) {
         </Card>
     )
 }
+
+export const ChannelCard = memo(ChannelCardComponent);

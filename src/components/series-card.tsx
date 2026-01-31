@@ -5,13 +5,14 @@ import type { Series } from '@/lib/types';
 import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { memo } from 'react';
 
 interface SeriesCardProps {
     series: Series;
     index?: number;
 }
 
-export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
+const SeriesCardComponent = ({ series, index = 0 }: SeriesCardProps) => {
     return (
         <Card
             key={series.id}
@@ -41,3 +42,5 @@ export function SeriesCard({ series, index = 0 }: SeriesCardProps) {
         </Card>
     );
 }
+
+export const SeriesCard = memo(SeriesCardComponent);

@@ -5,13 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Book } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { memo } from 'react';
 
 interface BookCardProps {
     book: Book;
     index?: number;
 }
 
-export function BookCard({ book, index = 0 }: BookCardProps) {
+const BookCardComponent = ({ book, index = 0 }: BookCardProps) => {
     const placeholder = getPlaceholderImage(book.imageId);
     return (
         <Card
@@ -41,3 +42,5 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
       </Card>
     );
 }
+
+export const BookCard = memo(BookCardComponent);
