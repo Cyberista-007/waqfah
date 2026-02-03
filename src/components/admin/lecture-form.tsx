@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -75,7 +76,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     
     setIsFetching(true);
      try {
-        const response = await fetch('/api/youtube-import', {
+        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: url, fetchVideoInfo: true }),

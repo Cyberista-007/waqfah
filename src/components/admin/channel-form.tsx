@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -69,7 +70,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
     }
     setIsFetching(true);
     try {
-        const response = await fetch('/api/youtube-import', {
+        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url, fetchChannelInfo: true }), // Add flag to fetch channel details
