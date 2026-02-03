@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,7 +13,7 @@ import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { YoutubePlayerModal } from '@/components/youtube-player-modal';
+import YouTube, { YouTubeProps } from 'react-youtube';
 import { LectureNotes } from '@/components/lecture-notes';
 import { CommentsSection } from '@/components/comments-section';
 import { LectureCard } from './lecture-card';
@@ -46,12 +47,12 @@ interface LectureClientPageProps {
 }
 
 export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
-  const { playTrack } = useAudioPlayer();
+  const { playTrack, pauseTrack, videoPlayerRef } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
 
@@ -105,6 +106,9 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
 
   const handlePlay = () => {
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function' && videoPlayerRef.current.getPlayerState() === 1) {
+        videoPlayerRef.current.pauseVideo();
+    }
     let startTime = 0;
     if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
         startTime = lectureHistory.position;
@@ -125,7 +129,16 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       programName: lecture.programName,
     }, startTime);
   };
+  
+  const handleWatchVideo = () => {
+      pauseTrack();
+      setIsPlayerVisible(true);
+  }
 
+  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
+    videoPlayerRef.current = event.target;
+    pauseTrack(); // Pause audio when video is ready to play
+  };
 
   const seriesLink = `/series/${lecture.seriesSlug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}"`;
@@ -174,18 +187,48 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
-      <Card className="shadow-lg">
-        <CardContent className="p-4">
-           <Button 
-            onClick={handlePlay}
-            className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90 transition-colors"
-            size="lg"
-          >
-            <Play className="w-6 h-6 me-2" />
-            <span>استماع</span>
-        </Button>
-        </CardContent>
-      </Card>
+      {isPlayerVisible && videoId ? (
+        <Card>
+            <div className="relative aspect-video">
+              <YouTube
+                videoId={videoId}
+                opts={{
+                  height: '100%',
+                  width: '100%',
+                  playerVars: {
+                    autoplay: 1,
+                    rel: 0,
+                  },
+                }}
+                onReady={onPlayerReady}
+                className="w-full h-full absolute top-0 left-0 rounded-t-lg overflow-hidden"
+              />
+            </div>
+            <CardContent className="p-4">
+                <Button onClick={() => {
+                    if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                        videoPlayerRef.current.pauseVideo();
+                    }
+                    setIsPlayerVisible(false);
+                }} variant="outline" className="w-full">
+                    إخفاء الفيديو والعودة للصوت
+                </Button>
+            </CardContent>
+        </Card>
+      ) : (
+        <Card className="shadow-lg">
+            <CardContent className="p-4">
+            <Button 
+                onClick={handlePlay}
+                className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90 transition-colors"
+                size="lg"
+            >
+                <Play className="w-6 h-6 me-2" />
+                <span>استماع</span>
+            </Button>
+            </CardContent>
+        </Card>
+      )}
       
       <section>
         <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
@@ -200,8 +243,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
             </Button>
-          {videoId && (
-            <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
+          {videoId && !isPlayerVisible && (
+            <Button variant="destructive" onClick={handleWatchVideo}>
               <Youtube />
               <span className="ms-2">مشاهدة (يوتيوب)</span>
             </Button>
@@ -324,14 +367,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       )}
 
     </div>
-    {videoId && (
-      <YoutubePlayerModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        videoId={videoId}
-        shareUrl={shareUrl}
-      />
-    )}
      <ClipCreationDialog 
         isOpen={isClipCreationOpen} 
         onOpenChange={setIsClipCreationOpen} 
@@ -341,3 +376,5 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     </>
   );
 }
+
+    
