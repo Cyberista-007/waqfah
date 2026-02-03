@@ -7,8 +7,10 @@ import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import type { LectureNote } from '@/lib/types';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Stamp } from 'lucide-react';
 import { Button } from './ui/button';
+import { useAudioPlayer } from './audio-player-provider';
+import { formatDuration } from '@/lib/utils';
 
 interface LectureNotesProps {
   lectureId: string;
@@ -18,6 +20,8 @@ interface LectureNotesProps {
 export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { audioRef, isPlaying } = useAudioPlayer();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const noteDocRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'users', userId, 'notes', lectureId) : null),
@@ -77,6 +81,40 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     }, 2000); // Auto-save after 2 seconds of inactivity
   };
   
+  const handleInsertTimestamp = () => {
+    if (!audioRef.current || !textareaRef.current) return;
+
+    const currentTime = audioRef.current.currentTime;
+    if (currentTime === 0 && !isPlaying) {
+        toast({
+            variant: "default",
+            title: "يرجى تشغيل المحاضرة أولاً",
+            description: "يجب تشغيل المحاضرة لتتمكن من إضافة طابع زمني دقيق.",
+        });
+        return;
+    }
+    
+    const timestamp = `[${formatDuration(currentTime)}] `;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    
+    const newContent = content.substring(0, start) + timestamp + content.substring(end);
+    setContent(newContent);
+    
+    // This is a bit tricky, we need to manually trigger save and update cursor
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    saveNote(newContent);
+
+    // Focus and move cursor after the inserted timestamp
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
+    }, 0);
+  };
+  
   useEffect(() => {
       return () => {
           if (debounceTimeout.current) {
@@ -87,12 +125,19 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
 
   return (
     <div className="space-y-4">
+       <div className="flex items-center justify-end gap-2">
+         <Button variant="outline" onClick={handleInsertTimestamp} disabled={isNoteLoading}>
+            <Stamp className="w-4 h-4 me-2"/>
+            إضافة طابع زمني
+        </Button>
+      </div>
       <Textarea
+        ref={textareaRef}
         value={content}
         onChange={handleContentChange}
         placeholder="اكتب ملاحظاتك وفوائدك من هذه المحاضرة هنا. سيتم الحفظ تلقائيًا..."
-        rows={8}
-        className="w-full text-base"
+        rows={12}
+        className="w-full text-base leading-relaxed"
         disabled={isNoteLoading}
       />
       <div className="flex items-center justify-end h-6">
