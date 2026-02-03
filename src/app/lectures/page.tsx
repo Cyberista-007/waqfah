@@ -25,7 +25,7 @@ export default function LecturesListPage() {
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
 
   const seriesFilter = searchParams.get('series');
-  const sortOrder = searchParams.get('sort') || 'newest';
+  const sortOrder = searchParams.get('sort') || 'most_popular';
   
   const [searchTerm, setSearchTerm] = useState("");
 
