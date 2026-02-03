@@ -252,12 +252,12 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
-                <div className="flex items-center gap-x-3 text-xs text-muted-foreground mb-1">
+                 <div className="flex items-center gap-x-3 text-sm font-semibold text-foreground mb-2">
                   {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
                     <>
                       {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
                           <div className="flex items-center gap-1">
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye className="w-4 h-4" />
                               <span>{formatViews(lecture.youtubeViewCount)}</span>
                           </div>
                       )}
@@ -266,7 +266,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                       )}
                       {lecture.duration > 0 && (
                           <div className="flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5" />
+                              <Clock className="w-4 h-4" />
                               <span>{formatDuration(lecture.duration)}</span>
                           </div>
                       )}
