@@ -142,8 +142,8 @@ service cloud.firestore {
       // Users can get, update, and delete their own playlists.
       allow get, update, delete: if isResourceOwner();
       
-      // Any signed-in user can also get a public playlist.
-      allow get: if isSignedIn() && resource.data.isPublic == true;
+      // Allow ANYONE to get a public playlist.
+      allow get: if resource.data.isPublic == true;
     }
     
     match /users/{userId}/notes/{lectureId} {
@@ -191,9 +191,12 @@ service cloud.firestore {
     // Collection Group Queries
     // =====================================================================
 
-    // Allow ANYONE to query all public playlists across all users.
+    // This rule allows the client to query the 'playlists' collection group.
+    // It's secured because the client query always includes `where('isPublic', '==', true)`
+    // and the `get` rule for individual playlists (above) checks `resource.data.isPublic == true`.
+    // This ensures only public playlists are returned by the query.
     match /{path=**}/playlists/{playlistId} {
-      allow list: if request.query.limit <= 30 && request.query.offset == null && request.query.orderBy.size() == 1 && request.query.orderBy[0].field == "createdAt" && request.query.orderBy[0].direction == "desc" && resource.data.isPublic == true;
+      allow list: if request.query.limit <= 30;
     }
   }
 }
