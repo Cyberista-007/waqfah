@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -187,23 +188,25 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
       {isPlayerVisible && videoId ? (
-        <Card className="sticky top-20 z-40 shadow-2xl bg-black">
-            <div className="overflow-auto rounded-t-lg bg-black" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
-              <YouTube
-                videoId={videoId}
-                opts={{
-                  height: '100%',
-                  width: '100%',
-                  playerVars: {
-                    autoplay: 1,
-                    rel: 0,
-                  },
-                }}
-                onReady={onPlayerReady}
-                className="w-full h-full"
-              />
+        <Card className="sticky top-20 z-40 shadow-2xl bg-transparent">
+            <div className="overflow-auto rounded-t-lg bg-transparent" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
+              <div className="w-full h-full relative">
+                <YouTube
+                  videoId={videoId}
+                  opts={{
+                    height: '100%',
+                    width: '100%',
+                    playerVars: {
+                      autoplay: 1,
+                      rel: 0,
+                    },
+                  }}
+                  onReady={onPlayerReady}
+                  className="w-full h-full"
+                />
+              </div>
             </div>
-            <CardContent className="p-4">
+            <CardContent className="p-4 bg-card rounded-b-lg">
                 <Button onClick={() => {
                     if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
                         videoPlayerRef.current.pauseVideo();
