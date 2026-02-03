@@ -13,9 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -23,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
 import type { Series, Lecture, Program } from "@/lib/types";
@@ -33,6 +32,8 @@ interface LectureFormProps {
     seriesList: Series[];
     lecture?: Lecture | any; // 'any' to handle serialized date from server
 }
+
+const AUTOSAVE_KEY = 'autosave_lecture_form';
 
 export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const { toast } = useToast();
@@ -45,14 +46,61 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
 
   const { data: programsList, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
 
+  const [title, setTitle] = useState(lecture?.title || "");
+  const [description, setDescription] = useState(lecture?.description || "");
+  const [audioSrc, setAudioSrc] = useState(lecture?.audioSrc || "");
+  const [duration, setDuration] = useState(lecture?.duration?.toString() || "");
+  const [pdfUrl, setPdfUrl] = useState(lecture?.pdfUrl || "");
+  const [youtubeUrl, setYoutubeUrl] = useState(lecture?.youtubeUrl || "");
+  const [soundcloudUrl, setSoundcloudUrl] = useState(lecture?.soundcloudUrl || "");
+  const [telegramUrl, setTelegramUrl] = useState(lecture?.telegramUrl || "");
+  const [language, setLanguage] = useState(lecture?.language || "ar");
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
   const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
 
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const audioSrcRef = useRef<HTMLInputElement>(null);
-  const durationRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setTitle(savedData.title || "");
+          setDescription(savedData.description || "");
+          setAudioSrc(savedData.audioSrc || "");
+          setDuration(savedData.duration || "");
+          setPdfUrl(savedData.pdfUrl || "");
+          setYoutubeUrl(savedData.youtubeUrl || "");
+          setSoundcloudUrl(savedData.soundcloudUrl || "");
+          setTelegramUrl(savedData.telegramUrl || "");
+          setLanguage(savedData.language || "ar");
+          setSelectedSeriesId(savedData.selectedSeriesId || "none");
+          setSelectedProgramId(savedData.selectedProgramId || "none");
+          setYoutubeViewCount(savedData.youtubeViewCount);
+        } catch (e) {
+          console.error("Failed to parse autosaved lecture data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = {
+        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount]);
+
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    router.push('/admin/lectures');
+    router.refresh();
+  }
 
   // Update selected program when series changes
   useEffect(() => {
@@ -68,12 +116,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
 
 
   const handleFetchMetadata = async () => {
-    // We will use youtubeUrl field instead, if it exists
-    const form = document.querySelector('form');
-    if (!form) return;
-    const formData = new FormData(form);
-    const youtubeUrl = formData.get("youtubeUrl") as string;
-    const url = youtubeUrl || audioSrcRef.current?.value;
+    const url = youtubeUrl || audioSrc;
 
     if (!url || !(url.includes('youtube.com') || url.includes('youtu.be'))) {
       toast({ variant: 'destructive', title: 'الرجاء إدخال رابط يوتيوب صالح في حقل رابط يوتيوب.' });
@@ -96,9 +139,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         const data = await response.json();
         
         if (data.videoInfo) {
-            if (titleRef.current) titleRef.current.value = data.videoInfo.title;
-            if (descriptionRef.current) descriptionRef.current.value = data.videoInfo.description;
-            if (durationRef.current) durationRef.current.value = data.videoInfo.durationInSeconds.toString();
+            setTitle(data.videoInfo.title);
+            setDescription(data.videoInfo.description);
+            setDuration(data.videoInfo.durationInSeconds.toString());
             setYoutubeViewCount(data.videoInfo.viewCount);
             toast({ title: "تم جلب بيانات الفيديو بنجاح." });
         } else {
@@ -116,13 +159,6 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     event.preventDefault();
     if (!firestore) return;
     setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const audioSrc = formData.get("audioSrc") as string;
-    const duration = formData.get("duration") as string;
-    const language = formData.get("language") as string;
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const programData = selectedProgramId !== 'none' ? programsList?.find(p => p.id === selectedProgramId) : null;
@@ -152,12 +188,12 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         audioSrc,
         duration: parseInt(duration, 10), 
         imageId: lecture?.imageId || `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
-        youtubeUrl: formData.get("youtubeUrl") as string || "",
-        pdfUrl: formData.get("pdfUrl") as string || "",
-        telegramUrl: formData.get("telegramUrl") as string || "",
-        soundcloudUrl: formData.get("soundcloudUrl") as string || "",
+        youtubeUrl: youtubeUrl,
+        pdfUrl: pdfUrl,
+        telegramUrl: telegramUrl,
+        soundcloudUrl: soundcloudUrl,
         youtubeViewCount: youtubeViewCount || 0,
-        language: language || 'ar',
+        language: language,
     };
 
     try {
@@ -217,8 +253,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         });
       }
       
-      router.push("/admin/lectures");
-      router.refresh();
+      handleClose();
 
     } catch (error) {
       console.error("Error submitting lecture:", error);
@@ -247,7 +282,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           <div>
             <Label htmlFor="audioSrc">رابط ملف الصوت المباشر (MP3)</Label>
             <div className="flex items-center gap-2">
-              <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required ref={audioSrcRef} />
+              <Input id="audioSrc" name="audioSrc" type="url" value={audioSrc} onChange={(e) => setAudioSrc(e.target.value)} required />
               <Button type="button" variant="outline" size="icon" onClick={handleFetchMetadata} disabled={isFetching}>
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
                 <span className="sr-only">استخلاص البيانات</span>
@@ -261,7 +296,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="title">عنوان المحاضرة</Label>
-              <Input id="title" name="title" defaultValue={lecture?.title} required ref={titleRef} />
+              <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="program">البرنامج (اختياري)</Label>
@@ -296,21 +331,21 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           
           <div>
             <Label htmlFor="description">وصف المحاضرة</Label>
-            <Textarea id="description" name="description" defaultValue={lecture?.description} required rows={4} ref={descriptionRef}/>
+            <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required rows={4}/>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="duration">المدة (بالثواني)</Label>
-              <Input id="duration" name="duration" type="number" defaultValue={lecture?.duration} required ref={durationRef}/>
+              <Input id="duration" name="duration" type="number" value={duration} onChange={(e) => setDuration(e.target.value)} required/>
             </div>
              <div>
               <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
-              <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={lecture?.pdfUrl} />
+              <Input id="pdfUrl" name="pdfUrl" type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
             </div>
              <div>
                 <Label htmlFor="language">اللغة</Label>
-                <Select name="language" defaultValue={lecture?.language || 'ar'}>
+                <Select name="language" value={language} onValueChange={setLanguage}>
                     <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
@@ -324,25 +359,25 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="youtubeUrl">رابط يوتيوب بديل (اختياري)</Label>
-              <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={lecture?.youtubeUrl} />
+              <Input id="youtubeUrl" name="youtubeUrl" type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="soundcloudUrl">رابط ساوندكلاود (اختياري)</Label>
-              <Input id="soundcloudUrl" name="soundcloudUrl" type="url" defaultValue={lecture?.soundcloudUrl} />
+              <Input id="soundcloudUrl" name="soundcloudUrl" type="url" value={soundcloudUrl} onChange={(e) => setSoundcloudUrl(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="telegramUrl">رابط تيليجرام (اختياري)</Label>
-              <Input id="telegramUrl" name="telegramUrl" type="url" defaultValue={lecture?.telegramUrl} />
+              <Input id="telegramUrl" name="telegramUrl" type="url" value={telegramUrl} onChange={(e) => setTelegramUrl(e.target.value)} />
             </div>
           </div>
 
           <div className="flex gap-2 pt-4 border-t">
-            <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isLoading || isSubmitting}>
+                {(isLoading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إضافة المحاضرة'}
             </Button>
-            <Button asChild variant="outline" type="button">
-              <Link href="/admin/lectures">إلغاء</Link>
+            <Button type="button" onClick={handleClose} variant="outline">
+              إلغاء
             </Button>
           </div>
         </form>

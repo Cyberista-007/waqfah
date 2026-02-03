@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, doc, runTransaction, increment } from "firebase/firestore";
 import type { Book, Program } from "@/lib/types";
@@ -25,6 +25,8 @@ interface BookFormProps {
     onFormClose: () => void;
 }
 
+const AUTOSAVE_KEY = 'autosave_book_form';
+
 export function BookForm({ book, onFormClose }: BookFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -32,16 +34,46 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
   
   const isEditMode = !!book;
   const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+  
+  const [title, setTitle] = useState(book?.title || "");
+  const [pdfUrl, setPdfUrl] = useState(book?.pdfUrl || "");
   const [selectedProgramName, setSelectedProgramName] = useState<string>(book?.programName || "none");
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setTitle(savedData.title || "");
+          setPdfUrl(savedData.pdfUrl || "");
+          setSelectedProgramName(savedData.selectedProgramName || "none");
+        } catch (e) {
+          console.error("Failed to parse autosaved book data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = { title, pdfUrl, selectedProgramName };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, title, pdfUrl, selectedProgramName]);
+
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    onFormClose();
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
     setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const pdfUrl = formData.get("pdfUrl") as string;
 
     if (!title || !pdfUrl) {
         toast({
@@ -77,7 +109,6 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
 
         await runTransaction(firestore, async (transaction) => {
             transaction.set(newBookRef, { ...bookData });
-            // Use set with merge to avoid error if doc doesn't exist
             transaction.set(statsRef, { books: increment(1) }, { merge: true });
         });
 
@@ -86,7 +117,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
             description: `تمت إضافة كتاب "${title}" الجديد.`,
         });
       }
-      onFormClose();
+      handleClose();
     } catch (error) {
       console.error("Error submitting book:", error);
       toast({
@@ -111,7 +142,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="title">عنوان الكتاب</Label>
-            <Input id="title" name="title" defaultValue={book?.title} required disabled={isSubmitting} />
+            <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required disabled={isSubmitting} />
           </div>
            <div>
               <Label htmlFor="program">البرنامج (اختياري)</Label>
@@ -129,7 +160,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
             </div>
           <div>
             <Label htmlFor="pdfUrl">رابط الكتاب (PDF)</Label>
-            <Input id="pdfUrl" name="pdfUrl" type="url" defaultValue={book?.pdfUrl} required disabled={isSubmitting} />
+            <Input id="pdfUrl" name="pdfUrl" type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} required disabled={isSubmitting} />
           </div>
            <div>
             <Label htmlFor="image">صورة الغلاف (اختياري)</Label>
@@ -140,7 +171,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
                 {(isSubmitting || programsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء الكتاب'}
             </Button>
-            <Button type="button" onClick={onFormClose} variant="outline">
+            <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
           </div>

@@ -12,13 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import type { Series, Program } from "@/lib/types";
 import {
@@ -34,6 +33,8 @@ interface SeriesFormProps {
     series?: Series | null;
 }
 
+const AUTOSAVE_KEY = 'autosave_series_form';
+
 export function SeriesForm({ series }: SeriesFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -42,19 +43,50 @@ export function SeriesForm({ series }: SeriesFormProps) {
   const isEditMode = !!series;
   
   const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+  
+  const [title, setTitle] = useState(series?.title || "");
+  const [description, setDescription] = useState(series?.description || "");
+  const [language, setLanguage] = useState(series?.language || 'ar');
   const [selectedProgramId, setSelectedProgramId] = useState<string>(series?.programId || "none");
 
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setTitle(savedData.title || "");
+          setDescription(savedData.description || "");
+          setLanguage(savedData.language || "ar");
+          setSelectedProgramId(savedData.selectedProgramId || "none");
+        } catch (e) {
+          console.error("Failed to parse autosaved series data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = { title, description, language, selectedProgramId };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, title, description, language, selectedProgramId]);
+
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    router.push("/admin/series");
+    router.refresh();
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const language = formData.get("language") as string;
-    
     const programData = selectedProgramId !== 'none' ? allPrograms?.find(p => p.id === selectedProgramId) : null;
 
 
@@ -84,10 +116,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
     try {
         if(isEditMode && series) {
             const seriesRef = doc(firestore, 'series', series.id);
-            // We don't update createdAt on edit
-            const updateData = {
-                ...seriesData,
-            };
+            const updateData = { ...seriesData };
             updateDocumentNonBlocking(seriesRef, updateData);
             toast({
                 title: "تم التحديث بنجاح",
@@ -104,7 +133,6 @@ export function SeriesForm({ series }: SeriesFormProps) {
 
             await runTransaction(firestore, async (transaction) => {
                 transaction.set(newSeriesRef, fullSeriesData);
-                 // Use set with merge to avoid error if doc doesn't exist
                 transaction.set(statsRef, { series: increment(1) }, { merge: true });
             });
 
@@ -114,8 +142,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
             });
         }
 
-        router.push("/admin/series");
-        router.refresh();
+        handleClose();
     } catch(error: any) {
         console.error("Error submitting series:", error);
         toast({
@@ -140,7 +167,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">عنوان السلسلة</Label>
-            <Input id="title" name="title" defaultValue={series?.title} required disabled={isSubmitting} />
+            <Input id="title" name="title" value={title} onChange={e => setTitle(e.target.value)} required disabled={isSubmitting} />
           </div>
            <div>
               <Label htmlFor="program">البرنامج (اختياري)</Label>
@@ -158,12 +185,12 @@ export function SeriesForm({ series }: SeriesFormProps) {
             </div>
           <div>
             <Label htmlFor="description">وصف السلسلة (اختياري)</Label>
-            <Textarea id="description" name="description" defaultValue={series?.description} disabled={isSubmitting}/>
+            <Textarea id="description" name="description" value={description} onChange={e => setDescription(e.target.value)} disabled={isSubmitting}/>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="language">اللغة</Label>
-              <Select name="language" defaultValue={series?.language || 'ar'}>
+              <Select name="language" value={language} onValueChange={setLanguage}>
                   <SelectTrigger>
                       <SelectValue />
                   </SelectTrigger>
@@ -183,8 +210,8 @@ export function SeriesForm({ series }: SeriesFormProps) {
                 {(isSubmitting || programsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء السلسلة'}
             </Button>
-            <Button asChild variant="outline" type="button">
-              <Link href="/admin/series">إلغاء</Link>
+            <Button type="button" onClick={handleClose} variant="outline">
+              إلغاء
             </Button>
           </div>
         </form>

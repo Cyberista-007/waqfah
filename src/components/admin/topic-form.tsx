@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import type { Topic, Lecture, Series } from "@/lib/types";
@@ -27,6 +27,8 @@ interface TopicFormProps {
     onFormClose: () => void;
 }
 
+const AUTOSAVE_KEY = 'autosave_topic_form';
+
 export function TopicForm({ topic, onFormClose }: TopicFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -37,8 +39,42 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['title', 'asc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
   
+  const [name, setName] = useState(topic?.name || "");
+  const [description, setDescription] = useState(topic?.description || "");
   const [selectedLectures, setSelectedLectures] = useState<string[]>(topic?.lectureIds || []);
   const [selectedSeries, setSelectedSeries] = useState<string[]>(topic?.seriesIds || []);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setName(savedData.name || "");
+          setDescription(savedData.description || "");
+          setSelectedLectures(savedData.selectedLectures || []);
+          setSelectedSeries(savedData.selectedSeries || []);
+        } catch (e) {
+          console.error("Failed to parse autosaved topic data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = { name, description, selectedLectures, selectedSeries };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, name, description, selectedLectures, selectedSeries]);
+  
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    onFormClose();
+  };
 
   const handleCheckboxChange = (type: 'lecture' | 'series', id: string, checked: boolean) => {
       if (type === 'lecture') {
@@ -54,9 +90,6 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
     if (!firestore) return;
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
     const slug = name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     if (!name || !description) {
@@ -78,24 +111,29 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
         seriesIds: selectedSeries,
     };
 
-    
-    if (isEditMode && topic) {
-      const topicRef = doc(firestore, 'topics', topic.id);
-      updateDocumentNonBlocking(topicRef, topicData);
-      toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث موضوع "${name}".`,
-      });
-    } else {
-      const topicsCollection = collection(firestore, 'topics');
-      addDocumentNonBlocking(topicsCollection, topicData);
-      toast({
-          title: "تم الإنشاء بنجاح",
-          description: `تمت إضافة موضوع "${name}" الجديد.`,
-      });
+    try {
+      if (isEditMode && topic) {
+        const topicRef = doc(firestore, 'topics', topic.id);
+        updateDocumentNonBlocking(topicRef, topicData);
+        toast({
+            title: "تم التحديث بنجاح",
+            description: `تم تحديث موضوع "${name}".`,
+        });
+      } else {
+        const topicsCollection = collection(firestore, 'topics');
+        addDocumentNonBlocking(topicsCollection, topicData);
+        toast({
+            title: "تم الإنشاء بنجاح",
+            description: `تمت إضافة موضوع "${name}" الجديد.`,
+        });
+      }
+      handleClose();
+    } catch(e) {
+      console.error("Error submitting topic:", e);
+      toast({ variant: 'destructive', title: "حدث خطأ", description: "لم نتمكن من حفظ الموضوع." });
+    } finally {
+      setIsSubmitting(false);
     }
-    onFormClose();
-    setIsSubmitting(false);
   };
   
   const isLoading = lecturesLoading || seriesLoading;
@@ -114,11 +152,11 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
               <div className="space-y-4">
                 <div>
                     <Label htmlFor="name">اسم الموضوع</Label>
-                    <Input id="name" name="name" defaultValue={topic?.name} required disabled={isSubmitting} />
+                    <Input id="name" name="name" value={name} onChange={e => setName(e.target.value)} required disabled={isSubmitting} />
                 </div>
                 <div>
                     <Label htmlFor="description">وصف الموضوع</Label>
-                    <Textarea id="description" name="description" defaultValue={topic?.description} required disabled={isSubmitting} />
+                    <Textarea id="description" name="description" value={description} onChange={e => setDescription(e.target.value)} required disabled={isSubmitting} />
                 </div>
               </div>
               <div className="space-y-4">
@@ -163,7 +201,7 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء الموضوع'}
             </Button>
-            <Button type="button" onClick={onFormClose} variant="outline">
+            <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
           </div>

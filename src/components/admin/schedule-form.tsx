@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFirestore } from "@/firebase";
 import { collection, doc, Timestamp } from "firebase/firestore";
 import type { ScheduleItem } from "@/lib/types";
@@ -29,6 +29,8 @@ interface ScheduleFormProps {
     onFormClose: () => void;
 }
 
+const AUTOSAVE_KEY = 'autosave_schedule_form';
+
 export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -36,18 +38,49 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
   
   const isEditMode = !!item;
 
+  const [title, setTitle] = useState(item?.title || "");
+  const [duration, setDuration] = useState(item?.duration || 60);
   const [date, setDate] = useState<Date | undefined>(item?.dateTime?.toDate());
   const [time, setTime] = useState<string>(item?.dateTime?.toDate() ? format(item.dateTime.toDate(), "HH:mm") : "12:00");
   const [isLive, setIsLive] = useState<boolean>(item?.isLive || false);
+  
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setTitle(savedData.title || "");
+          setDuration(savedData.duration || 60);
+          if (savedData.date) setDate(new Date(savedData.date));
+          setTime(savedData.time || "12:00");
+          setIsLive(savedData.isLive || false);
+        } catch (e) {
+          console.error("Failed to parse autosaved schedule data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = { title, duration, date: date?.toISOString(), time, isLive };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, title, duration, date, time, isLive]);
+
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    onFormClose();
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
     setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const duration = formData.get("duration") as string;
 
     if (!title || !date || !time) {
         toast({
@@ -66,27 +99,33 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
     const itemData = {
         title,
         dateTime: Timestamp.fromDate(combinedDateTime),
-        duration: duration ? parseInt(duration, 10) : 60,
+        duration: duration,
         isLive,
     };
 
-    if (isEditMode && item) {
-      const itemRef = doc(firestore, 'scheduled_lessons', item.id);
-      updateDocumentNonBlocking(itemRef, itemData);
-      toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث الدرس "${title}".`,
-      });
-    } else {
-      const itemsCollection = collection(firestore, 'scheduled_lessons');
-      addDocumentNonBlocking(itemsCollection, itemData);
-      toast({
-          title: "تم الإنشاء بنجاح",
-          description: `تمت إضافة الدرس "${title}" الجديد.`,
-      });
+    try {
+        if (isEditMode && item) {
+          const itemRef = doc(firestore, 'scheduled_lessons', item.id);
+          updateDocumentNonBlocking(itemRef, itemData);
+          toast({
+              title: "تم التحديث بنجاح",
+              description: `تم تحديث الدرس "${title}".`,
+          });
+        } else {
+          const itemsCollection = collection(firestore, 'scheduled_lessons');
+          addDocumentNonBlocking(itemsCollection, itemData);
+          toast({
+              title: "تم الإنشاء بنجاح",
+              description: `تمت إضافة الدرس "${title}" الجديد.`,
+          });
+        }
+        handleClose();
+    } catch(e) {
+        console.error("Error submitting schedule item:", e);
+        toast({ variant: 'destructive', title: "حدث خطأ", description: "لم نتمكن من حفظ الدرس." });
+    } finally {
+      setIsSubmitting(false);
     }
-    onFormClose();
-    setIsSubmitting(false);
   };
 
   return (
@@ -101,7 +140,7 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="title">عنوان الدرس</Label>
-            <Input id="title" name="title" defaultValue={item?.title} required disabled={isSubmitting} />
+            <Input id="title" name="title" value={title} onChange={e => setTitle(e.target.value)} required disabled={isSubmitting} />
           </div>
 
           <div className="flex gap-4">
@@ -138,7 +177,7 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
           
           <div>
              <Label htmlFor="duration">المدة (بالدقائق)</Label>
-             <Input id="duration" name="duration" type="number" defaultValue={item?.duration || 60} />
+             <Input id="duration" name="duration" type="number" value={duration} onChange={e => setDuration(Number(e.target.value))} />
           </div>
 
           <div className="flex items-center space-x-2 space-x-reverse">
@@ -151,7 +190,7 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء الدرس'}
             </Button>
-            <Button type="button" onClick={onFormClose} variant="outline">
+            <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
           </div>

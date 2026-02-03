@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import type { Program } from "@/lib/types";
@@ -36,6 +36,8 @@ interface YoutubeProgramInfo {
     imageUrl: string;
 }
 
+const AUTOSAVE_KEY = 'autosave_program_form';
+
 export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: ProgramFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -43,13 +45,49 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  const isEditMode = !!program;
+
+  const [name, setName] = useState(program?.name || "");
+  const [bio, setBio] = useState(program?.bio || "");
+  const [youtubeUrl, setYoutubeUrl] = useState(program?.youtubeUrl || initialYoutubeUrl || "");
   const [imagePreview, setImagePreview] = useState<string | null>(program?.imageUrl || null);
   
-  const nameRef = useRef<HTMLInputElement>(null);
-  const bioRef = useRef<HTMLTextAreaElement>(null);
-  const youtubeUrlRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setName(savedData.name || "");
+          setBio(savedData.bio || "");
+          setYoutubeUrl(savedData.youtubeUrl || "");
+          setImagePreview(savedData.imagePreview || null);
+        } catch (e) {
+          console.error("Failed to parse autosaved program data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      } else if (initialYoutubeUrl) {
+          setYoutubeUrl(initialYoutubeUrl);
+          handleFetchFromYoutube(initialYoutubeUrl);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, initialYoutubeUrl]);
+  
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = { name, bio, youtubeUrl, imagePreview };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, name, bio, youtubeUrl, imagePreview]);
 
-  const isEditMode = !!program;
+  const handleClose = () => {
+    if (!isEditMode) {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+    onFormClose();
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
@@ -59,9 +97,9 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
       }
   }
 
-  const handleFetchFromYoutube = async () => {
-    const url = youtubeUrlRef.current?.value;
-    if (!url) {
+  const handleFetchFromYoutube = async (urlToFetch?: string) => {
+    const finalUrl = urlToFetch || youtubeUrl;
+    if (!finalUrl) {
         toast({ variant: "destructive", title: "الرجاء إدخال رابط القناة أولاً." });
         return;
     }
@@ -70,7 +108,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const response = await fetch(`${window.location.origin}/api/youtube-import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, fetchChannelInfo: true }),
+            body: JSON.stringify({ url: finalUrl, fetchChannelInfo: true }),
         });
 
         if (!response.ok) {
@@ -81,8 +119,8 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const data: { channelInfo?: YoutubeProgramInfo } = await response.json();
         
         if (data.channelInfo) {
-            if(nameRef.current) nameRef.current.value = data.channelInfo.name;
-            if(bioRef.current) bioRef.current.value = data.channelInfo.description;
+            setName(data.channelInfo.name);
+            setBio(data.channelInfo.description);
             setImagePreview(data.channelInfo.imageUrl);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات البرنامج بنجاح." });
@@ -97,23 +135,11 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
     }
   }
 
-  useEffect(() => {
-    if (initialYoutubeUrl && youtubeUrlRef.current) {
-        youtubeUrlRef.current.value = initialYoutubeUrl;
-        handleFetchFromYoutube();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialYoutubeUrl]);
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore || !storage) return;
     setIsSubmitting(true);
 
-    const name = nameRef.current?.value || "";
-    const bio = bioRef.current?.value || "";
-    const youtubeUrl = youtubeUrlRef.current?.value || "";
-    
     if (!name) {
         toast({
             variant: "destructive",
@@ -170,7 +196,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
               description: `تمت إضافة البرنامج "${name}" الجديد.`,
           });
         }
-        onFormClose();
+        handleClose();
     } catch (error) {
         console.error("Error submitting program:", error);
         toast({
@@ -196,7 +222,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
           <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-24 w-24">
                   <AvatarImage src={imagePreview || undefined} />
-                  <AvatarFallback className="text-3xl">{getInitials(program?.name || nameRef.current?.value)}</AvatarFallback>
+                  <AvatarFallback className="text-3xl">{getInitials(name)}</AvatarFallback>
               </Avatar>
               <div>
                 <Label htmlFor="image">صورة البرنامج</Label>
@@ -213,26 +239,26 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
            <div>
             <Label htmlFor="youtubeUrl">رابط قناة يوتيوب (اختياري)</Label>
             <div className="flex gap-2">
-                <Input id="youtubeUrl" name="youtubeUrl" type="url" defaultValue={program?.youtubeUrl} disabled={isSubmitting || isFetching} ref={youtubeUrlRef} />
-                <Button type="button" onClick={handleFetchFromYoutube} disabled={isFetching || isSubmitting}>
+                <Input id="youtubeUrl" name="youtubeUrl" type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} disabled={isSubmitting || isFetching} />
+                <Button type="button" onClick={() => handleFetchFromYoutube()} disabled={isFetching || isSubmitting}>
                     {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                 </Button>
             </div>
           </div>
           <div>
             <Label htmlFor="name">اسم البرنامج</Label>
-            <Input id="name" name="name" defaultValue={program?.name} required disabled={isSubmitting} ref={nameRef} />
+            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="bio">نبذة تعريفية</Label>
-            <Textarea id="bio" name="bio" defaultValue={program?.bio} required disabled={isSubmitting} rows={4} ref={bioRef} />
+            <Textarea id="bio" name="bio" value={bio} onChange={(e) => setBio(e.target.value)} required disabled={isSubmitting} rows={4} />
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء البرنامج'}
             </Button>
-            <Button type="button" onClick={onFormClose} variant="outline">
+            <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
           </div>
