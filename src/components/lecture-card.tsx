@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -271,23 +270,23 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
                 <div className="mb-2">
-                    <div className="inline-flex items-center gap-x-3 text-sm font-semibold text-foreground">
-                        {(lecture.youtubeViewCount && lecture.youtubeViewCount > 0) && (
-                            <div className="flex items-center gap-1.5">
-                                <Eye className="w-4 h-4" />
-                                <span>{formatViews(lecture.youtubeViewCount)}</span>
-                            </div>
-                        )}
-                        {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                            <span className="opacity-70">·</span>
-                        )}
-                        {lecture.duration > 0 && (
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4" />
-                                <span>{formatDuration(lecture.duration)}</span>
-                            </div>
-                        )}
-                    </div>
+                  <div className="inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
+                      {(lecture.youtubeViewCount && lecture.youtubeViewCount > 0) && (
+                          <div className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>{formatViews(lecture.youtubeViewCount)}</span>
+                          </div>
+                      )}
+                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                          <span className="opacity-70">·</span>
+                      )}
+                      {lecture.duration > 0 && (
+                          <div className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{formatDuration(lecture.duration)}</span>
+                          </div>
+                      )}
+                  </div>
                 </div>
                 <TooltipProvider delayDuration={500}>
                   <Tooltip>
