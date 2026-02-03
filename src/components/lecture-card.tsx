@@ -51,7 +51,6 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [startInPip, setStartInPip] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -135,7 +134,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     e.preventDefault();
     e.stopPropagation();
     if (videoId) {
-        setStartInPip(false);
         setIsModalOpen(true);
     } else {
         // Fallback for non-video play click
@@ -143,24 +141,8 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     }
   };
 
-  const handlePipClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (videoId) {
-        setStartInPip(true);
-        setIsModalOpen(true);
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'الفيديو غير متاح',
-            description: 'وضع الصورة داخل صورة متاح فقط لفيديوهات اليوتيوب.',
-        });
-    }
-  };
-  
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setStartInPip(false);
   };
 
   const handleMouseEnter = () => {
@@ -277,7 +259,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
                 <div className="mb-2">
-                  <div className="inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
+                   <div className="inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
                       {(lecture.youtubeViewCount && lecture.youtubeViewCount > 0) && (
                           <div className="flex items-center gap-1">
                               <Eye className="w-3.5 h-3.5" />
@@ -318,11 +300,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                             <Youtube className="w-5 h-5" />
                         </Button>
                     )}
-                    {videoId && (
-                        <Button onClick={handlePipClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                            <PictureInPicture className="w-5 h-5" />
-                        </Button>
-                    )}
                     {lecture.telegramUrl && (
                         <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
@@ -355,8 +332,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
           isOpen={isModalOpen}
           onClose={handleModalClose}
           videoId={videoId}
-          shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/lectures/${lecture.slug}`}
-          initialIsPip={startInPip}
         />
       )}
        {user && (
