@@ -172,21 +172,24 @@ export default function AdminLecturesPage() {
 
         const batch = writeBatch(firestore);
         let successfulUpdates = 0;
+        const errorMessages = new Set<string>();
 
         const updatePromises = lecturesToUpdate.map(async (lecture) => {
+            if (!lecture.youtubeUrl) return;
             try {
                 const response = await fetch('/api/youtube-import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
                 });
+                
+                const data = await response.json();
 
                 if (response.ok) {
-                    const data = await response.json();
                     if (data.videoInfo) {
                         const lectureRef = doc(firestore, 'lectures', lecture.id);
                         const updateData: Partial<Lecture> = {
-                            youtubeViewCount: data.videoInfo.viewCount || 0,
+                            youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
                             title: data.videoInfo.title || lecture.title,
                             description: data.videoInfo.description || lecture.description,
                             duration: data.videoInfo.durationInSeconds || lecture.duration,
@@ -194,9 +197,16 @@ export default function AdminLecturesPage() {
                         batch.update(lectureRef, updateData);
                         successfulUpdates++;
                     }
+                } else {
+                     if (data.message) {
+                        errorMessages.add(data.message);
+                    } else {
+                        errorMessages.add(`فشل الطلب للمحاضرة: ${lecture.title}`);
+                    }
                 }
             } catch (error) {
                 console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+                errorMessages.add("فشل الاتصال بالخادم.");
             }
         });
 
@@ -207,8 +217,16 @@ export default function AdminLecturesPage() {
                 await batch.commit();
                 toast({
                     title: "اكتمل التحديث!",
-                    description: `تم تحديث بيانات ${successfulUpdates} محاضرة من أصل ${lecturesToUpdate.length}.`,
+                    description: `تم تحديث بيانات ${successfulUpdates} محاضرة بنجاح.`,
                 });
+                if (errorMessages.size > 0) {
+                     toast({
+                        variant: "destructive",
+                        title: "اكتمل التحديث جزئياً",
+                        description: `فشل تحديث ${lecturesToUpdate.length - successfulUpdates} محاضرة. السبب: ${Array.from(errorMessages).join(' ')}`,
+                        duration: 10000,
+                    });
+                }
             } catch (commitError) {
                 console.error("Error committing batch update:", commitError);
                 toast({
@@ -218,10 +236,14 @@ export default function AdminLecturesPage() {
                 });
             }
         } else {
+            const description = errorMessages.size > 0 
+                ? `${Array.from(errorMessages).join(' ')}`
+                : "لم نتمكن من تحديث بيانات أي محاضرة.";
             toast({
                 variant: "destructive",
                 title: "فشل التحديث",
-                description: "لم نتمكن من تحديث بيانات أي محاضرة.",
+                description: description,
+                duration: 10000,
             });
         }
 
