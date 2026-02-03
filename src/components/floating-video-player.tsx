@@ -6,7 +6,7 @@ import { Grip, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { DndContext, useDraggable, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, useDraggable, type DragMoveEvent } from '@dnd-kit/core';
 
 // This is the actual draggable content of the player
 function PlayerContent() {
@@ -65,7 +65,7 @@ export function FloatingVideoPlayer() {
     const { isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragMove = (event: DragMoveEvent) => {
         setPosition(prev => ({
             x: prev.x + event.delta.x,
             y: prev.y + event.delta.y,
@@ -94,7 +94,7 @@ export function FloatingVideoPlayer() {
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
         >
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext onDragMove={handleDragMove}>
                 <PlayerContent />
             </DndContext>
             <Button
