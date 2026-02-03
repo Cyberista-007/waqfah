@@ -165,8 +165,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     return (lectureHistory.position / lectureHistory.duration) * 100;
   }, [lectureHistory]);
   
-  const displayDurationInSeconds = lecture.duration || 0;
-
   const hasChannel = lecture.channelName && lecture.channelSlug;
 
   return (
@@ -225,21 +223,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     <Share2 className="w-4 h-4 text-white" />
                 </button>
             </div>
-            
-            <div className="absolute top-2 left-2 flex gap-2">
-              {displayDurationInSeconds > 0 && (
-                <div className="text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatDuration(displayDurationInSeconds)}</span>
-                </div>
-              )}
-              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                <div className="text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                    <Eye className="w-4 h-4" />
-                    <span>{formatViews(lecture.youtubeViewCount)}</span>
-                </div>
-              )}
-            </div>
 
           {hasChannel ? (
             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
@@ -280,6 +263,23 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                <div className="flex items-center gap-x-3 text-xs text-muted-foreground mt-1">
+                    {lecture.duration > 0 && (
+                        <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDuration(lecture.duration)}</span>
+                        </div>
+                    )}
+                    {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                        <span className="text-muted-foreground/50">·</span>
+                    )}
+                    {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
+                        <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            <span>{formatViews(lecture.youtubeViewCount)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2">
                 <div className="flex items-center gap-1">
