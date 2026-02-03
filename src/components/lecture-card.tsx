@@ -214,22 +214,22 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
               </div>
             </div>
 
-            <div className="absolute top-2 left-2 flex items-center gap-2 text-white bg-black/50 px-2 py-1 rounded-full text-xs font-bold">
+            <div className="absolute top-2 left-2 flex items-center gap-2 text-white bg-black/60 px-3 py-1.5 rounded-full text-sm font-semibold">
               {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
                 <>
-                  {lecture.duration > 0 && (
-                      <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{formatDuration(lecture.duration)}</span>
+                  {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
+                      <div className="flex items-center gap-1.5">
+                          <span>{formatViews(lecture.youtubeViewCount)}</span>
+                          <Eye className="w-4 h-4" />
                       </div>
                   )}
                   {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                      <span>·</span>
+                      <span className="opacity-70">·</span>
                   )}
-                  {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                      <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{formatViews(lecture.youtubeViewCount)}</span>
+                  {lecture.duration > 0 && (
+                      <div className="flex items-center gap-1.5">
+                          <span>{formatDuration(lecture.duration)}</span>
+                          <Clock className="w-4 h-4" />
                       </div>
                   )}
                 </>
