@@ -30,6 +30,22 @@
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
     },
+    "Channel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Channel",
+      "type": "object",
+      "description": "Represents a YouTube Channel that provides lectures.",
+      "properties": {
+        "slug": { "type": "string", "description": "A URL-friendly identifier for the channel." },
+        "name": { "type": "string", "description": "The full name of the channel." },
+        "description": { "type": "string", "description": "A short description of the channel." },
+        "imageId": { "type": "string", "description": "An ID for a placeholder image for the channel." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the channel's image." },
+        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the channel's YouTube channel." },
+        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this channel." }
+      },
+      "required": ["slug", "name", "imageId", "youtubeUrl", "followerCount"]
+    },
     "Series": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Series",
@@ -57,6 +73,9 @@
         "description": { "type": "string" },
         "programName": { "type": "string" },
         "programSlug": { "type": "string" },
+        "channelId": { "type": "string" },
+        "channelName": { "type": "string" },
+        "channelSlug": { "type": "string" },
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
@@ -98,6 +117,7 @@
         "name": { "type": "string" },
         "photoURL": { "type": "string", "format": "uri" },
         "bio": { "type": "string" },
+        "points": { "type": "number", "minimum": 0 },
         "minutesListened": { "type": "number", "minimum": 0 },
         "lecturesCompleted": { "type": "number", "minimum": 0 },
         "seriesCompleted": { "type": "number", "minimum": 0 },
@@ -205,13 +225,28 @@
       "properties": {
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "lectureIds": { "type": "array", "items": { "type": "string" } },
         "seriesId": { "type": "string" },
         "startDate": { "type": "string", "format": "date-time" },
         "endDate": { "type": "string", "format": "date-time" },
-        "isActive": { "type": "boolean" }
+        "isActive": { "type": "boolean" },
+        "participantCount": { "type": "number", "minimum": 0 },
+        "rewardPoints": { "type": "number", "minimum": 0 }
       },
-      "required": ["title", "description", "lectureIds", "startDate", "endDate", "isActive"]
+      "required": ["title", "description", "seriesId", "startDate", "endDate", "isActive"]
+    },
+     "UserChallenge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserChallenge",
+      "description": "Tracks a user's participation and progress in a challenge.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "challengeId": { "type": "string" },
+        "status": { "type": "string", "enum": ["in-progress", "completed"] },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "challengeId", "status", "startedAt"]
     },
     "LectureClip": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -284,6 +319,10 @@
         "path": "/programs/{programId}",
         "definition": { "schema": { "$ref": "#/entities/Program" } }
       },
+       {
+        "path": "/channels/{channelId}",
+        "definition": { "schema": { "$ref": "#/entities/Channel" } }
+      },
       {
         "path": "/series/{seriesId}",
         "definition": { "schema": { "$ref": "#/entities/Series" } }
@@ -319,6 +358,10 @@
       {
         "path": "/users/{userId}/notes/{lectureId}",
         "definition": { "schema": { "$ref": "#/entities/LectureNote" } }
+      },
+      {
+        "path": "/users/{userId}/user_challenges/{challengeId}",
+        "definition": { "schema": { "$ref": "#/entities/UserChallenge" } }
       },
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",

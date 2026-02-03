@@ -22,6 +22,7 @@ import {
   ListVideo,
   Settings,
   Podcast,
+  Flame,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -75,6 +76,7 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
+  { href: "/challenges", label: "التحديات", icon: Flame },
   { href: "/schedule", label: "جدول الدروس", icon: Calendar },
   { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
   { href: "/donations", label: "الدعم", icon: Heart },

@@ -124,6 +124,7 @@ export type UserProfile = Serializable<{
     photoURL?: string;
     createdAt: Timestamp;
     bio?: string;
+    points?: number;
     minutesListened?: number;
     lecturesCompleted?: number;
     seriesCompleted?: number;
@@ -194,11 +195,24 @@ export type Challenge = Serializable<{
     id: string;
     title: string;
     description: string;
-    lectureIds: string[];
-    seriesId?: string;
+    seriesId: string;
     startDate: Timestamp;
     endDate: Timestamp;
     isActive: boolean;
+    participantCount: number;
+    rewardPoints: number;
+    series?: Series;
+}>;
+
+export type UserChallenge = Serializable<{
+    id: string; // This will be the challengeId
+    userId: string;
+    challengeId: string;
+    progress: number; // Number of lectures completed
+    total: number; // Total lectures in the challenge
+    status: 'in-progress' | 'completed';
+    startedAt: Timestamp;
+    completedAt?: Timestamp;
 }>;
 
 export type LectureClip = Serializable<{

@@ -93,7 +93,8 @@ service cloud.firestore {
     
     match /challenges/{challengeId} {
       allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount']);
     }
 
 
@@ -110,6 +111,10 @@ service cloud.firestore {
       allow list: if isAdmin();
       // No one can delete user profiles for now.
       allow delete: if false;
+
+       match /user_challenges/{challengeId} {
+        allow read, write, delete: if isOwner(userId);
+      }
     }
 
     match /users/{userId}/favorites/{lectureId} {
