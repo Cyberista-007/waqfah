@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
@@ -189,7 +188,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
 
       {isPlayerVisible && videoId ? (
         <Card className="sticky top-20 z-40 shadow-2xl bg-transparent">
-            <div className="overflow-auto rounded-t-lg bg-transparent" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
+            <div className="overflow-auto rounded-lg bg-transparent" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
               <div className="w-full h-full relative">
                 <YouTube
                   videoId={videoId}
@@ -204,18 +203,22 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                   onReady={onPlayerReady}
                   className="w-full h-full"
                 />
+                <Button 
+                    onClick={() => {
+                        if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                            videoPlayerRef.current.pauseVideo();
+                        }
+                        setIsPlayerVisible(false);
+                    }} 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/75"
+                >
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">إغلاق المشغل</span>
+                </Button>
               </div>
             </div>
-            <CardContent className="p-4 bg-card rounded-b-lg">
-                <Button onClick={() => {
-                    if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
-                        videoPlayerRef.current.pauseVideo();
-                    }
-                    setIsPlayerVisible(false);
-                }} variant="outline" className="w-full">
-                    إخفاء الفيديو والعودة للصوت
-                </Button>
-            </CardContent>
         </Card>
       ) : (
         <Card className="shadow-lg">
