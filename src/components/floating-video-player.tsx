@@ -5,8 +5,8 @@ import { useAudioPlayer } from './audio-player-provider';
 import { Grip, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
-import { DndContext, useDraggable, type DragMoveEvent } from '@dnd-kit/core';
+import { useEffect, useState, useRef } from 'react';
+import { DndContext, useDraggable, type DragMoveEvent, type DragStartEvent } from '@dnd-kit/core';
 
 // This is the actual draggable content of the player
 function PlayerContent() {
@@ -45,7 +45,7 @@ function PlayerContent() {
       >
           <Grip className="h-5 w-5" />
       </div>
-      {/* The video container takes up the remaining space. Removed h-full to prevent overflow. */}
+      {/* The video container takes up the remaining space. */}
       <div className="flex-grow w-full relative">
         <YouTube
             videoId={videoTrack.videoId}
@@ -64,12 +64,17 @@ function PlayerContent() {
 export function FloatingVideoPlayer() {
     const { isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
     const [position, setPosition] = useState({ x: 0, y: 0 });
+    const initialPositionOnDrag = useRef({ x: 0, y: 0 });
+
+    const handleDragStart = (event: DragStartEvent) => {
+        initialPositionOnDrag.current = position;
+    };
 
     const handleDragMove = (event: DragMoveEvent) => {
-        setPosition(prev => ({
-            x: prev.x + event.delta.x,
-            y: prev.y + event.delta.y,
-        }));
+        setPosition({
+            x: initialPositionOnDrag.current.x + event.delta.x,
+            y: initialPositionOnDrag.current.y + event.delta.y,
+        });
     };
     
      useEffect(() => {
@@ -94,7 +99,7 @@ export function FloatingVideoPlayer() {
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
         >
-            <DndContext onDragMove={handleDragMove}>
+            <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove}>
                 <PlayerContent />
             </DndContext>
             <Button
