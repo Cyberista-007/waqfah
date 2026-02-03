@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -13,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, Timestamp } from "firebase/firestore";
 import type { Challenge, Series } from "@/lib/types";
@@ -31,6 +30,8 @@ interface ChallengeFormProps {
     item?: Challenge | null;
     onFormClose: () => void;
 }
+
+const AUTOSAVE_KEY = 'autosave_challenge_form';
 
 export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
   const { toast } = useToast();
@@ -52,21 +53,66 @@ export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
       }
   }
 
+  // Convert all fields to controlled components
+  const [title, setTitle] = useState(item?.title || "");
+  const [description, setDescription] = useState(item?.description || "");
+  const [rewardPoints, setRewardPoints] = useState<number>(item?.rewardPoints || 0);
   const [startDate, setStartDate] = useState<Date | undefined>(toDate(item?.startDate));
   const [endDate, setEndDate] = useState<Date | undefined>(toDate(item?.endDate));
   const [isActive, setIsActive] = useState<boolean>(item?.isActive || false);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(item?.seriesId || "");
+
+  // Load from localStorage on mount for new challenges
+  useEffect(() => {
+    if (!isEditMode) {
+      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedDataJSON) {
+        try {
+          const savedData = JSON.parse(savedDataJSON);
+          setTitle(savedData.title || "");
+          setDescription(savedData.description || "");
+          setRewardPoints(savedData.rewardPoints || 0);
+          setSelectedSeriesId(savedData.selectedSeriesId || "");
+          setIsActive(savedData.isActive || false);
+          if (savedData.startDate) setStartDate(new Date(savedData.startDate));
+          if (savedData.endDate) setEndDate(new Date(savedData.endDate));
+        } catch (e) {
+          console.error("Failed to parse autosaved challenge data", e);
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode]);
+
+  // Save to localStorage on change for new challenges
+  useEffect(() => {
+    if (!isEditMode) {
+      const dataToSave = {
+        title,
+        description,
+        rewardPoints,
+        selectedSeriesId,
+        isActive,
+        startDate: startDate?.toISOString(),
+        endDate: endDate?.toISOString(),
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isEditMode, title, description, rewardPoints, selectedSeriesId, isActive, startDate, endDate]);
+
+  const handleClose = () => {
+      if (!isEditMode) {
+          localStorage.removeItem(AUTOSAVE_KEY);
+      }
+      onFormClose();
+  };
 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore) return;
     setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const rewardPoints = formData.get("rewardPoints") as string;
 
     if (!title || !description || !selectedSeriesId || !startDate || !endDate) {
         toast({
@@ -84,29 +130,34 @@ export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
         seriesId: selectedSeriesId,
         startDate: Timestamp.fromDate(startDate),
         endDate: Timestamp.fromDate(endDate),
-        rewardPoints: rewardPoints ? parseInt(rewardPoints, 10) : 0,
+        rewardPoints: Number(rewardPoints),
         isActive,
         participantCount: item?.participantCount || 0,
     };
 
-    
-    if (isEditMode && item) {
-      const itemRef = doc(firestore, 'challenges', item.id);
-      updateDocumentNonBlocking(itemRef, itemData);
-      toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث التحدي "${title}".`,
-      });
-    } else {
-      const itemsCollection = collection(firestore, 'challenges');
-      addDocumentNonBlocking(itemsCollection, itemData);
-      toast({
-          title: "تم الإنشاء بنجاح",
-          description: `تمت إضافة التحدي "${title}" الجديد.`,
-      });
+    try {
+        if (isEditMode && item) {
+          const itemRef = doc(firestore, 'challenges', item.id);
+          updateDocumentNonBlocking(itemRef, itemData);
+          toast({
+              title: "تم التحديث بنجاح",
+              description: `تم تحديث التحدي "${title}".`,
+          });
+        } else {
+          const itemsCollection = collection(firestore, 'challenges');
+          addDocumentNonBlocking(itemsCollection, itemData);
+          toast({
+              title: "تم الإنشاء بنجاح",
+              description: `تمت إضافة التحدي "${title}" الجديد.`,
+          });
+        }
+        handleClose(); // This now also clears storage
+    } catch(e) {
+        console.error("Error submitting challenge:", e);
+        toast({ variant: 'destructive', title: "حدث خطأ", description: "لم نتمكن من حفظ التحدي." });
+    } finally {
+        setIsSubmitting(false);
     }
-    onFormClose();
-    setIsSubmitting(false);
   };
   
   const isLoading = seriesLoading;
@@ -123,11 +174,11 @@ export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="title">عنوان التحدي</Label>
-            <Input id="title" name="title" defaultValue={item?.title} required disabled={isSubmitting} />
+            <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required disabled={isSubmitting} />
           </div>
            <div>
             <Label htmlFor="description">وصف التحدي</Label>
-            <Textarea id="description" name="description" defaultValue={item?.description} required disabled={isSubmitting} />
+            <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required disabled={isSubmitting} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +195,7 @@ export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
             </div>
             <div>
               <Label htmlFor="rewardPoints">نقاط المكافأة</Label>
-              <Input id="rewardPoints" name="rewardPoints" type="number" defaultValue={item?.rewardPoints || 0} disabled={isSubmitting} />
+              <Input id="rewardPoints" name="rewardPoints" type="number" value={rewardPoints} onChange={(e) => setRewardPoints(Number(e.target.value))} disabled={isSubmitting} />
             </div>
           </div>
 
@@ -195,7 +246,7 @@ export function ChallengeForm({ item, onFormClose }: ChallengeFormProps) {
                 {(isSubmitting || isLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء التحدي'}
             </Button>
-            <Button type="button" onClick={onFormClose} variant="outline">
+            <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
           </div>
