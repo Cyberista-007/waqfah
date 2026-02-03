@@ -35,7 +35,9 @@ function PlayerContent() {
   };
 
   return (
+    // The draggable node ref is attached here
     <div ref={setNodeRef} className="w-full h-full flex flex-col bg-black rounded-lg">
+      {/* The drag listeners are attached to this handle */}
       <div 
           {...listeners}
           {...attributes}
@@ -43,7 +45,8 @@ function PlayerContent() {
       >
           <Grip className="h-5 w-5" />
       </div>
-      <div className="flex-grow w-full h-full relative">
+      {/* The video container takes up the remaining space. Removed h-full to prevent overflow. */}
+      <div className="flex-grow w-full relative">
         <YouTube
             videoId={videoTrack.videoId}
             opts={opts}
@@ -85,7 +88,7 @@ export function FloatingVideoPlayer() {
                 transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
             }}
             className={cn(
-                "fixed top-20 right-8 z-50 overflow-hidden rounded-lg shadow-2xl resize-both",
+                "fixed top-20 right-8 z-50 rounded-lg shadow-2xl resize-both overflow-hidden",
                 "w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
                 "transition-opacity duration-300",
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -103,6 +106,8 @@ export function FloatingVideoPlayer() {
             >
                 <X className="h-5 w-5" />
             </Button>
+            {/* This transparent div sits on top of the bottom-right corner to allow the resize handle to be grabbed */}
+            <div className="absolute bottom-0 right-0 w-4 h-4 z-30" />
         </div>
     );
 }
