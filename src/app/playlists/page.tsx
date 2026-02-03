@@ -1,3 +1,4 @@
+
 'use client';
 import type { Playlist, UserProfile } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -38,7 +39,7 @@ function PublicPlaylists() {
     const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users');
     
     const playlistsWithUsers = useMemo(() => {
-        if (!publicPlaylists || !users) return [];
+        if (!publicPlaylists || !users) return null;
         const userMap = new Map(users.map(u => [u.id, u]));
         return publicPlaylists.map(p => ({
             ...p,
@@ -47,7 +48,7 @@ function PublicPlaylists() {
 
     }, [publicPlaylists, users]);
 
-    const isLoading = publicPlaylistsLoading || usersLoading;
+    const isLoading = publicPlaylistsLoading || usersLoading || playlistsWithUsers === null;
 
     if (isLoading) {
         return <PlaylistsSkeleton />;
@@ -55,7 +56,7 @@ function PublicPlaylists() {
 
     return (
         <>
-            {playlistsWithUsers.length > 0 ? (
+            {playlistsWithUsers && playlistsWithUsers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {playlistsWithUsers.map((playlist, index) => (
                         <Card 
@@ -68,23 +69,23 @@ function PublicPlaylists() {
                                     <Link href={`/playlists/${playlist.id}`} className="hover:text-primary transition-colors">{playlist.name}</Link>
                                 </CardTitle>
                                 {playlist.userProfile && (
-                                     <CardDescription className="flex items-center gap-2 pt-1">
+                                     <CardDescription className="flex items-center justify-end gap-2 pt-1">
+                                        <span>{playlist.userProfile.name}</span>
                                         <Avatar className="h-6 w-6">
                                             <AvatarImage src={playlist.userProfile.photoURL} alt={playlist.userProfile.name} />
                                             <AvatarFallback>{getInitials(playlist.userProfile.name)}</AvatarFallback>
                                         </Avatar>
-                                        <span>{playlist.userProfile.name}</span>
                                     </CardDescription>
                                 )}
                             </CardHeader>
                              <CardContent className='flex justify-between items-center'>
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <Play className="h-4 w-4"/>
-                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
-                                </div>
                                 <Button asChild size="sm" variant="outline">
                                     <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
                                 </Button>
+                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
+                                    <Play className="h-4 w-4"/>
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
@@ -123,7 +124,7 @@ function MyPlaylists() {
                              style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <CardHeader>
-                                 <div className='flex justify-start items-center gap-2'>
+                                 <div className='flex justify-end items-center gap-2'>
                                     <CardTitle className="font-headline text-xl">
                                         <Link href={`/playlists/${playlist.id}`} className="hover:text-primary transition-colors">{playlist.name}</Link>
                                     </CardTitle>
@@ -138,13 +139,13 @@ function MyPlaylists() {
                                 )}
                             </CardHeader>
                              <CardFooter className='flex justify-between items-center pt-4'>
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <Play className="h-4 w-4"/>
-                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
-                                </div>
                                 <Button asChild size="sm" variant="outline">
                                     <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
                                 </Button>
+                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
+                                    <Play className="h-4 w-4"/>
+                                </div>
                             </CardFooter>
                         </Card>
                     ))}
