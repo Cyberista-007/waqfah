@@ -1,4 +1,3 @@
-
 'use client';
 
 import YouTube, { YouTubeProps } from 'react-youtube';
@@ -46,7 +45,7 @@ export function FloatingVideoPlayer() {
   return (
     <div
       className={cn(
-        "fixed top-20 right-8 z-50 overflow-auto rounded-lg bg-black shadow-2xl resize-both",
+        "fixed top-20 right-8 z-50 overflow-auto rounded-lg bg-black shadow-2xl resize-both p-1",
         "w-[50vw] h-[50vh] min-h-[200px] min-w-[300px] max-w-full transition-transform duration-300",
         isPlayerVisible ? "translate-x-0" : "translate-x-[150%]"
       )}
