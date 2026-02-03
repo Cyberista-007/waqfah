@@ -3,40 +3,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { auth } = initializeAdminApp();
 
     const idToken = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!idToken) {
-      return NextResponse.json({ message: 'Unauthorized: No token provided.' }, { status: 401 });
+      return NextResponse.json({ message: 'Unauthorized: No token provided.' }, { status: 401, headers: corsHeaders });
     }
     
     const decodedToken = await auth.verifyIdToken(idToken);
     if (decodedToken.role !== 'admin') {
-      return NextResponse.json({ message: 'Forbidden: User is not an admin.' }, { status: 403 });
+      return NextResponse.json({ message: 'Forbidden: User is not an admin.' }, { status: 403, headers: corsHeaders });
     }
 
     const { action, targetUid, duration } = await req.json();
 
     if (!action || !targetUid) {
-        return NextResponse.json({ message: 'Bad Request: Missing action or targetUid.' }, { status: 400 });
+        return NextResponse.json({ message: 'Bad Request: Missing action or targetUid.' }, { status: 400, headers: corsHeaders });
     }
 
     switch (action) {
       case 'delete':
         await auth.deleteUser(targetUid);
-        return NextResponse.json({ message: 'تم حذف المستخدم بنجاح.' });
+        return NextResponse.json({ message: 'تم حذف المستخدم بنجاح.' }, { headers: corsHeaders });
 
       case 'ban_permanent':
         await auth.updateUser(targetUid, { disabled: true });
-        return NextResponse.json({ message: 'تم حظر المستخدم بشكل دائم.' });
+        return NextResponse.json({ message: 'تم حظر المستخدم بشكل دائم.' }, { headers: corsHeaders });
 
       case 'unban':
         // Enables the user and removes any temporary ban custom claim.
         await auth.updateUser(targetUid, { disabled: false });
         await auth.setCustomUserClaims(targetUid, { ban_expires: null });
-        return NextResponse.json({ message: 'تم إلغاء حظر المستخدم.' });
+        return NextResponse.json({ message: 'تم إلغاء حظر المستخدم.' }, { headers: corsHeaders });
 
       case 'ban_temporary':
         if (!duration) throw new Error('يجب تحديد المدة للحظر المؤقت');
@@ -58,16 +71,16 @@ export async function POST(req: NextRequest) {
         }
 
         await auth.setCustomUserClaims(targetUid, { ban_expires: expiry });
-        return NextResponse.json({ message: `تم حظر المستخدم لمدة ${durationText}.` });
+        return NextResponse.json({ message: `تم حظر المستخدم لمدة ${durationText}.` }, { headers: corsHeaders });
 
       default:
-        return NextResponse.json({ message: 'إجراء غير صالح' }, { status: 400 });
+        return NextResponse.json({ message: 'إجراء غير صالح' }, { status: 400, headers: corsHeaders });
     }
   } catch (error: any) {
     console.error('Error managing user:', error);
     const errorMessage = error.code === 'auth/user-not-found' 
       ? 'لم يتم العثور على المستخدم.' 
       : (error.message || 'خطأ داخلي في الخادم');
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+    return NextResponse.json({ message: errorMessage }, { status: 500, headers: corsHeaders });
   }
 }

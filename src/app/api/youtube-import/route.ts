@@ -10,6 +10,19 @@ const youtubeImportSchema = z.object({
   fetchVideoInfo: z.boolean().optional(),
 });
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
 function getPlaylistIdFromUrl(url: string): string | null {
     try {
         const parsedUrl = new URL(url);
@@ -118,7 +131,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.YOUTUBE_API_KEY;
 
     if (!apiKey) {
-        return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. يرجى إضافته إلى ملف .env." }, { status: 500 });
+        return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. يرجى إضافته إلى ملف .env." }, { status: 500, headers: corsHeaders });
     }
 
     try {
@@ -126,7 +139,7 @@ export async function POST(req: NextRequest) {
         const validation = youtubeImportSchema.safeParse(body);
 
         if (!validation.success) {
-            return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400 });
+            return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400, headers: corsHeaders });
         }
         
         const { url, fetchChannelInfo, fetchVideoInfo } = validation.data;
@@ -140,7 +153,7 @@ export async function POST(req: NextRequest) {
         if (fetchVideoInfo) {
             const videoId = getVideoIdFromUrl(url);
             if (!videoId) {
-                return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400 });
+                return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }
             const videoResponse = await youtube.videos.list({
                 part: ['snippet', 'contentDetails', 'statistics'],
@@ -153,16 +166,16 @@ export async function POST(req: NextRequest) {
                     description: videoData.snippet?.description,
                     durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0,
                     viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0,
-                }});
+                }}, { headers: corsHeaders });
             } else {
-                return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404 });
+                return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404, headers: corsHeaders });
             }
         }
 
         const channelId = await getChannelIdFromUrl(url, youtube);
         
         if (!channelId) {
-             return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400 });
+             return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400, headers: corsHeaders });
         }
         
         // If the only goal is to fetch channel info for the form
@@ -177,9 +190,9 @@ export async function POST(req: NextRequest) {
                     name: channelData.snippet.title,
                     description: channelData.snippet.description,
                     imageUrl: channelData.snippet.thumbnails?.high?.url || channelData.snippet.thumbnails?.default?.url,
-                }});
+                }}, { headers: corsHeaders });
             } else {
-                 return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404 });
+                 return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404, headers: corsHeaders });
             }
         }
 
@@ -249,16 +262,16 @@ export async function POST(req: NextRequest) {
             videoCount: item.contentDetails.itemCount,
         }));
         
-        return NextResponse.json({ videos, shorts, playlists: formattedPlaylists });
+        return NextResponse.json({ videos, shorts, playlists: formattedPlaylists }, { headers: corsHeaders });
 
     } catch (error: any) {
         console.error("YouTube API Error:", error);
         if (error.code === 403) {
-             return NextResponse.json({ message: "تم رفض الطلب من قبل يوتيوب. قد يكون مفتاح الـ API غير صحيح أو مقيد." }, { status: 403 });
+             return NextResponse.json({ message: "تم رفض الطلب من قبل يوتيوب. قد يكون مفتاح الـ API غير صحيح أو مقيد." }, { status: 403, headers: corsHeaders });
         }
         if (error.code === 404) {
-             return NextResponse.json({ message: "لم يتم العثور على القناة أو قائمة التشغيل." }, { status: 404 });
+             return NextResponse.json({ message: "لم يتم العثور على القناة أو قائمة التشغيل." }, { status: 404, headers: corsHeaders });
         }
-        return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500 });
+        return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500, headers: corsHeaders });
     }
 }
