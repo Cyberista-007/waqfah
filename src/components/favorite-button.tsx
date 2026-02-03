@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Heart } from "lucide-react";
@@ -7,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useUser } from "@/firebase";
 import { doc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useRouter } from "next/navigation";
 
 interface FavoriteButtonProps {
@@ -78,13 +77,11 @@ export function FavoriteButton({ lectureId, showLabel = false, className }: Favo
     }
 
     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    {buttonContent}
-                </TooltipTrigger>
-                <TooltipContent><p>{isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</p></TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {buttonContent}
+            </TooltipTrigger>
+            <TooltipContent><p>{isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</p></TooltipContent>
+        </Tooltip>
     );
 }

@@ -138,12 +138,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     } else if (!pipHint) {
         // Fallback for non-video play click
         handlePlay();
-    } else {
-        // Show a toast if PiP is clicked on a non-youtube lecture
-        toast({
-            variant: "destructive",
-            title: "التشغيل العائم متاح لفيديوهات يوتيوب فقط.",
-        });
     }
   };
 
@@ -180,7 +174,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
   const hasChannel = lecture.channelName && lecture.channelSlug;
 
   return (
-    <>
+    <TooltipProvider>
       <Card
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl",
@@ -229,13 +223,20 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
             </div>
             
             <div className="absolute top-2 right-2 flex items-center gap-1">
-                <button
-                    onClick={handleShare}
-                    className="h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                    aria-label="Share"
-                >
-                    <Share2 className="w-4 h-4 text-white" />
-                </button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            onClick={handleShare}
+                            className="h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                            aria-label="Share"
+                        >
+                            <Share2 className="w-4 h-4 text-white" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>مشاركة المحاضرة</p>
+                    </TooltipContent>
+                </Tooltip>
             </div>
 
           {hasChannel ? (
@@ -282,60 +283,106 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                 </div>
               )}
             </div>
-            <TooltipProvider delayDuration={500}>
-              <Tooltip>
+            <Tooltip>
                 <TooltipTrigger asChild>
-                  <h3 className="font-headline text-lg leading-tight">
+                  <h3 className="font-headline text-lg leading-tight text-right w-full">
                     <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
                   </h3>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{lecture.title}</p>
                 </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            </Tooltip>
           </div>
           <div className="flex justify-between items-center mt-auto pt-2">
             <div className="flex items-center gap-1">
-              <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                <Headphones className="w-5 h-5" />
-              </Button>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                          <Headphones className="w-5 h-5" />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>استماع صوتي</p>
+                  </TooltipContent>
+              </Tooltip>
               {videoId && (
                 <>
-                  <Button onClick={() => handleOpenVideo(false)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
-                    <Youtube className="w-5 h-5" />
-                  </Button>
-                  <Button onClick={() => handleOpenVideo(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                    <PictureInPicture className="w-5 h-5" />
-                  </Button>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button onClick={() => handleOpenVideo(false)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
+                              <Youtube className="w-5 h-5" />
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>مشاهدة على يوتيوب</p>
+                      </TooltipContent>
+                  </Tooltip>
+                   <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button onClick={() => handleOpenVideo(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                                <PictureInPicture className="w-5 h-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>تشغيل عائم (صورة داخل صورة)</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </>
               )}
               {lecture.telegramUrl && (
-                <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
-                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
-                  </Button>
-                </a>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
+                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
+                        </Button>
+                        </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>متابعة على تيليجرام</p>
+                    </TooltipContent>
+                </Tooltip>
               )}
-              <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                <Download className="w-5 h-5" />
-              </Button>
+               <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                            <Download className="w-5 h-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>تحميل</p>
+                    </TooltipContent>
+                </Tooltip>
             </div>
                 
                 <div className="flex items-center gap-1">
-                    <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                        <ListPlus className="w-5 h-5" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                                <ListPlus className="w-5 h-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>إضافة إلى قائمة</p>
+                        </TooltipContent>
+                    </Tooltip>
                     <FavoriteButton lectureId={lecture.id} className="h-9 w-9" />
                     {onCollapse && (
-                        <Button onClick={onCollapse} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                            <Minimize2 className="h-5 h-5" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button onClick={onCollapse} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                                    <Minimize2 className="h-5 h-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>تصغير</p>
+                            </TooltipContent>
+                        </Tooltip>
                     )}
                 </div>
             </div>
         </div>
-
       </Card>
       {videoId && (
         <YoutubePlayerModal
@@ -353,7 +400,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
             userPlaylists={playlists || []}
         />
       )}
-    </>
+    </TooltipProvider>
   )
 }
 export const LectureCard = memo(LectureCardComponent)
