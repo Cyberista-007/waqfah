@@ -7,10 +7,14 @@ import { ListMusic, Play, Loader2, Lock, Globe } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useCollection, useUser } from '@/firebase';
-import { useMemo } from 'react';
+import { useCollection, useUser, useFirestore } from '@/firebase';
+import { useMemo, useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
+// Define WithId type locally as it's not exported from the barrel file
+type WithId<T> = T & { id: string };
 
 function PlaylistsSkeleton() {
     return (
@@ -35,11 +39,55 @@ function PlaylistsSkeleton() {
 }
 
 function PublicPlaylists() {
+    const firestore = useFirestore();
     const { data: publicPlaylists, isLoading: publicPlaylistsLoading } = useCollection<Playlist>('playlists', { where: ['isPublic', '==', true], orderBy: ['createdAt', 'desc'], limit: 30 });
-    const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users');
+    
+    const userIds = useMemo(() => {
+        if (!publicPlaylists) return [];
+        return [...new Set(publicPlaylists.map(p => p.userId).filter(Boolean))];
+    }, [publicPlaylists]);
+
+    const [users, setUsers] = useState<WithId<UserProfile>[]>([]);
+    const [usersLoading, setUsersLoading] = useState(true);
+    const userIdsJson = JSON.stringify(userIds);
+
+    useEffect(() => {
+        if (!firestore || userIds.length === 0) {
+            setUsers([]);
+            setUsersLoading(false);
+            return;
+        }
+
+        const fetchUsers = async () => {
+            setUsersLoading(true);
+            const usersData: WithId<UserProfile>[] = [];
+            const chunks: string[][] = [];
+            for (let i = 0; i < userIds.length; i += 30) {
+                chunks.push(userIds.slice(i, i + 30));
+            }
+            
+            try {
+                for (const chunk of chunks) {
+                    if (chunk.length === 0) continue;
+                    const usersQuery = query(collection(firestore, 'users'), where('__name__', 'in', chunk));
+                    const usersSnap = await getDocs(usersQuery);
+                    usersData.push(...usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithId<UserProfile>)));
+                }
+                setUsers(usersData);
+            } catch (error) {
+                console.error("Error fetching user profiles for playlists:", error);
+            } finally {
+                setUsersLoading(false);
+            }
+        };
+
+        fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [firestore, userIdsJson]);
     
     const playlistsWithUsers = useMemo(() => {
-        if (!publicPlaylists || !users) return null;
+        if (!publicPlaylists || !users) return [];
+        
         const userMap = new Map(users.map(u => [u.id, u]));
         return publicPlaylists.map(p => ({
             ...p,
@@ -48,7 +96,7 @@ function PublicPlaylists() {
 
     }, [publicPlaylists, users]);
 
-    const isLoading = publicPlaylistsLoading || usersLoading || playlistsWithUsers === null;
+    const isLoading = publicPlaylistsLoading || usersLoading;
 
     if (isLoading) {
         return <PlaylistsSkeleton />;
@@ -78,7 +126,7 @@ function PublicPlaylists() {
                                     </CardDescription>
                                 )}
                             </CardHeader>
-                             <CardContent className='flex justify-between items-center'>
+                            <CardFooter className='flex justify-between items-center pt-4'>
                                 <Button asChild size="sm" variant="outline">
                                     <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
                                 </Button>
@@ -86,7 +134,7 @@ function PublicPlaylists() {
                                     <span>{playlist.lectureIds?.length || 0} محاضرة</span>
                                     <Play className="h-4 w-4"/>
                                 </div>
-                            </CardContent>
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>

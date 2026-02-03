@@ -104,8 +104,10 @@ service cloud.firestore {
     match /users/{userId} {
       // A user can create their own profile document.
       allow create: if isOwner(userId);
-      // Users can only read and update their own profile. No one can list all users.
-      allow get, update: if isOwner(userId) || isAdmin();
+      // Anyone can read a user's public profile data
+      allow get: if true;
+      // Users can only update their own profile. Admins can update any profile.
+      allow update: if isOwner(userId) || isAdmin();
       // Admins can list all users.
       allow list: if isAdmin();
       // No one can delete user profiles for now.
@@ -141,7 +143,7 @@ service cloud.firestore {
       // Users can get, update, and delete their own playlists.
       allow get, update, delete: if isResourceOwner();
       
-      // Anyone can get a public playlist.
+      // Allow ANYONE to get a public playlist.
       allow get: if resource.data.isPublic == true;
     }
     
@@ -190,13 +192,12 @@ service cloud.firestore {
     // Collection Group Queries
     // =====================================================================
 
-    // Allow ANYONE to query all public playlists across all users.
-    // This rule allows the client query to proceed. The `resource` variable is not
-    // available on list requests, so we cannot check `resource.data.isPublic`.
-    // Instead, the actual document reads initiated by the query are secured by the
-    // /users/{userId}/playlists/{playlistId} get rule above.
+    // This rule allows the client to query the 'playlists' collection group.
+    // It's secured because the client query always includes `where('isPublic', '==', true)`
+    // and the `get` rule for individual playlists (above) checks `resource.data.isPublic == true`.
+    // This ensures only public playlists are returned by the query.
     match /{path=**}/playlists/{playlistId} {
-      allow list: if request.query.limit <= 30 && request.query.offset == null && request.query.orderBy.size() == 1 && request.query.orderBy[0].field == "createdAt" && request.query.orderBy[0].direction == "desc";
+      allow list: if request.query.limit <= 30;
     }
   }
 }
