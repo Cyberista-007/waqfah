@@ -60,7 +60,7 @@ function PublicPlaylists() {
                     {playlistsWithUsers.map((playlist, index) => (
                         <Card 
                             key={playlist.id} 
-                            className="transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
+                            className="text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
                              style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <CardHeader>
@@ -78,13 +78,13 @@ function PublicPlaylists() {
                                 )}
                             </CardHeader>
                              <CardContent className='flex justify-between items-center'>
+                                <Button asChild size="sm" variant="outline">
+                                    <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
+                                </Button>
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <Play className="h-4 w-4"/>
                                     <span>{playlist.lectureIds?.length || 0} محاضرة</span>
                                 </div>
-                                <Button asChild size="sm" variant="outline">
-                                    <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
-                                </Button>
                             </CardContent>
                         </Card>
                     ))}
@@ -119,7 +119,7 @@ function MyPlaylists() {
                     {myPlaylists.map((playlist, index) => (
                         <Card 
                             key={playlist.id} 
-                            className="transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
+                            className="text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
                              style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <CardHeader>
@@ -138,13 +138,13 @@ function MyPlaylists() {
                                 )}
                             </CardHeader>
                              <CardFooter className='flex justify-between items-center pt-4'>
+                                <Button asChild size="sm" variant="outline">
+                                    <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
+                                </Button>
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <Play className="h-4 w-4"/>
                                     <span>{playlist.lectureIds?.length || 0} محاضرة</span>
                                 </div>
-                                <Button asChild size="sm" variant="outline">
-                                    <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
-                                </Button>
                             </CardFooter>
                         </Card>
                     ))}
