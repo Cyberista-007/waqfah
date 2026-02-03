@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -188,8 +187,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
       {isPlayerVisible && videoId ? (
-        <Card className="sticky top-20 z-40 shadow-2xl">
-            <div className="relative overflow-auto rounded-t-lg bg-black" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
+        <Card className="sticky top-20 z-40 shadow-2xl bg-black">
+            <div className="overflow-auto rounded-t-lg bg-black" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
               <YouTube
                 videoId={videoId}
                 opts={{
@@ -201,7 +200,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                   },
                 }}
                 onReady={onPlayerReady}
-                className="w-full h-full absolute top-0 left-0"
+                className="w-full h-full"
               />
             </div>
             <CardContent className="p-4">
