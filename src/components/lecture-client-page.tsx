@@ -189,7 +189,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
 
       {isPlayerVisible && videoId ? (
         <Card className="sticky top-20 z-40 shadow-2xl">
-            <div className="relative overflow-auto rounded-t-lg" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
+            <div className="relative overflow-auto rounded-t-lg bg-black" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
               <YouTube
                 videoId={videoId}
                 opts={{
