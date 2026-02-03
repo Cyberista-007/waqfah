@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
@@ -189,7 +188,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
 
       {isPlayerVisible && videoId ? (
         <Card>
-            <div className="relative aspect-video">
+            <div className="relative overflow-auto rounded-t-lg" style={{ resize: 'vertical', height: '60vh', minHeight: '300px', maxHeight: '90vh' }}>
               <YouTube
                 videoId={videoId}
                 opts={{
@@ -201,8 +200,11 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                   },
                 }}
                 onReady={onPlayerReady}
-                className="w-full h-full absolute top-0 left-0 rounded-t-lg overflow-hidden"
+                className="w-full h-full absolute top-0 left-0"
               />
+               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-ns-resize pointer-events-none text-white/50 bg-black/30 rounded-full p-1">
+                    <ChevronsUpDown className="w-5 h-5" />
+                </div>
             </div>
             <CardContent className="p-4">
                 <Button onClick={() => {
@@ -376,5 +378,3 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     </>
   );
 }
-
-    
