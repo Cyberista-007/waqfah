@@ -252,26 +252,26 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
-                 <div className="flex items-center gap-x-3 text-sm font-semibold text-foreground mb-2">
-                  {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
-                    <>
-                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                          <div className="flex items-center gap-1">
-                              <Eye className="w-4 h-4" />
-                              <span>{formatViews(lecture.youtubeViewCount)}</span>
-                          </div>
-                      )}
-                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                          <span className="opacity-70">·</span>
-                      )}
-                      {lecture.duration > 0 && (
-                          <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{formatDuration(lecture.duration)}</span>
-                          </div>
-                      )}
-                    </>
-                  )}
+                <div className="mb-2">
+                    {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
+                        <div className="inline-flex items-center gap-x-3 text-xs font-semibold text-white bg-black/70 rounded-full px-3 py-1">
+                            {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                    <Eye className="w-4 h-4" />
+                                    <span>{formatViews(lecture.youtubeViewCount)}</span>
+                                </div>
+                            )}
+                            {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                                <span className="opacity-70">·</span>
+                            )}
+                            {lecture.duration > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{formatDuration(lecture.duration)}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
                 <TooltipProvider delayDuration={500}>
                   <Tooltip>
