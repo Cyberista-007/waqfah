@@ -21,8 +21,8 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture, Series } from "@/lib/types";
 import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, runTransaction, increment, writeBatch, getDocs, collection } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
+import { doc, runTransaction, increment, writeBatch } from "firebase/firestore";
+import { Loader2, Trash2, Edit, PlusCircle, Wand2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -32,6 +32,7 @@ export default function AdminLecturesPage() {
     const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
     const [selectedLectures, setSelectedLectures] = useState<string[]>([]);
     const [isBatchConfirmOpen, setIsBatchConfirmOpen] = useState(false);
+    const [isUpdatingAll, setIsUpdatingAll] = useState(false);
 
     const { data: allLectures, isLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
     const { data: allSeries } = useCollection<Series>('series');
@@ -150,6 +151,83 @@ export default function AdminLecturesPage() {
         }
     };
 
+    const handleUpdateAllMetadata = async () => {
+        if (!firestore || !allLectures) return;
+        
+        const lecturesToUpdate = allLectures.filter(l => l.youtubeUrl);
+
+        if (lecturesToUpdate.length === 0) {
+            toast({
+                title: "لا يوجد ما يمكن تحديثه",
+                description: "لم يتم العثور على محاضرات مرتبطة بيوتيوب لتحديث بياناتها.",
+            });
+            return;
+        }
+
+        setIsUpdatingAll(true);
+        toast({
+            title: "بدء تحديث البيانات...",
+            description: `جاري تحديث بيانات ${lecturesToUpdate.length} محاضرة. قد تستغرق هذه العملية بعض الوقت.`,
+        });
+
+        const batch = writeBatch(firestore);
+        let successfulUpdates = 0;
+
+        const updatePromises = lecturesToUpdate.map(async (lecture) => {
+            try {
+                const response = await fetch('/api/youtube-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.videoInfo) {
+                        const lectureRef = doc(firestore, 'lectures', lecture.id);
+                        const updateData: Partial<Lecture> = {
+                            youtubeViewCount: data.videoInfo.viewCount || 0,
+                            title: data.videoInfo.title || lecture.title,
+                            description: data.videoInfo.description || lecture.description,
+                            duration: data.videoInfo.durationInSeconds || lecture.duration,
+                        };
+                        batch.update(lectureRef, updateData);
+                        successfulUpdates++;
+                    }
+                }
+            } catch (error) {
+                console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+            }
+        });
+
+        await Promise.all(updatePromises);
+        
+        if (successfulUpdates > 0) {
+            try {
+                await batch.commit();
+                toast({
+                    title: "اكتمل التحديث!",
+                    description: `تم تحديث بيانات ${successfulUpdates} محاضرة من أصل ${lecturesToUpdate.length}.`,
+                });
+            } catch (commitError) {
+                console.error("Error committing batch update:", commitError);
+                toast({
+                    variant: "destructive",
+                    title: "فشل حفظ التحديثات",
+                    description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
+                });
+            }
+        } else {
+            toast({
+                variant: "destructive",
+                title: "فشل التحديث",
+                description: "لم نتمكن من تحديث بيانات أي محاضرة.",
+            });
+        }
+
+        setIsUpdatingAll(false);
+    };
+
     return (
         <>
         <Card>
@@ -167,6 +245,10 @@ export default function AdminLecturesPage() {
                         حذف المحدد ({selectedLectures.length})
                     </Button>
                 )}
+                <Button variant="outline" onClick={handleUpdateAllMetadata} disabled={isUpdatingAll || isLoading}>
+                    {isUpdatingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                    تحديث كل البيانات
+                </Button>
                 <Button asChild>
                 <Link href="/admin/lectures/new">
                     <PlusCircle className="mr-2 h-4 w-4" />
