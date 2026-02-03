@@ -1,12 +1,12 @@
 "use client"
 
-import type { Lecture } from "@/lib/types";
+import type { Lecture, ListenHistoryItem } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Download, Play, Share2, Maximize2, Youtube, Clock } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
-import { useFirestore, useUser } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
@@ -50,22 +50,21 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
     const { toast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    
+    const historyDocRef = useMemoFirebase(
+        () => (user && firestore ? doc(firestore, 'users', user.uid, 'listenHistory', lecture.id) : null),
+        [user, firestore, lecture.id]
+    );
+    const { data: lectureHistory } = useDoc<ListenHistoryItem>(historyDocRef);
 
-    const handlePlay = async () => {
+    const handlePlay = () => {
       let startTime = 0;
-      if (user && firestore) {
-        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', lecture.id);
-        const historySnap = await getDoc(historyRef);
-        if (historySnap.exists()) {
-          const data = historySnap.data();
-          if (data.position && data.duration && (data.duration - data.position) > 10 && data.position > 5) {
-            startTime = data.position;
-             toast({
-                title: "تكملة الاستماع",
-                description: `تم استئناف المحاضرة من حيث توقفت.`,
-            });
-          }
-        }
+      if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
+        startTime = lectureHistory.position;
+        toast({
+            title: "تكملة الاستماع",
+            description: `تم استئناف المحاضرة من حيث توقفت.`,
+        });
       }
 
       playTrack({ 

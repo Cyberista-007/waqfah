@@ -74,7 +74,20 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
     : placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/400/225`;
 
+  const lectureHistory = useMemo(() => 
+    listenHistory?.find(item => item.lectureId === lecture.id),
+    [listenHistory, lecture.id]
+  );
+  
   const handlePlay = () => {
+    let startTime = 0;
+    if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
+        startTime = lectureHistory.position;
+        toast({
+            title: "تكملة الاستماع",
+            description: `تم استئناف المحاضرة من حيث توقفت.`,
+        });
+    }
     playTrack({
       audioSrc: lecture.audioSrc,
       title: lecture.title,
@@ -85,7 +98,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
       imageId: lecture.imageId,
       slug: lecture.slug,
       programName: lecture.programName,
-    });
+    }, startTime);
   };
   
   const handleShare = async (e: React.MouseEvent) => {
@@ -160,11 +173,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
       }
       setIsHovering(false);
   };
-
-  const lectureHistory = useMemo(() => 
-    listenHistory?.find(item => item.lectureId === lecture.id),
-    [listenHistory, lecture.id]
-  );
   
   const progress = useMemo(() => {
     if (!lectureHistory || !lectureHistory.duration) return 0;

@@ -7,9 +7,9 @@ import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2,
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
-import type { Lecture, LectureClip } from '@/lib/types';
+import type { Lecture, LectureClip, ListenHistoryItem } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { YoutubePlayerModal } from '@/components/youtube-player-modal';
@@ -55,6 +55,12 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
 
+  const historyDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid, 'listenHistory', lecture.id) : null),
+    [user, firestore, lecture.id]
+  );
+  const { data: lectureHistory } = useDoc<ListenHistoryItem>(historyDocRef);
+
 
   useEffect(() => {
     // Set the share URL on the client side
@@ -98,21 +104,14 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   
   const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
 
-  const handlePlay = async () => {
+  const handlePlay = () => {
     let startTime = 0;
-    if (user && firestore) {
-        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', lecture.id);
-        const historySnap = await getDoc(historyRef);
-        if (historySnap.exists()) {
-            const data = historySnap.data();
-            if (data.position && data.duration && (data.duration - data.position) > 10 && data.position > 5) {
-                startTime = data.position;
-                toast({
-                    title: "تكملة الاستماع",
-                    description: `تم استئناف المحاضرة من حيث توقفت.`,
-                });
-            }
-        }
+    if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
+        startTime = lectureHistory.position;
+        toast({
+            title: "تكملة الاستماع",
+            description: `تم استئناف المحاضرة من حيث توقفت.`,
+        });
     }
     playTrack({
       id: lecture.id,
