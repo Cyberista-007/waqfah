@@ -1,5 +1,5 @@
 'use client';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useMemo, Suspense } from "react";
 import { Loader2, SearchIcon, Podcast, Book as BookIcon } from "lucide-react";
 import { LectureCard } from "@/components/lecture-card";
@@ -8,10 +8,20 @@ import { ProgramCard } from "@/components/program-card";
 import { BookCard } from "@/components/book-card";
 import { useCollection } from "@/firebase";
 import { Lecture, Series, Program, Book } from "@/lib/types";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function SearchPageComponent() {
+    const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
+
     const searchTerm = searchParams?.get("q") || "";
+    const languageFilter = searchParams?.get('lang') || 'all';
+    const durationFilter = searchParams?.get('duration') || 'any';
+    const transcriptSearch = searchParams?.get('transcript') === 'true';
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -20,27 +30,84 @@ function SearchPageComponent() {
 
     const isLoading = lecturesLoading || seriesLoading || programsLoading || booksLoading;
 
+    const handleFilterChange = (type: 'lang' | 'duration' | 'transcript', value: string | boolean) => {
+        const current = new URLSearchParams(Array.from(searchParams.entries()));
+
+        if (type === 'transcript') {
+            if (value) {
+                current.set(type, 'true');
+            } else {
+                current.delete(type);
+            }
+        } else if (value === 'all' || value === 'any' || !value) {
+            current.delete(type);
+        } else {
+            current.set(type, value as string);
+        }
+
+        const search = current.toString();
+        const query = search ? `?${search}` : "";
+
+        // Using router.replace to avoid polluting browser history with every filter change
+        router.replace(`${pathname}${query}`, { scroll: false });
+    };
+
     const { lectures, series, programs, books } = useMemo(() => {
         if (!searchTerm) {
             return { lectures: [], series: [], programs: [], books: [] };
         }
         
         const searchTermLower = searchTerm.toLowerCase();
-        const filteredLectures = (allLectures || []).filter(l => 
-            (l.title || '').toLowerCase().includes(searchTermLower) || 
-            (l.description || '').toLowerCase().includes(searchTermLower) ||
-            (l.programName || '').toLowerCase().includes(searchTermLower) ||
-            (l.seriesTitle || '').toLowerCase().includes(searchTermLower)
-        );
-        const filteredSeries = (allSeries || []).filter(s => 
+
+        // Lectures
+        let filteredLectures = (allLectures || []).filter(l => {
+            const titleMatch = (l.title || '').toLowerCase().includes(searchTermLower);
+            const descMatch = (l.description || '').toLowerCase().includes(searchTermLower);
+            const programMatch = (l.programName || '').toLowerCase().includes(searchTermLower);
+            const seriesMatch = (l.seriesTitle || '').toLowerCase().includes(searchTermLower);
+
+            let transcriptMatch = false;
+            if (transcriptSearch && Array.isArray(l.transcript)) {
+                transcriptMatch = l.transcript.some(t => (t.text || '').toLowerCase().includes(searchTermLower));
+            }
+            return titleMatch || descMatch || programMatch || seriesMatch || transcriptMatch;
+        });
+
+        if (languageFilter !== 'all') {
+            filteredLectures = filteredLectures.filter(l => l.language === languageFilter);
+        }
+
+        if (durationFilter !== 'any') {
+            switch(durationFilter) {
+                case 'under30':
+                    filteredLectures = filteredLectures.filter(l => l.duration < 1800);
+                    break;
+                case '30to60':
+                    filteredLectures = filteredLectures.filter(l => l.duration >= 1800 && l.duration <= 3600);
+                    break;
+                case 'over60':
+                    filteredLectures = filteredLectures.filter(l => l.duration > 3600);
+                    break;
+            }
+        }
+
+        // Series
+        let filteredSeries = (allSeries || []).filter(s => 
             (s.title || '').toLowerCase().includes(searchTermLower) ||
             (s.description || '').toLowerCase().includes(searchTermLower) ||
             (s.programName || '').toLowerCase().includes(searchTermLower)
         );
+        if (languageFilter !== 'all') {
+            filteredSeries = filteredSeries.filter(s => s.language === languageFilter);
+        }
+        
+        // Programs
         const filteredPrograms = (allPrograms || []).filter(p => 
             (p.name || '').toLowerCase().includes(searchTermLower) ||
             (p.bio || '').toLowerCase().includes(searchTermLower)
         );
+        
+        // Books
         const filteredBooks = (allBooks || []).filter(b => 
             (b.title || '').toLowerCase().includes(searchTermLower)
         );
@@ -51,7 +118,7 @@ function SearchPageComponent() {
             programs: filteredPrograms, 
             books: filteredBooks 
         };
-    }, [searchTerm, allLectures, allSeries, allPrograms, allBooks]);
+    }, [searchTerm, allLectures, allSeries, allPrograms, allBooks, languageFilter, durationFilter, transcriptSearch]);
 
     const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || books.length > 0;
 
@@ -61,6 +128,48 @@ function SearchPageComponent() {
                 <SearchIcon />
                 نتائج البحث عن: <span className="text-primary">"{searchTerm}"</span>
             </h1>
+
+            <Card className="mb-8 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <Label htmlFor="lang-filter">اللغة</Label>
+                        <Select onValueChange={(value) => handleFilterChange("lang", value)} defaultValue={languageFilter}>
+                        <SelectTrigger id="lang-filter">
+                            <SelectValue placeholder="اختر اللغة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">الكل</SelectItem>
+                            <SelectItem value="ar">العربية</SelectItem>
+                            <SelectItem value="en">الإنجليزية</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="duration-filter">مدة المحاضرة</Label>
+                        <Select onValueChange={(value) => handleFilterChange("duration", value)} defaultValue={durationFilter}>
+                        <SelectTrigger id="duration-filter">
+                            <SelectValue placeholder="اختر المدة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="any">أي مدة</SelectItem>
+                            <SelectItem value="under30">أقل من 30 دقيقة</SelectItem>
+                            <SelectItem value="30to60">30 - 60 دقيقة</SelectItem>
+                            <SelectItem value="over60">أكثر من 60 دقيقة</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse pt-4">
+                        <Checkbox 
+                            id="transcript-search" 
+                            checked={transcriptSearch}
+                            onCheckedChange={(checked) => handleFilterChange('transcript', !!checked)}
+                        />
+                        <Label htmlFor="transcript-search" className="cursor-pointer">
+                            بحث في التفريغ النصي
+                        </Label>
+                    </div>
+                </div>
+            </Card>
 
             {isLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="w-16 h-16 animate-spin" /></div>
