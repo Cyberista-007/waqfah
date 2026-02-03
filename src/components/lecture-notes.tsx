@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,7 +19,7 @@ interface LectureNotesProps {
 export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { audioRef, isPlaying } = useAudioPlayer();
+  const { audioRef, isPlaying, videoPlayerRef } = useAudioPlayer();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const noteDocRef = useMemoFirebase(
@@ -82,14 +81,31 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
   };
   
   const handleInsertTimestamp = () => {
-    if (!audioRef.current || !textareaRef.current) return;
+    if (!textareaRef.current) return;
 
-    const currentTime = audioRef.current.currentTime;
-    if (currentTime === 0 && !isPlaying) {
+    let currentTime: number | undefined;
+
+    // Check video player first, as it's the foreground activity
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+        const playerState = videoPlayerRef.current.getPlayerState();
+        // States: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
+        if (playerState === 1 || playerState === 2 || playerState === 3) {
+            currentTime = videoPlayerRef.current.getCurrentTime();
+        }
+    }
+
+    // Fallback to audio player if video isn't active
+    if (currentTime === undefined && audioRef.current) {
+        if (isPlaying || audioRef.current.currentTime > 0) {
+            currentTime = audioRef.current.currentTime;
+        }
+    }
+    
+    if (currentTime === undefined) {
         toast({
             variant: "default",
             title: "يرجى تشغيل المحاضرة أولاً",
-            description: "يجب تشغيل المحاضرة لتتمكن من إضافة طابع زمني دقيق.",
+            description: "يجب تشغيل المحاضرة (صوت أو فيديو) لتتمكن من إضافة طابع زمني.",
         });
         return;
     }
@@ -102,7 +118,6 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     const newContent = content.substring(0, start) + timestamp + content.substring(end);
     setContent(newContent);
     
-    // This is a bit tricky, we need to manually trigger save and update cursor
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }

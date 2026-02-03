@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import React from 'react';
+import { useAudioPlayer } from './audio-player-provider';
 
 interface YoutubePlayerModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ interface YoutubePlayerModalProps {
 }
 
 export function YoutubePlayerModal({ isOpen, onClose, videoId, showPipHint = false }: YoutubePlayerModalProps) {
-  const playerRef = useRef<any>(null);
+  const { videoPlayerRef } = useAudioPlayer();
   const [isHintVisible, setIsHintVisible] = React.useState(false);
 
   useEffect(() => {
@@ -31,16 +32,23 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, showPipHint = fal
     }
   }, [isOpen, showPipHint]);
 
-  // Reset hint when modal is closed
+  // Reset hint when modal is closed, and clear the video player ref
   useEffect(() => {
     if (!isOpen) {
       setIsHintVisible(false);
+      if (videoPlayerRef.current) {
+          // Check if player is playing and pause it.
+          if (typeof videoPlayerRef.current.getPlayerState === 'function' && videoPlayerRef.current.getPlayerState() === 1) {
+              videoPlayerRef.current.pauseVideo();
+          }
+      }
+      videoPlayerRef.current = null;
     }
-  }, [isOpen]);
+  }, [isOpen, videoPlayerRef]);
 
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-    playerRef.current = event.target;
+    videoPlayerRef.current = event.target;
   };
   
   const opts: YouTubeProps['opts'] = {

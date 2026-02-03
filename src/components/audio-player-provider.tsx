@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Lecture } from "@/lib/types";
+import type { YouTubePlayer } from "react-youtube";
 
 export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
 
@@ -16,6 +17,7 @@ type AudioPlayerContextType = {
   pauseTrack: () => void;
   closePlayer: () => void;
   togglePlayPause: () => void;
+  videoPlayerRef: React.RefObject<YouTubePlayer | null>;
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [clipEndTime, setClipEndTime] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const videoPlayerRef = useRef<YouTubePlayer | null>(null);
 
   const pauseTrack = useCallback(() => {
     setIsPlaying(false);
@@ -92,7 +95,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AudioPlayerContext.Provider value={{ track, isPlaying, audioRef, playTrack, pauseTrack, closePlayer, togglePlayPause, clipEndTime }}>
+    <AudioPlayerContext.Provider value={{ track, isPlaying, audioRef, playTrack, pauseTrack, closePlayer, togglePlayPause, clipEndTime, videoPlayerRef }}>
       {children}
     </AudioPlayerContext.Provider>
   );
