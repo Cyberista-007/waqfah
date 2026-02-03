@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye } from "lucide-react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -51,7 +51,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [startInPip, setStartInPip] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -130,13 +130,36 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     setIsPlaylistDialogOpen(true);
   }
 
-  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleNormalModalOpen = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (videoId) {
+        setStartInPip(false);
         setIsModalOpen(true);
     } else {
+        // Fallback for non-video play click
         handlePlay();
     }
+  };
+
+  const handlePipClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (videoId) {
+        setStartInPip(true);
+        setIsModalOpen(true);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'الفيديو غير متاح',
+            description: 'وضع الصورة داخل صورة متاح فقط لفيديوهات اليوتيوب.',
+        });
+    }
+  };
+  
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setStartInPip(false);
   };
 
   const handleMouseEnter = () => {
@@ -153,13 +176,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
       }
       setIsHovering(false);
   };
-
-  const handlePipClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    alert("لتفعيل الوضع العائم في فيديوهات يوتيوب المضمنة:\nانقر بزر الماوس الأيمن 'مرتين متتاليتين' على الفيديو واختر 'Picture-in-picture'");
-  };
-
 
   const lectureHistory = useMemo(() => 
     listenHistory?.find(item => item.lectureId === lecture.id),
@@ -194,16 +210,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                       allow="autoplay; encrypted-media"
                       className="w-full h-full"
                   ></iframe>
-                  <button
-                      className="custom-pip-btn"
-                      onClick={handlePipClick}
-                  >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{strokeLinecap: 'round', strokeLinejoin: 'round'}}>
-                          <path d="M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v4"></path>
-                          <path d="M14 14m0 1a1 1 0 0 1 1 -1h5a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-5a1 1 0 0 1 -1 -1z" fill="currentColor"></path>
-                      </svg>
-                      تشغيل عائم
-                  </button>
                 </div>
             ) : (
                 <Image
@@ -217,7 +223,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
               <div 
                 className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-                onClick={handleImageClick}
+                onClick={handleNormalModalOpen}
               />
           
             <div 
@@ -225,7 +231,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     "absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer",
                     isHovering ? "opacity-0" : "opacity-0 group-hover:opacity-100"
                 )}
-                 onClick={handleImageClick}
+                 onClick={handleNormalModalOpen}
             >
               <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
@@ -307,8 +313,13 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                         <Headphones className="w-5 h-5" />
                     </Button>
                     {videoId && (
-                        <Button onClick={() => setIsModalOpen(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
+                        <Button onClick={handleNormalModalOpen} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
                             <Youtube className="w-5 h-5" />
+                        </Button>
+                    )}
+                    {videoId && (
+                        <Button onClick={handlePipClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                            <PictureInPicture className="w-5 h-5" />
                         </Button>
                     )}
                     {lecture.telegramUrl && (
@@ -341,9 +352,10 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
       {videoId && (
         <YoutubePlayerModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleModalClose}
           videoId={videoId}
           shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/lectures/${lecture.slug}`}
+          initialIsPip={startInPip}
         />
       )}
        {user && (

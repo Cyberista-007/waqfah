@@ -19,11 +19,12 @@ interface YoutubePlayerModalProps {
   onClose: () => void;
   videoId: string;
   shareUrl: string;
+  initialIsPip?: boolean;
 }
 
-export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: YoutubePlayerModalProps) {
+export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl, initialIsPip = false }: YoutubePlayerModalProps) {
   const { toast } = useToast();
-  const [isPip, setIsPip] = useState(false);
+  const [isPip, setIsPip] = useState(initialIsPip);
   const playerRef = useRef<any>(null); // Use 'any' for the YouTube player object
 
   // State for draggable/resizable PiP
@@ -43,6 +44,12 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   } | null>(null);
 
   
+  useEffect(() => {
+    if (isOpen) {
+      setIsPip(initialIsPip);
+    }
+  }, [isOpen, initialIsPip]);
+
   // Effect to set initial PiP position
   useEffect(() => {
     if (isPip && position.x === 0 && position.y === 0) {
