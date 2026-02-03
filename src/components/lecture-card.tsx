@@ -1,8 +1,9 @@
+
 "use client"
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast } from "lucide-react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -226,12 +227,20 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                 </button>
             </div>
             
-          {displayDurationInSeconds > 0 && (
-            <div className="absolute top-2 left-2 text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                <Clock className="w-3 h-3" />
-                <span>{formatDuration(displayDurationInSeconds)}</span>
+            <div className="absolute top-2 left-2 flex gap-2">
+              {displayDurationInSeconds > 0 && (
+                <div className="text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+                    <Clock className="w-3 h-3" />
+                    <span>{formatDuration(displayDurationInSeconds)}</span>
+                </div>
+              )}
+              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && videoId && (
+                <div className="text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+                    <Eye className="w-4 h-4" />
+                    <span>{new Intl.NumberFormat('ar-EG').format(lecture.youtubeViewCount)}</span>
+                </div>
+              )}
             </div>
-          )}
 
           {hasChannel ? (
             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">

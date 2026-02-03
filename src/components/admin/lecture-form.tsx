@@ -46,6 +46,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
+  const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -91,6 +92,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             if (titleRef.current) titleRef.current.value = data.videoInfo.title;
             if (descriptionRef.current) descriptionRef.current.value = data.videoInfo.description;
             if (durationRef.current) durationRef.current.value = data.videoInfo.durationInSeconds.toString();
+            setYoutubeViewCount(data.videoInfo.viewCount);
             toast({ title: "تم جلب بيانات الفيديو بنجاح." });
         } else {
              toast({ variant: "destructive", title: "خطأ", description: "لم يتم العثور على معلومات الفيديو. يرجى التحقق من أن الرابط هو رابط فيديو صالح." });
@@ -147,6 +149,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         pdfUrl: formData.get("pdfUrl") as string || "",
         telegramUrl: formData.get("telegramUrl") as string || "",
         soundcloudUrl: formData.get("soundcloudUrl") as string || "",
+        youtubeViewCount: youtubeViewCount || 0,
         language: language || 'ar',
     };
 

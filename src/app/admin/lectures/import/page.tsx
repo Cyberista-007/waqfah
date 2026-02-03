@@ -54,6 +54,7 @@ interface FetchedVideo {
     title: string;
     description: string;
     durationInSeconds: number;
+    viewCount?: number;
 }
 
 interface FetchedPlaylist {
@@ -222,6 +223,7 @@ export default function AdminImportLecturesPage() {
                     rating: 0,
                     ratingCount: 0,
                     viewCount: 0,
+                    youtubeViewCount: video.viewCount || 0,
                     transcript: [],
                     language: series?.language || 'ar',
                 };

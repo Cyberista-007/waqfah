@@ -99,7 +99,7 @@ async function fetchPlaylistVideos(youtube: youtube_v3.Youtube, playlistId: stri
         
         if (videoIds.length > 0) {
              const videoDetailsResponse = await youtube.videos.list({
-                part: ['snippet', 'contentDetails'],
+                part: ['snippet', 'contentDetails', 'statistics'],
                 id: videoIds,
             });
 
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400 });
             }
             const videoResponse = await youtube.videos.list({
-                part: ['snippet', 'contentDetails'],
+                part: ['snippet', 'contentDetails', 'statistics'],
                 id: [videoId],
             });
             const videoData = videoResponse.data.items?.[0];
@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
                     title: videoData.snippet?.title,
                     description: videoData.snippet?.description,
                     durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0,
+                    viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0,
                 }});
             } else {
                 return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404 });
@@ -231,6 +232,7 @@ export async function POST(req: NextRequest) {
                 title: item.snippet?.title || 'بدون عنوان',
                 description: item.snippet?.description || '',
                 durationInSeconds,
+                viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 0,
             };
 
             // Heuristic to detect shorts, can be adjusted
