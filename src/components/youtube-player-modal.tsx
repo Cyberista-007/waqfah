@@ -24,7 +24,6 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   const { toast } = useToast();
   const [isPip, setIsPip] = useState(false);
   const playerRef = useRef<any>(null); // Use 'any' for the YouTube player object
-  const [startTime, setStartTime] = useState(0);
 
   // State for draggable/resizable PiP
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -152,13 +151,10 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   };
 
   const handlePipToggle = () => {
-    const currentTime = playerRef.current?.getCurrentTime() || 0;
-    setStartTime(currentTime);
     setIsPip(prev => !prev);
   };
   
   const handleClose = () => {
-    setStartTime(0);
     playerRef.current?.pauseVideo();
     setIsPip(false);
     onClose();
@@ -206,7 +202,6 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
     playerVars: {
       autoplay: 1,
       rel: 0,
-      start: Math.floor(startTime),
     },
   };
 
@@ -216,7 +211,6 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
   return (
     <Dialog open={isOpen} onOpenChange={handleClose} modal={!isPip}>
       <DialogContent 
-        key={isPip ? `pip-${startTime}` : 'modal'} // Force re-render with new start time on toggle
         ref={pipRef}
         style={pipStyle}
         className={cn(
