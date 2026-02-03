@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -14,7 +15,6 @@ import {
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
 import { cn, formatDuration, formatViews } from "@/lib/utils"
-import { YoutubePlayerModal } from "./youtube-player-modal"
 import { getPlaceholderImage } from "@/lib/images"
 import { useCollection, useFirestore, useUser } from "@/firebase"
 import { Progress } from "./ui/progress"
@@ -49,9 +49,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 }
 
 const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
-  const { playTrack } = useAudioPlayer();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showPipHint, setShowPipHint] = useState(false);
+  const { playTrack, playVideo } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -59,7 +57,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
-  const firestore = useFirestore();
 
   const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
   const { data: listenHistory } = useCollection<ListenHistoryItem>(listenHistoryPath);
@@ -144,19 +141,12 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     setIsPlaylistDialogOpen(true);
   }
 
-  const handleOpenVideo = (pipHint = false) => {
+  const handleOpenVideo = () => {
     if (videoId) {
-        setShowPipHint(pipHint);
-        setIsModalOpen(true);
-    } else if (!pipHint) {
-        // Fallback for non-video play click
+        playVideo({ videoId: videoId, title: lecture.title });
+    } else {
         handlePlay();
     }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setShowPipHint(false); // Reset on close
   };
 
   const handleMouseEnter = () => {
@@ -215,7 +205,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
               <div 
                 className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-                onClick={() => handleOpenVideo(false)}
+                onClick={handleOpenVideo}
               />
           
             <div 
@@ -223,7 +213,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     "absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer",
                     isHovering ? "opacity-0" : "opacity-0 group-hover:opacity-100"
                 )}
-                 onClick={() => handleOpenVideo(false)}
+                 onClick={handleOpenVideo}
             >
               <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
@@ -318,7 +308,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                 <>
                   <Tooltip>
                       <TooltipTrigger asChild>
-                          <Button onClick={() => handleOpenVideo(false)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
+                          <Button onClick={handleOpenVideo} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
                               <Youtube className="w-5 h-5" />
                           </Button>
                       </TooltipTrigger>
@@ -326,16 +316,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                           <p>مشاهدة على يوتيوب</p>
                       </TooltipContent>
                   </Tooltip>
-                   <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button onClick={() => handleOpenVideo(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                                <PictureInPicture className="w-5 h-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>تشغيل عائم (صورة داخل صورة)</p>
-                        </TooltipContent>
-                    </Tooltip>
                 </>
               )}
               {lecture.telegramUrl && (
@@ -392,14 +372,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
             </div>
         </div>
       </Card>
-      {videoId && (
-        <YoutubePlayerModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          videoId={videoId}
-          showPipHint={showPipHint}
-        />
-      )}
        {user && (
         <AddToPlaylistDialog
             isOpen={isPlaylistDialogOpen}

@@ -6,6 +6,7 @@ import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FirebaseClientProvider } from '@/firebase';
 import { AppearanceProvider } from '@/components/appearance-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { FloatingVideoPlayer } from './floating-video-player';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
     return (
@@ -42,6 +43,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
               <AudioPlayerProvider>
                 <FirebaseErrorListener />
                 {children}
+                <FloatingVideoPlayer />
               </AudioPlayerProvider>
             </FirebaseClientProvider>
           </AppearanceProvider>

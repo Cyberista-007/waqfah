@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,7 +13,6 @@ import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import YouTube, { YouTubeProps } from 'react-youtube';
 import { LectureNotes } from '@/components/lecture-notes';
 import { CommentsSection } from '@/components/comments-section';
 import { LectureCard } from './lecture-card';
@@ -46,12 +46,11 @@ interface LectureClientPageProps {
 }
 
 export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
-  const { playTrack, pauseTrack, videoPlayerRef } = useAudioPlayer();
+  const { playTrack, hideVideoPlayer, playVideo } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
 
@@ -105,9 +104,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
 
   const handlePlay = () => {
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function' && videoPlayerRef.current.getPlayerState() === 1) {
-        videoPlayerRef.current.pauseVideo();
-    }
+    hideVideoPlayer();
     let startTime = 0;
     if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
         startTime = lectureHistory.position;
@@ -130,14 +127,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   };
   
   const handleWatchVideo = () => {
-      pauseTrack();
-      setIsPlayerVisible(true);
+      if (videoId) {
+          playVideo({ videoId, title: lecture.title });
+      }
   }
-
-  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-    videoPlayerRef.current = event.target;
-    pauseTrack(); // Pause audio when video is ready to play
-  };
 
   const seriesLink = `/series/${lecture.seriesSlug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}"`;
@@ -186,42 +179,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
-      {isPlayerVisible && videoId ? (
-        <div className="sticky top-20 z-40 bg-transparent">
-            <div className="overflow-auto rounded-lg bg-transparent" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
-              <div className="w-full h-full relative">
-                <YouTube
-                  videoId={videoId}
-                  opts={{
-                    height: '100%',
-                    width: '100%',
-                    playerVars: {
-                      autoplay: 1,
-                      rel: 0,
-                    },
-                  }}
-                  onReady={onPlayerReady}
-                  className="w-full h-full"
-                />
-                <Button 
-                    onClick={() => {
-                        if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
-                            videoPlayerRef.current.pauseVideo();
-                        }
-                        setIsPlayerVisible(false);
-                    }} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/75"
-                >
-                    <X className="h-5 w-5" />
-                    <span className="sr-only">إغلاق المشغل</span>
-                </Button>
-              </div>
-            </div>
-        </div>
-      ) : (
-        <Card className="shadow-lg">
+      <Card className="shadow-lg">
             <CardContent className="p-4">
             <Button 
                 onClick={handlePlay}
@@ -233,7 +191,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
             </Button>
             </CardContent>
         </Card>
-      )}
       
       <section>
         <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
@@ -248,7 +205,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
             </Button>
-          {videoId && !isPlayerVisible && (
+          {videoId && (
             <Button variant="destructive" onClick={handleWatchVideo}>
               <Youtube />
               <span className="ms-2">مشاهدة (يوتيوب)</span>
