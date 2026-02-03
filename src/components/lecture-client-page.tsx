@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -188,7 +189,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
 
       {isPlayerVisible && videoId ? (
         <Card className="sticky top-20 z-40 shadow-2xl">
-            <div className="relative overflow-auto rounded-t-lg" style={{ resize: 'vertical', height: '50vh', minHeight: '200px', maxHeight: '90vh' }}>
+            <div className="relative overflow-auto rounded-t-lg" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
               <YouTube
                 videoId={videoId}
                 opts={{
@@ -202,9 +203,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                 onReady={onPlayerReady}
                 className="w-full h-full absolute top-0 left-0"
               />
-               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-ns-resize pointer-events-none text-white/50 bg-black/30 rounded-full p-1">
-                    <ChevronsUpDown className="w-5 h-5" />
-                </div>
             </div>
             <CardContent className="p-4">
                 <Button onClick={() => {
