@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import YouTube, { YouTubeProps } from 'react-youtube';
 import {
   Dialog,
@@ -9,25 +8,36 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import React from 'react';
 
 interface YoutubePlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
   videoId: string;
+  showPipHint?: boolean;
 }
 
-export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerModalProps) {
+export function YoutubePlayerModal({ isOpen, onClose, videoId, showPipHint = false }: YoutubePlayerModalProps) {
   const playerRef = useRef<any>(null);
+  const [isHintVisible, setIsHintVisible] = React.useState(false);
 
-  const handleClose = () => {
-    // Attempt to pause video on close, but don't worry if it fails
-    try {
-        playerRef.current?.pauseVideo();
-    } catch (e) {
-        console.warn("Could not pause video on close", e);
+  useEffect(() => {
+    if (isOpen && showPipHint) {
+      setIsHintVisible(true);
+      const timer = setTimeout(() => {
+        setIsHintVisible(false);
+      }, 5000); // Hide after 5 seconds
+      return () => clearTimeout(timer);
     }
-    onClose();
-  };
+  }, [isOpen, showPipHint]);
+
+  // Reset hint when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsHintVisible(false);
+    }
+  }, [isOpen]);
+
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -45,8 +55,8 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerMo
   if (!videoId) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl w-full p-0 border-0 bg-transparent shadow-none">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl w-full p-0 border-0 bg-black/50 shadow-none">
         <DialogHeader className="sr-only">
           <DialogTitle>مشغل فيديو يوتيوب</DialogTitle>
         </DialogHeader>
@@ -57,6 +67,17 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId }: YoutubePlayerMo
             onReady={onPlayerReady}
             className="w-full h-full absolute top-0 left-0 rounded-lg overflow-hidden"
           />
+          {isHintVisible && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-black/70 pointer-events-none rounded-lg text-white text-center p-4"
+              onClick={() => setIsHintVisible(false)}
+            >
+              <div>
+                <h3 className="font-bold text-xl mb-2">لتفعيل وضع الفيديو العائم</h3>
+                <p>انقر بزر الماوس الأيمن مرتين على الفيديو واختر "صورة داخل صورة"</p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

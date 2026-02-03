@@ -51,6 +51,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
   const { playTrack } = useAudioPlayer();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPipHint, setShowPipHint] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -130,19 +131,25 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     setIsPlaylistDialogOpen(true);
   }
 
-  const handleNormalModalOpen = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleOpenVideo = (pipHint = false) => {
     if (videoId) {
+        setShowPipHint(pipHint);
         setIsModalOpen(true);
-    } else {
+    } else if (!pipHint) {
         // Fallback for non-video play click
         handlePlay();
+    } else {
+        // Show a toast if PiP is clicked on a non-youtube lecture
+        toast({
+            variant: "destructive",
+            title: "التشغيل العائم متاح لفيديوهات يوتيوب فقط.",
+        });
     }
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
+    setShowPipHint(false); // Reset on close
   };
 
   const handleMouseEnter = () => {
@@ -206,7 +213,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
               <div 
                 className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-                onClick={handleNormalModalOpen}
+                onClick={() => handleOpenVideo(false)}
               />
           
             <div 
@@ -214,7 +221,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     "absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer",
                     isHovering ? "opacity-0" : "opacity-0 group-hover:opacity-100"
                 )}
-                 onClick={handleNormalModalOpen}
+                 onClick={() => handleOpenVideo(false)}
             >
               <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
@@ -257,60 +264,63 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
         </div>
 
         <div className="p-3 bg-card flex-grow flex flex-col">
-            <div className="flex-grow pb-2">
-                <div className="mb-2">
-                   <div className="inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
-                      {(lecture.youtubeViewCount && lecture.youtubeViewCount > 0) && (
-                          <div className="flex items-center gap-1">
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>{formatViews(lecture.youtubeViewCount)}</span>
-                          </div>
-                      )}
-                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                          <span className="opacity-70">·</span>
-                      )}
-                      {lecture.duration > 0 && (
-                          <div className="flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>{formatDuration(lecture.duration)}</span>
-                          </div>
-                      )}
-                  </div>
-                </div>
-                <TooltipProvider delayDuration={500}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <h3 className="font-headline text-lg leading-tight">
-                          <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
-                      </h3>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{lecture.title}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-            </div>
-            <div className="flex justify-between items-center mt-auto pt-2">
+          <div className="flex-grow pb-2">
+            <div className="mb-2 inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
+              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
                 <div className="flex items-center gap-1">
-                    <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                        <Headphones className="w-5 h-5" />
-                    </Button>
-                    {videoId && (
-                        <Button onClick={handleNormalModalOpen} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
-                            <Youtube className="w-5 h-5" />
-                        </Button>
-                    )}
-                    {lecture.telegramUrl && (
-                        <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
-                                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
-                            </Button>
-                        </a>
-                    )}
-                    <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                        <Download className="w-5 h-5" />
-                    </Button>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{formatViews(lecture.youtubeViewCount)}</span>
                 </div>
+              )}
+              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                <span className="opacity-70">·</span>
+              )}
+              {lecture.duration > 0 && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{formatDuration(lecture.duration)}</span>
+                </div>
+              )}
+            </div>
+            <TooltipProvider delayDuration={500}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h3 className="font-headline text-lg leading-tight">
+                    <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
+                  </h3>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lecture.title}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="flex justify-between items-center mt-auto pt-2">
+            <div className="flex items-center gap-1">
+              <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                <Headphones className="w-5 h-5" />
+              </Button>
+              {videoId && (
+                <>
+                  <Button onClick={() => handleOpenVideo(false)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
+                    <Youtube className="w-5 h-5" />
+                  </Button>
+                  <Button onClick={() => handleOpenVideo(true)} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                    <PictureInPicture className="w-5 h-5" />
+                  </Button>
+                </>
+              )}
+              {lecture.telegramUrl && (
+                <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
+                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
+                  </Button>
+                </a>
+              )}
+              <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+                <Download className="w-5 h-5" />
+              </Button>
+            </div>
                 
                 <div className="flex items-center gap-1">
                     <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
@@ -332,6 +342,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
           isOpen={isModalOpen}
           onClose={handleModalClose}
           videoId={videoId}
+          showPipHint={showPipHint}
         />
       )}
        {user && (
