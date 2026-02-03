@@ -10,7 +10,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
 import { SiteBackground } from '@/components/site-background';
-import { PiPEnabler } from '@/components/pip-enabler';
 
 export const metadata: Metadata = {
   title: {
@@ -47,7 +46,6 @@ export default function RootLayout({
         amiri.variable
       )}>
         <AppProviders>
-            <PiPEnabler />
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />

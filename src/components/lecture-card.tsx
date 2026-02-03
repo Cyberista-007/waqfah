@@ -155,6 +155,12 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
       setIsHovering(false);
   };
 
+  const handlePipClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    alert("لتفعيل الوضع العائم في فيديوهات يوتيوب المضمنة:\nانقر بزر الماوس الأيمن 'مرتين متتاليتين' على الفيديو واختر 'Picture-in-picture'");
+  };
+
 
   const lectureHistory = useMemo(() => 
     listenHistory?.find(item => item.lectureId === lecture.id),
@@ -182,12 +188,24 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
         <div className="relative aspect-video overflow-hidden" >
             <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0" aria-hidden="true" tabIndex={-1} />
              {isHovering && videoId ? (
-                <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}`}
-                    frameBorder="0"
-                    allow="autoplay; encrypted-media"
-                    className="w-full h-full absolute top-0 left-0"
-                ></iframe>
+                <div className="pip-wrapper absolute inset-0">
+                  <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}`}
+                      frameBorder="0"
+                      allow="autoplay; encrypted-media"
+                      className="w-full h-full"
+                  ></iframe>
+                  <button
+                      className="custom-pip-btn"
+                      onClick={handlePipClick}
+                  >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{strokeLinecap: 'round', strokeLinejoin: 'round'}}>
+                          <path d="M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v4"></path>
+                          <path d="M14 14m0 1a1 1 0 0 1 1 -1h5a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-5a1 1 0 0 1 -1 -1z" fill="currentColor"></path>
+                      </svg>
+                      تشغيل عائم
+                  </button>
+                </div>
             ) : (
                 <Image
                     src={imageUrl}
@@ -253,25 +271,23 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
                 <div className="mb-2">
-                    {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
-                        <div className="inline-flex items-center gap-x-3 text-xs font-semibold text-white bg-black/70 rounded-full px-3 py-1">
-                            {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                                <div className="flex items-center gap-1.5">
-                                    <Eye className="w-4 h-4" />
-                                    <span>{formatViews(lecture.youtubeViewCount)}</span>
-                                </div>
-                            )}
-                            {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                                <span className="opacity-70">·</span>
-                            )}
-                            {lecture.duration > 0 && (
-                                <div className="flex items-center gap-1.5">
-                                    <Clock className="w-4 h-4" />
-                                    <span>{formatDuration(lecture.duration)}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    <div className="inline-flex items-center gap-x-3 text-sm font-semibold text-foreground">
+                        {(lecture.youtubeViewCount && lecture.youtubeViewCount > 0) && (
+                            <div className="flex items-center gap-1.5">
+                                <Eye className="w-4 h-4" />
+                                <span>{formatViews(lecture.youtubeViewCount)}</span>
+                            </div>
+                        )}
+                        {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                            <span className="opacity-70">·</span>
+                        )}
+                        {lecture.duration > 0 && (
+                            <div className="flex items-center gap-1.5">
+                                <Clock className="w-4 h-4" />
+                                <span>{formatDuration(lecture.duration)}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <TooltipProvider delayDuration={500}>
                   <Tooltip>
