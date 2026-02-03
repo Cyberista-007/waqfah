@@ -26,7 +26,7 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, showPipHint = fal
       setIsHintVisible(true);
       const timer = setTimeout(() => {
         setIsHintVisible(false);
-      }, 5000); // Hide after 5 seconds
+      }, 10000); // Hide after 10 seconds
       return () => clearTimeout(timer);
     }
   }, [isOpen, showPipHint]);
