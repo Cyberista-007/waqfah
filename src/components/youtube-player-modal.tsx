@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -189,11 +190,11 @@ export function YoutubePlayerModal({ isOpen, onClose, videoId, shareUrl }: Youtu
 
   const pipStyle: React.CSSProperties = isPip ? {
     position: 'fixed',
-    left: position.x,
-    top: position.y,
+    left: 0,
+    top: 0,
     width: size.width,
     height: 'auto', // Let aspect ratio control height
-    transform: 'none',
+    transform: `translate(${position.x}px, ${position.y}px)`,
   } : {};
   
   const opts: YouTubeProps['opts'] = {
