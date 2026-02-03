@@ -196,8 +196,15 @@ export default function AdminImportLecturesPage() {
             const series = (targetSeriesId && targetSeriesId !== 'none') ? allSeries.find(s => s.id === targetSeriesId) : null;
             const program = (targetProgramId && targetProgramId !== 'none') ? allPrograms.find(p => p.id === targetProgramId) : null;
             const channel = (targetChannelId && targetChannelId !== 'none') ? allChannels.find(c => c.id === targetChannelId) : null;
+            
+            const placeholderAudios = [
+              'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+              'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+              'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+              'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+            ];
 
-            for (const video of videosToImport) {
+            videosToImport.forEach((video, index) => {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
                 const newLectureRef = doc(collection(firestore, 'lectures'));
 
@@ -214,7 +221,7 @@ export default function AdminImportLecturesPage() {
                     channelId: channel?.id || "",
                     channelName: channel?.name || "",
                     channelSlug: channel?.slug || "",
-                    audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`, // Placeholder
+                    audioSrc: placeholderAudios[index % placeholderAudios.length], // Using a placeholder MP3
                     duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
@@ -229,7 +236,7 @@ export default function AdminImportLecturesPage() {
                 };
                 
                 batch.set(newLectureRef, newLecturePayload);
-            }
+            });
             
             if (series) {
                 const seriesRef = doc(firestore, 'series', series.id);
@@ -604,3 +611,5 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
+
+    

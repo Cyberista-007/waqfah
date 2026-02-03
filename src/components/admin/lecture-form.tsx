@@ -68,9 +68,15 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
 
 
   const handleFetchMetadata = async () => {
-    const url = audioSrcRef.current?.value;
-    if (!url) {
-      toast({ variant: 'destructive', title: 'الرجاء إدخال رابط أولاً.' });
+    // We will use youtubeUrl field instead, if it exists
+    const form = document.querySelector('form');
+    if (!form) return;
+    const formData = new FormData(form);
+    const youtubeUrl = formData.get("youtubeUrl") as string;
+    const url = youtubeUrl || audioSrcRef.current?.value;
+
+    if (!url || !(url.includes('youtube.com') || url.includes('youtu.be'))) {
+      toast({ variant: 'destructive', title: 'الرجاء إدخال رابط يوتيوب صالح في حقل رابط يوتيوب.' });
       return;
     }
     
@@ -239,7 +245,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="audioSrc">رابط المحاضرة الأساسي (يوتيوب, MP3, إلخ)</Label>
+            <Label htmlFor="audioSrc">رابط ملف الصوت المباشر (MP3)</Label>
             <div className="flex items-center gap-2">
               <Input id="audioSrc" name="audioSrc" type="url" defaultValue={lecture?.audioSrc} required ref={audioSrcRef} />
               <Button type="button" variant="outline" size="icon" onClick={handleFetchMetadata} disabled={isFetching}>
@@ -247,6 +253,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                 <span className="sr-only">استخلاص البيانات</span>
               </Button>
             </div>
+             <p className="text-sm text-muted-foreground mt-1">
+                هذا الرابط لمشغل الصوت في الموقع. استخدم حقل "رابط يوتيوب بديل" أدناه لوضع روابط يوتيوب.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -341,3 +350,5 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     </Card>
   );
 }
+
+    
