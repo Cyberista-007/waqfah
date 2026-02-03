@@ -2,74 +2,107 @@
 
 import YouTube, { YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { X } from 'lucide-react';
+import { Grip, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { DndContext, useDraggable, type DragEndEvent } from '@dnd-kit/core';
 
-export function FloatingVideoPlayer() {
-  const { videoTrack, isPlayerVisible, videoPlayerRef, hideVideoPlayer, pauseTrack } = useAudioPlayer();
+// This is the actual draggable content of the player
+function PlayerContent() {
+  const { videoTrack, videoPlayerRef, pauseTrack } = useAudioPlayer();
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: 'youtube-player-handle',
+  });
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     videoPlayerRef.current = event.target;
-    pauseTrack(); // Pause audio when video is ready to play
+    pauseTrack();
   };
 
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-    // If video starts playing, pause the audio track
-    if (event.data === 1) { // 1 = playing
+    if (event.data === 1) { 
       pauseTrack();
     }
   };
-  
-  useEffect(() => {
-    // When the floating player becomes invisible, pause the video.
-    if (!isPlayerVisible && videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
-        videoPlayerRef.current.pauseVideo();
-    }
-  }, [isPlayerVisible, videoPlayerRef]);
 
-  if (!videoTrack) { // Do not render if no video has ever been selected.
-    return null;
-  }
+  if (!videoTrack) return null;
 
   const opts: YouTubeProps['opts'] = {
     height: '100%',
     width: '100%',
-    playerVars: {
-      autoplay: 1,
-      rel: 0,
-    },
+    playerVars: { autoplay: 1, rel: 0 },
   };
 
   return (
-    <div
-      className={cn(
-        "fixed top-20 right-8 z-50 overflow-auto rounded-lg bg-black shadow-2xl resize-both p-1",
-        "w-[50vw] h-[50vh] min-h-[200px] min-w-[300px] max-w-full transition-transform duration-300",
-        isPlayerVisible ? "translate-x-0" : "translate-x-[150%]"
-      )}
-    >
-      <div className="w-full h-full relative group">
-          <YouTube
+    <div ref={setNodeRef} className="w-full h-full flex flex-col bg-black rounded-lg">
+      <div 
+          {...listeners}
+          {...attributes}
+          className="flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 cursor-move"
+      >
+          <Grip className="h-5 w-5" />
+      </div>
+      <div className="flex-grow w-full h-full relative">
+        <YouTube
             videoId={videoTrack.videoId}
             opts={opts}
             onReady={onPlayerReady}
             onStateChange={onPlayerStateChange}
             className="w-full h-full"
-          />
-          <div className="absolute top-0 right-0 p-1 flex items-center gap-1 bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        />
+      </div>
+    </div>
+  );
+}
+
+
+// This component manages the position, visibility, and dnd context
+export function FloatingVideoPlayer() {
+    const { isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        setPosition(prev => ({
+            x: prev.x + event.delta.x,
+            y: prev.y + event.delta.y,
+        }));
+    };
+    
+     useEffect(() => {
+        // Reset position when hidden
+        if (!isPlayerVisible) {
+            // A small delay to allow the fade-out animation to finish
+            setTimeout(() => {
+                setPosition({ x: 0, y: 0 });
+            }, 300);
+        }
+    }, [isPlayerVisible]);
+
+    return (
+        <div
+            style={{
+                transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+            }}
+            className={cn(
+                "fixed top-20 right-8 z-50 overflow-hidden rounded-lg shadow-2xl resize-both",
+                "w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
+                "transition-opacity duration-300",
+                isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+        >
+            <DndContext onDragEnd={handleDragEnd}>
+                <PlayerContent />
+            </DndContext>
             <Button
                 onClick={hideVideoPlayer}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white"
+                className="absolute top-0 right-0 h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white z-20"
                 aria-label="إغلاق المشغل"
             >
                 <X className="h-5 w-5" />
             </Button>
-          </div>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }
