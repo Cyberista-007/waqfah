@@ -53,6 +53,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [startInPip, setStartInPip] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
