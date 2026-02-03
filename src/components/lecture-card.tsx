@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -213,28 +214,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                  <Play className="w-8 h-8 text-white fill-current ml-1" />
               </div>
             </div>
-
-            <div className="absolute top-2 left-2 flex items-center gap-2 text-white bg-black/60 px-3 py-1.5 rounded-full text-sm font-semibold">
-              {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
-                <>
-                  {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                      <div className="flex items-center gap-1.5">
-                          <span>{formatViews(lecture.youtubeViewCount)}</span>
-                          <Eye className="w-4 h-4" />
-                      </div>
-                  )}
-                  {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                      <span className="opacity-70">·</span>
-                  )}
-                  {lecture.duration > 0 && (
-                      <div className="flex items-center gap-1.5">
-                          <span>{formatDuration(lecture.duration)}</span>
-                          <Clock className="w-4 h-4" />
-                      </div>
-                  )}
-                </>
-              )}
-            </div>
             
             <div className="absolute top-2 right-2 flex items-center gap-1">
                 <button
@@ -273,10 +252,31 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
         <div className="p-3 bg-card flex-grow flex flex-col">
             <div className="flex-grow pb-2">
+                <div className="flex items-center gap-x-3 text-xs text-muted-foreground mb-1">
+                  {(lecture.duration > 0 || (lecture.youtubeViewCount && lecture.youtubeViewCount > 0)) && (
+                    <>
+                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
+                          <div className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>{formatViews(lecture.youtubeViewCount)}</span>
+                          </div>
+                      )}
+                      {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
+                          <span className="opacity-70">·</span>
+                      )}
+                      {lecture.duration > 0 && (
+                          <div className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{formatDuration(lecture.duration)}</span>
+                          </div>
+                      )}
+                    </>
+                  )}
+                </div>
                 <TooltipProvider delayDuration={500}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <h3 className="font-headline text-lg mb-1 leading-tight">
+                      <h3 className="font-headline text-lg leading-tight">
                           <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
                       </h3>
                     </TooltipTrigger>
