@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -51,4 +50,16 @@ export function formatTotalDuration(totalSeconds: number): string {
   }
 
   return parts.join(' و ');
+}
+
+export function formatViews(views: number): string {
+    if (views >= 1_000_000) {
+        const millions = views / 1_000_000;
+        const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1).replace('.0', '');
+        return `${formatted} مليون`;
+    }
+    if (views >= 1_000) {
+        return `${(views / 1_000).toFixed(0)} ألف`;
+    }
+    return new Intl.NumberFormat('ar-EG').format(views);
 }

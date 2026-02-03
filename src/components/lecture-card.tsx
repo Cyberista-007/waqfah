@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -14,7 +13,7 @@ import {
   Card,
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
-import { cn, formatDuration } from "@/lib/utils"
+import { cn, formatDuration, formatViews } from "@/lib/utils"
 import { YoutubePlayerModal } from "./youtube-player-modal"
 import { getPlaceholderImage } from "@/lib/images"
 import { useCollection, useFirestore, useUser } from "@/firebase"
@@ -234,10 +233,10 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     <span>{formatDuration(displayDurationInSeconds)}</span>
                 </div>
               )}
-              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && videoId && (
+              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
                 <div className="text-white text-xs font-semibold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
                     <Eye className="w-4 h-4" />
-                    <span>{new Intl.NumberFormat('ar-EG').format(lecture.youtubeViewCount)}</span>
+                    <span>{formatViews(lecture.youtubeViewCount)}</span>
                 </div>
               )}
             </div>
