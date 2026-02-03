@@ -187,7 +187,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
       {isPlayerVisible && videoId ? (
-        <Card className="sticky top-20 z-40 shadow-2xl bg-transparent">
+        <div className="sticky top-20 z-40 bg-transparent">
             <div className="overflow-auto rounded-lg bg-transparent" style={{ resize: 'both', height: '50vh', minHeight: '200px', maxHeight: '90vh', minWidth: '300px', maxWidth: '100%' }}>
               <div className="w-full h-full relative">
                 <YouTube
@@ -219,7 +219,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                 </Button>
               </div>
             </div>
-        </Card>
+        </div>
       ) : (
         <Card className="shadow-lg">
             <CardContent className="p-4">
