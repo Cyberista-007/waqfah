@@ -2,13 +2,12 @@
 
 import YouTube, { YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { Grip, X } from 'lucide-react';
+import { Grip, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { DndContext, useDraggable, type DragMoveEvent, type DragStartEvent } from '@dnd-kit/core';
 
-// This is the actual draggable content of the player
 function PlayerContent() {
   const { videoTrack, videoPlayerRef, pauseTrack } = useAudioPlayer();
   const { attributes, listeners, setNodeRef } = useDraggable({
@@ -17,7 +16,6 @@ function PlayerContent() {
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     videoPlayerRef.current = event.target;
-    pauseTrack();
   };
 
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
@@ -35,24 +33,22 @@ function PlayerContent() {
   };
 
   return (
-    // The draggable node ref is attached here
-    <div ref={setNodeRef} className="w-full h-full flex flex-col bg-black rounded-lg">
-      {/* The drag listeners are attached to this handle */}
+    <div ref={setNodeRef} className="w-full h-full flex flex-col bg-black rounded-lg overflow-hidden">
       <div 
           {...listeners}
           {...attributes}
-          className="flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 cursor-move"
+          className="flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 cursor-move bg-black"
       >
           <Grip className="h-5 w-5" />
       </div>
-      {/* The video container takes up the remaining space. */}
-      <div className="flex-grow w-full relative">
+      <div className="flex-grow w-full h-full relative">
         <YouTube
             videoId={videoTrack.videoId}
             opts={opts}
             onReady={onPlayerReady}
             onStateChange={onPlayerStateChange}
             className="w-full h-full"
+            iframeClassName="w-full h-full"
         />
       </div>
     </div>
@@ -60,11 +56,11 @@ function PlayerContent() {
 }
 
 
-// This component manages the position, visibility, and dnd context
 export function FloatingVideoPlayer() {
-    const { isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
+    const { videoPlayerRef, isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const initialPositionOnDrag = useRef({ x: 0, y: 0 });
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const handleDragStart = (event: DragStartEvent) => {
         initialPositionOnDrag.current = position;
@@ -77,12 +73,31 @@ export function FloatingVideoPlayer() {
         });
     };
     
+    const handleToggleCollapse = useCallback(() => {
+        // Reset drag position for simplicity when collapsing/expanding.
+        // This makes the translate logic much simpler.
+        setPosition({ x: 0, y: 0 });
+        setIsCollapsed(prev => {
+            const isNowCollapsing = !prev;
+            if (isNowCollapsing && videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                videoPlayerRef.current.pauseVideo();
+            }
+            return isNowCollapsing;
+        });
+    }, [videoPlayerRef]);
+
+    const handleClose = () => {
+        setIsCollapsed(false);
+        setPosition({ x: 0, y: 0 });
+        hideVideoPlayer();
+    };
+    
      useEffect(() => {
-        // Reset position when hidden
         if (!isPlayerVisible) {
-            // A small delay to allow the fade-out animation to finish
+            // Reset state when player is hidden
             setTimeout(() => {
                 setPosition({ x: 0, y: 0 });
+                setIsCollapsed(false);
             }, 300);
         }
     }, [isPlayerVisible]);
@@ -95,24 +110,51 @@ export function FloatingVideoPlayer() {
             className={cn(
                 "fixed top-20 right-8 z-50 rounded-lg shadow-2xl resize-both overflow-hidden",
                 "w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
-                "transition-opacity duration-300",
-                isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                "transition-all duration-300 ease-in-out", // transition-all to animate transform and other properties
+                isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+                isCollapsed && "translate-x-[calc(100%-56px)] resize-none" // 56px handle
             )}
         >
-            <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove}>
-                <PlayerContent />
-            </DndContext>
+            {/* Handle to expand when collapsed */}
             <Button
-                onClick={hideVideoPlayer}
                 variant="ghost"
                 size="icon"
-                className="absolute top-0 right-0 h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white z-20"
-                aria-label="إغلاق المشغل"
+                onClick={handleToggleCollapse}
+                className={cn(
+                    "absolute top-1/2 -translate-y-1/2 left-0 h-16 w-14 z-40 bg-black/70 rounded-r-none rounded-l-lg text-white transition-opacity",
+                    isCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+                )}
             >
-                <X className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
             </Button>
-            {/* This transparent div sits on top of the bottom-right corner to allow the resize handle to be grabbed */}
-            <div className="absolute bottom-0 right-0 w-4 h-4 z-30" />
+            
+            <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} disabled={isCollapsed}>
+                <PlayerContent />
+            </DndContext>
+            
+            {/* Buttons visible when expanded */}
+             <div className={cn("absolute top-0 right-0 z-20 flex items-center bg-black/50 rounded-bl-lg transition-opacity", isCollapsed && "opacity-0")}>
+                <Button
+                    onClick={handleToggleCollapse}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white"
+                    aria-label="إخفاء المشغل"
+                >
+                    <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <Button
+                    onClick={handleClose}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white"
+                    aria-label="إغلاق المشغل"
+                >
+                    <X className="h-5 w-5" />
+                </Button>
+            </div>
+
+             <div className={cn("absolute bottom-0 right-0 w-4 h-4 z-30", isCollapsed && "hidden")} />
         </div>
     );
 }
