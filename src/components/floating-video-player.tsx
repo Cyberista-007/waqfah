@@ -1,3 +1,4 @@
+
 'use client';
 
 import YouTube, { YouTubeProps } from 'react-youtube';
@@ -6,7 +7,7 @@ import { Grip, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { DndContext, useDraggable, type DragMoveEvent, type DragStartEvent } from '@dnd-kit/core';
+import { DndContext, useDraggable, type DragEndEvent, type DragStartEvent, type DragMoveEvent } from '@dnd-kit/core';
 
 function PlayerContent() {
   const { videoTrack, videoPlayerRef, pauseTrack } = useAudioPlayer();
@@ -58,10 +59,11 @@ function PlayerContent() {
 
 export function FloatingVideoPlayer() {
     const { videoPlayerRef, isPlayerVisible, hideVideoPlayer } = useAudioPlayer();
+    const playerContainerRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const initialPositionOnDrag = useRef({ x: 0, y: 0 });
     const [isCollapsed, setIsCollapsed] = useState(false);
-
+    
     const handleDragStart = (event: DragStartEvent) => {
         initialPositionOnDrag.current = position;
     };
@@ -74,14 +76,13 @@ export function FloatingVideoPlayer() {
     };
     
     const handleToggleCollapse = useCallback(() => {
-        // Reset drag position for simplicity when collapsing/expanding.
-        // This makes the translate logic much simpler.
-        setPosition({ x: 0, y: 0 });
         setIsCollapsed(prev => {
             const isNowCollapsing = !prev;
             if (isNowCollapsing && videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
                 videoPlayerRef.current.pauseVideo();
             }
+            // Reset drag position when collapsing/expanding for simplicity
+            setPosition({ x: 0, y: 0 });
             return isNowCollapsing;
         });
     }, [videoPlayerRef]);
@@ -92,28 +93,29 @@ export function FloatingVideoPlayer() {
         hideVideoPlayer();
     };
     
-     useEffect(() => {
+    useEffect(() => {
         if (!isPlayerVisible) {
-            // Reset state when player is hidden
             setTimeout(() => {
                 setPosition({ x: 0, y: 0 });
                 setIsCollapsed(false);
             }, 300);
         }
     }, [isPlayerVisible]);
-
+    
     return (
         <div
-            style={{
-                transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
-            }}
+            ref={playerContainerRef}
             className={cn(
-                "fixed top-20 right-8 z-50 rounded-lg shadow-2xl resize-both overflow-hidden",
+                "fixed top-20 right-8 z-50 rounded-lg shadow-2xl overflow-hidden",
                 "w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
-                "transition-all duration-300 ease-in-out", // transition-all to animate transform and other properties
+                "transition-all duration-300 ease-in-out",
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-                isCollapsed && "translate-x-[calc(100%-56px)] resize-none" // 56px handle
+                !isCollapsed && "resize-both",
+                isCollapsed ? "translate-x-[calc(100%-56px)]" : "translate-x-0"
             )}
+            style={{
+                transform: `translate3d(${position.x}px, ${position.y}px, 0) ${isCollapsed ? 'translateX(calc(100% - 56px))' : 'translateX(0)'}`,
+            }}
         >
             {/* Handle to expand when collapsed */}
             <Button
@@ -133,7 +135,7 @@ export function FloatingVideoPlayer() {
             </DndContext>
             
             {/* Buttons visible when expanded */}
-             <div className={cn("absolute top-0 right-0 z-20 flex items-center bg-black/50 rounded-bl-lg transition-opacity", isCollapsed && "opacity-0")}>
+            <div className={cn("absolute top-0 right-0 z-20 flex items-center bg-black/50 rounded-bl-lg transition-opacity", isCollapsed && "opacity-0")}>
                 <Button
                     onClick={handleToggleCollapse}
                     variant="ghost"
@@ -153,8 +155,10 @@ export function FloatingVideoPlayer() {
                     <X className="h-5 w-5" />
                 </Button>
             </div>
-
-             <div className={cn("absolute bottom-0 right-0 w-4 h-4 z-30", isCollapsed && "hidden")} />
+            
+            {/* Resize Handle */}
+            <div className={cn("absolute bottom-0 right-0 w-4 h-4 z-30 cursor-se-resize", isCollapsed && "hidden")} />
         </div>
     );
 }
+
