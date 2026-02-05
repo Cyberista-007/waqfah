@@ -13,7 +13,7 @@ const MIN_WIDTH = 320;
 const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 300;
-const VISIBLE_PART = 40; // The part of the player that remains visible when docked
+const VISIBLE_PART = 60; // The part of the player that remains visible when docked
 
 
 export function FloatingVideoPlayer() {
@@ -356,10 +356,10 @@ export function FloatingVideoPlayer() {
             {/* Undocking Controls */}
             {!isMaximized && (
                  <>
-                    {dockedTo === 'left' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 right-1 h-12 w-12 text-white"><ChevronsRight /></Button>}
-                    {dockedTo === 'right' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 left-1 h-12 w-12 text-white"><ChevronsLeft /></Button>}
-                    {dockedTo === 'top' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 bottom-1 h-12 w-12 text-white"><ChevronsDown /></Button>}
-                    {dockedTo === 'bottom' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 top-1 h-12 w-12 text-white"><ChevronsUp /></Button>}
+                    {dockedTo === 'left' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 right-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-l-none rounded-r-lg p-0"><ChevronsRight className="h-8 w-8" /></Button>}
+                    {dockedTo === 'right' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 left-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-r-none rounded-l-lg p-0"><ChevronsLeft className="h-8 w-8" /></Button>}
+                    {dockedTo === 'top' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 bottom-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-t-none rounded-b-lg p-0"><ChevronsDown className="h-8 w-8" /></Button>}
+                    {dockedTo === 'bottom' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 top-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-b-none rounded-t-lg p-0"><ChevronsUp className="h-8 w-8" /></Button>}
                 </>
             )}
 
