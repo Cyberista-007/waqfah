@@ -101,7 +101,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hideVideoPlayer = () => {
-    pauseVideo();
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
+      videoPlayerRef.current.destroy();
+      videoPlayerRef.current = null;
+    }
     setIsPlayerVisible(false);
     setVideoTrack(null);
   };
