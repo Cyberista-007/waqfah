@@ -103,6 +103,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const hideVideoPlayer = () => {
     pauseVideo();
     setIsPlayerVisible(false);
+    setVideoTrack(null);
   };
 
   // Effect to handle auto-pause at the end of a clip
