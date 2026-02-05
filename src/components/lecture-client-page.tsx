@@ -15,6 +15,7 @@ import { LectureCard } from './lecture-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipCreationDialog } from './clip-creation-dialog';
 import dynamic from 'next/dynamic';
+import { DownloaderModal } from './downloader-modal';
 
 const InteractiveTranscript = dynamic(() => import('@/components/interactive-transcript').then(mod => mod.InteractiveTranscript), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
@@ -66,6 +67,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const router = useRouter();
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
 
   const historyDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'listenHistory', lecture.id) : null),
@@ -162,9 +164,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
 
     // Prioritize video download if available
     if (videoId) {
-        // A common trick to redirect to a YouTube downloader service.
-        const downloadUrl = 'https://ssyoutube.com/watch?v=' + videoId;
-        window.open(downloadUrl, '_blank');
+        setIsDownloaderOpen(true);
         return;
     }
     
@@ -248,7 +248,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
           )}
           <Button onClick={handleDownload}>
               <Download className="w-5 h-5 me-2" />
-              <span>{videoId ? 'تحميل فيديو' : 'تحميل صوت (MP3)'}</span>
+              <span>تحميل</span>
             </Button>
            <Button onClick={handleCreateClip}>
               <Clapperboard className="w-5 h-5 me-2" />
@@ -378,6 +378,11 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         lectureId={lecture.id}
         lectureDuration={lecture.duration}
     />
+     <DownloaderModal 
+        isOpen={isDownloaderOpen}
+        onClose={() => setIsDownloaderOpen(false)}
+        videoUrl={lecture.youtubeUrl || ''}
+      />
     </>
   );
 }
