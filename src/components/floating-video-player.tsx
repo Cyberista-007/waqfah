@@ -180,7 +180,7 @@ export function FloatingVideoPlayer() {
             setSize({ width: window.innerWidth, height: window.innerHeight });
         }
         setIsMaximized(!isMaximized);
-    }, [dockedTo, isMaximized, position, preDockPosition, size, preMaximizeState, window.innerWidth, window.innerHeight]);
+    }, [dockedTo, isMaximized, position, preDockPosition, size, window.innerWidth, window.innerHeight]);
 
 
     // --- Keyboard Shortcuts ---
@@ -231,7 +231,7 @@ export function FloatingVideoPlayer() {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isPlayerVisible, videoPlayerRef, toggleMaximize]);
+    }, [isPlayerVisible, toggleMaximize]);
 
 
     // --- Dynamic Styles ---
@@ -324,16 +324,16 @@ export function FloatingVideoPlayer() {
                     {/* Docking buttons (on hover) */}
                     {!dockedTo && (
                          <div className="absolute inset-0 z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button onClick={() => handleDock('left')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -left-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                            <Button onClick={() => handleDock('left')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -left-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
                                 <ChevronsLeft />
                             </Button>
-                            <Button onClick={() => handleDock('right')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -right-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                            <Button onClick={() => handleDock('right')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -right-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
                                 <ChevronsRight />
                             </Button>
-                            <Button onClick={() => handleDock('top')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -top-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                            <Button onClick={() => handleDock('top')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -top-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
                                 <ChevronsUp />
                             </Button>
-                            <Button onClick={() => handleDock('bottom')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -bottom-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                            <Button onClick={() => handleDock('bottom')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -bottom-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
                                 <ChevronsDown />
                             </Button>
                         </div>
