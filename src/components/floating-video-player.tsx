@@ -3,7 +3,7 @@
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { X, GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { X, GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,8 @@ const MIN_WIDTH = 320;
 const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 300;
+const VISIBLE_PART = 40; // The part of the player that remains visible when docked
+
 
 export function FloatingVideoPlayer() {
     const { videoTrack, videoPlayerRef, isPlayerVisible, hideVideoPlayer, pauseTrack } = useAudioPlayer();
@@ -21,7 +23,10 @@ export function FloatingVideoPlayer() {
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isMaximized, setIsMaximized] = useState(false);
-    const [isHidden, setIsHidden] = useState(false);
+    const [dockedTo, setDockedTo] = useState<'left' | 'right' | 'top' | 'bottom' | null>(null);
+    const [preDockPosition, setPreDockPosition] = useState({ x: 0, y: 0 });
+    const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
 
     // Interaction state
     const [isDragging, setIsDragging] = useState(false);
@@ -29,11 +34,22 @@ export function FloatingVideoPlayer() {
     
     // Refs for interaction logic
     const playerRef = useRef<HTMLDivElement>(null);
+    const interactionOverlayRef = useRef<HTMLDivElement>(null);
     const dragStartRef = useRef({ x: 0, y: 0, playerX: 0, playerY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
     // Store pre-maximize state
     const preMaximizeState = useRef({ x: 0, y: 0, width: 0, height: 0 });
+
+    // Effect to track window size
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+        };
+        handleResize(); // Initial size
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Set initial position when player becomes visible
     useEffect(() => {
@@ -44,7 +60,7 @@ export function FloatingVideoPlayer() {
             });
             setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
             setIsMaximized(false);
-            setIsHidden(false);
+            setDockedTo(null);
         }
     }, [isPlayerVisible]);
 
@@ -61,7 +77,7 @@ export function FloatingVideoPlayer() {
     // --- Interaction Handlers ---
 
     const handleDragStart = (e: React.MouseEvent) => {
-        if (isMaximized || isHidden) return;
+        if (isMaximized || dockedTo) return;
         e.preventDefault();
         setIsDragging(true);
         dragStartRef.current = {
@@ -73,7 +89,7 @@ export function FloatingVideoPlayer() {
     };
 
     const handleResizeStart = (e: React.MouseEvent) => {
-        if (isMaximized || isHidden) return;
+        if (isMaximized || dockedTo) return;
         e.preventDefault();
         setIsResizing(true);
         resizeStartRef.current = {
@@ -131,8 +147,28 @@ export function FloatingVideoPlayer() {
 
 
     // --- UI Action Handlers ---
+    const handleDock = (side: 'left' | 'right' | 'top' | 'bottom' | null) => {
+        if (dockedTo) { // We are undocking
+            if (videoPlayerRef?.current && typeof videoPlayerRef.current.playVideo === 'function') {
+                videoPlayerRef.current.playVideo();
+            }
+            setPosition(preDockPosition);
+            setDockedTo(null);
+        } else if (side) { // We are docking
+            if (videoPlayerRef?.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                videoPlayerRef.current.pauseVideo();
+            }
+            setPreDockPosition(position);
+            setDockedTo(side);
+        }
+    };
 
     const toggleMaximize = useCallback(() => {
+        if (dockedTo) {
+            setPosition(preDockPosition);
+            setDockedTo(null);
+        }
+
         if (isMaximized) {
             // Restore
             setPosition(preMaximizeState.current);
@@ -144,16 +180,8 @@ export function FloatingVideoPlayer() {
             setSize({ width: window.innerWidth, height: window.innerHeight });
         }
         setIsMaximized(!isMaximized);
-    }, [isMaximized, position, size]);
+    }, [dockedTo, isMaximized, position, preDockPosition, size, preMaximizeState, window.innerWidth, window.innerHeight]);
 
-    const toggleHide = () => {
-        if (isHidden && videoPlayerRef?.current) {
-            videoPlayerRef.current.playVideo();
-        } else if (!isHidden && videoPlayerRef?.current) {
-            videoPlayerRef.current.pauseVideo();
-        }
-        setIsHidden(!isHidden);
-    };
 
     // --- Keyboard Shortcuts ---
     useEffect(() => {
@@ -207,15 +235,35 @@ export function FloatingVideoPlayer() {
 
 
     // --- Dynamic Styles ---
-
     const playerStyle: React.CSSProperties = {
-        top: `${position.y}px`,
-        left: `${position.x}px`,
         width: isMaximized ? '100vw' : `${size.width}px`,
         height: isMaximized ? '100vh' : `${size.height}px`,
-        transform: isHidden ? `translateX(calc(100% - 40px))` : 'translateX(0)',
-        transition: (isDragging || isResizing) ? 'none' : 'transform 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out',
+        transition: isDragging || isResizing ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out',
     };
+    
+    if (dockedTo) {
+        switch (dockedTo) {
+            case 'left':
+                playerStyle.left = `${-(size.width - VISIBLE_PART)}px`;
+                playerStyle.top = `${position.y}px`;
+                break;
+            case 'right':
+                playerStyle.left = `${windowSize.width - VISIBLE_PART}px`;
+                playerStyle.top = `${position.y}px`;
+                break;
+            case 'top':
+                playerStyle.top = `${-(size.height - VISIBLE_PART)}px`;
+                playerStyle.left = `${position.x}px`;
+                break;
+            case 'bottom':
+                playerStyle.top = `${windowSize.height - VISIBLE_PART}px`;
+                playerStyle.left = `${position.x}px`;
+                break;
+        }
+    } else {
+        playerStyle.top = `${position.y}px`;
+        playerStyle.left = `${position.x}px`;
+    }
 
     if (!isPlayerVisible || !videoTrack) {
         return null;
@@ -226,12 +274,12 @@ export function FloatingVideoPlayer() {
             ref={playerRef}
             style={playerStyle}
             className={cn(
-                "fixed z-50 rounded-lg shadow-2xl bg-black overflow-hidden flex flex-col",
+                "fixed z-50 rounded-lg shadow-2xl bg-black overflow-hidden flex flex-col group",
                 isMaximized && "rounded-none"
             )}
         >
             {/* Interaction Overlay */}
-            {(isDragging || isResizing) && <div className="absolute inset-0 z-20" />}
+            {(isDragging || isResizing) && <div ref={interactionOverlayRef} className="absolute inset-0 z-20" />}
             
             {/* Control Bar */}
             <div className="relative flex-shrink-0 h-8 w-full flex items-center justify-center bg-black text-white/50 z-10">
@@ -239,7 +287,7 @@ export function FloatingVideoPlayer() {
                     onMouseDown={handleDragStart}
                     className={cn(
                         "flex-grow h-full flex items-center justify-center",
-                        !isMaximized && !isHidden && "cursor-move"
+                       !isMaximized && !dockedTo && "cursor-move"
                     )}
                 >
                     <GripVertical className="h-5 w-5 pointer-events-none" />
@@ -270,19 +318,38 @@ export function FloatingVideoPlayer() {
                 />
             </div>
             
-            {/* Hide/Show Button */}
-             <Button
-                onClick={toggleHide}
-                variant="ghost"
-                size="icon"
-                className="absolute top-1/2 -translate-y-1/2 -left-0.5 h-16 w-8 z-30 bg-black/70 hover:bg-black rounded-r-lg rounded-l-none text-white opacity-50 hover:opacity-100"
-            >
-                {isHidden ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
-            </Button>
+            {/* Docking/Undocking Controls */}
+            {!isMaximized && (
+                 <>
+                    {/* Docking buttons (on hover) */}
+                    {!dockedTo && (
+                         <div className="absolute inset-0 z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button onClick={() => handleDock('left')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -left-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                                <ChevronsLeft />
+                            </Button>
+                            <Button onClick={() => handleDock('right')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -right-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                                <ChevronsRight />
+                            </Button>
+                            <Button onClick={() => handleDock('top')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -top-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                                <ChevronsUp />
+                            </Button>
+                            <Button onClick={() => handleDock('bottom')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -bottom-5 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
+                                <ChevronsDown />
+                            </Button>
+                        </div>
+                    )}
+                    
+                    {/* Undocking buttons (when docked) */}
+                    {dockedTo === 'left' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 right-1 h-12 w-12 text-white"><ChevronsRight /></Button>}
+                    {dockedTo === 'right' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 left-1 h-12 w-12 text-white"><ChevronsLeft /></Button>}
+                    {dockedTo === 'top' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 bottom-1 h-12 w-12 text-white"><ChevronsDown /></Button>}
+                    {dockedTo === 'bottom' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 top-1 h-12 w-12 text-white"><ChevronsUp /></Button>}
+                </>
+            )}
 
 
             {/* Resize Handle */}
-            {!isMaximized && !isHidden && (
+            {!isMaximized && !dockedTo && (
                  <div
                     onMouseDown={handleResizeStart}
                     className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-30"
