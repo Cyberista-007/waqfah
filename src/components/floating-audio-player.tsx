@@ -1,7 +1,8 @@
+
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, Maximize2, FastForward } from "lucide-react";
+import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, FastForward } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -35,14 +36,24 @@ export function FloatingAudioPlayer() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
   
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [sleepTimerDuration, setSleepTimerDuration] = useState(0);
+  const [sleepTimerDuration, setSleepTimerDuration] = useState(0); // in minutes
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState(0); // in seconds
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    const savedVolume = localStorage.getItem('audioPlayerVolume');
+    if (savedVolume) {
+        const parsedVolume = parseFloat(savedVolume);
+        setVolume(parsedVolume);
+        if (audioRef.current) {
+            audioRef.current.volume = parsedVolume;
+        }
+    }
+  }, [audioRef]);
   
   // Update progress bar
     useEffect(() => {
@@ -100,14 +111,6 @@ export function FloatingAudioPlayer() {
     }
   }, [user, firestore, track, audioRef]);
   
-  const clearSleepTimer = () => {
-    if (sleepTimerRef.current) {
-        clearTimeout(sleepTimerRef.current);
-        sleepTimerRef.current = null;
-        setSleepTimerDuration(0);
-    }
-  }
-
   const handleEnded = useCallback(() => {
     if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
     
@@ -275,17 +278,36 @@ export function FloatingAudioPlayer() {
   };
   
   const setSleepTimer = (minutes: number) => {
-    clearSleepTimer();
+    clearSleepTimer(); // Clear any existing timer
     if (minutes > 0) {
         setSleepTimerDuration(minutes);
-        sleepTimerRef.current = setTimeout(() => {
-            pauseTrack();
-            toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل بعد ${minutes} دقيقة.` });
-            clearSleepTimer();
-        }, minutes * 60 * 1000);
+        setSleepTimerRemaining(minutes * 60);
+
+        sleepTimerRef.current = setInterval(() => {
+            setSleepTimerRemaining(prev => {
+                if (prev <= 1) {
+                    pauseTrack();
+                    toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل.` });
+                    clearSleepTimer();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        
         toast({ title: "مؤقت النوم", description: `سيتم إيقاف التشغيل بعد ${minutes} دقيقة.` });
     }
   }
+
+  const clearSleepTimer = useCallback(() => {
+    if (sleepTimerRef.current) {
+        clearInterval(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+        setSleepTimerDuration(0);
+        setSleepTimerRemaining(0);
+        toast({ title: "مؤقت النوم", description: "تم إلغاء مؤقت النوم." });
+    }
+  }, [toast]);
   
   const handleSeek = (value: number[]) => {
       if (audioRef.current) {
@@ -294,12 +316,61 @@ export function FloatingAudioPlayer() {
       }
   };
 
+  const handleVolumeChange = (value: number) => {
+    const newVolume = value / 100;
+    setVolume(newVolume);
+    if (audioRef.current) {
+        audioRef.current.volume = newVolume;
+        if (newVolume > 0 && audioRef.current.muted) {
+            audioRef.current.muted = false;
+            setIsMuted(false);
+        }
+    }
+    localStorage.setItem('audioPlayerVolume', newVolume.toString());
+  };
+
   const toggleMute = () => {
       if (audioRef.current) {
-          audioRef.current.muted = !audioRef.current.muted;
-          setIsMuted(audioRef.current.muted);
+          const currentlyMuted = !audioRef.current.muted;
+          audioRef.current.muted = currentlyMuted;
+          setIsMuted(currentlyMuted);
       }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (!track) return;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
+            return;
+        }
+        
+        switch (event.code) {
+            case 'Space':
+                event.preventDefault();
+                togglePlayPause();
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                handleRewind();
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                handleFastForward();
+                break;
+            case 'KeyM':
+                event.preventDefault();
+                toggleMute();
+                break;
+        }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [togglePlayPause, track]);
+
 
   if (!isMounted || !track) {
     return null;
@@ -358,7 +429,56 @@ export function FloatingAudioPlayer() {
                 onValueChange={handleSeek}
                 className="flex-grow"
             />
-            <span className="text-xs font-mono text-muted-foreground w-10 text-center">{formatTime(duration)}</span>
+            <span className="text-xs font-mono text-muted-foreground w-10 text-center">
+              {sleepTimerRemaining > 0 ? `-${formatTime(sleepTimerRemaining)}` : formatTime(duration)}
+            </span>
+        </div>
+        <div className="px-2 pt-2 flex items-center justify-between">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground relative">
+                        <Timer className="w-4 h-4" />
+                        {sleepTimerDuration > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2">
+                    <div className="space-y-1">
+                        <Button onClick={() => setSleepTimer(15)} variant="ghost" className="w-full justify-start">بعد 15 دقيقة</Button>
+                        <Button onClick={() => setSleepTimer(30)} variant="ghost" className="w-full justify-start">بعد 30 دقيقة</Button>
+                        <Button onClick={() => setSleepTimer(60)} variant="ghost" className="w-full justify-start">بعد 60 دقيقة</Button>
+                        {sleepTimerDuration > 0 && <Button onClick={clearSleepTimer} variant="destructive" className="w-full justify-start mt-2">إلغاء المؤقت</Button>}
+                    </div>
+                </PopoverContent>
+            </Popover>
+
+            <Select onValueChange={handleSpeedChange} defaultValue="1">
+                <SelectTrigger className="w-[75px] h-8 text-xs rounded-full">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="0.75">0.75x</SelectItem>
+                    <SelectItem value="1">1x</SelectItem>
+                    <SelectItem value="1.25">1.25x</SelectItem>
+                    <SelectItem value="1.5">1.5x</SelectItem>
+                    <SelectItem value="2">2x</SelectItem>
+                </SelectContent>
+            </Select>
+            
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                        {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-32 p-2">
+                    <Slider
+                        value={[isMuted ? 0 : volume * 100]}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => handleVolumeChange(value[0])}
+                    />
+                </PopoverContent>
+            </Popover>
         </div>
       </div>
     </div>

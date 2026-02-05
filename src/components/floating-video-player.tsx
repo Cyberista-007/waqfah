@@ -132,7 +132,7 @@ export function FloatingVideoPlayer() {
 
     // --- UI Action Handlers ---
 
-    const toggleMaximize = () => {
+    const toggleMaximize = useCallback(() => {
         if (isMaximized) {
             // Restore
             setPosition(preMaximizeState.current);
@@ -144,7 +144,7 @@ export function FloatingVideoPlayer() {
             setSize({ width: window.innerWidth, height: window.innerHeight });
         }
         setIsMaximized(!isMaximized);
-    };
+    }, [isMaximized, position, size]);
 
     const toggleHide = () => {
         if (isHidden && videoPlayerRef?.current) {
@@ -154,6 +154,57 @@ export function FloatingVideoPlayer() {
         }
         setIsHidden(!isHidden);
     };
+
+    // --- Keyboard Shortcuts ---
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!isPlayerVisible || !videoPlayerRef.current) return;
+            
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
+                return;
+            }
+            
+            const player = videoPlayerRef.current;
+            const playerState = typeof player.getPlayerState === 'function' ? player.getPlayerState() : -1;
+
+            switch (event.code) {
+                case 'Space':
+                    event.preventDefault();
+                    if (playerState === 1) { // playing
+                        player.pauseVideo();
+                    } else {
+                        player.playVideo();
+                    }
+                    break;
+                case 'KeyM':
+                    event.preventDefault();
+                    if (player.isMuted()) {
+                        player.unMute();
+                    } else {
+                        player.mute();
+                    }
+                    break;
+                case 'KeyF':
+                    event.preventDefault();
+                    toggleMaximize();
+                    break;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    player.getCurrentTime().then(currentTime => player.seekTo(currentTime - 10, true));
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    player.getCurrentTime().then(currentTime => player.seekTo(currentTime + 10, true));
+                    break;
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isPlayerVisible, videoPlayerRef, toggleMaximize]);
+
 
     // --- Dynamic Styles ---
 
@@ -242,4 +293,3 @@ export function FloatingVideoPlayer() {
         </div>
     );
 }
-
