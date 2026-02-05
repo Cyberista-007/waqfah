@@ -157,6 +157,28 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     }
   }, [shareUrl, toast]);
 
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const url = lecture.audioSrc;
+    if (!url) {
+        toast({ variant: 'destructive', title: 'رابط التحميل غير متوفر' });
+        return;
+    }
+    
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = lecture.title ? `${lecture.title}.mp3` : 'lecture.mp3';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast({ title: 'بدء التحميل...' });
+    } catch (error) {
+        console.error("Download failed:", error);
+        toast({ variant: 'destructive', title: 'فشل التحميل' });
+    }
+  };
+
   const handleGenericShare = useCallback(async () => {
     if (navigator.share) {
       try {
@@ -208,12 +230,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       <section>
         <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
         <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <a href={lecture.audioSrc} download>
+          <Button onClick={handleDownload}>
               <Download className="w-5 h-5 me-2" />
               <span>تحميل صوت (MP3)</span>
-            </a>
-          </Button>
+            </Button>
            <Button onClick={handleCreateClip}>
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
@@ -351,3 +371,5 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     </>
   );
 }
+
+    
