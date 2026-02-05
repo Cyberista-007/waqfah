@@ -240,6 +240,12 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       <section>
         <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
         <div className="flex flex-wrap gap-3">
+           {videoId && (
+            <Button variant="destructive" onClick={handleWatchVideo}>
+              <Youtube />
+              <span className="ms-2">مشاهدة (يوتيوب)</span>
+            </Button>
+          )}
           <Button onClick={handleDownload}>
               <Download className="w-5 h-5 me-2" />
               <span>{videoId ? 'تحميل فيديو' : 'تحميل صوت (MP3)'}</span>
@@ -248,12 +254,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
             </Button>
-          {videoId && (
-            <Button variant="destructive" onClick={handleWatchVideo}>
-              <Youtube />
-              <span className="ms-2">مشاهدة (يوتيوب)</span>
-            </Button>
-          )}
           {lecture.soundcloudUrl && (
             <Button asChild style={{ backgroundColor: '#ff5500', color: 'white' }}>
               <a href={lecture.soundcloudUrl} target="_blank" rel="noopener noreferrer">
