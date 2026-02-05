@@ -6,7 +6,13 @@ import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { FirebaseClientProvider } from '@/firebase';
 import { AppearanceProvider } from '@/components/appearance-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { FloatingVideoPlayer } from './floating-video-player';
+import dynamic from 'next/dynamic';
+
+const FloatingVideoPlayer = dynamic(
+  () => import('./floating-video-player').then(mod => mod.FloatingVideoPlayer),
+  { ssr: false }
+);
+
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
     return (
