@@ -157,8 +157,18 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     }
   }, [shareUrl, toast]);
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleDownload = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+
+    // Prioritize video download if available
+    if (videoId) {
+        // A common trick to redirect to a YouTube downloader service.
+        const downloadUrl = 'https://ssyoutube.com/watch?v=' + videoId;
+        window.open(downloadUrl, '_blank');
+        return;
+    }
+    
+    // Fallback to audio download
     const url = lecture.audioSrc;
     if (!url) {
         toast({ variant: 'destructive', title: 'رابط التحميل غير متوفر' });
@@ -177,7 +187,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         console.error("Download failed:", error);
         toast({ variant: 'destructive', title: 'فشل التحميل' });
     }
-  };
+  }, [lecture, videoId, toast]);
 
   const handleGenericShare = useCallback(async () => {
     if (navigator.share) {
@@ -232,7 +242,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         <div className="flex flex-wrap gap-3">
           <Button onClick={handleDownload}>
               <Download className="w-5 h-5 me-2" />
-              <span>تحميل صوت (MP3)</span>
+              <span>{videoId ? 'تحميل فيديو' : 'تحميل صوت (MP3)'}</span>
             </Button>
            <Button onClick={handleCreateClip}>
               <Clapperboard className="w-5 h-5 me-2" />
@@ -371,5 +381,3 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     </>
   );
 }
-
-    
