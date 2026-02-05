@@ -3,7 +3,7 @@
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ const VISIBLE_PART = 60; // The part of the player that remains visible when doc
 
 
 export function FloatingVideoPlayer() {
-    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack } = useAudioPlayer();
+    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hideVideoPlayer } = useAudioPlayer();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -114,9 +114,10 @@ export function FloatingVideoPlayer() {
             let newX = dragStartRef.current.playerX + dx;
             let newY = dragStartRef.current.playerY + dy;
 
-            // Boundary checks
-            newX = Math.max(0, Math.min(newX, window.innerWidth - size.width));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
+            // Allow dragging slightly off-screen to enable docking gesture
+            newX = Math.max(-size.width + VISIBLE_PART, Math.min(newX, window.innerWidth - VISIBLE_PART));
+            newY = Math.max(-size.height + VISIBLE_PART, Math.min(newY, window.innerHeight - VISIBLE_PART));
+
 
             setPosition({ x: newX, y: newY });
         }
@@ -142,18 +143,19 @@ export function FloatingVideoPlayer() {
     
     const handleMouseUp = useCallback(() => {
         if (isDragging) {
-            const threshold = 50; // pixels from edge to trigger snap
             let newDockedTo: 'left' | 'right' | 'top' | 'bottom' | null = null;
-
-            if (position.x <= threshold) {
+            
+            // Check if player is pushed off-screen to trigger docking
+            if (position.x < 0) {
                 newDockedTo = 'left';
-            } else if (position.x + size.width >= windowSize.width - threshold) {
+            } else if (position.x + size.width > windowSize.width) {
                 newDockedTo = 'right';
-            } else if (position.y <= threshold) {
+            } else if (position.y < 0) {
                 newDockedTo = 'top';
-            } else if (position.y + size.height >= windowSize.height - threshold) {
+            } else if (position.y + size.height > windowSize.height) {
                 newDockedTo = 'bottom';
             }
+
 
             if (newDockedTo) {
                 setPreDockPosition(position); // Save position before docking
@@ -216,6 +218,11 @@ export function FloatingVideoPlayer() {
         }
         setIsMaximized(!isMaximized);
     }, [dockedTo, isMaximized, position, preDockPosition, size, window.innerWidth, window.innerHeight]);
+    
+    const handleClosePlayer = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        hideVideoPlayer();
+    }
 
 
     // --- Keyboard Shortcuts ---
@@ -328,9 +335,12 @@ export function FloatingVideoPlayer() {
                  aria-roledescription="draggable"
             >
                 <GripVertical className="h-5 w-5 pointer-events-none" />
-                 <div className="absolute top-0 right-0 h-8 flex items-center px-1">
+                 <div className="absolute top-0 right-0 h-8 flex items-center px-1 gap-1">
                     <Button onClick={(e) => toggleMaximize(e)} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
                         {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </Button>
+                    <Button onClick={handleClosePlayer} variant="ghost" size="icon" className="h-8 w-8 text-white rounded-md hover:bg-red-500">
+                      <X className="h-5 w-5" />
                     </Button>
                 </div>
             </div>
@@ -354,10 +364,10 @@ export function FloatingVideoPlayer() {
             {/* Undocking Controls */}
             {!isMaximized && (
                  <>
-                    {dockedTo === 'left' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 right-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-l-none rounded-r-lg p-0"><ChevronsRight className="h-8 w-8" /></Button>}
-                    {dockedTo === 'right' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 left-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-r-none rounded-l-lg p-0"><ChevronsLeft className="h-8 w-8" /></Button>}
-                    {dockedTo === 'top' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 bottom-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-t-none rounded-b-lg p-0"><ChevronsDown className="h-8 w-8" /></Button>}
-                    {dockedTo === 'bottom' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 top-2 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-b-none rounded-t-lg p-0"><ChevronsUp className="h-8 w-8" /></Button>}
+                    {dockedTo === 'left' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 right-0 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-l-none rounded-r-lg p-0"><ChevronsRight className="h-8 w-8" /></Button>}
+                    {dockedTo === 'right' && <Button onClick={handleUndock} className="absolute top-1/2 -translate-y-1/2 left-0 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-r-none rounded-l-lg p-0"><ChevronsLeft className="h-8 w-8" /></Button>}
+                    {dockedTo === 'top' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 bottom-0 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-t-none rounded-b-lg p-0"><ChevronsDown className="h-8 w-8" /></Button>}
+                    {dockedTo === 'bottom' && <Button onClick={handleUndock} className="absolute left-1/2 -translate-x-1/2 top-0 h-14 w-14 text-white bg-black/60 hover:bg-black/80 rounded-b-none rounded-t-lg p-0"><ChevronsUp className="h-8 w-8" /></Button>}
                 </>
             )}
 
