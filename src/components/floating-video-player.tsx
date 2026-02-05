@@ -78,6 +78,7 @@ export function FloatingVideoPlayer() {
     const handleDragStart = (e: React.MouseEvent) => {
         if (isMaximized || dockedTo) return;
         e.preventDefault();
+        e.stopPropagation();
         if (interactionOverlayRef.current) {
             interactionOverlayRef.current.style.display = 'block';
         }
@@ -93,6 +94,7 @@ export function FloatingVideoPlayer() {
     const handleResizeStart = (e: React.MouseEvent) => {
         if (isMaximized || dockedTo) return;
         e.preventDefault();
+        e.stopPropagation();
          if (interactionOverlayRef.current) {
             interactionOverlayRef.current.style.display = 'block';
         }
@@ -113,9 +115,9 @@ export function FloatingVideoPlayer() {
             let newX = dragStartRef.current.playerX + dx;
             let newY = dragStartRef.current.playerY + dy;
 
-            // Allow dragging fully to the edges to check for docking on mouse up
-            newX = Math.max(-size.width, Math.min(newX, window.innerWidth));
-            newY = Math.max(-size.height, Math.min(newY, window.innerHeight));
+            // Allow dragging far enough off-screen to trigger docking on mouse up
+            newX = Math.max(-(size.width), Math.min(newX, window.innerWidth));
+            newY = Math.max(-(size.height), Math.min(newY, window.innerHeight));
 
 
             setPosition({ x: newX, y: newY });
@@ -162,6 +164,12 @@ export function FloatingVideoPlayer() {
                     videoPlayerRef.current.pauseVideo();
                 }
                 setDockedTo(newDockedTo);
+            } else {
+                 // If not docking, clamp position to be fully inside the window
+                setPosition(prev => ({
+                    x: Math.max(0, Math.min(prev.x, windowSize.width - size.width)),
+                    y: Math.max(0, Math.min(prev.y, windowSize.height - size.height)),
+                }));
             }
         }
 
@@ -256,19 +264,19 @@ export function FloatingVideoPlayer() {
         switch (dockedTo) {
             case 'left':
                 playerStyle.left = `${-(size.width - VISIBLE_PART)}px`;
-                playerStyle.top = `${position.y}px`;
+                playerStyle.top = `${Math.max(0, Math.min(position.y, windowSize.height - size.height))}px`;
                 break;
             case 'right':
                 playerStyle.left = `${windowSize.width - VISIBLE_PART}px`;
-                playerStyle.top = `${position.y}px`;
+                playerStyle.top = `${Math.max(0, Math.min(position.y, windowSize.height - size.height))}px`;
                 break;
             case 'top':
                 playerStyle.top = `${-(size.height - VISIBLE_PART)}px`;
-                playerStyle.left = `${position.x}px`;
+                playerStyle.left = `${Math.max(0, Math.min(position.x, windowSize.width - size.width))}px`;
                 break;
             case 'bottom':
                 playerStyle.top = `${windowSize.height - VISIBLE_PART}px`;
-                playerStyle.left = `${position.x}px`;
+                playerStyle.left = `${Math.max(0, Math.min(position.x, windowSize.width - size.width))}px`;
                 break;
         }
     } else {
