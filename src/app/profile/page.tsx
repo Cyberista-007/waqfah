@@ -2,17 +2,20 @@
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { collection, query, where, getDocs, doc, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureClip, LectureNote } from "@/lib/types";
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContinueListening } from "@/components/continue-listening";
 import { ProgramCard } from "@/components/program-card";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -236,6 +239,263 @@ function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
     )
 }
 
+function UserChallengesSection() {
+    const { user } = useUser();
+    const userChallengesPath = user ? `users/${user.uid}/user_challenges` : null;
+    const { data: userChallengesData, isLoading: userChallengesLoading } = useCollection<UserChallenge>(userChallengesPath, { orderBy: ['startedAt', 'desc']});
+    const { data: allChallenges, isLoading: allChallengesLoading } = useCollection<Challenge>('challenges');
+
+    const [userChallenges, setUserChallenges] = useState<(UserChallenge & { challengeDetails?: Challenge })[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (userChallengesLoading || allChallengesLoading) return;
+        if (!userChallengesData || !allChallenges) {
+            setIsLoading(false);
+            return;
+        }
+
+        const enrichedChallenges = userChallengesData.map(uc => {
+            const challengeDetails = allChallenges.find(c => c.id === uc.challengeId);
+            return { ...uc, challengeDetails };
+        }).filter(uc => uc.challengeDetails);
+
+        setUserChallenges(enrichedChallenges as (UserChallenge & { challengeDetails: Challenge })[]);
+        setIsLoading(false);
+
+    }, [userChallengesData, allChallenges, userChallengesLoading, allChallengesLoading]);
+
+    if (isLoading) {
+        return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+               <Card key={i} className="h-[200px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+    
+    if (userChallenges.length === 0) {
+        return (
+            <Card className="text-center py-16">
+                <CardContent className="flex flex-col items-center gap-4">
+                    <Flame className="w-16 h-16 text-muted-foreground" />
+                    <p className="text-lg text-muted-foreground">لم تشترك في أي تحديات بعد.</p>
+                    <Button asChild><Link href="/challenges">تصفح التحديات</Link></Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {userChallenges.map(({id, status, challengeDetails}) => (
+                <Card key={id} className="flex flex-col justify-between">
+                    <CardHeader>
+                        <CardTitle>{challengeDetails?.title}</CardTitle>
+                        <Badge variant={status === 'completed' ? 'default' : 'secondary'} className="w-fit">{status === 'completed' ? 'مكتمل' : 'قيد التقدم'}</Badge>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{challengeDetails?.description}</p>
+                    </CardContent>
+                    <CardFooter>
+                         <Button asChild variant="secondary" className="w-full">
+                            <Link href={`/series/${challengeDetails?.seriesId}`}>
+                                الذهاب إلى السلسلة
+                            </Link>
+                         </Button>
+                    </CardFooter>
+                </Card>
+            ))}
+        </div>
+    )
+}
+
+function SavedClipsSection() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [clips, setClips] = useState<LectureClip[]>([]);
+    const [lectures, setLectures] = useState<Record<string, Lecture>>({});
+    const [isLoading, setIsLoading] = useState(true);
+    const { playTrack } = useAudioPlayer();
+
+    useEffect(() => {
+        if (!firestore || !user) {
+            setIsLoading(false);
+            return;
+        };
+
+        const fetchClips = async () => {
+            setIsLoading(true);
+            try {
+                const clipsQuery = query(collectionGroup(firestore, 'clips'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+                const clipsSnap = await getDocs(clipsQuery);
+                const userClips = clipsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as LectureClip));
+                setClips(userClips);
+
+                if (userClips.length > 0) {
+                    const lectureIds = [...new Set(userClips.map(c => c.lectureId))];
+                    const lecturesData: Record<string, Lecture> = {};
+
+                     for (let i = 0; i < lectureIds.length; i += 30) {
+                        const chunk = lectureIds.slice(i, i + 30);
+                        const lecturesQuery = query(collection(firestore, 'lectures'), where('__name__', 'in', chunk));
+                        const lecturesSnap = await getDocs(lecturesQuery);
+                        lecturesSnap.forEach(doc => {
+                           lecturesData[doc.id] = { id: doc.id, ...doc.data() } as Lecture;
+                        });
+                    }
+                    setLectures(lecturesData);
+                }
+            } catch (error) {
+                console.error("Error fetching saved clips:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchClips();
+    }, [user, firestore]);
+
+     if (isLoading) {
+        return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+               <Card key={i} className="h-[150px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+
+    if (clips.length === 0) {
+        return (
+            <Card className="text-center py-16">
+                <CardContent className="flex flex-col items-center gap-4">
+                    <Clapperboard className="w-16 h-16 text-muted-foreground" />
+                    <p className="text-lg text-muted-foreground">لم تقم بإنشاء أي مقاطع بعد.</p>
+                    <p className="text-sm text-muted-foreground">يمكنك إنشاء مقاطع من صفحة أي محاضرة.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            {clips.map(clip => {
+                const lecture = lectures[clip.lectureId];
+                if (!lecture) return null;
+
+                return (
+                    <Card key={clip.id} className="p-4 flex justify-between items-center">
+                        <div>
+                            <p className="font-bold text-lg">{clip.title}</p>
+                            <Link href={`/lectures/${lecture.slug}`} className="text-sm text-muted-foreground hover:underline">
+                                من محاضرة: {lecture.title}
+                            </Link>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => playTrack(lecture, clip.startTime, clip.endTime)}
+                            >
+                                <Play className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    </Card>
+                );
+            })}
+        </div>
+    );
+}
+
+function AllNotesSection() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [notes, setNotes] = useState<LectureNote[]>([]);
+    const [lectures, setLectures] = useState<Record<string, Lecture>>({});
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!firestore || !user) {
+            setIsLoading(false);
+            return;
+        };
+
+        const fetchNotes = async () => {
+            setIsLoading(true);
+            try {
+                const notesQuery = query(collectionGroup(firestore, 'notes'), where('userId', '==', user.uid), orderBy('updatedAt', 'desc'));
+                const notesSnap = await getDocs(notesQuery);
+                const userNotes = notesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as LectureNote));
+                setNotes(userNotes);
+
+                if (userNotes.length > 0) {
+                    const lectureIds = [...new Set(userNotes.map(n => n.lectureId))];
+                    const lecturesData: Record<string, Lecture> = {};
+
+                     for (let i = 0; i < lectureIds.length; i += 30) {
+                        const chunk = lectureIds.slice(i, i + 30);
+                        const lecturesQuery = query(collection(firestore, 'lectures'), where('__name__', 'in', chunk));
+                        const lecturesSnap = await getDocs(lecturesQuery);
+                        lecturesSnap.forEach(doc => {
+                           lecturesData[doc.id] = { id: doc.id, ...doc.data() } as Lecture;
+                        });
+                    }
+                    setLectures(lecturesData);
+                }
+            } catch (error) {
+                console.error("Error fetching notes:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, [user, firestore]);
+
+     if (isLoading) {
+        return <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, i) => (
+               <Card key={i} className="h-[200px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+            ))}
+        </div>
+    }
+
+    if (notes.length === 0) {
+        return (
+            <Card className="text-center py-16">
+                <CardContent className="flex flex-col items-center gap-4">
+                    <Notebook className="w-16 h-16 text-muted-foreground" />
+                    <p className="text-lg text-muted-foreground">لم تكتب أي ملاحظات بعد.</p>
+                     <p className="text-sm text-muted-foreground">يمكنك كتابة ملاحظات خاصة من صفحة أي محاضرة.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            {notes.map(note => {
+                const lecture = lectures[note.lectureId];
+                return (
+                    <Card key={note.id}>
+                        <CardHeader>
+                            <CardTitle>
+                                <Link href={`/lectures/${lecture?.slug}`} className="hover:underline">
+                                    {lecture?.title || 'محاضرة محذوفة'}
+                                </Link>
+                            </CardTitle>
+                             <CardDescription>
+                                آخر تحديث: {note.updatedAt ? formatDistanceToNow(note.updatedAt.toDate(), { addSuffix: true, locale: ar }) : ''}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground line-clamp-3 whitespace-pre-wrap">{note.content}</p>
+                        </CardContent>
+                    </Card>
+                );
+            })}
+        </div>
+    );
+}
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -270,6 +530,9 @@ export default function ProfilePage() {
                   <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
                   <TabsTrigger value="playlists" className="px-4 py-2 rounded-full flex items-center gap-2"><ListMusic className="h-5 w-5"/>قوائم التشغيل</TabsTrigger>
                   <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Podcast className="h-5 w-5"/>البرامج المتابعة</TabsTrigger>
+                  <TabsTrigger value="challenges" className="px-4 py-2 rounded-full flex items-center gap-2"><Flame className="h-5 w-5"/>تحدياتي</TabsTrigger>
+                  <TabsTrigger value="clips" className="px-4 py-2 rounded-full flex items-center gap-2"><Clapperboard className="h-5 w-5"/>مقاطعي</TabsTrigger>
+                  <TabsTrigger value="notes" className="px-4 py-2 rounded-full flex items-center gap-2"><Notebook className="h-5 w-5"/>ملاحظاتي</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="history" className="mt-6">
@@ -286,6 +549,15 @@ export default function ProfilePage() {
               </TabsContent>
               <TabsContent value="following" className="mt-6">
                 <FollowedProgramsSection />
+              </TabsContent>
+              <TabsContent value="challenges" className="mt-6">
+                <UserChallengesSection />
+              </TabsContent>
+              <TabsContent value="clips" className="mt-6">
+                <SavedClipsSection />
+              </TabsContent>
+              <TabsContent value="notes" className="mt-6">
+                <AllNotesSection />
               </TabsContent>
             </Tabs>
         </div>
