@@ -1,4 +1,3 @@
-
 'use client';
 
 import YouTube, { YouTubeProps } from 'react-youtube';
@@ -108,13 +107,12 @@ export function FloatingVideoPlayer() {
             className={cn(
                 "fixed top-20 right-8 z-50 rounded-lg shadow-2xl overflow-hidden",
                 "w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
-                "transition-all duration-300 ease-in-out",
+                "transition-transform duration-300 ease-in-out",
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-                !isCollapsed && "resize-both",
-                isCollapsed ? "translate-x-[calc(100%-56px)]" : "translate-x-0"
+                !isCollapsed && "resize-both"
             )}
             style={{
-                transform: `translate3d(${position.x}px, ${position.y}px, 0) ${isCollapsed ? 'translateX(calc(100% - 56px))' : 'translateX(0)'}`,
+                transform: `translateX(${isCollapsed ? 'calc(100% - 56px)' : '0px'}) translate3d(${position.x}px, ${position.y}px, 0)`,
             }}
         >
             {/* Handle to expand when collapsed */}
@@ -161,4 +159,3 @@ export function FloatingVideoPlayer() {
         </div>
     );
 }
-
