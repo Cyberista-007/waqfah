@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { ReactNode } from "react";
@@ -101,10 +100,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hideVideoPlayer = () => {
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
-      videoPlayerRef.current.destroy();
-      videoPlayerRef.current = null;
+    // Stop the video to ensure it's fully terminated
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.stopVideo === 'function') {
+      videoPlayerRef.current.stopVideo();
     }
+    // Set state to cause the player component to unmount, which will trigger cleanup.
     setIsPlayerVisible(false);
     setVideoTrack(null);
   };
