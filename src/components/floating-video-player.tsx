@@ -79,6 +79,9 @@ export function FloatingVideoPlayer() {
     const handleDragStart = (e: React.MouseEvent) => {
         if (isMaximized || dockedTo) return;
         e.preventDefault();
+        if (interactionOverlayRef.current) {
+            interactionOverlayRef.current.style.display = 'block';
+        }
         setIsDragging(true);
         dragStartRef.current = {
             x: e.clientX,
@@ -91,6 +94,9 @@ export function FloatingVideoPlayer() {
     const handleResizeStart = (e: React.MouseEvent) => {
         if (isMaximized || dockedTo) return;
         e.preventDefault();
+         if (interactionOverlayRef.current) {
+            interactionOverlayRef.current.style.display = 'block';
+        }
         setIsResizing(true);
         resizeStartRef.current = {
             x: e.clientX,
@@ -118,17 +124,53 @@ export function FloatingVideoPlayer() {
             const dw = e.clientX - resizeStartRef.current.x;
             const dh = e.clientY - resizeStartRef.current.y;
             
-            const newWidth = Math.max(MIN_WIDTH, resizeStartRef.current.width + dw);
-            const newHeight = Math.max(MIN_HEIGHT, resizeStartRef.current.height + dh);
+            let newWidth = Math.max(MIN_WIDTH, resizeStartRef.current.width + dw);
+            let newHeight = Math.max(MIN_HEIGHT, resizeStartRef.current.height + dh);
+
+            // Ensure resize doesn't go off-screen
+            if (position.x + newWidth > window.innerWidth) {
+                newWidth = window.innerWidth - position.x;
+            }
+             if (position.y + newHeight > window.innerHeight) {
+                newHeight = window.innerHeight - position.y;
+            }
+
 
             setSize({ width: newWidth, height: newHeight });
         }
-    }, [isDragging, isResizing, size.width, size.height]);
+    }, [isDragging, isResizing, size.width, size.height, position.x, position.y]);
     
     const handleMouseUp = useCallback(() => {
+        if (isDragging) {
+            const threshold = 50; // pixels from edge to trigger snap
+            let newDockedTo: 'left' | 'right' | 'top' | 'bottom' | null = null;
+
+            if (position.x <= threshold) {
+                newDockedTo = 'left';
+            } else if (position.x + size.width >= windowSize.width - threshold) {
+                newDockedTo = 'right';
+            } else if (position.y <= threshold) {
+                newDockedTo = 'top';
+            } else if (position.y + size.height >= windowSize.height - threshold) {
+                newDockedTo = 'bottom';
+            }
+
+            if (newDockedTo) {
+                setPreDockPosition(position); // Save position before docking
+                if (videoPlayerRef?.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                    videoPlayerRef.current.pauseVideo();
+                }
+                setDockedTo(newDockedTo);
+            }
+        }
+
+        if (interactionOverlayRef.current) {
+            interactionOverlayRef.current.style.display = 'none';
+        }
         setIsDragging(false);
         setIsResizing(false);
-    }, []);
+    }, [isDragging, position, size, windowSize.width, windowSize.height, videoPlayerRef]);
+
 
     useEffect(() => {
         if (isDragging || isResizing) {
@@ -147,26 +189,18 @@ export function FloatingVideoPlayer() {
 
 
     // --- UI Action Handlers ---
-    const handleDock = (side: 'left' | 'right' | 'top' | 'bottom' | null) => {
-        if (dockedTo) { // We are undocking
-            if (videoPlayerRef?.current && typeof videoPlayerRef.current.playVideo === 'function') {
-                videoPlayerRef.current.playVideo();
-            }
-            setPosition(preDockPosition);
-            setDockedTo(null);
-        } else if (side) { // We are docking
-            if (videoPlayerRef?.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
-                videoPlayerRef.current.pauseVideo();
-            }
-            setPreDockPosition(position);
-            setDockedTo(side);
+    const handleUndock = () => {
+        setDockedTo(null);
+        setPosition(preDockPosition); // Restore position
+        if (videoPlayerRef?.current && typeof videoPlayerRef.current.playVideo === 'function') {
+            videoPlayerRef.current.playVideo();
         }
     };
 
     const toggleMaximize = useCallback(() => {
         if (dockedTo) {
-            setPosition(preDockPosition);
             setDockedTo(null);
+            setPosition(preDockPosition);
         }
 
         if (isMaximized) {
@@ -279,19 +313,20 @@ export function FloatingVideoPlayer() {
             )}
         >
             {/* Interaction Overlay */}
-            {(isDragging || isResizing) && <div ref={interactionOverlayRef} className="absolute inset-0 z-20" />}
+            <div ref={interactionOverlayRef} className="absolute inset-0 z-20" style={{ display: 'none' }} />
             
             {/* Control Bar */}
-            <div className="relative flex-shrink-0 h-8 w-full flex items-center justify-center bg-black text-white/50 z-10">
-                <div
-                    onMouseDown={handleDragStart}
-                    className={cn(
-                        "flex-grow h-full flex items-center justify-center",
-                       !isMaximized && !dockedTo && "cursor-move"
-                    )}
-                >
-                    <GripVertical className="h-5 w-5 pointer-events-none" />
-                </div>
+            <div
+                onMouseDown={handleDragStart}
+                className={cn(
+                    "flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 bg-black",
+                   !isMaximized && !dockedTo && "cursor-move"
+                )}
+                 role="button"
+                 tabIndex={0}
+                 aria-roledescription="draggable"
+            >
+                <GripVertical className="h-5 w-5 pointer-events-none" />
                  <div className="absolute top-0 right-0 h-8 flex items-center px-1">
                     <Button onClick={toggleMaximize} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
                         {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -318,32 +353,13 @@ export function FloatingVideoPlayer() {
                 />
             </div>
             
-            {/* Docking/Undocking Controls */}
+            {/* Undocking Controls */}
             {!isMaximized && (
                  <>
-                    {/* Docking buttons (on hover) */}
-                    {!dockedTo && (
-                         <div className="absolute inset-0 z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button onClick={() => handleDock('left')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -left-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
-                                <ChevronsLeft />
-                            </Button>
-                            <Button onClick={() => handleDock('right')} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 -right-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
-                                <ChevronsRight />
-                            </Button>
-                            <Button onClick={() => handleDock('top')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -top-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
-                                <ChevronsUp />
-                            </Button>
-                            <Button onClick={() => handleDock('bottom')} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 -bottom-12 h-12 w-12 bg-black/80 hover:bg-black text-white pointer-events-auto rounded-full">
-                                <ChevronsDown />
-                            </Button>
-                        </div>
-                    )}
-                    
-                    {/* Undocking buttons (when docked) */}
-                    {dockedTo === 'left' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 right-1 h-12 w-12 text-white"><ChevronsRight /></Button>}
-                    {dockedTo === 'right' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 left-1 h-12 w-12 text-white"><ChevronsLeft /></Button>}
-                    {dockedTo === 'top' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 bottom-1 h-12 w-12 text-white"><ChevronsDown /></Button>}
-                    {dockedTo === 'bottom' && <Button onClick={() => handleDock(null)} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 top-1 h-12 w-12 text-white"><ChevronsUp /></Button>}
+                    {dockedTo === 'left' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 right-1 h-12 w-12 text-white"><ChevronsRight /></Button>}
+                    {dockedTo === 'right' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute top-1/2 -translate-y-1/2 left-1 h-12 w-12 text-white"><ChevronsLeft /></Button>}
+                    {dockedTo === 'top' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 bottom-1 h-12 w-12 text-white"><ChevronsDown /></Button>}
+                    {dockedTo === 'bottom' && <Button onClick={handleUndock} variant="ghost" size="icon" className="absolute left-1/2 -translate-x-1/2 top-1 h-12 w-12 text-white"><ChevronsUp /></Button>}
                 </>
             )}
 
