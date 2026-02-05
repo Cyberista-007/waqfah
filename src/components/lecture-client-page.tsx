@@ -1,24 +1,37 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InteractiveTranscript } from '@/components/interactive-transcript';
 import { LectureHeader } from '@/components/lecture-header';
 import type { Lecture, LectureClip, ListenHistoryItem } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { LectureNotes } from '@/components/lecture-notes';
-import { CommentsSection } from '@/components/comments-section';
 import { LectureCard } from './lecture-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipCreationDialog } from './clip-creation-dialog';
-import { ClipsSection } from './clips-section';
+import dynamic from 'next/dynamic';
+
+const InteractiveTranscript = dynamic(() => import('@/components/interactive-transcript').then(mod => mod.InteractiveTranscript), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
+    ssr: false
+});
+const LectureNotes = dynamic(() => import('@/components/lecture-notes').then(mod => mod.LectureNotes), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
+    ssr: false
+});
+const CommentsSection = dynamic(() => import('@/components/comments-section').then(mod => mod.CommentsSection), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
+    ssr: false
+});
+const ClipsSection = dynamic(() => import('@/components/clips-section').then(mod => mod.ClipsSection), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
+    ssr: false
+});
 
 function getYoutubeVideoId(url: string | undefined): string | null {
   if (!url) return null;
