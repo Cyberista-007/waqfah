@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -67,7 +68,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const router = useRouter();
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
-  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
 
   const historyDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'listenHistory', lecture.id) : null),
@@ -163,9 +163,14 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     e.preventDefault();
 
     // Prioritize video download if available
-    if (videoId) {
-        setIsDownloaderOpen(true);
-        return;
+    if (lecture.youtubeUrl) {
+      const downloaderUrl = `https://savefrom.net/${lecture.youtubeUrl}`;
+      window.open(downloaderUrl, '_blank');
+      toast({
+        title: "جاري فتح أداة التنزيل الخارجية",
+        description: "قد تحتوي الخدمة الخارجية على إعلانات.",
+      });
+      return;
     }
     
     // Fallback to audio download
@@ -187,7 +192,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         console.error("Download failed:", error);
         toast({ variant: 'destructive', title: 'فشل التحميل' });
     }
-  }, [lecture, videoId, toast]);
+  }, [lecture, toast]);
 
   const handleGenericShare = useCallback(async () => {
     if (navigator.share) {
@@ -378,11 +383,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         lectureId={lecture.id}
         lectureDuration={lecture.duration}
     />
-     <DownloaderModal 
-        isOpen={isDownloaderOpen}
-        onClose={() => setIsDownloaderOpen(false)}
-        videoUrl={lecture.youtubeUrl || ''}
-      />
     </>
   );
 }
+
+    
