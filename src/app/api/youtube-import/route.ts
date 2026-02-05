@@ -3,11 +3,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
+import ytdl from 'ytdl-core';
 
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
   fetchChannelInfo: z.boolean().optional(),
   fetchVideoInfo: z.boolean().optional(),
+  getFormats: z.boolean().optional(),
 });
 
 const corsHeaders = {
@@ -142,16 +144,53 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400, headers: corsHeaders });
         }
         
-        const { url, fetchChannelInfo, fetchVideoInfo } = validation.data;
+        const { url, fetchChannelInfo, fetchVideoInfo, getFormats } = validation.data;
+        const videoId = getVideoIdFromUrl(url);
 
         const youtube = google.youtube({
             version: 'v3',
             auth: apiKey,
         });
         
+        // Handle fetching download formats
+        if (getFormats) {
+            if (!videoId) {
+                return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
+            }
+             try {
+                const info = await ytdl.getInfo(videoId);
+                
+                const videoFormats = ytdl.filterFormats(info.formats, 'videoandaudio')
+                    .filter(f => f.container === 'mp4' && f.hasVideo && f.hasAudio)
+                    .map(f => ({
+                        itag: f.itag,
+                        qualityLabel: f.qualityLabel,
+                        container: f.container,
+                        hasAudio: f.hasAudio,
+                        url: f.url,
+                        contentLength: f.contentLength
+                    }));
+
+                const audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
+                     .filter(f => f.mimeType?.includes('mp4a'))
+                     .map(f => ({
+                        itag: f.itag,
+                        qualityLabel: null,
+                        container: 'mp4',
+                        hasAudio: true,
+                        url: f.url,
+                        contentLength: f.contentLength
+                    }));
+
+                return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
+            } catch (error: any) {
+                 console.error("YTDL Error:", error);
+                 return NextResponse.json({ message: "فشل في جلب صيغ التنزيل من يوتيوب.", description: error.message }, { status: 500, headers: corsHeaders });
+            }
+        }
+        
         // Handle single video info fetch
         if (fetchVideoInfo) {
-            const videoId = getVideoIdFromUrl(url);
             if (!videoId) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }

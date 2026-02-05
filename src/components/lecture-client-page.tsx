@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -68,6 +69,9 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const router = useRouter();
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
+  const [downloadFormats, setDownloadFormats] = useState([]);
+  const [isFetchingFormats, setIsFetchingFormats] = useState(false);
 
   const historyDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid, 'listenHistory', lecture.id) : null),
@@ -159,18 +163,33 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     }
   }, [shareUrl, toast]);
 
-  const handleDownload = useCallback((e: React.MouseEvent) => {
+  const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
 
-    // Prioritize video download if available
     if (lecture.youtubeUrl) {
-      const downloaderUrl = `https://savefrom.net/${lecture.youtubeUrl}`;
-      window.open(downloaderUrl, '_blank');
-      toast({
-        title: "جاري فتح أداة التنزيل الخارجية",
-        description: "قد تحتوي الخدمة الخارجية على إعلانات.",
-      });
-      return;
+        setIsFetchingFormats(true);
+        try {
+            const response = await fetch('/api/youtube-import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: lecture.youtubeUrl, getFormats: true }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'فشل في جلب صيغ التنزيل.');
+            
+            if (data.formats && data.formats.length > 0) {
+                setDownloadFormats(data.formats);
+                setIsDownloaderOpen(true);
+            } else {
+                toast({ variant: 'destructive', title: 'لم يتم العثور على صيغ تنزيل متاحة.' });
+            }
+
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+        } finally {
+            setIsFetchingFormats(false);
+        }
+        return;
     }
     
     // Fallback to audio download
@@ -192,7 +211,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         console.error("Download failed:", error);
         toast({ variant: 'destructive', title: 'فشل التحميل' });
     }
-  }, [lecture, toast]);
+  }, [lecture.audioSrc, lecture.title, lecture.youtubeUrl, toast]);
 
   const handleGenericShare = useCallback(async () => {
     if (navigator.share) {
@@ -251,10 +270,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <span className="ms-2">مشاهدة (يوتيوب)</span>
             </Button>
           )}
-          <Button onClick={handleDownload}>
-              <Download className="w-5 h-5 me-2" />
+          <Button onClick={handleDownload} disabled={isFetchingFormats}>
+              {isFetchingFormats ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Download className="w-5 h-5 me-2" />}
               <span>تحميل</span>
-            </Button>
+          </Button>
            <Button onClick={handleCreateClip}>
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
@@ -383,8 +402,12 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         lectureId={lecture.id}
         lectureDuration={lecture.duration}
     />
+    <DownloaderModal
+        isOpen={isDownloaderOpen}
+        onOpenChange={setIsDownloaderOpen}
+        formats={downloadFormats}
+        title={lecture.title}
+    />
     </>
   );
 }
-
-    
