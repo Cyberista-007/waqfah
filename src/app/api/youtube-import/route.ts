@@ -191,17 +191,22 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
             } catch (error: any) {
                  console.error("YTDL Error:", error);
-                 const ytdlErrorMessage = error.message || '';
-                 let description = 'حدث خطأ غير متوقع أثناء التواصل مع يوتيوب. قد يكون الفيديو مقيدًا أو غير متاح للتحميل المباشر.';
-                 
+                 const ytdlErrorMessage = (error.message || '').toLowerCase();
+                 let description: string;
+
                  if (ytdlErrorMessage.includes('private')) {
                      description = 'هذا الفيديو خاص ولا يمكن تحميله.';
                  } else if (ytdlErrorMessage.includes('age-restricted')) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';
                  } else if (ytdlErrorMessage.includes('unavailable')) {
                     description = 'هذا الفيديو غير متاح حاليًا.';
-                 } else if (ytdlErrorMessage) {
-                    description = ytdlErrorMessage;
+                 } else if (ytdlErrorMessage.includes('could not extract functions')) {
+                    description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
+                 } else if (error.message) {
+                    description = error.message;
+                 }
+                 else {
+                    description = 'حدث خطأ غير متوقع أثناء التواصل مع يوتيوب. قد يكون الفيديو مقيدًا أو غير متاح للتحميل المباشر.';
                  }
             
                  return NextResponse.json({ message: "فشل في جلب صيغ التنزيل", description }, { status: 500, headers: corsHeaders });
