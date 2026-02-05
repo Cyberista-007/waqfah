@@ -6,7 +6,6 @@ import { X, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, Corne
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { DndContext, useDraggable, type DragMoveEvent, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 
 // Default dimensions
 const DEFAULT_WIDTH = 500;
@@ -14,84 +13,112 @@ const DEFAULT_HEIGHT = 300;
 const MIN_WIDTH = 320;
 const MIN_HEIGHT = 180;
 const COLLAPSED_WIDTH = 56;
-
+const BORDER_SNAP = 20;
 
 export function FloatingVideoPlayer() {
     const { videoTrack, videoPlayerRef, isPlayerVisible, hideVideoPlayer, pauseTrack } = useAudioPlayer();
-    const playerContainerRef = useRef<HTMLDivElement>(null);
-
-    // New state management for position and size
-    const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
-    const [position, setPosition] = useState({
-        x: typeof window !== 'undefined' ? window.innerWidth - DEFAULT_WIDTH - 32 : 0,
-        y: 80,
-    });
     
-    // State for managing UI transitions and modes
+    // Player state
+    const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+    const [position, setPosition] = useState({ x: 0, y: 0 }); // Initial position, will be updated
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
-    const [isInteracting, setIsInteracting] = useState(false); // To disable transitions during drag/resize
 
-    // Draggable hooks from dnd-kit
-    const { attributes: moveAttributes, listeners: moveListeners, setNodeRef: moveHandleRef } = useDraggable({
-        id: 'video-player-move',
-    });
-    const { attributes: resizeAttributes, listeners: resizeListeners, setNodeRef: resizeHandleRef } = useDraggable({
-        id: 'video-player-resize',
-    });
+    // Interaction state
+    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const dragStartRef = useRef({ x: 0, y: 0, initialX: 0, initialY: 0 });
+    const resizeStartRef = useRef({ x: 0, y: 0, initialW: 0, initialH: 0 });
 
     const onPlayerReady: YouTubeProps['onReady'] = (event) => {
         videoPlayerRef.current = event.target;
     };
 
     const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-        // If video starts playing, pause the main audio player
         if (event.data === 1) { 
             pauseTrack();
         }
     };
     
-    // --- Handlers for Drag and Resize ---
-    const handleDragStart = (event: DragStartEvent) => {
-        setIsInteracting(true);
+    // --- Interaction Handlers (Manual Implementation) ---
+
+    const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+        const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        dragStartRef.current = { x: currentX, y: currentY, initialX: position.x, initialY: position.y };
     };
 
-    const handleDragMove = (event: DragMoveEvent) => {
-        if (!playerContainerRef.current) return;
-        
-        if (event.active.id === 'video-player-move') {
-            setPosition((prev) => {
-                const newX = prev.x + event.delta.x;
-                const newY = prev.y + event.delta.y;
+    const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        setIsResizing(true);
+        const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        resizeStartRef.current = { x: currentX, y: currentY, initialW: size.width, initialH: size.height };
+    };
 
-                // Constrain position within viewport
-                const constrainedX = Math.max(0, Math.min(newX, window.innerWidth - size.width));
-                const constrainedY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
-                
-                return { x: constrainedX, y: constrainedY };
+    const handleInteractionMove = useCallback((e: MouseEvent | TouchEvent) => {
+        const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+        if (isDragging) {
+            const dx = currentX - dragStartRef.current.x;
+            const dy = currentY - dragStartRef.current.y;
+            setPosition({
+                x: dragStartRef.current.initialX + dx,
+                y: dragStartRef.current.initialY + dy,
             });
-        } else if (event.active.id === 'video-player-resize') {
-            setSize((prev) => {
-                const newWidth = prev.width + event.delta.x;
-                const newHeight = prev.height + event.delta.y;
-
-                // Constrain size
-                const constrainedWidth = Math.max(MIN_WIDTH, Math.min(newWidth, window.innerWidth - position.x));
-                const constrainedHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, window.innerHeight - position.y));
-
-                return { width: constrainedWidth, height: constrainedHeight };
+        } else if (isResizing) {
+            const dw = currentX - resizeStartRef.current.x;
+            const dh = currentY - resizeStartRef.current.y;
+            setSize({
+                width: Math.max(MIN_WIDTH, resizeStartRef.current.initialW + dw),
+                height: Math.max(MIN_HEIGHT, resizeStartRef.current.initialH + dh),
             });
         }
-    };
+    }, [isDragging, isResizing]);
 
-    const handleDragEnd = (event: DragEndEvent) => {
-        setIsInteracting(false);
-    };
+    const handleInteractionEnd = useCallback(() => {
+        if (isDragging) {
+            // Snap to edges if close enough
+            setPosition(currentPos => {
+                let newX = currentPos.x;
+                if (currentPos.x < BORDER_SNAP) newX = 0;
+                if (currentPos.x > window.innerWidth - size.width - BORDER_SNAP) newX = window.innerWidth - size.width;
+                
+                let newY = currentPos.y;
+                if (currentPos.y < BORDER_SNAP) newY = 0;
+                if (currentPos.y > window.innerHeight - size.height - BORDER_SNAP) newY = window.innerHeight - size.height;
+                
+                return { x: newX, y: newY };
+            });
+        }
+        setIsDragging(false);
+        setIsResizing(false);
+    }, [isDragging, size.width, size.height]);
     
-    // --- Handlers for UI buttons ---
+    // Add/remove global listeners
+    useEffect(() => {
+        if (isDragging || isResizing) {
+            window.addEventListener('mousemove', handleInteractionMove);
+            window.addEventListener('touchmove', handleInteractionMove);
+            window.addEventListener('mouseup', handleInteractionEnd);
+            window.addEventListener('touchend', handleInteractionEnd);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleInteractionMove);
+            window.removeEventListener('touchmove', handleInteractionMove);
+            window.removeEventListener('mouseup', handleInteractionEnd);
+            window.removeEventListener('touchend', handleInteractionEnd);
+        };
+    }, [isDragging, isResizing, handleInteractionMove, handleInteractionEnd]);
+    
+    // --- UI Control Handlers ---
+
     const handleToggleCollapse = useCallback(() => {
         setIsCollapsed(prev => {
-            if (!prev) { // If collapsing now
+            if (!prev) {
                 if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
                     videoPlayerRef.current.pauseVideo();
                 }
@@ -105,132 +132,124 @@ export function FloatingVideoPlayer() {
     }, []);
 
     const handleClose = () => {
-        // Reset all states before hiding
         setIsCollapsed(false);
         setIsMaximized(false);
         hideVideoPlayer();
     };
 
-    // Reset position when visibility changes or on window resize
+    // --- Effects for position and visibility ---
+
     useEffect(() => {
-        const handleResize = () => {
-             setPosition({
-                x: window.innerWidth - size.width - 32,
+        const resetPosition = () => {
+            setPosition({
+                x: window.innerWidth - DEFAULT_WIDTH - 32,
                 y: 80,
             });
-            setIsCollapsed(false);
+            setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
             setIsMaximized(false);
-        }
+            setIsCollapsed(false);
+        };
 
         if (isPlayerVisible) {
-            window.addEventListener('resize', handleResize);
-            handleResize(); // Initial position set
+            window.addEventListener('resize', resetPosition);
+            resetPosition(); // Set initial position
         }
 
         return () => {
-            window.removeEventListener('resize', handleResize);
-        }
-    }, [isPlayerVisible, size.width]);
-
+            window.removeEventListener('resize', resetPosition);
+        };
+    }, [isPlayerVisible]);
 
     const opts: YouTubeProps['opts'] = {
         height: '100%',
         width: '100%',
-        playerVars: { autoplay: 1, rel: 0 },
+        playerVars: { autoplay: 1, rel: 0, controls: 1, modestbranding: 1 },
     };
+    
+    const isInteracting = isDragging || isResizing;
 
     return (
-        <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} onDragEnd={handleDragEnd}>
-            <div
-                ref={playerContainerRef}
-                className={cn(
-                    "fixed z-50 rounded-lg shadow-2xl bg-black overflow-hidden flex flex-col",
-                    isInteracting ? "transition-none" : "transition-all duration-300 ease-in-out",
-                    isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-                )}
-                style={
-                    isMaximized ? {
-                        top: 0,
-                        left: 0,
-                        width: '100vw',
-                        height: '100vh',
-                        borderRadius: 0,
-                    } : {
-                        top: `${position.y}px`,
-                        left: isCollapsed ? `calc(100% - ${COLLAPSED_WIDTH}px)` : `${position.x}px`,
-                        width: isCollapsed ? `${COLLAPSED_WIDTH}px` : `${size.width}px`,
-                        height: isCollapsed ? `${size.height}px` : `${size.height}px`, // Keep height on collapse
-                    }
+        <div
+            className={cn(
+                "fixed z-50 rounded-lg shadow-2xl bg-black overflow-hidden flex flex-col group",
+                isInteracting ? "transition-none" : "transition-all duration-300 ease-in-out",
+                isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+            )}
+            style={
+                isMaximized ? {
+                    top: 0, left: 0, width: '100vw', height: '100vh', borderRadius: 0,
+                } : isCollapsed ? {
+                    transform: `translateX(calc(100vw - ${COLLAPSED_WIDTH}px)) translateY(${position.y}px)`,
+                    width: `${COLLAPSED_WIDTH}px`,
+                    height: `${size.height}px`,
                 }
+                : {
+                    transform: `translateX(${position.x}px) translateY(${position.y}px)`,
+                    width: `${size.width}px`,
+                    height: `${size.height}px`,
+                }
+            }
+        >
+            {/* Interaction Overlay: Prevents iframe from capturing events */}
+            {isInteracting && <div className="absolute inset-0 z-50" />}
+
+            {/* Main Content */}
+            <div
+                className="flex-shrink-0 h-8 w-full flex items-center justify-between px-2 bg-black text-white/50"
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
             >
-                {/* Drag Handle */}
-                <div
-                    ref={moveHandleRef}
-                    {...moveListeners}
-                    {...moveAttributes}
-                    className="flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 cursor-move"
-                >
-                    <GripVertical className="h-5 w-5" />
-                </div>
-                
-                {/* Player Content */}
-                <div className="flex-grow w-full h-full relative">
-                    {videoTrack && (
-                         <YouTube
-                            videoId={videoTrack.videoId}
-                            opts={opts}
-                            onReady={onPlayerReady}
-                            onStateChange={onPlayerStateChange}
-                            className="w-full h-full"
-                            iframeClassName="w-full h-full"
-                        />
-                    )}
-                </div>
-
-                 {/* Controls Overlay */}
-                <div className="absolute top-0 right-0 z-20 flex items-center bg-black/50 rounded-bl-lg transition-opacity">
-                    <Button
-                        onClick={handleToggleMaximize}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white"
-                        aria-label={isMaximized ? "تصغير" : "تكبير"}
-                    >
-                        {isMaximized ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                <GripVertical className="h-5 w-5" />
+                <div className="flex items-center">
+                    <Button onClick={handleToggleMaximize} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
+                        {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </Button>
-                    <Button
-                        onClick={handleToggleCollapse}
-                        variant="ghost"
-                        size="icon"
-                        className={cn("h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white", isMaximized && "hidden")}
-                        aria-label="إخفاء المشغل"
-                    >
-                        {isCollapsed ? <ChevronRight className="h-5 w-5"/> : <ChevronLeft className="h-5 w-5" />}
+                    <Button onClick={handleClose} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
+                        <X className="h-4 w-4" />
                     </Button>
-                    <Button
-                        onClick={handleClose}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-white hover:bg-black/75 hover:text-white"
-                        aria-label="إغلاق المشغل"
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
-
-                {/* Resize Handle */}
-                <div
-                    ref={resizeHandleRef}
-                    {...resizeListeners}
-                    {...resizeAttributes}
-                    className={cn(
-                        "absolute bottom-0 right-0 w-5 h-5 z-30 cursor-se-resize flex items-center justify-center",
-                        (isCollapsed || isMaximized) && "hidden"
-                    )}
-                >
-                  <CornerDownRight className="w-3 h-3 text-white/40"/>
                 </div>
             </div>
-        </DndContext>
+            
+            <div className="flex-grow w-full h-full relative">
+                {videoTrack && (
+                    <YouTube
+                        videoId={videoTrack.videoId}
+                        opts={opts}
+                        onReady={onPlayerReady}
+                        onStateChange={onPlayerStateChange}
+                        className="w-full h-full"
+                        iframeClassName="w-full h-full"
+                    />
+                )}
+            </div>
+
+            {/* Collapse/Expand Toggle Button */}
+            <Button
+                onClick={handleToggleCollapse}
+                variant="ghost"
+                size="icon"
+                className={cn(
+                    "absolute top-1/2 -translate-y-1/2 h-16 w-10 z-40 bg-black/70 text-white rounded-none",
+                    "transition-opacity opacity-0 group-hover:opacity-100",
+                    isCollapsed ? "right-full rounded-r-lg" : "left-full rounded-l-lg",
+                    isMaximized && "hidden"
+                )}
+            >
+                {isCollapsed ? <ChevronRight className="h-5 w-5"/> : <ChevronLeft className="h-5 w-5" />}
+            </Button>
+            
+            {/* Resize Handle */}
+            <div
+                onMouseDown={handleResizeStart}
+                onTouchStart={handleResizeStart}
+                className={cn(
+                    "absolute bottom-0 right-0 w-5 h-5 z-30 cursor-se-resize flex items-center justify-center",
+                    (isCollapsed || isMaximized) && "hidden"
+                )}
+            >
+              <CornerDownRight className="w-3 h-3 text-white/40" style={{transform: 'rotate(90deg)'}}/>
+            </div>
+        </div>
     );
 }
