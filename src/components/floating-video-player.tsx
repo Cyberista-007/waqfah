@@ -1,4 +1,3 @@
-
 'use client';
 
 import YouTube, { YouTubeProps } from 'react-youtube';
@@ -7,7 +6,7 @@ import { Grip, X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { DndContext, useDraggable, type DragStartEvent, type DragMoveEvent } from '@dnd-kit/core';
+import { DndContext, useDraggable, type DragStartEvent, type DragMoveEvent, type DragEndEvent } from '@dnd-kit/core';
 
 function PlayerContent() {
   const { videoTrack, videoPlayerRef, pauseTrack } = useAudioPlayer();
@@ -64,10 +63,16 @@ export function FloatingVideoPlayer() {
     const initialPositionOnDrag = useRef({ x: 0, y: 0 });
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     
     const handleDragStart = (event: DragStartEvent) => {
+        setIsDragging(true);
         initialPositionOnDrag.current = position;
     };
+    
+    const handleDragEnd = (event: DragEndEvent) => {
+        setIsDragging(false);
+    }
 
     const handleDragMove = (event: DragMoveEvent) => {
         const playerNode = playerContainerRef.current;
@@ -134,7 +139,7 @@ export function FloatingVideoPlayer() {
                 isMaximized 
                     ? "w-screen h-screen top-0 right-0 border-none rounded-none" 
                     : "top-20 right-8 w-[50vw] h-[50vh] min-h-[240px] min-w-[320px] max-w-full",
-                "transition-all duration-300 ease-in-out",
+                isDragging ? "transition-none" : "transition-all duration-300 ease-in-out",
                 isPlayerVisible ? "opacity-100" : "opacity-0 pointer-events-none",
                 !isCollapsed && !isMaximized && "resize-both"
             )}
@@ -151,13 +156,13 @@ export function FloatingVideoPlayer() {
                 onClick={handleToggleCollapse}
                 className={cn(
                     "absolute top-1/2 -translate-y-1/2 left-0 h-16 w-14 z-40 bg-black/70 rounded-r-none rounded-l-lg text-white transition-opacity",
-                    isCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+                    isCollapsed ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 )}
             >
                 <ChevronRight className="h-6 w-6" />
             </Button>
             
-            <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} disabled={isCollapsed || isMaximized}>
+            <DndContext onDragStart={handleDragStart} onDragMove={handleDragMove} onDragEnd={handleDragEnd} disabled={isCollapsed || isMaximized}>
                 <PlayerContent />
             </DndContext>
             
