@@ -1,3 +1,4 @@
+
 'use client';
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
@@ -347,8 +348,8 @@ export function FloatingVideoPlayer() {
                     <Button onClick={toggleMaximize} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
                         {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </Button>
-                    <Button onClick={hideVideoPlayer} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
-                        <X className="h-4 w-4" />
+                    <Button onClick={hideVideoPlayer} variant="ghost" size="icon" className="h-8 w-8 text-white rounded-md hover:bg-red-500">
+                        <X className="h-5 w-5" />
                     </Button>
                 </div>
             </div>
@@ -392,3 +393,5 @@ export function FloatingVideoPlayer() {
         </div>
     );
 }
+
+    
