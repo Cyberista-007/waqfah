@@ -80,6 +80,7 @@ export function FloatingVideoPlayer() {
         if (isMaximized) return;
         // Check if the click is on a button inside the drag handle area
         if ((e.target as HTMLElement).closest('button')) {
+            e.stopPropagation();
             return;
         }
         e.preventDefault();
@@ -182,12 +183,6 @@ export function FloatingVideoPlayer() {
                     videoPlayerRef.current.pauseVideo();
                 }
                 setDockedTo(newDockedTo);
-            } else {
-                 // If not docking, clamp position to be fully inside the window
-                setPosition(prev => ({
-                    x: Math.max(0, Math.min(prev.x, windowSize.width - size.width)),
-                    y: Math.max(0, Math.min(prev.y, windowSize.height - size.height)),
-                }));
             }
         }
 
@@ -321,32 +316,30 @@ export function FloatingVideoPlayer() {
             <div ref={interactionOverlayRef} className="absolute inset-0 z-20" style={{ display: 'none' }} />
             
             {/* Control Bar */}
-            <div
+             <div
                 onMouseDown={handleDragStart}
                 className={cn(
-                    "flex-shrink-0 h-8 w-full flex items-center justify-between px-1 text-white/50 bg-black",
+                    "flex-shrink-0 h-8 w-full flex items-center justify-between px-2 text-white/50 bg-black",
                    !isMaximized && !dockedTo && "cursor-move"
                 )}
                  role="button"
                  tabIndex={0}
                  aria-roledescription="draggable"
             >
-                <div className="flex items-center">
-                    <Button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            hideVideoPlayer();
-                        }}
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-white rounded-md hover:bg-red-500"
-                        aria-label="إغلاق المشغل"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                </div>
+                <Button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        hideVideoPlayer();
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white rounded-md hover:bg-red-500"
+                    aria-label="إغلاق المشغل"
+                >
+                    <X className="h-5 w-5" />
+                </Button>
                  <GripVertical className="h-5 w-5 pointer-events-none" />
-                 <div className="w-7"></div>
+                 <div className="w-8"></div>
             </div>
 
             {/* Video Content */}
