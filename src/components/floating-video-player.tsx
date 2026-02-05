@@ -3,7 +3,7 @@
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { X, GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { GripVertical, Maximize2, Minimize2, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ const VISIBLE_PART = 60; // The part of the player that remains visible when doc
 
 
 export function FloatingVideoPlayer() {
-    const { videoTrack, videoPlayerRef, isPlayerVisible, hideVideoPlayer, pauseTrack } = useAudioPlayer();
+    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack } = useAudioPlayer();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -217,11 +217,6 @@ export function FloatingVideoPlayer() {
         setIsMaximized(!isMaximized);
     }, [dockedTo, isMaximized, position, preDockPosition, size, window.innerWidth, window.innerHeight]);
 
-    const handleClose = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        hideVideoPlayer();
-    };
-
 
     // --- Keyboard Shortcuts ---
     useEffect(() => {
@@ -334,11 +329,8 @@ export function FloatingVideoPlayer() {
             >
                 <GripVertical className="h-5 w-5 pointer-events-none" />
                  <div className="absolute top-0 right-0 h-8 flex items-center px-1">
-                    <Button onClick={toggleMaximize} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
+                    <Button onClick={(e) => toggleMaximize(e)} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
                         {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    </Button>
-                    <Button onClick={handleClose} variant="ghost" size="icon" className="h-8 w-8 text-white rounded-md hover:bg-red-500">
-                        <X className="h-5 w-5" />
                     </Button>
                 </div>
             </div>
