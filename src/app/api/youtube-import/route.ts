@@ -158,7 +158,13 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }
              try {
-                const info = await ytdl.getInfo(videoId);
+                const info = await ytdl.getInfo(videoId, {
+                    requestOptions: {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        }
+                    }
+                });
                 
                 const videoFormats = ytdl.filterFormats(info.formats, 'videoandaudio')
                     .filter(f => f.container === 'mp4' && f.hasVideo && f.hasAudio)
@@ -185,7 +191,11 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
             } catch (error: any) {
                  console.error("YTDL Error:", error);
-                 return NextResponse.json({ message: "فشل في جلب صيغ التنزيل من يوتيوب.", description: error.message }, { status: 500, headers: corsHeaders });
+                 const description = error.message.includes('private') ? 'هذا الفيديو خاص ولا يمكن تحميله.' : 
+                     error.message.includes('age-restricted') ? 'هذا الفيديو يتطلب تسجيل الدخول ولا يمكن تحميله.' :
+                     error.message.includes('unavailable') ? 'هذا الفيديو غير متاح.' :
+                     'حدث خطأ غير متوقع أثناء التواصل مع يوتيوب.';
+                 return NextResponse.json({ message: "فشل في جلب صيغ التنزيل", description }, { status: 500, headers: corsHeaders });
             }
         }
         

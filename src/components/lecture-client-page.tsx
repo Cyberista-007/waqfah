@@ -175,7 +175,9 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                 body: JSON.stringify({ url: lecture.youtubeUrl, getFormats: true }),
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'فشل في جلب صيغ التنزيل.');
+            if (!response.ok) {
+                throw new Error(data.description || data.message || 'فشل في جلب صيغ التنزيل.');
+            }
             
             if (data.formats && data.formats.length > 0) {
                 setDownloadFormats(data.formats);

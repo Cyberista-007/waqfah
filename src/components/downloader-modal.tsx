@@ -76,12 +76,12 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                 <TableRow key={format.itag}>
                                     <TableCell>صوت فقط</TableCell>
                                     <TableCell className="flex items-center gap-2">
-                                        <AudioWaveform className="h-4 w-4" /> mp3
+                                        <AudioWaveform className="h-4 w-4" /> m4a
                                     </TableCell>
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
                                         <Button asChild size="sm">
-                                            <a href={format.url} download={`${title}.mp3`}>
+                                            <a href={format.url} download={`${title}.m4a`}>
                                                 <Download className="me-2 h-4 w-4"/>
                                                 <span>تنزيل</span>
                                             </a>
