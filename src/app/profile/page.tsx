@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,8 +63,14 @@ function FavoritesSection() {
                 } else {
                     setFavoriteLectures([]);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching favorite lectures:", error);
+                 if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: `users/${user.uid}/favorites (or lectures)`,
+                        operation: 'list',
+                    }));
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -191,8 +197,14 @@ function FollowedProgramsSection() {
                     programsData.push(...programsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Program)));
                 }
                 setFollowedPrograms(programsData);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching followed programs:", error);
+                 if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: `programs`,
+                        operation: 'list',
+                    }));
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -347,8 +359,14 @@ function SavedClipsSection() {
                     }
                     setLectures(lecturesData);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching saved clips:", error);
+                if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: `clips (collectionGroup) or lectures`,
+                        operation: 'list',
+                    }));
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -442,8 +460,14 @@ function AllNotesSection() {
                     }
                     setLectures(lecturesData);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching notes:", error);
+                 if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: `notes (collectionGroup) or lectures`,
+                        operation: 'list',
+                    }));
+                }
             } finally {
                 setIsLoading(false);
             }
