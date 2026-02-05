@@ -2,7 +2,7 @@
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, X, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { GripVertical, X, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp, Maximize, Minimize } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,8 @@ const MIN_WIDTH = 320;
 const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 300;
-const VISIBLE_PART = 40; // The part of the player that remains visible when docked
+const DOCKING_THRESHOLD = 20; // Must be pushed off-screen until only this many pixels are left to trigger docking
+const DOCKED_VISIBLE_PART = 60; // The part of the player that remains visible when docked
 
 
 export function FloatingVideoPlayer() {
@@ -76,19 +77,36 @@ export function FloatingVideoPlayer() {
     // --- Interaction Handlers ---
 
     const handleDragStart = (e: React.MouseEvent) => {
-        if (isMaximized || dockedTo) return;
+        if (isMaximized) return;
+        // Check if the click is on a button inside the drag handle area
+        if ((e.target as HTMLElement).closest('button')) {
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
         if (interactionOverlayRef.current) {
             interactionOverlayRef.current.style.display = 'block';
         }
+        
         setIsDragging(true);
-        dragStartRef.current = {
-            x: e.clientX,
-            y: e.clientY,
-            playerX: position.x,
-            playerY: position.y,
-        };
+        if (dockedTo) {
+             const rect = playerRef.current!.getBoundingClientRect();
+             setDockedTo(null);
+             setPosition({ x: rect.left, y: rect.top });
+             dragStartRef.current = {
+                x: e.clientX,
+                y: e.clientY,
+                playerX: rect.left,
+                playerY: rect.top,
+            };
+        } else {
+            dragStartRef.current = {
+                x: e.clientX,
+                y: e.clientY,
+                playerX: position.x,
+                playerY: position.y,
+            };
+        }
     };
 
     const handleResizeStart = (e: React.MouseEvent) => {
@@ -147,13 +165,13 @@ export function FloatingVideoPlayer() {
             let newDockedTo: 'left' | 'right' | 'top' | 'bottom' | null = null;
             
             // Check if player is pushed substantially off-screen to trigger docking
-            if (position.x < -(size.width - VISIBLE_PART)) {
+            if (position.x < -(size.width - DOCKING_THRESHOLD)) {
                 newDockedTo = 'left';
-            } else if (position.x > windowSize.width - VISIBLE_PART) {
+            } else if (position.x > windowSize.width - DOCKING_THRESHOLD) {
                 newDockedTo = 'right';
-            } else if (position.y < -(size.height - VISIBLE_PART)) {
+            } else if (position.y < -(size.height - DOCKING_THRESHOLD)) {
                 newDockedTo = 'top';
-            } else if (position.y > windowSize.height - VISIBLE_PART) {
+            } else if (position.y > windowSize.height - DOCKING_THRESHOLD) {
                 newDockedTo = 'bottom';
             }
 
@@ -198,7 +216,8 @@ export function FloatingVideoPlayer() {
 
 
     // --- UI Action Handlers ---
-    const handleUndock = () => {
+    const handleUndock = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setDockedTo(null);
         setPosition(preDockPosition); // Restore position
         if (videoPlayerRef?.current && typeof videoPlayerRef.current.playVideo === 'function') {
@@ -263,19 +282,19 @@ export function FloatingVideoPlayer() {
     if (dockedTo) {
         switch (dockedTo) {
             case 'left':
-                playerStyle.left = `${-(size.width - VISIBLE_PART)}px`;
+                playerStyle.left = `${-(size.width - DOCKED_VISIBLE_PART)}px`;
                 playerStyle.top = `${Math.max(0, Math.min(position.y, windowSize.height - size.height))}px`;
                 break;
             case 'right':
-                playerStyle.left = `${windowSize.width - VISIBLE_PART}px`;
+                playerStyle.left = `${windowSize.width - DOCKED_VISIBLE_PART}px`;
                 playerStyle.top = `${Math.max(0, Math.min(position.y, windowSize.height - size.height))}px`;
                 break;
             case 'top':
-                playerStyle.top = `${-(size.height - VISIBLE_PART)}px`;
+                playerStyle.top = `${-(size.height - DOCKED_VISIBLE_PART)}px`;
                 playerStyle.left = `${Math.max(0, Math.min(position.x, windowSize.width - size.width))}px`;
                 break;
             case 'bottom':
-                playerStyle.top = `${windowSize.height - VISIBLE_PART}px`;
+                playerStyle.top = `${windowSize.height - DOCKED_VISIBLE_PART}px`;
                 playerStyle.left = `${Math.max(0, Math.min(position.x, windowSize.width - size.width))}px`;
                 break;
         }
@@ -297,19 +316,6 @@ export function FloatingVideoPlayer() {
                 isMaximized && "rounded-none"
             )}
         >
-             {/* Close Button */}
-            <Button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    hideVideoPlayer();
-                }}
-                variant="ghost"
-                size="icon"
-                className="absolute top-0 right-0 z-30 h-10 w-10 text-white rounded-none rounded-bl-lg hover:bg-red-600"
-                aria-label="إغلاق المشغل"
-            >
-                <X className="h-6 w-6" />
-            </Button>
             
             {/* Interaction Overlay */}
             <div ref={interactionOverlayRef} className="absolute inset-0 z-20" style={{ display: 'none' }} />
@@ -318,14 +324,29 @@ export function FloatingVideoPlayer() {
             <div
                 onMouseDown={handleDragStart}
                 className={cn(
-                    "flex-shrink-0 h-8 w-full flex items-center justify-center text-white/50 bg-black",
+                    "flex-shrink-0 h-8 w-full flex items-center justify-between px-1 text-white/50 bg-black",
                    !isMaximized && !dockedTo && "cursor-move"
                 )}
                  role="button"
                  tabIndex={0}
                  aria-roledescription="draggable"
             >
-                <GripVertical className="h-5 w-5 pointer-events-none" />
+                <div className="flex items-center">
+                    <Button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            hideVideoPlayer();
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-white rounded-md hover:bg-red-500"
+                        aria-label="إغلاق المشغل"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+                 <GripVertical className="h-5 w-5 pointer-events-none" />
+                 <div className="w-7"></div>
             </div>
 
             {/* Video Content */}
