@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
-import ytdl from 'ytdl-core';
+import play from 'play-dl';
 
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
@@ -158,49 +158,43 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }
              try {
-                const info = await ytdl.getInfo(videoId, {
-                    requestOptions: {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        }
-                    }
-                });
+                const info = await play.video_info(url);
                 
-                const videoFormats = ytdl.filterFormats(info.formats, 'videoandaudio')
-                    .filter(f => f.container === 'mp4' && f.hasVideo && f.hasAudio)
+                const videoFormats = info.format
+                    .filter(f => f.qualityLabel && f.mimeType?.includes('video/mp4') && f.audio_channels)
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
-                        container: f.container,
-                        hasAudio: f.hasAudio,
-                        url: f.url,
-                        contentLength: f.contentLength
-                    }));
-
-                const audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
-                     .filter(f => f.mimeType?.includes('mp4a'))
-                     .map(f => ({
-                        itag: f.itag,
-                        qualityLabel: null,
                         container: 'mp4',
                         hasAudio: true,
                         url: f.url,
-                        contentLength: f.contentLength
+                        contentLength: f.content_length?.toString()
+                    }));
+
+                const audioFormats = info.format
+                     .filter(f => f.mimeType?.includes('audio/mp4'))
+                     .map(f => ({
+                        itag: f.itag,
+                        qualityLabel: null,
+                        container: 'm4a',
+                        hasAudio: true,
+                        url: f.url,
+                        contentLength: f.content_length?.toString()
                     }));
 
                 return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
             } catch (error: any) {
-                 console.error("YTDL Error:", error);
-                 const ytdlErrorMessage = (error.message || '').toLowerCase();
+                 console.error("play-dl Error:", error);
+                 const errorMessage = (error.message || '').toLowerCase();
                  let description: string;
 
-                 if (ytdlErrorMessage.includes('private')) {
+                 if (errorMessage.includes('private')) {
                      description = 'هذا الفيديو خاص ولا يمكن تحميله.';
-                 } else if (ytdlErrorMessage.includes('age-restricted')) {
+                 } else if (errorMessage.includes('age-restricted') || errorMessage.includes('login required')) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';
-                 } else if (ytdlErrorMessage.includes('unavailable')) {
+                 } else if (errorMessage.includes('unavailable')) {
                     description = 'هذا الفيديو غير متاح حاليًا.';
-                 } else if (ytdlErrorMessage.includes('could not extract functions')) {
+                 } else if (errorMessage.includes('could not extract signature decipher')) {
                     description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
                  } else if (error.message) {
                     description = error.message;

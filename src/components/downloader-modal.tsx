@@ -76,7 +76,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                 <TableRow key={format.itag}>
                                     <TableCell>صوت فقط</TableCell>
                                     <TableCell className="flex items-center gap-2">
-                                        <AudioWaveform className="h-4 w-4" /> m4a
+                                        <AudioWaveform className="h-4 w-4" /> {format.container}
                                     </TableCell>
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
