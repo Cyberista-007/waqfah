@@ -2,7 +2,7 @@
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { GripVertical, X, ChevronsLeft, ChevronsRight, ChevronsDown, ChevronsUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -12,11 +12,11 @@ const MIN_WIDTH = 320;
 const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 300;
-const VISIBLE_PART = 60; // The part of the player that remains visible when docked
+const VISIBLE_PART = 40; // The part of the player that remains visible when docked
 
 
 export function FloatingVideoPlayer() {
-    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack } = useAudioPlayer();
+    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hideVideoPlayer } = useAudioPlayer();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -113,9 +113,9 @@ export function FloatingVideoPlayer() {
             let newX = dragStartRef.current.playerX + dx;
             let newY = dragStartRef.current.playerY + dy;
 
-            // Allow dragging slightly off-screen to enable docking gesture
-            newX = Math.max(-size.width + VISIBLE_PART, Math.min(newX, window.innerWidth - VISIBLE_PART));
-            newY = Math.max(-size.height + VISIBLE_PART, Math.min(newY, window.innerHeight - VISIBLE_PART));
+            // Allow dragging fully to the edges to check for docking on mouse up
+            newX = Math.max(-size.width, Math.min(newX, window.innerWidth));
+            newY = Math.max(-size.height, Math.min(newY, window.innerHeight));
 
 
             setPosition({ x: newX, y: newY });
@@ -144,14 +144,14 @@ export function FloatingVideoPlayer() {
         if (isDragging) {
             let newDockedTo: 'left' | 'right' | 'top' | 'bottom' | null = null;
             
-            // Check if player is pushed off-screen to trigger docking
-            if (position.x < 0) {
+            // Check if player is pushed substantially off-screen to trigger docking
+            if (position.x < -(size.width - VISIBLE_PART)) {
                 newDockedTo = 'left';
-            } else if (position.x + size.width > windowSize.width) {
+            } else if (position.x > windowSize.width - VISIBLE_PART) {
                 newDockedTo = 'right';
-            } else if (position.y < 0) {
+            } else if (position.y < -(size.height - VISIBLE_PART)) {
                 newDockedTo = 'top';
-            } else if (position.y + size.height > windowSize.height) {
+            } else if (position.y > windowSize.height - VISIBLE_PART) {
                 newDockedTo = 'bottom';
             }
 
@@ -170,7 +170,7 @@ export function FloatingVideoPlayer() {
         }
         setIsDragging(false);
         setIsResizing(false);
-    }, [isDragging, position, size, windowSize.width, windowSize.height, videoPlayerRef]);
+    }, [isDragging, position, size.width, size.height, windowSize.width, windowSize.height, videoPlayerRef]);
 
 
     useEffect(() => {
@@ -198,27 +198,6 @@ export function FloatingVideoPlayer() {
         }
     };
     
-    const toggleMaximize = useCallback((e?: React.MouseEvent) => {
-        e?.stopPropagation();
-        if (dockedTo) {
-            setDockedTo(null);
-            setPosition(preDockPosition);
-        }
-
-        if (isMaximized) {
-            // Restore
-            setPosition(preMaximizeState.current);
-            setSize({ width: preMaximizeState.current.width, height: preMaximizeState.current.height });
-        } else {
-            // Maximize
-            preMaximizeState.current = { ...position, ...size };
-            setPosition({ x: 0, y: 0 });
-            setSize({ width: window.innerWidth, height: window.innerHeight });
-        }
-        setIsMaximized(!isMaximized);
-    }, [dockedTo, isMaximized, position, preDockPosition, size, window.innerWidth, window.innerHeight]);
-
-
     // --- Keyboard Shortcuts ---
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -310,6 +289,20 @@ export function FloatingVideoPlayer() {
                 isMaximized && "rounded-none"
             )}
         >
+             {/* Close Button */}
+            <Button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    hideVideoPlayer();
+                }}
+                variant="ghost"
+                size="icon"
+                className="absolute top-0 right-0 z-30 h-10 w-10 text-white rounded-none rounded-bl-lg hover:bg-red-600"
+                aria-label="إغلاق المشغل"
+            >
+                <X className="h-6 w-6" />
+            </Button>
+            
             {/* Interaction Overlay */}
             <div ref={interactionOverlayRef} className="absolute inset-0 z-20" style={{ display: 'none' }} />
             
