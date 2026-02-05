@@ -197,24 +197,8 @@ export function FloatingVideoPlayer() {
         }
     };
     
-    // New handler for the 'X' button to dock the player
-    const handleDockRequest = () => {
-        // If it's already docked, do nothing. Let the undock arrow handle it.
-        if (dockedTo) return;
-
-        // Save current position before docking
-        setPreDockPosition(position);
-
-        // Pause the video
-        if (videoPlayerRef?.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
-            videoPlayerRef.current.pauseVideo();
-        }
-        
-        // Dock to the right side by default
-        setDockedTo('right');
-    };
-
-    const toggleMaximize = useCallback(() => {
+    const toggleMaximize = useCallback((e?: React.MouseEvent) => {
+        e?.stopPropagation();
         if (dockedTo) {
             setDockedTo(null);
             setPosition(preDockPosition);
@@ -232,6 +216,11 @@ export function FloatingVideoPlayer() {
         }
         setIsMaximized(!isMaximized);
     }, [dockedTo, isMaximized, position, preDockPosition, size, window.innerWidth, window.innerHeight]);
+
+    const handleClose = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        hideVideoPlayer();
+    };
 
 
     // --- Keyboard Shortcuts ---
@@ -348,7 +337,7 @@ export function FloatingVideoPlayer() {
                     <Button onClick={toggleMaximize} variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20">
                         {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </Button>
-                    <Button onClick={hideVideoPlayer} variant="ghost" size="icon" className="h-8 w-8 text-white rounded-md hover:bg-red-500">
+                    <Button onClick={handleClose} variant="ghost" size="icon" className="h-8 w-8 text-white rounded-md hover:bg-red-500">
                         <X className="h-5 w-5" />
                     </Button>
                 </div>
@@ -393,5 +382,3 @@ export function FloatingVideoPlayer() {
         </div>
     );
 }
-
-    

@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { ReactNode } from "react";
@@ -100,11 +101,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hideVideoPlayer = () => {
-    // Stop the video to ensure it's fully terminated
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.stopVideo === 'function') {
-      videoPlayerRef.current.stopVideo();
-    }
-    // Set state to cause the player component to unmount, which will trigger cleanup.
+    // Simply setting the state to false will cause the component to unmount.
+    // The react-youtube library will handle the destruction of the player instance on unmount.
+    // This is a cleaner and more React-idiomatic way to handle cleanup.
     setIsPlayerVisible(false);
     setVideoTrack(null);
   };
