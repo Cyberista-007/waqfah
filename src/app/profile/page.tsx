@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError, useAudioPlayer } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import { ProgramCard } from "@/components/program-card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { useAudioPlayer } from "@/components/audio-player-provider";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -441,7 +440,8 @@ function AllNotesSection() {
         const fetchNotes = async () => {
             setIsLoading(true);
             try {
-                const notesQuery = query(collectionGroup(firestore, 'notes'), where('userId', '==', user.uid), orderBy('updatedAt', 'desc'));
+                const notesCollectionRef = collection(firestore, 'users', user.uid, 'notes');
+                const notesQuery = query(notesCollectionRef, orderBy('updatedAt', 'desc'));
                 const notesSnap = await getDocs(notesQuery);
                 const userNotes = notesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as LectureNote));
                 setNotes(userNotes);
@@ -464,7 +464,7 @@ function AllNotesSection() {
                 console.error("Error fetching notes:", error);
                  if (error.code === 'permission-denied') {
                     errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: `notes (collectionGroup) or lectures`,
+                        path: `users/${user.uid}/notes or lectures`,
                         operation: 'list',
                     }));
                 }
