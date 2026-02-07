@@ -32,9 +32,9 @@ function DonationGoalBackgroundController() {
         return (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
     }, [settings]);
 
-    const handleSetParticleSettings = useCallback(setParticleSettings, []);
-    const handleSetParticleColor = useCallback(setParticleColor, []);
-    const handleSetBackgroundEffect = useCallback(setBackgroundEffect, []);
+    const handleSetParticleSettings = useCallback(setParticleSettings, [setParticleSettings]);
+    const handleSetParticleColor = useCallback(setParticleColor, [setParticleColor]);
+    const handleSetBackgroundEffect = useCallback(setBackgroundEffect, [setBackgroundEffect]);
 
     useEffect(() => {
         const originalParticleColor = localStorage.getItem("site-particle-color") || '#FFFFFF';
@@ -315,7 +315,7 @@ export default function DonationsPage() {
     { code: 'SAR', name: 'ريال سعودي', rate: 3.75 / 47.5 },
     { code: 'EUR', name: 'يورو', rate: 0.92 / 47.5 }
   ];
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies.find(c => c.code === 'EGP') || currencies[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
 
   useEffect(() => {
     const localeCurrencyMap: { [key: string]: string } = {
@@ -549,9 +549,9 @@ export default function DonationsPage() {
               {otherWaysToSupport.map((way, index) => {
                   const Icon = way.icon;
                   return (
-                      <Card key={index} className="bg-card/50 p-6 text-center flex flex-col">
+                      <Card key={index} className="group bg-card/50 p-6 text-center flex flex-col transition-all duration-300 rounded-xl hover:shadow-xl hover:-translate-y-1">
                         <div className="flex-grow">
-                          <Icon className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+                          <Icon className="h-10 w-10 text-muted-foreground mx-auto mb-4 transition-transform duration-300 group-hover:scale-125 group-hover:text-primary" />
                           <h3 className="text-lg font-bold font-headline">{way.title}</h3>
                           <p className="text-sm text-muted-foreground mt-2">{way.description}</p>
                         </div>
