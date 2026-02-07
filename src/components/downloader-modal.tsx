@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import {
@@ -75,8 +73,8 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title, videoId 
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {videoFormats.map(format => (
-                                <TableRow key={`video-${format.itag}`}>
+                            {videoFormats.map((format, index) => (
+                                <TableRow key={`video-${format.itag}-${index}`}>
                                     <TableCell>{format.qualityLabel}</TableCell>
                                     <TableCell className="flex items-center gap-2">
                                         <Video className="h-4 w-4" /> {format.container}
@@ -90,8 +88,8 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title, videoId 
                                     </TableCell>
                                 </TableRow>
                             ))}
-                             {audioFormats.map(format => (
-                                <TableRow key={`audio-${format.itag}`}>
+                             {audioFormats.map((format, index) => (
+                                <TableRow key={`audio-${format.itag}-${index}`}>
                                     <TableCell>صوت فقط</TableCell>
                                     <TableCell className="flex items-center gap-2">
                                         <AudioWaveform className="h-4 w-4" /> {format.container}
