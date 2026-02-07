@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -198,7 +197,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                     src={imageUrl}
                     alt={lecture.title}
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105 image-theme-filter"
                     data-ai-hint={placeholder?.imageHint || 'lecture content'}
                 />
             )}

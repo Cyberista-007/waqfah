@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
@@ -28,7 +27,7 @@ const ProgramCardComponent = ({ program, index = 0 }: ProgramCardProps) => {
         >
             <Link href={`/programs/${program.slug}`} key={program.id} className="block group w-full">
                 <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors mx-auto">
-                    {imageUrl && <AvatarImage src={imageUrl} alt={program.name} />}
+                    {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="image-theme-filter" />}
                     <AvatarFallback className="text-4xl">{getInitials(program.name)}</AvatarFallback>
                 </Avatar>
                 <CardHeader className="p-0">

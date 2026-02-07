@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/images';
@@ -29,7 +28,7 @@ const ChannelCardComponent = ({ channel, index = 0 }: ChannelCardProps) => {
         >
             <Link href={`/channels/${channel.slug}`} key={channel.id} className="block group w-full">
                 <Avatar className="h-32 w-32 mb-4 border-4 border-transparent group-hover:border-primary/50 transition-colors mx-auto">
-                    <AvatarImage src={imageUrl} alt={channel.name} />
+                    <AvatarImage src={imageUrl} alt={channel.name} className="image-theme-filter" />
                     <AvatarFallback className="text-4xl">{getInitials(channel.name)}</AvatarFallback>
                 </Avatar>
                 <CardHeader className="p-0">

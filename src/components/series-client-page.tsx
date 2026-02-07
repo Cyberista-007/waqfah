@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc, getDoc } from 'firebase/firestore';
-import type { Series, Lecture, Sheikh, ListenHistoryItem } from '@/lib/types';
+import type { Series, Lecture, Program, ListenHistoryItem } from '@/lib/types';
 import { getPlaceholderImage } from '@/lib/images';
 import { Play, Search, Share2 } from 'lucide-react';
 import { YoutubePlayerModal } from '@/components/youtube-player-modal';
@@ -41,7 +40,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 interface SeriesClientPageProps {
   series: Series;
   lecturesInSeries: Lecture[];
-  seriesCreator: Sheikh | null;
+  seriesCreator: Program | null;
 }
 
 export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: SeriesClientPageProps) {
@@ -104,7 +103,7 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
             src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/1200/800`}
             alt={series.title}
             fill
-            className="object-cover"
+            className="object-cover image-theme-filter"
             priority
             data-ai-hint={placeholder?.imageHint || 'islamic art'}
           />

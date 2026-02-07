@@ -106,7 +106,7 @@ export default function Home() {
             src={heroImage.imageUrl}
             alt={heroImage.description}
             fill
-            className="object-cover"
+            className="object-cover image-theme-filter"
             priority
             data-ai-hint={heroImage.imageHint}
           />

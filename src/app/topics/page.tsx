@@ -52,7 +52,7 @@ export default function TopicsPage() {
                             alt={topic.name}
                             width={400}
                             height={200}
-                            className="w-full h-40 object-cover"
+                            className="w-full h-40 object-cover image-theme-filter"
                             data-ai-hint={placeholder?.imageHint || 'abstract'}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

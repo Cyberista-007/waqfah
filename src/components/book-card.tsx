@@ -1,4 +1,3 @@
-
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,7 +28,7 @@ const BookCardComponent = ({ book, index = 0 }: BookCardProps) => {
             alt={`غلاف كتاب ${book.title}`}
             width={300}
             height={400}
-            className="w-full h-auto rounded-md shadow-md mb-4 mx-auto max-w-[200px]"
+            className="w-full h-auto rounded-md shadow-md mb-4 mx-auto max-w-[200px] image-theme-filter"
             data-ai-hint={placeholder?.imageHint || 'book cover'}
           />
           <h3 className="text-lg font-semibold mb-2 font-headline">{book.title}</h3>

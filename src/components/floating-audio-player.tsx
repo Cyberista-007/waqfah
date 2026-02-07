@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -393,7 +392,7 @@ export function FloatingAudioPlayer() {
                 alt={track.title}
                 width={64}
                 height={64}
-                className="w-16 h-16 rounded-md object-cover"
+                className="w-16 h-16 rounded-md object-cover image-theme-filter"
             />
             <div className="flex-grow min-w-0">
                 <p className="text-sm font-bold truncate">

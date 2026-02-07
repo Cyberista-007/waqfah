@@ -135,7 +135,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                     src={imageUrl}
                     alt={lecture.title}
                     fill
-                    className="object-cover"
+                    className="object-cover image-theme-filter"
                     data-ai-hint={placeholder?.imageHint || "lecture content"}
                 />
                 <div 
