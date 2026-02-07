@@ -165,15 +165,15 @@ export default function DonationsPage() {
         <h2 className="text-3xl font-bold text-center mb-12 font-headline">مستويات الدعم التقديرية</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
             {/* Bronze */}
-            <Card className="group text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
+            <Card className="group text-center p-4 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                 <CardHeader className="p-0">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20 group-hover:ring-orange-500/40 transition-shadow duration-300">
-                        <Star className="h-8 w-8 text-orange-500 dark:text-orange-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20 group-hover:ring-orange-500/40 transition-shadow duration-300">
+                        <Star className="h-7 w-7 text-orange-500 dark:text-orange-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
                     </div>
-                    <CardTitle className="font-headline text-2xl text-orange-600 dark:text-orange-400">داعم برونزي</CardTitle>
+                    <CardTitle className="font-headline text-xl text-orange-600 dark:text-orange-400">داعم برونزي</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 mt-2">
-                    <p className="text-lg text-muted-foreground">عند تجاوز 10$</p>
+                    <p className="text-base text-muted-foreground">عند تجاوز 10$</p>
                 </CardContent>
             </Card>
 
