@@ -63,6 +63,7 @@ import { AppearanceManager } from "./appearance-manager"
 import { useAppearance } from "./appearance-provider"
 import { Switch } from "./ui/switch"
 import { Label } from "./ui/label"
+import { ThemeToggle } from "./theme-toggle"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
@@ -197,6 +198,8 @@ export function SiteHeader() {
                   <span className="sr-only">بحث</span>
                 </Button>
             </Link>
+
+            <ThemeToggle />
 
             <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
               <Link href="/donations">
