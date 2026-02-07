@@ -163,12 +163,12 @@ export async function POST(req: NextRequest) {
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
                 const videoFormats = info.format
-                    .filter(f => f.qualityLabel && f.mimeType?.startsWith('video/') && f.audio_channels)
+                    .filter(f => f.qualityLabel && f.mimeType?.startsWith('video/'))
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
                         container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
-                        hasAudio: true,
+                        hasAudio: !!f.audio_channels,
                         url: f.url,
                         contentLength: f.content_length?.toString()
                     }));
@@ -189,8 +189,10 @@ export async function POST(req: NextRequest) {
                  console.error("play-dl Error:", error);
                  const errorMessage = (error.message || '').toLowerCase();
                  let description: string;
-
-                 if (errorMessage.includes('private')) {
+                 
+                 if (errorMessage.includes("sign in to confirm you're not a bot")) {
+                     description = "يوتيوب يطلب التحقق من أنك لست روبوتًا. هذا يحدث أحيانًا بسبب كثرة الطلبات. يرجى المحاولة مرة أخرى بعد فترة قصيرة.";
+                 } else if (errorMessage.includes('private')) {
                      description = 'هذا الفيديو خاص ولا يمكن تحميله.';
                  } else if (errorMessage.includes('age-restricted') || errorMessage.includes('login required')) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';
