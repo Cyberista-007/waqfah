@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { Series } from '@/lib/types';
@@ -17,7 +16,7 @@ const SeriesCardComponent = ({ series, index = 0 }: SeriesCardProps) => {
         <Card
             key={series.id}
             className={cn(
-                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl",
+                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:-rotate-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}
