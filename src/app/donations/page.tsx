@@ -94,7 +94,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
         // For this prototype, we'll just simulate a delay and show a success message.
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const convertedAmount = amount;
+        const convertedAmount = amount / currency.rate;
 
         toast({
             title: "شكرًا لدعمك!",
@@ -148,7 +148,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row justify-around gap-4">
                     {amounts.map(amount => {
-                        const convertedAmount = amount;
+                        const convertedAmount = amount * currency.rate;
                         return (
                             <Button
                                 key={amount}
@@ -160,7 +160,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                                 {isSubmitting === amount ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    `تبرع بـ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(convertedAmount)}`
+                                    `تبرع بـ ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code }).format(convertedAmount)}`
                                 )}
                             </Button>
                         )
@@ -191,8 +191,8 @@ function DonationProgress({ currency }: { currency: Currency }) {
     const { monthlyGoal = 0, currentAmount = 0 } = settings;
     const progress = (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
     
-    const convertedCurrent = currentAmount;
-    const convertedGoal = monthlyGoal;
+    const convertedCurrent = currentAmount * currency.rate;
+    const convertedGoal = monthlyGoal * currency.rate;
 
     return (
         <section>
@@ -201,10 +201,10 @@ function DonationProgress({ currency }: { currency: Currency }) {
                     <CardTitle className="text-2xl font-headline">ادعم استمراريتنا هذا الشهر</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                     <Progress value={progress} className="h-4" />
+                     <Progress value={progress} className="h-4 progress-shimmer" />
                      <div className="flex justify-between text-lg font-bold">
-                        <span>{new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
-                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
+                        <span>{new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
+                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
                      </div>
                 </CardContent>
             </Card>
@@ -361,6 +361,16 @@ export default function DonationsPage() {
           <Heart className="mx-auto h-16 w-16 text-primary animate-pulse" />
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">ادعم استمرارية هذا العلم</h1>
+              <div className="w-48">
+                  <Select value={selectedCurrency.code} onValueChange={(code) => setSelectedCurrency(currencies.find(c => c.code === code) || currencies[0])}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="اختر العملة..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {currencies.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                  </Select>
+              </div>
           </div>
           <p className="max-w-3xl mx-auto text-xl text-muted-foreground">
             كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.

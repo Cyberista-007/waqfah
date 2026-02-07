@@ -650,4 +650,22 @@
     from { transform: rotateY(0deg); }
     to { transform: rotateY(-360deg); }
   }
+
+  .progress-shimmer .progress-indicator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      hsla(var(--primary-foreground), 0) 0,
+      hsla(var(--primary-foreground), 0.2) 20%,
+      hsla(var(--primary-foreground), 0.5) 60%,
+      hsla(var(--primary-foreground), 0)
+    );
+    animation: shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }

@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -109,6 +108,9 @@ export default {
           'from': { transform: 'translateX(0)' },
           'to': { transform: 'translateX(-100%)' },
         },
+        'shimmer': {
+            '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -116,6 +118,7 @@ export default {
         'gradient-move': 'gradient-move 15s ease infinite',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'scroll-rtl': 'scroll-rtl 40s linear infinite',
+        'shimmer': 'shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
        animationPlayState: {
           'paused': 'paused',
