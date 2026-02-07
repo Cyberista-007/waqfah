@@ -109,15 +109,15 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
     localStorage.setItem("site-background-shown", shown ? "true" : "false");
   }, [applyBackground, clearBackgroundStyles]);
 
-  const handleSetFont = (newFont: string) => {
+  const handleSetFont = useCallback((newFont: string) => {
     const allFontClasses = fonts.map(f => f.value);
     document.body.classList.remove(...allFontClasses);
     document.body.classList.add(newFont);
     localStorage.setItem("site-font", newFont);
     setFont(newFont);
-  };
+  }, []);
   
-  const handleSetBackground = (newBg: BackgroundState | null) => {
+  const handleSetBackground = useCallback((newBg: BackgroundState | null) => {
       if (newBg?.image) {
         localStorage.setItem("site-background-image", newBg.image);
       } else {
@@ -142,12 +142,12 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
     } else if (isBackgroundShown) {
         applyBackground();
     }
-  };
+  }, [isBackgroundShown, toggleBackground, applyBackground]);
 
-  const handleSetParticleColor = (color: string) => {
+  const handleSetParticleColor = useCallback((color: string) => {
     setParticleColor(color);
     localStorage.setItem("site-particle-color", color);
-  };
+  }, []);
   
   const setParticleSettings = useCallback((newSettings: Partial<ParticleSettings>) => {
     setParticleSettingsState(prev => {
@@ -194,8 +194,7 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
         setParticleSettingsState(prev => ({...prev, ...JSON.parse(storedParticleSettings)}));
       } catch (e) { console.error("Failed to parse particle settings", e) }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultFont]);
+  }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
   return (
     <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>
