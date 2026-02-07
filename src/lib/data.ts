@@ -21,6 +21,31 @@ const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string 
     return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as T) }));
 };
 
+const getDocsWithQuery = async <T>(collectionName: string, options: { orderBy: [string, 'asc' | 'desc'], limit: number }): Promise<(T & { id: string })[]> => {
+    const firestore = getFirestore();
+    if (!firestore) return [];
+
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = firestore.collection(collectionName);
+
+    if (options.orderBy) {
+        query = query.orderBy(...options.orderBy);
+    }
+    if (options.limit) {
+        query = query.limit(options.limit);
+    }
+
+    const snapshot = await query.get();
+    if (snapshot.empty) {
+        return [];
+    }
+    return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as T) }));
+};
+
+export const getLatestSeries = cache(() => getDocsWithQuery<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 }));
+export const getLatestLectures = cache(() => getDocsWithQuery<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 }));
+export const getTopPrograms = cache(() => getDocsWithQuery<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 }));
+
+
 export const getAllLectures = cache(() => getAllDocs<Lecture>('lectures'));
 export const getAllSeries = cache(() => getAllDocs<Series>('series'));
 export const getAllPrograms = cache(() => getAllDocs<Program>('programs'));

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import type { Lecture, ListenHistoryItem } from '@/lib/types';
 import { recommendLectures } from '@/ai/flows/recommend-lectures';
@@ -43,6 +43,30 @@ export function RecommendedLectures() {
              const lecture = allLectures.find(l => l.id === item.lectureId);
              return lecture?.title || '';
         }).filter(Boolean);
+
+        // --- Client-side Caching Logic ---
+        const cachedDataJSON = localStorage.getItem('lecture_recommendations');
+        if (cachedDataJSON) {
+            try {
+                const cachedData = JSON.parse(cachedDataJSON);
+                const now = new Date().getTime();
+                // Cache is valid for 6 hours and listening history is identical
+                if (now - cachedData.timestamp < 6 * 60 * 60 * 1000 && 
+                    JSON.stringify(cachedData.history) === JSON.stringify(listenedLectureTitles)) {
+                    
+                    const cachedRecs = cachedData.recommendations
+                        .map((title: string) => allLectures.find(lecture => lecture.title === title))
+                        .filter((l: Lecture | undefined): l is Lecture => !!l);
+                    
+                    setRecommendations(cachedRecs);
+                    setIsLoading(false);
+                    return; // Use cached data
+                }
+            } catch (e) {
+                console.error("Failed to parse cached recommendations", e);
+                localStorage.removeItem('lecture_recommendations');
+            }
+        }
         
         const allLectureTitles = allLectures.map(l => l.title);
 
@@ -51,6 +75,15 @@ export function RecommendedLectures() {
           allLectures: allLectureTitles,
           numberOfRecommendations: 3,
         });
+
+        // Store new recommendations in cache
+        const dataToCache = {
+            recommendations: result.recommendedLectures,
+            history: listenedLectureTitles,
+            timestamp: new Date().getTime(),
+        };
+        localStorage.setItem('lecture_recommendations', JSON.stringify(dataToCache));
+        // --- End Caching Logic ---
 
         const recommended = result.recommendedLectures
             .map(title => allLectures.find(lecture => lecture.title === title))
@@ -93,8 +126,8 @@ export function RecommendedLectures() {
     <section>
         <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><BrainCircuit /> نرشح لك</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommendations.map(lecture => (
-                <LectureCard key={lecture.id} lecture={lecture} />
+            {recommendations.map((lecture, index) => (
+                <LectureCard key={lecture.id} lecture={lecture} index={index} />
             ))}
         </div>
     </section>

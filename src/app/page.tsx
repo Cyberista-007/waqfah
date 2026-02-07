@@ -1,163 +1,30 @@
-'use client';
 
-import { HomeSearch } from '@/components/home-search';
-import { RecommendedLectures } from '@/components/recommended-lectures';
-import { ContinueListening } from '@/components/continue-listening';
-import { SeriesCard } from '@/components/series-card';
-import { LectureCard } from '@/components/lecture-card';
-import { ProgramCard } from '@/components/program-card';
-import Image from 'next/image';
-import { getPlaceholderImage } from '@/lib/images';
-import { Suspense, useState } from 'react';
+import { HomePageClient } from '@/components/home-page-client';
+import { getLatestSeries, getLatestLectures, getTopPrograms } from '@/lib/data';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { useCollection } from '@/firebase';
-import type { Lecture, Series, Program } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { Suspense } from 'react';
 
-// New Component for paginated sections
-function PaginatedSection({
-  title,
-  items,
-  renderItem,
-  viewAllHref,
-  itemsPerPage = 4,
-  gridClassName,
-}: {
-  title: string;
-  items: any[] | null;
-  renderItem: (item: any, index: number) => React.ReactNode;
-  viewAllHref: string;
-  itemsPerPage?: number;
-  gridClassName?: string;
-}) {
-  const [visibleCount, setVisibleCount] = useState(itemsPerPage);
+export default async function Home() {
+  const [latestSeries, latestLectures, topPrograms] = await Promise.all([
+    getLatestSeries(),
+    getLatestLectures(),
+    getTopPrograms(),
+  ]);
 
-  if (!items || items.length === 0) {
-    return null;
-  }
-
-  const handleShowMore = () => {
-    setVisibleCount((prev) => Math.min(prev + itemsPerPage, items.length));
-  };
-
-  const hasMoreToLoad = visibleCount < items.length;
-
-  return (
-    <section>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold font-headline">{title}</h2>
-        <Button asChild variant="outline">
-          <Link href={viewAllHref}>
-            <span>عرض الكل</span>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-          </Link>
-        </Button>
-      </div>
-      <div
-        className={cn(
-          'grid grid-cols-1 sm:grid-cols-2 gap-6',
-          gridClassName || 'lg:grid-cols-4'
-        )}
-      >
-        {items.slice(0, visibleCount).map((item, index) => renderItem(item, index))}
-      </div>
-      {hasMoreToLoad && (
-        <div className="text-center mt-8">
-          <Button onClick={handleShowMore}>تحميل المزيد</Button>
-        </div>
-      )}
-    </section>
-  );
-}
-
-export default function Home() {
-  const heroImage = getPlaceholderImage('hero-background');
-
-  const { data: latestSeries, isLoading: seriesLoading } =
-    useCollection<Series>('series', {
-      orderBy: ['createdAt', 'desc'],
-      limit: 12,
-    });
-  const { data: latestLectures, isLoading: lecturesLoading } =
-    useCollection<Lecture>('lectures', {
-      orderBy: ['createdAt', 'desc'],
-      limit: 12,
-    });
-  const { data: topPrograms, isLoading: programsLoading } =
-    useCollection<Program>('programs', {
-      orderBy: ['followerCount', 'desc'],
-      limit: 12,
-    });
-
-  const isLoading = seriesLoading || lecturesLoading || programsLoading;
-
-  if (isLoading) {
+  // This is a simple way to handle the case where firebase-admin isn't configured.
+  // The page will still render with empty arrays.
+  const isLoading = !latestSeries || !latestLectures || !topPrograms;
+  if (isLoading && process.env.FIREBASE_SERVICE_ACCOUNT) {
     return <HomePageSkeleton />;
   }
 
   return (
-    <div className="space-y-12">
-      <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center text-white rounded-b-3xl overflow-hidden">
-        {heroImage && (
-          <Image
-            src={heroImage.imageUrl}
-            alt={heroImage.description}
-            fill
-            className="object-cover image-theme-filter"
-            priority
-            data-ai-hint={heroImage.imageHint}
-          />
-        )}
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="container relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight">
-            العلم الشرعي بين يديك
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
-            منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.
-          </p>
-          <HomeSearch />
-        </div>
-      </section>
-
-      <div className="container py-8 space-y-16">
-        <Suspense>
-          <ContinueListening />
-        </Suspense>
-        <Suspense>
-          <RecommendedLectures />
-        </Suspense>
-
-        <PaginatedSection
-          title="أبرز البرامج"
-          items={topPrograms}
-          viewAllHref="/programs"
-          itemsPerPage={4}
-          renderItem={(item, index) => <ProgramCard program={item} index={index} key={item.id} />}
-        />
-        
-        <PaginatedSection
-            title="أحدث المحاضرات"
-            items={latestLectures}
-            viewAllHref="/lectures"
-            itemsPerPage={3}
-            gridClassName="lg:grid-cols-3"
-            renderItem={(item, index) => <LectureCard lecture={item} index={index} key={item.id} />}
-        />
-        
-        <PaginatedSection
-            title="أحدث السلاسل"
-            items={latestSeries}
-            viewAllHref="/series"
-            itemsPerPage={3}
-            gridClassName="lg:grid-cols-3"
-            renderItem={(item, index) => <SeriesCard series={item} index={index} key={item.id} />}
-        />
-
-      </div>
-    </div>
+    <Suspense fallback={<HomePageSkeleton />}>
+      <HomePageClient
+        latestSeries={latestSeries || []}
+        latestLectures={latestLectures || []}
+        topPrograms={topPrograms || []}
+      />
+    </Suspense>
   );
 }
