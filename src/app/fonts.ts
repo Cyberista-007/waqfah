@@ -1,10 +1,10 @@
-
 import {
   Cairo,
   Tajawal,
   Amiri,
   Source_Code_Pro,
 } from 'next/font/google';
+import localFont from 'next/font/local';
 
 export const cairo = Cairo({
   subsets: ['arabic'],
