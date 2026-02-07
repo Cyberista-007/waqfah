@@ -15,7 +15,7 @@ import { ScrollArea } from "./ui/scroll-area"
 export const fonts = [
   { name: "الافتراضي (Cairo)", value: "font-body" },
   { name: "Tajawal", value: "font-tajawal" },
-  { name: "Amiri (عثماني)", value: "font-amiri" },
+  { name: "Amiri (نسخ)", value: "font-amiri" },
 ];
 
 interface FontSwitcherDialogProps {
