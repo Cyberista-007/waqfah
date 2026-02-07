@@ -76,9 +76,7 @@ const mainNavItems = [
 
 const moreNavItems = [
   { href: "/challenges", label: "التحديات", icon: Flame },
-  { href: "/schedule", label: "جدول الدروس", icon: Calendar },
   { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
-  { href: "/donations", label: "الدعم", icon: Heart },
   { href: "/contact", label: "تواصل معنا", icon: Mail },
 ]
 
@@ -199,18 +197,14 @@ export function SiteHeader() {
                   <span className="sr-only">بحث</span>
                 </Button>
             </Link>
-            
-            <Button
-              onClick={toggleTheme}
-              variant="ghost"
-              size="icon"
-              aria-label="Toggle theme"
-              className="text-foreground/70 hover:text-primary"
-            >
-              <Palette className="h-5 w-5" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
 
+            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
+              <Link href="/donations">
+                <Heart className="me-2 h-4 w-4"/>
+                ادعمنا
+              </Link>
+            </Button>
+            
             {isUserLoading ? (
               <Skeleton className="w-10 h-10 rounded-full" />
             ) : (
