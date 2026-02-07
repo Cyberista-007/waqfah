@@ -53,9 +53,26 @@ export default function DonationsPage() {
           كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.
         </p>
       </section>
+
+      <section>
+        <Card className="bg-primary/5 border-primary/20 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-headline text-primary">
+              <Heart className="h-6 w-6 fill-current" />
+              رسالة من مطور الموقع
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg text-foreground/80 leading-relaxed">
+              هذا المشروع تم تطويره كعمل خالص لوجه الله تعالى، بهدف نشر العلم النافع وتيسير وصوله لأبناء الأمة الإسلامية.
+              مطور الموقع لا يتقاضى أي أجر شخصي من هذه التبرعات. جميع المساهمات تُستخدم بشكل مباشر لتغطية التكاليف التشغيلية للموقع وضمان استمراريته ونموه.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
       
       <section>
-          <Card className="bg-primary/5 border-primary/20 shadow-lg">
+          <Card className="bg-card/50">
             <CardHeader className="text-center">
                 <CardTitle className="text-2xl font-headline">اختر طريقة الدعم المناسبة لك</CardTitle>
             </CardHeader>
