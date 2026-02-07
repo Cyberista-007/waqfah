@@ -67,7 +67,7 @@ export function DonationForm({ item, onFormClose }: DonationFormProps) {
         return;
     }
     
-    const tierThresholds = { gold: 100, silver: 50, bronze: 10 };
+    const tierThresholds = { gold: 5000, silver: 2500, bronze: 500 };
 
     try {
       await runTransaction(firestore, async (transaction) => {

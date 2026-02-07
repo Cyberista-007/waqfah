@@ -78,7 +78,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
         return null;
     }
     
-    const amounts = [10, 25, 50];
+    const amounts = [100, 250, 500];
 
     return (
         <section>
@@ -217,10 +217,10 @@ function WallOfSupporters() {
 
 export default function DonationsPage() {
   const currencies: Currency[] = [
-    { code: 'USD', name: 'دولار أمريكي', rate: 1 },
-    { code: 'EGP', name: 'جنيه مصري', rate: 47.5 },
-    { code: 'SAR', name: 'ريال سعودي', rate: 3.75 },
-    { code: 'EUR', name: 'يورو', rate: 0.92 }
+    { code: 'EGP', name: 'جنيه مصري', rate: 1 },
+    { code: 'USD', name: 'دولار أمريكي', rate: 1 / 47.5 },
+    { code: 'SAR', name: 'ريال سعودي', rate: 3.75 / 47.5 },
+    { code: 'EUR', name: 'يورو', rate: 0.92 / 47.5 }
   ];
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies.find(c => c.code === 'EGP') || currencies[0]);
 
@@ -324,7 +324,7 @@ export default function DonationsPage() {
                     <CardTitle className="font-headline text-xl text-orange-600 dark:text-orange-400">داعم برونزي</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 mt-2">
-                    <p className="text-base text-muted-foreground">عند تجاوز 10$</p>
+                    <p className="text-base text-muted-foreground">عند تجاوز 500 جنيه مصري</p>
                 </CardContent>
             </Card>
 
@@ -337,7 +337,7 @@ export default function DonationsPage() {
                     <CardTitle className="font-headline text-2xl text-slate-700 dark:text-slate-200">داعم فضي</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 mt-2">
-                    <p className="text-lg text-muted-foreground">عند تجاوز 50$</p>
+                    <p className="text-lg text-muted-foreground">عند تجاوز 2500 جنيه مصري</p>
                 </CardContent>
             </Card>
             
@@ -350,7 +350,7 @@ export default function DonationsPage() {
                     <CardTitle className="font-headline text-3xl text-amber-600 dark:text-amber-200">داعم ذهبي</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 mt-2">
-                    <p className="text-lg text-muted-foreground">عند تجاوز 100$</p>
+                    <p className="text-lg text-muted-foreground">عند تجاوز 5000 جنيه مصري</p>
                 </CardContent>
             </Card>
         </div>
