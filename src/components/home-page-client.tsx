@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useCollection } from '@/firebase';
+import { HomePageSkeleton } from './skeletons';
 
 // New Component for paginated sections
 function PaginatedSection({
@@ -73,13 +75,17 @@ function PaginatedSection({
 }
 
 
-interface HomePageClientProps {
-  latestSeries: Series[];
-  latestLectures: Lecture[];
-  topPrograms: Program[];
-}
+export function HomePageClient() {
+  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
 
-export function HomePageClient({ latestSeries, latestLectures, topPrograms }: HomePageClientProps) {
+  const isLoading = seriesLoading || lecturesLoading || programsLoading;
+
+  if (isLoading) {
+    return <HomePageSkeleton />;
+  }
+
   const heroImage = getPlaceholderImage('hero-background');
 
   return (
