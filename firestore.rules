@@ -102,6 +102,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /donations/{donationId} {
+      allow get, list: if true; // Allow public reading of donations for the wall
+      allow write: if isAdmin(); // Only admins can add/edit/delete donations for now
+    }
+
 
     // =====================================================================
     // User-Specific Data

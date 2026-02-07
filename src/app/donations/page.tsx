@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useDoc } from '@/firebase';
-import type { DonationSettings } from '@/lib/types';
+import { useCollection, useDoc } from '@/firebase';
+import type { Donation, DonationSettings } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
+import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function DonationProgress() {
     const { data: settings, isLoading } = useDoc<DonationSettings>('settings/donations');
@@ -42,6 +44,56 @@ function DonationProgress() {
                      </div>
                 </CardContent>
             </Card>
+        </section>
+    );
+}
+
+function WallOfSupporters() {
+    const { data: supporters, isLoading } = useCollection<Donation>('donations', {
+        where: ['isAnonymous', '==', false],
+        orderBy: ['donatedAt', 'desc'],
+        limit: 20
+    });
+
+    const extendedSupporters = useMemo(() => {
+        if (!supporters || supporters.length === 0) return [];
+        // Duplicate the array to create a seamless loop effect
+        if (supporters.length > 0 && supporters.length < 10) {
+           return [...supporters, ...supporters, ...supporters];
+        }
+        return [...supporters, ...supporters];
+    }, [supporters]);
+
+    if (isLoading) {
+        return (
+            <Card className="p-6">
+                <Skeleton className="h-6 w-1/2 mx-auto" />
+                <div className="flex gap-4 mt-4 overflow-hidden">
+                    {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-32 rounded-full" />
+                    ))}
+                </div>
+            </Card>
+        );
+    }
+
+    if (!supporters || supporters.length === 0) {
+        return null; // Don't show the section if there are no supporters
+    }
+
+    return (
+        <section>
+            <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
+            <div className="relative w-full overflow-hidden group">
+                <div className="flex gap-4 animate-scroll-rtl group-hover:animation-play-state-paused">
+                    {extendedSupporters.map((supporter, index) => (
+                        <div key={`${supporter.id}-${index}`} className="flex-shrink-0 bg-accent text-accent-foreground px-6 py-2 rounded-full shadow-md">
+                            <span className="font-semibold text-lg">{supporter.donorName}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+             <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
         </section>
     );
 }
@@ -115,6 +167,8 @@ export default function DonationsPage() {
           </CardContent>
         </Card>
       </section>
+
+      <WallOfSupporters />
       
       <section>
           <Card className="bg-card/50">

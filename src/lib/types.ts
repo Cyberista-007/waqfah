@@ -258,3 +258,11 @@ export type Comment = Serializable<{
     text: string;
     createdAt: Timestamp;
 }>;
+
+export type Donation = Serializable<{
+  id: string;
+  donorName: string;
+  amount?: number;
+  isAnonymous: boolean;
+  donatedAt: Timestamp;
+}>;

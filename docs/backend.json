@@ -334,6 +334,19 @@
         "monthlyGoal": { "type": "number", "minimum": 0, "description": "The monthly donation goal." },
         "currentAmount": { "type": "number", "minimum": 0, "description": "The current amount collected." }
       }
+    },
+    "Donation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Donation",
+      "description": "Represents a single donation made by a user or visitor.",
+      "type": "object",
+      "properties": {
+        "donorName": { "type": "string", "description": "The name of the donor to be displayed publicly." },
+        "amount": { "type": "number", "minimum": 0, "description": "The donation amount (optional)." },
+        "isAnonymous": { "type": "boolean", "default": false, "description": "If true, the donation will not be shown on the public wall of supporters." },
+        "donatedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the donation was made." }
+      },
+      "required": ["donorName", "isAnonymous", "donatedAt"]
     }
   },
   "auth": {
@@ -430,6 +443,10 @@
       {
         "path": "/settings/donations",
         "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
+      },
+      {
+        "path": "/donations/{donationId}",
+        "definition": { "schema": { "$ref": "#/entities/Donation" } }
       }
     ]
   }
