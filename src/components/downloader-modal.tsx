@@ -56,7 +56,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                         </TableHeader>
                         <TableBody>
                             {videoFormats.map(format => (
-                                <TableRow key={format.itag}>
+                                <TableRow key={`video-${format.itag}`}>
                                     <TableCell>{format.qualityLabel}</TableCell>
                                     <TableCell className="flex items-center gap-2">
                                         <Video className="h-4 w-4" /> {format.container}
@@ -73,7 +73,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                 </TableRow>
                             ))}
                              {audioFormats.map(format => (
-                                <TableRow key={format.itag}>
+                                <TableRow key={`audio-${format.itag}`}>
                                     <TableCell>صوت فقط</TableCell>
                                     <TableCell className="flex items-center gap-2">
                                         <AudioWaveform className="h-4 w-4" /> {format.container}
