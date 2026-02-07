@@ -10,6 +10,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
 import { SiteBackground } from '@/components/site-background';
+import { getAppearanceSettings } from '@/lib/data';
 
 export const metadata: Metadata = {
   title: {
@@ -31,11 +32,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appearanceSettings = await getAppearanceSettings();
+  
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={cn(
@@ -45,7 +48,10 @@ export default function RootLayout({
         tajawal.variable,
         amiri.variable
       )}>
-        <AppProviders>
+        <AppProviders 
+          defaultTheme={appearanceSettings?.defaultTheme}
+          defaultFont={appearanceSettings?.defaultFont}
+        >
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />

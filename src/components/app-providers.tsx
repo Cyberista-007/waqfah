@@ -14,11 +14,19 @@ const FloatingVideoPlayer = dynamic(
 );
 
 
-export function AppProviders({ children }: { children: React.ReactNode }) {
+export function AppProviders({
+  children,
+  defaultTheme,
+  defaultFont,
+}: {
+  children: React.ReactNode;
+  defaultTheme?: string;
+  defaultFont?: string;
+}) {
     return (
         <ThemeProvider 
           attribute="class" 
-          defaultTheme="theme-default-dark" 
+          defaultTheme={defaultTheme || "theme-default-dark"}
           enableSystem={false}
           themes={[
             'theme-default-light', 
@@ -44,7 +52,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             'theme-digital-horizon'
           ]}
         >
-          <AppearanceProvider>
+          <AppearanceProvider defaultFont={defaultFont}>
             <FirebaseClientProvider>
               <AudioPlayerProvider>
                 <FirebaseErrorListener />

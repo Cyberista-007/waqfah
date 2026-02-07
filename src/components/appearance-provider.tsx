@@ -1,6 +1,8 @@
+
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { fonts } from "./font-switcher";
 
 type BackgroundState = {
   image: string | null;
@@ -34,8 +36,14 @@ type AppearanceContextType = {
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
 
-export function AppearanceProvider({ children }: { children: ReactNode }) {
-  const [font, setFont] = useState("font-body");
+type AppearanceProviderProps = {
+  children: ReactNode;
+  defaultFont?: string;
+};
+
+
+export function AppearanceProvider({ children, defaultFont }: AppearanceProviderProps) {
+  const [font, setFont] = useState(defaultFont || "font-body");
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
   const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
@@ -102,7 +110,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   }, [applyBackground, clearBackgroundStyles]);
 
   const handleSetFont = (newFont: string) => {
-    document.body.classList.remove(font);
+    const allFontClasses = fonts.map(f => f.value);
+    document.body.classList.remove(...allFontClasses);
     document.body.classList.add(newFont);
     localStorage.setItem("site-font", newFont);
     setFont(newFont);
@@ -149,13 +158,13 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const allFontClasses = fonts.map(f => f.value);
     const storedFont = localStorage.getItem("site-font");
-    if (storedFont) {
-      setFont(storedFont);
-      document.body.classList.add(storedFont);
-    } else {
-      document.body.classList.add("font-body");
-    }
+    const initialFont = storedFont || defaultFont || 'font-body';
+    
+    document.body.classList.remove(...allFontClasses);
+    document.body.classList.add(initialFont);
+    setFont(initialFont);
 
     const storedIsShown = localStorage.getItem("site-background-shown");
     const show = storedIsShown !== "false";
@@ -186,7 +195,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       } catch (e) { console.error("Failed to parse particle settings", e) }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultFont]);
 
   return (
     <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>

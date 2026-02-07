@@ -1,7 +1,8 @@
+
 import 'server-only';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
-import type { Lecture, Series, Program, Topic } from '@/lib/types';
+import type { Lecture, Series, Program, Topic, AppearanceSettings } from '@/lib/types';
 
 const getFirestore = () => initializeAdminApp().firestore;
 
@@ -18,3 +19,13 @@ export const getAllLectures = cache(() => getAllDocs<Lecture>('lectures'));
 export const getAllSeries = cache(() => getAllDocs<Series>('series'));
 export const getAllPrograms = cache(() => getAllDocs<Program>('programs'));
 export const getAllTopics = cache(() => getAllDocs<Topic>('topics'));
+
+export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings | null> => {
+    const firestore = getFirestore();
+    const docRef = firestore.doc('settings/appearance');
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) {
+        return null;
+    }
+    return docSnap.data() as AppearanceSettings;
+});

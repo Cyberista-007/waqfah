@@ -302,6 +302,16 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "userName", "text", "createdAt"]
+    },
+    "AppearanceSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appearance Settings",
+      "description": "A singleton document to store default appearance settings for the site.",
+      "type": "object",
+      "properties": {
+        "defaultTheme": { "type": "string" },
+        "defaultFont": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -386,6 +396,10 @@
       {
         "path": "/scheduled_lessons/{lessonId}",
         "definition": { "schema": { "$ref": "#/entities/ScheduleItem" } }
+      },
+      {
+        "path": "/settings/{settingsId}",
+        "definition": { "schema": { "$ref": "#/entities/AppearanceSettings" } }
       }
     ]
   }
