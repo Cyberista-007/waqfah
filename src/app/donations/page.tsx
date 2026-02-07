@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -7,12 +8,20 @@ import Link from 'next/link';
 import { useCollection, useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-function OneClickDonation() {
+type Currency = {
+    code: string;
+    name: string;
+    rate: number;
+};
+
+
+function OneClickDonation({ currency }: { currency: Currency }) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -31,9 +40,11 @@ function OneClickDonation() {
         // For this prototype, we'll just simulate a delay and show a success message.
         await new Promise(resolve => setTimeout(resolve, 1500));
         
+        const convertedAmount = amount * currency.rate;
+
         toast({
             title: "شكرًا لدعمك!",
-            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount)} بنجاح.`,
+            description: `تم التبرع بما يعادل ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedAmount)} بنجاح.`,
         });
         
         // In a real app, you'd also update the donation goal progress bar here.
@@ -82,28 +93,31 @@ function OneClickDonation() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row justify-around gap-4">
-                    {amounts.map(amount => (
-                        <Button
-                            key={amount}
-                            size="lg"
-                            className="flex-grow"
-                            onClick={() => handleOneClickDonate(amount)}
-                            disabled={!!isSubmitting}
-                        >
-                            {isSubmitting === amount ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                `تبرع بـ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount)}`
-                            )}
-                        </Button>
-                    ))}
+                    {amounts.map(amount => {
+                        const convertedAmount = amount * currency.rate;
+                        return (
+                            <Button
+                                key={amount}
+                                size="lg"
+                                className="flex-grow"
+                                onClick={() => handleOneClickDonate(amount)}
+                                disabled={!!isSubmitting}
+                            >
+                                {isSubmitting === amount ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    `تبرع بـ ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedAmount)}`
+                                )}
+                            </Button>
+                        )
+                    })}
                 </CardContent>
             </Card>
         </section>
     );
 }
 
-function DonationProgress() {
+function DonationProgress({ currency }: { currency: Currency }) {
     const { data: settings, isLoading } = useDoc<DonationSettings>('settings/donations');
     
     if (isLoading) {
@@ -121,7 +135,10 @@ function DonationProgress() {
     }
 
     const { monthlyGoal = 0, currentAmount = 0 } = settings;
-    const progress = Math.min((currentAmount / monthlyGoal) * 100, 100);
+    const progress = (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
+    
+    const convertedCurrent = currentAmount * currency.rate;
+    const convertedGoal = monthlyGoal * currency.rate;
 
     return (
         <section>
@@ -132,8 +149,8 @@ function DonationProgress() {
                 <CardContent className="space-y-4">
                      <Progress value={progress} className="h-4" />
                      <div className="flex justify-between text-lg font-bold">
-                        <span>{new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(currentAmount)}</span>
-                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(monthlyGoal)}</span>
+                        <span>{new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
+                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
                      </div>
                 </CardContent>
             </Card>
@@ -202,6 +219,30 @@ function WallOfSupporters() {
 }
 
 export default function DonationsPage() {
+  const currencies: Currency[] = [
+    { code: 'USD', name: 'دولار أمريكي', rate: 1 },
+    { code: 'EGP', name: 'جنيه مصري', rate: 47.5 },
+    { code: 'SAR', name: 'ريال سعودي', rate: 3.75 },
+    { code: 'EUR', name: 'يورو', rate: 0.92 }
+  ];
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
+
+  useEffect(() => {
+    const localeCurrencyMap: { [key: string]: string } = {
+        'ar-EG': 'EGP',
+        'ar-SA': 'SAR',
+        'en-GB': 'EUR',
+        'de-DE': 'EUR',
+        'fr-FR': 'EUR'
+        // We can add more mappings here
+    };
+    const userLocale = navigator.language;
+    const currencyCode = localeCurrencyMap[userLocale] || 'USD';
+    const currency = currencies.find(c => c.code === currencyCode) || currencies[0];
+    setSelectedCurrency(currency);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const donationReasons = [
     {
       icon: Server,
@@ -246,21 +287,36 @@ export default function DonationsPage() {
     <div className="space-y-16">
       <section className="text-center">
         <Heart className="mx-auto h-16 w-16 text-primary animate-pulse" />
-        <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">ادعم استمرارية هذا العلم</h1>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">ادعم استمرارية هذا العلم</h1>
+            <div className="mt-4">
+                 <Select value={selectedCurrency.code} onValueChange={(code) => {
+                    const currency = currencies.find(c => c.code === code);
+                    if (currency) setSelectedCurrency(currency);
+                }}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="اختر العملة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {currencies.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
         <p className="max-w-3xl mx-auto text-xl text-muted-foreground">
           كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.
         </p>
       </section>
 
-      <OneClickDonation />
+      <OneClickDonation currency={selectedCurrency} />
 
-      <DonationProgress />
+      <DonationProgress currency={selectedCurrency} />
 
       <section>
         <h2 className="text-3xl font-bold text-center mb-12 font-headline">مستويات الدعم التقديرية</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
             {/* Bronze */}
-            <Card className="group text-center p-4 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
+            <Card className="group text-center p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                 <CardHeader className="p-0">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20 group-hover:ring-orange-500/40 transition-shadow duration-300">
                         <Star className="h-7 w-7 text-orange-500 dark:text-orange-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
