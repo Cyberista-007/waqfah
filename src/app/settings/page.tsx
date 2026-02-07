@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -52,6 +53,7 @@ import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { DonationTierBadge } from '@/components/DonationTierBadge';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -192,7 +194,7 @@ function NewEpisodesView({ onBack }: { onBack: () => void; }) {
 
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
 
-     useEffect(() => {
+     useState(() => {
         if (programsLoading || followingLoading || !allPrograms || !following) {
              if (!programsLoading && !followingLoading) {
                 setIsLoading(false);
@@ -205,7 +207,7 @@ function NewEpisodesView({ onBack }: { onBack: () => void; }) {
         setFollowedPrograms(subscribedPrograms);
         setIsLoading(false);
 
-    }, [following, allPrograms, programsLoading, followingLoading]);
+    });
 
     const handleToggle = (programId: string, newState: boolean) => {
         if (!user || !firestore) return;
@@ -320,6 +322,7 @@ export default function SettingsPage() {
         <div className="text-center sm:text-right">
             <div className="flex items-center gap-3 justify-center sm:justify-start">
                 <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+                <DonationTierBadge tier={userProfile.donationTier} />
                 {userProfile.role === 'admin' && (
                   <Link href="/admin/dashboard">
                     <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/80">وضع المدير</Badge>
