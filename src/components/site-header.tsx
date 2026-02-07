@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -129,7 +128,7 @@ export function SiteHeader() {
       {/* Desktop Header */}
       <header className={cn(
           "sticky top-0 z-50 transition-all duration-300 hidden md:block",
-          scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
+          scrolled ? "bg-background/80 backdrop-blur-md shadow-md" : "bg-transparent"
       )}>
         <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
             <Link
@@ -259,7 +258,7 @@ export function SiteHeader() {
       </header>
       
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-background/95 border-t backdrop-blur-sm">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-background/80 border-t backdrop-blur-md">
         <div className="grid h-full grid-cols-5 mx-auto">
             {mobileNavLinks.map((item) => {
                 const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
