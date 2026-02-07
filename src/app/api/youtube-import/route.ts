@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
                 const videoFormats = info.format
-                    .filter(f => f.qualityLabel && f.mimeType?.startsWith('video/'))
+                    .filter(f => f.url && f.qualityLabel && (f.mimeType?.startsWith('video/mp4') || f.mimeType?.startsWith('video/webm')))
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
                     }));
 
                 const audioFormats = info.format
-                     .filter(f => f.mimeType?.includes('audio/mp4'))
+                     .filter(f => f.url && f.mimeType?.includes('audio/mp4'))
                      .map(f => ({
                         itag: f.itag,
                         qualityLabel: null,
@@ -192,14 +192,14 @@ export async function POST(req: NextRequest) {
                  
                  if (errorMessage.includes("sign in to confirm you're not a bot")) {
                      description = "يوتيوب يطلب التحقق من أنك لست روبوتًا. هذا يحدث أحيانًا بسبب كثرة الطلبات. يرجى المحاولة مرة أخرى بعد فترة قصيرة.";
+                 } else if (errorMessage.includes('could not extract signature decipher') || errorMessage.includes('could not extract functions')) {
+                    description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
                  } else if (errorMessage.includes('private')) {
                      description = 'هذا الفيديو خاص ولا يمكن تحميله.';
                  } else if (errorMessage.includes('age-restricted') || errorMessage.includes('login required')) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';
                  } else if (errorMessage.includes('unavailable')) {
                     description = 'هذا الفيديو غير متاح حاليًا.';
-                 } else if (errorMessage.includes('could not extract signature decipher') || errorMessage.includes('could not extract functions')) {
-                    description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
                  } else if (error.message) {
                     description = error.message;
                  }
