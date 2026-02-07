@@ -32,7 +32,7 @@ interface CustomDownloaderModalProps {
 
 export function DownloaderModal({ isOpen, onOpenChange, formats, title }: CustomDownloaderModalProps) {
     
-    const videoFormats = formats.filter(f => f.qualityLabel && f.container === 'mp4');
+    const videoFormats = formats.filter(f => f.qualityLabel);
     const audioFormats = formats.filter(f => !f.qualityLabel && f.hasAudio);
 
     return (
@@ -64,7 +64,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
                                         <Button asChild size="sm">
-                                            <a href={format.url} download={`${title} - ${format.qualityLabel}.mp4`}>
+                                            <a href={format.url} download={`${title} - ${format.qualityLabel}.${format.container}`}>
                                                 <Download className="me-2 h-4 w-4"/>
                                                 <span>تنزيل</span>
                                             </a>
@@ -81,7 +81,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
                                         <Button asChild size="sm">
-                                            <a href={format.url} download={`${title}.m4a`}>
+                                            <a href={format.url} download={`${title}.${format.container}`}>
                                                 <Download className="me-2 h-4 w-4"/>
                                                 <span>تنزيل</span>
                                             </a>

@@ -158,14 +158,16 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }
              try {
-                const info = await play.video_info(url);
+                // play-dl can be picky, so we ensure a clean URL
+                const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                const info = await play.video_info(cleanUrl, { htmldata: false });
                 
                 const videoFormats = info.format
-                    .filter(f => f.qualityLabel && f.mimeType?.includes('video/mp4') && f.audio_channels)
+                    .filter(f => f.qualityLabel && f.mimeType?.startsWith('video/') && f.audio_channels)
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
-                        container: 'mp4',
+                        container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
                         hasAudio: true,
                         url: f.url,
                         contentLength: f.content_length?.toString()
@@ -194,7 +196,7 @@ export async function POST(req: NextRequest) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';
                  } else if (errorMessage.includes('unavailable')) {
                     description = 'هذا الفيديو غير متاح حاليًا.';
-                 } else if (errorMessage.includes('could not extract signature decipher')) {
+                 } else if (errorMessage.includes('could not extract signature decipher') || errorMessage.includes('could not extract functions')) {
                     description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
                  } else if (error.message) {
                     description = error.message;
