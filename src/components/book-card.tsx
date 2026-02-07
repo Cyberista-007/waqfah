@@ -17,7 +17,7 @@ const BookCardComponent = ({ book, index = 0 }: BookCardProps) => {
         <Card
             key={book.id}
             className={cn(
-                "text-center p-4 transition-transform transform hover:-translate-y-1 hover:-rotate-1 flex flex-col rounded-xl",
+                "text-center p-4 transition-transform flex flex-col rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}

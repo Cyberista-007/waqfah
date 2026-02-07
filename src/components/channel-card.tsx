@@ -21,7 +21,7 @@ const ChannelCardComponent = ({ channel, index = 0 }: ChannelCardProps) => {
     return (
         <Card 
             className={cn(
-                "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 hover:-rotate-1 border-2 border-transparent hover:border-primary/50 rounded-xl",
+                "h-full flex flex-col items-center text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}

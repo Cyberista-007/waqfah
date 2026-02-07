@@ -174,7 +174,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
     <TooltipProvider>
       <Card
         className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl hover:-translate-y-1 hover:-rotate-1",
+          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
           "animate-fade-in-up"
         )}
         style={{ animationDelay: `${index * 100}ms` }}

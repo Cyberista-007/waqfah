@@ -16,7 +16,7 @@ const SeriesCardComponent = ({ series, index = 0 }: SeriesCardProps) => {
         <Card
             key={series.id}
             className={cn(
-                "transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:-rotate-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl",
+                "transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}

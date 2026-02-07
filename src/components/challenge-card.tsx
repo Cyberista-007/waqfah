@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -30,7 +29,7 @@ const ChallengeCardComponent = ({ challenge, index = 0 }: ChallengeCardProps) =>
     return (
         <Card 
             className={cn(
-                "h-full flex flex-col justify-between text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 border-2 border-transparent hover:border-amber-500/50 rounded-xl bg-gradient-to-br from-card to-muted/50",
+                "h-full flex flex-col justify-between text-center p-6 transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-amber-500/50 rounded-xl bg-gradient-to-br from-card to-muted/50 transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}
