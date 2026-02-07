@@ -27,3 +27,9 @@ export const amiri = Amiri({
   weight: ['400', '700'],
   variable: '--font-amiri',
 });
+
+export const lazeez = localFont({
+  src: '../assets/fonts/Lazeez-Regular.ttf',
+  variable: '--font-lazeez',
+  display: 'swap',
+});

@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
-import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
+import { sourceCodePro, cairo, tajawal, amiri, lazeez } from './fonts';
 import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
@@ -49,7 +49,8 @@ export default async function RootLayout({
         sourceCodePro.variable,
         cairo.variable,
         tajawal.variable,
-        amiri.variable
+        amiri.variable,
+        lazeez.variable
       )}>
         <AppProviders 
           appearanceSettings={appearanceSettings}
