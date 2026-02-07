@@ -160,7 +160,8 @@
       "properties": {
         "userId": { "type": "string" },
         "programId": { "type": "string" },
-        "followedAt": { "type": "string", "format": "date-time" }
+        "followedAt": { "type": "string", "format": "date-time" },
+        "notificationsEnabled": { "type": "boolean", "description": "Whether the user wants notifications for new episodes from this program." }
       },
       "required": ["userId", "programId", "followedAt"]
     },
