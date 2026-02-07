@@ -224,25 +224,25 @@ function WallOfSupporters() {
     const { data: supporters, isLoading } = useCollection<Donation>('donations', {
         where: ['isAnonymous', '==', false],
         orderBy: ['donatedAt', 'desc'],
-        limit: 20
+        limit: 50
     });
 
-    const extendedSupporters = useMemo(() => {
-        const staticSupporters = [
-            { id: 'static-supporter-1', donorName: 'عبدالرحمن رضا', isAnonymous: false, donatedAt: new Date() }
-        ];
+    const processedSupporters = useMemo(() => {
+        if (!supporters) return { displayList: [], total: 0 };
 
-        let combinedSupporters = supporters ? [...supporters] : [];
-
-        // Add static supporters if they are not already in the list from DB
-        staticSupporters.forEach(staticSupporter => {
-            if (!combinedSupporters.some(s => s.donorName === staticSupporter.donorName)) {
-                combinedSupporters.unshift(staticSupporter as any);
-            }
-        });
+        const staticSupporter = { id: 'static-supporter-1', donorName: 'عبدالرحمن رضا', isAnonymous: false, donatedAt: new Date(), amount: 99999 };
         
-        // No need to loop, the styling will handle a variable amount.
-        return combinedSupporters.slice(0, 15); // Limit to 15 to avoid clutter
+        let combined = [...supporters];
+        if (!combined.some(s => s.donorName === staticSupporter.donorName)) {
+            combined.unshift(staticSupporter as any);
+        }
+
+        const sortedByAmount = combined.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+        
+        return { 
+            displayList: sortedByAmount.slice(0, 15), 
+            total: supporters.length
+        };
     }, [supporters]);
 
     if (isLoading) {
@@ -253,7 +253,7 @@ function WallOfSupporters() {
         );
     }
     
-    if (extendedSupporters.length === 0) {
+    if (processedSupporters.displayList.length === 0) {
         return (
              <Card className="text-center py-10">
                 <CardContent>
@@ -265,19 +265,33 @@ function WallOfSupporters() {
 
     return (
         <section className="py-16">
-            <h2 className="text-3xl font-bold text-center mb-12 font-headline">جدار الداعمين الكرام</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 font-headline">جدار الداعمين الكرام</h2>
+            <div className="flex justify-center items-center gap-2 mb-12">
+                <Users className="h-6 w-6 text-muted-foreground" />
+                <span className="text-xl font-bold text-muted-foreground">
+                    إجمالي الداعمين: {processedSupporters.total}
+                </span>
+            </div>
             <div className="relative flex flex-wrap items-center justify-center gap-4 min-h-[300px]">
-                {extendedSupporters.map((supporter, index) => (
-                   <div 
-                        key={`${supporter.id}-${index}`} 
-                        className="supporter-sphere"
-                        style={{
-                            '--i': index, // custom property for staggering animations
-                        } as React.CSSProperties}
-                    >
-                        <span className="font-semibold text-center text-sm md:text-base p-2 break-words">{supporter.donorName}</span>
-                    </div>
-                ))}
+                {processedSupporters.displayList.map((supporter, index) => {
+                    const isTopDonor = index < 3;
+                    return (
+                        <div 
+                            key={`${supporter.id}-${index}`} 
+                            className="supporter-sphere"
+                            style={{
+                                '--i': index, // custom property for staggering animations
+                            } as React.CSSProperties}
+                        >
+                            <div className="flex items-center justify-center gap-1.5">
+                                {isTopDonor && <Star className="h-4 w-4 text-amber-400 fill-amber-400" />}
+                                <span className="font-semibold text-center text-sm md:text-base p-2 break-words bg-gradient-to-b from-sky-400 to-white bg-clip-text text-transparent">
+                                    {supporter.donorName}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
             <p className="text-center text-sm text-muted-foreground mt-12">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
         </section>
