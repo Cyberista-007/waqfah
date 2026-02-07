@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,13 +43,17 @@ export default function TopicsPage() {
       ) : (
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {topics?.map((topic) => {
+                {topics?.map((topic, index) => {
                 const placeholder = getPlaceholderImage(topic.imageId);
                 return (
                     <Link href={`/topics/${topic.slug}`} key={topic.id} className="block group">
-                    <Card className={cn(
-                        "h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]"
-                    )}>
+                    <Card 
+                        className={cn(
+                            "h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
+                            "animate-fade-in-up"
+                        )}
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
                         <div className="relative">
                         <Image
                             src={placeholder?.imageUrl || `https://picsum.photos/seed/${topic.slug}/400/200`}

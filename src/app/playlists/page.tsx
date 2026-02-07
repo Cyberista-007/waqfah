@@ -12,6 +12,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 // Define WithId type locally as it's not exported from the barrel file
 type WithId<T> = T & { id: string };
@@ -109,7 +110,10 @@ function PublicPlaylists() {
                     {playlistsWithUsers.map((playlist, index) => (
                         <Card 
                             key={playlist.id} 
-                            className="text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
+                            className={cn(
+                                "text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between",
+                                "animate-fade-in-up"
+                            )}
                              style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <CardHeader className="text-right">
@@ -168,7 +172,10 @@ function MyPlaylists() {
                     {myPlaylists.map((playlist, index) => (
                         <Card 
                             key={playlist.id} 
-                            className="text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between animate-fade-in-up"
+                            className={cn(
+                                "text-right transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl flex flex-col justify-between",
+                                "animate-fade-in-up"
+                            )}
                              style={{ animationDelay: `${index * 100}ms` }}
                         >
                             <CardHeader>
