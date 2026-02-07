@@ -8,6 +8,9 @@ const getFirestore = () => initializeAdminApp().firestore;
 
 const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
     const firestore = getFirestore();
+    // If Firestore admin instance is not available (e.g., no service account), return empty array.
+    if (!firestore) return [];
+
     const snapshot = await firestore.collection(collectionName).get();
     if (snapshot.empty) {
         return [];
@@ -22,6 +25,9 @@ export const getAllTopics = cache(() => getAllDocs<Topic>('topics'));
 
 export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings | null> => {
     const firestore = getFirestore();
+    // If Firestore admin instance is not available, return null.
+    if (!firestore) return null;
+
     const docRef = firestore.doc('settings/appearance');
     const docSnap = await docRef.get();
     if (!docSnap.exists) {
