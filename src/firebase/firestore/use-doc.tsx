@@ -75,7 +75,14 @@ export function useDoc<T = any>(
       docRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
         if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
+          const docData = { ...(snapshot.data() as T), id: snapshot.id } as any;
+
+          // For demonstration purposes, if fetching an admin user without a donation tier, assign 'gold'.
+          if (docRef.path.startsWith('users/') && docData.role === 'admin' && !docData.donationTier) {
+            docData.donationTier = 'gold';
+          }
+          
+          setData(docData);
         } else {
           // Document does not exist
           setData(null);
