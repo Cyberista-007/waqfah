@@ -161,40 +161,45 @@ export default function DonationsPage() {
       <DonationProgress />
 
       <section>
-        <h2 className="text-3xl font-bold text-center mb-8 font-headline">مستويات الدعم التقديرية</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center p-6 border-2 border-orange-300/50 dark:border-orange-800/50 bg-gradient-to-br from-card to-orange-50 dark:to-orange-900/20">
-            <CardHeader className="p-0">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4">
-                <Star className="h-8 w-8 text-orange-500 dark:text-orange-400 fill-current" />
-                </div>
-                <CardTitle className="font-headline text-xl text-orange-700 dark:text-orange-300">داعم برونزي</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 mt-2">
-                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 10$.</p>
-            </CardContent>
+        <h2 className="text-3xl font-bold text-center mb-12 font-headline">مستويات الدعم التقديرية</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Bronze */}
+            <Card className="text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/80 rounded-2xl">
+                <CardHeader className="p-0">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20">
+                        <Star className="h-8 w-8 text-orange-500 dark:text-orange-400" />
+                    </div>
+                    <CardTitle className="font-headline text-2xl text-orange-600 dark:text-orange-400">داعم برونزي</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 mt-2">
+                    <p className="text-lg text-muted-foreground">عند تجاوز 10$</p>
+                </CardContent>
             </Card>
-            <Card className="text-center p-6 border-2 border-slate-300/50 dark:border-slate-600/50 bg-gradient-to-br from-card to-slate-50 dark:to-slate-800/20">
-            <CardHeader className="p-0">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 mb-4">
-                <Star className="h-8 w-8 text-slate-500 dark:text-slate-400 fill-current" />
-                </div>
-                <CardTitle className="font-headline text-xl text-slate-700 dark:text-slate-300">داعم فضي</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 mt-2">
-                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 50$.</p>
-            </CardContent>
+
+            {/* Silver */}
+            <Card className="text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/80 rounded-2xl">
+                <CardHeader className="p-0">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700/50 mb-4 ring-4 ring-slate-500/20">
+                        <Star className="h-8 w-8 text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300" />
+                    </div>
+                    <CardTitle className="font-headline text-2xl text-slate-700 dark:text-slate-200">داعم فضي</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 mt-2">
+                    <p className="text-lg text-muted-foreground">عند تجاوز 50$</p>
+                </CardContent>
             </Card>
-            <Card className="text-center p-6 border-2 border-amber-300/50 dark:border-amber-500/50 bg-gradient-to-br from-card to-amber-50 dark:to-amber-900/20">
-            <CardHeader className="p-0">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4">
-                <Shield className="h-8 w-8 text-amber-500 dark:text-amber-400 fill-current" />
-                </div>
-                <CardTitle className="font-headline text-xl text-amber-600 dark:text-amber-300">داعم ذهبي</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 mt-2">
-                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 100$.</p>
-            </CardContent>
+            
+            {/* Gold - Highlighted */}
+            <Card className="text-center p-8 transition-all duration-300 bg-card md:scale-110 border-2 border-amber-400/50 shadow-2xl shadow-amber-500/10 rounded-2xl">
+                 <CardHeader className="p-0">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4 ring-4 ring-amber-500/20">
+                        <Shield className="h-10 w-10 text-amber-500 dark:text-amber-300 fill-current" />
+                    </div>
+                    <CardTitle className="font-headline text-3xl text-amber-600 dark:text-amber-200">داعم ذهبي</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 mt-2">
+                    <p className="text-lg text-muted-foreground">عند تجاوز 100$</p>
+                </CardContent>
             </Card>
         </div>
       </section>
