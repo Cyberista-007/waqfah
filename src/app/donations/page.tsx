@@ -56,8 +56,9 @@ function WallOfSupporters() {
     });
 
     const extendedSupporters = useMemo(() => {
-        if (!supporters || supporters.length === 0) return [];
-        // Duplicate the array to create a seamless loop effect
+        if (!supporters) return [];
+        // To make the loop seamless, we need to have enough items.
+        // We duplicate the array until we have a reasonable number for a smooth animation.
         if (supporters.length > 0 && supporters.length < 10) {
            return [...supporters, ...supporters, ...supporters];
         }
@@ -164,10 +165,10 @@ export default function DonationsPage() {
         <h2 className="text-3xl font-bold text-center mb-12 font-headline">مستويات الدعم التقديرية</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
             {/* Bronze */}
-            <Card className="text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/80 rounded-2xl">
+            <Card className="group text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                 <CardHeader className="p-0">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20">
-                        <Star className="h-8 w-8 text-orange-500 dark:text-orange-400" />
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4 ring-4 ring-orange-500/20 group-hover:ring-orange-500/40 transition-shadow duration-300">
+                        <Star className="h-8 w-8 text-orange-500 dark:text-orange-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
                     </div>
                     <CardTitle className="font-headline text-2xl text-orange-600 dark:text-orange-400">داعم برونزي</CardTitle>
                 </CardHeader>
@@ -177,10 +178,10 @@ export default function DonationsPage() {
             </Card>
 
             {/* Silver */}
-            <Card className="text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/80 rounded-2xl">
+            <Card className="group text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                 <CardHeader className="p-0">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700/50 mb-4 ring-4 ring-slate-500/20">
-                        <Star className="h-8 w-8 text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300" />
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700/50 mb-4 ring-4 ring-slate-500/20 group-hover:ring-slate-500/40 transition-shadow duration-300">
+                        <Star className="h-8 w-8 text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
                     </div>
                     <CardTitle className="font-headline text-2xl text-slate-700 dark:text-slate-200">داعم فضي</CardTitle>
                 </CardHeader>
@@ -190,10 +191,10 @@ export default function DonationsPage() {
             </Card>
             
             {/* Gold - Highlighted */}
-            <Card className="text-center p-8 transition-all duration-300 bg-card md:scale-110 border-2 border-amber-400/50 shadow-2xl shadow-amber-500/10 rounded-2xl">
+            <Card className="group text-center p-8 transition-all duration-300 bg-card border-2 border-amber-400/50 shadow-2xl shadow-amber-500/10 rounded-2xl hover:shadow-amber-500/20 hover:-translate-y-2 hover:scale-110">
                  <CardHeader className="p-0">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4 ring-4 ring-amber-500/20">
-                        <Shield className="h-10 w-10 text-amber-500 dark:text-amber-300 fill-current" />
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4 ring-4 ring-amber-500/20 group-hover:ring-amber-500/40 transition-shadow duration-300">
+                        <Shield className="h-10 w-10 text-amber-500 dark:text-amber-300 fill-current transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[-15deg]" />
                     </div>
                     <CardTitle className="font-headline text-3xl text-amber-600 dark:text-amber-200">داعم ذهبي</CardTitle>
                 </CardHeader>
