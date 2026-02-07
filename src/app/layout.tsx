@@ -11,6 +11,7 @@ import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
 import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings } from '@/lib/data';
+import type { AppearanceSettings } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: {
@@ -49,8 +50,7 @@ export default async function RootLayout({
         amiri.variable
       )}>
         <AppProviders 
-          defaultTheme={appearanceSettings?.defaultTheme}
-          defaultFont={appearanceSettings?.defaultFont}
+          appearanceSettings={appearanceSettings}
         >
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">

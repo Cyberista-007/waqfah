@@ -14,6 +14,7 @@ const getAdminApp = (): App | null => {
     if (!serviceAccountString) {
         // This is a common case in local development, so we'll just return null
         // and let the calling functions handle the absence of admin services.
+        console.warn("FIREBASE_SERVICE_ACCOUNT is not set. Server-side data fetching will be disabled.");
         return null;
     }
     

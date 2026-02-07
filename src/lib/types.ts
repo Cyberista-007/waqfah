@@ -16,6 +16,7 @@ export type NotificationSettings = {
 export type AppearanceSettings = {
     defaultTheme: string;
     defaultFont: string;
+    maintenanceMode?: boolean;
 };
 
 export type Stats = {

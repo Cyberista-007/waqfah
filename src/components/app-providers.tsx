@@ -7,6 +7,9 @@ import { FirebaseClientProvider } from '@/firebase';
 import { AppearanceProvider } from '@/components/appearance-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import dynamic from 'next/dynamic';
+import { MaintenanceHandler } from '@/components/maintenance-handler';
+import type { AppearanceSettings } from '@/lib/types';
+
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player').then(mod => mod.FloatingVideoPlayer),
@@ -16,13 +19,15 @@ const FloatingVideoPlayer = dynamic(
 
 export function AppProviders({
   children,
-  defaultTheme,
-  defaultFont,
+  appearanceSettings,
 }: {
   children: React.ReactNode;
-  defaultTheme?: string;
-  defaultFont?: string;
+  appearanceSettings: AppearanceSettings | null;
 }) {
+    const maintenanceMode = appearanceSettings?.maintenanceMode || false;
+    const defaultTheme = appearanceSettings?.defaultTheme;
+    const defaultFont = appearanceSettings?.defaultFont;
+    
     return (
         <ThemeProvider 
           attribute="class" 
@@ -54,11 +59,13 @@ export function AppProviders({
         >
           <AppearanceProvider defaultFont={defaultFont}>
             <FirebaseClientProvider>
-              <AudioPlayerProvider>
-                <FirebaseErrorListener />
-                {children}
-                <FloatingVideoPlayer />
-              </AudioPlayerProvider>
+                <MaintenanceHandler maintenanceMode={maintenanceMode}>
+                    <AudioPlayerProvider>
+                        <FirebaseErrorListener />
+                        {children}
+                        <FloatingVideoPlayer />
+                    </AudioPlayerProvider>
+              </MaintenanceHandler>
             </FirebaseClientProvider>
           </AppearanceProvider>
         </ThemeProvider>

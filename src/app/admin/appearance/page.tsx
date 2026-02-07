@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDoc, useFirestore } from '@/firebase';
 import type { AppearanceSettings } from '@/lib/types';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Palette } from 'lucide-react';
 import { themes } from '@/components/theme-switcher';
 import { fonts } from '@/components/font-switcher';
+import { Switch } from '@/components/ui/switch';
 
 export default function AdminAppearancePage() {
   const { toast } = useToast();
@@ -22,15 +22,18 @@ export default function AdminAppearancePage() {
 
   const [defaultTheme, setDefaultTheme] = useState<string>('');
   const [defaultFont, setDefaultFont] = useState<string>('');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (currentSettings) {
       setDefaultTheme(currentSettings.defaultTheme || 'theme-default-dark');
       setDefaultFont(currentSettings.defaultFont || 'font-body');
+      setMaintenanceMode(currentSettings.maintenanceMode || false);
     } else if (!isLoading) {
       setDefaultTheme('theme-default-dark');
       setDefaultFont('font-body');
+      setMaintenanceMode(false);
     }
   }, [currentSettings, isLoading]);
 
@@ -43,7 +46,7 @@ export default function AdminAppearancePage() {
     setIsSubmitting(true);
     try {
         const settingsRef = doc(firestore, 'settings', 'appearance');
-        await setDoc(settingsRef, { defaultTheme, defaultFont }, { merge: true });
+        await setDoc(settingsRef, { defaultTheme, defaultFont, maintenanceMode }, { merge: true });
         toast({ title: 'تم حفظ الإعدادات بنجاح!' });
     } catch (error) {
         console.error("Error saving appearance settings:", error);
@@ -58,10 +61,10 @@ export default function AdminAppearancePage() {
       <CardHeader>
         <CardTitle className="text-2xl font-headline flex items-center gap-2">
             <Palette />
-            إدارة المظهر الافتراضي
+            إدارة المظهر
         </CardTitle>
         <CardDescription>
-            تحكم في الثيم والخط الافتراضي الذي يراه الزوار الجدد للموقع. هذه الإعدادات لا تؤثر على المستخدمين الذين قاموا بتخصيص مظهرهم.
+            تحكم في الثيم والخط الافتراضي الذي يراه الزوار الجدد، وقم بتفعيل وضع الصيانة.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -99,6 +102,20 @@ export default function AdminAppearancePage() {
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="maintenance-mode" className="text-base">وضع الصيانة</Label>
+                    <CardDescription>
+                      عند تفعيله، لن يتمكن سوى المديرين من الوصول للموقع.
+                    </CardDescription>
+                  </div>
+                  <Switch
+                    id="maintenance-mode"
+                    checked={maintenanceMode}
+                    onCheckedChange={setMaintenanceMode}
+                  />
                 </div>
 
                 <Button onClick={handleSubmit} disabled={isSubmitting}>

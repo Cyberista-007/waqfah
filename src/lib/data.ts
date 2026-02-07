@@ -4,7 +4,10 @@ import { initializeAdminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
 import type { Lecture, Series, Program, Topic, AppearanceSettings } from '@/lib/types';
 
-const getFirestore = () => initializeAdminApp().firestore;
+const getFirestore = () => {
+    const { firestore } = initializeAdminApp();
+    return firestore;
+}
 
 const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
     const firestore = getFirestore();
@@ -29,9 +32,14 @@ export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings 
     if (!firestore) return null;
 
     const docRef = firestore.doc('settings/appearance');
-    const docSnap = await docRef.get();
-    if (!docSnap.exists) {
+    try {
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return null;
+        }
+        return docSnap.data() as AppearanceSettings;
+    } catch (error) {
+        console.error("Could not fetch appearance settings:", error);
         return null;
     }
-    return docSnap.data() as AppearanceSettings;
 });
