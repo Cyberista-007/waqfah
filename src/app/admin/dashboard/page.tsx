@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette, Megaphone } from "lucide-react";
 import Link from "next/link";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
@@ -106,6 +106,7 @@ export default function AdminDashboardPage() {
                     <CardContent className="flex flex-col gap-3">
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/users"><span>إدارة المستخدمين</span><UserCog /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/appearance"><span>إدارة المظهر</span><Palette /></Link></Button>
+                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/announcement"><span>إدارة الإعلان</span><Megaphone /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures/import"><span>استيراد المحاضرات</span><Upload /></Link></Button>
                     </CardContent>
                 </Card>

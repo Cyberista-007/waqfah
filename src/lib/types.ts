@@ -13,6 +13,12 @@ export type NotificationSettings = {
     newBooks?: boolean;
 };
 
+export type AnnouncementSettings = {
+    text?: string;
+    link?: string;
+    isActive?: boolean;
+};
+
 export type AppearanceSettings = {
     defaultTheme: string;
     defaultFont: string;

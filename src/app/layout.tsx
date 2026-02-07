@@ -10,8 +10,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
 import { SiteBackground } from '@/components/site-background';
-import { getAppearanceSettings } from '@/lib/data';
-import type { AppearanceSettings } from '@/lib/types';
+import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
+import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
+import { AnnouncementBar } from '@/components/announcement-bar';
 
 export const metadata: Metadata = {
   title: {
@@ -39,6 +40,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const appearanceSettings = await getAppearanceSettings();
+  const announcement = await getAnnouncement();
   
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
@@ -52,6 +54,9 @@ export default async function RootLayout({
         <AppProviders 
           appearanceSettings={appearanceSettings}
         >
+            {announcement?.isActive && announcement.text && (
+              <AnnouncementBar text={announcement.text} link={announcement.link} />
+            )}
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />

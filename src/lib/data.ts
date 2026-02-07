@@ -2,7 +2,7 @@
 import 'server-only';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
-import type { Lecture, Series, Program, Topic, AppearanceSettings } from '@/lib/types';
+import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 
 const getFirestore = () => {
     const { firestore } = initializeAdminApp();
@@ -40,6 +40,23 @@ export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings 
         return docSnap.data() as AppearanceSettings;
     } catch (error) {
         console.error("Could not fetch appearance settings:", error);
+        return null;
+    }
+});
+
+export const getAnnouncement = cache(async (): Promise<AnnouncementSettings | null> => {
+    const firestore = getFirestore();
+    if (!firestore) return null;
+
+    const docRef = firestore.doc('settings/announcement');
+    try {
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return null;
+        }
+        return docSnap.data() as AnnouncementSettings;
+    } catch (error) {
+        console.error("Could not fetch announcement settings:", error);
         return null;
     }
 });
