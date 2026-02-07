@@ -1,6 +1,7 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Server, Film, BookOpen, Gift, Users, Share2 } from 'lucide-react';
+import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata = {
@@ -76,23 +77,50 @@ export default function DonationsPage() {
             <CardHeader className="text-center">
                 <CardTitle className="text-2xl font-headline">اختر طريقة الدعم المناسبة لك</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="rounded-lg p-6 text-center space-y-4">
-                    <h3 className="text-xl font-bold font-headline">دعم شهري مستمر</h3>
-                    <p className="text-muted-foreground">
-                        دعمك الشهري يضمن لنا الاستقرار المالي ويساعدنا في التخطيط طويل الأمد للمشاريع العلمية.
+             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="rounded-lg p-6 text-center space-y-4 border">
+                    <h3 className="text-xl font-bold font-headline flex items-center justify-center gap-2">
+                        <Heart className="h-5 w-5" /> دعم شهري (باتريون)
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                        دعمك المستمر يضمن لنا الاستقرار المالي ويساعدنا في التخطيط طويل الأمد.
                     </p>
                      <Button asChild size="lg" variant="secondary" className="w-full">
                         <Link href="#">ادعمنا عبر باتريون</Link>
                     </Button>
                 </div>
-                 <div className="rounded-lg p-6 text-center space-y-4">
-                    <h3 className="text-xl font-bold font-headline">تبرع لمرة واحدة</h3>
-                    <p className="text-muted-foreground">
-                       ساهم ولو لمرة واحدة. تبرعك سيُستخدم مباشرة في تغطية التكاليف التشغيلية للموقع.
+                 <div className="rounded-lg p-6 text-center space-y-4 border">
+                    <h3 className="text-xl font-bold font-headline flex items-center justify-center gap-2">
+                        <svg className="h-6 w-6" viewBox="0 0 24 24"><path fill="currentColor" d="M7.336 2.112H2.944a.2.2 0 00-.2.2v16.945a.2.2 0 00.2.2h3.626v-6.072h1.614a4.41 4.41 0 110-8.82H7.336zm4.618 5.378a.65.65 0 00-.65.65v5.18a.65.65 0 00.65.65h1.16a.65.65 0 000-1.3H12.6V8.14a.65.65 0 00-.646-.65zM15.42 8.7a.64.64 0 000 1.28h.592v3.29h-.592a.64.64 0 100 1.28h.592a2.536 2.536 0 002.536-2.536V9.91a2.536 2.536 0 00-2.536-2.535h-1.87a.64.64 0 000 1.28h1.278z"></path></svg>
+                        تبرع لمرة واحدة (باي بال)
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                       ساهم ولو لمرة واحدة لتغطية التكاليف التشغيلية.
                     </p>
                     <Button asChild size="lg" className="w-full">
                         <Link href="#">تبرع عبر باي بال</Link>
+                    </Button>
+                </div>
+                 <div className="rounded-lg p-6 text-center space-y-4 border">
+                    <h3 className="text-xl font-bold font-headline flex items-center justify-center gap-2">
+                        <CreditCard className="h-5 w-5" /> البطاقة الإئتمانية (Stripe)
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                       طريقة آمنة ومباشرة لدعم الموقع باستخدام بطاقتك الإئتمانية.
+                    </p>
+                    <Button asChild size="lg" className="w-full">
+                        <Link href="#">تبرع عبر Stripe</Link>
+                    </Button>
+                </div>
+                <div className="rounded-lg p-6 text-center space-y-4 border">
+                    <h3 className="text-xl font-bold font-headline flex items-center justify-center gap-2">
+                        <Landmark className="h-5 w-5" /> تحويل بنكي مباشر
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                       للمساهمات المباشرة، يمكنكم استخدام تفاصيل الحساب البنكي.
+                    </p>
+                    <Button asChild size="lg" variant="secondary" className="w-full">
+                        <Link href="#">عرض تفاصيل الحساب</Link>
                     </Button>
                 </div>
             </CardContent>
