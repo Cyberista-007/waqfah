@@ -7,6 +7,13 @@
     filter: var(--image-filter, none);
     transition: filter 0.5s ease-in-out;
   }
+  .progress-indicator {
+    transform: translateX(calc(-100% + var(--progress-value, 0%)));
+  }
+
+  html[dir="rtl"] .progress-indicator {
+    transform: translateX(calc(100% - var(--progress-value, 0%)));
+  }
 }
 
 @layer base {
