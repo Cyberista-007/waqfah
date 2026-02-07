@@ -73,7 +73,7 @@ function SettingsTab() {
         ) : (
             <>
                 <div className="space-y-2">
-                    <Label htmlFor="monthly-goal">الهدف الشهري ($)</Label>
+                    <Label htmlFor="monthly-goal">الهدف الشهري (بالجنيه المصري)</Label>
                     <Input 
                         id="monthly-goal"
                         type="number"
@@ -83,7 +83,7 @@ function SettingsTab() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="current-amount">المبلغ الذي تم جمعه ($)</Label>
+                    <Label htmlFor="current-amount">المبلغ الذي تم جمعه (بالجنيه المصري)</Label>
                     <Input 
                         id="current-amount"
                         type="number"

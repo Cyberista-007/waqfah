@@ -146,7 +146,7 @@ export function DonationForm({ item, onFormClose }: DonationFormProps) {
                 <Input id="donorName" value={donorName} onChange={e => setDonorName(e.target.value)} required disabled={isSubmitting} />
              </div>
              <div>
-                <Label htmlFor="amount">المبلغ ($)</Label>
+                <Label htmlFor="amount">المبلغ (بالجنيه المصري)</Label>
                 <Input id="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} disabled={isSubmitting} />
              </div>
           </div>
