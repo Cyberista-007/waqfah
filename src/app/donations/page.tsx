@@ -1,8 +1,9 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2 } from 'lucide-react';
+import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2, Star, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useCollection, useDoc } from '@/firebase';
 import type { Donation, DonationSettings } from '@/lib/types';
@@ -78,7 +79,16 @@ function WallOfSupporters() {
     }
 
     if (!supporters || supporters.length === 0) {
-        return null; // Don't show the section if there are no supporters
+        return (
+             <section>
+                <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
+                <Card className="text-center py-10">
+                    <CardContent>
+                        <p className="text-lg text-muted-foreground">كن أول الداعمين! سيظهر اسمك هنا بعد مساهمتك.</p>
+                    </CardContent>
+                </Card>
+            </section>
+        );
     }
 
     return (
@@ -152,24 +162,44 @@ export default function DonationsPage() {
       <DonationProgress />
 
       <section>
-        <Card className="bg-primary/5 border-primary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline text-primary">
-              <Heart className="h-6 w-6 fill-current" />
-              رسالة من مطور الموقع
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg text-foreground/80 leading-relaxed">
-              هذا المشروع تم تطويره كعمل خالص لوجه الله تعالى، بهدف نشر العلم النافع وتيسير وصوله لأبناء الأمة الإسلامية.
-              مطور الموقع لا يتقاضى أي أجر شخصي من هذه التبرعات. جميع المساهمات تُستخدم بشكل مباشر لتغطية التكاليف التشغيلية للموقع وضمان استمراريته ونموه.
-            </p>
-          </CardContent>
-        </Card>
+        <h2 className="text-3xl font-bold text-center mb-8 font-headline">مستويات الدعم التقديرية</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center p-6 border-2 border-orange-300/50 dark:border-orange-800/50 bg-gradient-to-br from-card to-orange-50 dark:to-orange-900/20">
+            <CardHeader className="p-0">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50 mb-4">
+                <Star className="h-8 w-8 text-orange-500 dark:text-orange-400 fill-current" />
+                </div>
+                <CardTitle className="font-headline text-xl text-orange-700 dark:text-orange-300">داعم برونزي</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 mt-2">
+                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 10$.</p>
+            </CardContent>
+            </Card>
+            <Card className="text-center p-6 border-2 border-slate-300/50 dark:border-slate-600/50 bg-gradient-to-br from-card to-slate-50 dark:to-slate-800/20">
+            <CardHeader className="p-0">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 mb-4">
+                <Star className="h-8 w-8 text-slate-500 dark:text-slate-400 fill-current" />
+                </div>
+                <CardTitle className="font-headline text-xl text-slate-700 dark:text-slate-300">داعم فضي</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 mt-2">
+                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 50$.</p>
+            </CardContent>
+            </Card>
+            <Card className="text-center p-6 border-2 border-amber-300/50 dark:border-amber-500/50 bg-gradient-to-br from-card to-amber-50 dark:to-amber-900/20">
+            <CardHeader className="p-0">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4">
+                <Shield className="h-8 w-8 text-amber-500 dark:text-amber-400 fill-current" />
+                </div>
+                <CardTitle className="font-headline text-xl text-amber-600 dark:text-amber-300">داعم ذهبي</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 mt-2">
+                <p className="text-muted-foreground">عندما يتجاوز إجمالي تبرعاتك 100$.</p>
+            </CardContent>
+            </Card>
+        </div>
       </section>
 
-      <WallOfSupporters />
-      
       <section>
           <Card className="bg-card/50">
             <CardHeader className="text-center">
@@ -225,7 +255,9 @@ export default function DonationsPage() {
           </Card>
       </section>
 
-      <section>
+      <WallOfSupporters />
+
+       <section>
         <h2 className="text-3xl font-bold text-center mb-8 font-headline">أين تذهب مساهماتكم؟</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {donationReasons.map((reason, index) => {
@@ -242,6 +274,23 @@ export default function DonationsPage() {
             );
           })}
         </div>
+      </section>
+
+      <section>
+        <Card className="bg-primary/5 border-primary/20 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-headline text-primary">
+              <Heart className="h-6 w-6 fill-current" />
+              رسالة من مطور الموقع
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg text-foreground/80 leading-relaxed">
+              هذا المشروع تم تطويره كعمل خالص لوجه الله تعالى، بهدف نشر العلم النافع وتيسير وصوله لأبناء الأمة الإسلامية.
+              مطور الموقع لا يتقاضى أي أجر شخصي من هذه التبرعات. جميع المساهمات تُستخدم بشكل مباشر لتغطية التكاليف التشغيلية للموقع وضمان استمراريته ونموه.
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       <section>
