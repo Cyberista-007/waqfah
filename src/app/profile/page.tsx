@@ -1,9 +1,8 @@
-
-"use client";
+'use client';
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError, useAudioPlayer } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
@@ -17,6 +16,9 @@ import { ProgramCard } from "@/components/program-card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { DonationTierBadge } from "@/components/DonationTierBadge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -522,6 +524,49 @@ function AllNotesSection() {
     );
 }
 
+function DonationsSection({ userProfile }: { userProfile: UserProfile }) {
+  if (!userProfile.totalDonated || userProfile.totalDonated === 0) {
+    return (
+      <Card className="text-center py-16">
+          <CardContent className="flex flex-col items-center gap-4">
+              <Heart className="w-16 h-16 text-muted-foreground" />
+              <p className="text-lg text-muted-foreground">لم تقم بأي تبرعات بعد.</p>
+              <Button asChild><Link href="/donations">ادعم المشروع</Link></Button>
+          </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4 max-w-2xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>ملخص مساهماتك</CardTitle>
+          <CardDescription>شكرًا لدعمك السخي للمشروع. جزاك الله خيرًا.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <span className="text-muted-foreground">إجمالي المساهمات</span>
+              <span className="font-bold text-lg">{new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(userProfile.totalDonated)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">مستوى الدعم الحالي</span>
+              {userProfile.donationTier ? (
+                <DonationTierBadge tier={userProfile.donationTier} />
+              ) : (
+                <span className="text-muted-foreground">لا يوجد</span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse pt-4">
+              <Switch id="show-donations" disabled />
+              <Label htmlFor="show-donations">إظهار ملخص التبرعات للعامة في ملفي الشخصي (قيد التطوير)</Label>
+            </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -557,6 +602,7 @@ export default function ProfilePage() {
                   <TabsTrigger value="playlists" className="px-4 py-2 rounded-full flex items-center gap-2"><ListMusic className="h-5 w-5"/>قوائم التشغيل</TabsTrigger>
                   <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Podcast className="h-5 w-5"/>البرامج المتابعة</TabsTrigger>
                   <TabsTrigger value="challenges" className="px-4 py-2 rounded-full flex items-center gap-2"><Flame className="h-5 w-5"/>تحدياتي</TabsTrigger>
+                  <TabsTrigger value="donations" className="px-4 py-2 rounded-full flex items-center gap-2"><HandHeart className="h-5 w-5"/>الدعم</TabsTrigger>
                   <TabsTrigger value="clips" className="px-4 py-2 rounded-full flex items-center gap-2"><Clapperboard className="h-5 w-5"/>مقاطعي</TabsTrigger>
                   <TabsTrigger value="notes" className="px-4 py-2 rounded-full flex items-center gap-2"><Notebook className="h-5 w-5"/>ملاحظاتي</TabsTrigger>
                 </TabsList>
@@ -578,6 +624,9 @@ export default function ProfilePage() {
               </TabsContent>
               <TabsContent value="challenges" className="mt-6">
                 <UserChallengesSection />
+              </TabsContent>
+               <TabsContent value="donations" className="mt-6">
+                <DonationsSection userProfile={userProfile} />
               </TabsContent>
               <TabsContent value="clips" className="mt-6">
                 <SavedClipsSection />

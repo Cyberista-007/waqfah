@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Star, Shield } from 'lucide-react';
@@ -43,8 +42,8 @@ export function DonationTierBadge({ tier, className }: DonationTierBadgeProps) {
     <TooltipProvider>
         <Tooltip>
         <TooltipTrigger asChild>
-            <Badge variant="outline" className={cn('gap-1.5 cursor-help', config.className, className)}>
-            <Icon className="h-3.5 w-3.5 fill-current" />
+            <Badge variant="outline" className={cn('group gap-1.5 cursor-help', config.className, className)}>
+            <Icon className="h-3.5 w-3.5 fill-current transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
             <span>{config.label}</span>
             </Badge>
         </TooltipTrigger>
