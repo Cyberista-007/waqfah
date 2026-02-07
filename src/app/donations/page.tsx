@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useCollection, useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -32,44 +32,48 @@ function DonationGoalBackgroundController() {
         return (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
     }, [settings]);
 
+    const handleSetParticleSettings = useCallback(setParticleSettings, []);
+    const handleSetParticleColor = useCallback(setParticleColor, []);
+    const handleSetBackgroundEffect = useCallback(setBackgroundEffect, []);
+
     useEffect(() => {
         const originalParticleColor = localStorage.getItem("site-particle-color") || '#FFFFFF';
         const originalParticleSettings = localStorage.getItem("site-particle-settings");
         const originalEffect = localStorage.getItem("site-background-effect") as 'none' | 'particles' | null;
 
-        setBackgroundEffect('particles');
+        handleSetBackgroundEffect('particles');
         
         if (progress < 25) {
-            setParticleColor('#FFFFFF'); // Calm white stars
-            setParticleSettings({ count: 50, speed: 0.1, lineDistance: 150 });
+            handleSetParticleColor('#FFFFFF'); // Calm white stars
+            handleSetParticleSettings({ count: 50, speed: 0.1, lineDistance: 150 });
         } else if (progress < 50) {
-            setParticleColor('#FFFFE0'); // Light yellow
-            setParticleSettings({ count: 70, speed: 0.2, lineDistance: 140 });
+            handleSetParticleColor('#FFFFE0'); // Light yellow
+            handleSetParticleSettings({ count: 70, speed: 0.2, lineDistance: 140 });
         } else if (progress < 75) {
-            setParticleColor('#FFD700'); // Gold
-            setParticleSettings({ count: 100, speed: 0.3, lineDistance: 130 });
+            handleSetParticleColor('#FFD700'); // Gold
+            handleSetParticleSettings({ count: 100, speed: 0.3, lineDistance: 130 });
         } else if (progress < 100) {
-            setParticleColor('#FFAC1C'); // Light Orange, more particles
-            setParticleSettings({ count: 150, speed: 0.5, lineDistance: 120 });
+            handleSetParticleColor('#FFAC1C'); // Light Orange, more particles
+            handleSetParticleSettings({ count: 150, speed: 0.5, lineDistance: 120 });
         } else { // 100% or more - Celebration!
-            setParticleColor('#FFD700'); // Bright Gold
-            setParticleSettings({ count: 250, speed: 1, lineDistance: 150 }); // "Shooting stars" effect
+            handleSetParticleColor('#FFD700'); // Bright Gold
+            handleSetParticleSettings({ count: 250, speed: 1, lineDistance: 150 }); // "Shooting stars" effect
         }
 
         // On component unmount, reset to default.
         return () => {
-            setBackgroundEffect(originalEffect || 'none');
+            handleSetBackgroundEffect(originalEffect || 'none');
             
             if (originalParticleSettings) {
                 try {
-                  setParticleSettings(JSON.parse(originalParticleSettings));
+                  handleSetParticleSettings(JSON.parse(originalParticleSettings));
                 } catch (e) { /* ignore */ }
             } else {
-                setParticleSettings({ interaction: true, count: 80, speed: 0.3, lineDistance: 120 });
+                handleSetParticleSettings({ interaction: true, count: 80, speed: 0.3, lineDistance: 120 });
             }
-            setParticleColor(originalParticleColor);
+            handleSetParticleColor(originalParticleColor);
         };
-    }, [progress, setBackgroundEffect, setParticleSettings, setParticleColor]);
+    }, [progress, handleSetBackgroundEffect, handleSetParticleSettings, handleSetParticleColor]);
 
     return null;
 }
@@ -149,6 +153,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                         const convertedAmount = amount * currency.rate;
                         const formattedAmount = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(Math.round(convertedAmount));
                         const currencyName = currency.code === 'EGP' ? 'جنيه' : currency.code;
+                        const buttonText = currency.code === 'EGP' ? `تبرع بـ ${formattedAmount} جنيه` : `تبرع بـ ${formattedAmount} ${currencyName}`;
                         return (
                             <Button
                                 key={amount}
@@ -160,7 +165,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                                 {isSubmitting === amount ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    `تبرع بـ ${formattedAmount} ${currencyName}`
+                                    buttonText
                                 )}
                             </Button>
                         )
@@ -225,10 +230,25 @@ function WallOfSupporters() {
     });
 
     const extendedSupporters = useMemo(() => {
-        if (!supporters || supporters.length === 0) return [];
-        let items = [...supporters];
+        const staticSupporters = [
+            { id: 'static-supporter-1', donorName: 'عبدالرحمن رضا', isAnonymous: false, donatedAt: new Date() }
+        ];
+
+        let combinedSupporters = supporters ? [...supporters] : [];
+
+        // Add static supporters if they are not already in the list from DB
+        staticSupporters.forEach(staticSupporter => {
+            if (!combinedSupporters.some(s => s.donorName === staticSupporter.donorName)) {
+                combinedSupporters.unshift(staticSupporter as any);
+            }
+        });
+        
+        if (combinedSupporters.length === 0) return [];
+
+        let items = [...combinedSupporters];
+        // Ensure the carousel has enough items to loop smoothly
         while (items.length > 0 && items.length < 12) {
-           items = [...items, ...supporters];
+           items = [...items, ...combinedSupporters.slice(0, 12 - items.length)];
         }
         return items;
     }, [supporters]);
