@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -28,10 +29,25 @@ interface CustomDownloaderModalProps {
     onOpenChange: (open: boolean) => void;
     formats: Format[];
     title: string;
+    youtubeUrl?: string;
 }
 
-export function DownloaderModal({ isOpen, onOpenChange, formats, title }: CustomDownloaderModalProps) {
+export function DownloaderModal({ isOpen, onOpenChange, formats, title, youtubeUrl }: CustomDownloaderModalProps) {
     
+    const handleDownload = (format: Format) => {
+        if (!youtubeUrl) {
+            console.error("YouTube URL is missing for download.");
+            return;
+        }
+
+        const quality = format.qualityLabel || 'الصوت فقط';
+        const fileName = `${title} - ${quality}`;
+        
+        const downloadUrl = `/api/download?url=${encodeURIComponent(youtubeUrl)}&itag=${format.itag}&title=${encodeURIComponent(fileName)}&container=${format.container}`;
+        
+        window.location.href = downloadUrl;
+    };
+
     const videoFormats = formats.filter(f => f.qualityLabel);
     const audioFormats = formats.filter(f => !f.qualityLabel && f.hasAudio);
 
@@ -41,7 +57,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                 <DialogHeader>
                     <DialogTitle>تحميل: {title}</DialogTitle>
                     <DialogDescription>
-                        اختر الصيغة المناسبة لك. قد تكون بعض التنزيلات بطيئة.
+                        اختر الصيغة المناسبة لك. قد يكون التنزيل بطيئًا للملفات الكبيرة.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto">
@@ -63,11 +79,9 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                     </TableCell>
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
-                                        <Button asChild size="sm">
-                                            <a href={format.url} download={`${title} - ${format.qualityLabel}.${format.container}`}>
-                                                <Download className="me-2 h-4 w-4"/>
-                                                <span>تنزيل</span>
-                                            </a>
+                                        <Button size="sm" onClick={() => handleDownload(format)}>
+                                            <Download className="me-2 h-4 w-4"/>
+                                            <span>تنزيل</span>
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -80,11 +94,9 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
                                     </TableCell>
                                     <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
-                                        <Button asChild size="sm">
-                                            <a href={format.url} download={`${title}.${format.container}`}>
-                                                <Download className="me-2 h-4 w-4"/>
-                                                <span>تنزيل</span>
-                                            </a>
+                                         <Button size="sm" onClick={() => handleDownload(format)}>
+                                            <Download className="me-2 h-4 w-4"/>
+                                            <span>تنزيل</span>
                                         </Button>
                                     </TableCell>
                                 </TableRow>

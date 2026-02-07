@@ -409,6 +409,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         onOpenChange={setIsDownloaderOpen}
         formats={downloadFormats}
         title={lecture.title}
+        youtubeUrl={lecture.youtubeUrl}
     />
     </>
   );
