@@ -16,7 +16,6 @@ export const fonts = [
   { name: "الافتراضي (Cairo)", value: "font-body" },
   { name: "Tajawal", value: "font-tajawal" },
   { name: "Amiri (نسخ)", value: "font-amiri" },
-  { name: "Lazeez", value: "font-lazeez" },
 ];
 
 interface FontSwitcherDialogProps {

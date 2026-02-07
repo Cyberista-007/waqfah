@@ -21,7 +21,6 @@ export default {
         code: ['var(--font-code)'],
         'tajawal': ['var(--font-tajawal)'],
         'amiri': ['var(--font-amiri)'],
-        'lazeez': ['var(--font-lazeez)'],
       },
       colors: {
         background: 'hsl(var(--background))',

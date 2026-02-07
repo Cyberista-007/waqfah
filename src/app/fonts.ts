@@ -28,12 +28,13 @@ export const amiri = Amiri({
   variable: '--font-amiri',
 });
 
+/*
 export const lazeez = localFont({
   src: '../assets/fonts/Lazeez-Regular.ttf',
   variable: '--font-lazeez',
   display: 'swap',
 });
-/*
+
 export const uthmanic = localFont({
   src: '../assets/fonts/Uthmanic.ttf',
   variable: '--font-uthmanic',
