@@ -94,11 +94,9 @@ function OneClickDonation({ currency }: { currency: Currency }) {
         // For this prototype, we'll just simulate a delay and show a success message.
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const convertedAmount = amount / currency.rate;
-
         toast({
             title: "شكرًا لدعمك!",
-            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(convertedAmount)} بنجاح.`,
+            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG').format(amount)} جنيه مصري بنجاح.`,
         });
         
         // In a real app, you'd also update the donation goal progress bar here.
@@ -149,6 +147,8 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                 <CardContent className="flex flex-col sm:flex-row justify-around gap-4">
                     {amounts.map(amount => {
                         const convertedAmount = amount * currency.rate;
+                        const formattedAmount = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(Math.round(convertedAmount));
+                        const currencyName = currency.code === 'EGP' ? 'جنيه' : currency.code;
                         return (
                             <Button
                                 key={amount}
@@ -160,7 +160,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                                 {isSubmitting === amount ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    `تبرع بـ ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code }).format(convertedAmount)}`
+                                    `تبرع بـ ${formattedAmount} ${currencyName}`
                                 )}
                             </Button>
                         )
@@ -194,6 +194,11 @@ function DonationProgress({ currency }: { currency: Currency }) {
     const convertedCurrent = currentAmount * currency.rate;
     const convertedGoal = monthlyGoal * currency.rate;
 
+    const numberFormat = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 });
+    const formattedCurrent = numberFormat.format(Math.round(convertedCurrent));
+    const formattedGoal = numberFormat.format(Math.round(convertedGoal));
+    const currencyName = currency.code === 'EGP' ? 'جنيه' : currency.code;
+
     return (
         <section>
             <Card className="text-center bg-primary/5 border-primary/20">
@@ -203,8 +208,8 @@ function DonationProgress({ currency }: { currency: Currency }) {
                 <CardContent className="space-y-4">
                      <Progress value={progress} className="h-4 progress-shimmer" />
                      <div className="flex justify-between text-lg font-bold">
-                        <span>{new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
-                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
+                        <span>{formattedCurrent} {currencyName}</span>
+                        <span className="text-muted-foreground">الهدف: {formattedGoal} {currencyName}</span>
                      </div>
                 </CardContent>
             </Card>
