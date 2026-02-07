@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,8 +20,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Donation, DonationSettings } from '@/lib/types';
 import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import { Loader2, Heart, Edit, Trash2, PlusCircle, Settings, List } from 'lucide-react';
+import { doc, setDoc, runTransaction, increment, collection, Timestamp } from 'firebase/firestore';
+import { Loader2, Heart, Edit, Trash2, PlusCircle, Settings, List, Bot } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -30,6 +29,7 @@ import { DonationForm } from '@/components/admin/donation-form';
 import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format } from 'date-fns';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 function SettingsTab() {
   const { toast } = useToast();
@@ -40,12 +40,12 @@ function SettingsTab() {
   const [currentAmount, setCurrentAmount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     if (currentSettings) {
       setMonthlyGoal(currentSettings.monthlyGoal || 0);
       setCurrentAmount(currentSettings.currentAmount || 0);
     }
-  });
+  }, [currentSettings]);
 
   const handleSubmit = async () => {
     if (!firestore) {
@@ -109,6 +109,8 @@ function DonationsListTab() {
   const [itemToDelete, setItemToDelete] = useState<Donation | null>(null);
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { isAdmin } = useAdminAuth();
+  const [isCreatingFake, setIsCreatingFake] = useState(false);
 
   const handleNew = () => {
     setItemToEdit(null);
@@ -132,13 +134,50 @@ function DonationsListTab() {
     setItemToDelete(null);
   };
 
+  const handleCreateFakeDonation = async () => {
+    if (!firestore) return;
+    setIsCreatingFake(true);
+
+    const fakeDonation = {
+      donorName: 'متبرع تجريبي',
+      amount: Math.floor(Math.random() * (500 - 50 + 1) + 50), // Random amount between 50 and 500
+      isAnonymous: Math.random() < 0.3, // 30% chance of being anonymous
+      donatedAt: Timestamp.now(),
+      userId: null
+    };
+
+    try {
+        const donationRef = doc(collection(firestore, 'donations'));
+        const settingsRef = doc(firestore, 'settings', 'donations');
+
+        await runTransaction(firestore, async (transaction) => {
+            transaction.set(donationRef, fakeDonation);
+            transaction.set(settingsRef, { currentAmount: increment(fakeDonation.amount) }, { merge: true });
+        });
+        
+        toast({ title: 'تم إنشاء تبرع تجريبي بنجاح' });
+    } catch (error) {
+        console.error('Error creating fake donation:', error);
+        toast({ variant: 'destructive', title: 'فشل إنشاء التبرع التجريبي' });
+    } finally {
+        setIsCreatingFake(false);
+    }
+  };
+
+
   if (isFormOpen) {
     return <DonationForm item={itemToEdit} onFormClose={handleFormClose} />;
   }
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        {isAdmin && (
+            <Button onClick={handleCreateFakeDonation} disabled={isCreatingFake} variant="secondary">
+                {isCreatingFake ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Bot className="me-2 h-4 w-4" />}
+                إضافة تبرع وهمي
+            </Button>
+        )}
         <Button onClick={handleNew}><PlusCircle className="me-2 h-4 w-4" /> إضافة تبرع جديد</Button>
       </div>
       <Table>
@@ -158,7 +197,7 @@ function DonationsListTab() {
             donations?.map(d => (
               <TableRow key={d.id}>
                 <TableCell>{d.donorName}</TableCell>
-                <TableCell>${d.amount || 'N/A'}</TableCell>
+                <TableCell>{d.amount ? new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(d.amount) : 'N/A'}</TableCell>
                 <TableCell>{d.donatedAt ? format(d.donatedAt.toDate(), 'yyyy/MM/dd') : '-'}</TableCell>
                 <TableCell>{d.isAnonymous ? 'نعم' : 'لا'}</TableCell>
                 <TableCell>
