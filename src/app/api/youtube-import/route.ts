@@ -160,21 +160,32 @@ export async function POST(req: NextRequest) {
              try {
                 // play-dl can be picky, so we ensure a clean URL
                 const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                // This tells play-dl to act more like a web browser to avoid getting blocked.
+                await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
                 const videoFormats = info.format
-                    .filter(f => f.url && f.qualityLabel && (f.mimeType?.startsWith('video/mp4') || f.mimeType?.startsWith('video/webm')))
+                    .filter(f => 
+                        f.url &&
+                        f.qualityLabel &&
+                        f.audio_channels && f.audio_channels > 0 &&
+                        (f.mimeType?.startsWith('video/mp4') || f.mimeType?.startsWith('video/webm'))
+                    )
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
                         container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
-                        hasAudio: !!f.audio_channels,
+                        hasAudio: true,
                         url: f.url,
                         contentLength: f.content_length
                     }));
 
                 const audioFormats = info.format
-                     .filter(f => f.url && f.mimeType?.includes('audio/mp4'))
+                     .filter(f => 
+                        f.url && 
+                        f.mimeType?.includes('audio/mp4') &&
+                        !f.video_channels
+                     )
                      .map(f => ({
                         itag: f.itag,
                         qualityLabel: null,
@@ -183,18 +194,20 @@ export async function POST(req: NextRequest) {
                         url: f.url,
                         contentLength: f.content_length
                     }));
+                
+                const combinedFormats = [...videoFormats, ...audioFormats].filter(f => f.url);
 
-                return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
+                return NextResponse.json({ formats: combinedFormats }, { headers: corsHeaders });
             } catch (error: any) {
                  console.error("play-dl Error:", error);
                  const errorMessage = (error.message || '').toLowerCase();
                  let description: string;
                  
-                 if (errorMessage.includes("sign in to confirm you're not a bot")) {
-                     description = "يوتيوب يطلب التحقق من أنك لست روبوتًا. هذا يحدث أحيانًا بسبب كثرة الطلبات. يرجى المحاولة مرة أخرى بعد فترة قصيرة.";
-                 } else if (errorMessage.includes('could not extract signature decipher') || errorMessage.includes('could not extract functions')) {
-                    description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
-                 } else if (errorMessage.includes('private')) {
+                if (errorMessage.includes("sign in to confirm you're not a bot")) {
+                    description = "يوتيوب يطلب التحقق من أنك لست روبوتًا. هذا يحدث أحيانًا بسبب كثرة الطلبات. يرجى المحاولة مرة أخرى بعد فترة قصيرة.";
+                } else if (errorMessage.includes('could not extract signature decipher') || errorMessage.includes('could not extract functions')) {
+                   description = 'فشل تحليل بيانات الفيديو من يوتيوب. قد يكون هذا بسبب تغييرات في منصة يوتيوب أو أن الفيديو مقيد. يرجى المحاولة مرة أخرى لاحقًا.';
+                } else if (errorMessage.includes('private')) {
                      description = 'هذا الفيديو خاص ولا يمكن تحميله.';
                  } else if (errorMessage.includes('age-restricted') || errorMessage.includes('login required')) {
                      description = 'هذا الفيديو محمي بقيود عمرية ويتطلب تسجيل الدخول، لذا لا يمكن تحميله.';

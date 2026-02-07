@@ -40,21 +40,19 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title }: Custom
         }
 
         const quality = format.qualityLabel || 'الصوت فقط';
-        const fileName = `${title} - ${quality}.${format.container}`;
-
-        // Create a temporary anchor element and trigger download
-        // This is more robust than window.location.href for downloads
-        const anchor = document.createElement('a');
-        anchor.href = format.url;
-        anchor.download = fileName;
-        anchor.target = "_blank"; // Good practice for external links
-        anchor.rel = "noopener noreferrer";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        const fileName = `${title} - ${quality}`;
+        
+        const downloadUrl = `/api/download?url=${encodeURIComponent(format.url)}&title=${encodeURIComponent(fileName)}&container=${encodeURIComponent(format.container)}`;
+        
+        // Redirecting to this URL will trigger the download via the proxy.
+        window.location.href = downloadUrl;
     };
 
-    const videoFormats = formats.filter(f => f.qualityLabel);
+    const videoFormats = formats.filter(f => f.qualityLabel).sort((a, b) => {
+        const qualityA = parseInt(a.qualityLabel || '0');
+        const qualityB = parseInt(b.qualityLabel || '0');
+        return qualityB - qualityA;
+    });
     const audioFormats = formats.filter(f => !f.qualityLabel && f.hasAudio);
 
     return (
