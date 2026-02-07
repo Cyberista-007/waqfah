@@ -194,16 +194,16 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         return;
     }
     
-    // Fallback to audio download
-    const url = lecture.audioSrc;
-    if (!url) {
+    // Fallback for non-YouTube audio download
+    const audioUrl = lecture.audioSrc;
+    if (!audioUrl) {
         toast({ variant: 'destructive', title: 'رابط التحميل غير متوفر' });
         return;
     }
     
     try {
       const a = document.createElement('a');
-      a.href = url;
+      a.href = audioUrl;
       a.download = lecture.title ? `${lecture.title}.mp3` : 'lecture.mp3';
       document.body.appendChild(a);
       a.click();
@@ -409,7 +409,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         onOpenChange={setIsDownloaderOpen}
         formats={downloadFormats}
         title={lecture.title}
-        youtubeUrl={lecture.youtubeUrl}
+        videoId={videoId}
     />
     </>
   );

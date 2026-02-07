@@ -19,9 +19,8 @@ interface Format {
     itag: number;
     qualityLabel: string | null;
     container: string;
-    hasAudio: boolean;
-    url: string;
     contentLength?: number;
+    type: 'video' | 'audio';
 }
 
 interface CustomDownloaderModalProps {
@@ -29,31 +28,32 @@ interface CustomDownloaderModalProps {
     onOpenChange: (open: boolean) => void;
     formats: Format[];
     title: string;
+    videoId: string | null;
 }
 
-export function DownloaderModal({ isOpen, onOpenChange, formats, title }: CustomDownloaderModalProps) {
+export function DownloaderModal({ isOpen, onOpenChange, formats, title, videoId }: CustomDownloaderModalProps) {
     
     const handleDownload = (format: Format) => {
-        if (!format.url) {
-            console.error("Download URL is missing for this format.");
+        if (!videoId) {
+            console.error("Video ID is missing.");
             return;
         }
 
         const quality = format.qualityLabel || 'الصوت فقط';
         const fileName = `${title} - ${quality}`;
         
-        const downloadUrl = `/api/download?url=${encodeURIComponent(format.url)}&title=${encodeURIComponent(fileName)}&container=${encodeURIComponent(format.container)}`;
+        const downloadUrl = `/api/download?videoId=${videoId}&itag=${format.itag}&title=${encodeURIComponent(fileName)}&container=${encodeURIComponent(format.container)}`;
         
-        // Redirecting to this URL will trigger the download via the proxy.
+        // This triggers the download via our proxy endpoint.
         window.location.href = downloadUrl;
     };
 
-    const videoFormats = formats.filter(f => f.qualityLabel).sort((a, b) => {
+    const videoFormats = formats.filter(f => f.type === 'video').sort((a, b) => {
         const qualityA = parseInt(a.qualityLabel || '0');
         const qualityB = parseInt(b.qualityLabel || '0');
         return qualityB - qualityA;
     });
-    const audioFormats = formats.filter(f => !f.qualityLabel && f.hasAudio);
+    const audioFormats = formats.filter(f => f.type === 'audio');
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>

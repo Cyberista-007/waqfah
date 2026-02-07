@@ -164,38 +164,30 @@ export async function POST(req: NextRequest) {
                 await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
+                 // Progressive formats (video + audio)
                 const videoFormats = info.format
-                    .filter(f => 
-                        f.url &&
-                        f.qualityLabel &&
-                        f.audio_channels && f.audio_channels > 0 &&
-                        (f.mimeType?.startsWith('video/mp4') || f.mimeType?.startsWith('video/webm'))
-                    )
+                    .filter(f => f.qualityLabel && f.audio_channels && f.audio_channels > 0)
                     .map(f => ({
                         itag: f.itag,
                         qualityLabel: f.qualityLabel,
                         container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
-                        hasAudio: true,
-                        url: f.url,
-                        contentLength: f.content_length
+                        contentLength: f.content_length,
+                        type: 'video'
                     }));
 
+                // Audio-only formats
                 const audioFormats = info.format
-                     .filter(f => 
-                        f.url && 
-                        f.mimeType?.includes('audio/mp4') &&
-                        !f.video_channels
-                     )
+                     .filter(f => f.mimeType?.startsWith('audio/') && !f.video_channels)
                      .map(f => ({
                         itag: f.itag,
-                        qualityLabel: null,
-                        container: 'm4a',
-                        hasAudio: true,
-                        url: f.url,
-                        contentLength: f.content_length
+                        qualityLabel: null, // no video
+                        container: f.mimeType?.includes('webm') ? 'weba' : 'm4a',
+                        contentLength: f.content_length,
+                        type: 'audio'
                     }));
                 
-                const combinedFormats = [...videoFormats, ...audioFormats].filter(f => f.url);
+                const combinedFormats = [...videoFormats, ...audioFormats].filter(f => f.itag);
+
 
                 return NextResponse.json({ formats: combinedFormats }, { headers: corsHeaders });
             } catch (error: any) {
