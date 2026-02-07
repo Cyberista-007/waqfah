@@ -33,3 +33,16 @@ export const lazeez = localFont({
   variable: '--font-lazeez',
   display: 'swap',
 });
+/*
+export const uthmanic = localFont({
+  src: '../assets/fonts/Uthmanic.ttf',
+  variable: '--font-uthmanic',
+  display: 'swap',
+});
+
+export const geDinar = localFont({
+  src: '../assets/fonts/GE-Dinar-Two-Medium.ttf',
+  variable: '--font-ge-dinar',
+  display: 'swap',
+});
+*/
