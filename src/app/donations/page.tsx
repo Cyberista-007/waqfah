@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 function OneClickDonation() {
     const { user } = useUser();
