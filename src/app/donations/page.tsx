@@ -14,16 +14,19 @@ export default function DonationsPage() {
       icon: Server,
       title: 'تكاليف الاستضافة',
       description: 'ضمان بقاء الموقع سريعًا ومتاحًا للجميع على مدار الساعة.',
+      example: 'كل 50$ تساعد في تغطية تكاليف الخادم ليوم كامل.'
     },
     {
       icon: Film,
       title: 'إنتاج محتوى جديد',
       description: 'المساعدة في تسجيل وتحرير ونشر المزيد من المحاضرات والسلاسل العلمية.',
+      example: 'كل 25$ تساهم في تفريغ محاضرة صوتية واحدة.'
     },
     {
       icon: BookOpen,
       title: 'التفريغ النصي والترجمة',
       description: 'توفير تفريغات نصية دقيقة وترجمات للمحتوى للوصول إلى جمهور أوسع.',
+      example: 'كل 10$ تساعد في ترجمة صفحة من محتوى علمي.'
     },
   ];
 
@@ -36,7 +39,8 @@ export default function DonationsPage() {
       {
           icon: Users,
           title: 'تطوع معنا',
-          description: 'إذا كانت لديك مهارات في البرمجة، التصميم، أو التفريغ الصوتي، فتواصل معنا.'
+          description: 'إذا كانت لديك مهارات في البرمجة، التصميم، أو التفريغ الصوتي، فتواصل معنا.',
+          action: <Button asChild variant="link"><Link href="/contact">تواصل معنا</Link></Button>
       },
       {
           icon: Gift,
@@ -139,6 +143,7 @@ export default function DonationsPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2 font-headline">{reason.title}</h3>
                 <p className="text-muted-foreground">{reason.description}</p>
+                <p className="text-sm font-semibold text-primary mt-3">{reason.example}</p>
               </Card>
             );
           })}
@@ -151,10 +156,13 @@ export default function DonationsPage() {
             {otherWaysToSupport.map((way, index) => {
                 const Icon = way.icon;
                 return (
-                    <Card key={index} className="bg-card/50 p-6 text-center">
+                    <Card key={index} className="bg-card/50 p-6 text-center flex flex-col">
+                      <div className="flex-grow">
                         <Icon className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-bold font-headline">{way.title}</h3>
                         <p className="text-sm text-muted-foreground mt-2">{way.description}</p>
+                      </div>
+                      {way.action && <div className="mt-4">{way.action}</div>}
                     </Card>
                 )
             })}
