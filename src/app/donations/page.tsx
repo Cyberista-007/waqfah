@@ -188,32 +188,29 @@ function WallOfSupporters() {
         );
     }
 
-    if (!supporters || supporters.length === 0) {
-        return (
-             <section>
-                <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
+    return (
+        <section>
+            <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
+            {supporters && supporters.length > 0 ? (
+                <>
+                    <div className="relative w-full overflow-hidden group">
+                        <div className="flex gap-4 animate-scroll-rtl group-hover:animation-play-state-paused">
+                            {extendedSupporters.map((supporter, index) => (
+                                <div key={`${supporter.id}-${index}`} className="flex-shrink-0 bg-accent text-accent-foreground px-6 py-2 rounded-full shadow-md">
+                                    <span className="font-semibold text-lg">{supporter.donorName}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
+                </>
+            ) : (
                 <Card className="text-center py-10">
                     <CardContent>
                         <p className="text-lg text-muted-foreground">كن أول الداعمين! سيظهر اسمك هنا بعد مساهمتك.</p>
                     </CardContent>
                 </Card>
-            </section>
-        );
-    }
-
-    return (
-        <section>
-            <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
-            <div className="relative w-full overflow-hidden group">
-                <div className="flex gap-4 animate-scroll-rtl group-hover:animation-play-state-paused">
-                    {extendedSupporters.map((supporter, index) => (
-                        <div key={`${supporter.id}-${index}`} className="flex-shrink-0 bg-accent text-accent-foreground px-6 py-2 rounded-full shadow-md">
-                            <span className="font-semibold text-lg">{supporter.donorName}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-             <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
+            )}
         </section>
     );
 }
@@ -225,7 +222,7 @@ export default function DonationsPage() {
     { code: 'SAR', name: 'ريال سعودي', rate: 3.75 },
     { code: 'EUR', name: 'يورو', rate: 0.92 }
   ];
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies.find(c => c.code === 'EGP') || currencies[0]);
 
   useEffect(() => {
     const localeCurrencyMap: { [key: string]: string } = {
@@ -234,12 +231,15 @@ export default function DonationsPage() {
         'en-GB': 'EUR',
         'de-DE': 'EUR',
         'fr-FR': 'EUR'
-        // We can add more mappings here
     };
     const userLocale = navigator.language;
-    const currencyCode = localeCurrencyMap[userLocale] || 'USD';
-    const currency = currencies.find(c => c.code === currencyCode) || currencies[0];
-    setSelectedCurrency(currency);
+    const currencyCode = localeCurrencyMap[userLocale];
+    if (currencyCode) {
+        const currency = currencies.find(c => c.code === currencyCode);
+        if (currency) {
+            setSelectedCurrency(currency);
+        }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
