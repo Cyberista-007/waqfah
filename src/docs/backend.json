@@ -123,6 +123,11 @@
         "seriesCompleted": { "type": "number", "minimum": 0 },
         "role": { "type": "string", "enum": ["user", "admin"], "default": "user" },
         "createdAt": { "type": "string", "format": "date-time" },
+        "totalDonated": { "type": "number", "minimum": 0, "description": "The total amount donated by the user." },
+        "donationTier": { "type": "string", "enum": ["bronze", "silver", "gold"], "description": "The user's donation tier." },
+        "stripeCustomerId": { "type": "string", "description": "The customer ID from the payment provider (e.g., Stripe)." },
+        "savedCardBrand": { "type": "string", "description": "The brand of the user's saved card (e.g., 'Visa')." },
+        "savedCardLast4": { "type": "string", "description": "The last 4 digits of the user's saved card." },
         "notificationSettings": {
           "type": "object",
           "description": "User's notification preferences.",
@@ -324,6 +329,30 @@
         "link": { "type": "string", "format": "uri" },
         "isActive": { "type": "boolean" }
       }
+    },
+    "DonationSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Donation Settings",
+      "description": "A singleton document to store donation campaign settings.",
+      "type": "object",
+      "properties": {
+        "monthlyGoal": { "type": "number", "minimum": 0, "description": "The monthly donation goal." },
+        "currentAmount": { "type": "number", "minimum": 0, "description": "The current amount collected." }
+      }
+    },
+    "Donation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Donation",
+      "description": "Represents a single donation made by a user or visitor.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who made the donation, if applicable." },
+        "donorName": { "type": "string", "description": "The name of the donor to be displayed publicly." },
+        "amount": { "type": "number", "minimum": 0, "description": "The donation amount (optional)." },
+        "isAnonymous": { "type": "boolean", "default": false, "description": "If true, the donation will not be shown on the public wall of supporters." },
+        "donatedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the donation was made." }
+      },
+      "required": ["donorName", "isAnonymous", "donatedAt"]
     }
   },
   "auth": {
@@ -416,6 +445,14 @@
        {
         "path": "/settings/announcement",
         "definition": { "schema": { "$ref": "#/entities/AnnouncementSettings" } }
+      },
+      {
+        "path": "/settings/donations",
+        "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
+      },
+      {
+        "path": "/donations/{donationId}",
+        "definition": { "schema": { "$ref": "#/entities/Donation" } }
       }
     ]
   }

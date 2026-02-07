@@ -125,6 +125,9 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "totalDonated": { "type": "number", "minimum": 0, "description": "The total amount donated by the user." },
         "donationTier": { "type": "string", "enum": ["bronze", "silver", "gold"], "description": "The user's donation tier." },
+        "stripeCustomerId": { "type": "string", "description": "The customer ID from the payment provider (e.g., Stripe)." },
+        "savedCardBrand": { "type": "string", "description": "The brand of the user's saved card (e.g., 'Visa')." },
+        "savedCardLast4": { "type": "string", "description": "The last 4 digits of the user's saved card." },
         "notificationSettings": {
           "type": "object",
           "description": "User's notification preferences.",

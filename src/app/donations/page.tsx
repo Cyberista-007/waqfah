@@ -4,11 +4,103 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2, Star, Shield } from 'lucide-react';
 import Link from 'next/link';
-import { useCollection, useDoc } from '@/firebase';
-import type { Donation, DonationSettings } from '@/lib/types';
+import { useCollection, useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
+
+function OneClickDonation() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState<number | null>(null);
+
+    const userDocRef = useMemoFirebase(
+        () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+        [user, firestore]
+    );
+    const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+
+    const handleOneClickDonate = async (amount: number) => {
+        setIsSubmitting(amount);
+        // In a real application, this would call a backend function
+        // to process the payment with the saved payment method.
+        // For this prototype, we'll just simulate a delay and show a success message.
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        toast({
+            title: "شكرًا لدعمك!",
+            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount)} بنجاح.`,
+        });
+        
+        // In a real app, you'd also update the donation goal progress bar here.
+        
+        setIsSubmitting(null);
+    };
+
+    if (isLoading) {
+        return (
+            <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-6">
+                    <Skeleton className="h-6 w-1/2 mb-4" />
+                    <div className="flex justify-around gap-4">
+                        <Skeleton className="h-12 w-24 rounded-full" />
+                        <Skeleton className="h-12 w-24 rounded-full" />
+                        <Skeleton className="h-12 w-24 rounded-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+    
+    // For demonstration, let's assume the user has a saved card.
+    // In a real app, this condition would be:
+    // const hasSavedCard = userProfile?.stripeCustomerId && userProfile?.savedCardLast4;
+    const hasSavedCard = user; // Show for any logged-in user for demo purposes.
+    const cardBrand = userProfile?.savedCardBrand || 'Visa'; // Demo data
+    const last4 = userProfile?.savedCardLast4 || '4242'; // Demo data
+
+    if (!hasSavedCard) {
+        return null;
+    }
+    
+    const amounts = [10, 25, 50];
+
+    return (
+        <section>
+            <Card className="bg-primary/5 border-primary/20">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                        <CreditCard className="h-6 w-6" />
+                        تبرع بنقرة واحدة
+                    </CardTitle>
+                    <CardDescription>
+                        شكرًا لكونك داعمًا مستمرًا! استخدم بطاقتك المحفوظة ({cardBrand} تنتهي بـ {last4}) للتبرع بسرعة.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row justify-around gap-4">
+                    {amounts.map(amount => (
+                        <Button
+                            key={amount}
+                            size="lg"
+                            className="flex-grow"
+                            onClick={() => handleOneClickDonate(amount)}
+                            disabled={!!isSubmitting}
+                        >
+                            {isSubmitting === amount ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                `تبرع بـ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount)}`
+                            )}
+                        </Button>
+                    ))}
+                </CardContent>
+            </Card>
+        </section>
+    );
+}
 
 function DonationProgress() {
     const { data: settings, isLoading } = useDoc<DonationSettings>('settings/donations');
@@ -158,6 +250,8 @@ export default function DonationsPage() {
           كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.
         </p>
       </section>
+
+      <OneClickDonation />
 
       <DonationProgress />
 

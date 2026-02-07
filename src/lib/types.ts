@@ -150,6 +150,9 @@ export type UserProfile = Serializable<{
     totalDonated?: number;
     donationTier?: 'bronze' | 'silver' | 'gold';
     notificationSettings?: NotificationSettings;
+    stripeCustomerId?: string;
+    savedCardBrand?: string;
+    savedCardLast4?: string;
 }>;
 
 export type EditProfileForm = {
