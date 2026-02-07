@@ -104,7 +104,7 @@ function CommentItem({ comment, lectureId }: { comment: Comment, lectureId: stri
 
         try {
             const idToken = await user.getIdToken();
-            const response = await fetch('/api/admin/users/manage', {
+            const response = await fetch(`${window.location.origin}/api/admin/users/manage`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
