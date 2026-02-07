@@ -19,6 +19,11 @@ export type AnnouncementSettings = {
     isActive?: boolean;
 };
 
+export type DonationSettings = {
+    monthlyGoal?: number;
+    currentAmount?: number;
+};
+
 export type AppearanceSettings = {
     defaultTheme: string;
     defaultFont: string;

@@ -1,12 +1,50 @@
+'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark } from 'lucide-react';
+import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useDoc } from '@/firebase';
+import type { DonationSettings } from '@/lib/types';
+import { Progress } from '@/components/ui/progress';
 
-export const metadata = {
-    title: 'دعم الموقع',
-};
+function DonationProgress() {
+    const { data: settings, isLoading } = useDoc<DonationSettings>('settings/donations');
+    
+    if (isLoading) {
+        return (
+            <Card>
+                <CardContent className="p-6">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                </CardContent>
+            </Card>
+        );
+    }
+    
+    if (!settings || !settings.monthlyGoal || settings.monthlyGoal <= 0) {
+        return null; // Don't show if goal is not set
+    }
+
+    const { monthlyGoal = 0, currentAmount = 0 } = settings;
+    const progress = Math.min((currentAmount / monthlyGoal) * 100, 100);
+
+    return (
+        <section>
+            <Card className="text-center bg-primary/5 border-primary/20">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-headline">ادعم استمراريتنا هذا الشهر</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <Progress value={progress} className="h-4" />
+                     <div className="flex justify-between text-lg font-bold">
+                        <span>{new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(currentAmount)}</span>
+                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(monthlyGoal)}</span>
+                     </div>
+                </CardContent>
+            </Card>
+        </section>
+    );
+}
 
 export default function DonationsPage() {
   const donationReasons = [
@@ -58,6 +96,8 @@ export default function DonationsPage() {
           كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.
         </p>
       </section>
+
+      <DonationProgress />
 
       <section>
         <Card className="bg-primary/5 border-primary/20 shadow-lg">
