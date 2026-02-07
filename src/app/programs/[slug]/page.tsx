@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -14,45 +13,21 @@ import { Users, Loader2 } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
 
-export default function ProgramPage() {
-    const params = useParams();
-    const slug = params.slug as string;
-
-    // 1. Fetch the program by slug
-    const { data: programs, isLoading: programsLoading } = useCollection<Program>('programs', {
-        where: ['slug', '==', slug],
-        limit: 1
-    });
-
-    const program = programs?.[0];
-    const programId = program?.id;
-
-    // 2. Fetch lectures and series for this program ID, only if programId exists
+function ProgramPageContent({ program }: { program: Program }) {
     const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
-        programId ? 'lectures' : null, 
-        { where: ['programId', '==', programId] }
+        'lectures',
+        { where: ['programId', '==', program.id] }
     );
     const { data: series, isLoading: seriesLoading } = useCollection<Series>(
-        programId ? 'series' : null, 
-        { where: ['programId', '==', programId] }
+        'series',
+        { where: ['programId', '==', program.id] }
     );
 
-    const isLoading = programsLoading || (programId !== undefined && (lecturesLoading || seriesLoading));
-
-    if (isLoading) {
-        return <HomePageSkeleton />;
-    }
-
-    if (!program) {
-        notFound();
-        return null;
-    }
+    const contentIsLoading = lecturesLoading || seriesLoading;
 
     const placeholder = getPlaceholderImage(program.imageId);
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
-    
     const bannerUrl = "https://picsum.photos/seed/program-banner/1600/400";
-
 
     return (
         <div className="container mx-auto px-0 py-0 -mt-8 space-y-12">
@@ -101,31 +76,64 @@ export default function ProgramPage() {
                 </div>
             </div>
 
-            {(series?.length || 0) > 0 && (
-                <section className="px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-2xl font-bold mb-6 font-headline">السلاسل</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {series!.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
-                    </div>
-                </section>
+            {contentIsLoading && (
+                 <div className="text-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                 </div>
             )}
 
-            {(lectures?.length || 0) > 0 && (
-                 <section className="px-4 sm:px-6 lg:px-8">
-                     <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {lectures!.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
-                    </div>
-                </section>
-            )}
+            {!contentIsLoading && (
+                <>
+                    {(series?.length || 0) > 0 && (
+                        <section className="px-4 sm:px-6 lg:px-8">
+                            <h2 className="text-2xl font-bold mb-6 font-headline">السلاسل</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {series!.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
+                            </div>
+                        </section>
+                    )}
 
-            {(lectures?.length || 0) === 0 && (series?.length || 0) === 0 && (
-                 <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20">
-                    <p className="text-lg text-muted-foreground">
-                        لا يوجد محتوى في هذا البرنامج حالياً.
-                    </p>
-                </div>
+                    {(lectures?.length || 0) > 0 && (
+                         <section className="px-4 sm:px-6 lg:px-8">
+                             <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {lectures!.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                            </div>
+                        </section>
+                    )}
+
+                    {(lectures?.length || 0) === 0 && (series?.length || 0) === 0 && (
+                         <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20 px-4 sm:px-6 lg:px-8">
+                            <p className="text-lg text-muted-foreground">
+                                لا يوجد محتوى في هذا البرنامج حالياً.
+                            </p>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
+}
+
+export default function ProgramPage() {
+    const params = useParams();
+    const slug = params.slug as string;
+
+    const { data: programs, isLoading: programsLoading } = useCollection<Program>('programs', {
+        where: ['slug', '==', slug],
+        limit: 1
+    });
+
+    if (programsLoading) {
+        return <HomePageSkeleton />;
+    }
+
+    const program = programs?.[0];
+
+    if (!program) {
+        notFound();
+        return null;
+    }
+
+    return <ProgramPageContent program={program} />;
 }

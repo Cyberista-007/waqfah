@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -7,40 +6,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
 import { getInitials } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
-import { Users } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
 
-export default function ChannelPage() {
-    const params = useParams();
-    const slug = params.slug as string;
-
-    // 1. Fetch the channel by slug
-    const { data: channels, isLoading: channelsLoading } = useCollection<Channel>('channels', {
-        where: ['slug', '==', slug],
-        limit: 1
-    });
-    const channel = channels?.[0];
-    const channelId = channel?.id;
-
-    // 2. Fetch lectures for this channel ID, only if channelId exists
+function ChannelPageContent({ channel }: { channel: Channel }) {
     const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
-        channelId ? 'lectures' : null, 
-        { where: ['channelId', '==', channelId] }
+        'lectures',
+        { where: ['channelId', '==', channel.id] }
     );
-
-    const isLoading = channelsLoading || (channelId !== undefined && lecturesLoading);
-
-    if (isLoading) {
-        return <HomePageSkeleton />;
-    }
-
-    if (!channel) {
-        notFound();
-        return null;
-    }
 
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
@@ -97,7 +73,11 @@ export default function ChannelPage() {
             {/* Lectures Section */}
             <section className="px-4 sm:px-6 lg:px-8">
                  <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
-                {lectures && lectures.length > 0 ? (
+                {lecturesLoading ? (
+                     <div className="text-center py-16">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                     </div>
+                ) : lectures && lectures.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                     </div>
@@ -111,4 +91,28 @@ export default function ChannelPage() {
             </section>
         </div>
     );
+}
+
+
+export default function ChannelPage() {
+    const params = useParams();
+    const slug = params.slug as string;
+
+    const { data: channels, isLoading: channelsLoading } = useCollection<Channel>('channels', {
+        where: ['slug', '==', slug],
+        limit: 1
+    });
+
+    if (channelsLoading) {
+        return <HomePageSkeleton />;
+    }
+
+    const channel = channels?.[0];
+
+    if (!channel) {
+        notFound();
+        return null;
+    }
+
+    return <ChannelPageContent channel={channel} />;
 }
