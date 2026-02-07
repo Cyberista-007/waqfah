@@ -586,3 +586,15 @@
 .custom-pip-btn:hover {
     background: #ff0000;
 }
+
+@keyframes draw-icon {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-icon-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-icon 1.5s ease-out forwards;
+}

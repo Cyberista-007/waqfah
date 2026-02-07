@@ -546,7 +546,7 @@ export default function ProfilePage() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-4xl font-bold font-headline flex items-center gap-3"><ListMusic className="h-9 w-9" />مكتبتي</h1>
+            <h1 className="text-4xl font-bold font-headline flex items-center gap-3"><ListMusic className="h-9 w-9 animate-icon-draw" />مكتبتي</h1>
 
             <Tabs defaultValue="history" className="w-full">
               <div className="flex justify-center overflow-x-auto pb-2">

@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
@@ -19,7 +19,7 @@ export default function AdminDashboardPage() {
         <div className="space-y-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 className="text-4xl font-bold font-headline">لوحة تحكم المدير</h1>
+                <h1 className="text-4xl font-bold font-headline flex items-center gap-2"><LayoutDashboard className="h-9 w-9 animate-icon-draw"/>لوحة تحكم المدير</h1>
                 <p className="text-muted-foreground mt-2">نظرة عامة على أداء الموقع والمحتوى.</p>
             </div>
             <div className="flex gap-2">

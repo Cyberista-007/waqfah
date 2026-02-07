@@ -49,7 +49,7 @@ function SeriesList() {
 export default function SeriesListPage() {
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3"><ListVideo/>السلاسل العلمية</h1>
+      <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3"><ListVideo className="animate-icon-draw"/>السلاسل العلمية</h1>
       <SeriesList />
     </div>
   );

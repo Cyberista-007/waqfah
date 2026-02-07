@@ -156,7 +156,7 @@ function BooksList() {
 export default function BooksPage() {
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3 justify-center"><BookIcon className="h-9 w-9" />الكتب والمؤلفات</h1>
+      <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3 justify-center"><BookIcon className="h-9 w-9 animate-icon-draw" />الكتب والمؤلفات</h1>
       <BooksList />
     </div>
   );
