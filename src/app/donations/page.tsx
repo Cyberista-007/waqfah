@@ -21,7 +21,7 @@ type Currency = {
 };
 
 function DonationGoalBackgroundController() {
-    const { setBackgroundEffect, setParticleSettings, setParticleColor } = useAppearance();
+    const { setBackgroundEffect, setParticleColor, setParticleSettings } = useAppearance();
     const { data: settings } = useDoc<DonationSettings>('settings/donations');
 
     const progress = useMemo(() => {
@@ -94,11 +94,11 @@ function OneClickDonation({ currency }: { currency: Currency }) {
         // For this prototype, we'll just simulate a delay and show a success message.
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const convertedAmount = amount * currency.rate;
+        const convertedAmount = amount;
 
         toast({
             title: "شكرًا لدعمك!",
-            description: `تم التبرع بما يعادل ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedAmount)} بنجاح.`,
+            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(convertedAmount)} بنجاح.`,
         });
         
         // In a real app, you'd also update the donation goal progress bar here.
@@ -148,7 +148,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row justify-around gap-4">
                     {amounts.map(amount => {
-                        const convertedAmount = amount * currency.rate;
+                        const convertedAmount = amount;
                         return (
                             <Button
                                 key={amount}
@@ -160,7 +160,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                                 {isSubmitting === amount ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    `تبرع بـ ${new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedAmount)}`
+                                    `تبرع بـ ${new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(convertedAmount)}`
                                 )}
                             </Button>
                         )
@@ -191,8 +191,8 @@ function DonationProgress({ currency }: { currency: Currency }) {
     const { monthlyGoal = 0, currentAmount = 0 } = settings;
     const progress = (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
     
-    const convertedCurrent = currentAmount * currency.rate;
-    const convertedGoal = monthlyGoal * currency.rate;
+    const convertedCurrent = currentAmount;
+    const convertedGoal = monthlyGoal;
 
     return (
         <section>
@@ -203,8 +203,8 @@ function DonationProgress({ currency }: { currency: Currency }) {
                 <CardContent className="space-y-4">
                      <Progress value={progress} className="h-4" />
                      <div className="flex justify-between text-lg font-bold">
-                        <span>{new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
-                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.code, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
+                        <span>{new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedCurrent)}</span>
+                        <span className="text-muted-foreground">الهدف: {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(convertedGoal)}</span>
                      </div>
                 </CardContent>
             </Card>
@@ -220,51 +220,65 @@ function WallOfSupporters() {
     });
 
     const extendedSupporters = useMemo(() => {
-        if (!supporters) return [];
-        // To make the loop seamless, we need to have enough items.
-        // We duplicate the array until we have a reasonable number for a smooth animation.
-        if (supporters.length > 0 && supporters.length < 10) {
-           return [...supporters, ...supporters, ...supporters];
+        if (!supporters || supporters.length === 0) return [];
+        let items = [...supporters];
+        while (items.length > 0 && items.length < 12) {
+           items = [...items, ...supporters];
         }
-        return [...supporters, ...supporters];
+        return items;
     }, [supporters]);
 
     if (isLoading) {
         return (
-            <Card className="p-6">
-                <Skeleton className="h-6 w-1/2 mx-auto" />
-                <div className="flex gap-4 mt-4 overflow-hidden">
-                    {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} className="h-10 w-32 rounded-full" />
-                    ))}
-                </div>
+            <Card className="p-6 h-64 flex items-center justify-center">
+                <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
             </Card>
         );
     }
+    
+    if (extendedSupporters.length === 0) {
+        return (
+             <Card className="text-center py-10">
+                <CardContent>
+                    <p className="text-lg text-muted-foreground">كن أول الداعمين! سيظهر اسمك هنا بعد مساهمتك.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+    
+    const panelCount = extendedSupporters.length;
+    const radius = Math.round( ( 220 / 2 ) / Math.tan( Math.PI / panelCount ) );
+    const angle = 360 / panelCount;
+
 
     return (
-        <section>
+        <section className="h-[400px] flex flex-col items-center justify-center space-y-8">
             <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
-            {supporters && supporters.length > 0 ? (
-                <>
-                    <div className="relative w-full overflow-hidden group">
-                        <div className="flex gap-4 animate-scroll-rtl group-hover:animation-play-state-paused">
-                            {extendedSupporters.map((supporter, index) => (
-                                <div key={`${supporter.id}-${index}`} className="flex-shrink-0 bg-accent text-accent-foreground px-6 py-2 rounded-full shadow-md">
-                                    <span className="font-semibold text-lg">{supporter.donorName}</span>
-                                </div>
-                            ))}
-                        </div>
+            <div className="w-full h-48 flex items-center justify-center">
+                <div className="scene3d">
+                    <div 
+                        className="carousel3d"
+                        style={{
+                            '--panel-count': panelCount,
+                            '--radius': `${radius}px`,
+                        } as React.CSSProperties}
+                    >
+                        {extendedSupporters.map((supporter, index) => (
+                           <div 
+                                key={`${supporter.id}-${index}`} 
+                                className="carousel3d__cell"
+                                style={{
+                                    '--i': index,
+                                    '--angle': `${angle}deg`
+                                } as React.CSSProperties}
+                            >
+                                <span className="font-semibold text-xl">{supporter.donorName}</span>
+                            </div>
+                        ))}
                     </div>
-                    <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
-                </>
-            ) : (
-                <Card className="text-center py-10">
-                    <CardContent>
-                        <p className="text-lg text-muted-foreground">كن أول الداعمين! سيظهر اسمك هنا بعد مساهمتك.</p>
-                    </CardContent>
-                </Card>
-            )}
+                </div>
+            </div>
+            <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
         </section>
     );
 }
@@ -293,6 +307,8 @@ export default function DonationsPage() {
         if (currency) {
             setSelectedCurrency(currency);
         }
+    } else {
+        setSelectedCurrency(currencies.find(c => c.code === 'EGP') || currencies[0]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -345,19 +361,6 @@ export default function DonationsPage() {
           <Heart className="mx-auto h-16 w-16 text-primary animate-pulse" />
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">ادعم استمرارية هذا العلم</h1>
-              <div className="mt-4">
-                  <Select value={selectedCurrency.code} onValueChange={(code) => {
-                      const currency = currencies.find(c => c.code === code);
-                      if (currency) setSelectedCurrency(currency);
-                  }}>
-                      <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="اختر العملة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          {currencies.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                  </Select>
-              </div>
           </div>
           <p className="max-w-3xl mx-auto text-xl text-muted-foreground">
             كل مساهمة، مهما كانت صغيرة، تساعدنا على نشر العلم الشرعي وجعله متاحًا للملايين حول العالم.
