@@ -21,7 +21,7 @@ interface Format {
     container: string;
     hasAudio: boolean;
     url: string;
-    contentLength?: string;
+    contentLength?: number;
 }
 
 interface CustomDownloaderModalProps {
@@ -29,23 +29,29 @@ interface CustomDownloaderModalProps {
     onOpenChange: (open: boolean) => void;
     formats: Format[];
     title: string;
-    youtubeUrl?: string;
 }
 
-export function DownloaderModal({ isOpen, onOpenChange, formats, title, youtubeUrl }: CustomDownloaderModalProps) {
+export function DownloaderModal({ isOpen, onOpenChange, formats, title }: CustomDownloaderModalProps) {
     
     const handleDownload = (format: Format) => {
-        if (!youtubeUrl) {
-            console.error("YouTube URL is missing for download.");
+        if (!format.url) {
+            console.error("Download URL is missing for this format.");
             return;
         }
 
         const quality = format.qualityLabel || 'الصوت فقط';
-        const fileName = `${title} - ${quality}`;
-        
-        const downloadUrl = `/api/download?url=${encodeURIComponent(youtubeUrl)}&itag=${format.itag}&title=${encodeURIComponent(fileName)}&container=${format.container}`;
-        
-        window.location.href = downloadUrl;
+        const fileName = `${title} - ${quality}.${format.container}`;
+
+        // Create a temporary anchor element and trigger download
+        // This is more robust than window.location.href for downloads
+        const anchor = document.createElement('a');
+        anchor.href = format.url;
+        anchor.download = fileName;
+        anchor.target = "_blank"; // Good practice for external links
+        anchor.rel = "noopener noreferrer";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
     };
 
     const videoFormats = formats.filter(f => f.qualityLabel);
@@ -77,7 +83,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title, youtubeU
                                     <TableCell className="flex items-center gap-2">
                                         <Video className="h-4 w-4" /> {format.container}
                                     </TableCell>
-                                    <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
+                                    <TableCell>{format.contentLength ? formatBytes(format.contentLength) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
                                         <Button size="sm" onClick={() => handleDownload(format)}>
                                             <Download className="me-2 h-4 w-4"/>
@@ -92,7 +98,7 @@ export function DownloaderModal({ isOpen, onOpenChange, formats, title, youtubeU
                                     <TableCell className="flex items-center gap-2">
                                         <AudioWaveform className="h-4 w-4" /> {format.container}
                                     </TableCell>
-                                    <TableCell>{format.contentLength ? formatBytes(parseInt(format.contentLength)) : 'N/A'}</TableCell>
+                                     <TableCell>{format.contentLength ? formatBytes(format.contentLength) : 'N/A'}</TableCell>
                                     <TableCell className="text-left">
                                          <Button size="sm" onClick={() => handleDownload(format)}>
                                             <Download className="me-2 h-4 w-4"/>

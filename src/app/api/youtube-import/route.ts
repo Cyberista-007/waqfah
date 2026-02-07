@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
                         container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
                         hasAudio: !!f.audio_channels,
                         url: f.url,
-                        contentLength: f.content_length?.toString()
+                        contentLength: f.content_length
                     }));
 
                 const audioFormats = info.format
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
                         container: 'm4a',
                         hasAudio: true,
                         url: f.url,
-                        contentLength: f.content_length?.toString()
+                        contentLength: f.content_length
                     }));
 
                 return NextResponse.json({ formats: [...videoFormats, ...audioFormats] }, { headers: corsHeaders });
