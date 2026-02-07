@@ -1,5 +1,5 @@
 
-import { NextRequest, NextResponse } from 'next/request';
+import { NextRequest, NextResponse } from 'next/server';
 import play from 'play-dl';
 
 export async function GET(request: NextRequest) {
