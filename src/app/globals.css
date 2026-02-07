@@ -607,57 +607,6 @@
 }
 
 @layer utilities {
-  .scene3d {
-    width: 220px;
-    height: 160px;
-    perspective: 1000px;
-  }
-
-  .carousel3d {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    animation: rotate3d 45s linear infinite;
-  }
-
-  .carousel3d__cell {
-    position: absolute;
-    width: 210px;
-    height: 120px;
-    left: 5px;
-    top: 20px;
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: hsl(var(--card));
-    border: 2px solid hsl(var(--primary) / 0.5);
-    border-radius: var(--radius);
-    
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: hsl(var(--primary));
-    
-    transform: rotateY(calc(var(--i) * var(--angle))) translateZ(var(--radius));
-    
-    box-shadow: 0 5px 15px hsl(var(--primary) / 0.1);
-  }
-  
-  .carousel3d__cell::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 50% 50%, transparent, hsl(var(--background) / 0.6));
-    opacity: 0.8;
-  }
-
-  @keyframes rotate3d {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(-360deg); }
-  }
-
   .progress-shimmer .progress-indicator::after {
     content: '';
     position: absolute;
@@ -674,5 +623,67 @@
       hsla(var(--primary-foreground), 0)
     );
     animation: shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 25px 15px 0px hsla(var(--primary)/0.05);
+    }
+    50% {
+      transform: translateY(-15px) scale(1.05);
+      box-shadow: 0 40px 25px 0px hsla(var(--primary)/0.08);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 25px 15px 0px hsla(var(--primary)/0.05);
+    }
+  }
+
+  .supporter-sphere {
+    @apply relative flex items-center justify-center rounded-full border border-primary/20 bg-card text-card-foreground;
+    width: 120px;
+    height: 120px;
+    animation: float 6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.5s); /* Stagger the animation */
+    transition: transform 0.3s ease;
+  }
+
+  .supporter-sphere:hover {
+    transform: scale(1.1);
+    animation-play-state: paused;
+  }
+
+  /* Add some variety */
+  .supporter-sphere:nth-child(5n+1) {
+    width: 140px;
+    height: 140px;
+    animation-duration: 5.5s;
+  }
+
+  .supporter-sphere:nth-child(5n+2) {
+    width: 100px;
+    height: 100px;
+    animation-duration: 7s;
+    animation-delay: calc(var(--i) * -0.7s);
+  }
+
+  .supporter-sphere:nth-child(5n+3) {
+    width: 150px;
+    height: 150px;
+    animation-duration: 5s;
+  }
+
+  .supporter-sphere:nth-child(5n+4) {
+    width: 110px;
+    height: 110px;
+    animation-duration: 6.5s;
+    animation-delay: calc(var(--i) * -0.3s);
+  }
+
+  .supporter-sphere:nth-child(5n+5) {
+    width: 130px;
+    height: 130px;
+    animation-duration: 7.5s;
   }
 }

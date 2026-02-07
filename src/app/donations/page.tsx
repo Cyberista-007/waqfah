@@ -152,8 +152,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
                     {amounts.map(amount => {
                         const convertedAmount = amount * currency.rate;
                         const formattedAmount = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(Math.round(convertedAmount));
-                        const currencyName = currency.code === 'EGP' ? 'جنيه' : currency.code;
-                        const buttonText = currency.code === 'EGP' ? `تبرع بـ ${formattedAmount} جنيه` : `تبرع بـ ${formattedAmount} ${currencyName}`;
+                        const buttonText = currency.code === 'EGP' ? `تبرع بـ ${formattedAmount} جنيه` : `تبرع بـ ${formattedAmount} ${currency.code}`;
                         return (
                             <Button
                                 key={amount}
@@ -202,7 +201,6 @@ function DonationProgress({ currency }: { currency: Currency }) {
     const numberFormat = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 });
     const formattedCurrent = numberFormat.format(Math.round(convertedCurrent));
     const formattedGoal = numberFormat.format(Math.round(convertedGoal));
-    const currencyName = currency.code === 'EGP' ? 'جنيه' : currency.code;
 
     return (
         <section>
@@ -213,8 +211,8 @@ function DonationProgress({ currency }: { currency: Currency }) {
                 <CardContent className="space-y-4">
                      <Progress value={progress} className="h-4 progress-shimmer" />
                      <div className="flex justify-between text-lg font-bold">
-                        <span>{formattedCurrent} {currencyName}</span>
-                        <span className="text-muted-foreground">الهدف: {formattedGoal} {currencyName}</span>
+                        <span>{formattedCurrent} {currency.code === 'EGP' ? 'جنيه' : currency.code}</span>
+                        <span className="text-muted-foreground">الهدف: {formattedGoal} {currency.code === 'EGP' ? 'جنيه' : currency.code}</span>
                      </div>
                 </CardContent>
             </Card>
@@ -243,14 +241,8 @@ function WallOfSupporters() {
             }
         });
         
-        if (combinedSupporters.length === 0) return [];
-
-        let items = [...combinedSupporters];
-        // Ensure the carousel has enough items to loop smoothly
-        while (items.length > 0 && items.length < 12) {
-           items = [...items, ...combinedSupporters.slice(0, 12 - items.length)];
-        }
-        return items;
+        // No need to loop, the styling will handle a variable amount.
+        return combinedSupporters.slice(0, 15); // Limit to 15 to avoid clutter
     }, [supporters]);
 
     if (isLoading) {
@@ -270,40 +262,24 @@ function WallOfSupporters() {
             </Card>
         )
     }
-    
-    const panelCount = extendedSupporters.length;
-    const radius = Math.round( ( 220 / 2 ) / Math.tan( Math.PI / panelCount ) );
-    const angle = 360 / panelCount;
-
 
     return (
-        <section className="h-[400px] flex flex-col items-center justify-center space-y-8">
-            <h2 className="text-3xl font-bold text-center mb-8 font-headline">جدار الداعمين الكرام</h2>
-            <div className="w-full h-48 flex items-center justify-center">
-                <div className="scene3d">
-                    <div 
-                        className="carousel3d"
+        <section className="py-16">
+            <h2 className="text-3xl font-bold text-center mb-12 font-headline">جدار الداعمين الكرام</h2>
+            <div className="relative flex flex-wrap items-center justify-center gap-4 min-h-[300px]">
+                {extendedSupporters.map((supporter, index) => (
+                   <div 
+                        key={`${supporter.id}-${index}`} 
+                        className="supporter-sphere"
                         style={{
-                            '--panel-count': panelCount,
-                            '--radius': `${radius}px`,
+                            '--i': index, // custom property for staggering animations
                         } as React.CSSProperties}
                     >
-                        {extendedSupporters.map((supporter, index) => (
-                           <div 
-                                key={`${supporter.id}-${index}`} 
-                                className="carousel3d__cell"
-                                style={{
-                                    '--i': index,
-                                    '--angle': `${angle}deg`
-                                } as React.CSSProperties}
-                            >
-                                <span className="font-semibold text-xl">{supporter.donorName}</span>
-                            </div>
-                        ))}
+                        <span className="font-semibold text-center text-sm md:text-base p-2 break-words">{supporter.donorName}</span>
                     </div>
-                </div>
+                ))}
             </div>
-            <p className="text-center text-sm text-muted-foreground mt-4">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
+            <p className="text-center text-sm text-muted-foreground mt-12">نحن ممتنون لكل من ساهم في هذا المشروع. جزاكم الله خيرًا.</p>
         </section>
     );
 }
