@@ -15,12 +15,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useFirestore, useStorage } from "@/firebase";
-import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import type { DestructiveSin } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from "next/image";
+import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 interface SinFormProps {
     item?: DestructiveSin | null;
@@ -113,49 +114,44 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
         return;
     }
     
-    let finalIcon = selectedIcon;
-
-    if (imageFile) {
-        const imageRef = ref(storage, `sin_icons/${Date.now()}_${imageFile.name}`);
-        const snapshot = await uploadBytes(imageRef, imageFile);
-        finalIcon = await getDownloadURL(snapshot.ref);
-    } else if (imagePreview) {
-        finalIcon = imagePreview;
-    }
-
-
-    const itemData = {
-        title,
-        dialogTitle,
-        quranVerse,
-        hadith,
-        hadith2,
-        icon: finalIcon,
-    };
-    
     try {
-      if (isEditMode && item) {
-        const itemRef = doc(firestore, 'destructive_sins', item.id);
-        await updateDoc(itemRef, itemData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث بطاقة "${title}".`,
-        });
-      } else {
-        const itemsCollection = collection(firestore, 'destructive_sins');
-        await addDoc(itemsCollection, itemData);
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة بطاقة "${title}" الجديدة.`,
-        });
-      }
+        let finalIcon = selectedIcon;
+
+        // Await the image upload if a new file is present
+        if (imageFile) {
+            const imageRef = ref(storage, `sin_icons/${Date.now()}_${imageFile.name}`);
+            const snapshot = await uploadBytes(imageRef, imageFile);
+            finalIcon = await getDownloadURL(snapshot.ref);
+        } else if (imagePreview) {
+            finalIcon = imagePreview;
+        }
+
+        const itemData = {
+            title,
+            dialogTitle,
+            quranVerse,
+            hadith,
+            hadith2,
+            icon: finalIcon,
+        };
+        
+        if (isEditMode && item) {
+            const itemRef = doc(firestore, 'destructive_sins', item.id);
+            updateDocumentNonBlocking(itemRef, itemData);
+            toast({
+                title: "تم تحديث البطاقة بنجاح",
+            });
+        } else {
+            const itemsCollection = collection(firestore, 'destructive_sins');
+            addDocumentNonBlocking(itemsCollection, itemData);
+            toast({
+                title: "تم إنشاء البطاقة بنجاح",
+            });
+        }
       handleClose();
     } catch(e: any) {
       console.error("Error submitting sin card:", e);
-      const errorMessage = e.code === 'permission-denied'
-        ? "ليست لديك الصلاحية للقيام بهذا الإجراء."
-        : "لم نتمكن من حفظ البطاقة.";
-      toast({ variant: 'destructive', title: "حدث خطأ", description: errorMessage });
+      toast({ variant: 'destructive', title: "حدث خطأ", description: "فشل حفظ البطاقة، قد يكون السبب مشكلة في رفع الصورة." });
     } finally {
       setIsSubmitting(false);
     }
