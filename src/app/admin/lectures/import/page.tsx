@@ -148,10 +148,13 @@ export default function AdminImportLecturesPage() {
 
 
         setIsFetching(true);
-        // Clear previous results
+        // Only clear the list of playlists if we are fetching a new channel from the input field
+        if (!urlToFetch) {
+            setFetchedPlaylists([]);
+        }
+        // Always clear video content and selections for a new fetch
         setFetchedVideos([]);
         setFetchedShorts([]);
-        setFetchedPlaylists([]);
         setSelectedVideos([]);
         setSelectedShorts([]);
 
@@ -171,12 +174,17 @@ export default function AdminImportLecturesPage() {
             
             setFetchedVideos(data.videos || []);
             setFetchedShorts(data.shorts || []);
-            setFetchedPlaylists(data.playlists || []);
+            
+            // Only update the playlists list if the API returned some.
+            // This happens on a channel fetch, but not on a specific playlist fetch.
+            if (data.playlists && data.playlists.length > 0) {
+              setFetchedPlaylists(data.playlists || []);
+            }
             
             let message = "تم جلب البيانات بنجاح.";
             if (data.videos?.length) message += ` ${data.videos.length} فيديو.`;
             if (data.shorts?.length) message += ` ${data.shorts.length} فيديو قصير.`;
-            if (data.playlists?.length) message += ` ${data.playlists.length} قائمة تشغيل.`;
+            if (data.playlists?.length && !urlToFetch) message += ` ${data.playlists.length} قائمة تشغيل.`;
             
             toast({ title: message });
 
