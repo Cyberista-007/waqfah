@@ -1,0 +1,45 @@
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      // Assumes user's role is stored in a 'users' collection in Firestore.
+      return request.auth != null && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Allow public read for all files. This is useful for images, etc.
+    match /{allPaths=**} {
+      allow get: if true;
+    }
+
+    // Restrict writes to specific folders.
+
+    // Only admins can write to the icons folders.
+    match /sin_icons/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+    match /system_icons/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+    
+    // Users can write to their own profile images folder.
+    match /profile-images/{userId}/{allPaths=**} {
+        allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Admins can upload program/channel/series/book images
+    match /program-images/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+    match /channel-images/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+     match /series-images/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+     match /book-images/{allPaths=**} {
+      allow write: if isAdmin();
+    }
+  }
+}

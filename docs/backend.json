@@ -391,6 +391,21 @@
         "totalPoints": { "type": "number" }
       },
       "required": ["userId", "date"]
+    },
+    "DestructiveSin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Destructive Sin",
+      "description": "A major sin to be warned against in the accountability tracker.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "dialogTitle": { "type": "string" },
+        "quranVerse": { "type": "string" },
+        "hadith": { "type": "string" },
+        "hadith2": { "type": "string" },
+        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." }
+      },
+      "required": ["title", "dialogTitle", "icon"]
     }
   },
   "auth": {
@@ -495,6 +510,10 @@
       {
         "path": "/donations/{donationId}",
         "definition": { "schema": { "$ref": "#/entities/Donation" } }
+      },
+       {
+        "path": "/destructive_sins/{sinId}",
+        "definition": { "schema": { "$ref": "#/entities/DestructiveSin" } }
       }
     ]
   }
