@@ -79,6 +79,7 @@ const mainNavItems = [
 
 const moreNavItems = [
   { href: "/challenges", label: "التحديات", icon: Flame },
+  { href: "/accountability", label: "محاسبة النفس", icon: BookCheck },
   { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
   { href: "/contact", label: "تواصل معنا", icon: Mail },
 ]
@@ -278,5 +279,3 @@ export function SiteHeader() {
     </>
   )
 }
-
-    

@@ -2,7 +2,7 @@
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError, useAudioPlayer } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
@@ -19,6 +19,7 @@ import { ar } from 'date-fns/locale';
 import { DonationTierBadge } from "@/components/DonationTierBadge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { AccountabilityTracker } from "@/components/accountability-tracker";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -599,6 +600,7 @@ export default function ProfilePage() {
                   <TabsTrigger value="history" className="px-4 py-2 rounded-full flex items-center gap-2"><History className="h-5 w-5"/>أكمل الاستماع</TabsTrigger>
                   <TabsTrigger value="favorites" className="px-4 py-2 rounded-full flex items-center gap-2"><Heart className="h-5 w-5"/>المفضلة</TabsTrigger>
                   <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
+                  <TabsTrigger value="accountability" className="px-4 py-2 rounded-full flex items-center gap-2"><BookCheck className="h-5 w-5"/>محاسبة النفس</TabsTrigger>
                   <TabsTrigger value="playlists" className="px-4 py-2 rounded-full flex items-center gap-2"><ListMusic className="h-5 w-5"/>قوائم التشغيل</TabsTrigger>
                   <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Podcast className="h-5 w-5"/>البرامج المتابعة</TabsTrigger>
                   <TabsTrigger value="challenges" className="px-4 py-2 rounded-full flex items-center gap-2"><Flame className="h-5 w-5"/>تحدياتي</TabsTrigger>
@@ -615,6 +617,9 @@ export default function ProfilePage() {
               </TabsContent>
                <TabsContent value="reports" className="mt-6">
                 <ReportsSection userProfile={userProfile} />
+              </TabsContent>
+               <TabsContent value="accountability" className="mt-6">
+                <AccountabilityTracker showHeader={false} redirectToOnAuth='/profile' />
               </TabsContent>
               <TabsContent value="playlists" className="mt-6">
                 <PlaylistsSection />
