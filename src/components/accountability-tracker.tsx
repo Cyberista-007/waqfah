@@ -21,7 +21,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppearance } from './appearance-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sinsToSeed } from '@/lib/sins-data';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { destructiveSinsData } from '@/lib/sins-data';
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -169,22 +170,22 @@ function DestructiveSinsSection() {
     const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
     const { quranIconUrl, hadithIconUrl } = useAppearance();
     const firestore = useFirestore();
+    const { isAdmin } = useAdminAuth();
 
-    // Seed the destructive_sins collection if it's empty
+    // Seed the destructive_sins collection if it's empty and user is admin
     useEffect(() => {
         const seedData = async () => {
-            if (firestore && !isLoading && sinsFromDB && sinsFromDB.length === 0) {
-                console.log("Destructive sins collection is empty. Seeding data...");
+            if (isAdmin && firestore && !isLoading && sinsFromDB && sinsFromDB.length === 0) {
+                console.log("Destructive sins collection is empty. Seeding data from local file...");
                 const batch = writeBatch(firestore);
                 const sinsCollection = collection(firestore, 'destructive_sins');
-                sinsToSeed.forEach(sin => {
-                    const docRef = doc(sinsCollection);
+                destructiveSinsData.forEach(sin => {
+                    const docRef = doc(sinsCollection, sin.id); // Use the ID from the local data
                     batch.set(docRef, sin);
                 });
                 try {
                     await batch.commit();
                     console.log("Successfully seeded destructive sins data.");
-                    // The useCollection hook will automatically update the component with the new data
                 } catch (error) {
                     console.error("Error seeding destructive sins:", error);
                 }
@@ -192,7 +193,7 @@ function DestructiveSinsSection() {
         };
 
         seedData();
-    }, [sinsFromDB, isLoading, firestore]);
+    }, [sinsFromDB, isLoading, firestore, isAdmin]);
 
     const sins = useMemo(() => {
         // If firestore has data, it is the source of truth.
@@ -203,11 +204,9 @@ function DestructiveSinsSection() {
         if (isLoading) {
             return null;
         }
-        // If firestore is done and empty, use the local seed data as a fallback.
-        // The admin can later modify this data, and the new data from Firestore will take precedence.
-        return sinsToSeed.map((sin, index) => ({ ...sin, id: `seed-${index}` }));
+        // If firestore is done and empty, use the local seed data as a fallback for all users.
+        return destructiveSinsData;
     }, [sinsFromDB, isLoading]);
-
 
     const getIcon = (iconName: string) => {
         if (iconName?.startsWith('http')) {
