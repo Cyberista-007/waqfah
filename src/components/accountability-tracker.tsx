@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, collection, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
@@ -17,11 +18,12 @@ import { cn } from '@/lib/utils';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppearance } from './appearance-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { sinsToSeed } from '@/lib/sins-data';
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -168,6 +170,31 @@ function DestructiveSinsSection() {
     const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
     const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
     const { quranIconUrl, hadithIconUrl } = useAppearance();
+    const firestore = useFirestore();
+
+    // Seed the destructive_sins collection if it's empty
+    useEffect(() => {
+        const seedData = async () => {
+            if (firestore && !isLoading && sins && sins.length === 0) {
+                console.log("Destructive sins collection is empty. Seeding data...");
+                const batch = writeBatch(firestore);
+                const sinsCollection = collection(firestore, 'destructive_sins');
+                sinsToSeed.forEach(sin => {
+                    const docRef = doc(sinsCollection);
+                    batch.set(docRef, sin);
+                });
+                try {
+                    await batch.commit();
+                    console.log("Successfully seeded destructive sins data.");
+                    // The useCollection hook will automatically update the component with the new data
+                } catch (error) {
+                    console.error("Error seeding destructive sins:", error);
+                }
+            }
+        };
+
+        seedData();
+    }, [sins, isLoading, firestore]);
 
     const getIcon = (iconName: string) => {
         if (iconName?.startsWith('http')) {
@@ -223,7 +250,7 @@ function DestructiveSinsSection() {
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
         <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0" hideCloseButton={true}>
             <DialogHeader className="sr-only">
-                <DialogTitle>{activeSin?.dialogTitle}</DialogTitle>
+                <DialogTitle>{activeSin?.dialogTitle || 'Warning'}</DialogTitle>
             </DialogHeader>
             <div className="relative p-6">
                  <div className="absolute top-4 left-4 z-10">
