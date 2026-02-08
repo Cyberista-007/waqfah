@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ReactNode, useEffect } from 'react';
@@ -39,6 +38,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       const navItems = [
         { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
         { href: '/admin/programs', label: 'البرامج', icon: Podcast },
+        { href: '/admin/channels', label: 'القنوات', icon: Youtube },
         { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
         { href: '/admin/books', label: 'الكتب', icon: Book },
