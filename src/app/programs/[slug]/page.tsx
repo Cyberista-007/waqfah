@@ -34,20 +34,46 @@ function ProgramPageContent({ program }: { program: Program }) {
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          // Fetch lectures directly associated with the program
-          const lecturesQuery = query(collection(firestore, 'lectures'), where('programId', '==', program.id));
-          const lecturesSnap = await getDocs(lecturesQuery);
-          const lecturesData = lecturesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Lecture));
-
           // Fetch series associated with the program
           const seriesQuery = query(collection(firestore, 'series'), where('programId', '==', program.id));
           const seriesSnap = await getDocs(seriesQuery);
           const seriesData = seriesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Series));
+          if (isMounted) setSeries(seriesData);
 
-          if (isMounted) {
-            setLectures(lecturesData);
-            setSeries(seriesData);
+          const allProgramLectures: Lecture[] = [];
+
+          // 1. Fetch lectures that are directly associated with the program.
+          const directLecturesQuery = query(collection(firestore, 'lectures'), where('programId', '==', program.id));
+          const directLecturesSnap = await getDocs(directLecturesQuery);
+          directLecturesSnap.forEach(doc => {
+            allProgramLectures.push({ id: doc.id, ...doc.data() } as Lecture);
+          });
+          
+          // 2. Fetch lectures from all series belonging to this program.
+          const seriesIds = seriesData.map(s => s.id).filter(Boolean);
+          if (seriesIds.length > 0) {
+            const lecturePromises = [];
+            // Firestore 'in' query can handle up to 30 items.
+            for (let i = 0; i < seriesIds.length; i += 30) {
+                const chunk = seriesIds.slice(i, i + 30);
+                const lecturesQuery = query(collection(firestore, 'lectures'), where('seriesId', 'in', chunk));
+                lecturePromises.push(getDocs(lecturesQuery));
+            }
+            const lectureSnapshots = await Promise.all(lecturePromises);
+            lectureSnapshots.forEach(snap => {
+                snap.forEach(doc => {
+                    allProgramLectures.push({ id: doc.id, ...doc.data() } as Lecture);
+                });
+            });
           }
+
+          // 3. Deduplicate lectures
+          const uniqueLectures = Array.from(new Map(allProgramLectures.map(l => [l.id, l])).values());
+          
+          if (isMounted) {
+            setLectures(uniqueLectures);
+          }
+
         } catch (error) {
           console.error("Error fetching program content:", error);
         } finally {
