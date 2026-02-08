@@ -39,15 +39,32 @@ export default function SeriesDetailPage() {
     const fetchData = async () => {
       setIsDependentDataLoading(true);
       try {
-        // Fetch lectures
+        // Fetch lectures without ordering to avoid needing a composite index
         const lecturesQuery = query(
           collection(firestore, 'lectures'),
-          where('seriesId', '==', series.id),
-          orderBy('createdAt', 'asc')
+          where('seriesId', '==', series.id)
         );
         const lecturesSnapshot = await getDocs(lecturesQuery);
-        const lecturesData = lecturesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Lecture));
+        let lecturesData = lecturesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Lecture));
         
+        // Helper to safely convert Firestore Timestamps or strings to Date objects
+        const toDate = (timestamp: any): Date => {
+            if (!timestamp) return new Date(0); // For sorting purposes
+            if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+                return timestamp.toDate();
+            }
+            // Handle ISO strings from serialization
+            const d = new Date(timestamp);
+            return isNaN(d.getTime()) ? new Date(0) : d;
+        }
+
+        // Sort manually client-side
+        lecturesData.sort((a, b) => {
+            const dateA = toDate(a.createdAt).getTime();
+            const dateB = toDate(b.createdAt).getTime();
+            return dateA - dateB;
+        });
+
         // Fetch program
         let programData: Program | null = null;
         if (series.programId) {
