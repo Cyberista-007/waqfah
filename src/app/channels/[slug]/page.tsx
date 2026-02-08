@@ -11,12 +11,15 @@ import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { useMemo } from 'react';
 
 function ChannelPageContent({ channel }: { channel: Channel }) {
-    const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
-        'lectures',
-        { where: ['channelId', '==', channel.id] }
-    );
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+
+    const lectures = useMemo(() => {
+        if (!allLectures) return [];
+        return allLectures.filter(l => l.channelId === channel.id);
+    }, [allLectures, channel.id]);
 
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
@@ -98,16 +101,17 @@ export default function ChannelPage() {
     const params = useParams();
     const slug = decodeURIComponent(params.slug as string);
 
-    const { data: channels, isLoading: channelsLoading } = useCollection<Channel>('channels', {
-        where: ['slug', '==', slug],
-        limit: 1
-    });
+    const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels');
+    
+    const channel = useMemo(() => {
+      if (!allChannels) return null;
+      return allChannels.find(c => c.slug === slug);
+    }, [allChannels, slug]);
+
 
     if (channelsLoading) {
         return <HomePageSkeleton />;
     }
-
-    const channel = channels?.[0];
 
     if (!channel) {
         notFound();

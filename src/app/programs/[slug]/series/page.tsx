@@ -10,13 +10,21 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
 
 
 function ProgramSeriesContent({ program }: { program: Program }) {
-    const { data: series, isLoading: seriesLoading } = useCollection<Series>(
-        'series',
-        { where: ['programId', '==', program.id], orderBy: ['createdAt', 'desc'] }
-    );
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+
+    const series = useMemo(() => {
+        if (!allSeries) return [];
+        return allSeries
+            .filter(s => s.programId === program.id)
+            .sort((a, b) => {
+                const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
+                return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
+            });
+    }, [allSeries, program.id]);
 
     return (
         <div>
@@ -62,16 +70,17 @@ export default function ProgramSeriesPage() {
     const params = useParams();
     const slug = decodeURIComponent(params.slug as string);
 
-    const { data: programs, isLoading: programsLoading } = useCollection<Program>('programs', {
-        where: ['slug', '==', slug],
-        limit: 1
-    });
+    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
+
+    const program = useMemo(() => {
+        if (!allPrograms) return null;
+        return allPrograms.find(p => p.slug === slug);
+    }, [allPrograms, slug]);
+
 
     if (programsLoading) {
         return <HomePageSkeleton />;
     }
-
-    const program = programs?.[0];
 
     if (!program) {
         notFound();

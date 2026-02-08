@@ -11,25 +11,21 @@ export default function SeriesDetailPage() {
   const params = useParams();
   const slug = decodeURIComponent(params.slug as string);
 
-  // 1. Fetch the series by slug.
-  const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>(
-    'series', 
-    { where: ['slug', '==', slug], limit: 1 }
-  );
+  // 1. Fetch all series and find the correct one by slug client-side.
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
 
-  const series = seriesList?.[0];
+  const series = useMemo(() => {
+    if (!allSeries) return null;
+    return allSeries.find(s => s.slug === slug);
+  }, [allSeries, slug]);
 
-  // 2. Fetch lectures for this series.
-  // The useCollection hook handles the case where series?.id is initially undefined.
-  const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
-    'lectures',
-    {
-      where: ['seriesId', '==', series?.id]
-    }
-  );
+  // 2. Fetch ALL lectures to filter them on the client. This is more robust against missing indexes.
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
   
   const lecturesInSeries = useMemo(() => {
-    if (!lectures) return [];
+    if (!series || !allLectures) return [];
+
+    const lecturesForThisSeries = allLectures.filter(l => l.seriesId === series.id);
     
     const toDate = (timestamp: any): Date => {
       if (!timestamp) return new Date(0);
@@ -39,24 +35,25 @@ export default function SeriesDetailPage() {
     };
 
     // Create a new array before sorting to avoid mutating the original
-    return [...lectures].sort((a, b) => {
+    return [...lecturesForThisSeries].sort((a, b) => {
       const dateA = toDate(a.createdAt).getTime();
       const dateB = toDate(b.createdAt).getTime();
       return dateA - dateB;
     });
 
-  }, [lectures]);
+  }, [series, allLectures]);
 
 
   // 3. Fetch the program (creator) of the series
   const { data: seriesCreator, isLoading: programLoading } = useDoc<Program>(series?.programId ? `programs/${series.programId}` : null);
   
-  const isLoading = seriesLoading || (!!series && (lecturesLoading || programLoading));
+  const isLoading = seriesLoading || lecturesLoading || (!!series && programLoading);
   
   if (isLoading) {
     return <SeriesPageSkeleton />;
   }
   
+  // After all data is loaded, if the series wasn't found, show 404.
   if (!series) {
     notFound();
     return null;
