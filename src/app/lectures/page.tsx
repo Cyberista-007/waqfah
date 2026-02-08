@@ -6,17 +6,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection } from "@/firebase";
 import type { Lecture, Series } from "@/lib/types";
 import { HomePageSkeleton } from "@/components/skeletons";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-export default function LecturesListPage() {
+function LecturesListPageClient() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -149,4 +148,12 @@ export default function LecturesListPage() {
       )}
     </div>
   );
+}
+
+export default function LecturesPage() {
+    return (
+        <Suspense fallback={<HomePageSkeleton />}>
+            <LecturesListPageClient />
+        </Suspense>
+    );
 }
