@@ -10,26 +10,63 @@ import { SeriesCard } from '@/components/series-card';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 import { Users, Loader2 } from 'lucide-react';
-import { useCollection } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 function ProgramPageContent({ program }: { program: Program }) {
-    const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
-        'lectures',
-        { where: ['programId', '==', program.id] }
-    );
-    const { data: series, isLoading: seriesLoading } = useCollection<Series>(
-        'series',
-        { where: ['programId', '==', program.id] }
-    );
+    const firestore = useFirestore();
+
+    const [lectures, setLectures] = useState<Lecture[] | null>(null);
+    const [series, setSeries] = useState<Series[] | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      if (!program || !firestore) {
+        setIsLoading(false);
+        return;
+      }
+
+      let isMounted = true;
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          // Fetch lectures directly associated with the program
+          const lecturesQuery = query(collection(firestore, 'lectures'), where('programId', '==', program.id));
+          const lecturesSnap = await getDocs(lecturesQuery);
+          const lecturesData = lecturesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Lecture));
+
+          // Fetch series associated with the program
+          const seriesQuery = query(collection(firestore, 'series'), where('programId', '==', program.id));
+          const seriesSnap = await getDocs(seriesQuery);
+          const seriesData = seriesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Series));
+
+          if (isMounted) {
+            setLectures(lecturesData);
+            setSeries(seriesData);
+          }
+        } catch (error) {
+          console.error("Error fetching program content:", error);
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [program, firestore]);
 
     const { shorts, regularLectures } = useMemo(() => {
         if (!lectures) return { shorts: [], regularLectures: [] };
         const shortsArr: Lecture[] = [];
         const regularLecturesArr: Lecture[] = [];
         lectures.forEach(lecture => {
-            // A lecture is a "short" if its duration is 3 minutes (180 seconds) or less.
             if (lecture.duration <= 180) {
                 shortsArr.push(lecture);
             } else {
@@ -40,7 +77,7 @@ function ProgramPageContent({ program }: { program: Program }) {
     }, [lectures]);
 
 
-    const contentIsLoading = lecturesLoading || seriesLoading;
+    const contentIsLoading = isLoading;
 
     const placeholder = getPlaceholderImage(program.imageId);
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
