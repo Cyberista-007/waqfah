@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -18,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppearance } from './appearance-provider';
@@ -248,9 +247,9 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0" hideCloseButton={true}>
-            <DialogHeader className="sr-only">
-                <DialogTitle>{activeSin?.dialogTitle || 'Warning'}</DialogTitle>
+        <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0">
+            <DialogHeader>
+                <DialogTitle className="sr-only">{activeSin?.dialogTitle || 'Warning'}</DialogTitle>
             </DialogHeader>
             <div className="relative p-6">
                  <div className="absolute top-4 left-4 z-10">
