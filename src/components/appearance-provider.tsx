@@ -33,6 +33,8 @@ type AppearanceContextType = {
   setParticleColor: (color: string) => void;
   particleSettings: ParticleSettings;
   setParticleSettings: (settings: Partial<ParticleSettings>) => void;
+  quranIconUrl?: string | null;
+  hadithIconUrl?: string | null;
 };
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -40,10 +42,12 @@ const AppearanceContext = createContext<AppearanceContextType | undefined>(undef
 type AppearanceProviderProps = {
   children: ReactNode;
   defaultFont?: string;
+  quranIconUrl?: string | null;
+  hadithIconUrl?: string | null;
 };
 
 
-export function AppearanceProvider({ children, defaultFont }: AppearanceProviderProps) {
+export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadithIconUrl }: AppearanceProviderProps) {
   const [font, setFont] = useState(defaultFont || "font-body");
   const [language, setLanguageState] = useState('ar');
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
@@ -207,8 +211,10 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
     }
   }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
+  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, quranIconUrl, hadithIconUrl };
+
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>
+    <AppearanceContext.Provider value={value}>
       {children}
     </AppearanceContext.Provider>
   );

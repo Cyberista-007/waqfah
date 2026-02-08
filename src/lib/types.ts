@@ -29,6 +29,8 @@ export type AppearanceSettings = {
     defaultTheme: string;
     defaultFont: string;
     maintenanceMode?: boolean;
+    quranIconUrl?: string;
+    hadithIconUrl?: string;
 };
 
 export type Stats = {

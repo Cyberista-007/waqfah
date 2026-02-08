@@ -317,7 +317,9 @@
       "properties": {
         "defaultTheme": { "type": "string" },
         "defaultFont": { "type": "string" },
-        "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." }
+        "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." },
+        "quranIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Quran icon." },
+        "hadithIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Hadith icon." }
       }
     },
     "AnnouncementSettings": {
@@ -401,7 +403,7 @@
         "quranVerse": { "type": "string", "description": "A relevant Quranic verse." },
         "hadith": { "type": "string", "description": "A relevant Hadith." },
         "hadith2": { "type": "string", "description": "An optional second relevant Hadith." },
-        "icon": { "type": "string", "description": "The name of the lucide-react icon or a special key for custom SVG." }
+        "icon": { "type": "string", "description": "The name of the lucide-react icon, a special key for custom SVG, or an uploaded image URL." }
       },
       "required": ["title", "dialogTitle", "icon"]
     }

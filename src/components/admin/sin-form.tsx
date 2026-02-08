@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -13,13 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import type { DestructiveSin } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import Image from "next/image";
 
 interface SinFormProps {
     item?: DestructiveSin | null;
@@ -35,10 +37,10 @@ const iconOptions = [
     { value: 'Angry', label: 'السب واللعن (Angry)' },
 ];
 
-
 export function SinForm({ item, onFormClose }: SinFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const isEditMode = !!item;
@@ -48,7 +50,10 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
   const [quranVerse, setQuranVerse] = useState(item?.quranVerse || "");
   const [hadith, setHadith] = useState(item?.hadith || "");
   const [hadith2, setHadith2] = useState(item?.hadith2 || "");
-  const [icon, setIcon] = useState(item?.icon || "MessageSquareX");
+  const [selectedIcon, setSelectedIcon] = useState(item?.icon && !item.icon.startsWith('http') ? item.icon : "");
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(item?.icon?.startsWith('http') ? item.icon : null);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -61,7 +66,8 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
           setQuranVerse(savedData.quranVerse || "");
           setHadith(savedData.hadith || "");
           setHadith2(savedData.hadith2 || "");
-          setIcon(savedData.icon || "MessageSquareX");
+          setSelectedIcon(savedData.selectedIcon || "");
+          // Note: we don't autosave the image file itself, just the preview if it was already a URL
         } catch (e) {
           console.error("Failed to parse autosaved sin data", e);
           localStorage.removeItem(AUTOSAVE_KEY);
@@ -72,10 +78,10 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
 
   useEffect(() => {
     if (!isEditMode) {
-      const dataToSave = { title, dialogTitle, quranVerse, hadith, hadith2, icon };
+      const dataToSave = { title, dialogTitle, quranVerse, hadith, hadith2, selectedIcon, imagePreview };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, title, dialogTitle, quranVerse, hadith, hadith2, icon]);
+  }, [isEditMode, title, dialogTitle, quranVerse, hadith, hadith2, selectedIcon, imagePreview]);
   
   const handleClose = () => {
       if (!isEditMode) {
@@ -84,13 +90,21 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
       onFormClose();
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+        setSelectedIcon(''); // Clear dropdown selection
+    }
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore) return;
+    if (!firestore || !storage) return;
     setIsSubmitting(true);
 
-    if (!title || !dialogTitle || !icon) {
+    if (!title || !dialogTitle || (!selectedIcon && !imageFile && !imagePreview)) {
         toast({
             variant: "destructive",
             title: "خطأ",
@@ -99,6 +113,17 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
         setIsSubmitting(false);
         return;
     }
+    
+    let finalIcon = selectedIcon;
+
+    if (imageFile) {
+        const imageRef = ref(storage, `sin_icons/${Date.now()}_${imageFile.name}`);
+        const snapshot = await uploadBytes(imageRef, imageFile);
+        finalIcon = await getDownloadURL(snapshot.ref);
+    } else if (imagePreview) {
+        finalIcon = imagePreview;
+    }
+
 
     const itemData = {
         title,
@@ -106,7 +131,7 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
         quranVerse,
         hadith,
         hadith2,
-        icon,
+        icon: finalIcon,
     };
     
     try {
@@ -154,17 +179,39 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
               <Input id="dialogTitle" value={dialogTitle} onChange={e => setDialogTitle(e.target.value)} required disabled={isSubmitting} placeholder="مثال: خطر الكذب" />
             </div>
           </div>
-           <div>
-              <Label htmlFor="icon">الأيقونة</Label>
-              <Select name="icon" onValueChange={setIcon} value={icon}>
-                  <SelectTrigger>
-                      <SelectValue placeholder="اختر أيقونة..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {iconOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                  </SelectContent>
-              </Select>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div>
+                <Label>الأيقونة</Label>
+                <div className="p-2 border rounded-md mt-2 space-y-4">
+                  <div>
+                    <Label htmlFor="icon-select">اختر أيقونة جاهزة</Label>
+                    <Select name="icon-select" onValueChange={(val) => { setSelectedIcon(val); setImageFile(null); setImagePreview(null); }} value={selectedIcon}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="اختر أيقونة..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {iconOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-center text-sm text-muted-foreground">أو</div>
+                  <div>
+                    <Label htmlFor="icon-upload">ارفع أيقونة مخصصة</Label>
+                    <Input id="icon-upload" type="file" accept="image/*" onChange={handleImageChange} />
+                  </div>
+                </div>
             </div>
+            {imagePreview && (
+                <div className="text-center">
+                    <Label>معاينة الأيقونة</Label>
+                    <div className="mt-2 flex justify-center">
+                        <Image src={imagePreview} alt="معاينة" width={80} height={80} className="rounded-md object-cover" />
+                    </div>
+                </div>
+            )}
+          </div>
+           
           <div>
             <Label htmlFor="quranVerse">الآية القرآنية (اختياري)</Label>
             <Textarea id="quranVerse" value={quranVerse} onChange={e => setQuranVerse(e.target.value)} disabled={isSubmitting} placeholder="أدخل الآية بدون أقواس..." />

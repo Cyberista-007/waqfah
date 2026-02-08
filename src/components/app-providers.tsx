@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -27,6 +28,8 @@ export function AppProviders({
     const maintenanceMode = appearanceSettings?.maintenanceMode || false;
     const defaultTheme = appearanceSettings?.defaultTheme;
     const defaultFont = appearanceSettings?.defaultFont;
+    const quranIconUrl = appearanceSettings?.quranIconUrl;
+    const hadithIconUrl = appearanceSettings?.hadithIconUrl;
     
     return (
         <ThemeProvider 
@@ -58,7 +61,11 @@ export function AppProviders({
             'theme-high-contrast'
           ]}
         >
-          <AppearanceProvider defaultFont={defaultFont}>
+          <AppearanceProvider 
+            defaultFont={defaultFont}
+            quranIconUrl={quranIconUrl}
+            hadithIconUrl={hadithIconUrl}
+          >
             <FirebaseClientProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
                     <AudioPlayerProvider>
