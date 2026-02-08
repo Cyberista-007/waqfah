@@ -23,6 +23,16 @@ import {
   CaseSensitive,
   Grid,
   XCircle,
+  DownloadCloud,
+  Wifi,
+  Database,
+  Contrast,
+  Trash2,
+  HardDriveDownload,
+  UserX,
+  Crown,
+  Link as LinkIcon,
+  Smartphone,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -72,15 +82,17 @@ const SettingsItem = ({
   value,
   href,
   onClick,
+  className,
 }: {
   icon: React.ElementType;
   label: string;
   value?: string;
   href?: string;
   onClick?: () => void;
+  className?: string;
 }) => {
   const content = (
-    <div className="flex items-center py-3 px-2">
+    <div className={cn("flex items-center py-3 px-2", className)}>
       <Icon className="w-6 h-6 me-4 text-muted-foreground" />
       <span className="flex-grow text-lg">{label}</span>
       {value && <span className="text-muted-foreground text-lg me-2">{value}</span>}
@@ -359,8 +371,6 @@ export default function SettingsPage() {
           <SettingsItem icon={Globe} label="اللغة" value={currentLanguageName} onClick={() => setIsLanguageSwitcherOpen(true)} />
           <Separator />
           <SettingsItem icon={Headphones} label="إعدادات الصوت" />
-          <Separator />
-          <SettingsItem icon={Download} label="إعدادات التحميل" />
         </div>
 
         <SectionTitle title="المظهر" />
@@ -368,54 +378,7 @@ export default function SettingsPage() {
             <SettingsItem icon={Palette} label="تغيير الثيم" onClick={() => setIsThemeSwitcherOpen(true)} />
             <Separator />
             <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
-        </div>
-        
-        <SectionTitle title="تأثيرات الخلفية" />
-        <div className="bg-card rounded-xl p-2 space-y-1">
-            <div className="p-3">
-                <Label htmlFor="bg-effect-select" className="text-lg">تأثير الخلفية المتحركة</Label>
-                <Select value={backgroundEffect} onValueChange={(value: BackgroundEffect) => setBackgroundEffect(value)}>
-                    <SelectTrigger id="bg-effect-select" className="mt-2">
-                        <SelectValue placeholder="اختر تأثيرًا..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">
-                            <div className="flex items-center gap-2"><XCircle className="h-5 w-5"/><span>بدون تأثير</span></div>
-                        </SelectItem>
-                        <SelectItem value="particles">
-                            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5"/><span>جزيئات</span></div>
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            
-            {backgroundEffect === 'particles' && (
-                <div className="p-3 pt-0 border-t mt-2 space-y-4">
-                    <div className='flex items-center gap-4 mt-4'>
-                        <Label htmlFor="particle-color">لون الجزيئات</Label>
-                        <Input id="particle-color" type="color" value={particleColor} onChange={(e) => setParticleColor(e.target.value)} className="w-16 h-10 p-1" />
-                    </div>
-                    <div className='flex items-center justify-between'>
-                        <Label htmlFor="p-interaction">التفاعل مع الفأرة</Label>
-                        <Switch id="p-interaction" checked={particleSettings.interaction} onCheckedChange={(checked) => setParticleSettings({ interaction: checked })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="p-count">عدد الجزيئات: {particleSettings.count}</Label>
-                        <Slider id="p-count" min={10} max={200} step={5} value={[particleSettings.count]} onValueChange={(v) => setParticleSettings({ count: v[0] })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="p-speed">سرعة الحركة: {particleSettings.speed.toFixed(1)}</Label>
-                        <Slider id="p-speed" min={0.1} max={2} step={0.1} value={[particleSettings.speed]} onValueChange={(v) => setParticleSettings({ speed: v[0] })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="p-distance">مسافة الربط: {particleSettings.lineDistance}</Label>
-                        <Slider id="p-distance" min={50} max={250} step={10} value={[particleSettings.lineDistance]} onValueChange={(v) => setParticleSettings({ lineDistance: v[0] })} />
-                    </div>
-                </div>
-            )}
-
             <Separator />
-            
             <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
             <SettingsItem icon={Grid} label="اختيار نمط خلفية" onClick={() => setIsPatternSwitcherOpen(true)} />
@@ -423,7 +386,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
                 <Label htmlFor="bg-switch" className="text-lg cursor-pointer flex items-center gap-4">
                     <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                    <span>إظهار الخلفية (صورة أو نمط)</span>
+                    <span>إظهار الخلفية</span>
                 </Label>
                 <Switch
                     id="bg-switch"
@@ -433,11 +396,45 @@ export default function SettingsPage() {
             </div>
         </div>
 
-        <SectionTitle title="الحساب" />
+        <SectionTitle title="التنزيلات والتخزين" />
+         <div className="bg-card rounded-xl p-2">
+            <SettingsItem icon={DownloadCloud} label="جودة التنزيل" value="عالية" />
+            <Separator />
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                <Label htmlFor="wifi-only-switch" className="text-lg cursor-pointer flex items-center gap-4">
+                    <Wifi className="w-6 h-6 text-muted-foreground" />
+                    <span>التنزيل عبر Wi-Fi فقط</span>
+                </Label>
+                <Switch id="wifi-only-switch" defaultChecked={true} />
+            </div>
+            <Separator />
+            <SettingsItem icon={Database} label="إدارة مساحة التخزين" />
+        </div>
+
+        <SectionTitle title="إمكانية الوصول" />
         <div className="bg-card rounded-xl p-2">
-          <SettingsItem icon={Sparkles} label="اشتراك ثمانية" />
+             <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                <Label htmlFor="high-contrast-switch" className="text-lg cursor-pointer flex items-center gap-4">
+                    <Contrast className="w-6 h-6 text-muted-foreground" />
+                    <span>وضع التباين العالي</span>
+                </Label>
+                <Switch id="high-contrast-switch" />
+            </div>
+        </div>
+
+        <SectionTitle title="الحساب والبيانات" />
+        <div className="bg-card rounded-xl p-2">
+          <SettingsItem icon={Crown} label="إدارة الاشتراكات" />
           <Separator />
-          <SettingsItem icon={History} label="الإستيراد" />
+          <SettingsItem icon={LinkIcon} label="الحسابات المرتبطة" />
+          <Separator />
+          <SettingsItem icon={Smartphone} label="الأجهزة المتصلة" />
+          <Separator />
+          <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
+          <Separator />
+          <SettingsItem icon={HardDriveDownload} label="تنزيل بياناتي" />
+          <Separator />
+          <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive"/>
         </div>
       </div>
 
