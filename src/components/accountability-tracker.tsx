@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -16,12 +16,10 @@ import { cn } from '@/lib/utils';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppearance } from './appearance-provider';
-import { destructiveSinsData } from '@/lib/sins-data';
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -165,8 +163,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 }
 
 function DestructiveSinsSection() {
-    const sins = destructiveSinsData;
-    const isLoading = false;
+    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
     const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
     const { quranIconUrl, hadithIconUrl } = useAppearance();
 
