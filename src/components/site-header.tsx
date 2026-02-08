@@ -22,6 +22,7 @@ import {
   Settings,
   Podcast,
   Flame,
+  BookCheck,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -69,6 +70,7 @@ const mainNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/programs", label: "البرامج" },
   { href: "/lectures", label: "المحاضرات" },
+  { href: "/accountability", label: "محاسبة النفس" },
   { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },
   { href: "/playlists", label: "قوائم التشغيل" },
@@ -85,6 +87,7 @@ const mobileNavLinks = [
     { href: '/', icon: Home, label: 'الرئيسية' },
     { href: '/programs', icon: Podcast, label: 'البرامج' },
     { href: '/search', icon: Search, label: 'بحث' },
+    { href: '/accountability', icon: BookCheck, label: 'محاسبة' },
     { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
     { href: '/settings', icon: Settings, label: 'الإعدادات'}
 ];
@@ -256,7 +259,7 @@ export function SiteHeader() {
       
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-background/80 border-t backdrop-blur-md">
-        <div className="grid h-full grid-cols-5 mx-auto">
+        <div className="grid h-full grid-cols-6 mx-auto">
             {mobileNavLinks.map((item) => {
                 const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
                 const href = ((item.href === '/profile' || item.href === '/settings') && !user) ? `/auth/login?redirect_to=${item.href}` : item.href;
@@ -275,3 +278,5 @@ export function SiteHeader() {
     </>
   )
 }
+
+    

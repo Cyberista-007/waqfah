@@ -273,3 +273,30 @@ export type Donation = Serializable<{
   isAnonymous: boolean;
   donatedAt: Timestamp;
 }>;
+
+export type AccountabilityEntry = Serializable<{
+  id: string; // The date in YYYY-MM-DD format
+  userId: string;
+  date: Timestamp;
+  fajr?: 'on-time' | 'late' | 'missed';
+  sunnah?: 'all' | 'most' | 'some' | 'none';
+  duha?: boolean;
+  qiyam?: boolean;
+  witr?: boolean;
+  quranWird?: boolean;
+  quranAmount?: 'juz' | 'half-juz' | 'less';
+  quranTadabbur?: boolean;
+  quranListen?: boolean;
+  adhkarMorningEvening?: boolean;
+  adhkarAfterSalah?: boolean;
+  adhkarBeforeSleep?: boolean;
+  adhkarGeneral?: boolean;
+  parentsDutifulness?: 'yes' | 'somewhat' | 'no';
+  tongueGuarded?: 'yes' | 'somewhat' | 'no';
+  gazeLowered?: 'yes' | 'somewhat' | 'no';
+  truthful?: 'yes' | 'somewhat' | 'no';
+  listenedToLecture?: boolean;
+  readBook?: boolean;
+  notes?: string;
+}>;
+    

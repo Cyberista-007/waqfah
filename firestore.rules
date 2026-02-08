@@ -127,6 +127,10 @@ service cloud.firestore {
        match /user_challenges/{challengeId} {
         allow read, write, delete: if isOwner(userId);
       }
+
+      match /accountability/{entryId} {
+        allow read, write, delete: if isOwner(userId);
+      }
     }
 
     match /users/{userId}/favorites/{lectureId} {
@@ -227,3 +231,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
