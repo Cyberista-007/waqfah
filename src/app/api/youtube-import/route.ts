@@ -238,14 +238,12 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const channelId = await getChannelIdFromUrl(url, youtube);
-        
-        if (!channelId) {
-             return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400, headers: corsHeaders });
-        }
-        
         // If the only goal is to fetch channel info for the form
         if (fetchChannelInfo) {
+            const channelId = await getChannelIdFromUrl(url, youtube);
+            if (!channelId) {
+                 return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400, headers: corsHeaders });
+            }
             const channelResponse = await youtube.channels.list({
                 part: ['snippet'],
                 id: [channelId]
@@ -275,7 +273,12 @@ export async function POST(req: NextRequest) {
             allVideos = await fetchPlaylistVideos(youtube, playlistIdFromUrl);
         } else {
             // It's a channel URL, fetch uploads and playlists
-             const channelResponse = await youtube.channels.list({
+            const channelId = await getChannelIdFromUrl(url, youtube);
+            if (!channelId) {
+                 return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400, headers: corsHeaders });
+            }
+
+            const channelResponse = await youtube.channels.list({
                 part: ['contentDetails'],
                 id: [channelId]
             });
@@ -342,5 +345,3 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500, headers: corsHeaders });
     }
 }
-
-  
