@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { useAppearance } from './appearance-provider';
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -237,7 +238,7 @@ function DestructiveSinsSection() {
                     {activeSin?.quranVerse && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 48 48"><g fill="none" stroke="#f87171" strokeLinejoin="round" strokeWidth="2.5"><path fill="#f87171" fillOpacity="0.2" d="M12 40V24a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H13a1 1 0 0 1-1-1Z"/><path strokeLinecap="round" d="M19 8s-1.154 3.462-3.846 4.615C12 14 8 13 8 13m21-5s1.154 3.462 3.846 4.615C36 14 40 13 40 13"/></g></svg>}
+                                {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><path fill="#f87171" d="M10.5 5.572a2 2 0 0 0-1.923-1.62C8.253 3.91 8 4.14 8 4.5v13a.5.5 0 0 0 .5.5H10v-1a.5.5 0 0 1 .5-.5h.5v.5h.5a.5.5 0 0 0 .5-.5v-1.5h1.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-.5v-1h.5a.5.5 0 0 0 .5-.5v-1.5h.5a.5.5 0 0 0 .5-.5V8a2.5 2.5 0 0 0-2.5-2.5h-2.077zM9 5.5a.5.5 0 0 1-.5.5H7v1.5h1.5a.5.5 0 0 1 .5.5v2.5a.5.5 0 0 1-.5.5H6.5a.5.5 0 0 0-.5.5v1.5a.5.5 0 0 0 .5.5H8v1.5a.5.5 0 0 1-.5.5H5.5A.5.5 0 0 1 5 17V5.5a.5.5 0 0 1 .5-.5h2.25a1.25 1.25 0 0 1 1.25 1.25V7h-1.5a.5.5 0 0 0-.5.5v-.5z"/></svg>}
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                 <span className="font-bold text-red-400">قال تعالى:</span> ({activeSin.quranVerse})
