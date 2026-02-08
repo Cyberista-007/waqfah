@@ -1,23 +1,24 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronRight, ChevronLeft, MessageSquareX, EyeOff, Angry, BookOpen, BookText } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronLeft, ChevronRight, MessageSquareX, EyeOff, Angry, BookOpen, BookText } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
@@ -242,15 +243,14 @@ function DestructiveSinsSection() {
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
         <DialogContent className="max-w-md">
             <DialogHeader>
-                <DialogTitle className="text-center font-headline text-2xl text-destructive">{activeSin?.dialog.title}</DialogTitle>
+                 <DialogTitle className="flex justify-center items-center gap-4 font-headline text-2xl text-destructive">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600/90 border-4 border-red-500/50">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                     {activeSin?.dialog.title}
+                </DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center justify-center gap-6 py-6">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-600/90">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a7 7 0 1 0 10 10A12 12 0 0 1 12 2Z"/>
-                    </svg>
-                </div>
-                
                 {activeSin?.dialog.quran && (
                     <p className="text-center font-amiri text-xl leading-relaxed">
                         قال تعالى: ({activeSin.dialog.quran})
@@ -333,7 +333,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
 
     const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
         if (!entryDocRef) return;
-        setDocumentNonBlocking(entryDocRef, { 
+        setDocumentNonBlocking(docRef, { 
             userId: user!.uid, 
             date: Timestamp.fromDate(selectedDate),
             completedActionIds: newCompleted,
