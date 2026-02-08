@@ -3,17 +3,17 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronLeft, ChevronRight, MessageSquareX, EyeOff, Angry } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -256,45 +256,46 @@ function DestructiveSinsSection() {
 
                 <div className="space-y-6">
                     {activeSin?.dialog.quran && (
-                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
-                            <div className="flex justify-center">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
-                                  <path d="M4 4C4 3.44772 4.44772 3 5 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V4Z" fill="currentColor"></path>
-                                  <path fillRule="evenodd" clipRule="evenodd" d="M12 5.75C9.10051 5.75 6.75 8.10051 6.75 11C6.75 13.8995 9.10051 16.25 12 16.25C14.8995 16.25 17.25 13.8995 17.25 11C17.25 8.10051 14.8995 5.75 12 5.75ZM8.25 11C8.25 8.92893 9.92893 7.25 12 7.25C14.0711 7.25 15.75 8.92893 15.75 11C15.75 12.0832 15.2891 13.0427 14.5303 13.6967C13.6214 14.4552 12.3786 14.75 11.25 14.75C9.6231 14.75 8.25 13.3769 8.25 11.75V11Z" fill="white"></path>
+                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
+                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
+                               <svg width="40" height="40" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M40 145C40 136.716 46.7157 130 55 130H105C113.284 130 120 136.716 120 145" stroke="#293A5E" strokeWidth="16" strokeLinecap="round"/>
+                                    <path d="M10.6667 80L80 30L149.333 80L80 130L10.6667 80Z" fill="#E3B456"/>
+                                    <path d="M24 84L80 44L136 84L80 124L24 84Z" fill="#293A5E"/>
                                 </svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
-                                قال تعالى: ({activeSin.dialog.quran})
+                                <span className="font-bold text-red-400">قال تعالى:</span> ({activeSin.dialog.quran})
                             </p>
                         </div>
                     )}
                     {activeSin?.dialog.hadith && (
-                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
-                            <div className="flex justify-center">
-                               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
-                                  <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
-                                  <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
-                                  <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
-                                  <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
+                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+                                    <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
+                                    <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                    <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                    <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
                                 </svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
-                                قال رسول الله ﷺ: "{activeSin.dialog.hadith}"
+                                 <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.dialog.hadith}"
                             </p>
                         </div>
                     )}
                      {activeSin?.dialog.hadith2 && (
-                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
-                           <div className="flex justify-center">
-                               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
-                                  <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
-                                  <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
-                                  <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
-                                  <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
+                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+                                    <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
+                                    <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                    <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                    <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
                                 </svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
-                                "{activeSin.dialog.hadith2}"
+                                <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.dialog.hadith2}"
                             </p>
                         </div>
                     )}
@@ -365,9 +366,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
 
 
     const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
-        if (!entryDocRef) return;
-        setDocumentNonBlocking(docRef, { 
-            userId: user!.uid, 
+        if (!entryDocRef || !user) return;
+        setDocumentNonBlocking(entryDocRef, { 
+            userId: user.uid, 
             date: Timestamp.fromDate(selectedDate),
             completedActionIds: newCompleted,
             customActions: newCustom
