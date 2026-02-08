@@ -121,8 +121,8 @@ service cloud.firestore {
       allow update: if isOwner(userId) || isAdmin();
       // Admins can list all users.
       allow list: if isAdmin();
-      // No one can delete user profiles for now.
-      allow delete: if false;
+      // A user can delete their own account.
+      allow delete: if isOwner(userId);
 
        match /user_challenges/{challengeId} {
         allow read, write, delete: if isOwner(userId);
@@ -141,7 +141,7 @@ service cloud.firestore {
     
     match /users/{userId}/listenHistory/{lectureId} {
       // Users can only read and write to their own listening history.
-      allow read, write: if isOwner(userId);
+      allow read, write, delete: if isOwner(userId);
     }
 
     match /users/{userId}/playlists/{playlistId} {

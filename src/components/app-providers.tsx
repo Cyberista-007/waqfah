@@ -54,7 +54,8 @@ export function AppProviders({
             'theme-deep-space',
             'theme-oled',
             'theme-studio-simpatico',
-            'theme-digital-horizon'
+            'theme-digital-horizon',
+            'theme-high-contrast'
           ]}
         >
           <AppearanceProvider defaultFont={defaultFont}>
