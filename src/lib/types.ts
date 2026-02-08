@@ -290,4 +290,14 @@ export type AccountabilityEntry = Serializable<{
   };
   totalPoints?: number;
 }>;
+
+export type DestructiveSin = Serializable<{
+  id: string;
+  title: string;
+  dialogTitle: string;
+  quranVerse?: string;
+  hadith?: string;
+  hadith2?: string;
+  icon: string;
+}>;
     

@@ -355,36 +355,55 @@
       },
       "required": ["donorName", "isAnonymous", "donatedAt"]
     },
+    "CustomAccountabilityAction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Custom Accountability Action",
+      "description": "A user-defined action for their accountability checklist.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "points": { "type": "number" }
+      },
+      "required": ["id", "title", "points"]
+    },
     "AccountabilityEntry": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Accountability Entry",
-      "description": "A user's daily self-accountability checklist.",
+      "description": "A user's daily accountability checklist entry.",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
         "date": { "type": "string", "format": "date-time" },
-        "fajr": { "type": "string", "enum": ["on-time", "late", "missed"] },
-        "sunnah": { "type": "string", "enum": ["all", "most", "some", "none"] },
-        "duha": { "type": "boolean" },
-        "qiyam": { "type": "boolean" },
-        "witr": { "type": "boolean" },
-        "quranWird": { "type": "boolean" },
-        "quranAmount": { "type": "string", "enum": ["juz", "half-juz", "less"] },
-        "quranTadabbur": { "type": "boolean" },
-        "quranListen": { "type": "boolean" },
-        "adhkarMorningEvening": { "type": "boolean" },
-        "adhkarAfterSalah": { "type": "boolean" },
-        "adhkarBeforeSleep": { "type": "boolean" },
-        "adhkarGeneral": { "type": "boolean" },
-        "parentsDutifulness": { "type": "string", "enum": ["yes", "somewhat", "no"] },
-        "tongueGuarded": { "type": "string", "enum": ["yes", "somewhat", "no"] },
-        "gazeLowered": { "type": "string", "enum": ["yes", "somewhat", "no"] },
-        "truthful": { "type": "string", "enum": ["yes", "somewhat", "no"] },
-        "listenedToLecture": { "type": "boolean" },
-        "readBook": { "type": "boolean" },
-        "notes": { "type": "string" }
+        "completedActionIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "customActions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/entities/CustomAccountabilityAction" }
+          }
+        },
+        "totalPoints": { "type": "number" }
       },
       "required": ["userId", "date"]
+    },
+    "DestructiveSin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Destructive Sin",
+      "description": "Represents a destructive sin card for the accountability tracker.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the sin card, e.g., 'الكذب'." },
+        "dialogTitle": { "type": "string", "description": "The title for the popup dialog, e.g., 'خطر الكذب'." },
+        "quranVerse": { "type": "string", "description": "A relevant Quranic verse." },
+        "hadith": { "type": "string", "description": "A relevant Hadith." },
+        "hadith2": { "type": "string", "description": "An optional second relevant Hadith." },
+        "icon": { "type": "string", "description": "The name of the lucide-react icon or a special key for custom SVG." }
+      },
+      "required": ["title", "dialogTitle", "icon"]
     }
   },
   "auth": {
@@ -489,9 +508,12 @@
       {
         "path": "/donations/{donationId}",
         "definition": { "schema": { "$ref": "#/entities/Donation" } }
+      },
+      {
+        "path": "/destructive_sins/{sinId}",
+        "definition": { "schema": { "$ref": "#/entities/DestructiveSin" } }
       }
     ]
   }
 }
-
     

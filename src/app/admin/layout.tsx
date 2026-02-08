@@ -44,6 +44,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         { href: '/admin/books', label: 'الكتب', icon: Book },
         { href: '/admin/topics', label: 'المواضيع', icon: Hash },
         { href: '/admin/challenges', label: 'التحديات', icon: Flame },
+        { href: '/admin/sins', label: 'المهلكات', icon: ShieldX },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
         { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
         { href: '/admin/appearance', label: 'المظهر', icon: Palette },
