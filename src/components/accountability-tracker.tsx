@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -167,7 +165,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 }
 
 function DestructiveSinsSection() {
-    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
+    const { data: sinsFromDB, isLoading } = useCollection<DestructiveSin>('destructive_sins');
     const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
     const { quranIconUrl, hadithIconUrl } = useAppearance();
     const firestore = useFirestore();
@@ -175,7 +173,7 @@ function DestructiveSinsSection() {
     // Seed the destructive_sins collection if it's empty
     useEffect(() => {
         const seedData = async () => {
-            if (firestore && !isLoading && sins && sins.length === 0) {
+            if (firestore && !isLoading && sinsFromDB && sinsFromDB.length === 0) {
                 console.log("Destructive sins collection is empty. Seeding data...");
                 const batch = writeBatch(firestore);
                 const sinsCollection = collection(firestore, 'destructive_sins');
@@ -194,7 +192,22 @@ function DestructiveSinsSection() {
         };
 
         seedData();
-    }, [sins, isLoading, firestore]);
+    }, [sinsFromDB, isLoading, firestore]);
+
+    const sins = useMemo(() => {
+        // If firestore has data, it is the source of truth.
+        if (sinsFromDB && sinsFromDB.length > 0) {
+            return sinsFromDB;
+        }
+        // If firestore is still loading, wait.
+        if (isLoading) {
+            return null;
+        }
+        // If firestore is done and empty, use the local seed data as a fallback.
+        // The admin can later modify this data, and the new data from Firestore will take precedence.
+        return sinsToSeed.map((sin, index) => ({ ...sin, id: `seed-${index}` }));
+    }, [sinsFromDB, isLoading]);
+
 
     const getIcon = (iconName: string) => {
         if (iconName?.startsWith('http')) {
@@ -219,7 +232,7 @@ function DestructiveSinsSection() {
         }
     };
     
-    if (isLoading) {
+    if (isLoading && !sins) {
         return <Card className="mt-8 bg-card/50"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
     }
     
@@ -521,5 +534,3 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         </div>
     );
 }
-
-    
