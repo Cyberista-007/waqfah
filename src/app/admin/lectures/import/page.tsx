@@ -18,7 +18,7 @@ import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, Li
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Program, Lecture, Channel } from "@/lib/types";
-import { writeBatch, doc, collection, Timestamp, increment } from "firebase/firestore";
+import { writeBatch, doc, collection, Timestamp, increment, runTransaction } from "firebase/firestore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -32,6 +32,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDuration } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ToastAction } from "@/components/ui/toast";
+
 
 // A simple CSV parser
 const parseCSV = (text: string): Record<string, string>[] => {
@@ -61,6 +63,7 @@ interface FetchedPlaylist {
     id: string;
     title: string;
     videoCount: number;
+    description: string;
 }
 
 export default function AdminImportLecturesPage() {
@@ -69,6 +72,7 @@ export default function AdminImportLecturesPage() {
     const searchParams = useSearchParams();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isImportingSeries, setIsImportingSeries] = useState<string | null>(null);
     
     // CSV State
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -140,10 +144,14 @@ export default function AdminImportLecturesPage() {
             return;
         }
 
-        const channelExists = allChannels?.some(c => c.youtubeUrl === finalUrl);
-        if (!channelExists && !urlToFetch) { // Don't show this if fetching from a playlist link inside the component
-            router.push(`/admin/channels?youtubeUrl=${encodeURIComponent(finalUrl)}`);
-            return;
+        const isPlaylistUrl = finalUrl.includes('playlist?list=');
+        
+        if (!isPlaylistUrl) {
+          const channelExists = allChannels?.some(c => c.youtubeUrl === finalUrl);
+          if (!channelExists && !urlToFetch) {
+              router.push(`/admin/channels?youtubeUrl=${encodeURIComponent(finalUrl)}`);
+              return;
+          }
         }
 
 
@@ -313,6 +321,68 @@ export default function AdminImportLecturesPage() {
             setIsSubmitting(false);
         }
     }
+
+    const handleImportPlaylistAsSeries = async (playlist: FetchedPlaylist) => {
+        if (!firestore || !allPrograms || !allSeries) {
+            toast({ variant: "destructive", title: "البيانات لم تحمل بعد، يرجى الانتظار." });
+            return;
+        }
+    
+        if (targetProgramId === 'none') {
+            toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار البرنامج الذي تنتمي إليه هذه السلسلة أولاً." });
+            return;
+        }
+    
+        const seriesExists = allSeries.some(s => s.title === playlist.title);
+        if (seriesExists) {
+            toast({ variant: "destructive", title: "السلسلة موجودة بالفعل", description: `سلسلة بعنوان "${playlist.title}" موجودة بالفعل في قاعدة البيانات.` });
+            return;
+        }
+        
+        setIsImportingSeries(playlist.id);
+    
+        try {
+            const program = allPrograms.find(p => p.id === targetProgramId);
+            if (!program) {
+                throw new Error("Selected program not found.");
+            }
+    
+            const slug = playlist.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+    
+            const newSeriesData = {
+                title: playlist.title,
+                slug: slug,
+                description: playlist.description || "",
+                programId: program.id,
+                programName: program.name,
+                programSlug: program.slug,
+                lectureCount: playlist.videoCount,
+                imageId: `series-${slug}`, // Placeholder image ID
+                createdAt: Timestamp.now(),
+                language: 'ar',
+            };
+    
+            const newSeriesRef = doc(collection(firestore, 'series'));
+            const statsRef = doc(firestore, 'stats', 'global');
+            
+            await runTransaction(firestore, async (transaction) => {
+              transaction.set(newSeriesRef, newSeriesData);
+              transaction.set(statsRef, { series: increment(1) }, { merge: true });
+            });
+    
+            toast({
+                title: "تم استيراد السلسلة بنجاح!",
+                description: `تمت إضافة سلسلة "${playlist.title}" إلى قائمة السلاسل.`,
+                action: <ToastAction altText="عرض السلاسل" onClick={() => router.push('/admin/series')}>عرض السلاسل</ToastAction>,
+            });
+    
+        } catch (error) {
+            console.error("Error importing playlist as series:", error);
+            toast({ variant: "destructive", title: "فشل استيراد السلسلة", description: "حدث خطأ غير متوقع." });
+        } finally {
+            setIsImportingSeries(null);
+        }
+    };
 
     const handleCSVSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -600,7 +670,7 @@ export default function AdminImportLecturesPage() {
                                                         <TableRow>
                                                             <TableHead>عنوان قائمة التشغيل</TableHead>
                                                             <TableHead>عدد الفيديوهات</TableHead>
-                                                            <TableHead></TableHead>
+                                                            <TableHead className="text-left">إجراءات</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -609,9 +679,14 @@ export default function AdminImportLecturesPage() {
                                                                 <TableCell className="font-medium">{playlist.title}</TableCell>
                                                                 <TableCell>{playlist.videoCount}</TableCell>
                                                                 <TableCell className="text-left">
-                                                                    <Button onClick={() => handleFetchFromYoutube(`https://www.youtube.com/playlist?list=${playlist.id}`)} size="sm" disabled={isFetching}>
-                                                                        {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب فيديوهات القائمة"}
-                                                                    </Button>
+                                                                    <div className="flex gap-2 justify-end">
+                                                                        <Button onClick={() => handleImportPlaylistAsSeries(playlist)} size="sm" variant="secondary" disabled={!!isImportingSeries}>
+                                                                            {isImportingSeries === playlist.id ? <Loader2 className="h-4 w-4 animate-spin"/> : "استيراد كسلسلة"}
+                                                                        </Button>
+                                                                        <Button onClick={() => handleFetchFromYoutube(`https://www.youtube.com/playlist?list=${playlist.id}`)} size="sm" disabled={isFetching}>
+                                                                            {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب الفيديوهات"}
+                                                                        </Button>
+                                                                    </div>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))}
@@ -683,3 +758,5 @@ export default function AdminImportLecturesPage() {
     
     
   
+
+    

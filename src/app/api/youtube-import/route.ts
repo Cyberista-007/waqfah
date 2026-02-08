@@ -328,8 +328,9 @@ export async function POST(req: NextRequest) {
         
         const formattedPlaylists = allPlaylists.map(item => ({
             id: item.id,
-            title: item.snippet.title,
-            videoCount: item.contentDetails.itemCount,
+            title: item.snippet?.title,
+            description: item.snippet?.description || '',
+            videoCount: item.contentDetails?.itemCount,
         }));
         
         return NextResponse.json({ videos, shorts, playlists: formattedPlaylists }, { headers: corsHeaders });
@@ -345,3 +346,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500, headers: corsHeaders });
     }
 }
+
+    
