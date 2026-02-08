@@ -43,7 +43,7 @@ function SeriesContentWrapper({ series }: { series: Series }) {
 
 export default function SeriesDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = decodeURIComponent(params.slug as string);
 
   // 1. Fetch the series by slug
   const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>(

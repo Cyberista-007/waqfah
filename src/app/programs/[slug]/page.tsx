@@ -117,7 +117,7 @@ function ProgramPageContent({ program }: { program: Program }) {
 
 export default function ProgramPage() {
     const params = useParams();
-    const slug = params.slug as string;
+    const slug = decodeURIComponent(params.slug as string);
 
     const { data: programs, isLoading: programsLoading } = useCollection<Program>('programs', {
         where: ['slug', '==', slug],

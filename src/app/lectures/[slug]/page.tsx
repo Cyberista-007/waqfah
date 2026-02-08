@@ -29,7 +29,7 @@ function LecturePageContent({ lecture }: { lecture: Lecture }) {
 
 export default function LectureDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = decodeURIComponent(params.slug as string);
 
   const { data: lectures, isLoading: lectureLoading } = useCollection<Lecture>(
       'lectures', 

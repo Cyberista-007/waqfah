@@ -11,7 +11,7 @@ import { HomePageSkeleton } from '@/components/skeletons';
 
 export default function TopicDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = decodeURIComponent(params.slug as string);
 
   const { data: allTopics, isLoading: topicsLoading } = useCollection<Topic>('topics');
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');

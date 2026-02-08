@@ -96,7 +96,7 @@ function ChannelPageContent({ channel }: { channel: Channel }) {
 
 export default function ChannelPage() {
     const params = useParams();
-    const slug = params.slug as string;
+    const slug = decodeURIComponent(params.slug as string);
 
     const { data: channels, isLoading: channelsLoading } = useCollection<Channel>('channels', {
         where: ['slug', '==', slug],
