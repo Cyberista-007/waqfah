@@ -107,12 +107,6 @@ service cloud.firestore {
       allow write: if isAdmin(); // Only admins can add/edit/delete donations for now
     }
 
-    match /destructive_sins/{sinId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-
     // =====================================================================
     // User-Specific Data
     // =====================================================================

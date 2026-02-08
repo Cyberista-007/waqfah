@@ -68,7 +68,6 @@ export default function AdminDashboardPage() {
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/books"><span>إدارة الكتب</span><Book /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/topics"><span>إدارة المواضيع</span><Hash /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/challenges"><span>إدارة التحديات</span><Flame /></Link></Button>
-                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/sins"><span>إدارة المهلكات</span><ShieldX /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/schedule"><span>جدول الدروس</span><CalendarClock /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/qa"><span>الأسئلة والأجوبة</span><HelpCircle /></Link></Button>
                     </CardContent>

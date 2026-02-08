@@ -391,21 +391,6 @@
         "totalPoints": { "type": "number" }
       },
       "required": ["userId", "date"]
-    },
-    "DestructiveSin": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Destructive Sin",
-      "description": "Represents a destructive sin card for the accountability tracker.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string", "description": "The title of the sin card, e.g., 'الكذب'." },
-        "dialogTitle": { "type": "string", "description": "The title for the popup dialog, e.g., 'خطر الكذب'." },
-        "quranVerse": { "type": "string", "description": "A relevant Quranic verse." },
-        "hadith": { "type": "string", "description": "A relevant Hadith." },
-        "hadith2": { "type": "string", "description": "An optional second relevant Hadith." },
-        "icon": { "type": "string", "description": "The name of the lucide-react icon, a special key for custom SVG, or an uploaded image URL." }
-      },
-      "required": ["title", "dialogTitle", "icon"]
     }
   },
   "auth": {
@@ -510,12 +495,7 @@
       {
         "path": "/donations/{donationId}",
         "definition": { "schema": { "$ref": "#/entities/Donation" } }
-      },
-      {
-        "path": "/destructive_sins/{sinId}",
-        "definition": { "schema": { "$ref": "#/entities/DestructiveSin" } }
       }
     ]
   }
 }
-    
