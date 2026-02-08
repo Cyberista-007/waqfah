@@ -481,9 +481,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="fajr" className="w-full">
+            <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-6">
-                    {Object.entries(accountabilityStructure).map(([key, { name }]) => {
+                    {Object.entries(accountabilityStructure).reverse().map(([key, { name }]) => {
                          const Icon = prayerIcons[key as keyof typeof prayerIcons];
                         return (
                              <TabsTrigger key={key} value={key} className="flex flex-col sm:flex-row gap-2 h-12">
@@ -497,7 +497,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 {isLoading ? (
                      <div className="flex justify-center p-16"><Loader2 className="h-12 w-12 animate-spin" /></div>
                 ) : (
-                    Object.entries(accountabilityStructure).map(([key, prayerConfig]) => (
+                    Object.entries(accountabilityStructure).reverse().map(([key, prayerConfig]) => (
                         <TabsContent key={key} value={key} className="mt-6">
                             <h2 className="text-3xl font-bold text-center mb-6">{prayerConfig.name}</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
