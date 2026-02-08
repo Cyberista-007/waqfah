@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -248,26 +247,33 @@ function DestructiveSinsSection() {
             
             <div className="space-y-6 font-amiri text-xl leading-relaxed text-center">
                 {activeSin?.dialog.quran && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
-                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
-                        <BookOpen className="h-5 w-5" />
-                    </div>
-                    <p><span className="font-bold">قال تعالى:</span> ({activeSin.dialog.quran})</p>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
+                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
+                        <path d="M14.5 7.5C13.5 7.5 12.5445 7.96269 11.8481 8.74546C11.1517 9.52824 10.7836 10.5889 10.8417 11.666C10.8998 12.7431 11.3803 13.7547 12.1804 14.5029C12.9805 15.2512 14.043 15.6669 15.125 15.6669" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <p>قال تعالى: ({activeSin.dialog.quran})</p>
                 </div>
                 )}
                 {activeSin?.dialog.hadith && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
-                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
-                        <BookText className="h-5 w-5" />
-                    </div>
-                    <p><span className="font-bold">قال رسول الله ﷺ:</span> "{activeSin.dialog.hadith}"</p>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
+                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
+                        <line x1="9" y1="8" x2="15" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="9" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="9" y1="16" x2="13" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <p>قال رسول الله ﷺ: "{activeSin.dialog.hadith}"</p>
                 </div>
                 )}
                 {activeSin?.dialog.hadith2 && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
-                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
-                        <BookText className="h-5 w-5" />
-                    </div>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
+                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
+                        <line x1="9" y1="8" x2="15" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="9" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="9" y1="16" x2="13" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
                     <p>"{activeSin.dialog.hadith2}"</p>
                 </div>
                 )}
