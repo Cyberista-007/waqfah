@@ -11,16 +11,29 @@ import {
   Legend,
   Line,
 } from 'recharts';
+import { subDays, format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
-const trafficData = [
-  { name: 'قبل 6 أيام', visits: 1200, users: 800 },
-  { name: 'قبل 5 أيام', visits: 1500, users: 950 },
-  { name: 'قبل 4 أيام', visits: 1300, users: 900 },
-  { name: 'قبل 3 أيام', visits: 1700, users: 1100 },
-  { name: 'قبل 2 يوم', visits: 1600, users: 1050 },
-  { name: 'الأمس', visits: 1900, users: 1250 },
-  { name: 'اليوم', visits: 2400, users: 1500 },
-];
+const generateLast7DaysData = () => {
+    const data = [];
+    const today = new Date();
+    const baseVisits = [1200, 1500, 1300, 1700, 1600, 1900, 2400];
+    const baseUsers = [800, 950, 900, 1100, 1050, 1250, 1500];
+
+    for (let i = 6; i >= 0; i--) {
+        const date = subDays(today, i);
+        const formattedDate = format(date, 'd MMM', { locale: ar });
+        data.push({
+            name: formattedDate,
+            visits: baseVisits[6 - i] || 0,
+            users: baseUsers[6 - i] || 0,
+        });
+    }
+    return data;
+};
+
+const trafficData = generateLast7DaysData();
+
 
 export function TrafficChart() {
     return (
