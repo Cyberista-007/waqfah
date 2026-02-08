@@ -9,11 +9,13 @@ import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
-import { Users, Loader2 } from 'lucide-react';
+import { Users, Loader2, ArrowLeft } from 'lucide-react';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { useMemo, useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function ProgramPageContent({ program }: { program: Program }) {
     const firestore = useFirestore();
@@ -64,9 +66,16 @@ function ProgramPageContent({ program }: { program: Program }) {
 
     const { shorts, regularLectures } = useMemo(() => {
         if (!lectures) return { shorts: [], regularLectures: [] };
+        
+        // Show most recent first
+        const sortedLectures = [...lectures].sort((a, b) => {
+            const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
+            return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
+        });
+
         const shortsArr: Lecture[] = [];
         const regularLecturesArr: Lecture[] = [];
-        lectures.forEach(lecture => {
+        sortedLectures.forEach(lecture => {
             if (lecture.duration <= 180) {
                 shortsArr.push(lecture);
             } else {
@@ -140,27 +149,45 @@ function ProgramPageContent({ program }: { program: Program }) {
                 <>
                     {shorts.length > 0 && (
                         <section className="px-4 sm:px-6 lg:px-8">
-                            <h2 className="text-2xl font-bold mb-6 font-headline">مقاطع قصيرة</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold font-headline">مقاطع قصيرة</h2>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {shorts.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                                {shorts.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                            </div>
+                        </section>
+                    )}
+                    
+                    {(series?.length || 0) > 0 && (
+                        <section className="px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold font-headline">السلاسل</h2>
+                                <Button asChild variant="outline">
+                                    <Link href={`/programs/${program.slug}/series`}>
+                                        <span>عرض الكل</span>
+                                        <ArrowLeft className="h-4 w-4 mr-2" />
+                                    </Link>
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {series!.slice(0, 3).map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
                             </div>
                         </section>
                     )}
                     
                     {regularLectures.length > 0 && (
                          <section className="px-4 sm:px-6 lg:px-8">
-                             <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
+                             <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold font-headline">المحاضرات</h2>
+                                <Button asChild variant="outline">
+                                    <Link href={`/programs/${program.slug}/lectures`}>
+                                        <span>عرض الكل</span>
+                                        <ArrowLeft className="h-4 w-4 mr-2" />
+                                    </Link>
+                                </Button>
+                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {regularLectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
-                            </div>
-                        </section>
-                    )}
-
-                    {(series?.length || 0) > 0 && (
-                        <section className="px-4 sm:px-6 lg:px-8">
-                            <h2 className="text-2xl font-bold mb-6 font-headline">السلاسل</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {series!.map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
+                                {regularLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                             </div>
                         </section>
                     )}
