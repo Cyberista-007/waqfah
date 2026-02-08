@@ -1,6 +1,6 @@
-
 'use client'
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,10 +10,12 @@ import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 import { StatCard } from "@/components/admin/StatCard";
 import { useCollection, useDoc } from "@/firebase";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminDashboardPage() {
     const { data: stats, isLoading: statsLoading } = useDoc<Stats>('stats/global');
     const { data: popularLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['viewCount', 'desc'], limit: 5 });
+    const [timeRange, setTimeRange] = useState<'7d' | '30d' | '12m'>('7d');
 
     return (
         <div className="space-y-8">
@@ -38,10 +40,19 @@ export default function AdminDashboardPage() {
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <Card className="lg:col-span-2 rounded-2xl">
                     <CardHeader>
-                        <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار (آخر 7 أيام)</CardTitle>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
+                            <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
+                                <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                                    <TabsTrigger value="7d">آخر 7 أيام</TabsTrigger>
+                                    <TabsTrigger value="30d">آخر 30 يومًا</TabsTrigger>
+                                    <TabsTrigger value="12m">آخر 12 شهرًا</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
                     </CardHeader>
                     <CardContent className="h-[350px] w-full">
-                    <TrafficChart />
+                        <TrafficChart timeRange={timeRange} />
                     </CardContent>
                 </Card>
                 <Card className="rounded-2xl">
