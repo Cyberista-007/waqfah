@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import {
   Bell,
@@ -39,7 +39,7 @@ import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, updateDocumentNonBlocking, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { doc, collection } from 'firebase/firestore';
 import type { UserProfile, Following, Program, NotificationSettings } from '@/lib/types';
@@ -65,6 +65,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { DonationTierBadge } from '@/components/DonationTierBadge';
 import { LanguageSwitcherDialog, languages } from '@/components/language-switcher';
+import { cn } from '@/lib/utils';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
