@@ -12,6 +12,7 @@ import { FollowButton } from '@/components/follow-button';
 import { Users, Loader2 } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
+import { useMemo } from 'react';
 
 function ProgramPageContent({ program }: { program: Program }) {
     const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
@@ -22,6 +23,22 @@ function ProgramPageContent({ program }: { program: Program }) {
         'series',
         { where: ['programId', '==', program.id] }
     );
+
+    const { shorts, regularLectures } = useMemo(() => {
+        if (!lectures) return { shorts: [], regularLectures: [] };
+        const shortsArr: Lecture[] = [];
+        const regularLecturesArr: Lecture[] = [];
+        lectures.forEach(lecture => {
+            // A lecture is a "short" if its duration is 3 minutes (180 seconds) or less.
+            if (lecture.duration <= 180) {
+                shortsArr.push(lecture);
+            } else {
+                regularLecturesArr.push(lecture);
+            }
+        });
+        return { shorts: shortsArr, regularLectures: regularLecturesArr };
+    }, [lectures]);
+
 
     const contentIsLoading = lecturesLoading || seriesLoading;
 
@@ -84,6 +101,24 @@ function ProgramPageContent({ program }: { program: Program }) {
 
             {!contentIsLoading && (
                 <>
+                    {shorts.length > 0 && (
+                        <section className="px-4 sm:px-6 lg:px-8">
+                            <h2 className="text-2xl font-bold mb-6 font-headline">مقاطع قصيرة</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {shorts.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                            </div>
+                        </section>
+                    )}
+                    
+                    {regularLectures.length > 0 && (
+                         <section className="px-4 sm:px-6 lg:px-8">
+                             <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {regularLectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                            </div>
+                        </section>
+                    )}
+
                     {(series?.length || 0) > 0 && (
                         <section className="px-4 sm:px-6 lg:px-8">
                             <h2 className="text-2xl font-bold mb-6 font-headline">السلاسل</h2>
@@ -93,16 +128,7 @@ function ProgramPageContent({ program }: { program: Program }) {
                         </section>
                     )}
 
-                    {(lectures?.length || 0) > 0 && (
-                         <section className="px-4 sm:px-6 lg:px-8">
-                             <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {lectures!.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
-                            </div>
-                        </section>
-                    )}
-
-                    {(lectures?.length || 0) === 0 && (series?.length || 0) === 0 && (
+                    {shorts.length === 0 && regularLectures.length === 0 && (series?.length || 0) === 0 && (
                          <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20 px-4 sm:px-6 lg:px-8">
                             <p className="text-lg text-muted-foreground">
                                 لا يوجد محتوى في هذا البرنامج حالياً.

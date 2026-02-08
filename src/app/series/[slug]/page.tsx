@@ -6,29 +6,46 @@ import { doc } from 'firebase/firestore';
 import type { Lecture, Program, Series } from '@/lib/types';
 import { SeriesClientPage } from '@/components/series-client-page';
 import { SeriesPageSkeleton } from '@/components/skeletons';
-import { useMemo } from 'react';
 
-// Wrapper to fetch dependent data now that we have a valid series
-function SeriesContentWrapper({ series }: { series: Series }) {
+export default function SeriesDetailPage() {
+  const params = useParams();
+  const slug = decodeURIComponent(params.slug as string);
   const firestore = useFirestore();
 
-  // Fetch lectures in this series
+  // 1. Fetch the series by slug.
+  const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>(
+    'series', 
+    { where: ['slug', '==', slug], limit: 1 }
+  );
+
+  const series = seriesList?.[0];
+  
+  // 2. Based on series, fetch lectures. Use a stable query that only runs when `series.id` is available.
   const { data: lecturesInSeries, isLoading: lecturesLoading } = useCollection<Lecture>(
-    'lectures', 
-    { where: ['seriesId', '==', series.id], orderBy: ['createdAt', 'asc'] }
+    series?.id ? 'lectures' : null, // Only create the query if we have a series.id
+    { where: ['seriesId', '==', series?.id], orderBy: ['createdAt', 'asc'] }
   );
   
-  // Fetch the creator (Program)
+  // 3. Fetch the creator (Program) of the series.
   const programDocRef = useMemoFirebase(
-    () => (series.programId ? doc(firestore, 'programs', series.programId) : null),
-    [firestore, series.programId]
+    () => (series?.programId ? doc(firestore, 'programs', series.programId) : null),
+    [firestore, series?.programId]
   );
   const { data: seriesCreator, isLoading: programLoading } = useDoc<Program>(programDocRef);
   
-  const contentIsLoading = lecturesLoading || programLoading;
-
-  // Show skeleton if any of the dependent content is loading for the first time
-  if (contentIsLoading && !lecturesInSeries) {
+  // If still loading the main series data, show skeleton
+  if (seriesLoading) {
+    return <SeriesPageSkeleton />;
+  }
+  
+  // If loading is done and no series was found, this is a 404.
+  if (!series) {
+    notFound();
+    return null;
+  }
+  
+  // Now we have a series, but the lectures might still be loading.
+  if (lecturesLoading && !lecturesInSeries) {
       return <SeriesPageSkeleton />;
   }
 
@@ -39,32 +56,4 @@ function SeriesContentWrapper({ series }: { series: Series }) {
       seriesCreator={seriesCreator}
     />
   );
-}
-
-export default function SeriesDetailPage() {
-  const params = useParams();
-  const slug = decodeURIComponent(params.slug as string);
-
-  // 1. Fetch the series by slug
-  const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>(
-    'series', 
-    { where: ['slug', '==', slug], limit: 1 }
-  );
-  
-  // Show skeleton while the main resource is loading
-  if (seriesLoading) {
-    return <SeriesPageSkeleton />;
-  }
-
-  const series = seriesList?.[0];
-  
-  // If loading is done and still no series, it's a 404
-  if (!series) {
-    notFound();
-    return null;
-  }
-  
-  // This component will now only be rendered if `series` is found.
-  // It fetches its own dependent data.
-  return <SeriesContentWrapper series={series} />;
 }
