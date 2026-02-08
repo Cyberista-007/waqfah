@@ -163,51 +163,18 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 }
 
 function DestructiveSinsSection() {
-    const [activeSin, setActiveSin] = useState<any | null>(null);
-
-    const sins: any[] = [
-      {
-        id: 'lying',
-        title: 'الكذب',
-        dialogTitle: 'خطر الكذب',
-        quranVerse: 'إِنَّمَا يَفْتَرِي الْكَذِبَ الَّذِينَ لَا يُؤْمِنُونَ بِآيَاتِ اللَّهِ ۖ وَأُولَٰئِكَ هُمُ الْكَاذِبُونَ',
-        hadith: "إِيَّاكُمْ وَالْكَذِبَ، فَإِنَّ الْكَذِبَ يَهْدِي إِلَى الْفُجُورِ، وَإِنَّ الْفُجُورَ يَهْدِي إِلَى النَّارِ، وَمَا يَزَالُ الرَّجُلُ يَكْذِبُ وَيَتَحَرَّى الْكَذِبَ حَتَّى يُكْتَبَ عِنْدَ اللَّهِ كَذَّابًا.",
-        icon: 'MessageSquareX'
-      },
-      {
-        id: 'backbiting',
-        title: 'الغيبة',
-        dialogTitle: 'عاقبة الغيبة',
-        quranVerse: 'وَلَا يَغْتَب بَّعْضُكُم بَعْضًا ۚ أَيُحِبُّ أَحَدُكُمْ أَن يَأْكُلَ لَحْمَ أَخِيهِ مَيْتًا فَكَرِهْتُمُوهُ',
-        hadith: "أتدرون ما الغِيبةُ؟ قالوا: اللهُ ورسولُه أعلمُ. قال: ذِكْرُك أخاك بما يكرهُ...",
-        icon: 'custom-backbiting'
-      },
-      {
-        id: 'gaze',
-        title: 'إطلاق البصر',
-        dialogTitle: 'فتنة النظر',
-        quranVerse: 'قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ',
-        hadith: 'النَّظْرَةُ سَهْمٌ مِنْ سِهَامِ إِبْلِيسَ مَسْمُومَةٌ، فَمَنْ تَرَكَهَا مِنْ خَوْفِ اللَّهِ أَثَابَهُ اللَّهُ إِيمَانًا يَجِدُ حَلَاوَتَهُ فِي قَلْبِهِ.',
-        icon: 'EyeOff'
-      },
-      {
-        id: 'cursing',
-        title: 'السب واللعن',
-        dialogTitle: 'السب واللعن',
-        quranVerse: 'وَالَّذِينَ يُؤْذُونَ الْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ بِغَيْرِ مَا اكْتَسَبُوا فَقَدِ احْتَمَلُوا بُهْتَانًا وَإِثْمًا مُّبِينًا',
-        hadith: "لَيْسَ الْمُؤْمِنُ بِالطَّعَّانِ وَلَا اللَّعَّانِ وَلَا الْفَاحِشِ وَلَا الْبَذِيءِ.",
-        icon: 'Angry'
-      },
-    ];
+    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
+    const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
+    const { quranIconUrl, hadithIconUrl } = useAppearance();
 
     const getIcon = (iconName: string) => {
+        if (iconName?.startsWith('http')) {
+            return <img src={iconName} alt="icon" className="h-10 w-10 object-contain" />;
+        }
         switch (iconName) {
-            case 'MessageSquareX':
-                return <MessageSquareX className="h-10 w-10" />;
-            case 'EyeOff':
-                return <EyeOff className="h-10 w-10" />;
-            case 'Angry':
-                return <Angry className="h-10 w-10" />;
+            case 'MessageSquareX': return <MessageSquareX className="h-10 w-10" />;
+            case 'EyeOff': return <EyeOff className="h-10 w-10" />;
+            case 'Angry': return <Angry className="h-10 w-10" />;
             case 'custom-backbiting':
                 return (
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10">
@@ -223,6 +190,10 @@ function DestructiveSinsSection() {
         }
     };
     
+    if (isLoading) {
+        return <Card className="mt-8 bg-card/50"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
+    }
+    
   return (
     <>
       <Card className="mt-8 bg-card/50">
@@ -232,7 +203,7 @@ function DestructiveSinsSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-            {sins.map((sin) => (
+            {sins?.map((sin) => (
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
@@ -266,7 +237,7 @@ function DestructiveSinsSection() {
                     {activeSin?.quranVerse && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 48 48"><g fill="none" stroke="#f87171" strokeLinejoin="round" strokeWidth="2.5"><path fill="#f87171" fillOpacity="0.2" d="M12 40V24a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H13a1 1 0 0 1-1-1Z"/><path strokeLinecap="round" d="M19 8s-1.154 3.462-3.846 4.615C12 14 8 13 8 13m21-5s1.154 3.462 3.846 4.615C36 14 40 13 40 13"/></g></svg>
+                                {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 48 48"><g fill="none" stroke="#f87171" strokeLinejoin="round" strokeWidth="2.5"><path fill="#f87171" fillOpacity="0.2" d="M12 40V24a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H13a1 1 0 0 1-1-1Z"/><path strokeLinecap="round" d="M19 8s-1.154 3.462-3.846 4.615C12 14 8 13 8 13m21-5s1.154 3.462 3.846 4.615C36 14 40 13 40 13"/></g></svg>}
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                 <span className="font-bold text-red-400">قال تعالى:</span> ({activeSin.quranVerse})
@@ -276,7 +247,7 @@ function DestructiveSinsSection() {
                     {activeSin?.hadith && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>
+                                {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                  <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith}"
@@ -286,7 +257,7 @@ function DestructiveSinsSection() {
                      {activeSin?.hadith2 && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>
+                                {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                 <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith2}"
