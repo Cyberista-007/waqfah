@@ -240,39 +240,40 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="bg-slate-900/90 border-destructive/20 border-2 backdrop-blur-sm p-8 rounded-2xl max-w-2xl text-white font-body" hideCloseButton>
+        <DialogContent className="relative overflow-hidden bg-slate-900/90 border-destructive/20 border-2 backdrop-blur-sm p-8 rounded-2xl max-w-2xl text-white font-body" hideCloseButton>
+            <div className="absolute top-0 right-0 bottom-0 w-2.5 bg-destructive/80 rounded-r-2xl shadow-[0_0_15px_3px_hsl(var(--destructive)/0.5)]"/>
             <DialogHeader className="text-center mb-6">
                 <DialogTitle className="text-3xl font-headline text-destructive">{activeSin?.dialog.title}</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-6 font-amiri text-xl leading-relaxed text-center">
                 {activeSin?.dialog.quran && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
-                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
-                        <path d="M14.5 7.5C13.5 7.5 12.5445 7.96269 11.8481 8.74546C11.1517 9.52824 10.7836 10.5889 10.8417 11.666C10.8998 12.7431 11.3803 13.7547 12.1804 14.5029C12.9805 15.2512 14.043 15.6669 15.125 15.6669" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
+                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
+                        <path d="M15.5 14.5C14.7358 14.9056 13.8828 15.125 13 15.125C10.1716 15.125 8 12.8631 8 10.0625C8 9.07923 8.35624 8.18274 8.96434 7.46875" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <p>قال تعالى: ({activeSin.dialog.quran})</p>
                 </div>
                 )}
                 {activeSin?.dialog.hadith && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
-                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
-                        <line x1="9" y1="8" x2="15" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="9" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="9" y1="16" x2="13" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
+                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
+                        <line x1="8" y1="9" x2="16" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="8" y1="15" x2="13" y2="15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                     <p>قال رسول الله ﷺ: "{activeSin.dialog.hadith}"</p>
                 </div>
                 )}
                 {activeSin?.dialog.hadith2 && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 text-destructive">
-                        <path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" fill="currentColor"/>
-                        <line x1="9" y1="8" x2="15" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="9" y1="12" x2="15" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="9" y1="16" x2="13" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
+                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
+                        <line x1="8" y1="9" x2="16" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="8" y1="15" x2="13" y2="15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                     <p>"{activeSin.dialog.hadith2}"</p>
                 </div>
