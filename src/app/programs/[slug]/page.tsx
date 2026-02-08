@@ -28,15 +28,23 @@ function ProgramPageContent({ program }: { program: Program }) {
     const { programSeries, programLectures } = useMemo(() => {
         if (!allSeries || !allLectures) return { programSeries: [], programLectures: [] };
 
-        const seriesForProgram = allSeries.filter(s => s.programId === program.id);
+        const seriesForProgram = allSeries.filter(s => s.programId === program.id || s.programSlug === program.slug);
         const seriesIds = new Set(seriesForProgram.map(s => s.id));
 
-        const lecturesForProgram = allLectures.filter(l => 
-            l.programId === program.id || (l.seriesId && seriesIds.has(l.seriesId))
-        );
+        const lecturesForProgram = allLectures.filter(l => {
+            // Direct link by programId or programSlug
+            if (l.programId === program.id || l.programSlug === program.slug) {
+                return true;
+            }
+            // Indirect link via a series that belongs to the program
+            if (l.seriesId && seriesIds.has(l.seriesId)) {
+                return true;
+            }
+            return false;
+        });
         
         return { programSeries: seriesForProgram, programLectures: lecturesForProgram };
-    }, [allSeries, allLectures, program.id]);
+    }, [allSeries, allLectures, program.id, program.slug]);
 
     const { shorts, regularLectures } = useMemo(() => {
         if (!programLectures) return { shorts: [], regularLectures: [] };
@@ -134,12 +142,14 @@ function ProgramPageContent({ program }: { program: Program }) {
                          <section className="px-4 sm:px-6 lg:px-8">
                              <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold font-headline">المحاضرات</h2>
-                                <Button asChild variant="outline">
-                                    <Link href={`/programs/${program.slug}/lectures`}>
-                                        <span>عرض الكل</span>
-                                        <ArrowLeft className="h-4 w-4 mr-2" />
-                                    </Link>
-                                </Button>
+                                {regularLectures.length > 4 && (
+                                    <Button asChild variant="outline">
+                                        <Link href={`/programs/${program.slug}/lectures`}>
+                                            <span>عرض الكل</span>
+                                            <ArrowLeft className="h-4 w-4 mr-2" />
+                                        </Link>
+                                    </Button>
+                                )}
                              </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {regularLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
@@ -151,12 +161,14 @@ function ProgramPageContent({ program }: { program: Program }) {
                         <section className="px-4 sm:px-6 lg:px-8">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold font-headline">السلاسل</h2>
-                                <Button asChild variant="outline">
-                                    <Link href={`/programs/${program.slug}/series`}>
-                                        <span>عرض الكل</span>
-                                        <ArrowLeft className="h-4 w-4 mr-2" />
-                                    </Link>
-                                </Button>
+                                {programSeries.length > 3 && (
+                                    <Button asChild variant="outline">
+                                        <Link href={`/programs/${program.slug}/series`}>
+                                            <span>عرض الكل</span>
+                                            <ArrowLeft className="h-4 w-4 mr-2" />
+                                        </Link>
+                                    </Button>
+                                )}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {programSeries.slice(0, 3).map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
