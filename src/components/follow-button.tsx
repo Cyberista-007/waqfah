@@ -9,19 +9,26 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 interface FollowButtonProps {
-    programId: string;
+    programId?: string;
+    channelId?: string;
 }
 
-export function FollowButton({ programId }: FollowButtonProps) {
+export function FollowButton({ programId, channelId }: FollowButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
 
+    const targetId = programId || channelId;
+    const targetCollection = programId ? 'programs' : 'channels';
+    // TODO: The following collection is currently specific to programs.
+    // To fully support channel follows, a new collection or a more generic schema is needed.
+    const followCollectionPath = programId ? 'following' : null;
+
     const followDocPath = useMemo(() => {
-        if (!user || !programId) return null;
-        return `users/${user.uid}/following/${programId}`;
-    }, [user, programId]);
+        if (!user || !targetId || !followCollectionPath) return null;
+        return `users/${user.uid}/${followCollectionPath}/${targetId}`;
+    }, [user, targetId, followCollectionPath]);
 
     const followDocRef = useMemoFirebase(
       () => (firestore && followDocPath ? doc(firestore, followDocPath) : null),
@@ -38,6 +45,15 @@ export function FollowButton({ programId }: FollowButtonProps) {
         e.stopPropagation();
 
         if (isLoading) return;
+        
+        // Disable follow for channels for now
+        if (channelId) {
+            toast({
+                title: "قريبا!",
+                description: "ميزة متابعة القنوات قيد التطوير.",
+            });
+            return;
+        }
 
         if (!user || !firestore) {
             toast({
@@ -49,24 +65,23 @@ export function FollowButton({ programId }: FollowButtonProps) {
             return;
         }
 
-        if (!programId) return;
+        if (!targetId || !followDocRef) return;
 
-        const followRef = followDocRef!;
-        const targetRef = doc(firestore, 'programs', programId);
+        const targetRef = doc(firestore, targetCollection, targetId);
 
         try {
             await runTransaction(firestore, async (transaction) => {
                 const targetDoc = await transaction.get(targetRef);
                 if (!targetDoc.exists()) {
-                    throw "Program does not exist!";
+                    throw "Target does not exist!";
                 }
 
                 if (isFollowing) {
-                    transaction.delete(followRef);
+                    transaction.delete(followDocRef);
                     transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
-                    const followData = { programId, followedAt: Timestamp.now() };
-                    transaction.set(followRef, followData);
+                    const followData = { [programId ? 'programId' : 'channelId']: targetId, followedAt: Timestamp.now() };
+                    transaction.set(followDocRef, followData);
                     transaction.update(targetRef, { followerCount: increment(1) });
                 }
             });
@@ -78,7 +93,7 @@ export function FollowButton({ programId }: FollowButtonProps) {
         } catch (error: any) {
              if (error.code === 'permission-denied') {
                 const permissionError = new FirestorePermissionError({
-                    path: followRef.path,
+                    path: followDocRef.path,
                     operation: isFollowing ? 'delete' : 'create',
                     requestResourceData: isFollowing ? undefined : { followedAt: 'server_timestamp' }
                 });
@@ -99,7 +114,7 @@ export function FollowButton({ programId }: FollowButtonProps) {
     }
 
     return (
-        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full">
+        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full" disabled={!!channelId}>
             {isFollowing ? (
                 <>
                     <UserCheck className="me-2 h-5 w-5" />
