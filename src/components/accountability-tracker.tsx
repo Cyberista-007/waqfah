@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -13,11 +13,11 @@ import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
@@ -240,49 +240,33 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="relative overflow-hidden bg-slate-900/90 border-destructive/20 border-2 backdrop-blur-sm p-8 rounded-2xl max-w-2xl text-white font-body" hideCloseButton>
-            <div className="absolute top-0 right-0 bottom-0 w-2.5 bg-destructive/80 rounded-r-2xl shadow-[0_0_15px_3px_hsl(var(--destructive)/0.5)]"/>
-            <DialogHeader className="text-center mb-6">
-                <DialogTitle className="text-3xl font-headline text-destructive">{activeSin?.dialog.title}</DialogTitle>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle className="text-center font-headline text-2xl text-destructive">{activeSin?.dialog.title}</DialogTitle>
             </DialogHeader>
-            
-            <div className="space-y-6 font-amiri text-xl leading-relaxed text-center">
-                {activeSin?.dialog.quran && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
-                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
-                        <path d="M15.5 14.5C14.7358 14.9056 13.8828 15.125 13 15.125C10.1716 15.125 8 12.8631 8 10.0625C8 9.07923 8.35624 8.18274 8.96434 7.46875" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <div className="flex flex-col items-center justify-center gap-6 py-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-600/90">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a7 7 0 1 0 10 10A12 12 0 0 1 12 2Z"/>
                     </svg>
-                    <p>قال تعالى: ({activeSin.dialog.quran})</p>
                 </div>
+                
+                {activeSin?.dialog.quran && (
+                    <p className="text-center font-amiri text-xl leading-relaxed">
+                        قال تعالى: ({activeSin.dialog.quran})
+                    </p>
                 )}
                 {activeSin?.dialog.hadith && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
-                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
-                        <line x1="8" y1="9" x2="16" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="8" y1="15" x2="13" y2="15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    <p>قال رسول الله ﷺ: "{activeSin.dialog.hadith}"</p>
-                </div>
+                    <p className="text-center font-amiri text-xl leading-relaxed">
+                    قال رسول الله ﷺ: "{activeSin.dialog.hadith}"
+                    </p>
                 )}
                 {activeSin?.dialog.hadith2 && (
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
-                    <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 2C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H19C20.6569 22 22 20.6569 22 19V5C22 3.34315 20.6569 2 19 2H5Z" fill="hsl(var(--destructive))"/>
-                        <line x1="8" y1="9" x2="16" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                        <line x1="8" y1="15" x2="13" y2="15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    <p>"{activeSin.dialog.hadith2}"</p>
-                </div>
+                    <p className="text-center font-amiri text-xl leading-relaxed">
+                        "{activeSin.dialog.hadith2}"
+                    </p>
                 )}
             </div>
-            <DialogClose className="absolute left-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close</span>
-            </DialogClose>
         </DialogContent>
       </Dialog>
     </>
