@@ -15,10 +15,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useFirestore, useStorage } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import type { DestructiveSin } from "@/lib/types";
 import { Loader2 } from "lucide-react";
-import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from "next/image";
@@ -137,23 +136,26 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
     try {
       if (isEditMode && item) {
         const itemRef = doc(firestore, 'destructive_sins', item.id);
-        updateDocumentNonBlocking(itemRef, itemData);
+        await updateDoc(itemRef, itemData);
         toast({
             title: "تم التحديث بنجاح",
             description: `تم تحديث بطاقة "${title}".`,
         });
       } else {
         const itemsCollection = collection(firestore, 'destructive_sins');
-        addDocumentNonBlocking(itemsCollection, itemData);
+        await addDoc(itemsCollection, itemData);
         toast({
             title: "تم الإنشاء بنجاح",
             description: `تمت إضافة بطاقة "${title}" الجديدة.`,
         });
       }
       handleClose();
-    } catch(e) {
+    } catch(e: any) {
       console.error("Error submitting sin card:", e);
-      toast({ variant: 'destructive', title: "حدث خطأ", description: "لم نتمكن من حفظ البطاقة." });
+      const errorMessage = e.code === 'permission-denied'
+        ? "ليست لديك الصلاحية للقيام بهذا الإجراء."
+        : "لم نتمكن من حفظ البطاقة.";
+      toast({ variant: 'destructive', title: "حدث خطأ", description: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
