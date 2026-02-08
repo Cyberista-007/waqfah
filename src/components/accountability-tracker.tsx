@@ -8,7 +8,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocki
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronRight, ChevronLeft, MessageSquareX, EyeOff, Angry } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -162,6 +162,90 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
         </Card>
     )
 }
+
+const sins = [
+  {
+    id: 'lying',
+    title: 'الكذب',
+    icon: <MessageSquareX className="h-10 w-10" />,
+    dialog: {
+      title: 'خطر الكذب',
+      content: 'الكذب من صفات المنافقين وهو من كبائر الذنوب. قال رسول الله صلى الله عليه وسلم: "وإياكم والكذب، فإن الكذب يهدي إلى الفجور، وإن الفجور يهدي إلى النار، وما يزال الرجل يكذب ويتحرى الكذب حتى يكتب عند الله كذابًا".'
+    }
+  },
+  {
+    id: 'backbiting',
+    title: 'الغيبة',
+    icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <line x1="2" y1="22" x2="22" y2="2" />
+        </svg>
+    ),
+    dialog: {
+      title: 'عاقبة الغيبة',
+      content: 'الغيبة هي ذكرك أخاك بما يكره. قال تعالى: "وَلَا يَغْتَب بَّعْضُكُم بَعْضًا ۚ أَيُحِبُّ أَحَدُكُمْ أَن يَأْكُلَ لَحْمَ أَخِيهِ مَيْتًا فَكَرِهْتُمُوهُ". وهي من أسباب عذاب القبر.'
+    }
+  },
+  {
+    id: 'gaze',
+    title: 'إطلاق البصر',
+    icon: <EyeOff className="h-10 w-10" />,
+    dialog: {
+      title: 'فتنة النظر',
+      content: 'غض البصر عبادة عظيمة يحفظ بها المسلم دينه وقلبه. قال تعالى: "قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ". وإطلاق البصر سهم من سهام إبليس.'
+    }
+  },
+  {
+    id: 'cursing',
+    title: 'السب واللعن',
+    icon: <Angry className="h-10 w-10" />,
+    dialog: {
+      title: 'السب واللعن',
+      content: 'المؤمن ليس بالطعان ولا اللعان ولا الفاحش ولا البذيء. اللعن من الكبائر ويطرد صاحبه من رحمة الله. قال النبي صلى الله عليه وسلم: "لعن المؤمن كقتله".'
+    }
+  }
+];
+
+function DestructiveSinsSection() {
+  const [activeSin, setActiveSin] = useState<(typeof sins)[number] | null>(null);
+
+  return (
+    <>
+      <Card className="mt-8 bg-card/50">
+        <CardHeader>
+          <CardTitle className="text-2xl font-headline text-destructive text-center border-b-2 border-destructive/50 pb-2">
+            احذر المهلكات
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+          {sins.map((sin) => (
+            <button
+              key={sin.id}
+              onClick={() => setActiveSin(sin)}
+              className="p-4 rounded-xl bg-destructive/10 hover:bg-destructive/20 transition-colors text-destructive flex flex-col items-center justify-center gap-4 aspect-square"
+            >
+              {sin.icon}
+              <span className="font-bold text-lg">{sin.title}</span>
+            </button>
+          ))}
+        </CardContent>
+      </Card>
+      <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-headline">{activeSin?.dialog.title}</DialogTitle>
+          </DialogHeader>
+          <p className="py-4 text-base leading-relaxed text-muted-foreground">{activeSin?.dialog.content}</p>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 
 export function AccountabilityTracker({ redirectToOnAuth = '/accountability', showHeader = true }: { redirectToOnAuth?: string, showHeader?: boolean }) {
     const { toast } = useToast();
@@ -365,6 +449,8 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                     ))
                 )}
             </Tabs>
+
+            <DestructiveSinsSection />
 
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
                  <Card className="p-2 rounded-full shadow-lg border-2 border-primary/50">
