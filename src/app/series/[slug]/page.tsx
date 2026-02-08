@@ -2,7 +2,7 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, doc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, orderBy, getDoc } from 'firebase/firestore';
 import type { Lecture, Program, Series } from '@/lib/types';
 import { SeriesClientPage } from '@/components/series-client-page';
 import { SeriesPageSkeleton } from '@/components/skeletons';
