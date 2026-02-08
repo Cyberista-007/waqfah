@@ -86,6 +86,7 @@ export default function AdminImportLecturesPage() {
     const [targetChannelId, setTargetChannelId] = useState<string>("none");
     const [activeTab, setActiveTab] = useState("youtube-videos");
 
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
     const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels');
@@ -194,13 +195,32 @@ export default function AdminImportLecturesPage() {
             toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
-        if (!firestore || !allSeries || !allPrograms || !allChannels) return;
+        if (!firestore || !allSeries || !allPrograms || !allChannels || !allLectures) return;
         
         setIsSubmitting(true);
         
         try {
             const batch = writeBatch(firestore);
             const videosToImport = sourceItems.filter(v => itemsToImport.includes(v.videoId));
+            
+            // Create a set of existing YouTube URLs for quick lookup
+            const existingYoutubeUrls = new Set(allLectures.map(l => l.youtubeUrl).filter(Boolean));
+
+            const newVideosToImport = videosToImport.filter(video => {
+                const videoUrl = `https://www.youtube.com/watch?v=${video.videoId}`;
+                return !existingYoutubeUrls.has(videoUrl);
+            });
+
+            const skippedCount = videosToImport.length - newVideosToImport.length;
+
+            if (newVideosToImport.length === 0) {
+                toast({
+                    title: "لا توجد محاضرات جديدة",
+                    description: `كل الفيديوهات المحددة (${skippedCount}) موجودة بالفعل.`,
+                });
+                setIsSubmitting(false);
+                return;
+            }
 
             const series = (targetSeriesId && targetSeriesId !== 'none') ? allSeries.find(s => s.id === targetSeriesId) : null;
             const program = (targetProgramId && targetProgramId !== 'none') ? allPrograms.find(p => p.id === targetProgramId) : null;
@@ -213,7 +233,7 @@ export default function AdminImportLecturesPage() {
               'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
             ];
 
-            videosToImport.forEach((video, index) => {
+            newVideosToImport.forEach((video, index) => {
                 const slug = video.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
                 const newLectureRef = doc(collection(firestore, 'lectures'));
 
@@ -249,16 +269,22 @@ export default function AdminImportLecturesPage() {
             
             if (series) {
                 const seriesRef = doc(firestore, 'series', series.id);
-                batch.update(seriesRef, { lectureCount: increment(videosToImport.length) });
+                batch.update(seriesRef, { lectureCount: increment(newVideosToImport.length) });
             }
 
             const statsRef = doc(firestore, 'stats', 'global');
-            batch.set(statsRef, { lectures: increment(videosToImport.length) }, { merge: true });
+            batch.set(statsRef, { lectures: increment(newVideosToImport.length) }, { merge: true });
 
             await batch.commit();
+            
+            let description = `تمت إضافة ${newVideosToImport.length} محاضرة بنجاح.`;
+            if (skippedCount > 0) {
+                description += ` تم تخطي ${skippedCount} محاضرة لأنها موجودة بالفعل.`;
+            }
+
             toast({
-                title: "تم الاستيراد بنجاح",
-                description: `تمت إضافة ${videosToImport.length} محاضرة بنجاح.`,
+                title: "اكتمل الاستيراد",
+                description: description,
             });
             
             // Clear selections after import
@@ -282,7 +308,7 @@ export default function AdminImportLecturesPage() {
 
     const handleCSVSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!selectedFile || !firestore || !allSeries || !allPrograms) {
+        if (!selectedFile || !firestore || !allSeries || !allPrograms || !allLectures) {
             toast({
                 variant: "destructive",
                 title: "خطأ",
@@ -303,10 +329,27 @@ export default function AdminImportLecturesPage() {
                     throw new Error("الملف فارغ أو غير صالح.");
                 }
 
+                const existingAudioSrcs = new Set(allLectures.map(l => l.audioSrc).filter(Boolean));
+
+                const newLecturesToImport = lecturesToImport.filter(lecture => {
+                    return !existingAudioSrcs.has(lecture.audioSrc);
+                });
+
+                const skippedCount = lecturesToImport.length - newLecturesToImport.length;
+
+                if (newLecturesToImport.length === 0) {
+                     toast({
+                        title: "لا توجد محاضرات جديدة",
+                        description: `كل المحاضرات في الملف (${skippedCount}) موجودة بالفعل.`,
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
+
                 const batch = writeBatch(firestore);
                 const seriesLectureCount: Record<string, number> = {};
 
-                for (const lectureData of lecturesToImport) {
+                for (const lectureData of newLecturesToImport) {
                     const { title, description, seriesId, audioSrc, duration, youtubeUrl, pdfUrl } = lectureData;
 
                     if (!title || !seriesId || !audioSrc || !duration) {
@@ -348,6 +391,7 @@ export default function AdminImportLecturesPage() {
                         viewCount: 0,
                         transcript: [],
                         createdAt: Timestamp.now(),
+                        language: series.language || 'ar',
                     };
                     
                     batch.set(newLectureRef, newLecturePayload);
@@ -364,13 +408,18 @@ export default function AdminImportLecturesPage() {
                 }
                 
                 const statsRef = doc(firestore, 'stats', 'global');
-                batch.set(statsRef, { lectures: increment(lecturesToImport.length) }, { merge: true });
+                batch.set(statsRef, { lectures: increment(newLecturesToImport.length) }, { merge: true });
 
                 await batch.commit();
 
+                let description = `تمت إضافة ${newLecturesToImport.length} محاضرة بنجاح.`;
+                if (skippedCount > 0) {
+                    description += ` تم تخطي ${skippedCount} محاضرة لأنها موجودة بالفعل.`;
+                }
+
                 toast({
-                    title: "تم الاستيراد بنجاح",
-                    description: `تمت إضافة ${lecturesToImport.length} محاضرة بنجاح.`,
+                    title: "اكتمل الاستيراد من CSV",
+                    description: description,
                 });
 
             } catch (error: any) {
@@ -387,7 +436,7 @@ export default function AdminImportLecturesPage() {
         reader.readAsText(selectedFile);
     };
 
-    const isLoading = seriesLoading || programsLoading || channelsLoading;
+    const isLoading = seriesLoading || programsLoading || channelsLoading || lecturesLoading;
     
     const hasFetchedYoutubeData = fetchedVideos.length > 0 || fetchedShorts.length > 0 || fetchedPlaylists.length > 0;
     
@@ -583,6 +632,7 @@ export default function AdminImportLecturesPage() {
                                 </li>
                                 <li>الأعمدة الاختيارية: `description`, `youtubeUrl`, `pdfUrl`.</li>
                                 <li>تأكد من أن `seriesId` الموجود في الملف يطابق معرف سلسلة موجود بالفعل في قاعدة البيانات.</li>
+                                <li>للتحقق من عدم التكرار، سيتم استخدام عمود `audioSrc` كمعرف فريد.</li>
                             </ul>
                         </div>
                         <form onSubmit={handleCSVSubmit} className="space-y-4">
@@ -621,4 +671,5 @@ export default function AdminImportLecturesPage() {
     );
 }
 
+    
     
