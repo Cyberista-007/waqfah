@@ -66,7 +66,8 @@ function ProgramLecturesContent({ program }: { program: Program }) {
 
 export default function ProgramLecturesPage() {
     const params = useParams();
-    const slug = decodeURIComponent(params.slug as string);
+    const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+    const slug = decodeURIComponent(slugParam as string);
 
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
 

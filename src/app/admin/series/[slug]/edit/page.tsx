@@ -8,7 +8,8 @@ import { useCollection } from '@/firebase';
 
 export default function AdminEditSeriesPage() {
     const params = useParams();
-    const slug = params.slug as string;
+    const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+    const slug = decodeURIComponent(slugParam as string);
 
     const { data: allSeries, isLoading } = useCollection<Series>('series');
 
