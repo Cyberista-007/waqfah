@@ -314,8 +314,9 @@ export async function POST(req: NextRequest) {
                 viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 0,
             };
 
-            // Heuristic to detect shorts, can be adjusted
-            if (durationInSeconds > 0 && durationInSeconds <= 90 && (item.snippet?.title?.includes('#shorts') || item.snippet?.description?.includes('#shorts'))) {
+            // Heuristic to detect shorts, can be adjusted.
+            // A video is considered a "short" for import purposes if it is 180 seconds or less.
+            if (durationInSeconds > 0 && durationInSeconds <= 180) {
                 shorts.push(videoData);
             } else {
                 videos.push(videoData);
@@ -341,3 +342,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500, headers: corsHeaders });
     }
 }
+
+  

@@ -478,6 +478,7 @@ export default function AdminImportLecturesPage() {
                                     </Button>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-2">إذا كان البرنامج غير مضاف، سيتم توجيهك لإضافته أولاً.</p>
+                                <p className="text-xs text-muted-foreground mt-1">ملاحظة: الفيديو الذي تقل مدته عن 3 دقائق سيُعامل على أنه "فيديو قصير".</p>
                             </div>
                             {hasFetchedYoutubeData && (
                                  <Tabs defaultValue="youtube-videos" className="w-full mt-4" onValueChange={setActiveTab}>
@@ -673,3 +674,4 @@ export default function AdminImportLecturesPage() {
 
     
     
+  
