@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -8,7 +9,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocki
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronRight, ChevronLeft, MessageSquareX, EyeOff, Angry } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronRight, ChevronLeft, MessageSquareX, EyeOff, Angry, BookOpen, BookText } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,7 +19,7 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
@@ -170,7 +171,8 @@ const sins = [
     icon: <MessageSquareX className="h-10 w-10" />,
     dialog: {
       title: 'خطر الكذب',
-      content: 'الكذب من صفات المنافقين وهو من كبائر الذنوب. قال رسول الله صلى الله عليه وسلم: "وإياكم والكذب، فإن الكذب يهدي إلى الفجور، وإن الفجور يهدي إلى النار، وما يزال الرجل يكذب ويتحرى الكذب حتى يكتب عند الله كذابًا".'
+      quran: 'إِنَّمَا يَفْتَرِي الْكَذِبَ الَّذِينَ لَا يُؤْمِنُونَ بِآيَاتِ اللَّهِ وَأُولَٰئِكَ هُمُ الْكَاذِبُونَ',
+      hadith: "إِيَّاكُمْ وَالْكَذِبَ، فَإِنَّ الْكِذْبَ يَهْدِي إِلَى الْفُجُورِ، وَإِنَّ الْفُجُورَ يَهْدِي إِلَى النَّارِ."
     }
   },
   {
@@ -187,7 +189,8 @@ const sins = [
     ),
     dialog: {
       title: 'عاقبة الغيبة',
-      content: 'الغيبة هي ذكرك أخاك بما يكره. قال تعالى: "وَلَا يَغْتَب بَّعْضُكُم بَعْضًا ۚ أَيُحِبُّ أَحَدُكُمْ أَن يَأْكُلَ لَحْمَ أَخِيهِ مَيْتًا فَكَرِهْتُمُوهُ". وهي من أسباب عذاب القبر.'
+      quran: 'وَلَا يَغْتَب بَّعْضُكُم بَعْضًا ۚ أَيُحِبُّ أَحَدُكُمْ أَن يَأْكُلَ لَحْمَ أَخِيهِ مَيْتًا فَكَرِهْتُمُوهُ',
+      hadith: 'أتدرون ما الغيبة؟ قالوا: الله ورسوله أعلم. قال: ذكرك أخاك بما يكره.'
     }
   },
   {
@@ -196,7 +199,8 @@ const sins = [
     icon: <EyeOff className="h-10 w-10" />,
     dialog: {
       title: 'فتنة النظر',
-      content: 'غض البصر عبادة عظيمة يحفظ بها المسلم دينه وقلبه. قال تعالى: "قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ". وإطلاق البصر سهم من سهام إبليس.'
+      quran: 'قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ',
+      hadith: 'النظرة سهم من سهام إبليس مسموم، فمن تركها من مخافتي أبدلته إيمانًا يجد حلاوته في قلبه.'
     }
   },
   {
@@ -205,7 +209,8 @@ const sins = [
     icon: <Angry className="h-10 w-10" />,
     dialog: {
       title: 'السب واللعن',
-      content: 'المؤمن ليس بالطعان ولا اللعان ولا الفاحش ولا البذيء. اللعن من الكبائر ويطرد صاحبه من رحمة الله. قال النبي صلى الله عليه وسلم: "لعن المؤمن كقتله".'
+      hadith: 'ليس المؤمن بالطعان ولا اللعان ولا الفاحش ولا البذيء.',
+      hadith2: 'لعن المؤمن كقتله.'
     }
   }
 ];
@@ -235,11 +240,41 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-headline">{activeSin?.dialog.title}</DialogTitle>
-          </DialogHeader>
-          <p className="py-4 text-base leading-relaxed text-muted-foreground">{activeSin?.dialog.content}</p>
+        <DialogContent className="bg-slate-900/90 border-destructive/20 border-2 backdrop-blur-sm p-8 rounded-2xl max-w-2xl text-white font-body" hideCloseButton>
+            <DialogHeader className="text-center mb-6">
+                <DialogTitle className="text-3xl font-headline text-destructive">{activeSin?.dialog.title}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6 font-amiri text-xl leading-relaxed text-center">
+                {activeSin?.dialog.quran && (
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
+                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
+                        <BookOpen className="h-5 w-5" />
+                    </div>
+                    <p><span className="font-bold">قال تعالى:</span> ({activeSin.dialog.quran})</p>
+                </div>
+                )}
+                {activeSin?.dialog.hadith && (
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
+                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
+                        <BookText className="h-5 w-5" />
+                    </div>
+                    <p><span className="font-bold">قال رسول الله ﷺ:</span> "{activeSin.dialog.hadith}"</p>
+                </div>
+                )}
+                {activeSin?.dialog.hadith2 && (
+                <div className="bg-white/5 p-6 rounded-xl border border-white/10 relative">
+                    <div className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center bg-destructive/20 text-destructive rounded-md">
+                        <BookText className="h-5 w-5" />
+                    </div>
+                    <p>"{activeSin.dialog.hadith2}"</p>
+                </div>
+                )}
+            </div>
+            <DialogClose className="absolute left-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+            </DialogClose>
         </DialogContent>
       </Dialog>
     </>
