@@ -70,7 +70,6 @@ const mainNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/programs", label: "البرامج" },
   { href: "/lectures", label: "المحاضرات" },
-  { href: "/accountability", label: "محاسبة النفس" },
   { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },
   { href: "/playlists", label: "قوائم التشغيل" },
