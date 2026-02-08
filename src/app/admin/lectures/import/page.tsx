@@ -31,7 +31,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDuration } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // A simple CSV parser
 const parseCSV = (text: string): Record<string, string>[] => {
@@ -66,6 +66,7 @@ interface FetchedPlaylist {
 export default function AdminImportLecturesPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -102,6 +103,14 @@ export default function AdminImportLecturesPage() {
         }
     }, [targetSeriesId, allSeries]);
 
+    useEffect(() => {
+        const urlFromParams = searchParams.get('youtubeUrl');
+        if (urlFromParams) {
+            setYoutubeUrl(urlFromParams);
+            handleFetchFromYoutube(urlFromParams);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {

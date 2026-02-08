@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -18,16 +19,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Program } from "@/lib/types";
+import type { Program, Lecture } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc, runTransaction, increment, writeBatch, collection, query, where, getDocs } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle, Podcast } from "lucide-react";
+import { doc, runTransaction, increment, writeBatch, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import { Loader2, Trash2, Edit, PlusCircle, Podcast, Wand2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ProgramForm } from "@/components/admin/program-form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { getInitials } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ToastAction } from "@/components/ui/toast";
+import Link from "next/link";
 
 export default function AdminProgramsPage() {
     const { toast } = useToast();
@@ -39,8 +42,92 @@ export default function AdminProgramsPage() {
     const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
     const [programToEdit, setProgramToEdit] = useState<Program | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(!!youtubeUrl);
+    const [syncingProgramId, setSyncingProgramId] = useState<string | null>(null);
 
     const { data: allPrograms, isLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+
+    const handleSyncProgramData = async (program: Program) => {
+        if (!program.youtubeUrl || !firestore) {
+            toast({
+                variant: "destructive",
+                title: "لا يوجد رابط يوتيوب",
+                description: `لا يمكن تحديث بيانات البرنامج "${program.name}".`,
+            });
+            return;
+        }
+
+        setSyncingProgramId(program.id);
+        toast({ title: `بدء مزامنة بيانات "${program.name}"...` });
+
+        try {
+            // 1. Fetch channel info to update program data
+            const programInfoResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
+            });
+
+            if (programInfoResponse.ok) {
+                const programData = await programInfoResponse.json();
+                if (programData.channelInfo) {
+                    const programRef = doc(firestore, 'programs', program.id);
+                    await updateDoc(programRef, {
+                        name: programData.channelInfo.name,
+                        bio: programData.channelInfo.description,
+                        imageUrl: programData.channelInfo.imageUrl,
+                    });
+                }
+            } else {
+                 console.warn(`Could not update program info for ${program.name}`);
+            }
+
+            // 2. Fetch all videos from the channel
+            const videosResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: program.youtubeUrl }),
+            });
+
+            if (!videosResponse.ok) {
+                const error = await videosResponse.json();
+                throw new Error(error.message || "فشل في جلب فيديوهات القناة.");
+            }
+
+            const data = await videosResponse.json();
+            const fetchedVideos: any[] = data.videos || [];
+
+            // 3. Compare with existing lectures
+            const q = query(collection(firestore, 'lectures'), where("programId", "==", program.id));
+            const lecturesSnapshot = await getDocs(q);
+            const existingYoutubeUrls = new Set(lecturesSnapshot.docs.map(doc => doc.data().youtubeUrl));
+
+            const newVideos = fetchedVideos.filter(v => !existingYoutubeUrls.has(`https://www.youtube.com/watch?v=${v.videoId}`));
+
+            if (newVideos.length > 0) {
+                 toast({
+                    title: `تم العثور على ${newVideos.length} محاضرة جديدة`,
+                    description: 'يمكنك استيرادها الآن.',
+                    duration: 10000,
+                    action: <ToastAction altText="اذهب للاستيراد" asChild><Link href={`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`}>اذهب للاستيراد</Link></ToastAction>,
+                });
+            } else {
+                 toast({
+                    title: 'البرنامج محدّث',
+                    description: 'لا توجد محاضرات جديدة لاستيرادها.',
+                });
+            }
+
+        } catch (error: any) {
+            console.error("Error syncing program data:", error);
+            toast({
+                variant: "destructive",
+                title: "فشلت المزامنة",
+                description: error.message || "حدث خطأ غير متوقع.",
+            });
+        } finally {
+            setSyncingProgramId(null);
+        }
+    };
 
     const handleDelete = async () => {
         if (!programToDelete || !firestore) return;
@@ -163,6 +250,9 @@ export default function AdminProgramsPage() {
                             <TableCell className="hidden md:table-cell max-w-sm truncate text-muted-foreground">{program.bio}</TableCell>
                             <TableCell className="text-left">
                             <div className="flex gap-2 justify-end">
+                                <Button onClick={() => handleSyncProgramData(program)} variant="outline" size="sm" disabled={syncingProgramId === program.id}>
+                                    {syncingProgramId === program.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
+                                </Button>
                                 <Button onClick={() => handleEdit(program)} variant="outline" size="sm">
                                 <Edit className="h-4 w-4" />
                                 </Button>
@@ -192,3 +282,5 @@ export default function AdminProgramsPage() {
       </>
     );
 }
+
+    
