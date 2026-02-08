@@ -163,8 +163,42 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 }
 
 function DestructiveSinsSection() {
-    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins', { orderBy: ['title', 'asc'] });
-    const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
+    const [activeSin, setActiveSin] = useState<any | null>(null);
+
+    const sins: any[] = [
+      {
+        id: 'lying',
+        title: 'الكذب',
+        dialogTitle: 'خطر الكذب',
+        quranVerse: 'إِنَّمَا يَفْتَرِي الْكَذِبَ الَّذِينَ لَا يُؤْمِنُونَ بِآيَاتِ اللَّهِ ۖ وَأُولَٰئِكَ هُمُ الْكَاذِبُونَ',
+        hadith: "إِيَّاكُمْ وَالْكَذِبَ، فَإِنَّ الْكَذِبَ يَهْدِي إِلَى الْفُجُورِ، وَإِنَّ الْفُجُورَ يَهْدِي إِلَى النَّارِ، وَمَا يَزَالُ الرَّجُلُ يَكْذِبُ وَيَتَحَرَّى الْكَذِبَ حَتَّى يُكْتَبَ عِنْدَ اللَّهِ كَذَّابًا.",
+        icon: 'MessageSquareX'
+      },
+      {
+        id: 'backbiting',
+        title: 'الغيبة',
+        dialogTitle: 'عاقبة الغيبة',
+        quranVerse: 'وَلَا يَغْتَب بَّعْضُكُم بَعْضًا ۚ أَيُحِبُّ أَحَدُكُمْ أَن يَأْكُلَ لَحْمَ أَخِيهِ مَيْتًا فَكَرِهْتُمُوهُ',
+        hadith: "أتدرون ما الغِيبةُ؟ قالوا: اللهُ ورسولُه أعلمُ. قال: ذِكْرُك أخاك بما يكرهُ...",
+        icon: 'custom-backbiting'
+      },
+      {
+        id: 'gaze',
+        title: 'إطلاق البصر',
+        dialogTitle: 'فتنة النظر',
+        quranVerse: 'قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ',
+        hadith: 'النَّظْرَةُ سَهْمٌ مِنْ سِهَامِ إِبْلِيسَ مَسْمُومَةٌ، فَمَنْ تَرَكَهَا مِنْ خَوْفِ اللَّهِ أَثَابَهُ اللَّهُ إِيمَانًا يَجِدُ حَلَاوَتَهُ فِي قَلْبِهِ.',
+        icon: 'EyeOff'
+      },
+      {
+        id: 'cursing',
+        title: 'السب واللعن',
+        dialogTitle: 'السب واللعن',
+        quranVerse: 'وَالَّذِينَ يُؤْذُونَ الْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ بِغَيْرِ مَا اكْتَسَبُوا فَقَدِ احْتَمَلُوا بُهْتَانًا وَإِثْمًا مُّبِينًا',
+        hadith: "لَيْسَ الْمُؤْمِنُ بِالطَّعَّانِ وَلَا اللَّعَّانِ وَلَا الْفَاحِشِ وَلَا الْبَذِيءِ.",
+        icon: 'Angry'
+      },
+    ];
 
     const getIcon = (iconName: string) => {
         switch (iconName) {
@@ -198,10 +232,7 @@ function DestructiveSinsSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-          {isLoading ? (
-            [...Array(4)].map((_, i) => <div key={i} className="group p-4 rounded-xl bg-muted animate-pulse aspect-square" />)
-          ) : (
-            sins?.map((sin) => (
+            {sins.map((sin) => (
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
@@ -213,29 +244,29 @@ function DestructiveSinsSection() {
                 <span className="font-bold text-lg">{sin.title}</span>
                 </button>
             ))
-          )}
+          }
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="max-w-xl bg-slate-900/90 backdrop-blur-sm border-red-500/50 shadow-2xl shadow-red-500/20 text-white p-0" hideCloseButton={true}>
+        <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0" hideCloseButton={true}>
             <div className="relative p-6">
-                <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-red-500/70 shadow-[0_0_15px_3px_rgba(239,68,68,0.4)]"></div>
-                <div className="flex justify-between items-center mb-6">
+                 <div className="absolute top-4 left-4 z-10">
                     <DialogClose asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10 text-white rounded-full">
                             <X className="h-5 w-5" />
                         </Button>
                     </DialogClose>
-                    <DialogTitle className="font-headline text-2xl text-red-400">
-                        {activeSin?.dialogTitle}
-                    </DialogTitle>
                 </div>
+                <div className="absolute top-4 right-4 font-headline text-2xl text-red-400">
+                    {activeSin?.dialogTitle}
+                </div>
+                <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-red-500/70 shadow-[0_0_15px_3px_rgba(239,68,68,0.4)]"></div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 pt-16">
                     {activeSin?.quranVerse && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                               <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><path fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" d="M336 264.13V436c0 14.12-12.74 24.3-26.86 20.24l-42.42-12.12c-14.12-4.06-26.86 6.12-26.86 20.24v20.75a28.28 28.28 0 0 1-50.71 0v-20.75c0-14.12-12.74-24.3-26.86-20.24l-42.42 12.12C105.74 460.3 93 450.12 93 436V264.13c0-23.75-22-42.27-45.75-38.41C24 229.56 16 211.33 16 192V104a24 24 0 0 1 24-24h32c12.38 0 23.3-7.53 27.29-18.79l14.65-41.24A28.28 28.28 0 0 1 138 6h236a28.28 28.28 0 0 1 26.07 14l14.65 41.21C418.7 74.47 429.62 82 442 82h32a24 24 0 0 1 24 24v88c0 19.33-8 37.56-31.25 41.42C443 221.86 421 240.38 421 264.13z"/><rect width="256" height="192" x="128" y="144" fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" rx="24" ry="24"/></svg>
+                               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 48 48"><g fill="none" stroke="#f87171" strokeLinejoin="round" strokeWidth="2.5"><path fill="#f87171" fillOpacity="0.2" d="M12 40V24a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H13a1 1 0 0 1-1-1Z"/><path strokeLinecap="round" d="M19 8s-1.154 3.462-3.846 4.615C12 14 8 13 8 13m21-5s1.154 3.462 3.846 4.615C36 14 40 13 40 13"/></g></svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                 <span className="font-bold text-red-400">قال تعالى:</span> ({activeSin.quranVerse})
@@ -245,7 +276,7 @@ function DestructiveSinsSection() {
                     {activeSin?.hadith && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                  <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith}"
@@ -255,7 +286,7 @@ function DestructiveSinsSection() {
                      {activeSin?.hadith2 && (
                          <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>
                             </div>
                             <p className="font-amiri text-2xl leading-relaxed">
                                 <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith2}"
