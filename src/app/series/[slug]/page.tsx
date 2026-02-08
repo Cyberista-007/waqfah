@@ -1,17 +1,15 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, doc, getDocs, query, where, orderBy, getDoc } from 'firebase/firestore';
+import { useCollection, useDoc } from '@/firebase';
 import type { Lecture, Program, Series } from '@/lib/types';
 import { SeriesClientPage } from '@/components/series-client-page';
 import { SeriesPageSkeleton } from '@/components/skeletons';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
 export default function SeriesDetailPage() {
   const params = useParams();
   const slug = decodeURIComponent(params.slug as string);
-  const firestore = useFirestore();
 
   // 1. Fetch the series by slug.
   const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>(
@@ -21,83 +19,40 @@ export default function SeriesDetailPage() {
 
   const series = seriesList?.[0];
 
-  // State for lectures and program, to be fetched manually
-  const [lecturesInSeries, setLecturesInSeries] = useState<Lecture[] | null>(null);
-  const [seriesCreator, setSeriesCreator] = useState<Program | null>(null);
-  const [isDependentDataLoading, setIsDependentDataLoading] = useState(true);
-
-  useEffect(() => {
-    if (!series || !firestore) {
-      if (!seriesLoading) {
-        // if series loading is done and we still have no series, we're done.
-        setIsDependentDataLoading(false);
-      }
-      return;
+  // 2. Fetch lectures for this series.
+  // The useCollection hook handles the case where series?.id is initially undefined.
+  const { data: lectures, isLoading: lecturesLoading } = useCollection<Lecture>(
+    'lectures',
+    {
+      where: ['seriesId', '==', series?.id]
     }
-
-    let isMounted = true;
-    const fetchData = async () => {
-      setIsDependentDataLoading(true);
-      try {
-        // Fetch lectures without ordering to avoid needing a composite index
-        const lecturesQuery = query(
-          collection(firestore, 'lectures'),
-          where('seriesId', '==', series.id)
-        );
-        const lecturesSnapshot = await getDocs(lecturesQuery);
-        let lecturesData = lecturesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Lecture));
-        
-        // Helper to safely convert Firestore Timestamps or strings to Date objects
-        const toDate = (timestamp: any): Date => {
-            if (!timestamp) return new Date(0); // For sorting purposes
-            if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-                return timestamp.toDate();
-            }
-            // Handle ISO strings from serialization
-            const d = new Date(timestamp);
-            return isNaN(d.getTime()) ? new Date(0) : d;
-        }
-
-        // Sort manually client-side
-        lecturesData.sort((a, b) => {
-            const dateA = toDate(a.createdAt).getTime();
-            const dateB = toDate(b.createdAt).getTime();
-            return dateA - dateB;
-        });
-
-        // Fetch program
-        let programData: Program | null = null;
-        if (series.programId) {
-          const programRef = doc(firestore, 'programs', series.programId);
-          const programSnap = await getDoc(programRef);
-          if (programSnap.exists()) {
-            programData = { id: programSnap.id, ...programSnap.data() } as Program;
-          }
-        }
-        
-        if (isMounted) {
-          setLecturesInSeries(lecturesData);
-          setSeriesCreator(programData);
-        }
-
-      } catch (error) {
-        console.error("Error fetching dependent data for series page:", error);
-      } finally {
-        if (isMounted) {
-          setIsDependentDataLoading(false);
-        }
-      }
+  );
+  
+  const lecturesInSeries = useMemo(() => {
+    if (!lectures) return [];
+    
+    const toDate = (timestamp: any): Date => {
+      if (!timestamp) return new Date(0);
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+      const d = new Date(timestamp);
+      return isNaN(d.getTime()) ? new Date(0) : d;
     };
 
-    fetchData();
-    
-    return () => {
-      isMounted = false;
-    }
-  }, [series, firestore, seriesLoading]);
-  
-  const isLoading = seriesLoading || (isDependentDataLoading && !!series);
+    // Create a new array before sorting to avoid mutating the original
+    return [...lectures].sort((a, b) => {
+      const dateA = toDate(a.createdAt).getTime();
+      const dateB = toDate(b.createdAt).getTime();
+      return dateA - dateB;
+    });
 
+  }, [lectures]);
+
+
+  // 3. Fetch the program (creator) of the series
+  const { data: seriesCreator, isLoading: programLoading } = useDoc<Program>(series?.programId ? `programs/${series.programId}` : null);
+  
+  const isLoading = seriesLoading || (!!series && (lecturesLoading || programLoading));
+  
   if (isLoading) {
     return <SeriesPageSkeleton />;
   }
@@ -110,7 +65,7 @@ export default function SeriesDetailPage() {
   return (
     <SeriesClientPage
       series={series}
-      lecturesInSeries={lecturesInSeries || []}
+      lecturesInSeries={lecturesInSeries}
       seriesCreator={seriesCreator}
     />
   );
