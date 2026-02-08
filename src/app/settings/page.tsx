@@ -54,6 +54,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { DonationTierBadge } from '@/components/DonationTierBadge';
+import { LanguageSwitcherDialog, languages } from '@/components/language-switcher';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -271,12 +272,14 @@ export default function SettingsPage() {
         setBackgroundEffect,
         particleSettings,
         setParticleSettings,
+        language,
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
+    const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
     const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
@@ -310,6 +313,8 @@ export default function SettingsPage() {
     if (view === 'newEpisodes') {
         return <NewEpisodesView onBack={() => setView('notifications')} />;
     }
+    
+    const currentLanguageName = languages.find(l => l.value === language)?.name || 'العربية';
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -351,7 +356,7 @@ export default function SettingsPage() {
         <div className="bg-card rounded-xl p-2">
           <SettingsItem icon={Bell} label="الإشعارات" onClick={() => setView('notifications')}/>
           <Separator />
-          <SettingsItem icon={Globe} label="اللغة" value="العربية" />
+          <SettingsItem icon={Globe} label="اللغة" value={currentLanguageName} onClick={() => setIsLanguageSwitcherOpen(true)} />
           <Separator />
           <SettingsItem icon={Headphones} label="إعدادات الصوت" />
           <Separator />
@@ -451,6 +456,7 @@ export default function SettingsPage() {
 
         <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
         <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
+        <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
         <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
     </div>
   );

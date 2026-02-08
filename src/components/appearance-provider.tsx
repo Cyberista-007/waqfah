@@ -1,4 +1,3 @@
-
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
@@ -22,6 +21,8 @@ export type ParticleSettings = {
 type AppearanceContextType = {
   font: string;
   setFont: (font: string) => void;
+  language: string;
+  setLanguage: (language: string) => void;
   background: BackgroundState;
   setBackground: (background: BackgroundState | null) => void;
   isBackgroundShown: boolean;
@@ -44,6 +45,7 @@ type AppearanceProviderProps = {
 
 export function AppearanceProvider({ children, defaultFont }: AppearanceProviderProps) {
   const [font, setFont] = useState(defaultFont || "font-body");
+  const [language, setLanguageState] = useState('ar');
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
   const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
@@ -117,6 +119,11 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
     setFont(newFont);
   }, []);
   
+  const handleSetLanguage = useCallback((newLang: string) => {
+    localStorage.setItem("site-language", newLang);
+    setLanguageState(newLang);
+  }, []);
+  
   const handleSetBackground = useCallback((newBg: BackgroundState | null) => {
       if (newBg?.image) {
         localStorage.setItem("site-background-image", newBg.image);
@@ -166,6 +173,10 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
     document.body.classList.add(initialFont);
     setFont(initialFont);
 
+    const storedLang = localStorage.getItem("site-language");
+    const initialLang = storedLang || 'ar';
+    setLanguageState(initialLang);
+
     const storedIsShown = localStorage.getItem("site-background-shown");
     const show = storedIsShown !== "false";
     
@@ -197,7 +208,7 @@ export function AppearanceProvider({ children, defaultFont }: AppearanceProvider
   }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
   return (
-    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>
+    <AppearanceContext.Provider value={{ font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings }}>
       {children}
     </AppearanceContext.Provider>
   );
