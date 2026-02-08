@@ -221,6 +221,9 @@ function DestructiveSinsSection() {
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
         <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0" hideCloseButton={true}>
+            <DialogHeader className="sr-only">
+              <DialogTitle>{activeSin?.dialogTitle}</DialogTitle>
+            </DialogHeader>
             <div className="relative p-6">
                  <div className="absolute top-4 left-4 z-10">
                     <DialogClose asChild>
