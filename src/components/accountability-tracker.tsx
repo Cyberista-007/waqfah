@@ -1,24 +1,23 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronLeft, ChevronRight, MessageSquareX, EyeOff, Angry, BookOpen, BookText } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, ChevronLeft, ChevronRight, MessageSquareX, EyeOff, Angry } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
@@ -166,7 +165,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 const sins = [
   {
     id: 'lying',
-    title: 'الكذب',
+    title: 'خطر الكذب',
     icon: <MessageSquareX className="h-10 w-10" />,
     dialog: {
       title: 'خطر الكذب',
@@ -241,31 +240,65 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="max-w-md">
-            <DialogHeader>
-                 <DialogTitle className="flex justify-center items-center gap-4 font-headline text-2xl text-destructive">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600/90 border-4 border-red-500/50">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    </div>
-                     {activeSin?.dialog.title}
-                </DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center gap-6 py-6">
-                {activeSin?.dialog.quran && (
-                    <p className="text-center font-amiri text-xl leading-relaxed">
-                        قال تعالى: ({activeSin.dialog.quran})
-                    </p>
-                )}
-                {activeSin?.dialog.hadith && (
-                    <p className="text-center font-amiri text-xl leading-relaxed">
-                    قال رسول الله ﷺ: "{activeSin.dialog.hadith}"
-                    </p>
-                )}
-                {activeSin?.dialog.hadith2 && (
-                    <p className="text-center font-amiri text-xl leading-relaxed">
-                        "{activeSin.dialog.hadith2}"
-                    </p>
-                )}
+        <DialogContent className="max-w-xl bg-slate-900/90 backdrop-blur-sm border-red-500/50 shadow-2xl shadow-red-500/20 text-white p-0" hideCloseButton={true}>
+            <div className="relative p-6">
+                <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-red-500/70 shadow-[0_0_15px_3px_rgba(239,68,68,0.4)]"></div>
+                <div className="flex justify-between items-center mb-6">
+                    <DialogClose asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10">
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </DialogClose>
+                    <DialogTitle className="font-headline text-2xl text-red-400">
+                        {activeSin?.dialog.title}
+                    </DialogTitle>
+                </div>
+
+                <div className="space-y-6">
+                    {activeSin?.dialog.quran && (
+                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
+                            <div className="flex justify-center">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+                                  <path d="M4 4C4 3.44772 4.44772 3 5 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V4Z" fill="currentColor"></path>
+                                  <path fillRule="evenodd" clipRule="evenodd" d="M12 5.75C9.10051 5.75 6.75 8.10051 6.75 11C6.75 13.8995 9.10051 16.25 12 16.25C14.8995 16.25 17.25 13.8995 17.25 11C17.25 8.10051 14.8995 5.75 12 5.75ZM8.25 11C8.25 8.92893 9.92893 7.25 12 7.25C14.0711 7.25 15.75 8.92893 15.75 11C15.75 12.0832 15.2891 13.0427 14.5303 13.6967C13.6214 14.4552 12.3786 14.75 11.25 14.75C9.6231 14.75 8.25 13.3769 8.25 11.75V11Z" fill="white"></path>
+                                </svg>
+                            </div>
+                            <p className="font-amiri text-2xl leading-relaxed">
+                                قال تعالى: ({activeSin.dialog.quran})
+                            </p>
+                        </div>
+                    )}
+                    {activeSin?.dialog.hadith && (
+                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
+                            <div className="flex justify-center">
+                               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+                                  <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
+                                  <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                  <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                  <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                </svg>
+                            </div>
+                            <p className="font-amiri text-2xl leading-relaxed">
+                                قال رسول الله ﷺ: "{activeSin.dialog.hadith}"
+                            </p>
+                        </div>
+                    )}
+                     {activeSin?.dialog.hadith2 && (
+                        <div className="bg-slate-800/50 rounded-2xl border-t-2 border-s-2 border-red-500/50 p-6 space-y-4 text-center">
+                           <div className="flex justify-center">
+                               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+                                  <path d="M6 3C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L15 3H6Z" fill="currentColor"></path>
+                                  <path d="M8 11H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                  <path d="M8 14H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                  <path d="M8 17H12" stroke="white" strokeWidth="1.5" strokeLinecap="round"></path>
+                                </svg>
+                            </div>
+                            <p className="font-amiri text-2xl leading-relaxed">
+                                "{activeSin.dialog.hadith2}"
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
         </DialogContent>
       </Dialog>
