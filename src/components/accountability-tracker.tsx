@@ -172,7 +172,7 @@ const sins = [
     dialog: {
       title: 'خطر الكذب',
       quran: 'إِنَّمَا يَفْتَرِي الْكَذِبَ الَّذِينَ لَا يُؤْمِنُونَ بِآيَاتِ اللَّهِ وَأُولَٰئِكَ هُمُ الْكَاذِبُونَ',
-      hadith: "إِيَّاكُمْ وَالْكَذِبَ، فَإِنَّ الْكِذْبَ يَهْدِي إِلَى الْفُجُورِ، وَإِنَّ الْفُجُورَ يَهْدِي إِلَى النَّارِ."
+      hadith: "إِيَّاكُمْ وَالْكَذِبَ، فَإِنَّ الْكَذْبَ يَهْدِي إِلَى الْفُجُورِ، وَإِنَّ الْفُجُورَ يَهْدِي إِلَى النَّارِ."
     }
   },
   {
@@ -231,9 +231,11 @@ function DestructiveSinsSection() {
             <button
               key={sin.id}
               onClick={() => setActiveSin(sin)}
-              className="p-4 rounded-xl bg-destructive/10 hover:bg-destructive/20 transition-colors text-destructive flex flex-col items-center justify-center gap-4 aspect-square"
+              className="group p-4 rounded-xl bg-destructive/10 hover:bg-destructive/20 transition-all duration-300 text-destructive flex flex-col items-center justify-center gap-4 aspect-square border-2 border-transparent hover:border-destructive/30 hover:shadow-lg hover:shadow-destructive/20"
             >
-              {sin.icon}
+              <div className="transition-transform duration-300 group-hover:scale-125">
+                {sin.icon}
+              </div>
               <span className="font-bold text-lg">{sin.title}</span>
             </button>
           ))}
