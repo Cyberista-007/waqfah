@@ -269,28 +269,27 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     <div className="container mx-auto px-4 sm:px-6 py-8 space-y-10">
       <LectureHeader lecture={lecture} seriesLink={seriesLink} />
 
-      <Card className="shadow-lg">
-            <CardContent className="p-4">
-            <Button 
-                onClick={handlePlay}
-                className="w-full bg-primary/80 text-primary-foreground hover:bg-primary/90 transition-colors"
-                size="lg"
-            >
-                <Play className="w-6 h-6 me-2" />
-                <span>استماع</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Button onClick={handlePlay} size="lg" className="h-16 text-lg">
+            <Play className="w-6 h-6 me-3" />
+            <span>استماع صوتي</span>
+        </Button>
+        {videoId ? (
+            <Button onClick={handleWatchVideo} size="lg" variant="secondary" className="h-16 text-lg">
+                <Youtube className="w-6 h-6 me-3" />
+                <span>مشاهدة فيديو</span>
             </Button>
-            </CardContent>
-        </Card>
-      
+        ) : (
+            <Button size="lg" variant="secondary" className="h-16 text-lg" disabled>
+                <Youtube className="w-6 h-6 me-3" />
+                <span>فيديو غير متاح</span>
+            </Button>
+        )}
+      </div>
+
       <section>
-        <h3 className="text-2xl font-bold mb-4 font-headline">الاستماع والتحميل</h3>
+        <h3 className="text-2xl font-bold mb-4 font-headline">أدوات إضافية</h3>
         <div className="flex flex-wrap gap-3">
-           {videoId && (
-            <Button variant="destructive" onClick={handleWatchVideo}>
-              <Youtube />
-              <span className="ms-2">مشاهدة (يوتيوب)</span>
-            </Button>
-          )}
           <Button onClick={handleDownload} disabled={isFetchingFormats}>
               {isFetchingFormats ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Download className="w-5 h-5 me-2" />}
               <span>تحميل</span>
@@ -299,22 +298,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <Clapperboard className="w-5 h-5 me-2" />
               <span>إنشاء مقطع</span>
             </Button>
-          {lecture.soundcloudUrl && (
-            <Button asChild style={{ backgroundColor: '#ff5500', color: 'white' }}>
-              <a href={lecture.soundcloudUrl} target="_blank" rel="noopener noreferrer">
-                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M1.203 12.373a2.381 2.381 0 012.38-2.38c.63 0 1.23.25 1.68.7l.807.806V6.143a2.382 2.382 0 012.38-2.381h13.17a2.38 2.38 0 012.38 2.38v6.23h-2.38V6.143a.068.068 0 00-.07-.068H8.45a.068.068 0 00-.07.068v9.428a.068.068 0 00.07.068h.806v2.381h-.806a2.381 2.381 0 01-2.38-2.38v-3.111l-.808.807a2.38 2.38 0 01-3.367 0 2.38 2.38 0 010-3.367zm20.417.807v-1.587h2.38v1.587h-2.38zm-3.174 0v-1.587h2.38v1.587h-2.38zm-3.175 0v-1.587h2.38v1.587h-2.38z"/></svg>
-                <span className="ms-2">استماع (ساوندكلاود)</span>
-              </a>
-            </Button>
-          )}
-           {lecture.telegramUrl && (
-            <Button asChild style={{ backgroundColor: '#26A5E4', color: 'white' }}>
-              <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
-                <span className="ms-2">متابعة (تيليجرام)</span>
-              </a>
-            </Button>
-          )}
           {lecture.pdfUrl && (
             <Button asChild variant="secondary">
               <a href={lecture.pdfUrl} download>
@@ -325,8 +308,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
           )}
         </div>
       </section>
-
-       <section>
+      
+      <section>
         <h3 className="text-2xl font-bold mb-4 font-headline">مشاركة المحاضرة</h3>
         <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline">
@@ -337,10 +320,26 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
             </Button>
             <Button asChild variant="outline">
               <a href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`} data-action="share/whatsapp/share" target="_blank" rel="noopener noreferrer">
-                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 me-2" fill="currentColor"><path d="M16.75 13.96c-.25-.12-1.48-.72-1.71-.81-.23-.08-.39-.12-.56.12-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.23-.75-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.43s-.65-1.56-.88-2.15c-.23-.58-.47-.5-.65-.51-.17-.01-.37-.01-.56-.01s-.47.06-.72.31c-.25.25-.97.95-1.19 2.16-.22 1.21.36 2.39.41 2.56.05.17.97 1.57 2.38 2.98 1.41 1.41 2.5 1.88 3.29 2.2.79.32 1.48.29 2.01.18.53-.12 1.48-.6 1.69-.97.21-.37.21-.69.14-.81-.07-.12-.23-.19-.48-.31zM12 2.04c-5.5 0-9.96 4.46-9.96 9.96 0 1.95.56 3.81 1.59 5.39L2 22.04l5.66-1.56C9.17 21.43 10.54 22 12 22c5.5 0 9.96-4.46 9.96-9.96S17.5 2.04 12 2.04zm0 18.25c-1.85 0-3.6-.56-5.08-1.59l-.36-.21-3.69.97.98-3.6-.23-.38c-1.08-1.76-1.65-3.79-1.65-5.91 0-4.57 3.71-8.28 8.28-8.28 4.57 0 8.28 3.71 8.28 8.28.01 4.57-3.7 8.28-8.27 8.28z"/></svg>
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 me-2" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52s-.67-.161-.923-.223c-.253-.062-.522-.072-.79-.072-.267 0-.701.099-1.065.465-.364.365-1.399 1.36-1.399 3.315 0 1.955 1.433 3.845 1.63 4.118.198.273 2.783 4.237 6.75 5.973 1.04.453 1.947.534 2.65.534.825 0 1.581-.347 2.203-.659.622-.312 1.89-1.233 2.162-1.755.273-.522.273-.972.198-1.121-.075-.149-.274-.224-.572-.372zM12.001 2.003C6.486 2.003 2 6.488 2 12.002c0 1.98.592 3.832 1.688 5.432L2.04 22.001l5.736-1.57c1.554.965 3.344 1.54 5.225 1.54h.001c5.514 0 9.998-4.485 9.998-9.998C22 6.488 17.515 2.003 12.001 2.003z"/></svg>
                 <span className="ms-2">واتساب</span>
               </a>
             </Button>
+            {lecture.soundcloudUrl && (
+            <Button asChild style={{ backgroundColor: '#ff5500', color: 'white' }}>
+              <a href={lecture.soundcloudUrl} target="_blank" rel="noopener noreferrer">
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M1.203 12.373a2.381 2.381 0 012.38-2.38c.63 0 1.23.25 1.68.7l.807.806V6.143a2.382 2.382 0 012.38-2.381h13.17a2.38 2.38 0 012.38 2.38v6.23h-2.38V6.143a.068.068 0 00-.07-.068H8.45a.068.068 0 00-.07.068v9.428a.068.068 0 00.07.068h.806v2.381h-.806a2.381 2.381 0 01-2.38-2.38v-3.111l-.808.807a2.38 2.38 0 01-3.367 0 2.38 2.38 0 010-3.367zm20.417.807v-1.587h2.38v1.587h-2.38zm-3.174 0v-1.587h2.38v1.587h-2.38zm-3.175 0v-1.587h2.38v1.587h-2.38z"/></svg>
+                <span className="ms-2">ساوندكلاود</span>
+              </a>
+            </Button>
+          )}
+           {lecture.telegramUrl && (
+            <Button asChild style={{ backgroundColor: '#26A5E4', color: 'white' }}>
+              <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
+                <span className="ms-2">تيليجرام</span>
+              </a>
+            </Button>
+          )}
             <Button variant="outline" onClick={handleCopyLink}>
               <Copy className="h-5 w-5 me-2" />
               <span>نسخ الرابط</span>
