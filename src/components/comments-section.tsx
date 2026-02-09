@@ -281,7 +281,7 @@ export function CommentsSection({ lectureId }: CommentsSectionProps) {
       };
 
       try {
-        await addDocumentNonBlocking(commentsCollection, commentData);
+        addDocumentNonBlocking(commentsCollection, commentData);
         setNewComment('');
       } catch(error) {
         console.error("Error posting comment:", error);
