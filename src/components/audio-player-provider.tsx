@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { ReactNode } from "react";
@@ -7,7 +6,11 @@ import type { Lecture } from "@/lib/types";
 import type { YouTubePlayer } from "react-youtube";
 
 export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
-export type VideoTrack = { videoId: string; title: string };
+export type IframeTrack = { 
+    type: 'youtube' | 'soundcloud';
+    src: string; // youtube videoId or soundcloud URL
+    title: string;
+};
 
 type AudioPlayerContextType = {
   // Audio state
@@ -20,12 +23,12 @@ type AudioPlayerContextType = {
   closePlayer: () => void;
   togglePlayPause: () => void;
 
-  // Video state
-  videoTrack: VideoTrack | null;
+  // Iframe player state
+  iframeTrack: IframeTrack | null;
   isPlayerVisible: boolean;
-  videoPlayerRef: React.RefObject<YouTubePlayer | null>;
-  playVideo: (track: VideoTrack) => void;
-  hideVideoPlayer: () => void;
+  videoPlayerRef: React.RefObject<YouTubePlayer | null>; // Kept for YouTube specific interactions
+  playIframe: (track: IframeTrack) => void;
+  hidePlayer: () => void;
   setVideoClipEndTime: (endTime: number | null) => void;
 };
 
@@ -38,8 +41,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [clipEndTime, setClipEndTime] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Video State
-  const [videoTrack, setVideoTrack] = useState<VideoTrack | null>(null);
+  // Iframe Player State
+  const [iframeTrack, setIframeTrack] = useState<IframeTrack | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const videoPlayerRef = useRef<YouTubePlayer | null>(null);
   const [videoClipEndTime, setVideoClipEndTime] = useState<number | null>(null);
@@ -83,10 +86,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }, 50);
   };
   
-  const playVideo = (track: VideoTrack) => {
+  const playIframe = (track: IframeTrack) => {
     pauseTrack();
     setClipEndTime(null);
-    setVideoTrack(track);
+    setIframeTrack(track);
     setIsPlayerVisible(true);
   };
 
@@ -104,13 +107,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setClipEndTime(null);
   };
 
-  const hideVideoPlayer = () => {
+  const hidePlayer = () => {
     if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
         videoPlayerRef.current.destroy();
         videoPlayerRef.current = null;
     }
     setIsPlayerVisible(false);
-    setVideoTrack(null);
+    setIframeTrack(null);
     setVideoClipEndTime(null);
   };
 
@@ -134,7 +137,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   // Effect to handle auto-pause for VIDEO clips
   useEffect(() => {
-    if (!isPlayerVisible || !videoPlayerRef.current || !videoClipEndTime) return;
+    if (!isPlayerVisible || !videoPlayerRef.current || !videoClipEndTime || iframeTrack?.type !== 'youtube') return;
 
     const player = videoPlayerRef.current;
     let interval: NodeJS.Timeout;
@@ -159,7 +162,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     return () => {
         if (interval) clearInterval(interval);
     };
-  }, [isPlayerVisible, videoClipEndTime]);
+  }, [isPlayerVisible, videoClipEndTime, iframeTrack]);
 
   return (
     <AudioPlayerContext.Provider value={{
@@ -171,11 +174,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       pauseTrack,
       closePlayer,
       togglePlayPause,
-      videoTrack,
+      iframeTrack,
       isPlayerVisible,
       videoPlayerRef,
-      playVideo,
-      hideVideoPlayer,
+      playIframe,
+      hidePlayer,
       setVideoClipEndTime,
     }}>
       {children}

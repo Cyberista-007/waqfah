@@ -51,7 +51,7 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
-  const { audioRef, videoPlayerRef, isPlaying } = useAudioPlayer();
+  const { audioRef, videoPlayerRef, iframeTrack, isPlaying } = useAudioPlayer();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [title, setTitle] = useState('');
@@ -74,12 +74,20 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
   const handleSetCurrentTime = async (field: 'start' | 'end') => {
     let currentTime: number | undefined;
 
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+    if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
         const playerState = await videoPlayerRef.current.getPlayerState();
         if ([1, 2, 3].includes(playerState)) {
             currentTime = await videoPlayerRef.current.getCurrentTime();
         }
+    } else if (iframeTrack?.type === 'soundcloud') {
+        toast({
+            variant: "default",
+            title: "الميزة غير مدعومة",
+            description: "تحديد الوقت الحالي من مشغل ساوندكلاود غير مدعوم حاليًا. يرجى استخدام المشغل الصوتي.",
+        });
+        return;
     }
+
     if (currentTime === undefined && audioRef.current) {
         if (isPlaying || audioRef.current.currentTime > 0) {
             currentTime = audioRef.current.currentTime;

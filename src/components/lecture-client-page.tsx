@@ -60,7 +60,7 @@ interface LectureClientPageProps {
 }
 
 export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
-  const { playTrack, hideVideoPlayer, playVideo, audioRef, videoPlayerRef, isPlaying } = useAudioPlayer();
+  const { playTrack, hidePlayer, playIframe, audioRef, videoPlayerRef, isPlaying, isPlayerVisible, setVideoClipEndTime } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -122,7 +122,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
 
   const handlePlay = () => {
-    hideVideoPlayer();
+    hidePlayer();
     let startTime = 0;
     if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
         startTime = lectureHistory.position;
@@ -146,9 +146,16 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   
   const handleWatchVideo = () => {
       if (videoId) {
-          playVideo({ videoId, title: lecture.title });
+          playIframe({ type: 'youtube', src: videoId, title: lecture.title });
       }
   }
+
+  const handlePlaySoundcloud = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (lecture.soundcloudUrl) {
+      playIframe({ type: 'soundcloud', src: lecture.soundcloudUrl, title: lecture.title });
+    }
+  };
 
   const seriesLink = `/series/${lecture.seriesSlug}`;
   const shareText = `استمع إلى محاضرة "${lecture.title}"`;
@@ -279,6 +286,11 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                 <Youtube className="w-6 h-6 me-3" />
                 <span>مشاهدة فيديو</span>
             </Button>
+        ) : lecture.soundcloudUrl ? (
+             <Button onClick={handlePlaySoundcloud} size="lg" variant="secondary" className="h-16 text-lg" style={{ backgroundColor: '#ff5500', color: 'white' }}>
+                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 me-3" fill="currentColor"><path d="M1.203 12.373a2.381 2.381 0 012.38-2.38c.63 0 1.23.25 1.68.7l.807.806V6.143a2.382 2.382 0 012.38-2.381h13.17a2.38 2.38 0 012.38 2.38v6.23h-2.38V6.143a.068.068 0 00-.07-.068H8.45a.068.068 0 00-.07.068v9.428a.068.068 0 00.07.068h.806v2.381h-.806a2.381 2.381 0 01-2.38-2.38v-3.111l-.808.807a2.38 2.38 0 01-3.367 0 2.38 2.38 0 010-3.367zm20.417.807v-1.587h2.38v1.587h-2.38zm-3.174 0v-1.587h2.38v1.587h-2.38zm-3.175 0v-1.587h2.38v1.587h-2.38z"/></svg>
+                <span>استمع على ساوندكلاود</span>
+            </Button>
         ) : (
             <Button size="lg" variant="secondary" className="h-16 text-lg" disabled>
                 <Youtube className="w-6 h-6 me-3" />
@@ -325,11 +337,9 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               </a>
             </Button>
             {lecture.soundcloudUrl && (
-            <Button asChild style={{ backgroundColor: '#ff5500', color: 'white' }}>
-              <a href={lecture.soundcloudUrl} target="_blank" rel="noopener noreferrer">
-                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M1.203 12.373a2.381 2.381 0 012.38-2.38c.63 0 1.23.25 1.68.7l.807.806V6.143a2.382 2.382 0 012.38-2.381h13.17a2.38 2.38 0 012.38 2.38v6.23h-2.38V6.143a.068.068 0 00-.07-.068H8.45a.068.068 0 00-.07.068v9.428a.068.068 0 00.07.068h.806v2.381h-.806a2.381 2.381 0 01-2.38-2.38v-3.111l-.808.807a2.38 2.38 0 01-3.367 0 2.38 2.38 0 010-3.367zm20.417.807v-1.587h2.38v1.587h-2.38zm-3.174 0v-1.587h2.38v1.587h-2.38zm-3.175 0v-1.587h2.38v1.587h-2.38z"/></svg>
+            <Button onClick={handlePlaySoundcloud} style={{ backgroundColor: '#ff5500', color: 'white' }}>
+              <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor"><path d="M1.203 12.373a2.381 2.381 0 012.38-2.38c.63 0 1.23.25 1.68.7l.807.806V6.143a2.382 2.382 0 012.38-2.381h13.17a2.38 2.38 0 012.38 2.38v6.23h-2.38V6.143a.068.068 0 00-.07-.068H8.45a.068.068 0 00-.07.068v9.428a.068.068 0 00.07.068h.806v2.381h-.806a2.381 2.381 0 01-2.38-2.38v-3.111l-.808.807a2.38 2.38 0 01-3.367 0 2.38 2.38 0 010-3.367zm20.417.807v-1.587h2.38v1.587h-2.38zm-3.174 0v-1.587h2.38v1.587h-2.38zm-3.175 0v-1.587h2.38v1.587h-2.38z"/></svg>
                 <span className="ms-2">ساوندكلاود</span>
-              </a>
             </Button>
           )}
            {lecture.telegramUrl && (

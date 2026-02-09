@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -40,7 +39,7 @@ interface LectureNotesProps {
 export function LectureNotes({ lecture, userId }: LectureNotesProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { audioRef, videoPlayerRef, playTrack, isPlaying, isPlayerVisible, setVideoClipEndTime } = useAudioPlayer();
+  const { audioRef, videoPlayerRef, iframeTrack, playTrack, isPlaying, isPlayerVisible, setVideoClipEndTime } = useAudioPlayer();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const noteDocRef = useMemoFirebase(
@@ -120,11 +119,18 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     const getCurrentTime = async (): Promise<number | undefined> => {
         let currentTime: number | undefined;
 
-        if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+        if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
             const playerState = await videoPlayerRef.current.getPlayerState();
             if ([1, 2, 3].includes(playerState)) {
                 currentTime = await videoPlayerRef.current.getCurrentTime();
             }
+        } else if (iframeTrack?.type === 'soundcloud') {
+            toast({
+                variant: "default",
+                title: "الميزة غير مدعومة",
+                description: "تحديد الوقت الحالي من مشغل ساوندكلاود غير مدعوم حاليًا. يرجى استخدام المشغل الصوتي.",
+            });
+            return undefined;
         }
 
         if (currentTime === undefined && audioRef.current) {
@@ -190,7 +196,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
 
   
     const handleTimestampClick = async (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
-        if (isPlayerVisible && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+        if (isPlayerVisible && iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
             const playerState = await videoPlayerRef.current.getPlayerState();
             videoPlayerRef.current.seekTo(startTimeInSeconds, true);
             if (playerState !== 1) { // if not playing

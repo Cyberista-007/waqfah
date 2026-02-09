@@ -5,7 +5,6 @@ import { useAudioPlayer } from './audio-player-provider';
 import { GripVertical, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { cn } from '@/lib/utils';
 
 // Define constants for player dimensions
 const MIN_WIDTH = 320;
@@ -15,7 +14,7 @@ const DEFAULT_HEIGHT = 300;
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
 export function FloatingVideoPlayer() {
-    const { videoTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hideVideoPlayer } = useAudioPlayer();
+    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer } = useAudioPlayer();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -140,7 +139,7 @@ export function FloatingVideoPlayer() {
     // --- Keyboard Shortcuts ---
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (!isPlayerVisible || !videoPlayerRef.current) return;
+            if (!isPlayerVisible || !videoPlayerRef.current || iframeTrack?.type !== 'youtube') return;
             
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
                 return;
@@ -181,7 +180,7 @@ export function FloatingVideoPlayer() {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isPlayerVisible, videoPlayerRef]);
+    }, [isPlayerVisible, videoPlayerRef, iframeTrack]);
 
 
     // --- Dynamic Styles ---
@@ -193,8 +192,42 @@ export function FloatingVideoPlayer() {
         transition: isDragging || isResizing ? 'none' : 'top 0.1s ease-out, left 0.1s ease-out',
     };
 
-    if (!isPlayerVisible || !videoTrack) {
+    if (!isPlayerVisible || !iframeTrack) {
         return null;
+    }
+
+    const renderPlayer = () => {
+        switch (iframeTrack.type) {
+            case 'youtube':
+                return (
+                    <YouTube
+                        videoId={iframeTrack.src}
+                        opts={{
+                            height: '100%',
+                            width: '100%',
+                            playerVars: { autoplay: 1, rel: 0, controls: 1, modestbranding: 1 },
+                        }}
+                        onReady={onPlayerReady}
+                        onStateChange={onPlayerStateChange}
+                        className="w-full h-full"
+                        iframeClassName="w-full h-full"
+                    />
+                );
+            case 'soundcloud':
+                const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(iframeTrack.src)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
+                return (
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        scrolling="no"
+                        frameBorder="no"
+                        allow="autoplay"
+                        src={embedUrl}>
+                    </iframe>
+                );
+            default:
+                return null;
+        }
     }
 
     return (
@@ -214,7 +247,7 @@ export function FloatingVideoPlayer() {
                 <Button
                     onClick={(e) => {
                         e.stopPropagation();
-                        hideVideoPlayer();
+                        hidePlayer();
                     }}
                     variant="ghost"
                     size="icon"
@@ -229,18 +262,7 @@ export function FloatingVideoPlayer() {
 
             {/* Video Content */}
             <div className="flex-grow w-full h-full bg-black">
-                <YouTube
-                    videoId={videoTrack.videoId}
-                    opts={{
-                        height: '100%',
-                        width: '100%',
-                        playerVars: { autoplay: 1, rel: 0, controls: 1, modestbranding: 1 },
-                    }}
-                    onReady={onPlayerReady}
-                    onStateChange={onPlayerStateChange}
-                    className="w-full h-full"
-                    iframeClassName="w-full h-full"
-                />
+                {renderPlayer()}
             </div>
             
             {/* Resize Handle */}

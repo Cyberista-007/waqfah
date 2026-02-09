@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -49,7 +48,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
 }
 
 const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
-  const { playTrack, playVideo } = useAudioPlayer();
+  const { playTrack, playIframe } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -143,7 +142,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
 
   const handleOpenVideo = () => {
     if (videoId) {
-        playVideo({ videoId: videoId, title: lecture.title });
+        playIframe({ type: 'youtube', src: videoId, title: lecture.title });
     } else {
         handlePlay();
     }
