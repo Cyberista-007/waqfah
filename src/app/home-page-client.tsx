@@ -1,4 +1,3 @@
-
 'use client';
 
 import { HomeSearch } from '@/components/home-search';
@@ -141,9 +140,7 @@ export function HomePageClient() {
           <RecommendedLectures />
         </Suspense>
 
-        <Suspense>
-          <ShortsCarousel shorts={shorts} />
-        </Suspense>
+        <ShortsCarousel shorts={shorts} />
 
         <PaginatedSection
           title="أبرز البرامج"
