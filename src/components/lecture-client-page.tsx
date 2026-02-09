@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X, Loader2 } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X, Loader2, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureHeader } from '@/components/lecture-header';
 import type { Lecture, LectureClip, ListenHistoryItem } from '@/lib/types';
@@ -352,9 +352,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       </section>
 
       <Tabs defaultValue="transcript" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="transcript">التفريغ النصي</TabsTrigger>
           <TabsTrigger value="clips">المقاطع</TabsTrigger>
+          <TabsTrigger value="comments">التعليقات</TabsTrigger>
           <TabsTrigger value="notes" disabled={!user}>ملاحظاتي</TabsTrigger>
         </TabsList>
         <TabsContent value="transcript">
@@ -380,6 +381,9 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                 </CardContent>
             </Card>
         </TabsContent>
+        <TabsContent value="comments">
+          <CommentsSection lectureId={lecture.id} />
+        </TabsContent>
         <TabsContent value="notes">
           {user ? (
             <Card>
@@ -401,9 +405,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         </TabsContent>
       </Tabs>
 
-
-      <CommentsSection lectureId={lecture.id} />
-      
       {relatedLectures.length > 0 && (
         <section>
             <h3 className="text-2xl font-semibold mb-4 font-headline">محاضرات ذات صلة</h3>
