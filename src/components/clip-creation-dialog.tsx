@@ -11,7 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { useFirestore, useUser, useAudioPlayer } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
+import { useAudioPlayer } from '@/components/audio-player-provider';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from './ui/input';
