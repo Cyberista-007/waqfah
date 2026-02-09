@@ -5,7 +5,7 @@
 import Link from "next/link";
 import type { Lecture, Playlist } from "@/lib/types";
 import { Button } from "./ui/button";
-import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError, useMemoFirebase } from "@/firebase";
+import { useFirestore, useUser, useCollection, useDoc, errorEmitter, FirestorePermissionError, useMemoFirebase } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { Star, ListPlus, MicVocal, ArrowRight, Pin, Loader2 } from "lucide-react";
