@@ -25,6 +25,7 @@
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
         "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
         "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
+        "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the program's podcast." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
       },
@@ -42,6 +43,7 @@
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the channel." },
         "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the channel's image." },
         "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the channel's YouTube channel." },
+        "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the channel's podcast." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this channel." }
       },
       "required": ["slug", "name", "imageId", "youtubeUrl", "followerCount"]

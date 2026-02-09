@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,8 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library, AlertTriangle, CheckCircle, Link as LinkIcon } from "lucide-react";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Program, Lecture, Channel } from "@/lib/types";
 import { writeBatch, doc, collection, Timestamp, increment, runTransaction } from "firebase/firestore";
@@ -66,6 +66,12 @@ interface FetchedPlaylist {
     description: string;
 }
 
+interface OpmlResult {
+    matched: (Program | Channel)[];
+    unmatched: string[];
+}
+
+
 export default function AdminImportLecturesPage() {
     const { toast } = useToast();
     const router = useRouter();
@@ -93,6 +99,7 @@ export default function AdminImportLecturesPage() {
     // OPML State
     const [opmlFile, setOpmlFile] = useState<File | null>(null);
     const [isImportingOpml, setIsImportingOpml] = useState(false);
+    const [opmlResults, setOpmlResults] = useState<OpmlResult | null>(null);
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -544,18 +551,33 @@ export default function AdminImportLecturesPage() {
         }
 
         setIsImportingOpml(true);
-        // Simulate import process
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        toast({
-            title: 'بدء عملية الاستيراد',
-            description: `جاري استيراد الاشتراكات من ملف: ${opmlFile.name}. سيصلك إشعار عند الانتهاء.`,
-        });
+        setOpmlResults(null);
+        const formData = new FormData();
+        formData.append('opml', opmlFile);
 
-        // Here you would typically read and parse the OPML file
-        // and match the podcast feeds with programs/channels in your database.
-        
-        setIsImportingOpml(false);
+        try {
+            const response = await fetch('/api/opml-import', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'فشل في معالجة الملف.');
+            }
+            
+            setOpmlResults(result);
+            toast({
+                title: 'اكتملت المعالجة',
+                description: `تم العثور على ${result.matched.length} مطابق و ${result.unmatched.length} غير مطابق.`,
+            });
+            
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+        } finally {
+            setIsImportingOpml(false);
+        }
     };
 
 
@@ -827,6 +849,44 @@ export default function AdminImportLecturesPage() {
                                     بدء استيراد OPML
                                 </Button>
                             </div>
+                             {opmlResults && (
+                                <div className="mt-6 space-y-6">
+                                    <div>
+                                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle className="text-green-500"/>برامج وقنوات مطابقة ({opmlResults.matched.length})</h4>
+                                        {opmlResults.matched.length > 0 ? (
+                                            <div className="space-y-2 rounded-lg border p-4">
+                                                {opmlResults.matched.map(item => (
+                                                    <div key={item.id} className="flex items-center justify-between">
+                                                        <span className="font-medium">{item.name}</span>
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={`/admin/${'bio' in item ? 'programs' : 'channels'}`}>
+                                                                عرض <LinkIcon className="h-4 w-4 mr-2"/>
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : <p className="text-muted-foreground">لم يتم العثور على أي تطابق.</p>}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2"><AlertTriangle className="text-amber-500"/>روابط غير مطابقة ({opmlResults.unmatched.length})</h4>
+                                        {opmlResults.unmatched.length > 0 ? (
+                                            <div className="space-y-2 rounded-lg border p-4 max-h-60 overflow-y-auto">
+                                                {opmlResults.unmatched.map((url, index) => (
+                                                    <div key={index} className="flex items-center justify-between gap-4">
+                                                        <span className="text-sm text-muted-foreground truncate" title={url}>{url}</span>
+                                                        <Button variant="secondary" size="sm" asChild>
+                                                            <Link href={`/admin/programs?youtubeUrl=${encodeURIComponent(url)}`}>
+                                                                إضافة <LinkIcon className="h-4 w-4 mr-2"/>
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : <p className="text-muted-foreground">رائع! كل الروابط تم مطابقتها.</p>}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>
@@ -840,3 +900,4 @@ export default function AdminImportLecturesPage() {
   
 
     
+

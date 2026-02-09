@@ -57,6 +57,7 @@ export type Channel = Serializable<{
   imageId: string;
   imageUrl?: string;
   youtubeUrl?: string;
+  rssFeedUrl?: string;
   followerCount: number;
 }>;
 
@@ -68,6 +69,7 @@ export type Program = Serializable<{
   imageId: string;
   imageUrl?: string;
   youtubeUrl?: string;
+  rssFeedUrl?: string;
   createdAt: Timestamp;
   followerCount: number;
 }>;
