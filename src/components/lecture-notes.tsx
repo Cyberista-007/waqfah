@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import type { LectureNote } from '@/lib/types';
+import type { Lecture, LectureNote } from '@/lib/types';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Stamp, Edit, Eye, PlayCircle, X } from 'lucide-react';
@@ -32,19 +32,19 @@ const parseTimestampToSeconds = (timestamp: string): number => {
 
 
 interface LectureNotesProps {
-  lectureId: string;
+  lecture: Lecture;
   userId: string;
 }
 
-export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
+export function LectureNotes({ lecture, userId }: LectureNotesProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { audioRef, videoPlayerRef, playTrack, track, isPlaying } = useAudioPlayer();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const noteDocRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, 'users', userId, 'notes', lectureId) : null),
-    [firestore, userId, lectureId]
+    () => (firestore ? doc(firestore, 'users', userId, 'notes', lecture.id) : null),
+    [firestore, userId, lecture.id]
   );
 
   const { data: note, isLoading: isNoteLoading } = useDoc<LectureNote>(noteDocRef);
@@ -85,7 +85,7 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     try {
       await setDoc(noteDocRef, {
         userId,
-        lectureId,
+        lectureId: lecture.id,
         content: newContent,
         updatedAt: Timestamp.now(),
       }, { merge: true });
@@ -100,7 +100,7 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [firestore, noteDocRef, userId, lectureId, toast]);
+  }, [firestore, noteDocRef, userId, lecture.id, toast]);
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
@@ -188,17 +188,15 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     };
 
   
-    const handleTimestampClick = (timeInSeconds: number) => {
+    const handleTimestampClick = (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
         if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
-            videoPlayerRef.current.seekTo(timeInSeconds, true);
-            if (typeof videoPlayerRef.current.getPlayerState === 'function' && videoPlayerRef.current.getPlayerState() !== 1) {
+            const playerState = videoPlayerRef.current.getPlayerState();
+            videoPlayerRef.current.seekTo(startTimeInSeconds, true);
+            if (playerState !== 1) { // if not playing
                 videoPlayerRef.current.playVideo();
             }
-        } else if (audioRef.current) {
-            audioRef.current.currentTime = timeInSeconds;
-            if (audioRef.current.paused && track) {
-                playTrack(track, timeInSeconds);
-            }
+        } else {
+            playTrack(lecture, startTimeInSeconds, endTimeInSeconds);
         }
     };
 
@@ -215,14 +213,17 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
 
             const fullMatch = match[0];
             const startTimeStr = match[1];
+            const endTimeStr = match[2];
             
-            const timeInSeconds = parseTimestampToSeconds(startTimeStr);
+            const startTimeInSeconds = parseTimestampToSeconds(startTimeStr);
+            const endTimeInSeconds = endTimeStr ? parseTimestampToSeconds(endTimeStr) : null;
+
             parts.push(
                 <button
                     key={`match-${match.index}`}
                     onClick={(e) => {
                         e.stopPropagation(); // Prevent edit mode from triggering
-                        handleTimestampClick(timeInSeconds);
+                        handleTimestampClick(startTimeInSeconds, endTimeInSeconds);
                     }}
                     className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1"
                 >

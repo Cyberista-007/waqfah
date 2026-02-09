@@ -394,7 +394,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <LectureNotes lectureId={lecture.id} userId={user.uid} />
+                    <LectureNotes lecture={lecture} userId={user.uid} />
                 </CardContent>
             </Card>
           ) : (
