@@ -22,9 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { Lecture, Series } from "@/lib/types";
 import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { doc, runTransaction, increment, writeBatch } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle, Wand2 } from "lucide-react";
+import { Loader2, Trash2, Edit, PlusCircle, Wand2, Search } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 export default function AdminLecturesPage() {
     const { toast } = useToast();
@@ -33,15 +34,27 @@ export default function AdminLecturesPage() {
     const [selectedLectures, setSelectedLectures] = useState<string[]>([]);
     const [isBatchConfirmOpen, setIsBatchConfirmOpen] = useState(false);
     const [isUpdatingAll, setIsUpdatingAll] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const { data: allLectures, isLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
     const { data: allSeries } = useCollection<Series>('series');
 
-    const isAllSelected = allLectures ? selectedLectures.length === allLectures.length : false;
-
+    const filteredLectures = useMemo(() => {
+        if (!allLectures) return [];
+        if (!searchTerm) return allLectures;
+        
+        return allLectures.filter(lecture =>
+            lecture.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (lecture.programName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (lecture.seriesTitle || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allLectures, searchTerm]);
+    
+    const isAllSelected = filteredLectures.length > 0 ? selectedLectures.length === filteredLectures.length : false;
+    
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedLectures(allLectures?.map(l => l.id) || []);
+            setSelectedLectures(filteredLectures.map(l => l.id) || []);
         } else {
             setSelectedLectures([]);
         }
@@ -280,6 +293,17 @@ export default function AdminLecturesPage() {
             </div>
         </CardHeader>
         <CardContent>
+            <div className="mb-4 max-w-sm">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="ابحث بالاسم، السلسلة، أو البرنامج..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="ps-10"
+                    />
+                </div>
+            </div>
             <Table>
             <TableHeader>
                 <TableRow>
@@ -305,7 +329,7 @@ export default function AdminLecturesPage() {
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
-                ) : allLectures?.map((lecture) => (
+                ) : filteredLectures.map((lecture) => (
                 <TableRow key={lecture.id} data-state={selectedLectures.includes(lecture.id) && "selected"}>
                     <TableCell>
                          <Checkbox
@@ -345,8 +369,10 @@ export default function AdminLecturesPage() {
                 ))}
             </TableBody>
             </Table>
-            {!isLoading && !allLectures?.length && (
-              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي محاضرات بعد.</p>
+            {!isLoading && filteredLectures.length === 0 && (
+              <p className="py-8 text-center text-muted-foreground">
+                {allLectures && allLectures.length > 0 ? "لا توجد محاضرات تطابق بحثك." : "لم تتم إضافة أي محاضرات بعد."}
+              </p>
             )}
         </CardContent>
         </Card>
