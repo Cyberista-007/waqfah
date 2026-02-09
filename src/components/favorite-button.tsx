@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Heart } from "lucide-react";
@@ -61,7 +62,7 @@ export function FavoriteButton({ lectureId, showLabel = false, className }: Favo
           variant={showLabel ? "outline" : "ghost"} 
           size={showLabel ? "default" : "icon"} 
           className={cn(
-              "h-10 w-10 text-muted-foreground hover:text-red-500",
+              "text-muted-foreground hover:text-red-500",
               isFavorite && "text-red-500",
               className
           )}
