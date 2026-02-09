@@ -8,7 +8,7 @@ import { useDoc, useFirestore, useCollection } from '@/firebase';
 import type { PinnedLectureSettings, Lecture } from '@/lib/types';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Pin, Check, ChevronsUpDown } from 'lucide-react';
+import { Loader2, Pin, Check, ChevronsUpDown, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -103,9 +103,22 @@ export default function AdminPinnedLecturePage() {
                           aria-expanded={open}
                           className="w-full justify-between h-auto min-h-10"
                         >
-                          <div className="flex gap-1 flex-wrap">
+                          <div className="flex gap-2 flex-wrap">
                             {selectedLectures.length > 0 ? selectedLectures.map(lecture => (
-                                <Badge key={lecture.id} variant="secondary">{lecture.title}</Badge>
+                                <Badge key={lecture.id} variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
+                                    <span>{lecture.title}</span>
+                                    <button
+                                        aria-label={`إزالة ${lecture.title}`}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setSelectedIds(selectedIds.filter((id) => id !== lecture.id));
+                                        }}
+                                        className="rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </Badge>
                             )) : "اختر محاضرة أو أكثر..."}
                           </div>
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -120,6 +133,7 @@ export default function AdminPinnedLecturePage() {
                               {allLectures?.map((lecture) => (
                                 <CommandItem
                                   key={lecture.id}
+                                  value={lecture.title}
                                   onSelect={() => {
                                     setSelectedIds(
                                       selectedIds.includes(lecture.id)
