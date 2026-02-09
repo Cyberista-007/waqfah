@@ -33,7 +33,6 @@ import {
   Crown,
   Link as LinkIcon,
   Smartphone,
-  Library,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -431,8 +430,6 @@ export default function SettingsPage() {
           <SettingsItem icon={LinkIcon} label="الحسابات المرتبطة" />
           <Separator />
           <SettingsItem icon={Smartphone} label="الأجهزة المتصلة" />
-          <Separator />
-          <SettingsItem icon={Library} label="استيراد المكتبة" href="/settings/import" />
           <Separator />
           <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
           <Separator />

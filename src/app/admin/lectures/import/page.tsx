@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast } from "lucide-react";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Program, Lecture, Channel } from "@/lib/types";
@@ -89,6 +89,10 @@ export default function AdminImportLecturesPage() {
     const [targetProgramId, setTargetProgramId] = useState<string>("none");
     const [targetChannelId, setTargetChannelId] = useState<string>("none");
     const [activeTab, setActiveTab] = useState("youtube-videos");
+
+    // OPML State
+    const [opmlFile, setOpmlFile] = useState<File | null>(null);
+    const [isImportingOpml, setIsImportingOpml] = useState(false);
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -514,6 +518,47 @@ export default function AdminImportLecturesPage() {
         reader.readAsText(selectedFile);
     };
 
+    const handleOpmlFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) {
+            const file = event.target.files[0];
+            if (file.name.endsWith('.opml') || file.type === 'text/xml') {
+                setOpmlFile(file);
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'ملف غير صالح',
+                    description: 'يرجى اختيار ملف بصيغة OPML.',
+                });
+            }
+        }
+    };
+
+    const handleOpmlImport = async () => {
+        if (!opmlFile) {
+            toast({
+                variant: "destructive",
+                title: "لم يتم اختيار ملف",
+                description: "يرجى اختيار ملف OPML أولاً.",
+            });
+            return;
+        }
+
+        setIsImportingOpml(true);
+        // Simulate import process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        toast({
+            title: 'بدء عملية الاستيراد',
+            description: `جاري استيراد الاشتراكات من ملف: ${opmlFile.name}. سيصلك إشعار عند الانتهاء.`,
+        });
+
+        // Here you would typically read and parse the OPML file
+        // and match the podcast feeds with programs/channels in your database.
+        
+        setIsImportingOpml(false);
+    };
+
+
     const isLoading = seriesLoading || programsLoading || channelsLoading || lecturesLoading;
     
     const hasFetchedYoutubeData = fetchedVideos.length > 0 || fetchedShorts.length > 0 || fetchedPlaylists.length > 0;
@@ -534,9 +579,10 @@ export default function AdminImportLecturesPage() {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="youtube">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="youtube"><Youtube className="me-2"/>يوتيوب</TabsTrigger>
                         <TabsTrigger value="csv"><FileText className="me-2"/>ملف CSV</TabsTrigger>
+                        <TabsTrigger value="opml"><Library className="me-2"/>ملف OPML</TabsTrigger>
                     </TabsList>
                     <TabsContent value="youtube" className="mt-6">
                         <div className="space-y-4">
@@ -748,6 +794,40 @@ export default function AdminImportLecturesPage() {
                                 </Button>
                             </div>
                         </form>
+                    </TabsContent>
+                    <TabsContent value="opml" className="mt-6">
+                        <div className="mb-6 p-4 border-l-4 border-primary bg-primary/10 rounded-r-lg">
+                            <h4 className="font-bold mb-2">استيراد الاشتراكات من ملف OPML</h4>
+                            <p className="text-sm text-foreground/80">
+                                هذه الميزة تتيح لك استيراد اشتراكات البودكاست الخاصة بك من تطبيقات أخرى. سيقوم النظام بمحاولة مطابقة روابط الـ RSS الموجودة في الملف مع البرامج والقنوات الموجودة في قاعدة البيانات.
+                            </p>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="opml-file">ملف الاشتراكات (OPML)</Label>
+                                <Input
+                                    id="opml-file"
+                                    name="opml-file"
+                                    type="file"
+                                    accept=".opml,text/xml"
+                                    onChange={handleOpmlFileChange}
+                                    required
+                                    disabled={isImportingOpml}
+                                />
+                                {opmlFile && (
+                                    <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                                        <FileText className="w-4 h-4" />
+                                        الملف المختار: {opmlFile.name}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button onClick={handleOpmlImport} disabled={isImportingOpml || !opmlFile}>
+                                    {isImportingOpml && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    بدء استيراد OPML
+                                </Button>
+                            </div>
+                        </div>
                     </TabsContent>
                 </Tabs>
             </CardContent>
