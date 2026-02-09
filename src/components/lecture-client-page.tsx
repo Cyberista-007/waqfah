@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -62,13 +60,14 @@ interface LectureClientPageProps {
 }
 
 export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
-  const { playTrack, hideVideoPlayer, playVideo } = useAudioPlayer();
+  const { playTrack, hideVideoPlayer, playVideo, audioRef, videoPlayerRef, isPlaying } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const [shareUrl, setShareUrl] = useState('');
   const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
+  const [clipCreationStartTime, setClipCreationStartTime] = useState<number | undefined>();
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
   const [downloadFormats, setDownloadFormats] = useState([]);
   const [isFetchingFormats, setIsFetchingFormats] = useState(false);
@@ -232,7 +231,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     }
   }, [shareText, shareUrl, handleCopyLink]);
   
-  const handleCreateClip = () => {
+  const handleCreateClip = async () => {
       if (!user) {
           toast({
               variant: "destructive",
@@ -242,8 +241,28 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
           router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
           return;
       }
+      
+      let currentTime: number | undefined;
+
+      // Check YouTube player first, if it's active
+      if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+          const playerState = await videoPlayerRef.current.getPlayerState();
+          // States: 1 (playing), 2 (paused), 3 (buffering)
+          if ([1, 2, 3].includes(playerState)) {
+               currentTime = await videoPlayerRef.current.getCurrentTime();
+          }
+      }
+
+      // Fallback to audio player if video player isn't active or available
+      if (currentTime === undefined && audioRef.current) {
+           if (isPlaying || audioRef.current.currentTime > 0) {
+              currentTime = audioRef.current.currentTime;
+          }
+      }
+      
+      setClipCreationStartTime(currentTime);
       setIsClipCreationOpen(true);
-  }
+  };
 
   return (
     <>
@@ -403,6 +422,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         onOpenChange={setIsClipCreationOpen} 
         lectureId={lecture.id}
         lectureDuration={lecture.duration}
+        initialStartTime={clipCreationStartTime}
     />
     <DownloaderModal
         isOpen={isDownloaderOpen}

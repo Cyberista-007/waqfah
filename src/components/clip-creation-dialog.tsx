@@ -10,24 +10,32 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Loader2 } from 'lucide-react';
+import { formatDuration } from '@/lib/utils';
 
 interface ClipCreationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   lectureId: string;
   lectureDuration: number;
+  initialStartTime?: number;
 }
 
 // Helper to parse MM:SS or SS to seconds
 const parseTimeToSeconds = (timeStr: string): number => {
+    if (!timeStr) return 0;
     const parts = timeStr.split(':').map(Number);
+    if (parts.some(isNaN)) return 0; // handle invalid input
+
+    if (parts.length === 3) {
+        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+    }
     if (parts.length === 2) {
         return (parts[0] * 60) + parts[1];
     }
@@ -38,11 +46,20 @@ const parseTimeToSeconds = (timeStr: string): number => {
 };
 
 
-export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDuration }: ClipCreationDialogProps) {
+export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDuration, initialStartTime }: ClipCreationDialogProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startTimeValue, setStartTimeValue] = useState('');
+
+  useEffect(() => {
+    if (isOpen && initialStartTime !== undefined) {
+      setStartTimeValue(formatDuration(initialStartTime));
+    } else if (!isOpen) {
+      setStartTimeValue(''); // Reset on close
+    }
+  }, [isOpen, initialStartTime]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,13 +72,12 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
     
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
-    const startTimeStr = formData.get("startTime") as string;
     const endTimeStr = formData.get("endTime") as string;
 
-    const startTime = parseTimeToSeconds(startTimeStr);
+    const startTime = parseTimeToSeconds(startTimeValue);
     const endTime = parseTimeToSeconds(endTimeStr);
 
-    if (!title || !startTimeStr || !endTimeStr) {
+    if (!title || !startTimeValue || !endTimeStr) {
         toast({ variant: 'destructive', title: "يرجى ملء جميع الحقول." });
         setIsSubmitting(false);
         return;
@@ -112,7 +128,14 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <Label htmlFor="startTime">وقت البدء (د:ث)</Label>
-                    <Input id="startTime" name="startTime" placeholder="00:30" required />
+                    <Input 
+                      id="startTime" 
+                      name="startTime" 
+                      placeholder="00:30" 
+                      required 
+                      value={startTimeValue}
+                      onChange={(e) => setStartTimeValue(e.target.value)}
+                    />
                 </div>
                  <div>
                     <Label htmlFor="endTime">وقت النهاية (د:ث)</Label>
