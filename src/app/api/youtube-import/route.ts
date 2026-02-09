@@ -346,5 +346,3 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: error.message || "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب." }, { status: 500, headers: corsHeaders });
     }
 }
-
-    
