@@ -11,12 +11,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useAudioPlayer } from '@/firebase';
 import { collection, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
 import { formatDuration } from '@/lib/utils';
 
 interface ClipCreationDialogProps {
@@ -33,10 +33,10 @@ const parseTimeToSeconds = (timeStr: string): number => {
     const parts = timeStr.split(':').map(Number);
     if (parts.some(isNaN)) return 0; // handle invalid input
 
-    if (parts.length === 3) {
+    if (parts.length === 3) { // HH:MM:SS
         return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
     }
-    if (parts.length === 2) {
+    if (parts.length === 2) { // MM:SS
         return (parts[0] * 60) + parts[1];
     }
     if (parts.length === 1) {
@@ -50,16 +50,57 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  const { audioRef, videoPlayerRef, isPlaying } = useAudioPlayer();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [title, setTitle] = useState('');
   const [startTimeValue, setStartTimeValue] = useState('');
+  const [endTimeValue, setEndTimeValue] = useState('');
 
   useEffect(() => {
-    if (isOpen && initialStartTime !== undefined) {
-      setStartTimeValue(formatDuration(initialStartTime));
-    } else if (!isOpen) {
-      setStartTimeValue(''); // Reset on close
+    if (isOpen) {
+      if (initialStartTime !== undefined) {
+        setStartTimeValue(formatDuration(initialStartTime));
+      }
+    } else {
+      // Reset form on close
+      setTitle('');
+      setStartTimeValue('');
+      setEndTimeValue('');
     }
   }, [isOpen, initialStartTime]);
+
+  const handleSetCurrentTime = async (field: 'start' | 'end') => {
+    let currentTime: number | undefined;
+
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+        const playerState = await videoPlayerRef.current.getPlayerState();
+        if ([1, 2, 3].includes(playerState)) {
+            currentTime = await videoPlayerRef.current.getCurrentTime();
+        }
+    }
+    if (currentTime === undefined && audioRef.current) {
+        if (isPlaying || audioRef.current.currentTime > 0) {
+            currentTime = audioRef.current.currentTime;
+        }
+    }
+    
+    if (currentTime !== undefined) {
+        const formattedTime = formatDuration(currentTime);
+        if (field === 'start') {
+            setStartTimeValue(formattedTime);
+        } else {
+            setEndTimeValue(formattedTime);
+        }
+    } else {
+        toast({
+            variant: "default",
+            title: "يرجى تشغيل المحاضرة أولاً",
+            description: "يجب تشغيل المحاضرة (صوت أو فيديو) لتتمكن من تحديد الوقت الحالي.",
+        });
+    }
+  };
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -69,15 +110,11 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
     };
     
     setIsSubmitting(true);
-    
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const endTimeStr = formData.get("endTime") as string;
 
     const startTime = parseTimeToSeconds(startTimeValue);
-    const endTime = parseTimeToSeconds(endTimeStr);
+    const endTime = parseTimeToSeconds(endTimeValue);
 
-    if (!title || !startTimeValue || !endTimeStr) {
+    if (!title || !startTimeValue || !endTimeValue) {
         toast({ variant: 'destructive', title: "يرجى ملء جميع الحقول." });
         setIsSubmitting(false);
         return;
@@ -90,7 +127,7 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
     }
     
     if (endTime > lectureDuration) {
-        toast({ variant: 'destructive', title: `وقت النهاية يتجاوز مدة المحاضرة.` });
+        toast({ variant: 'destructive', title: `وقت النهاية يتجاوز مدة المحاضرة (${formatDuration(lectureDuration)}).` });
         setIsSubmitting(false);
         return;
     }
@@ -117,29 +154,46 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
         <DialogHeader>
           <DialogTitle>إنشاء مقطع جديد</DialogTitle>
           <DialogDescription>
-            حدد عنوانًا ووقت البدء والنهاية لمقطعك.
+            حدد عنوانًا ووقت البدء والنهاية لمقطعك. يمكنك استخدام الأزرار لتحديد الوقت الحالي من المشغل.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div>
                 <Label htmlFor="title">عنوان المقطع</Label>
-                <Input id="title" name="title" required />
+                <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="startTime">وقت البدء (د:ث)</Label>
-                    <Input 
-                      id="startTime" 
-                      name="startTime" 
-                      placeholder="00:30" 
-                      required 
-                      value={startTimeValue}
-                      onChange={(e) => setStartTimeValue(e.target.value)}
-                    />
+                <div className="space-y-2">
+                    <Label htmlFor="startTime">وقت البدء</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="startTime" 
+                        name="startTime" 
+                        placeholder="00:30" 
+                        required 
+                        value={startTimeValue}
+                        onChange={(e) => setStartTimeValue(e.target.value)}
+                      />
+                      <Button variant="outline" size="icon" type="button" onClick={() => handleSetCurrentTime('start')} aria-label="Set start time to current time">
+                        <Clock className="h-4 w-4"/>
+                      </Button>
+                    </div>
                 </div>
-                 <div>
-                    <Label htmlFor="endTime">وقت النهاية (د:ث)</Label>
-                    <Input id="endTime" name="endTime" placeholder="01:15" required />
+                 <div className="space-y-2">
+                    <Label htmlFor="endTime">وقت النهاية</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="endTime" 
+                        name="endTime" 
+                        placeholder="01:15" 
+                        required 
+                        value={endTimeValue}
+                        onChange={(e) => setEndTimeValue(e.target.value)}
+                      />
+                       <Button variant="outline" size="icon" type="button" onClick={() => handleSetCurrentTime('end')} aria-label="Set end time to current time">
+                        <Clock className="h-4 w-4"/>
+                      </Button>
+                    </div>
                 </div>
             </div>
             <DialogFooter>
