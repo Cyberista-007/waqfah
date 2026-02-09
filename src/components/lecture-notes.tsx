@@ -6,14 +6,15 @@ import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import type { LectureNote } from '@/lib/types';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Stamp, Edit, Eye } from 'lucide-react';
+import { Loader2, Stamp, Edit, Eye, PlayCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { useAudioPlayer } from './audio-player-provider';
+import { useAudioPlayer } from '@/components/audio-player-provider';
 import { formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 
 const parseTimestampToSeconds = (timestamp: string): number => {
+    if (!timestamp) return 0;
     const parts = timestamp.split(':').map(Number);
     if (parts.some(isNaN)) return 0;
     
@@ -22,6 +23,9 @@ const parseTimestampToSeconds = (timestamp: string): number => {
     }
     if (parts.length === 2) { // MM:SS
         return parts[0] * 60 + parts[1];
+    }
+    if (parts.length === 1) { // SS
+        return parts[0];
     }
     return 0;
 };
@@ -49,6 +53,7 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [clipStartTime, setClipStartTime] = useState<number | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -111,62 +116,77 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     }, 2000); // Auto-save after 2 seconds of inactivity
   };
   
-  const handleInsertTimestamp = () => {
-    let currentTime: number | undefined;
+    const getCurrentTime = async (): Promise<number | undefined> => {
+        let currentTime: number | undefined;
 
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-        const playerState = videoPlayerRef.current.getPlayerState();
-        if (playerState === 1 || playerState === 2 || playerState === 3) {
-            currentTime = videoPlayerRef.current.getCurrentTime();
+        if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+            const playerState = await videoPlayerRef.current.getPlayerState();
+            if ([1, 2, 3].includes(playerState)) {
+                currentTime = await videoPlayerRef.current.getCurrentTime();
+            }
         }
-    }
 
-    if (currentTime === undefined && audioRef.current) {
-        if (isPlaying || audioRef.current.currentTime > 0) {
-            currentTime = audioRef.current.currentTime;
+        if (currentTime === undefined && audioRef.current) {
+            if (isPlaying || audioRef.current.currentTime > 0) {
+                currentTime = audioRef.current.currentTime;
+            }
         }
-    }
-    
-    if (currentTime === undefined) {
+        return currentTime;
+    };
+
+  const handleSetStartTime = async () => {
+        const currentTime = await getCurrentTime();
+        if (currentTime === undefined) {
+            toast({
+                variant: "default",
+                title: "يرجى تشغيل المحاضرة أولاً",
+            });
+            return;
+        }
+        setClipStartTime(currentTime);
         toast({
-            variant: "default",
-            title: "يرجى تشغيل المحاضرة أولاً",
-            description: "يجب تشغيل المحاضرة (صوت أو فيديو) لتتمكن من إضافة طابع زمني.",
+            title: "تم تحديد بداية المقطع.",
+            description: `الآن انتقل إلى نقطة النهاية ثم اضغط "تحديد نهاية وإدراج".`,
         });
-        return;
-    }
-    
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+    };
 
-    const hours = Math.floor(currentTime / 3600);
-    const minutes = Math.floor((currentTime % 3600) / 60);
-    const seconds = Math.floor(currentTime % 60);
+    const handleInsertClip = async () => {
+        const endTime = await getCurrentTime();
+        if (endTime === undefined || clipStartTime === null) {
+            toast({ variant: 'destructive', title: "خطأ", description: "لم يتم تحديد وقت البدء أو النهاية." });
+            return;
+        }
+        if (endTime <= clipStartTime) {
+            toast({ variant: 'destructive', title: "خطأ", description: "وقت النهاية يجب أن يكون بعد وقت البداية." });
+            return;
+        }
 
-    let timestampText: string;
-    if (hours > 0) {
-        timestampText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    } else {
-        timestampText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    const timestamp = `[${timestampText}] `;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    
-    const newContent = content.substring(0, start) + timestamp + content.substring(end);
-    setContent(newContent);
-    
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-    saveNote(newContent);
+        const textarea = textareaRef.current;
+        if (!textarea) return;
 
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
-    }, 0);
-  };
+        const startTimestampStr = formatDuration(clipStartTime);
+        const endTimestampStr = formatDuration(endTime);
+        const timestamp = `[${startTimestampStr} - ${endTimestampStr}] `;
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newContent = content.substring(0, start) + timestamp + content.substring(end);
+        setContent(newContent);
+        setClipStartTime(null);
+
+        // Debounce saving
+        if (debounceTimeout.current) {
+          clearTimeout(debounceTimeout.current);
+        }
+        saveNote(newContent);
+        
+        // Focus and move cursor
+        setTimeout(() => {
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
+        }, 0);
+    };
+
   
     const handleTimestampClick = (timeInSeconds: number) => {
         if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
@@ -177,37 +197,48 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
         } else if (audioRef.current) {
             audioRef.current.currentTime = timeInSeconds;
             if (audioRef.current.paused && track) {
-                playTrack(track);
+                playTrack(track, timeInSeconds);
             }
         }
     };
 
     const renderNoteContent = (text: string) => {
-        const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
-        const parts = text.split(timestampRegex);
+        const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)(?:\s*-\s*(\d{1,2}:\d{2}(?::\d{2})?))?\]/g;
+        const parts = [];
+        let lastIndex = 0;
 
-        return (
-            <div className="text-base leading-relaxed whitespace-pre-wrap font-body">
-                {parts.map((part, index) => {
-                    if (index % 2 === 1) {
-                        const timeInSeconds = parseTimestampToSeconds(part);
-                        return (
-                        <button
-                            key={index}
-                            onClick={(e) => {
-                                e.stopPropagation(); // Prevent edit mode from triggering
-                                handleTimestampClick(timeInSeconds);
-                            }}
-                            className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1"
-                        >
-                            [{part}]
-                        </button>
-                        );
-                    }
-                    return <span key={index}>{part}</span>;
-                })}
-            </div>
-        );
+        for (const match of text.matchAll(timestampRegex)) {
+            const preText = text.substring(lastIndex, match.index);
+            if (preText) {
+                parts.push(<span key={`pre-${lastIndex}`}>{preText}</span>);
+            }
+
+            const fullMatch = match[0];
+            const startTimeStr = match[1];
+            
+            const timeInSeconds = parseTimestampToSeconds(startTimeStr);
+            parts.push(
+                <button
+                    key={`match-${match.index}`}
+                    onClick={(e) => {
+                        e.stopPropagation(); // Prevent edit mode from triggering
+                        handleTimestampClick(timeInSeconds);
+                    }}
+                    className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1"
+                >
+                    {fullMatch}
+                </button>
+            );
+
+            lastIndex = (match.index || 0) + fullMatch.length;
+        }
+
+        const postText = text.substring(lastIndex);
+        if (postText) {
+            parts.push(<span key="post-last">{postText}</span>);
+        }
+        
+        return <div className="text-base leading-relaxed whitespace-pre-wrap font-body">{parts}</div>;
     };
 
 
@@ -223,10 +254,20 @@ export function LectureNotes({ lectureId, userId }: LectureNotesProps) {
     <div className="space-y-4">
        <div className="flex items-center justify-end gap-2">
          {isEditing && (
-            <Button variant="outline" onClick={handleInsertTimestamp} disabled={isNoteLoading}>
-                <Stamp className="w-4 h-4 me-2"/>
-                إضافة طابع زمني
-            </Button>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={clipStartTime === null ? handleSetStartTime : handleInsertClip} disabled={isNoteLoading}>
+                    {clipStartTime === null ? (
+                        <><PlayCircle className="w-4 h-4 me-2"/> تحديد بداية</>
+                    ) : (
+                        <><Stamp className="w-4 h-4 me-2"/> تحديد نهاية وإدراج</>
+                    )}
+                </Button>
+                {clipStartTime !== null && (
+                    <Button variant="ghost" size="sm" onClick={() => setClipStartTime(null)}>
+                        إلغاء ({formatDuration(clipStartTime)})
+                    </Button>
+                )}
+            </div>
          )}
          <Button variant="outline" onClick={isEditing ? handleSaveClick : handleEditClick}>
              {isEditing ? <><Eye className="w-4 h-4 me-2"/> عرض الملاحظات</> : <><Edit className="w-4 h-4 me-2"/> تعديل الملاحظات</>}
