@@ -406,6 +406,17 @@
         "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." }
       },
       "required": ["title", "dialogTitle", "icon"]
+    },
+    "PinnedLectureSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Pinned Lecture Settings",
+      "description": "A singleton document to store the pinned lecture for the homepage.",
+      "type": "object",
+      "properties": {
+        "lectureId": { "type": "string", "description": "The ID of the pinned lecture." },
+        "message": { "type": "string", "description": "The custom message to display with the pinned lecture." },
+        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned lecture section." }
+      }
     }
   },
   "auth": {
@@ -506,6 +517,10 @@
       {
         "path": "/settings/donations",
         "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
+      },
+       {
+        "path": "/settings/pinned_lecture",
+        "definition": { "schema": { "$ref": "#/entities/PinnedLectureSettings" } }
       },
       {
         "path": "/donations/{donationId}",

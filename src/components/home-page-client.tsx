@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from './skeletons';
+import { PinnedLecture } from './pinned-lecture';
 
 // New Component for paginated sections
 function PaginatedSection({
@@ -114,6 +115,9 @@ export function HomePageClient() {
       </section>
 
       <div className="container py-8 space-y-16">
+        <Suspense>
+            <PinnedLecture />
+        </Suspense>
         <Suspense>
           <ContinueListening />
         </Suspense>

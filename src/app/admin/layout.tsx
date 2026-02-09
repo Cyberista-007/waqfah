@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX, Youtube, Podcast, Flame, Palette, Megaphone, Heart, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Book, CalendarClock, Clapperboard, Flame, Hash, Heart, HelpCircle, LayoutDashboard, ListVideo, Loader2, LogOut, Megaphone, Palette, Pin, Podcast, ShieldX, Upload, UserCog, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         { href: '/admin/challenges', label: 'التحديات', icon: Flame },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
         { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
+        { href: '/admin/pinned', label: 'المحاضرة المثبتة', icon: Pin },
         { href: '/admin/appearance', label: 'المظهر', icon: Palette },
         { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
         { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },

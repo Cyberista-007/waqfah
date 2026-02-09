@@ -20,6 +20,12 @@ export type AnnouncementSettings = {
     isActive?: boolean;
 };
 
+export type PinnedLectureSettings = {
+    lectureId?: string;
+    message?: string;
+    isActive?: boolean;
+};
+
 export type DonationSettings = {
     monthlyGoal?: number;
     currentAmount?: number;
