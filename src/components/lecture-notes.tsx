@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -39,7 +40,7 @@ interface LectureNotesProps {
 export function LectureNotes({ lecture, userId }: LectureNotesProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { audioRef, videoPlayerRef, playTrack, track, isPlaying } = useAudioPlayer();
+  const { audioRef, videoPlayerRef, playTrack, isPlaying, isPlayerVisible, setVideoClipEndTime } = useAudioPlayer();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const noteDocRef = useMemoFirebase(
@@ -188,12 +189,15 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     };
 
   
-    const handleTimestampClick = (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
-        if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
-            const playerState = videoPlayerRef.current.getPlayerState();
+    const handleTimestampClick = async (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
+        if (isPlayerVisible && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+            const playerState = await videoPlayerRef.current.getPlayerState();
             videoPlayerRef.current.seekTo(startTimeInSeconds, true);
             if (playerState !== 1) { // if not playing
                 videoPlayerRef.current.playVideo();
+            }
+            if (endTimeInSeconds) {
+                setVideoClipEndTime(endTimeInSeconds);
             }
         } else {
             playTrack(lecture, startTimeInSeconds, endTimeInSeconds);

@@ -26,6 +26,7 @@ type AudioPlayerContextType = {
   videoPlayerRef: React.RefObject<YouTubePlayer | null>;
   playVideo: (track: VideoTrack) => void;
   hideVideoPlayer: () => void;
+  setVideoClipEndTime: (endTime: number | null) => void;
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -41,6 +42,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [videoTrack, setVideoTrack] = useState<VideoTrack | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const videoPlayerRef = useRef<YouTubePlayer | null>(null);
+  const [videoClipEndTime, setVideoClipEndTime] = useState<number | null>(null);
 
   const pauseTrack = useCallback(() => {
     setIsPlaying(false);
@@ -59,6 +61,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (isPlayerVisible) {
       pauseVideo();
     }
+    setVideoClipEndTime(null);
 
     if (track?.id !== newTrack.id) {
       setTrack(newTrack);
@@ -82,6 +85,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   
   const playVideo = (track: VideoTrack) => {
     pauseTrack();
+    setClipEndTime(null);
     setVideoTrack(track);
     setIsPlayerVisible(true);
   };
@@ -107,9 +111,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
     setIsPlayerVisible(false);
     setVideoTrack(null);
+    setVideoClipEndTime(null);
   };
 
-  // Effect to handle auto-pause at the end of a clip
+  // Effect to handle auto-pause for AUDIO clips
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -127,6 +132,35 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [audioRef, clipEndTime, pauseTrack]);
 
+  // Effect to handle auto-pause for VIDEO clips
+  useEffect(() => {
+    if (!isPlayerVisible || !videoPlayerRef.current || !videoClipEndTime) return;
+
+    const player = videoPlayerRef.current;
+    let interval: NodeJS.Timeout;
+
+    const checkTime = async () => {
+        try {
+            const currentTime = await player.getCurrentTime();
+            if (currentTime >= videoClipEndTime) {
+                player.pauseVideo();
+                setVideoClipEndTime(null);
+                if (interval) clearInterval(interval);
+            }
+        } catch (e) {
+            console.error("Error checking video time", e);
+            setVideoClipEndTime(null);
+            if (interval) clearInterval(interval);
+        }
+    };
+    
+    interval = setInterval(checkTime, 250);
+
+    return () => {
+        if (interval) clearInterval(interval);
+    };
+  }, [isPlayerVisible, videoClipEndTime]);
+
   return (
     <AudioPlayerContext.Provider value={{
       track,
@@ -142,6 +176,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       videoPlayerRef,
       playVideo,
       hideVideoPlayer,
+      setVideoClipEndTime,
     }}>
       {children}
     </AudioPlayerContext.Provider>
