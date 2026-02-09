@@ -107,17 +107,18 @@ export default function AdminPinnedLecturePage() {
                             {selectedLectures.length > 0 ? selectedLectures.map(lecture => (
                                 <Badge key={lecture.id} variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
                                     <span>{lecture.title}</span>
-                                    <button
+                                    <div
+                                        role="button"
                                         aria-label={`إزالة ${lecture.title}`}
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             setSelectedIds(selectedIds.filter((id) => id !== lecture.id));
                                         }}
-                                        className="rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                                        className="rounded-full hover:bg-primary/20 p-0.5 transition-colors cursor-pointer"
                                     >
                                         <X className="h-3 w-3" />
-                                    </button>
+                                    </div>
                                 </Badge>
                             )) : "اختر محاضرة أو أكثر..."}
                           </div>
