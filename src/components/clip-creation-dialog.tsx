@@ -44,7 +44,7 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
   const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!firestore || !user) {
         toast({ variant: 'destructive', title: "يرجى تسجيل الدخول أولاً."});
@@ -89,16 +89,10 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
         createdAt: Timestamp.now(),
     };
 
-    try {
-        await addDocumentNonBlocking(clipsCollection, clipData);
-        toast({ title: "تم إنشاء المقطع بنجاح!" });
-        onOpenChange(false);
-    } catch (e) {
-        console.error("Failed to create clip:", e);
-        toast({ variant: 'destructive', title: "فشل إنشاء المقطع."});
-    } finally {
-        setIsSubmitting(false);
-    }
+    addDocumentNonBlocking(clipsCollection, clipData);
+    toast({ title: "تم إنشاء المقطع بنجاح!" });
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
 
   return (
