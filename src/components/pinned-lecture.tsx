@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDoc, useCollection } from '@/firebase';
@@ -41,12 +42,44 @@ export function PinnedLecture() {
     }, [settings, allLectures]);
 
     const isLoading = settingsLoading || (settings?.lectureIds && settings.lectureIds.length > 0 && lecturesLoading);
+    
+    const toDate = (timestamp: any): Date | undefined => {
+      if (!timestamp) return undefined;
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+      try {
+        const d = new Date(timestamp);
+        return isNaN(d.getTime()) ? undefined : d;
+      } catch {
+        return undefined;
+      }
+    }
+    
+    const isScheduled = useMemo(() => {
+        if (!settings) return false;
+        
+        const now = new Date();
+        const startDate = toDate(settings.startDate);
+        const endDate = toDate(settings.endDate);
+
+        if (startDate && now < startDate) {
+            return false;
+        }
+        if (endDate) {
+            // Set end of day for endDate
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            if (now > endOfDay) {
+                return false;
+            }
+        }
+        return true;
+    }, [settings]);
 
     if (isLoading) {
         return <PinnedLectureSkeleton />;
     }
 
-    if (!settings || !settings.isActive || pinnedLectures.length === 0) {
+    if (!settings || !settings.isActive || !isScheduled || pinnedLectures.length === 0) {
         return null;
     }
 

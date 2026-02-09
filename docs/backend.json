@@ -419,7 +419,9 @@
           "description": "The IDs of the pinned lectures."
         },
         "message": { "type": "string", "description": "The custom message to display with the pinned lectures." },
-        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned lecture section." }
+        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned lecture section." },
+        "startDate": { "type": "string", "format": "date-time", "description": "The date from which the pinned lectures should be visible." },
+        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned lectures should be visible." }
       }
     }
   },

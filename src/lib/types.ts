@@ -24,6 +24,8 @@ export type PinnedLectureSettings = {
     lectureIds?: string[];
     message?: string;
     isActive?: boolean;
+    startDate?: Timestamp;
+    endDate?: Timestamp;
 };
 
 export type DonationSettings = {
@@ -299,7 +301,7 @@ export type AccountabilityEntry = Serializable<{
   totalPoints?: number;
 }>;
 
-export type DestructiveSin = Serializable<{
+export type DestructiveSin = {
   id: string;
   title: string;
   dialogTitle: string;
@@ -307,5 +309,5 @@ export type DestructiveSin = Serializable<{
   hadith?: string;
   hadith2?: string;
   icon: string;
-}>;
+};
     
