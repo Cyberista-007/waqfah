@@ -53,11 +53,11 @@ function SearchPageComponent() {
     };
 
     const { lectures, series, programs, books } = useMemo(() => {
-        if (!searchTerm) {
+        if (!searchTerm.trim()) {
             return { lectures: [], series: [], programs: [], books: [] };
         }
         
-        const searchTermLower = searchTerm.toLowerCase();
+        const searchTermLower = searchTerm.toLowerCase().trim();
 
         // Lectures
         let filteredLectures = (allLectures || []).filter(l => {
@@ -124,98 +124,108 @@ function SearchPageComponent() {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3">
-                <SearchIcon />
-                نتائج البحث عن: <span className="text-primary">"{searchTerm}"</span>
-            </h1>
-
-            <Card className="mb-8 p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <div>
-                        <Label htmlFor="lang-filter">اللغة</Label>
-                        <Select onValueChange={(value) => handleFilterChange("lang", value)} defaultValue={languageFilter}>
-                        <SelectTrigger id="lang-filter">
-                            <SelectValue placeholder="اختر اللغة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">الكل</SelectItem>
-                            <SelectItem value="ar">العربية</SelectItem>
-                            <SelectItem value="en">الإنجليزية</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="duration-filter">مدة المحاضرة</Label>
-                        <Select onValueChange={(value) => handleFilterChange("duration", value)} defaultValue={durationFilter}>
-                        <SelectTrigger id="duration-filter">
-                            <SelectValue placeholder="اختر المدة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="any">أي مدة</SelectItem>
-                            <SelectItem value="under30">أقل من 30 دقيقة</SelectItem>
-                            <SelectItem value="30to60">30 - 60 دقيقة</SelectItem>
-                            <SelectItem value="over60">أكثر من 60 دقيقة</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex items-center space-x-2 space-x-reverse pt-4">
-                        <Checkbox 
-                            id="transcript-search" 
-                            checked={transcriptSearch}
-                            onCheckedChange={(checked) => handleFilterChange('transcript', !!checked)}
-                        />
-                        <Label htmlFor="transcript-search" className="cursor-pointer">
-                            بحث في التفريغ النصي
-                        </Label>
-                    </div>
+             {!searchTerm.trim() ? (
+                <div className="text-center py-16">
+                    <p className="text-lg text-muted-foreground">
+                        الرجاء إدخال مصطلح للبحث عنه في الشريط أعلاه.
+                    </p>
                 </div>
-            </Card>
-
-            {isLoading ? (
-                <div className="flex justify-center py-20"><Loader2 className="w-16 h-16 animate-spin" /></div>
             ) : (
-                <div className="space-y-12">
-                    {programs.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><Podcast /> البرامج</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                               {programs.map((p, index) => <ProgramCard key={p.id} program={p} index={index} />)}
-                            </div>
-                        </section>
-                    )}
-                    {series.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold mb-6 font-headline">السلاسل</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                               {series.map((s, index) => <SeriesCard key={s.id} series={s} index={index} />)}
-                            </div>
-                        </section>
-                    )}
-                     {lectures.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold mb-6 font-headline">المحاضرات</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {lectures.map((lecture, index) => <LectureCard key={lecture.id} lecture={lecture} index={index} />)}
-                            </div>
-                        </section>
-                    )}
-                    {books.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><BookIcon /> الكتب</h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
-                               {books.map((b, index) => <BookCard key={b.id} book={b} index={index} />)}
-                            </div>
-                        </section>
-                    )}
-        
-                    {!hasResults && searchTerm && (
-                         <div className="text-center py-16">
-                            <p className="text-lg text-muted-foreground">
-                                لم يتم العثور على نتائج للبحث عن: <span className="font-bold text-foreground">"{searchTerm}"</span>
-                            </p>
+                <>
+                <h1 className="text-4xl font-bold mb-8 font-headline flex items-center gap-3">
+                    <SearchIcon />
+                    نتائج البحث عن: <span className="text-primary">"{searchTerm}"</span>
+                </h1>
+
+                <Card className="mb-8 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <Label htmlFor="lang-filter">اللغة</Label>
+                            <Select onValueChange={(value) => handleFilterChange("lang", value)} defaultValue={languageFilter}>
+                            <SelectTrigger id="lang-filter">
+                                <SelectValue placeholder="اختر اللغة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">الكل</SelectItem>
+                                <SelectItem value="ar">العربية</SelectItem>
+                                <SelectItem value="en">الإنجليزية</SelectItem>
+                            </SelectContent>
+                            </Select>
                         </div>
-                    )}
-                </div>
+                        <div>
+                            <Label htmlFor="duration-filter">مدة المحاضرة</Label>
+                            <Select onValueChange={(value) => handleFilterChange("duration", value)} defaultValue={durationFilter}>
+                            <SelectTrigger id="duration-filter">
+                                <SelectValue placeholder="اختر المدة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="any">أي مدة</SelectItem>
+                                <SelectItem value="under30">أقل من 30 دقيقة</SelectItem>
+                                <SelectItem value="30to60">30 - 60 دقيقة</SelectItem>
+                                <SelectItem value="over60">أكثر من 60 دقيقة</SelectItem>
+                            </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center space-x-2 space-x-reverse pt-4">
+                            <Checkbox 
+                                id="transcript-search" 
+                                checked={transcriptSearch}
+                                onCheckedChange={(checked) => handleFilterChange('transcript', !!checked)}
+                            />
+                            <Label htmlFor="transcript-search" className="cursor-pointer">
+                                بحث في التفريغ النصي
+                            </Label>
+                        </div>
+                    </div>
+                </Card>
+
+                {isLoading ? (
+                    <div className="flex justify-center py-20"><Loader2 className="w-16 h-16 animate-spin" /></div>
+                ) : (
+                    <div className="space-y-12">
+                        {programs.length > 0 && (
+                            <section>
+                                <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><Podcast /> البرامج</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                                {programs.map((p, index) => <ProgramCard key={p.id} program={p} index={index} />)}
+                                </div>
+                            </section>
+                        )}
+                        {series.length > 0 && (
+                            <section>
+                                <h2 className="text-3xl font-bold mb-6 font-headline">السلاسل</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {series.map((s, index) => <SeriesCard key={s.id} series={s} index={index} />)}
+                                </div>
+                            </section>
+                        )}
+                        {lectures.length > 0 && (
+                            <section>
+                                <h2 className="text-3xl font-bold mb-6 font-headline">المحاضرات</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {lectures.map((lecture, index) => <LectureCard key={lecture.id} lecture={lecture} index={index} />)}
+                                </div>
+                            </section>
+                        )}
+                        {books.length > 0 && (
+                            <section>
+                                <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-3"><BookIcon /> الكتب</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                                {books.map((b, index) => <BookCard key={b.id} book={b} index={index} />)}
+                                </div>
+                            </section>
+                        )}
+            
+                        {!hasResults && (
+                            <div className="text-center py-16">
+                                <p className="text-lg text-muted-foreground">
+                                    لم يتم العثور على نتائج للبحث عن: <span className="font-bold text-foreground">"{searchTerm}"</span>
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+                </>
             )}
         </div>
     );
