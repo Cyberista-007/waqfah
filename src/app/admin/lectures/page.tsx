@@ -293,6 +293,7 @@ export default function AdminLecturesPage() {
                 <TableHead>عنوان المحاضرة</TableHead>
                 <TableHead className="hidden md:table-cell">البرنامج</TableHead>
                 <TableHead className="hidden md:table-cell">السلسلة</TableHead>
+                <TableHead>الاقتراحات</TableHead>
                 <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
@@ -300,7 +301,7 @@ export default function AdminLecturesPage() {
             <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />
                     </TableCell>
                   </TableRow>
@@ -316,6 +317,7 @@ export default function AdminLecturesPage() {
                     <TableCell className="font-medium">{lecture.title}</TableCell>
                     <TableCell className="hidden md:table-cell">{lecture.programName || 'غير محدد'}</TableCell>
                     <TableCell className="hidden md:table-cell">{lecture.seriesTitle || 'محاضرة مستقلة'}</TableCell>
+                    <TableCell>{lecture.suggestionCount || 0}</TableCell>
                     <TableCell className="hidden md:table-cell">
                         {(lecture.createdAt as any)?.toDate?.().toLocaleDateString('ar-EG') || 'غير محدد'}
                     </TableCell>

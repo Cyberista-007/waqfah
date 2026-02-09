@@ -8,6 +8,7 @@ import { Skeleton } from './ui/skeleton';
 import { Pin } from 'lucide-react';
 import { useMemo } from 'react';
 import { Card } from './ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 
 function PinnedLectureSkeleton() {
     return (
@@ -83,7 +84,9 @@ export function PinnedLecture() {
         return null;
     }
 
-    return (
+    const layout = settings.layout || 'grid';
+
+    const sectionContent = (
         <section className="space-y-6">
             <h2 className="text-3xl font-bold font-headline flex items-center gap-3">
                 <Pin className="h-8 w-8 text-primary animate-pulse" />
@@ -94,11 +97,29 @@ export function PinnedLecture() {
                     <p className="text-lg leading-relaxed">{settings.message}</p>
                 </Card>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-                {pinnedLectures.map((lecture, index) => (
-                    <LectureCard key={lecture.id} lecture={lecture} index={index} />
-                ))}
-            </div>
+            {layout === 'carousel' ? (
+                 <Carousel opts={{ align: "start", loop: true, direction: "rtl" }} className="w-full">
+                    <CarouselContent className="-ml-4">
+                        {pinnedLectures.map((lecture, index) => (
+                            <CarouselItem key={lecture.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
+                                <div className="p-1 h-full">
+                                    <LectureCard lecture={lecture} index={index} />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="right-12" />
+                    <CarouselNext />
+                </Carousel>
+            ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                    {pinnedLectures.map((lecture, index) => (
+                        <LectureCard key={lecture.id} lecture={lecture} index={index} />
+                    ))}
+                </div>
+            )}
         </section>
     );
+
+    return sectionContent;
 }

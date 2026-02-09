@@ -67,8 +67,13 @@ service cloud.firestore {
     match /lectures/{lectureId} {
       allow get, list: if true;
       // Admins can perform any write operation.
-      // This also implicitly allows batched deletes by admins.
       allow write: if isAdmin();
+      // Allow users to suggest lectures for pinning.
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suggestionCount']);
+
+      match /suggestions/{userId} {
+        allow read, create, delete: if isOwner(userId);
+      }
     }
 
     match /books/{bookId} {

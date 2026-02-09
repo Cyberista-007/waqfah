@@ -89,7 +89,8 @@
         "ratingCount": { "type": "number", "minimum": 0 },
         "viewCount": { "type": "number", "minimum": 0 },
         "createdAt": { "type": "string", "format": "date-time" },
-        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
+        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." },
+        "suggestionCount": { "type": "number", "minimum": 0, "description": "Number of times this lecture has been suggested for pinning." }
       },
       "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },
@@ -421,8 +422,20 @@
         "message": { "type": "string", "description": "The custom message to display with the pinned lectures." },
         "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned lecture section." },
         "startDate": { "type": "string", "format": "date-time", "description": "The date from which the pinned lectures should be visible." },
-        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned lectures should be visible." }
+        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned lectures should be visible." },
+        "layout": { "type": "string", "enum": ["grid", "carousel"], "description": "The display layout for pinned lectures." }
       }
+    },
+    "Suggestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Suggestion",
+      "description": "Represents a user's suggestion to pin a lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "createdAt"]
     }
   },
   "auth": {
@@ -451,6 +464,10 @@
       {
         "path": "/lectures/{lectureId}",
         "definition": { "schema": { "$ref": "#/entities/Lecture" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/suggestions/{userId}",
+        "definition": { "schema": { "$ref": "#/entities/Suggestion" } }
       },
       {
         "path": "/books/{bookId}",

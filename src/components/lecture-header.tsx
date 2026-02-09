@@ -1,14 +1,14 @@
 
 
-"use client";
+'use client';
 
 import Link from "next/link";
 import type { Lecture, Playlist } from "@/lib/types";
 import { Button } from "./ui/button";
-import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError } from "@/firebase";
+import { useAuth, useFirestore, useUser, useCollection, errorEmitter, FirestorePermissionError, useMemoFirebase } from "@/firebase";
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, runTransaction, increment, Timestamp } from "firebase/firestore";
-import { Star, ListPlus, MicVocal, ArrowRight } from "lucide-react";
+import { Star, ListPlus, MicVocal, ArrowRight, Pin, Loader2 } from "lucide-react";
 import { FavoriteButton } from "./favorite-button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -31,11 +31,19 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     const [hoverRating, setHoverRating] = useState<number | null>(null);
     const [currentRating, setCurrentRating] = useState(lecture.rating || 0);
     const [ratingCount, setRatingCount] = useState(lecture.ratingCount || 0);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRatingSubmitting, setIsRatingSubmitting] = useState(false);
     const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+    const [isSuggesting, setIsSuggesting] = useState(false);
 
     const playlistsPath = user ? `users/${user.uid}/playlists` : null;
     const { data: playlists } = useCollection<Playlist>(playlistsPath);
+
+    const suggestionDocPath = useMemoFirebase(
+      () => (user && firestore ? doc(firestore, 'lectures', lecture.id, 'suggestions', user.uid) : null),
+      [user, firestore, lecture.id]
+    );
+    const { data: suggestionDoc, isLoading: isSuggestionLoading } = useDoc(suggestionDocPath);
+    const hasSuggested = !!suggestionDoc;
     
     useEffect(() => {
         const fetchRating = async () => {
@@ -68,9 +76,44 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
         }
         setIsPlaylistDialogOpen(true);
     }
+    
+    const handleSuggestPin = async () => {
+      if (!user || !firestore || hasSuggested || isSuggesting) {
+        if (!user) {
+          toast({ variant: 'destructive', title: 'يرجى تسجيل الدخول أولاً.' });
+          router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
+        }
+        return;
+      }
+
+      setIsSuggesting(true);
+      const lectureRef = doc(firestore, 'lectures', lecture.id);
+      const suggestionRef = doc(firestore, 'lectures', lecture.id, 'suggestions', user.uid);
+
+      try {
+        await runTransaction(firestore, async (transaction) => {
+          const lectureSnap = await transaction.get(lectureRef);
+          if (!lectureSnap.exists()) throw new Error("Lecture not found.");
+
+          const suggestionSnap = await transaction.get(suggestionRef);
+          if (suggestionSnap.exists()) {
+            // Already suggested, do nothing.
+            return;
+          }
+          // Create suggestion doc and increment count
+          transaction.set(suggestionRef, { userId: user.uid, createdAt: Timestamp.now() });
+          transaction.update(lectureRef, { suggestionCount: increment(1) });
+        });
+        toast({ title: 'شكراً لاقتراحك!', description: 'تم تسجيل اقتراحك لتثبيت هذه المحاضرة.' });
+      } catch (e: any) {
+         toast({ variant: 'destructive', title: 'حدث خطأ', description: e.message || "لم نتمكن من تسجيل اقتراحك." });
+      } finally {
+        setIsSuggesting(false);
+      }
+    };
 
     const handleRating = async (ratingValue: number) => {
-        if (isSubmitting) return;
+        if (isRatingSubmitting) return;
 
         if (!user || !firestore) {
             toast({
@@ -81,7 +124,7 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
             return;
         }
 
-        setIsSubmitting(true);
+        setIsRatingSubmitting(true);
 
         const lectureRef = doc(firestore, 'lectures', lecture.id);
         const ratingRef = doc(firestore, 'lectures', lecture.id, 'ratings', user.uid);
@@ -140,7 +183,7 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                 toast({ variant: 'destructive', title: "حدث خطأ أثناء التقييم." });
             }
         } finally {
-            setIsSubmitting(false);
+            setIsRatingSubmitting(false);
         }
     };
 
@@ -161,6 +204,10 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                         <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                         <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading}>
+                            {isSuggesting || isSuggestionLoading ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Pin className="w-5 h-5 me-2" />}
+                            <span>{hasSuggested ? "تم الاقتراح" : "اقترح للتثبيت"}</span>
+                        </Button>
                          <Button variant="outline" onClick={handleAddToPlaylistClick}>
                             <ListPlus className="w-5 h-5 me-2" />
                             <span>إضافة لقائمة</span>

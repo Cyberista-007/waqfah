@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -21,6 +22,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function SortableLectureItem({ id, lecture, onRemove }: { id: string, lecture: Lecture, onRemove: (id: string) => void }) {
     const {
@@ -83,6 +85,7 @@ export default function AdminPinnedLecturePage() {
   const [open, setOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [layout, setLayout] = useState<'grid' | 'carousel'>('grid');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -99,6 +102,7 @@ export default function AdminPinnedLecturePage() {
       setIsActive(currentSettings.isActive || false);
       setStartDate(toDate(currentSettings.startDate));
       setEndDate(toDate(currentSettings.endDate));
+      setLayout(currentSettings.layout || 'grid');
     }
   }, [currentSettings]);
 
@@ -121,6 +125,7 @@ export default function AdminPinnedLecturePage() {
             isActive,
             startDate: startDate ? Timestamp.fromDate(startDate) : null,
             endDate: endDate ? Timestamp.fromDate(endDate) : null,
+            layout,
         }, { merge: true });
         toast({ title: 'تم حفظ إعدادات المحاضرات المثبتة بنجاح!' });
     } catch (error) {
@@ -233,7 +238,10 @@ export default function AdminPinnedLecturePage() {
                                       selectedIds.includes(lecture.id) ? "opacity-100" : "opacity-0"
                                     )}
                                   />
-                                  {lecture.title}
+                                   <span className="flex-grow">{lecture.title}</span>
+                                    {lecture.suggestionCount && lecture.suggestionCount > 0 && (
+                                        <Badge variant="outline">{lecture.suggestionCount}</Badge>
+                                    )}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -251,6 +259,19 @@ export default function AdminPinnedLecturePage() {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <Label>تصميم العرض في الرئيسية</Label>
+                    <Select value={layout} onValueChange={(v) => setLayout(v as any)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="اختر تصميمًا..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="grid">شبكة (Grid)</SelectItem>
+                            <SelectItem value="carousel">شريط تمرير (Carousel)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

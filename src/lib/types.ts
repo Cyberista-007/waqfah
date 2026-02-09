@@ -26,6 +26,7 @@ export type PinnedLectureSettings = {
     isActive?: boolean;
     startDate?: Timestamp;
     endDate?: Timestamp;
+    layout?: 'grid' | 'carousel';
 };
 
 export type DonationSettings = {
@@ -99,6 +100,7 @@ export type Lecture = Serializable<{
   youtubeViewCount?: number;
   createdAt: Timestamp; // Firestore timestamp
   language?: string;
+  suggestionCount?: number;
 }>;
 
 export type TranscriptItem = {
@@ -310,4 +312,10 @@ export type DestructiveSin = {
   hadith2?: string;
   icon: string;
 };
+
+export type Suggestion = Serializable<{
+    id: string; // userId
+    userId: string;
+    createdAt: Timestamp;
+}>;
     
