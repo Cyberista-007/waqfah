@@ -21,7 +21,7 @@ export type AnnouncementSettings = {
 };
 
 export type PinnedLectureSettings = {
-    lectureId?: string;
+    lectureIds?: string[];
     message?: string;
     isActive?: boolean;
 };
