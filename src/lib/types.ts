@@ -105,6 +105,7 @@ export type Lecture = Serializable<{
   ratingCount: number;
   viewCount: number;
   youtubeViewCount?: number;
+  publishedAt?: Timestamp;
   createdAt: Timestamp; // Firestore timestamp
   language?: string;
   suggestionCount?: number;

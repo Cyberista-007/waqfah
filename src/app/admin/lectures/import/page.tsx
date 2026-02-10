@@ -57,6 +57,7 @@ interface FetchedVideo {
     description: string;
     durationInSeconds: number;
     viewCount?: number;
+    publishedAt?: string;
 }
 
 interface FetchedPlaylist {
@@ -352,6 +353,7 @@ export default function AdminImportLecturesPage() {
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
                     pdfUrl: "",
                     createdAt: Timestamp.now(),
+                    publishedAt: video.publishedAt ? Timestamp.fromDate(new Date(video.publishedAt)) : undefined,
                     rating: 0,
                     ratingCount: 0,
                     viewCount: 0,
@@ -979,5 +981,6 @@ export default function AdminImportLecturesPage() {
   
 
     
+
 
 

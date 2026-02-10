@@ -92,7 +92,8 @@
         "viewCount": { "type": "number", "minimum": 0 },
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." },
-        "suggestionCount": { "type": "number", "minimum": 0, "description": "Number of times this lecture has been suggested for pinning." }
+        "suggestionCount": { "type": "number", "minimum": 0, "description": "Number of times this lecture has been suggested for pinning." },
+        "publishedAt": { "type": "string", "format": "date-time", "description": "The original publication date from the source (e.g., YouTube)." }
       },
       "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
     },

@@ -232,6 +232,7 @@ export async function POST(req: NextRequest) {
                     description: videoData.snippet?.description,
                     durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0,
                     viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0,
+                    publishedAt: videoData.snippet?.publishedAt,
                 }}, { headers: corsHeaders });
             } else {
                 return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404, headers: corsHeaders });
@@ -316,6 +317,7 @@ export async function POST(req: NextRequest) {
                 description: item.snippet?.description || '',
                 durationInSeconds,
                 viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 0,
+                publishedAt: item.snippet?.publishedAt,
             };
 
             // Heuristic to detect shorts, can be adjusted.

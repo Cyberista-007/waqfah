@@ -1,9 +1,12 @@
+
 "use client"
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture, MessageSquare } from "lucide-react"
-import { useState, useMemo, useRef, memo } from "react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture, MessageSquare, Calendar } from "lucide-react"
+import { useState, useMemo, useRef, memo, Fragment } from "react"
+import { formatDistanceToNow } from "date-fns";
+import { ar } from 'date-fns/locale';
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -172,6 +175,37 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
   
   const hasChannel = lecture.channelName && lecture.channelSlug;
 
+  const publicationDate = lecture.publishedAt ? new Date(lecture.publishedAt) : new Date(lecture.createdAt);
+  const dateText = !isNaN(publicationDate.getTime()) 
+    ? formatDistanceToNow(publicationDate, { addSuffix: true, locale: ar })
+    : null;
+
+  const metaItems = [];
+    if (dateText) {
+        metaItems.push(
+            <div key="date" className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{dateText}</span>
+            </div>
+        );
+    }
+    if (lecture.youtubeViewCount && lecture.youtubeViewCount > 0) {
+        metaItems.push(
+            <div key="views" className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5" />
+                <span>{formatViews(lecture.youtubeViewCount)}</span>
+            </div>
+        );
+    }
+    if (lecture.duration > 0) {
+        metaItems.push(
+            <div key="duration" className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{formatDuration(lecture.duration)}</span>
+            </div>
+        );
+    }
+
   return (
     <TooltipProvider>
       <Card
@@ -266,21 +300,12 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
         <div className="p-3 bg-card flex-grow flex flex-col">
           <div className="flex-grow pb-2">
             <div className="mb-2 inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
-              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
-                <div className="flex items-center gap-1">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>{formatViews(lecture.youtubeViewCount)}</span>
-                </div>
-              )}
-              {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && lecture.duration > 0 && (
-                <span className="opacity-70">·</span>
-              )}
-              {lecture.duration > 0 && (
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{formatDuration(lecture.duration)}</span>
-                </div>
-              )}
+                {metaItems.map((item, index) => (
+                    <Fragment key={index}>
+                        {item}
+                        {index < metaItems.length - 1 && <span className="opacity-70">·</span>}
+                    </Fragment>
+                ))}
             </div>
             <Tooltip>
                 <TooltipTrigger asChild>

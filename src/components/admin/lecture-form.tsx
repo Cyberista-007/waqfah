@@ -58,6 +58,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
   const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
+  const [publishedAt, setPublishedAt] = useState<string | null>(lecture?.publishedAt ? new Date(lecture.publishedAt).toISOString() : null);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -77,6 +78,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           setSelectedSeriesId(savedData.selectedSeriesId || "none");
           setSelectedProgramId(savedData.selectedProgramId || "none");
           setYoutubeViewCount(savedData.youtubeViewCount);
+          setPublishedAt(savedData.publishedAt || null);
         } catch (e) {
           console.error("Failed to parse autosaved lecture data", e);
           localStorage.removeItem(AUTOSAVE_KEY);
@@ -88,11 +90,11 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   useEffect(() => {
     if (!isEditMode) {
       const dataToSave = {
-        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount
+        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt
       };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount]);
+  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt]);
 
   const handleClose = () => {
     if (!isEditMode) {
@@ -143,6 +145,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             setDescription(data.videoInfo.description);
             setDuration(data.videoInfo.durationInSeconds.toString());
             setYoutubeViewCount(data.videoInfo.viewCount);
+            setPublishedAt(data.videoInfo.publishedAt);
             toast({ title: "تم جلب بيانات الفيديو بنجاح." });
         } else {
              toast({ variant: "destructive", title: "خطأ", description: "لم يتم العثور على معلومات الفيديو. يرجى التحقق من أن الرابط هو رابط فيديو صالح." });
@@ -194,6 +197,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         soundcloudUrl: soundcloudUrl,
         youtubeViewCount: youtubeViewCount || 0,
         language: language,
+        publishedAt: publishedAt ? Timestamp.fromDate(new Date(publishedAt)) : undefined,
     };
 
     try {
@@ -334,7 +338,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required rows={4}/>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="duration">المدة (بالثواني)</Label>
               <Input id="duration" name="duration" type="number" value={duration} onChange={(e) => setDuration(e.target.value)} required/>
@@ -354,6 +358,10 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                         <SelectItem value="en">الإنجليزية</SelectItem>
                     </SelectContent>
                 </Select>
+            </div>
+             <div>
+                <Label htmlFor="publishedAt">تاريخ النشر الأصلي</Label>
+                <Input id="publishedAt" type="text" value={publishedAt ? new Date(publishedAt).toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' }) : 'غير متوفر'} readOnly disabled />
             </div>
           </div>
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
