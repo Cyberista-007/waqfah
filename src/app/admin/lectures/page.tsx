@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import type { Lecture } from "@/lib/types";
+import type { Lecture, Program, Series } from "@/lib/types";
 import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, runTransaction } from "firebase/firestore";
+import { doc, runTransaction, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Wand2, Search, Clapperboard, Video, ChevronDown } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,6 +30,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 export default function AdminLecturesPage() {
     const { toast } = useToast();
@@ -42,8 +59,27 @@ export default function AdminLecturesPage() {
     const [activeTab, setActiveTab] = useState("lectures");
     const [openCollapsibles, setOpenCollapsibles] = useState<string[]>([]);
 
+    const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
+    const [batchSeriesId, setBatchSeriesId] = useState("");
+    const [batchProgramId, setBatchProgramId] = useState("");
+    const [isBatchUpdating, setIsBatchUpdating] = useState(false);
 
-    const { data: allLectures, isLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
+
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
+    const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
+    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+    
+    const isLoading = lecturesLoading || seriesLoading || programsLoading;
+
+    useEffect(() => {
+        if (batchSeriesId && batchSeriesId !== 'none' && allSeries) {
+            const series = allSeries.find(s => s.id === batchSeriesId);
+            if (series?.programId) {
+                setBatchProgramId(series.programId);
+            }
+        }
+    }, [batchSeriesId, allSeries]);
+
 
     const { regularLectures, shorts } = useMemo(() => {
         if (!allLectures) return { regularLectures: [], shorts: [] };
@@ -166,25 +202,17 @@ export default function AdminLecturesPage() {
                         if (!seriesUpdateCounts[lecture.seriesId]) {
                             seriesUpdateCounts[lecture.seriesId] = 0;
                         }
-                        seriesUpdateCounts[lecture.seriesId]++;
+                        seriesUpdateCounts[lecture.seriesId]--;
                     }
                 });
 
                 for (const seriesId in seriesUpdateCounts) {
                     const seriesRef = doc(firestore, 'series', seriesId);
-                    const seriesDoc = await transaction.get(seriesRef);
-                    if (seriesDoc.exists()) {
-                        const currentCount = seriesDoc.data().lectureCount || 0;
-                        const newCount = Math.max(0, currentCount - seriesUpdateCounts[seriesId]);
-                        transaction.update(seriesRef, { lectureCount: newCount });
-                    }
+                    transaction.update(seriesRef, { lectureCount: increment(seriesUpdateCounts[seriesId]) });
                 }
                 
                 const statsRef = doc(firestore, 'stats', 'global');
-                const statsDoc = await transaction.get(statsRef);
-                const currentLectures = statsDoc.data()?.lectures || 0;
-                const newLecturesCount = Math.max(0, currentLectures - lecturesToDelete.length);
-                transaction.set(statsRef, { lectures: newLecturesCount }, { merge: true });
+                transaction.set(statsRef, { lectures: increment(-lecturesToDelete.length) }, { merge: true });
 
                 lecturesToDelete.forEach(lecture => {
                     const lectureRef = doc(firestore, 'lectures', lecture.id);
@@ -209,6 +237,95 @@ export default function AdminLecturesPage() {
              setIsBatchConfirmOpen(false);
         }
     };
+    
+    const handleBatchUpdate = async () => {
+        if (!firestore || selectedItems.length === 0) return;
+        
+        const seriesId = batchSeriesId; // Can be '', 'none', or an ID
+        const programId = batchProgramId;
+
+        if (!seriesId && !programId) {
+            toast({ variant: 'destructive', title: 'لم يتم تحديد أي تغيير' });
+            return;
+        }
+
+        setIsBatchUpdating(true);
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const lecturesToUpdateRefs = selectedItems.map(id => doc(firestore, 'lectures', id));
+                const lectureSnapshots = await Promise.all(lecturesToUpdateRefs.map(ref => transaction.get(ref)));
+
+                const newSeries = seriesId && seriesId !== 'none' ? allSeries?.find(s => s.id === seriesId) : null;
+                let newProgram = programId && programId !== 'none' ? allPrograms?.find(p => p.id === programId) : null;
+                
+                if (newSeries) {
+                    newProgram = allPrograms?.find(p => p.id === newSeries.programId) || null;
+                }
+
+                const seriesCountChanges: Record<string, number> = {};
+
+                for (const lectureSnap of lectureSnapshots) {
+                    if (!lectureSnap.exists()) continue;
+                    
+                    const lectureData = lectureSnap.data() as Lecture;
+                    const updatePayload: any = {};
+
+                    const oldSeriesId = lectureData.seriesId;
+                    
+                    if (seriesId) {
+                        const newSeriesId = newSeries ? newSeries.id : '';
+                        if (oldSeriesId !== newSeriesId) {
+                            updatePayload.seriesId = newSeriesId;
+                            updatePayload.seriesTitle = newSeries ? newSeries.title : '';
+                            updatePayload.seriesSlug = newSeries ? newSeries.slug : '';
+
+                            if (oldSeriesId) seriesCountChanges[oldSeriesId] = (seriesCountChanges[oldSeriesId] || 0) - 1;
+                            if (newSeriesId) seriesCountChanges[newSeriesId] = (seriesCountChanges[newSeriesId] || 0) + 1;
+                        }
+                    }
+                    
+                    const newProgramId = newProgram ? newProgram.id : '';
+                    if (seriesId || programId) {
+                        if (newSeries) {
+                             updatePayload.programId = newProgram ? newProgram.id : '';
+                             updatePayload.programName = newProgram ? newProgram.name : '';
+                             updatePayload.programSlug = newProgram ? newProgram.slug : '';
+                        } else if (programId) {
+                             updatePayload.programId = newProgramId;
+                             updatePayload.programName = newProgram ? newProgram.name : '';
+                             updatePayload.programSlug = newProgram ? newProgram.slug : '';
+                        }
+                    }
+
+                    if (Object.keys(updatePayload).length > 0) {
+                        transaction.update(lectureSnap.ref, updatePayload);
+                    }
+                }
+                
+                for (const sId in seriesCountChanges) {
+                    const change = seriesCountChanges[sId];
+                    if (change !== 0) {
+                        const seriesRef = doc(firestore, 'series', sId);
+                        transaction.update(seriesRef, { lectureCount: increment(change) });
+                    }
+                }
+            });
+
+            toast({ title: "تم التحديث بنجاح", description: `تم تحديث ${selectedItems.length} محاضرة.` });
+            
+        } catch (error) {
+            console.error("Batch update transaction failed:", error);
+            toast({ variant: 'destructive', title: "فشل التحديث الجماعي" });
+        } finally {
+            setIsBatchUpdating(false);
+            setIsBatchEditOpen(false);
+            setSelectedItems([]);
+            setBatchSeriesId('');
+            setBatchProgramId('');
+        }
+    };
+
 
     const handleUpdateAllMetadata = async () => {
         if (!firestore || !allLectures) return;
@@ -409,10 +526,61 @@ export default function AdminLecturesPage() {
                     />
                     <Label htmlFor="select-all">تحديد الكل</Label>
                     {selectedItems.length > 0 && (
-                        <Button variant="destructive" onClick={() => setIsBatchConfirmOpen(true)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            حذف المحدد ({selectedItems.length})
-                        </Button>
+                        <>
+                            <Button variant="destructive" onClick={() => setIsBatchConfirmOpen(true)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                حذف المحدد ({selectedItems.length})
+                            </Button>
+                             <Dialog open={isBatchEditOpen} onOpenChange={setIsBatchEditOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        تعديل جماعي ({selectedItems.length})
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>تعديل {selectedItems.length} محاضرة</DialogTitle>
+                                        <DialogDescription>
+                                            قم بتعيين سلسلة أو برنامج جديد للمحاضرات المحددة. سيتم تطبيق التغيير على جميع العناصر المحددة.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div>
+                                            <Label htmlFor="batch-series">تعيين إلى سلسلة</Label>
+                                            <Select value={batchSeriesId} onValueChange={setBatchSeriesId}>
+                                                <SelectTrigger id="batch-series">
+                                                    <SelectValue placeholder="اختر سلسلة..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">إزالة من السلسلة</SelectItem>
+                                                    {allSeries?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="batch-program">تعيين إلى برنامج</Label>
+                                            <Select value={batchProgramId} onValueChange={setBatchProgramId} disabled={!!batchSeriesId && batchSeriesId !== 'none'}>
+                                                <SelectTrigger id="batch-program">
+                                                    <SelectValue placeholder="اختر برنامجًا..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">محاضرة مستقلة (بدون برنامج)</SelectItem>
+                                                    {allPrograms?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsBatchEditOpen(false)}>إلغاء</Button>
+                                        <Button onClick={handleBatchUpdate} disabled={isBatchUpdating}>
+                                            {isBatchUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            تطبيق التغييرات
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </>
                     )}
                 </div>
             </div>
