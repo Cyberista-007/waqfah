@@ -15,6 +15,7 @@ import { HomePageSkeleton } from '@/components/skeletons';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 function ProgramPageContent({ program }: { program: Program }) {
     // Fetch all data needed and filter on the client.
@@ -129,12 +130,7 @@ function ProgramPageContent({ program }: { program: Program }) {
                 <>
                     {shorts.length > 0 && (
                         <section className="px-4 sm:px-6 lg:px-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold font-headline">مقاطع قصيرة</h2>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {shorts.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
-                            </div>
+                           <ShortsCarousel shorts={shorts} />
                         </section>
                     )}
                     
