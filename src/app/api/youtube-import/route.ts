@@ -245,7 +245,7 @@ export async function POST(req: NextRequest) {
                  return NextResponse.json({ message: "لم يتم العثور على قناة صالحة في الرابط." }, { status: 400, headers: corsHeaders });
             }
             const channelResponse = await youtube.channels.list({
-                part: ['snippet'],
+                part: ['snippet', 'brandingSettings'],
                 id: [channelId]
             });
             const channelData = channelResponse.data.items?.[0];
@@ -254,6 +254,7 @@ export async function POST(req: NextRequest) {
                     name: channelData.snippet.title,
                     description: channelData.snippet.description,
                     imageUrl: channelData.snippet.thumbnails?.high?.url || channelData.snippet.thumbnails?.default?.url,
+                    bannerUrl: channelData.brandingSettings?.image?.bannerExternalUrl,
                 }}, { headers: corsHeaders });
             } else {
                  return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404, headers: corsHeaders });

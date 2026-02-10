@@ -13,7 +13,7 @@ import { FollowButton } from '@/components/follow-button';
 import { Users, Loader2, ArrowLeft } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
@@ -25,6 +25,34 @@ function ProgramPageContent({ program }: { program: Program }) {
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
 
     const isLoading = lecturesLoading || seriesLoading;
+    const [bannerUrl, setBannerUrl] = useState("https://picsum.photos/seed/program-banner/1600/400");
+
+    useEffect(() => {
+        if (program.youtubeUrl) {
+            const fetchBanner = async () => {
+                try {
+                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.channelInfo?.bannerUrl) {
+                            // YouTube banner URLs can be tweaked for size. Let's try to get a bigger one.
+                            const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
+                            setBannerUrl(highResBanner);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch YouTube banner:", error);
+                }
+            };
+            fetchBanner();
+        }
+    }, [program.youtubeUrl]);
+
 
     // Memoize the filtering logic to run only when data changes
     const { programSeries, programLectures } = useMemo(() => {
@@ -72,7 +100,6 @@ function ProgramPageContent({ program }: { program: Program }) {
     const contentIsLoading = isLoading;
     const placeholder = getPlaceholderImage(program.imageId);
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
-    const bannerUrl = "https://picsum.photos/seed/program-banner/1600/400";
 
     return (
         <div className="container mx-auto px-0 py-0 -mt-8 space-y-12">

@@ -11,11 +11,39 @@ import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 function ChannelPageContent({ channel }: { channel: Channel }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+
+    const [bannerUrl, setBannerUrl] = useState("https://picsum.photos/seed/channel-banner/1600/400");
+
+    useEffect(() => {
+        if (channel.youtubeUrl) {
+            const fetchBanner = async () => {
+                try {
+                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: channel.youtubeUrl, fetchChannelInfo: true }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.channelInfo?.bannerUrl) {
+                            // YouTube banner URLs can be tweaked for size. Let's try to get a bigger one.
+                            const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
+                            setBannerUrl(highResBanner);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch YouTube banner:", error);
+                }
+            };
+            fetchBanner();
+        }
+    }, [channel.youtubeUrl]);
 
     const { shorts, regularLectures } = useMemo(() => {
         if (!allLectures) return { shorts: [], regularLectures: [] };
@@ -44,7 +72,6 @@ function ChannelPageContent({ channel }: { channel: Channel }) {
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
     
-    const bannerUrl = "https://picsum.photos/seed/channel-banner/1600/400";
     const totalLectures = (shorts?.length || 0) + (regularLectures?.length || 0);
 
 
