@@ -75,3 +75,11 @@ export function formatBytes(bytes: number, decimals = 2) {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+export function normalizeArabic(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا') // Normalize hamzas to plain alif
+    .replace(/ة/g, 'ه'); // Normalize taa marbuta to haa
+}

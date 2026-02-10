@@ -5,7 +5,7 @@ import { useParams, notFound } from 'next/navigation';
 import type { Program, Lecture, Series } from '@/lib/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
-import { getInitials } from '@/lib/utils';
+import { getInitials, normalizeArabic } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import Image from 'next/image';
@@ -97,8 +97,9 @@ function ProgramPageContent({ program }: { program: Program }) {
         if (!lectureSearchTerm) {
             return regularLectures;
         }
+        const normalizedSearchTerm = normalizeArabic(lectureSearchTerm);
         return regularLectures.filter(lecture => 
-            lecture.title.toLowerCase().includes(lectureSearchTerm.toLowerCase())
+            normalizeArabic(lecture.title).includes(normalizedSearchTerm)
         );
     }, [regularLectures, lectureSearchTerm]);
 

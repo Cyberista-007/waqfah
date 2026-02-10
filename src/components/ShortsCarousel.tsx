@@ -6,6 +6,7 @@ import type { Lecture } from '@/lib/types';
 import { Sparkles, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Input } from './ui/input';
+import { normalizeArabic } from '@/lib/utils';
 
 
 interface ShortsCarouselProps {
@@ -19,8 +20,9 @@ export function ShortsCarousel({ shorts }: ShortsCarouselProps) {
         if (!searchTerm) {
             return shorts;
         }
+        const normalizedSearchTerm = normalizeArabic(searchTerm);
         return shorts.filter(short =>
-            short.title.toLowerCase().includes(searchTerm.toLowerCase())
+            normalizeArabic(short.title).includes(normalizedSearchTerm)
         );
     }, [shorts, searchTerm]);
 
