@@ -9,7 +9,7 @@ import { collection, query, where, orderBy, doc, getDoc } from 'firebase/firesto
 import type { Series, Lecture, Program, ListenHistoryItem } from '@/lib/types';
 import { getPlaceholderImage } from '@/lib/images';
 import { Play, Search, Share2 } from 'lucide-react';
-import { YoutubePlayerModal } from '@/components/youtube-player-modal';
+import { useAudioPlayer } from '@/components/audio-player-provider';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,10 +44,10 @@ interface SeriesClientPageProps {
 }
 
 export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: SeriesClientPageProps) {
+  const { playIframe } = useAudioPlayer();
   const { user } = useUser();
   const { toast } = useToast();
   const [filteredLectures, setFilteredLectures] = useState<Lecture[]>(lecturesInSeries);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
   const { data: listenHistory } = useCollection<ListenHistoryItem>(
@@ -95,6 +95,12 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
   const featuredLecture = lecturesInSeries[0] || null;
   const mainVideoId = getYoutubeVideoId(featuredLecture?.youtubeUrl);
 
+  const handlePlayVideo = () => {
+    if (mainVideoId) {
+      playIframe({ type: 'youtube', src: mainVideoId, title: featuredLecture?.title || series.title });
+    }
+  }
+
   return (
     <>
       <div className="space-y-8 -mt-8 -mx-4 md:-mx-8">
@@ -110,7 +116,7 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
           <div 
             className={cn("absolute inset-0 flex items-center justify-center transition-opacity duration-300", mainVideoId ? "cursor-pointer group" : "cursor-default")}
-            onClick={() => mainVideoId && setIsModalOpen(true)}
+            onClick={handlePlayVideo}
           >
             {mainVideoId && (
               <div className="h-20 w-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100">
@@ -168,14 +174,6 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
           </div>
         </section>
       </div>
-      {mainVideoId && (
-        <YoutubePlayerModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          videoId={mainVideoId}
-          shareUrl={typeof window !== 'undefined' ? window.location.href : ''}
-        />
-      )}
     </>
   );
 }

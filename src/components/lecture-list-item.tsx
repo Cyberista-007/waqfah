@@ -13,8 +13,6 @@ import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
 import { cn, formatDuration } from "@/lib/utils";
 import { useState, memo } from "react";
-import { YoutubePlayerModal } from "./youtube-player-modal";
-import { ImageModal } from "./image-modal";
 import { LectureCard } from "./lecture-card";
 
 
@@ -45,11 +43,10 @@ interface LectureListItemProps {
 }
 
 const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
-    const { playTrack } = useAudioPlayer();
+    const { playTrack, playIframe } = useAudioPlayer();
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     
     const historyDocRef = useMemoFirebase(
@@ -105,7 +102,6 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
 
     const videoId = getYoutubeVideoId(lecture.youtubeUrl);
     const placeholder = getPlaceholderImage(lecture.imageId);
-    const lectureUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${lecture.slug}` : '';
     
     const imageUrl = videoId 
       ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
@@ -113,7 +109,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
 
     const handleImageClick = () => {
         if (videoId) {
-            setIsModalOpen(true);
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title });
         } else {
             handlePlay();
         }
@@ -121,6 +117,14 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
     
     if (isExpanded) {
         return <LectureCard lecture={lecture} index={index} onCollapse={() => setIsExpanded(false)} />;
+    }
+
+    const handleYoutubeClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (videoId) {
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+        }
     }
 
 
@@ -163,7 +167,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
             </div>
             <div className="flex flex-col md:flex-row items-center gap-1">
                 {videoId && (
-                    <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
+                    <Button variant="ghost" size="icon" onClick={handleYoutubeClick}>
                         <Youtube className="w-5 h-5 text-red-500"/>
                     </Button>
                 )}
@@ -181,14 +185,6 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                 </Button>
             </div>
         </div>
-        {videoId && (
-            <YoutubePlayerModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                videoId={videoId}
-                shareUrl={lectureUrl}
-            />
-        )}
         </>
     );
 }
