@@ -1,4 +1,3 @@
-
 'use client';
 
 import { HomeSearch } from '@/components/home-search';
@@ -9,7 +8,7 @@ import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import type { Lecture, Series, Program } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -17,7 +16,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from './skeletons';
-import { PinnedLecture } from './pinned-lecture';
+import { PinnedItems } from '@/app/pinned-items';
+import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 // New Component for paginated sections
 function PaginatedSection({
@@ -77,11 +77,26 @@ function PaginatedSection({
 
 
 export function HomePageClient() {
-  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 20 });
   const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
+  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
 
   const isLoading = seriesLoading || lecturesLoading || programsLoading;
+
+  const { shorts, regularLectures } = useMemo(() => {
+    if (!latestLectures) return { shorts: [], regularLectures: [] };
+    const shortsArr: Lecture[] = [];
+    const regularLecturesArr: Lecture[] = [];
+    latestLectures.forEach(lecture => {
+        // Shorts are defined as 180 seconds (3 minutes) or less
+        if (lecture.duration <= 180) {
+            shortsArr.push(lecture);
+        } else {
+            regularLecturesArr.push(lecture);
+        }
+    });
+    return { shorts: shortsArr, regularLectures: regularLecturesArr };
+  }, [latestLectures]);
 
   if (isLoading) {
     return <HomePageSkeleton />;
@@ -116,7 +131,7 @@ export function HomePageClient() {
 
       <div className="container py-8 space-y-16">
         <Suspense>
-            <PinnedLecture />
+            <PinnedItems />
         </Suspense>
         <Suspense>
           <ContinueListening />
@@ -124,6 +139,8 @@ export function HomePageClient() {
         <Suspense>
           <RecommendedLectures />
         </Suspense>
+
+        <ShortsCarousel shorts={shorts} />
 
         <PaginatedSection
           title="أبرز البرامج"
@@ -135,7 +152,7 @@ export function HomePageClient() {
         
         <PaginatedSection
             title="أحدث المحاضرات"
-            items={latestLectures}
+            items={regularLectures}
             viewAllHref="/lectures"
             itemsPerPage={3}
             gridClassName="lg:grid-cols-3"
