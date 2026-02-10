@@ -12,19 +12,40 @@ import { FollowButton } from '@/components/follow-button';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { useMemo } from 'react';
+import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 function ChannelPageContent({ channel }: { channel: Channel }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
 
-    const lectures = useMemo(() => {
-        if (!allLectures) return [];
-        return allLectures.filter(l => l.channelId === channel.id);
+    const { shorts, regularLectures } = useMemo(() => {
+        if (!allLectures) return { shorts: [], regularLectures: [] };
+        
+        const channelLectures = allLectures.filter(l => l.channelId === channel.id);
+
+        const shortsArr: Lecture[] = [];
+        const regularLecturesArr: Lecture[] = [];
+
+        // Sort by creation date descending
+        channelLectures.sort((a, b) => {
+            const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
+            return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
+        });
+
+        channelLectures.forEach(lecture => {
+            if (lecture.duration <= 180) {
+                shortsArr.push(lecture);
+            } else {
+                regularLecturesArr.push(lecture);
+            }
+        });
+        return { shorts: shortsArr, regularLectures: regularLecturesArr };
     }, [allLectures, channel.id]);
 
     const placeholder = getPlaceholderImage(channel.imageId);
     const imageUrl = channel.imageUrl || placeholder?.imageUrl;
     
     const bannerUrl = "https://picsum.photos/seed/channel-banner/1600/400";
+    const totalLectures = (shorts?.length || 0) + (regularLectures?.length || 0);
 
 
     return (
@@ -53,7 +74,7 @@ function ChannelPageContent({ channel }: { channel: Channel }) {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-2">
                              <span>@{channel.slug}</span>
                              <span className="hidden sm:inline">·</span>
-                             <span>{lectures?.length || 0} محاضرة</span>
+                             <span>{totalLectures || 0} محاضرة</span>
                              {channel.followerCount && channel.followerCount > 0 && (
                                 <>
                                   <span className="hidden sm:inline">·</span>
@@ -73,6 +94,13 @@ function ChannelPageContent({ channel }: { channel: Channel }) {
                 </div>
             </div>
 
+            {/* Shorts Section */}
+            {shorts.length > 0 && (
+                <section className="px-4 sm:px-6 lg:px-8">
+                    <ShortsCarousel shorts={shorts} />
+                </section>
+            )}
+
             {/* Lectures Section */}
             <section className="px-4 sm:px-6 lg:px-8">
                  <h2 className="text-2xl font-bold mb-6 font-headline">المحاضرات</h2>
@@ -80,16 +108,18 @@ function ChannelPageContent({ channel }: { channel: Channel }) {
                      <div className="text-center py-16">
                         <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                      </div>
-                ) : lectures && lectures.length > 0 ? (
+                ) : regularLectures && regularLectures.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {lectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                        {regularLectures.map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                     </div>
                 ) : (
-                    <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20">
-                        <p className="text-lg text-muted-foreground">
-                            لا توجد محاضرات في هذه القناة حالياً.
-                        </p>
-                    </div>
+                    shorts.length === 0 && ( // Only show if there are no shorts either
+                        <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20">
+                            <p className="text-lg text-muted-foreground">
+                                لا توجد محاضرات في هذه القناة حالياً.
+                            </p>
+                        </div>
+                    )
                 )}
             </section>
         </div>
