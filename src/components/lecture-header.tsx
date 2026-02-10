@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from "next/link";
@@ -16,6 +14,7 @@ import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getPlaceholderImage } from "@/lib/images";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./ui/tooltip";
 
 interface LectureHeaderProps {
     lecture: Lecture;
@@ -188,7 +187,7 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
     };
 
     return (
-        <>
+        <TooltipProvider>
             <div className="space-y-4">
                  <Button variant="ghost" onClick={() => router.back()} className="mb-4 text-muted-foreground">
                     <ArrowRight className="w-5 h-5 me-2" />
@@ -204,10 +203,17 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                         <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                         <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading}>
-                            {isSuggesting || isSuggestionLoading ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Pin className="w-5 h-5 me-2" />}
-                            <span>{hasSuggested ? "تم الاقتراح" : "اقترح للتثبيت"}</span>
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading}>
+                                    {isSuggesting || isSuggestionLoading ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Pin className="w-5 h-5 me-2" />}
+                                    <span>{hasSuggested ? "تم الاقتراح" : "اقترح للتثبيت"}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>عند الضغط على زر اقتراح التثبيت يظهر لمنشئ الموقع أنك تقترح تثبيت المحاضرة في الصفحة الرئيسية ليشاهدها الجميع لأنها مهمة.</p>
+                            </TooltipContent>
+                        </Tooltip>
                          <Button variant="outline" onClick={handleAddToPlaylistClick}>
                             <ListPlus className="w-5 h-5 me-2" />
                             <span>إضافة لقائمة</span>
@@ -244,6 +250,6 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                     userPlaylists={playlists || []}
                 />
             )}
-        </>
+        </TooltipProvider>
     );
 }
