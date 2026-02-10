@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ReactNode, useEffect } from 'react';
@@ -36,21 +37,30 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   // If we are done loading, and the user is an admin, show the layout
   if (isAdmin) {
       const navItems = [
+        // Overview
         { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
+        
+        // Content Management
         { href: '/admin/programs', label: 'البرامج', icon: Podcast },
         { href: '/admin/channels', label: 'القنوات', icon: Youtube },
-        { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
+        { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
         { href: '/admin/books', label: 'الكتب', icon: Book },
+        
+        // Content Organization
         { href: '/admin/topics', label: 'المواضيع', icon: Hash },
+        { href: '/admin/pinned', label: 'العناصر المثبتة', icon: Pin },
+
+        // Feature Management
         { href: '/admin/challenges', label: 'التحديات', icon: Flame },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
         { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
-        { href: '/admin/pinned', label: 'العناصر المثبتة', icon: Pin },
+        { href: '/admin/sins', label: 'إدارة المهلكات', icon: AlertTriangle },
+
+        // Site Administration
         { href: '/admin/appearance', label: 'المظهر', icon: Palette },
         { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
         { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },
-        { href: '/admin/sins', label: 'إدارة المهلكات', icon: AlertTriangle },
         { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
         { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
       ];
