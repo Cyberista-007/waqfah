@@ -13,7 +13,7 @@ const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 300;
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
-export function FloatingVideoPlayer() {
+export default function FloatingVideoPlayer() {
     const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer } = useAudioPlayer();
     
     // Player state

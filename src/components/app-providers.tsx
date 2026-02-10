@@ -13,7 +13,7 @@ import type { AppearanceSettings } from '@/lib/types';
 
 
 const FloatingVideoPlayer = dynamic(
-  () => import('./floating-video-player').then(mod => mod.FloatingVideoPlayer),
+  () => import('./floating-video-player'),
   { ssr: false }
 );
 
