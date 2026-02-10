@@ -329,61 +329,63 @@ export default function AdminLecturesPage() {
 
     const handleUpdateAllMetadata = async () => {
         if (!firestore || !allLectures) return;
-        
-        const lecturesToUpdate = allLectures.filter(l => l.youtubeUrl);
 
+        const lecturesToUpdate = allLectures.filter(l => l.youtubeUrl);
         if (lecturesToUpdate.length === 0) {
-            toast({
-                title: "لا يوجد ما يمكن تحديثه",
-                description: "لم يتم العثور على محاضرات مرتبطة بيوتيوب لتحديث بياناتها.",
-            });
+            toast({ title: "لا يوجد ما يمكن تحديثه", description: "لم يتم العثور على محاضرات مرتبطة بيوتيوب." });
             return;
         }
 
         setIsUpdatingAll(true);
-        toast({
-            title: "بدء تحديث البيانات...",
-            description: `جاري تحديث بيانات ${lecturesToUpdate.length} محاضرة. قد تستغرق هذه العملية بعض الوقت.`,
-        });
+        toast({ title: "بدء تحديث البيانات...", description: `جاري تحديث ${lecturesToUpdate.length} محاضرة. قد تستغرق هذه العملية بعض الوقت.` });
+
+        const CHUNK_SIZE = 10;
+        const allUpdateData = new Map<string, Partial<Lecture>>();
+        let updatedCount = 0;
 
         try {
-            const allUpdateData = new Map<string, Partial<Lecture>>();
-
-            // Sequentially fetch metadata to avoid overwhelming the network
-            for (const lecture of lecturesToUpdate) {
-                if (!lecture.youtubeUrl) continue;
-                try {
-                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
-                    });
-                    
-                    const data = await response.json();
-
-                    if (response.ok && data.videoInfo) {
-                        const updateData: Partial<Lecture> = {
-                            youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
-                            title: data.videoInfo.title || lecture.title,
-                            description: data.videoInfo.description || lecture.description,
-                            duration: data.videoInfo.durationInSeconds || lecture.duration,
-                        };
-                         // Only update publishedAt if we get a new valid date from youtube
-                        if (data.videoInfo.publishedAt) {
-                            updateData.publishedAt = Timestamp.fromDate(new Date(data.videoInfo.publishedAt));
+            for (let i = 0; i < lecturesToUpdate.length; i += CHUNK_SIZE) {
+                const chunk = lecturesToUpdate.slice(i, i + CHUNK_SIZE);
+                const promises = chunk.map(async (lecture) => {
+                    if (!lecture.youtubeUrl) return null;
+                    try {
+                        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.videoInfo) {
+                            const updateData: Partial<Lecture> = {
+                                youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
+                                title: data.videoInfo.title || lecture.title,
+                                description: data.videoInfo.description || lecture.description,
+                                duration: data.videoInfo.durationInSeconds || lecture.duration,
+                            };
+                            if (data.videoInfo.publishedAt) {
+                                updateData.publishedAt = Timestamp.fromDate(new Date(data.videoInfo.publishedAt));
+                            }
+                            return { id: lecture.id, data: updateData };
+                        } else {
+                            console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
+                            return null;
                         }
-                        allUpdateData.set(lecture.id, updateData);
-                    } else {
-                       console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
+                    } catch (error) {
+                        console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+                        return null;
                     }
-                } catch (error) {
-                    console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
-                    // Continue to next lecture on individual fetch error
-                }
+                });
+
+                const results = await Promise.all(promises);
+                results.forEach(result => {
+                    if (result) {
+                        allUpdateData.set(result.id, result.data);
+                    }
+                });
             }
 
-            // Use a batched write to update all documents at once
             if (allUpdateData.size > 0) {
+                updatedCount = allUpdateData.size;
                 const batch = writeBatch(firestore);
                 allUpdateData.forEach((data, id) => {
                     const lectureRef = doc(firestore, 'lectures', id);
@@ -394,11 +396,11 @@ export default function AdminLecturesPage() {
 
             toast({
                 title: "اكتمل التحديث!",
-                description: `تم محاولة تحديث بيانات ${lecturesToUpdate.length} محاضرة. تم تحديث ${allUpdateData.size} منها بنجاح.`,
+                description: `تم محاولة تحديث ${lecturesToUpdate.length} محاضرة. تم تحديث ${updatedCount} منها بنجاح.`,
             });
-        } catch(e) {
-             console.error("Error in transaction for updating all metadata:", e);
-             toast({
+        } catch (e) {
+            console.error("Error in transaction for updating all metadata:", e);
+            toast({
                 variant: "destructive",
                 title: "فشل حفظ التحديثات",
                 description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
