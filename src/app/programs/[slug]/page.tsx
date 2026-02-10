@@ -2,58 +2,21 @@
 
 import { useParams, notFound } from 'next/navigation';
 import type { Program, Lecture, Series } from '@/lib/types';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { getPlaceholderImage } from '@/lib/images';
-import { getInitials, normalizeArabic } from '@/lib/utils';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
-import Image from 'next/image';
-import { FollowButton } from '@/components/follow-button';
-import { Users, Loader2, ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
-import { Input } from '@/components/ui/input';
-import Fuse from 'fuse.js';
 
 function ProgramPageContent({ program }: { program: Program }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
 
-    const [lectureSearchTerm, setLectureSearchTerm] = useState('');
-    const [shortSearchTerm, setShortSearchTerm] = useState('');
-
     const isLoading = lecturesLoading || seriesLoading;
-    const [bannerUrl, setBannerUrl] = useState("https://picsum.photos/seed/program-banner/1600/400");
-
-    useEffect(() => {
-        if (program.youtubeUrl) {
-            const fetchBanner = async () => {
-                try {
-                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.channelInfo?.bannerUrl) {
-                            const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
-                            setBannerUrl(highResBanner);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch YouTube banner:", error);
-                }
-            };
-            fetchBanner();
-        }
-    }, [program.youtubeUrl]);
-
 
     const { programSeries, programLectures } = useMemo(() => {
         if (!allSeries || !allLectures) return { programSeries: [], programLectures: [] };
@@ -62,13 +25,8 @@ function ProgramPageContent({ program }: { program: Program }) {
         const seriesIds = new Set(seriesForProgram.map(s => s.id));
 
         const lecturesForProgram = allLectures.filter(l => {
-            if (l.programId === program.id || l.programSlug === program.slug) {
-                return true;
-            }
-            if (l.seriesId && seriesIds.has(l.seriesId)) {
-                return true;
-            }
-            return false;
+            const belongsToProgram = (l.programId === program.id || l.programSlug === program.slug) || (l.seriesId && seriesIds.has(l.seriesId));
+            return belongsToProgram;
         });
         
         return { programSeries: seriesForProgram, programLectures: lecturesForProgram };
@@ -94,165 +52,70 @@ function ProgramPageContent({ program }: { program: Program }) {
         return { shorts: shortsArr, regularLectures: regularLecturesArr };
     }, [programLectures]);
 
-    const filteredLectures = useMemo(() => {
-        if (!lectureSearchTerm) {
-            return regularLectures;
-        }
-        const fuse = new Fuse(regularLectures, {
-            keys: ['title'],
-            threshold: 0.4,
-            ignoreLocation: true,
-            preprocessor: normalizeArabic,
-        });
-        return fuse.search(lectureSearchTerm).map(result => result.item);
-    }, [regularLectures, lectureSearchTerm]);
-
-    const filteredShorts = useMemo(() => {
-        if (!shortSearchTerm) {
-            return shorts;
-        }
-        const fuse = new Fuse(shorts, {
-            keys: ['title'],
-            threshold: 0.4,
-            ignoreLocation: true,
-            preprocessor: normalizeArabic,
-        });
-        return fuse.search(shortSearchTerm).map(result => result.item);
-    }, [shorts, shortSearchTerm]);
-
-
-    const contentIsLoading = isLoading;
-    const placeholder = getPlaceholderImage(program.imageId);
-    const imageUrl = program.imageUrl || placeholder?.imageUrl;
+    if (isLoading) {
+         return (
+             <div className="text-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+             </div>
+        );
+    }
+    
+    const hasContent = shorts.length > 0 || regularLectures.length > 0 || programSeries.length > 0;
 
     return (
-        <div className="container mx-auto px-0 py-0 -mt-8 space-y-12">
-            {/* Banner Image */}
-            <div className="relative h-40 md:h-56 w-full bg-muted">
-                <Image
-                    src={bannerUrl}
-                    alt={`${program.name} banner`}
-                    fill
-                    className="object-cover"
-                    data-ai-hint="abstract texture"
-                    priority
-                />
-            </div>
-
-            {/* Program Header */}
-            <div className="px-4 sm:px-6 lg:px-8">
-                 <div className="flex flex-col sm:flex-row items-start gap-6">
-                    <Avatar className="h-24 w-24 sm:h-36 sm:w-36 border-4 border-background -mt-12 sm:-mt-20 shrink-0">
-                        {imageUrl && <AvatarImage src={imageUrl} alt={program.name} />}
-                        <AvatarFallback className="text-4xl">{getInitials(program.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow pt-2">
-                        <h1 className="text-3xl lg:text-4xl font-extrabold font-headline">{program.name}</h1>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-2">
-                             <span>@{program.slug}</span>
-                             <span className="hidden sm:inline">·</span>
-                             <span>{programSeries?.length || 0} سلسلة</span>
-                             <span className="hidden sm:inline">·</span>
-                             <span>{regularLectures.length || 0} محاضرة</span>
-                             <span className="hidden sm:inline">·</span>
-                             <span>{shorts.length || 0} مقطع قصير</span>
-                             {program.followerCount && program.followerCount > 0 && (
-                                <>
-                                  <span className="hidden sm:inline">·</span>
-                                  <div className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
-                                    <span>{program.followerCount} متابع</span>
-                                  </div>
-                                </>
-                             )}
-                        </div>
-                        <p className="text-base text-muted-foreground mt-3 max-w-xl line-clamp-3">{program.bio}</p>
-                         <div className="mt-6 flex flex-wrap gap-2">
-                             <FollowButton programId={program.id} />
-                         </div>
-                    </div>
+        <div className="space-y-12">
+            {!hasContent && (
+                 <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20 px-4 sm:px-6 lg:px-8">
+                    <p className="text-lg text-muted-foreground">
+                        لا يوجد محتوى في هذا البرنامج حالياً.
+                    </p>
                 </div>
-            </div>
-
-            {contentIsLoading && (
-                 <div className="text-center py-16">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                 </div>
             )}
 
-            {!contentIsLoading && (
-                <>
-                    <div className="px-4 sm:px-6 lg:px-8">
-                        <ShortsCarousel 
-                            shorts={filteredShorts} 
-                            searchTerm={shortSearchTerm} 
-                            onSearchTermChange={setShortSearchTerm} 
-                        />
+            {shorts.length > 0 && <ShortsCarousel shorts={shorts.slice(0, 12)} />}
+            
+            {regularLectures.length > 0 && (
+                 <section>
+                     <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold font-headline">أحدث المحاضرات</h2>
+                        {regularLectures.length > 4 && (
+                            <Button asChild variant="outline">
+                                <Link href={`/programs/${program.slug}/lectures`}>
+                                    <span>عرض الكل</span>
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                </Link>
+                            </Button>
+                        )}
+                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {regularLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                     </div>
-                    
-                    {regularLectures.length > 0 && (
-                         <section className="px-4 sm:px-6 lg:px-8">
-                             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                <h2 className="text-2xl font-bold font-headline shrink-0">المحاضرات</h2>
-                                <div className="flex w-full items-center gap-4">
-                                    <div className="relative flex-grow">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            placeholder="ابحث في محاضرات البرنامج..."
-                                            className="ps-10"
-                                            value={lectureSearchTerm}
-                                            onChange={(e) => setLectureSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                    {regularLectures.length > 4 && (
-                                        <Button asChild variant="outline">
-                                            <Link href={`/programs/${program.slug}/lectures`}>
-                                                <span>عرض الكل</span>
-                                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                            </Link>
-                                        </Button>
-                                    )}
-                                </div>
-                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {filteredLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
-                            </div>
-                        </section>
-                    )}
+                </section>
+            )}
 
-                    {programSeries.length > 0 && (
-                        <section className="px-4 sm:px-6 lg:px-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold font-headline">السلاسل</h2>
-                                {programSeries.length > 3 && (
-                                    <Button asChild variant="outline">
-                                        <Link href={`/programs/${program.slug}/series`}>
-                                            <span>عرض الكل</span>
-                                            <ArrowLeft className="h-4 w-4 mr-2" />
-                                        </Link>
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {programSeries.slice(0, 3).map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
-                            </div>
-                        </section>
-                    )}
-                    
-                    {shorts.length === 0 && regularLectures.length === 0 && programSeries.length === 0 && (
-                         <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20 px-4 sm:px-6 lg:px-8">
-                            <p className="text-lg text-muted-foreground">
-                                لا يوجد محتوى في هذا البرنامج حالياً.
-                            </p>
-                        </div>
-                    )}
-                </>
+            {programSeries.length > 0 && (
+                <section>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold font-headline">السلاسل</h2>
+                        {programSeries.length > 3 && (
+                            <Button asChild variant="outline">
+                                <Link href={`/programs/${program.slug}/series`}>
+                                    <span>عرض الكل</span>
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {programSeries.slice(0, 3).map((s, i) => <SeriesCard key={s.id} series={s} index={i} />)}
+                    </div>
+                </section>
             )}
         </div>
     );
 }
 
-export default function ProgramPage() {
+export default function ProgramHomePage() {
     const params = useParams();
     const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
     const slug = decodeURIComponent(slugParam as string);
@@ -263,7 +126,6 @@ export default function ProgramPage() {
         if (!allPrograms) return null;
         return allPrograms.find(p => p.slug === slug);
     }, [allPrograms, slug]);
-
 
     if (programsLoading) {
         return <HomePageSkeleton />;

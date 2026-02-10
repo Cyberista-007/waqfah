@@ -2,40 +2,39 @@
 
 import { useParams, notFound } from 'next/navigation';
 import type { Program, Lecture } from '@/lib/types';
-import { LectureListItem } from '@/components/lecture-list-item';
+import { ShortCard } from '@/components/ShortCard';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { normalizeArabic } from '@/lib/utils';
 import Fuse from 'fuse.js';
 
-function ProgramLecturesContent({ program }: { program: Program }) {
+function ProgramShortsContent({ program }: { program: Program }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const lectures = useMemo(() => {
+    const shorts = useMemo(() => {
         if (!allLectures) return [];
-        const programLectures = allLectures
-            .filter(l => (l.programId === program.id) && l.duration > 180)
+        const programShorts = allLectures
+            .filter(l => (l.programId === program.id) && l.duration <= 180)
             .sort((a, b) => {
                 const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
                 return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
             });
-
+        
         if (!searchTerm) {
-            return programLectures;
+            return programShorts;
         }
 
-        const fuse = new Fuse(programLectures, {
-            keys: ['title', 'description', 'seriesTitle'],
+        const fuse = new Fuse(programShorts, {
+            keys: ['title', 'description'],
             threshold: 0.4,
             ignoreLocation: true,
             preprocessor: normalizeArabic,
         });
+
         return fuse.search(searchTerm).map(result => result.item);
 
     }, [allLectures, program.id, searchTerm]);
@@ -46,7 +45,7 @@ function ProgramLecturesContent({ program }: { program: Program }) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                     type="search"
-                    placeholder={`ابحث في محاضرات برنامج ${program.name}...`}
+                    placeholder={`ابحث في المقاطع القصيرة لبرنامج ${program.name}...`}
                     className="w-full ps-10 h-12 text-lg"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -54,19 +53,23 @@ function ProgramLecturesContent({ program }: { program: Program }) {
             </div>
 
             {lecturesLoading ? (
-                <div className="space-y-4">
-                    {[...Array(8)].map((_, i) => (
-                        <Skeleton key={i} className="h-24 w-full" />
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {[...Array(12)].map((_, i) => (
+                        <div key={i} className="space-y-2">
+                           <Skeleton className="aspect-[9/16] w-full rounded-xl" />
+                           <Skeleton className="h-4 w-full" />
+                           <Skeleton className="h-3 w-1/2" />
+                        </div>
                     ))}
                 </div>
-            ) : lectures && lectures.length > 0 ? (
-                <div className="space-y-4">
-                    {lectures.map((l, i) => <LectureListItem key={l.id} lecture={l} index={i + 1} />)}
+            ) : shorts && shorts.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {shorts.map((s, i) => <ShortCard key={s.id} lecture={s} index={i} />)}
                 </div>
             ) : (
                 <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/20">
                     <p className="text-lg text-muted-foreground">
-                        {searchTerm ? "لا توجد نتائج تطابق بحثك." : "لا توجد محاضرات في هذا البرنامج حالياً."}
+                        {searchTerm ? "لا توجد نتائج تطابق بحثك." : "لا توجد مقاطع قصيرة في هذا البرنامج حالياً."}
                     </p>
                 </div>
             )}
@@ -74,7 +77,7 @@ function ProgramLecturesContent({ program }: { program: Program }) {
     );
 }
 
-export default function ProgramLecturesPage() {
+export default function ProgramShortsPage() {
     const params = useParams();
     const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
     const slug = decodeURIComponent(slugParam as string);
@@ -96,5 +99,5 @@ export default function ProgramLecturesPage() {
         return null;
     }
 
-    return <ProgramLecturesContent program={program} />;
+    return <ProgramShortsContent program={program} />;
 }
