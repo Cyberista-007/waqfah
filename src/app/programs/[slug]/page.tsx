@@ -10,19 +10,20 @@ import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import Image from 'next/image';
 import { FollowButton } from '@/components/follow-button';
-import { Users, Loader2, ArrowLeft } from 'lucide-react';
+import { Users, Loader2, ArrowLeft, Search } from 'lucide-react';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from '@/components/skeletons';
 import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
+import { Input } from '@/components/ui/input';
 
 function ProgramPageContent({ program }: { program: Program }) {
-    // Fetch all data needed and filter on the client.
-    // This is more robust against missing Firestore indexes.
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+
+    const [lectureSearchTerm, setLectureSearchTerm] = useState('');
 
     const isLoading = lecturesLoading || seriesLoading;
     const [bannerUrl, setBannerUrl] = useState("https://picsum.photos/seed/program-banner/1600/400");
@@ -40,7 +41,6 @@ function ProgramPageContent({ program }: { program: Program }) {
                     if (response.ok) {
                         const data = await response.json();
                         if (data.channelInfo?.bannerUrl) {
-                            // YouTube banner URLs can be tweaked for size. Let's try to get a bigger one.
                             const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
                             setBannerUrl(highResBanner);
                         }
@@ -54,7 +54,6 @@ function ProgramPageContent({ program }: { program: Program }) {
     }, [program.youtubeUrl]);
 
 
-    // Memoize the filtering logic to run only when data changes
     const { programSeries, programLectures } = useMemo(() => {
         if (!allSeries || !allLectures) return { programSeries: [], programLectures: [] };
 
@@ -62,11 +61,9 @@ function ProgramPageContent({ program }: { program: Program }) {
         const seriesIds = new Set(seriesForProgram.map(s => s.id));
 
         const lecturesForProgram = allLectures.filter(l => {
-            // Direct link by programId or programSlug
             if (l.programId === program.id || l.programSlug === program.slug) {
                 return true;
             }
-            // Indirect link via a series that belongs to the program
             if (l.seriesId && seriesIds.has(l.seriesId)) {
                 return true;
             }
@@ -95,6 +92,15 @@ function ProgramPageContent({ program }: { program: Program }) {
         });
         return { shorts: shortsArr, regularLectures: regularLecturesArr };
     }, [programLectures]);
+
+    const filteredLectures = useMemo(() => {
+        if (!lectureSearchTerm) {
+            return regularLectures;
+        }
+        return regularLectures.filter(lecture => 
+            lecture.title.toLowerCase().includes(lectureSearchTerm.toLowerCase())
+        );
+    }, [regularLectures, lectureSearchTerm]);
 
 
     const contentIsLoading = isLoading;
@@ -158,27 +164,34 @@ function ProgramPageContent({ program }: { program: Program }) {
 
             {!contentIsLoading && (
                 <>
-                    {shorts.length > 0 && (
-                        <section className="px-4 sm:px-6 lg:px-8">
-                           <ShortsCarousel shorts={shorts} />
-                        </section>
-                    )}
+                    <ShortsCarousel shorts={shorts} />
                     
                     {regularLectures.length > 0 && (
                          <section className="px-4 sm:px-6 lg:px-8">
-                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold font-headline">المحاضرات</h2>
-                                {regularLectures.length > 4 && (
-                                    <Button asChild variant="outline">
-                                        <Link href={`/programs/${program.slug}/lectures`}>
-                                            <span>عرض الكل</span>
-                                            <ArrowLeft className="h-4 w-4 mr-2" />
-                                        </Link>
-                                    </Button>
-                                )}
+                             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                <h2 className="text-2xl font-bold font-headline shrink-0">المحاضرات</h2>
+                                <div className="flex w-full items-center gap-4">
+                                    <div className="relative flex-grow">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            placeholder="ابحث في محاضرات البرنامج..."
+                                            className="ps-10"
+                                            value={lectureSearchTerm}
+                                            onChange={(e) => setLectureSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    {regularLectures.length > 4 && (
+                                        <Button asChild variant="outline">
+                                            <Link href={`/programs/${program.slug}/lectures`}>
+                                                <span>عرض الكل</span>
+                                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </div>
                              </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {regularLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
+                                {filteredLectures.slice(0, 4).map((l, i) => <LectureCard key={l.id} lecture={l} index={i} />)}
                             </div>
                         </section>
                     )}
