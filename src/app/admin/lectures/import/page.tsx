@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library, AlertTriangle, CheckCircle, Link as LinkIcon } from "lucide-react";
+import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library, AlertTriangle, CheckCircle, Link as LinkIcon, RefreshCw, DownloadCloud } from "lucide-react";
 import { useCollection, useFirestore } from "@/firebase";
 import type { Series, Program, Lecture, Channel } from "@/lib/types";
 import { writeBatch, doc, collection, Timestamp, increment, runTransaction } from "firebase/firestore";
@@ -86,6 +86,7 @@ export default function AdminImportLecturesPage() {
     // YouTube State
     const [youtubeUrl, setYoutubeUrl] = useState("");
     const [isFetching, setIsFetching] = useState(false);
+    const [isFetchingAll, setIsFetchingAll] = useState(false);
     const [fetchedVideos, setFetchedVideos] = useState<FetchedVideo[]>([]);
     const [fetchedShorts, setFetchedShorts] = useState<FetchedVideo[]>([]);
     const [fetchedPlaylists, setFetchedPlaylists] = useState<FetchedPlaylist[]>([]);
@@ -214,6 +215,74 @@ export default function AdminImportLecturesPage() {
         }
     }
     
+    const handleFetchAllPlaylistVideos = async () => {
+        if (!fetchedPlaylists || fetchedPlaylists.length === 0) {
+            toast({ variant: "destructive", title: "لا توجد قوائم تشغيل لجلبها." });
+            return;
+        }
+
+        setIsFetchingAll(true);
+        setFetchedVideos([]);
+        setFetchedShorts([]);
+        setSelectedVideos([]);
+        setSelectedShorts([]);
+
+        try {
+            let allPlaylistVideos: FetchedVideo[] = [];
+            let allPlaylistShorts: FetchedVideo[] = [];
+            let failedPlaylists: string[] = [];
+
+            for (const playlist of fetchedPlaylists) {
+                try {
+                    const playlistUrl = `https://www.youtube.com/playlist?list=${playlist.id}`;
+                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: playlistUrl }),
+                    });
+
+                    if (!response.ok) {
+                        failedPlaylists.push(playlist.title);
+                        console.warn(`Failed to fetch playlist ${playlist.title}`);
+                        continue;
+                    }
+
+                    const data = await response.json();
+                    if (data.videos) {
+                        allPlaylistVideos.push(...data.videos);
+                    }
+                    if (data.shorts) {
+                        allPlaylistShorts.push(...data.shorts);
+                    }
+                } catch (error) {
+                    failedPlaylists.push(playlist.title);
+                    console.error(`Error fetching playlist ${playlist.title}:`, error);
+                }
+            }
+
+            const uniqueVideos = Array.from(new Map(allPlaylistVideos.map(v => [v.videoId, v])).values());
+            const uniqueShorts = Array.from(new Map(allPlaylistShorts.map(s => [s.videoId, s])).values());
+            
+            setFetchedVideos(uniqueVideos);
+            setFetchedShorts(uniqueShorts);
+            setActiveTab('youtube-videos');
+            
+            let toastTitle = `اكتمل جلب الجميع.`;
+            let toastDescription = `تم العثور على ${uniqueVideos.length} فيديو و ${uniqueShorts.length} مقطع قصير.`;
+            
+            if (failedPlaylists.length > 0) {
+                 toastDescription += ` فشل جلب ${failedPlaylists.length} قائمة تشغيل.`;
+            }
+
+            toast({ title: toastTitle, description: toastDescription, duration: 10000 });
+
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "خطأ عام", description: error.message });
+        } finally {
+            setIsFetchingAll(false);
+        }
+    };
+
     const handleImportSelected = async () => {
         const itemsToImport = activeTab === 'youtube-videos' ? selectedVideos : selectedShorts;
         const sourceItems = activeTab === 'youtube-videos' ? fetchedVideos : fetchedShorts;
@@ -732,6 +801,16 @@ export default function AdminImportLecturesPage() {
                                             </div>
                                         </TabsContent>
                                          <TabsContent value="youtube-playlists">
+                                           <div className="flex justify-end gap-2 mb-4">
+                                                <Button onClick={() => handleFetchFromYoutube()} disabled={isFetching || isFetchingAll || !youtubeUrl} variant="outline">
+                                                    {isFetching && !isFetchingAll ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : <RefreshCw className="me-2 h-4 w-4" />}
+                                                    تحديث القوائم
+                                                </Button>
+                                                <Button onClick={handleFetchAllPlaylistVideos} disabled={isFetchingAll || isFetching || fetchedPlaylists.length === 0}>
+                                                    {isFetchingAll ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : <DownloadCloud className="me-2 h-4 w-4" />}
+                                                    جلب فيديوهات كل القوائم
+                                                </Button>
+                                            </div>
                                            <div className="max-h-80 overflow-y-auto">
                                                 <Table>
                                                     <TableHeader>
@@ -900,4 +979,5 @@ export default function AdminImportLecturesPage() {
   
 
     
+
 
