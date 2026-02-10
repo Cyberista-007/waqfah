@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -101,7 +102,9 @@ function ProgramPageContent({ program }: { program: Program }) {
                              <span className="hidden sm:inline">·</span>
                              <span>{programSeries?.length || 0} سلسلة</span>
                              <span className="hidden sm:inline">·</span>
-                             <span>{programLectures?.length || 0} محاضرة</span>
+                             <span>{regularLectures.length || 0} محاضرة</span>
+                             <span className="hidden sm:inline">·</span>
+                             <span>{shorts.length || 0} مقطع قصير</span>
                              {program.followerCount && program.followerCount > 0 && (
                                 <>
                                   <span className="hidden sm:inline">·</span>
