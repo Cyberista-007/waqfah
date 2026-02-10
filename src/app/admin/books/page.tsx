@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Book } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc, runTransaction, increment } from "firebase/firestore";
+import { doc, runTransaction } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Book as BookIcon } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { BookForm } from "@/components/admin/book-form";
@@ -43,9 +43,11 @@ export default function AdminBooksPage() {
 
         try {
             await runTransaction(firestore, async (transaction) => {
+                const statsDoc = await transaction.get(statsRef);
+                const newBooksCount = Math.max(0, (statsDoc.data()?.books || 0) - 1);
+                
+                transaction.set(statsRef, { books: newBooksCount }, { merge: true });
                 transaction.delete(bookRef);
-                // Use set with merge to avoid error if doc doesn't exist
-                transaction.set(statsRef, { books: increment(-1) }, { merge: true });
             });
 
             toast({

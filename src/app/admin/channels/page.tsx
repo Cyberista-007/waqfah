@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Channel } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc, writeBatch, collection, query, where, getDocs, increment } from "firebase/firestore";
+import { doc, collection, query, where, getDocs, runTransaction } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Youtube } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ChannelForm } from "@/components/admin/channel-form";
@@ -53,22 +53,23 @@ export default function AdminChannelsPage() {
             const lecturesSnapshot = await getDocs(q);
             const lecturesToDeleteCount = lecturesSnapshot.size;
 
-            const batch = writeBatch(firestore);
+            await runTransaction(firestore, async (transaction) => {
+                // Delete all lectures in the channel
+                lecturesSnapshot.forEach(doc => {
+                    transaction.delete(doc.ref);
+                });
 
-            // Delete all lectures in the channel
-            lecturesSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
+                // Delete the channel itself
+                transaction.delete(channelRef);
+
+                // Update stats
+                if (lecturesToDeleteCount > 0) {
+                    const statsDoc = await transaction.get(statsRef);
+                    const currentLectures = statsDoc.data()?.lectures || 0;
+                    const newCount = Math.max(0, currentLectures - lecturesToDeleteCount);
+                    transaction.set(statsRef, { lectures: newCount }, { merge: true });
+                }
             });
-
-            // Delete the channel itself
-            batch.delete(channelRef);
-
-            // Update stats
-            if (lecturesToDeleteCount > 0) {
-              batch.set(statsRef, { lectures: increment(-lecturesToDeleteCount) }, { merge: true });
-            }
-            
-            await batch.commit();
 
             toast({
                 variant: "destructive",

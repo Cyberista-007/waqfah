@@ -21,7 +21,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture, Series } from "@/lib/types";
 import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, runTransaction, increment, writeBatch } from "firebase/firestore";
+import { doc, runTransaction } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Wand2, Search } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -75,19 +75,21 @@ export default function AdminLecturesPage() {
         
         try {
             await runTransaction(firestore, async (transaction) => {
+                const statsRef = doc(firestore, 'stats', 'global');
+                const statsDoc = await transaction.get(statsRef);
+                const newLecturesCount = Math.max(0, (statsDoc.data()?.lectures || 0) - 1);
+                transaction.set(statsRef, { lectures: newLecturesCount }, { merge: true });
+
                 // Decrement series lectureCount if it exists
                 if (lectureToDelete.seriesId) {
                     const seriesRef = doc(firestore, 'series', lectureToDelete.seriesId);
                     const seriesDoc = await transaction.get(seriesRef);
-                    if (seriesDoc.exists() && (seriesDoc.data().lectureCount || 0) > 0) {
-                        transaction.update(seriesRef, { lectureCount: increment(-1) });
+                    if (seriesDoc.exists()) {
+                        const newSeriesLecturesCount = Math.max(0, (seriesDoc.data().lectureCount || 0) - 1);
+                        transaction.update(seriesRef, { lectureCount: newSeriesLecturesCount });
                     }
                 }
                 
-                // Decrement global lecture count
-                const statsRef = doc(firestore, 'stats', 'global');
-                transaction.set(statsRef, { lectures: increment(-1) }, { merge: true });
-
                 // Delete the lecture
                 transaction.delete(lectureRef);
             });
@@ -120,38 +122,49 @@ export default function AdminLecturesPage() {
     const handleDeleteSelected = async () => {
         if (selectedLectures.length === 0 || !firestore || !allLectures) return;
         
-        const batch = writeBatch(firestore);
-        const lecturesToDelete = allLectures.filter(l => selectedLectures.includes(l.id));
-        const seriesUpdateCounts: Record<string, number> = {};
-
-        lecturesToDelete.forEach(lecture => {
-            const lectureRef = doc(firestore, 'lectures', lecture.id);
-            batch.delete(lectureRef);
-
-            if (lecture.seriesId) {
-                if (!seriesUpdateCounts[lecture.seriesId]) {
-                    seriesUpdateCounts[lecture.seriesId] = 0;
-                }
-                seriesUpdateCounts[lecture.seriesId]--;
-            }
-        });
-
-        // Decrement counts for each affected series
-        for (const seriesId in seriesUpdateCounts) {
-            const seriesRef = doc(firestore, 'series', seriesId);
-            batch.update(seriesRef, { lectureCount: increment(seriesUpdateCounts[seriesId]) });
-        }
-        
-        // Decrement global lecture count
-        const statsRef = doc(firestore, 'stats', 'global');
-        batch.set(statsRef, { lectures: increment(-lecturesToDelete.length) }, { merge: true });
-
         try {
-            await batch.commit();
+            await runTransaction(firestore, async (transaction) => {
+                const lecturesToDelete = allLectures.filter(l => selectedLectures.includes(l.id));
+                const seriesUpdateCounts: Record<string, number> = {};
+                
+                lecturesToDelete.forEach(lecture => {
+                    if (lecture.seriesId) {
+                        if (!seriesUpdateCounts[lecture.seriesId]) {
+                            seriesUpdateCounts[lecture.seriesId] = 0;
+                        }
+                        seriesUpdateCounts[lecture.seriesId]++; // count how many to remove from each series
+                    }
+                });
+
+                // Update series counts
+                for (const seriesId in seriesUpdateCounts) {
+                    const seriesRef = doc(firestore, 'series', seriesId);
+                    const seriesDoc = await transaction.get(seriesRef);
+                    if (seriesDoc.exists()) {
+                        const currentCount = seriesDoc.data().lectureCount || 0;
+                        const newCount = Math.max(0, currentCount - seriesUpdateCounts[seriesId]);
+                        transaction.update(seriesRef, { lectureCount: newCount });
+                    }
+                }
+                
+                // Update global lecture count
+                const statsRef = doc(firestore, 'stats', 'global');
+                const statsDoc = await transaction.get(statsRef);
+                const currentLectures = statsDoc.data()?.lectures || 0;
+                const newLecturesCount = Math.max(0, currentLectures - lecturesToDelete.length);
+                transaction.set(statsRef, { lectures: newLecturesCount }, { merge: true });
+
+                // Delete all selected lectures
+                lecturesToDelete.forEach(lecture => {
+                    const lectureRef = doc(firestore, 'lectures', lecture.id);
+                    transaction.delete(lectureRef);
+                });
+            });
+
             toast({
                 variant: "destructive",
                 title: "تم الحذف بنجاح",
-                description: `تم حذف ${lecturesToDelete.length} محاضرة بنجاح.`,
+                description: `تم حذف ${selectedLectures.length} محاضرة بنجاح.`,
             });
             setSelectedLectures([]);
         } catch(error) {
@@ -161,6 +174,8 @@ export default function AdminLecturesPage() {
                 title: "فشل الحذف المجمع",
                 description: "لم نتمكن من حذف المحاضرات المحددة.",
             });
+        } finally {
+             setIsBatchConfirmOpen(false);
         }
     };
 
@@ -183,82 +198,53 @@ export default function AdminLecturesPage() {
             description: `جاري تحديث بيانات ${lecturesToUpdate.length} محاضرة. قد تستغرق هذه العملية بعض الوقت.`,
         });
 
-        const batch = writeBatch(firestore);
-        let successfulUpdates = 0;
-        const errorMessages = new Set<string>();
+        // Use a transaction for the updates
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const updatePromises = lecturesToUpdate.map(async (lecture) => {
+                    if (!lecture.youtubeUrl) return;
+                    try {
+                        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
+                        });
+                        
+                        const data = await response.json();
 
-        const updatePromises = lecturesToUpdate.map(async (lecture) => {
-            if (!lecture.youtubeUrl) return;
-            try {
-                const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
-                });
-                
-                const data = await response.json();
-
-                if (response.ok) {
-                    if (data.videoInfo) {
-                        const lectureRef = doc(firestore, 'lectures', lecture.id);
-                        const updateData: Partial<Lecture> = {
-                            youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
-                            title: data.videoInfo.title || lecture.title,
-                            description: data.videoInfo.description || lecture.description,
-                            duration: data.videoInfo.durationInSeconds || lecture.duration,
-                        };
-                        batch.update(lectureRef, updateData);
-                        successfulUpdates++;
+                        if (response.ok && data.videoInfo) {
+                            const lectureRef = doc(firestore, 'lectures', lecture.id);
+                            const updateData: Partial<Lecture> = {
+                                youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
+                                title: data.videoInfo.title || lecture.title,
+                                description: data.videoInfo.description || lecture.description,
+                                duration: data.videoInfo.durationInSeconds || lecture.duration,
+                            };
+                            transaction.update(lectureRef, updateData);
+                        } else {
+                           console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
+                        }
+                    } catch (error) {
+                        console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
                     }
-                } else {
-                     if (data.message) {
-                        errorMessages.add(data.message);
-                    } else {
-                        errorMessages.add(`فشل الطلب للمحاضرة: ${lecture.title}`);
-                    }
-                }
-            } catch (error) {
-                console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
-                errorMessages.add("فشل الاتصال بالخادم.");
-            }
-        });
+                });
 
-        await Promise.all(updatePromises);
-        
-        if (successfulUpdates > 0) {
-            try {
-                await batch.commit();
-                toast({
-                    title: "اكتمل التحديث!",
-                    description: `تم تحديث بيانات ${successfulUpdates} محاضرة بنجاح.`,
-                });
-                if (errorMessages.size > 0) {
-                     toast({
-                        variant: "destructive",
-                        title: "اكتمل التحديث جزئياً",
-                        description: `فشل تحديث ${lecturesToUpdate.length - successfulUpdates} محاضرة. السبب: ${Array.from(errorMessages).join(' ')}`,
-                        duration: 10000,
-                    });
-                }
-            } catch (commitError) {
-                console.error("Error committing batch update:", commitError);
-                toast({
-                    variant: "destructive",
-                    title: "فشل حفظ التحديثات",
-                    description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
-                });
-            }
-        } else {
-            const description = errorMessages.size > 0 
-                ? `${Array.from(errorMessages).join(' ')}`
-                : "لم نتمكن من تحديث بيانات أي محاضرة.";
+                await Promise.all(updatePromises);
+            });
+
             toast({
+                title: "اكتمل التحديث!",
+                description: `تم محاولة تحديث بيانات ${lecturesToUpdate.length} محاضرة.`,
+            });
+        } catch(e) {
+             console.error("Error in transaction for updating all metadata:", e);
+             toast({
                 variant: "destructive",
-                title: "فشل التحديث",
-                description: description,
-                duration: 10000,
+                title: "فشل حفظ التحديثات",
+                description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
             });
         }
+
 
         setIsUpdatingAll(false);
     };
@@ -379,10 +365,7 @@ export default function AdminLecturesPage() {
         <DeleteConfirmationDialog 
             isOpen={isBatchConfirmOpen}
             onClose={() => setIsBatchConfirmOpen(false)}
-            onConfirm={async () => {
-                await handleDeleteSelected();
-                setIsBatchConfirmOpen(false);
-            }}
+            onConfirm={handleDeleteSelected}
             title={`حذف ${selectedLectures.length} محاضرة`}
             description={`هل أنت متأكد من رغبتك في حذف المحاضرات المحددة؟ لا يمكن التراجع عن هذا الإجراء.`}
             confirmButtonText="نعم، قم بالحذف"

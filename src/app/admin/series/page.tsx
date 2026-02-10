@@ -23,7 +23,7 @@ import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { useState } from "react";
-import { doc, runTransaction, increment, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
 
 export default function AdminSeriesPage() {
   const { data: allSeries, isLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
@@ -48,23 +48,26 @@ export default function AdminSeriesPage() {
         const lecturesSnapshot = await getDocs(q);
         const lecturesToDeleteCount = lecturesSnapshot.size;
 
-        const batch = writeBatch(firestore);
+        await runTransaction(firestore, async (transaction) => {
+            const statsDoc = await transaction.get(statsRef);
+            const currentStats = statsDoc.data() || {};
+            const newSeriesCount = Math.max(0, (currentStats.series || 0) - 1);
+            const newLecturesCount = Math.max(0, (currentStats.lectures || 0) - lecturesToDeleteCount);
 
-        // Delete all lectures in the series
-        lecturesSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
+            // Update stats
+            transaction.set(statsRef, { 
+                series: newSeriesCount,
+                lectures: newLecturesCount 
+            }, { merge: true });
+
+            // Delete all lectures in the series
+            lecturesSnapshot.forEach(doc => {
+                transaction.delete(doc.ref);
+            });
+
+            // Delete the series itself
+            transaction.delete(seriesRef);
         });
-
-        // Delete the series itself
-        batch.delete(seriesRef);
-
-        // Update stats
-        batch.set(statsRef, { 
-            series: increment(-1),
-            lectures: increment(-lecturesToDeleteCount) 
-        }, { merge: true });
-
-        await batch.commit();
 
         toast({
             title: "تم الحذف بنجاح",

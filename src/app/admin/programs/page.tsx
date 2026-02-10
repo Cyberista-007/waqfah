@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Program, Lecture } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc, runTransaction, increment, writeBatch, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import { doc, runTransaction, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Podcast, Wand2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ProgramForm } from "@/components/admin/program-form";
@@ -149,19 +149,24 @@ export default function AdminProgramsPage() {
             const seriesToDeleteCount = seriesSnapshot.size;
             const lecturesToDeleteCount = lecturesSnapshot.size;
             
-            const batch = writeBatch(firestore);
+            await runTransaction(firestore, async (transaction) => {
+                const statsDoc = await transaction.get(statsRef);
+                const currentStats = statsDoc.data() || {};
+                
+                const newProgramsCount = Math.max(0, (currentStats.programs || 0) - 1);
+                const newSeriesCount = Math.max(0, (currentStats.series || 0) - seriesToDeleteCount);
+                const newLecturesCount = Math.max(0, (currentStats.lectures || 0) - lecturesToDeleteCount);
 
-            seriesSnapshot.forEach(doc => batch.delete(doc.ref));
-            lecturesSnapshot.forEach(doc => batch.delete(doc.ref));
-            batch.delete(programRef);
+                transaction.set(statsRef, { 
+                    programs: newProgramsCount,
+                    series: newSeriesCount,
+                    lectures: newLecturesCount,
+                }, { merge: true });
 
-            batch.set(statsRef, { 
-                programs: increment(-1),
-                series: increment(-seriesToDeleteCount),
-                lectures: increment(-lecturesToDeleteCount),
-            }, { merge: true });
-            
-            await batch.commit();
+                seriesSnapshot.forEach(doc => transaction.delete(doc.ref));
+                lecturesSnapshot.forEach(doc => transaction.delete(doc.ref));
+                transaction.delete(programRef);
+            });
 
             toast({
                 variant: "destructive",
@@ -282,5 +287,4 @@ export default function AdminProgramsPage() {
       </>
     );
 }
-
     
