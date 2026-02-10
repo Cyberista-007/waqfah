@@ -44,7 +44,8 @@ export default function AdminBooksPage() {
         try {
             await runTransaction(firestore, async (transaction) => {
                 const statsDoc = await transaction.get(statsRef);
-                const newBooksCount = Math.max(0, (statsDoc.data()?.books || 0) - 1);
+                const currentBooks = statsDoc.data()?.books || 0;
+                const newBooksCount = Math.max(0, currentBooks - 1);
                 
                 transaction.set(statsRef, { books: newBooksCount }, { merge: true });
                 transaction.delete(bookRef);

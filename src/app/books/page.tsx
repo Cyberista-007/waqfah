@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { doc, runTransaction, increment } from 'firebase/firestore';
+import { doc, runTransaction } from 'firebase/firestore';
 
 
 function BooksListSkeleton() {
@@ -58,8 +58,12 @@ function BooksList() {
 
         try {
             await runTransaction(firestore, async (transaction) => {
+                const statsDoc = await transaction.get(statsRef);
+                const currentBooks = statsDoc.data()?.books || 0;
+                const newBooksCount = Math.max(0, currentBooks - 1);
+
+                transaction.set(statsRef, { books: newBooksCount }, { merge: true });
                 transaction.delete(bookRef);
-                transaction.set(statsRef, { books: increment(-1) }, { merge: true });
             });
 
             toast({
