@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3">
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/users"><span>إدارة المستخدمين</span><UserCog /></Link></Button>
-                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/pinned"><span>المحاضرة المثبتة</span><Pin /></Link></Button>
+                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/pinned"><span>العناصر المثبتة</span><Pin /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/appearance"><span>إدارة المظهر</span><Palette /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/announcement"><span>إدارة الإعلان</span><Megaphone /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/donations"><span>إدارة التبرعات</span><Heart /></Link></Button>

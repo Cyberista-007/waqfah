@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture } from "lucide-react"
+import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture, MessageSquare } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
@@ -11,6 +11,7 @@ import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
 import {
   Card,
+  CardFooter,
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
 import { cn, formatDuration, formatViews } from "@/lib/utils"
@@ -25,6 +26,7 @@ interface LectureCardProps {
   lecture: Lecture
   index?: number
   onCollapse?: () => void;
+  pinnedMessage?: string;
 }
 
 function getYoutubeVideoId(url: string | undefined): string | null {
@@ -47,7 +49,7 @@ function getYoutubeVideoId(url: string | undefined): string | null {
   return null;
 }
 
-const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardProps) => {
+const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }: LectureCardProps) => {
   const { playTrack, playIframe } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
@@ -291,7 +293,15 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                 </TooltipContent>
             </Tooltip>
           </div>
-          <div className="flex justify-between items-center mt-auto pt-2">
+          {pinnedMessage && (
+              <div className="pt-2 pb-1">
+                  <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 flex items-center gap-1.5">
+                    <MessageSquare className="w-3 h-3 shrink-0"/> 
+                    <span className="line-clamp-2">{pinnedMessage}</span>
+                  </p>
+              </div>
+          )}
+          <div className="flex justify-between items-center mt-auto pt-2 border-t">
             <div className="flex items-center gap-1">
               <Tooltip>
                   <TooltipTrigger asChild>
@@ -316,20 +326,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse }: LectureCardPro
                       </TooltipContent>
                   </Tooltip>
                 </>
-              )}
-              {lecture.telegramUrl && (
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a href={lecture.telegramUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-sky-500">
-                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.17.91-.494 1.202-.82 1.23-.696.06-1.225-.46-1.9- .902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.794-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.04-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.24-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.39 4.027-1.633 4.476-1.636z"/></svg>
-                        </Button>
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>متابعة على تيليجرام</p>
-                    </TooltipContent>
-                </Tooltip>
               )}
                <Tooltip>
                     <TooltipTrigger asChild>

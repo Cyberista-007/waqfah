@@ -46,7 +46,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         { href: '/admin/challenges', label: 'التحديات', icon: Flame },
         { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
         { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
-        { href: '/admin/pinned', label: 'المحاضرة المثبتة', icon: Pin },
+        { href: '/admin/pinned', label: 'العناصر المثبتة', icon: Pin },
         { href: '/admin/appearance', label: 'المظهر', icon: Palette },
         { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
         { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },

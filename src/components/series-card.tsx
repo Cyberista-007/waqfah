@@ -1,8 +1,8 @@
 
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import type { Series } from '@/lib/types';
-import { Play } from 'lucide-react';
+import { Play, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { memo } from 'react';
@@ -10,9 +10,10 @@ import { memo } from 'react';
 interface SeriesCardProps {
     series: Series;
     index?: number;
+    pinnedMessage?: string;
 }
 
-const SeriesCardComponent = ({ series, index = 0 }: SeriesCardProps) => {
+const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardProps) => {
     return (
         <Card
             key={series.id}
@@ -26,18 +27,26 @@ const SeriesCardComponent = ({ series, index = 0 }: SeriesCardProps) => {
                 <CardTitle className="font-headline text-xl">
                     <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
                 </CardTitle>
-                <CardDescription className="flex items-center gap-2 pt-1">
+                <CardDescription className="flex items-center gap-2 pt-1 line-clamp-3">
                     {series.description}
                 </CardDescription>
             </CardHeader>
-            <CardContent className='flex justify-between items-center'>
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Play className="h-4 w-4"/>
-                    <span>{series.lectureCount || 0} محاضرة</span>
+            <CardContent className='pt-4 flex flex-col gap-4'>
+                {pinnedMessage && (
+                    <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 w-full flex items-center gap-1.5">
+                        <MessageSquare className="w-3 h-3 shrink-0"/> 
+                        <span className="line-clamp-2">{pinnedMessage}</span>
+                    </p>
+                )}
+                <div className='flex justify-between items-center'>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Play className="h-4 w-4"/>
+                        <span>{series.lectureCount || 0} محاضرة</span>
+                    </div>
+                    <Button asChild size="sm" variant="outline">
+                        <Link href={`/series/${series.slug}`}>عرض السلسلة</Link>
+                    </Button>
                 </div>
-                 <Button asChild size="sm" variant="outline">
-                    <Link href={`/series/${series.slug}`}>عرض السلسلة</Link>
-                </Button>
             </CardContent>
         </Card>
     );

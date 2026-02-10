@@ -6,15 +6,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Program } from '@/lib/types';
 import { cn, getInitials } from '@/lib/utils';
 import { FollowButton } from './follow-button';
-import { Podcast } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { memo } from 'react';
 
 interface ProgramCardProps {
     program: Program;
     index?: number;
+    pinnedMessage?: string;
 }
 
-const ProgramCardComponent = ({ program, index = 0 }: ProgramCardProps) => {
+const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCardProps) => {
     const placeholder = getPlaceholderImage(program.imageId);
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
 
@@ -38,7 +39,13 @@ const ProgramCardComponent = ({ program, index = 0 }: ProgramCardProps) => {
                     <CardDescription className="line-clamp-3">{program.bio}</CardDescription>
                 </CardContent>
             </Link>
-            <CardFooter className="p-0 pt-4 mt-auto w-full">
+            <CardFooter className="flex flex-col items-start gap-3 p-0 pt-4 mt-auto w-full">
+                 {pinnedMessage && (
+                    <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 w-full mb-2 flex items-center gap-1.5">
+                        <MessageSquare className="w-3 h-3 shrink-0"/> 
+                        <span className="line-clamp-2">{pinnedMessage}</span>
+                    </p>
+                )}
                  <FollowButton programId={program.id} />
             </CardFooter>
         </Card>

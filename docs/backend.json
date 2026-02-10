@@ -410,22 +410,33 @@
       },
       "required": ["title", "dialogTitle", "icon"]
     },
-    "PinnedLectureSettings": {
+    "PinnedItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Pinned Lecture Settings",
-      "description": "A singleton document to store pinned lectures for the homepage.",
+      "title": "Pinned Item",
+      "description": "Represents an item pinned to the homepage, which can be a lecture, series, or program.",
       "type": "object",
       "properties": {
-        "lectureIds": {
+        "id": { "type": "string", "description": "The document ID of the pinned item." },
+        "type": { "type": "string", "enum": ["lecture", "series", "program"], "description": "The type of the pinned item." },
+        "message": { "type": "string", "description": "A custom message to display with the pinned item." }
+      },
+      "required": ["id", "type"]
+    },
+    "PinnedItemSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Pinned Item Settings",
+      "description": "A singleton document to store pinned items for the homepage.",
+      "type": "object",
+      "properties": {
+        "pinnedItems": {
           "type": "array",
-          "items": { "type": "string" },
-          "description": "The IDs of the pinned lectures."
+          "items": { "$ref": "#/entities/PinnedItem" },
+          "description": "An ordered array of items to pin on the homepage."
         },
-        "message": { "type": "string", "description": "The custom message to display with the pinned lectures." },
-        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned lecture section." },
-        "startDate": { "type": "string", "format": "date-time", "description": "The date from which the pinned lectures should be visible." },
-        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned lectures should be visible." },
-        "layout": { "type": "string", "enum": ["grid", "carousel"], "description": "The display layout for pinned lectures." }
+        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned items section." },
+        "startDate": { "type": "string", "format": "date-time", "description": "The date from which the pinned items should be visible." },
+        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned items should be visible." },
+        "layout": { "type": "string", "enum": ["grid", "carousel"], "description": "The display layout for pinned items." }
       }
     },
     "Suggestion": {
@@ -545,7 +556,7 @@
       },
        {
         "path": "/settings/pinned_lecture",
-        "definition": { "schema": { "$ref": "#/entities/PinnedLectureSettings" } }
+        "definition": { "schema": { "$ref": "#/entities/PinnedItemSettings" } }
       },
       {
         "path": "/donations/{donationId}",

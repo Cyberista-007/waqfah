@@ -2,17 +2,17 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
-import type { PinnedLectureSettings, Lecture } from '@/lib/types';
+import type { PinnedItemSettings, PinnedItem, Lecture, Series, Program } from '@/lib/types';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Pin, Check, ChevronsUpDown, X, GripVertical, Calendar as CalendarIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -24,39 +24,46 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-function SortableLectureItem({ id, lecture, onRemove }: { id: string, lecture: Lecture, onRemove: (id: string) => void }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-    } = useSortable({ id });
+function SortableItem({ item, allData, onRemove, onMessageChange }: { 
+    item: PinnedItem;
+    allData: { lecture: Lecture[], series: Series[], program: Program[] };
+    onRemove: (id: string) => void;
+    onMessageChange: (id: string, message: string) => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+    const style = { transform: CSS.Transform.toString(transform), transition };
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
+    // Find the corresponding data item from the collections
+    const dataItem = useMemo(() => {
+        return (allData[item.type] || []).find(d => d.id === item.id);
+    }, [allData, item.type, item.id]);
     
+    if (!dataItem) return null; // Should not happen if data is loaded
+
     return (
-        <div ref={setNodeRef} style={style} className="flex items-center gap-2 w-full">
-             <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab shrink-0">
+        <div ref={setNodeRef} style={style} className="flex items-start gap-2 w-full p-3 bg-muted/50 rounded-lg">
+            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab shrink-0 mt-2">
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
-             </Button>
-            <Badge variant="secondary" className="flex-grow flex items-center justify-between gap-1 pl-3 pr-1 py-1 h-auto">
-                <span className="truncate">{lecture.title}</span>
-                <div
-                    role="button"
-                    aria-label={`إزالة ${lecture.title}`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove(lecture.id);
-                    }}
-                    className="rounded-full hover:bg-primary/20 p-0.5 transition-colors cursor-pointer shrink-0"
-                >
-                    <X className="h-4 w-4" />
+            </Button>
+            <div className="flex-grow space-y-2">
+                <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{item.type === 'lecture' ? 'محاضرة' : item.type === 'series' ? 'سلسلة' : 'برنامج'}</Badge>
+                    <p className="font-semibold truncate">{(dataItem as any).title || (dataItem as any).name}</p>
                 </div>
-            </Badge>
+                <Input
+                    placeholder="رسالة مخصصة (اختياري)"
+                    value={item.message || ''}
+                    onChange={(e) => onMessageChange(item.id, e.target.value)}
+                />
+            </div>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemove(item.id)}
+                className="shrink-0 text-destructive hover:bg-destructive/10"
+            >
+                <X className="h-4 w-4" />
+            </Button>
         </div>
     );
 }
@@ -72,14 +79,16 @@ const toDate = (timestamp: any): Date | undefined => {
     }
 }
 
-export default function AdminPinnedLecturePage() {
+export default function AdminPinnedItemsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedLectureSettings>('settings/pinned_lecture');
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc']});
+  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_lecture');
+  
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [isActive, setIsActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
@@ -97,8 +106,7 @@ export default function AdminPinnedLecturePage() {
 
   useEffect(() => {
     if (currentSettings) {
-      setSelectedIds(currentSettings.lectureIds || []);
-      setMessage(currentSettings.message || '');
+      setPinnedItems(currentSettings.pinnedItems || []);
       setIsActive(currentSettings.isActive || false);
       setStartDate(toDate(currentSettings.startDate));
       setEndDate(toDate(currentSettings.endDate));
@@ -111,8 +119,8 @@ export default function AdminPinnedLecturePage() {
         toast({ variant: 'destructive', title: 'خطأ في الاتصال بقاعدة البيانات.' });
         return;
     }
-    if (selectedIds.length === 0 && isActive) {
-        toast({ variant: 'destructive', title: 'لا يمكن تفعيل قسم بدون تحديد محاضرات.' });
+    if (pinnedItems.length === 0 && isActive) {
+        toast({ variant: 'destructive', title: 'لا يمكن تفعيل قسم بدون تحديد عناصر.' });
         return;
     }
 
@@ -120,16 +128,15 @@ export default function AdminPinnedLecturePage() {
     try {
         const settingsRef = doc(firestore, 'settings', 'pinned_lecture');
         await setDoc(settingsRef, { 
-            lectureIds: selectedIds, 
-            message, 
+            pinnedItems, 
             isActive,
             startDate: startDate ? Timestamp.fromDate(startDate) : null,
             endDate: endDate ? Timestamp.fromDate(endDate) : null,
             layout,
         }, { merge: true });
-        toast({ title: 'تم حفظ إعدادات المحاضرات المثبتة بنجاح!' });
+        toast({ title: 'تم حفظ الإعدادات بنجاح!' });
     } catch (error) {
-        console.error("Error saving pinned lecture settings:", error);
+        console.error("Error saving pinned items settings:", error);
         toast({ variant: 'destructive', title: 'فشل حفظ الإعدادات.' });
     } finally {
         setIsSubmitting(false);
@@ -139,32 +146,50 @@ export default function AdminPinnedLecturePage() {
   const handleDragEnd = useCallback((event: any) => {
     const { active, over } = event;
     if (active.id !== over.id) {
-        setSelectedIds((items) => {
-            const oldIndex = items.indexOf(active.id);
-            const newIndex = items.indexOf(over.id);
+        setPinnedItems((items) => {
+            const oldIndex = items.findIndex(item => item.id === active.id);
+            const newIndex = items.findIndex(item => item.id === over.id);
             return arrayMove(items, oldIndex, newIndex);
         });
     }
   }, []);
 
-  const isLoading = settingsLoading || lecturesLoading;
+  const isLoading = settingsLoading || lecturesLoading || seriesLoading || programsLoading;
   
-  const selectedLectures = selectedIds.map(id => allLectures?.find(l => l.id === id)).filter((l): l is Lecture => !!l);
-  
-  const removeLecture = (idToRemove: string) => {
-    setSelectedIds(currentIds => currentIds.filter(id => id !== idToRemove));
-  };
+  const allData = useMemo(() => ({
+      lecture: allLectures || [],
+      series: allSeries || [],
+      program: allPrograms || []
+  }), [allLectures, allSeries, allPrograms]);
 
+  const handleSelect = (item: { id: string; type: 'lecture' | 'series' | 'program' }) => {
+    setPinnedItems(currentItems => {
+        const exists = currentItems.some(i => i.id === item.id);
+        if (exists) {
+            return currentItems.filter(i => i.id !== item.id);
+        } else {
+            return [...currentItems, { ...item, message: '' }];
+        }
+    });
+  };
+  
+  const handleMessageChange = (id: string, message: string) => {
+      setPinnedItems(currentItems => currentItems.map(item => item.id === id ? {...item, message} : item));
+  };
+  
+  const removePinnedItem = (idToRemove: string) => {
+    setPinnedItems(currentItems => currentItems.filter(item => item.id !== idToRemove));
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-2xl font-headline flex items-center gap-2">
             <Pin />
-            تثبيت محاضرات في الرئيسية
+            تثبيت عناصر في الرئيسية
         </CardTitle>
         <CardDescription>
-            اختر المحاضرات لتثبيتها في الصفحة الرئيسية مع رسالة مخصصة وجدولة زمنية.
+            اختر المحاضرات، السلاسل، أو البرامج لتثبيتها في الصفحة الرئيسية.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -187,16 +212,16 @@ export default function AdminPinnedLecturePage() {
                 </div>
             
                 <div className="space-y-2">
-                    <Label>المحاضرات المثبتة (اسحب للإعادة الترتيب)</Label>
+                    <Label>العناصر المثبتة (اسحب للإعادة الترتيب)</Label>
                      <div className="p-2 border rounded-md min-h-[50px] space-y-2">
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext items={selectedIds} strategy={verticalListSortingStrategy}>
-                                {selectedLectures.length > 0 ? (
-                                    selectedLectures.map(lecture => (
-                                        <SortableLectureItem key={lecture.id} id={lecture.id} lecture={lecture} onRemove={removeLecture} />
+                            <SortableContext items={pinnedItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                {pinnedItems.length > 0 ? (
+                                    pinnedItems.map(item => (
+                                        <SortableItem key={item.id} item={item} allData={allData} onRemove={removePinnedItem} onMessageChange={handleMessageChange} />
                                     ))
                                 ) : (
-                                    <p className="text-sm text-muted-foreground p-2 text-center">لم يتم اختيار محاضرات بعد.</p>
+                                    <p className="text-sm text-muted-foreground p-2 text-center">لم يتم اختيار عناصر بعد.</p>
                                 )}
                             </SortableContext>
                         </DndContext>
@@ -210,38 +235,36 @@ export default function AdminPinnedLecturePage() {
                           aria-expanded={open}
                           className="w-full justify-between mt-2"
                         >
-                          <span>اختر محاضرة أو أكثر...</span>
+                          <span>اختر عنصرًا أو أكثر...</span>
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput placeholder="ابحث عن محاضرة..." />
+                          <CommandInput placeholder="ابحث..." />
                           <CommandList>
                             <CommandEmpty>لا توجد نتائج.</CommandEmpty>
-                            <CommandGroup>
-                              {allLectures?.map((lecture) => (
-                                <CommandItem
-                                  key={lecture.id}
-                                  value={lecture.title}
-                                  onSelect={() => {
-                                    setSelectedIds(
-                                      selectedIds.includes(lecture.id)
-                                        ? selectedIds.filter((id) => id !== lecture.id)
-                                        : [...selectedIds, lecture.id]
-                                    )
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedIds.includes(lecture.id) ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                   <span className="flex-grow">{lecture.title}</span>
-                                    {lecture.suggestionCount && lecture.suggestionCount > 0 && (
-                                        <Badge variant="outline">{lecture.suggestionCount}</Badge>
-                                    )}
+                            <CommandGroup heading="محاضرات">
+                              {allData.lecture.map((item) => (
+                                <CommandItem key={item.id} value={`lecture-${item.title}`} onSelect={() => handleSelect({id: item.id, type: 'lecture'})}>
+                                  <Check className={cn("mr-2 h-4 w-4", pinnedItems.some(p => p.id === item.id) ? "opacity-100" : "opacity-0")} />
+                                   {item.title}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                             <CommandGroup heading="سلاسل">
+                              {allData.series.map((item) => (
+                                <CommandItem key={item.id} value={`series-${item.title}`} onSelect={() => handleSelect({id: item.id, type: 'series'})}>
+                                  <Check className={cn("mr-2 h-4 w-4", pinnedItems.some(p => p.id === item.id) ? "opacity-100" : "opacity-0")} />
+                                   {item.title}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                             <CommandGroup heading="برامج">
+                              {allData.program.map((item) => (
+                                <CommandItem key={item.id} value={`program-${item.name}`} onSelect={() => handleSelect({id: item.id, type: 'program'})}>
+                                  <Check className={cn("mr-2 h-4 w-4", pinnedItems.some(p => p.id === item.id) ? "opacity-100" : "opacity-0")} />
+                                   {item.name}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -251,16 +274,6 @@ export default function AdminPinnedLecturePage() {
                     </Popover>
                 </div>
                 
-                <div className="space-y-2">
-                    <Label htmlFor="pinned-message">رسالة مخصصة (اختياري)</Label>
-                    <Textarea 
-                        id="pinned-message" 
-                        placeholder="مثال: محاضرات هامة بمناسبة شهر رمضان..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                    />
-                </div>
-
                 <div className="space-y-2">
                     <Label>تصميم العرض في الرئيسية</Label>
                     <Select value={layout} onValueChange={(v) => setLayout(v as any)}>

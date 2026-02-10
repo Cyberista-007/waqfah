@@ -20,9 +20,14 @@ export type AnnouncementSettings = {
     isActive?: boolean;
 };
 
-export type PinnedLectureSettings = {
-    lectureIds?: string[];
+export type PinnedItem = {
+    id: string;
+    type: 'lecture' | 'series' | 'program';
     message?: string;
+};
+
+export type PinnedItemSettings = {
+    pinnedItems?: PinnedItem[];
     isActive?: boolean;
     startDate?: Timestamp;
     endDate?: Timestamp;

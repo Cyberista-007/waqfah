@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from './skeletons';
-import { PinnedLecture } from './pinned-lecture';
+import { PinnedItems } from './pinned-items';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 // New Component for paginated sections
@@ -131,7 +131,7 @@ export function HomePageClient() {
 
       <div className="container py-8 space-y-16">
         <Suspense>
-            <PinnedLecture />
+            <PinnedItems />
         </Suspense>
         <Suspense>
           <ContinueListening />
