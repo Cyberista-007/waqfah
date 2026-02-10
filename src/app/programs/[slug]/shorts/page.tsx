@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { normalizeArabic } from '@/lib/utils';
 import Fuse from 'fuse.js';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function ProgramShortsContent({ program }: { program: Program }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
