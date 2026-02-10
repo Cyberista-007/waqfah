@@ -21,7 +21,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture, Program, Series } from "@/lib/types";
 import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, runTransaction, increment } from "firebase/firestore";
+import { doc, runTransaction, increment, writeBatch, Timestamp } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Wand2, Search, Clapperboard, Video, ChevronDown } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -347,40 +347,54 @@ export default function AdminLecturesPage() {
         });
 
         try {
-            await runTransaction(firestore, async (transaction) => {
-                const updatePromises = lecturesToUpdate.map(async (lecture) => {
-                    if (!lecture.youtubeUrl) return;
-                    try {
-                        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
-                        });
-                        
-                        const data = await response.json();
+            const allUpdateData = new Map<string, Partial<Lecture>>();
 
-                        if (response.ok && data.videoInfo) {
-                            const lectureRef = doc(firestore, 'lectures', lecture.id);
-                            const updateData: Partial<Lecture> = {
-                                youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
-                                title: data.videoInfo.title || lecture.title,
-                                description: data.videoInfo.description || lecture.description,
-                                duration: data.videoInfo.durationInSeconds || lecture.duration,
-                            };
-                            transaction.update(lectureRef, updateData);
-                        } else {
-                           console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
+            // Sequentially fetch metadata to avoid overwhelming the network
+            for (const lecture of lecturesToUpdate) {
+                if (!lecture.youtubeUrl) continue;
+                try {
+                    const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
+                    });
+                    
+                    const data = await response.json();
+
+                    if (response.ok && data.videoInfo) {
+                        const updateData: Partial<Lecture> = {
+                            youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
+                            title: data.videoInfo.title || lecture.title,
+                            description: data.videoInfo.description || lecture.description,
+                            duration: data.videoInfo.durationInSeconds || lecture.duration,
+                        };
+                         // Only update publishedAt if we get a new valid date from youtube
+                        if (data.videoInfo.publishedAt) {
+                            updateData.publishedAt = Timestamp.fromDate(new Date(data.videoInfo.publishedAt));
                         }
-                    } catch (error) {
-                        console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+                        allUpdateData.set(lecture.id, updateData);
+                    } else {
+                       console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
                     }
+                } catch (error) {
+                    console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+                    // Continue to next lecture on individual fetch error
+                }
+            }
+
+            // Use a batched write to update all documents at once
+            if (allUpdateData.size > 0) {
+                const batch = writeBatch(firestore);
+                allUpdateData.forEach((data, id) => {
+                    const lectureRef = doc(firestore, 'lectures', id);
+                    batch.update(lectureRef, data);
                 });
-                await Promise.all(updatePromises);
-            });
+                await batch.commit();
+            }
 
             toast({
                 title: "اكتمل التحديث!",
-                description: `تم محاولة تحديث بيانات ${lecturesToUpdate.length} محاضرة.`,
+                description: `تم محاولة تحديث بيانات ${lecturesToUpdate.length} محاضرة. تم تحديث ${allUpdateData.size} منها بنجاح.`,
             });
         } catch(e) {
              console.error("Error in transaction for updating all metadata:", e);
