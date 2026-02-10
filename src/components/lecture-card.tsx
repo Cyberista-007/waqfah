@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -175,8 +174,17 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
   
   const hasChannel = lecture.channelName && lecture.channelSlug;
 
-  const publicationDate = lecture.publishedAt ? new Date(lecture.publishedAt) : new Date(lecture.createdAt);
-  const dateText = !isNaN(publicationDate.getTime()) 
+  const toDate = (timestamp: any): Date | null => {
+    if (!timestamp) return null;
+    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate();
+    }
+    const d = new Date(timestamp);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const publicationDate = toDate(lecture.publishedAt) || toDate(lecture.createdAt);
+  const dateText = publicationDate 
     ? formatDistanceToNow(publicationDate, { addSuffix: true, locale: ar })
     : null;
 
