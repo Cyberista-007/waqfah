@@ -11,12 +11,6 @@ import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
-import dynamic from 'next/dynamic';
-
-const FloatingAudioPlayer = dynamic(
-  () => import('@/components/floating-audio-player').then(mod => mod.FloatingAudioPlayer),
-  { ssr: false }
-);
 
 export const metadata: Metadata = {
   title: {
@@ -69,7 +63,6 @@ export default async function RootLayout({
               </main>
               <SiteFooter />
             </div>
-            <FloatingAudioPlayer />
             <Toaster />
         </AppProviders>
         <Analytics />

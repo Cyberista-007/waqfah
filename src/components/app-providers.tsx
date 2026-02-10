@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -14,6 +12,11 @@ import type { AppearanceSettings } from '@/lib/types';
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player'),
+  { ssr: false }
+);
+
+const FloatingAudioPlayer = dynamic(
+  () => import('@/components/floating-audio-player').then(mod => mod.FloatingAudioPlayer),
   { ssr: false }
 );
 
@@ -71,6 +74,7 @@ export function AppProviders({
                     <AudioPlayerProvider>
                         <FirebaseErrorListener />
                         {children}
+                        <FloatingAudioPlayer />
                         <FloatingVideoPlayer />
                     </AudioPlayerProvider>
               </MaintenanceHandler>
