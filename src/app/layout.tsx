@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { Toaster } from '@/components/ui/toaster';
-import { FloatingAudioPlayer } from '@/components/floating-audio-player';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
@@ -12,6 +11,12 @@ import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
+import dynamic from 'next/dynamic';
+
+const FloatingAudioPlayer = dynamic(
+  () => import('@/components/floating-audio-player').then(mod => mod.FloatingAudioPlayer),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: {
