@@ -14,6 +14,8 @@ import { HomePageSkeleton } from "@/components/skeletons";
 import { useMemo, useState, Suspense } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Fuse from 'fuse.js';
+import { normalizeArabic } from "@/lib/utils";
 
 function LecturesListPageClient() {
   const router = useRouter();
@@ -53,13 +55,15 @@ function LecturesListPageClient() {
     }
 
     if (searchTerm) {
-        const lowercasedTerm = searchTerm.toLowerCase();
-        lectures = lectures.filter(l => 
-            (l.title || '').toLowerCase().includes(lowercasedTerm) ||
-            (l.description || '').toLowerCase().includes(lowercasedTerm) ||
-            (l.programName || '').toLowerCase().includes(lowercasedTerm) ||
-            (l.seriesTitle || '').toLowerCase().includes(lowercasedTerm)
-        );
+        const fuseOptions = {
+          includeScore: false,
+          keys: ['title', 'description', 'programName', 'seriesTitle'],
+          threshold: 0.4,
+          ignoreLocation: true,
+          preprocessor: normalizeArabic,
+        };
+        const fuse = new Fuse(lectures, fuseOptions);
+        lectures = fuse.search(searchTerm).map(result => result.item);
     }
     
     lectures.sort((a, b) => {

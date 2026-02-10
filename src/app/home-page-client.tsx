@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from './skeletons';
-import { PinnedItems } from './pinned-items';
+import { PinnedItems } from '@/app/pinned-items';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 
 // New Component for paginated sections

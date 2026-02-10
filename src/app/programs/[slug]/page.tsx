@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -18,12 +17,14 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 import { Input } from '@/components/ui/input';
+import Fuse from 'fuse.js';
 
 function ProgramPageContent({ program }: { program: Program }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
 
     const [lectureSearchTerm, setLectureSearchTerm] = useState('');
+    const [shortSearchTerm, setShortSearchTerm] = useState('');
 
     const isLoading = lecturesLoading || seriesLoading;
     const [bannerUrl, setBannerUrl] = useState("https://picsum.photos/seed/program-banner/1600/400");
@@ -97,11 +98,27 @@ function ProgramPageContent({ program }: { program: Program }) {
         if (!lectureSearchTerm) {
             return regularLectures;
         }
-        const normalizedSearchTerm = normalizeArabic(lectureSearchTerm);
-        return regularLectures.filter(lecture => 
-            normalizeArabic(lecture.title).includes(normalizedSearchTerm)
-        );
+        const fuse = new Fuse(regularLectures, {
+            keys: ['title'],
+            threshold: 0.4,
+            ignoreLocation: true,
+            preprocessor: normalizeArabic,
+        });
+        return fuse.search(lectureSearchTerm).map(result => result.item);
     }, [regularLectures, lectureSearchTerm]);
+
+    const filteredShorts = useMemo(() => {
+        if (!shortSearchTerm) {
+            return shorts;
+        }
+        const fuse = new Fuse(shorts, {
+            keys: ['title'],
+            threshold: 0.4,
+            ignoreLocation: true,
+            preprocessor: normalizeArabic,
+        });
+        return fuse.search(shortSearchTerm).map(result => result.item);
+    }, [shorts, shortSearchTerm]);
 
 
     const contentIsLoading = isLoading;
@@ -165,7 +182,13 @@ function ProgramPageContent({ program }: { program: Program }) {
 
             {!contentIsLoading && (
                 <>
-                    <ShortsCarousel shorts={shorts} />
+                    <div className="px-4 sm:px-6 lg:px-8">
+                        <ShortsCarousel 
+                            shorts={filteredShorts} 
+                            searchTerm={shortSearchTerm} 
+                            onSearchTermChange={setShortSearchTerm} 
+                        />
+                    </div>
                     
                     {regularLectures.length > 0 && (
                          <section className="px-4 sm:px-6 lg:px-8">

@@ -12,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import Fuse from 'fuse.js';
+import { normalizeArabic } from "@/lib/utils";
 
 function SearchPageComponent() {
     const router = useRouter();
@@ -57,26 +59,20 @@ function SearchPageComponent() {
             return { lectures: [], series: [], programs: [], books: [] };
         }
         
-        const searchTermLower = searchTerm.toLowerCase().trim();
+        const fuseOptions = {
+            includeScore: false,
+            threshold: 0.4,
+            ignoreLocation: true,
+            preprocessor: normalizeArabic,
+        };
 
         // Lectures
-        let filteredLectures = (allLectures || []).filter(l => {
-            const titleMatch = (l.title || '').toLowerCase().includes(searchTermLower);
-            const descMatch = (l.description || '').toLowerCase().includes(searchTermLower);
-            const programMatch = (l.programName || '').toLowerCase().includes(searchTermLower);
-            const seriesMatch = (l.seriesTitle || '').toLowerCase().includes(searchTermLower);
+        let filteredLectures = allLectures || [];
 
-            let transcriptMatch = false;
-            if (transcriptSearch && Array.isArray(l.transcript)) {
-                transcriptMatch = l.transcript.some(t => (t.text || '').toLowerCase().includes(searchTermLower));
-            }
-            return titleMatch || descMatch || programMatch || seriesMatch || transcriptMatch;
-        });
-
+        // Apply filters before fuzzy search for better performance
         if (languageFilter !== 'all') {
             filteredLectures = filteredLectures.filter(l => l.language === languageFilter);
         }
-
         if (durationFilter !== 'any') {
             switch(durationFilter) {
                 case 'under30':
@@ -91,32 +87,34 @@ function SearchPageComponent() {
             }
         }
 
+        const lectureKeys = ['title', 'description', 'programName', 'seriesTitle'];
+        if (transcriptSearch) {
+          lectureKeys.push('transcript.text');
+        }
+        const lectureFuse = new Fuse(filteredLectures, { ...fuseOptions, keys: lectureKeys });
+        const finalLectures = lectureFuse.search(searchTerm).map(result => result.item);
+
         // Series
-        let filteredSeries = (allSeries || []).filter(s => 
-            (s.title || '').toLowerCase().includes(searchTermLower) ||
-            (s.description || '').toLowerCase().includes(searchTermLower) ||
-            (s.programName || '').toLowerCase().includes(searchTermLower)
-        );
+        let filteredSeries = allSeries || [];
         if (languageFilter !== 'all') {
             filteredSeries = filteredSeries.filter(s => s.language === languageFilter);
         }
+        const seriesFuse = new Fuse(filteredSeries, { ...fuseOptions, keys: ['title', 'description', 'programName'] });
+        const finalSeries = seriesFuse.search(searchTerm).map(result => result.item);
         
         // Programs
-        const filteredPrograms = (allPrograms || []).filter(p => 
-            (p.name || '').toLowerCase().includes(searchTermLower) ||
-            (p.bio || '').toLowerCase().includes(searchTermLower)
-        );
+        const programsFuse = new Fuse(allPrograms || [], { ...fuseOptions, keys: ['name', 'bio'] });
+        const finalPrograms = programsFuse.search(searchTerm).map(result => result.item);
         
         // Books
-        const filteredBooks = (allBooks || []).filter(b => 
-            (b.title || '').toLowerCase().includes(searchTermLower)
-        );
+        const booksFuse = new Fuse(allBooks || [], { ...fuseOptions, keys: ['title', 'programName'] });
+        const finalBooks = booksFuse.search(searchTerm).map(result => result.item);
         
         return { 
-            lectures: filteredLectures, 
-            series: filteredSeries, 
-            programs: filteredPrograms, 
-            books: filteredBooks 
+            lectures: finalLectures, 
+            series: finalSeries, 
+            programs: finalPrograms, 
+            books: finalBooks 
         };
     }, [searchTerm, allLectures, allSeries, allPrograms, allBooks, languageFilter, durationFilter, transcriptSearch]);
 
