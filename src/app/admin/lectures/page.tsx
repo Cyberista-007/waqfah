@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -522,24 +523,22 @@ export default function AdminLecturesPage() {
                         onOpenChange={() => toggleCollapsible(programName)}
                         className="border rounded-lg bg-card"
                     >
-                        <CollapsibleTrigger className="flex justify-between items-center w-full p-4 font-semibold text-lg bg-muted/30 rounded-t-lg">
-                            <div className="flex items-center gap-4">
+                         <div className="flex justify-between items-center w-full p-4 bg-muted/30 rounded-t-lg">
+                            <CollapsibleTrigger className="flex items-center gap-4 font-semibold text-lg text-right flex-grow">
                                 <span>{programName} ({lectures.length})</span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // prevent collapsing/expanding
-                                        handleUpdateProgramMetadata(lectures);
-                                    }}
-                                    disabled={isUpdatingProgram[programName] || isLoading}
-                                >
-                                    {isUpdatingProgram[programName] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                    تحديث هذا البرنامج
-                                </Button>
-                            </div>
-                            <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", openCollapsibles.includes(programName) && "rotate-180")} />
-                        </CollapsibleTrigger>
+                                <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", openCollapsibles.includes(programName) && "rotate-180")} />
+                            </CollapsibleTrigger>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUpdateProgramMetadata(lectures)}
+                                disabled={isUpdatingProgram[programName] || isLoading}
+                                className="mr-4"
+                            >
+                                {isUpdatingProgram[programName] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                تحديث هذا البرنامج
+                            </Button>
+                        </div>
                         <CollapsibleContent>
                             <Table>
                                 <TableHeader>
