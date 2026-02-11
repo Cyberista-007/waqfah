@@ -24,7 +24,7 @@ import { useCollection, useFirestore } from "@/firebase";
 import { doc, runTransaction, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Podcast, Wand2 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { ProgramForm } from "@/components/admin/program-form";
+import { ProgramForm } from "@/app/admin/program-form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getPlaceholderImage } from "@/lib/images";
 import { getInitials } from "@/lib/utils";
@@ -60,28 +60,9 @@ export default function AdminProgramsPage() {
         toast({ title: `بدء مزامنة بيانات "${program.name}"...` });
 
         try {
-            // 1. Fetch channel info to update program data
-            const programInfoResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
-            });
+            // The sync button is now only for checking for new content,
+            // not for updating program metadata (which is handled in the edit form).
 
-            if (programInfoResponse.ok) {
-                const programData = await programInfoResponse.json();
-                if (programData.channelInfo) {
-                    const programRef = doc(firestore, 'programs', program.id);
-                    await updateDoc(programRef, {
-                        name: programData.channelInfo.name,
-                        bio: programData.channelInfo.description,
-                        imageUrl: programData.channelInfo.imageUrl,
-                    });
-                }
-            } else {
-                 console.warn(`Could not update program info for ${program.name}`);
-            }
-
-            // 2. Fetch all videos from the channel
             const videosResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -94,9 +75,9 @@ export default function AdminProgramsPage() {
             }
 
             const data = await videosResponse.json();
-            const fetchedVideos: any[] = data.videos || [];
+            const fetchedVideos: any[] = [...(data.videos || []), ...(data.shorts || [])];
 
-            // 3. Compare with existing lectures
+            // Compare with existing lectures for this program
             const q = query(collection(firestore, 'lectures'), where("programId", "==", program.id));
             const lecturesSnapshot = await getDocs(q);
             const existingYoutubeUrls = new Set(lecturesSnapshot.docs.map(doc => doc.data().youtubeUrl));
@@ -118,12 +99,24 @@ export default function AdminProgramsPage() {
             }
 
         } catch (error: any) {
-            console.error("Error syncing program data:", error);
-            toast({
-                variant: "destructive",
-                title: "فشلت المزامنة",
-                description: error.message || "حدث خطأ غير متوقع.",
-            });
+             // Handle the specific "Failed to fetch" TypeError, which likely indicates a timeout.
+            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                 console.error("Sync failed, likely due to API route timeout:", error);
+                 toast({
+                    variant: "destructive",
+                    title: "فشلت المزامنة",
+                    description: "استغرق جلب الفيديوهات وقتاً طويلاً. حاول استيراد المحاضرات مباشرة من صفحة الاستيراد.",
+                    duration: 10000,
+                    action: <ToastAction altText="اذهب للاستيراد" asChild><Link href={`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`}>اذهب للاستيراد</Link></ToastAction>,
+                });
+            } else {
+                console.error("Error syncing program data:", error);
+                toast({
+                    variant: "destructive",
+                    title: "فشلت المزامنة",
+                    description: error.message || "حدث خطأ غير متوقع.",
+                });
+            }
         } finally {
             setSyncingProgramId(null);
         }
@@ -287,4 +280,6 @@ export default function AdminProgramsPage() {
       </>
     );
 }
+    
+
     

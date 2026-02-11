@@ -21,7 +21,7 @@ import type { Channel } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 interface ChannelFormProps {
