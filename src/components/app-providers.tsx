@@ -2,13 +2,19 @@
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
-import { FirebaseProvider } from '@/firebase';
 import { AppearanceProvider } from '@/components/appearance-provider';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import dynamic from 'next/dynamic';
 import { MaintenanceHandler } from '@/components/maintenance-handler';
 import type { AppearanceSettings } from '@/lib/types';
+import { HomePageSkeleton } from './skeletons';
 
+const DynamicFirebaseProvider = dynamic(
+  () => import('@/firebase').then((mod) => mod.FirebaseProvider),
+  {
+    loading: () => <HomePageSkeleton />,
+    ssr: false,
+  }
+);
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player'),
@@ -69,16 +75,15 @@ export function AppProviders({
             quranIconUrl={quranIconUrl}
             hadithIconUrl={hadithIconUrl}
           >
-            <FirebaseProvider>
+            <DynamicFirebaseProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
                     <AudioPlayerProvider>
-                        <FirebaseErrorListener />
                         {children}
                         <FloatingAudioPlayer />
                         <FloatingVideoPlayer />
                     </AudioPlayerProvider>
               </MaintenanceHandler>
-            </FirebaseProvider>
+            </DynamicFirebaseProvider>
           </AppearanceProvider>
         </ThemeProvider>
     )
