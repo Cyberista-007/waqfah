@@ -2,7 +2,7 @@
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
-import { FirebaseClientProvider } from '@/firebase';
+import { FirebaseProvider } from '@/firebase';
 import { AppearanceProvider } from '@/components/appearance-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import dynamic from 'next/dynamic';
@@ -69,7 +69,7 @@ export function AppProviders({
             quranIconUrl={quranIconUrl}
             hadithIconUrl={hadithIconUrl}
           >
-            <FirebaseClientProvider>
+            <FirebaseProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
                     <AudioPlayerProvider>
                         <FirebaseErrorListener />
@@ -78,7 +78,7 @@ export function AppProviders({
                         <FloatingVideoPlayer />
                     </AudioPlayerProvider>
               </MaintenanceHandler>
-            </FirebaseClientProvider>
+            </FirebaseProvider>
           </AppearanceProvider>
         </ThemeProvider>
     )
