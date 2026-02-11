@@ -16,6 +16,9 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Fuse from 'fuse.js';
 import { normalizeArabic } from "@/lib/utils";
+import { Pagination } from "@/components/pagination";
+
+const ITEMS_PER_PAGE = 12;
 
 function LecturesListPageClient() {
   const router = useRouter();
@@ -25,6 +28,7 @@ function LecturesListPageClient() {
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
 
+  const currentPage = Number(searchParams.get('page')) || 1;
   const seriesFilter = searchParams.get('series');
   const sortOrder = searchParams.get('sort') || 'most_popular';
   
@@ -32,6 +36,7 @@ function LecturesListPageClient() {
 
   const handleFilterChange = (type: 'series' | 'sort', value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set('page', '1'); // Reset to first page on filter change
 
     if (value === "all") {
       current.delete(type);
@@ -43,6 +48,15 @@ function LecturesListPageClient() {
     const query = search ? `?${search}` : "";
 
     router.push(`${pathname}${query}`);
+  };
+
+  const handlePageChange = (page: number) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set('page', page.toString());
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    window.scrollTo(0, 0); // Scroll to top on page change
+    router.push(`${pathname}${query}`, { scroll: false });
   };
   
   const filteredLectures = useMemo(() => {
@@ -92,6 +106,12 @@ function LecturesListPageClient() {
 
   }, [allLectures, seriesFilter, sortOrder, searchTerm]);
 
+  const totalPages = Math.ceil(filteredLectures.length / ITEMS_PER_PAGE);
+  const lecturesForPage = filteredLectures.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+  );
+
   const isLoading = lecturesLoading || seriesLoading;
 
 
@@ -139,16 +159,26 @@ function LecturesListPageClient() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredLectures?.map((lecture, index) => {
+        {lecturesForPage?.map((lecture, index) => {
           return (
             <LectureCard key={lecture.id} lecture={lecture} index={index} />
           )
         })}
       </div>
-       {!isLoading && filteredLectures.length === 0 && (
+       {!isLoading && lecturesForPage.length === 0 && (
          <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">لا توجد محاضرات تطابق خيارات الفلترة الحالية.</p>
          </div>
+      )}
+      
+      {totalPages > 1 && (
+        <div className="mt-8">
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+        </div>
       )}
     </div>
   );
