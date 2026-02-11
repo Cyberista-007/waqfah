@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, ShieldX, AlertTriangle, Pin, Calendar as CalendarIcon } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, AlertTriangle, Pin, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
@@ -51,7 +51,10 @@ export default function AdminDashboardPage() {
                 <Card className="lg:col-span-2 rounded-2xl">
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
+                            <div>
+                                <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
+                                <CardDescription>بيانات تجريبية للعرض. لربط إحصائيات حقيقية، تحتاج إلى ربط خدمة تحليلات.</CardDescription>
+                            </div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
                                     <TabsList className="grid w-full grid-cols-4 sm:w-auto">
