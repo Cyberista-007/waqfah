@@ -4,18 +4,28 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, ShieldX, AlertTriangle, Pin } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, Upload, UserCog, MicVocal, Youtube, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, ShieldX, AlertTriangle, Pin, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
 import { StatCard } from "@/components/admin/StatCard";
 import { useCollection, useDoc } from "@/firebase";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type DateRange } from "react-day-picker";
+import { subDays, format } from "date-fns";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
 
 export default function AdminDashboardPage() {
     const { data: stats, isLoading: statsLoading } = useDoc<Stats>('stats/global');
     const { data: popularLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['viewCount', 'desc'], limit: 5 });
-    const [timeRange, setTimeRange] = useState<'7d' | '30d' | '12m'>('7d');
+    const [timeRange, setTimeRange] = useState<'7d' | '30d' | '12m' | 'custom'>('7d');
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
+        from: subDays(new Date(), 6),
+        to: new Date(),
+    });
 
     return (
         <div className="space-y-8">
@@ -42,17 +52,58 @@ export default function AdminDashboardPage() {
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
-                            <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
-                                <TabsList className="grid w-full grid-cols-3 sm:w-auto">
-                                    <TabsTrigger value="7d">آخر 7 أيام</TabsTrigger>
-                                    <TabsTrigger value="30d">آخر 30 يومًا</TabsTrigger>
-                                    <TabsTrigger value="12m">آخر 12 شهرًا</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
+                                    <TabsList className="grid w-full grid-cols-4 sm:w-auto">
+                                        <TabsTrigger value="7d">آخر 7 أيام</TabsTrigger>
+                                        <TabsTrigger value="30d">آخر 30 يومًا</TabsTrigger>
+                                        <TabsTrigger value="12m">آخر 12 شهرًا</TabsTrigger>
+                                        <TabsTrigger value="custom">مخصص</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                                {timeRange === 'custom' && (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <Button
+                                            id="date"
+                                            variant={"outline"}
+                                            className={cn(
+                                            "w-[260px] justify-start text-left font-normal",
+                                            !customDateRange && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {customDateRange?.from ? (
+                                            customDateRange.to ? (
+                                                <>
+                                                {format(customDateRange.from, "LLL dd, y")} -{" "}
+                                                {format(customDateRange.to, "LLL dd, y")}
+                                                </>
+                                            ) : (
+                                                format(customDateRange.from, "LLL dd, y")
+                                            )
+                                            ) : (
+                                            <span>اختر نطاقًا</span>
+                                            )}
+                                        </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="end">
+                                        <Calendar
+                                            initialFocus
+                                            mode="range"
+                                            defaultMonth={customDateRange?.from}
+                                            selected={customDateRange}
+                                            onSelect={setCustomDateRange}
+                                            numberOfMonths={2}
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="h-[350px] w-full">
-                        <TrafficChart timeRange={timeRange} />
+                        <TrafficChart timeRange={timeRange} customDateRange={customDateRange} />
                     </CardContent>
                 </Card>
                 <Card className="rounded-2xl">

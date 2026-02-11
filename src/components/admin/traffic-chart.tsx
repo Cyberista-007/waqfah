@@ -12,24 +12,22 @@ import {
   Legend,
   Line,
 } from 'recharts';
-import { subDays, subMonths, format } from 'date-fns';
+import { subDays, subMonths, format, differenceInDays, addDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { type DateRange } from 'react-day-picker';
 
-// A more dynamic data generation function
-const generateData = (numPoints: number, unit: 'day' | 'month') => {
+const generatePresetData = (numPoints: number, unit: 'day' | 'month') => {
     const data = [];
     const today = new Date();
     for (let i = numPoints - 1; i >= 0; i--) {
         const date = unit === 'day' ? subDays(today, i) : subMonths(today, i);
         const name = unit === 'day' ? format(date, 'd MMM', { locale: ar }) : format(date, 'MMM yy', { locale: ar });
         
-        // Let's create a growth trend
         const growthFactor = (numPoints - i) / numPoints;
         
         const baseVisits = unit === 'month' ? 40000 : 1500;
         const baseUsers = unit === 'month' ? 25000 : 1000;
         
-        // Add some noise and trend
         const visits = Math.floor(baseVisits * growthFactor * (0.85 + Math.random() * 0.3));
         const users = Math.floor(baseUsers * growthFactor * (0.8 + Math.random() * 0.4));
 
@@ -38,23 +36,51 @@ const generateData = (numPoints: number, unit: 'day' | 'month') => {
     return data;
 };
 
+const generateCustomData = (range: DateRange) => {
+    if (!range.from || !range.to) return [];
+    
+    const data = [];
+    const days = differenceInDays(range.to, range.from);
+    if (days < 0) return [];
+    
+    for (let i = 0; i <= days; i++) {
+        const date = addDays(range.from, i);
+        const name = format(date, 'd MMM', { locale: ar });
 
-interface TrafficChartProps {
-    timeRange: '7d' | '30d' | '12m';
+        const growthFactor = (i + 1) / (days + 1);
+        const baseVisits = 1500;
+        const baseUsers = 1000;
+        
+        const visits = Math.floor(baseVisits * growthFactor * (0.85 + Math.random() * 0.3));
+        const users = Math.floor(baseUsers * growthFactor * (0.8 + Math.random() * 0.4));
+        
+        data.push({ name, visits, users });
+    }
+    return data;
 }
 
-export function TrafficChart({ timeRange = '7d' }: TrafficChartProps) {
+
+interface TrafficChartProps {
+    timeRange: '7d' | '30d' | '12m' | 'custom';
+    customDateRange?: DateRange;
+}
+
+export function TrafficChart({ timeRange = '7d', customDateRange }: TrafficChartProps) {
     const trafficData = useMemo(() => {
+        if (timeRange === 'custom' && customDateRange) {
+            return generateCustomData(customDateRange);
+        }
+        
         switch (timeRange) {
             case '30d':
-                return generateData(30, 'day');
+                return generatePresetData(30, 'day');
             case '12m':
-                return generateData(12, 'month');
+                return generatePresetData(12, 'month');
             case '7d':
             default:
-                return generateData(7, 'day');
+                return generatePresetData(7, 'day');
         }
-    }, [timeRange]);
+    }, [timeRange, customDateRange]);
 
     return (
         <ResponsiveContainer>
