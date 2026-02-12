@@ -59,7 +59,7 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         let fullUrl = url;
         // Ensure the URL has a protocol for the URL constructor to work reliably.
         if (!/^https?:\/\//i.test(fullUrl)) {
-            fullUrl = `https://${fullUrl}`;
+            fullUrl = `https://''' + fullUrl;
         }
         
         // 1. Check if it's a video URL first.
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.YOUTUBE_API_KEY;
 
     if (!apiKey) {
-        return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. يرجى إضافته إلى ملف .env." }, { status: 500, headers: corsHeaders });
+        return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. لتفعيل هذه الميزة، يرجى اتباع التعليمات في ملف 'docs/youtube-api-key.md' لإضافة المفتاح إلى مشروعك." }, { status: 500, headers: corsHeaders });
     }
 
     try {
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
 
         // Prepend protocol if missing before validation
         if (body.url && typeof body.url === 'string' && !/^https?:\/\//i.test(body.url)) {
-            body.url = `https://${body.url}`;
+            body.url = `https://''' + body.url;
         }
         
         const validation = youtubeImportSchema.safeParse(body);
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
             }
              try {
                 // play-dl can be picky, so we ensure a clean URL
-                const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                const cleanUrl = `https://www.youtube.com/watch?v=''' + videoId;
                 // This tells play-dl to act more like a web browser to avoid getting blocked.
                 await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
                 const info = await play.video_info(cleanUrl, { htmldata: false });
@@ -376,7 +376,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         console.error("YouTube API Error:", error);
         if (error.code === 403) {
-             return NextResponse.json({ message: "تم رفض الطلب من قبل يوتيوب. قد يكون مفتاح الـ API غير صحيح أو مقيد." }, { status: 403, headers: corsHeaders });
+             return NextResponse.json({ message: "تم رفض الطلب من قبل يوتيوب. تحقق من أن مفتاح الـ API صحيح، وأنه غير مقيد، وأن 'YouTube Data API v3' مُفعَّلة في مشروع Google Cloud." }, { status: 403, headers: corsHeaders });
         }
         if (error.code === 404) {
              return NextResponse.json({ message: "لم يتم العثور على القناة أو قائمة التشغيل." }, { status: 404, headers: corsHeaders });
