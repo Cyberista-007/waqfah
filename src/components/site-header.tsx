@@ -23,6 +23,7 @@ import {
   Podcast,
   Flame,
   BookCheck,
+  Hash,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -69,14 +70,15 @@ import { ThemeToggle } from "./theme-toggle"
 const mainNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/programs", label: "البرامج" },
+  { href: "/series", label: "السلاسل" },
   { href: "/lectures", label: "المحاضرات" },
-  { href: "/profile", label: "مكتبتي" },
   { href: "/topics", label: "المواضيع" },
-  { href: "/playlists", label: "قوائم التشغيل" },
-  { href: "/books", label: "الكتب" },
+  { href: "/profile", label: "مكتبتي" },
 ]
 
 const moreNavItems = [
+  { href: "/playlists", label: "قوائم التشغيل", icon: ListMusic },
+  { href: "/books", label: "الكتب", icon: HelpCircle },
   { href: "/challenges", label: "التحديات", icon: Flame },
   { href: "/accountability", label: "محاسبة النفس", icon: BookCheck },
   { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
