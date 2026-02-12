@@ -1,5 +1,4 @@
 
-
 import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
@@ -59,7 +58,7 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         let fullUrl = url;
         // Ensure the URL has a protocol for the URL constructor to work reliably.
         if (!/^https?:\/\//i.test(fullUrl)) {
-            fullUrl = `https://''' + fullUrl;
+            fullUrl = 'https://' + fullUrl;
         }
         
         // 1. Check if it's a video URL first.
@@ -170,7 +169,7 @@ export async function POST(req: NextRequest) {
 
         // Prepend protocol if missing before validation
         if (body.url && typeof body.url === 'string' && !/^https?:\/\//i.test(body.url)) {
-            body.url = `https://''' + body.url;
+            body.url = 'https://' + body.url;
         }
         
         const validation = youtubeImportSchema.safeParse(body);
@@ -194,7 +193,7 @@ export async function POST(req: NextRequest) {
             }
              try {
                 // play-dl can be picky, so we ensure a clean URL
-                const cleanUrl = `https://www.youtube.com/watch?v=''' + videoId;
+                const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
                 // This tells play-dl to act more like a web browser to avoid getting blocked.
                 await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
                 const info = await play.video_info(cleanUrl, { htmldata: false });
