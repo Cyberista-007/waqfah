@@ -61,6 +61,17 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         if (!/^https?:\/\//.test(fullUrl)) {
             fullUrl = `https://${fullUrl}`;
         }
+        
+        // 1. Check if it's a video URL first.
+        const videoId = getVideoIdFromUrl(fullUrl);
+        if (videoId) {
+            const { data } = await youtube.videos.list({ part: ['snippet'], id: [videoId] });
+            if (data.items && data.items.length > 0) {
+              return data.items[0]?.snippet?.channelId || null;
+            }
+        }
+
+        // 2. If not a video, proceed with channel/user/handle logic
         const parsedUrl = new URL(fullUrl);
         const pathParts = parsedUrl.pathname.split('/').filter(p => p);
 
@@ -69,33 +80,33 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         const identifier = pathParts[0];
         const secondPart = pathParts[1];
 
+        // Handle /channel/UC...
         if (identifier === 'channel' && secondPart) {
             return secondPart;
         }
 
+        // Handle /user/username (less common now but good to have)
         if (identifier === 'user' && secondPart) {
             const { data } = await youtube.channels.list({ part: ['id'], forUsername: secondPart });
             return data.items?.[0]?.id || null;
         }
-
-        if (identifier === 'c' && secondPart) {
-            // Custom URLs are tricky. The best we can do is search. This is not 100% reliable.
-            const { data } = await youtube.search.list({ part: ['id'], q: secondPart, type: ['channel'], maxResults: 1 });
-            const foundChannel = data.items?.find(item => item.id?.kind === 'youtube#channel');
-            return foundChannel?.id?.channelId || null;
-        }
         
+        // Handle @handle
         if (identifier?.startsWith('@')) {
-            const { data } = await youtube.channels.list({ part: ['id'], forHandle: identifier });
+            const { data } = await youtube.channels.list({ part: ['id'], forHandle: identifier.substring(1) });
             return data.items?.[0]?.id || null;
         }
 
+        // The /c/ vanity URLs are not reliably resolvable via the API anymore.
+        // The above methods cover the most common and current URL formats.
         return null;
+
     } catch (error) {
-        console.error("Error parsing channel URL:", error);
+        console.error("Error parsing channel/video URL to get Channel ID:", error);
         return null;
     }
 }
+
 
 function parseISO8601Duration(duration: string): number {
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
