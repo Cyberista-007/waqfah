@@ -56,31 +56,41 @@ function getVideoIdFromUrl(url: string): string | null {
 
 async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Promise<string | null> {
     try {
-        const parsedUrl = new URL(url);
-        const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+        let fullUrl = url;
+        // Ensure the URL has a protocol for the URL constructor to work reliably.
+        if (!/^https?:\/\//.test(fullUrl)) {
+            fullUrl = `https://${fullUrl}`;
+        }
+        const parsedUrl = new URL(fullUrl);
+        const pathParts = parsedUrl.pathname.split('/').filter(p => p);
 
-        let channelId: string | null = null;
-        
-        if (pathParts[0] === 'channel' && pathParts[1]) {
-            channelId = pathParts[1];
-        } else if (pathParts[0]?.startsWith('@')) {
-            const handle = pathParts[0]; // Keep "@"
-            const response = await youtube.channels.list({
-                part: ['id'],
-                forHandle: handle,
-            });
-            channelId = response.data.items?.[0]?.id || null;
-        } else if (pathParts[0] === 'user' && pathParts[1]) {
-            const username = pathParts[1];
-            const response = await youtube.channels.list({
-                part: ['id'],
-                forUsername: username,
-            });
-            channelId = response.data.items?.[0]?.id || null;
+        if (pathParts.length === 0) return null;
+
+        const identifier = pathParts[0];
+        const secondPart = pathParts[1];
+
+        if (identifier === 'channel' && secondPart) {
+            return secondPart;
         }
 
-        return channelId;
+        if (identifier === 'user' && secondPart) {
+            const { data } = await youtube.channels.list({ part: ['id'], forUsername: secondPart });
+            return data.items?.[0]?.id || null;
+        }
 
+        if (identifier === 'c' && secondPart) {
+            // Custom URLs are tricky. The best we can do is search. This is not 100% reliable.
+            const { data } = await youtube.search.list({ part: ['id'], q: secondPart, type: ['channel'], maxResults: 1 });
+            const foundChannel = data.items?.find(item => item.id?.kind === 'youtube#channel');
+            return foundChannel?.id?.channelId || null;
+        }
+        
+        if (identifier?.startsWith('@')) {
+            const { data } = await youtube.channels.list({ part: ['id'], forHandle: identifier });
+            return data.items?.[0]?.id || null;
+        }
+
+        return null;
     } catch (error) {
         console.error("Error parsing channel URL:", error);
         return null;
