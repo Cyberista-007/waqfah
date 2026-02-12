@@ -240,7 +240,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
           <div>
             <Label htmlFor="youtubeUrl">رابط قناة يوتيوب</Label>
             <div className="flex gap-2">
-                <Input id="youtubeUrl" name="youtubeUrl" type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} required disabled={isSubmitting || isFetching} />
+                <Input id="youtubeUrl" name="youtubeUrl" type="text" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} required disabled={isSubmitting || isFetching} />
                 <Button type="button" onClick={() => handleFetchFromYoutube()} disabled={isFetching || isSubmitting}>
                     {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                 </Button>
@@ -248,7 +248,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
           </div>
            <div>
             <Label htmlFor="rssFeedUrl">رابط بودكاست RSS (اختياري)</Label>
-            <Input id="rssFeedUrl" name="rssFeedUrl" type="url" value={rssFeedUrl} onChange={(e) => setRssFeedUrl(e.target.value)} disabled={isSubmitting} />
+            <Input id="rssFeedUrl" name="rssFeedUrl" type="text" value={rssFeedUrl} onChange={(e) => setRssFeedUrl(e.target.value)} disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="name">اسم القناة</Label>

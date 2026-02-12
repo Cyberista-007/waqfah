@@ -293,7 +293,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           <div>
             <Label htmlFor="audioSrc">رابط ملف الصوت المباشر (MP3)</Label>
             <div className="flex items-center gap-2">
-              <Input id="audioSrc" name="audioSrc" type="url" value={audioSrc} onChange={(e) => setAudioSrc(e.target.value)} required />
+              <Input id="audioSrc" name="audioSrc" type="text" value={audioSrc} onChange={(e) => setAudioSrc(e.target.value)} required />
               <Button type="button" variant="outline" size="icon" onClick={handleFetchMetadata} disabled={isFetching}>
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Wand2 className="h-4 w-4" />}
                 <span className="sr-only">استخلاص البيانات</span>
@@ -368,7 +368,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             </div>
              <div>
               <Label htmlFor="pdfUrl">رابط التفريغ (PDF) (اختياري)</Label>
-              <Input id="pdfUrl" name="pdfUrl" type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
+              <Input id="pdfUrl" name="pdfUrl" type="text" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
             </div>
              <div>
                 <Label htmlFor="language">اللغة</Label>
@@ -390,15 +390,15 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="youtubeUrl">رابط يوتيوب بديل (اختياري)</Label>
-              <Input id="youtubeUrl" name="youtubeUrl" type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
+              <Input id="youtubeUrl" name="youtubeUrl" type="text" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="soundcloudUrl">رابط ساوندكلاود (اختياري)</Label>
-              <Input id="soundcloudUrl" name="soundcloudUrl" type="url" value={soundcloudUrl} onChange={(e) => setSoundcloudUrl(e.target.value)} />
+              <Input id="soundcloudUrl" name="soundcloudUrl" type="text" value={soundcloudUrl} onChange={(e) => setSoundcloudUrl(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="telegramUrl">رابط تيليجرام (اختياري)</Label>
-              <Input id="telegramUrl" name="telegramUrl" type="url" value={telegramUrl} onChange={(e) => setTelegramUrl(e.target.value)} />
+              <Input id="telegramUrl" name="telegramUrl" type="text" value={telegramUrl} onChange={(e) => setTelegramUrl(e.target.value)} />
             </div>
           </div>
 

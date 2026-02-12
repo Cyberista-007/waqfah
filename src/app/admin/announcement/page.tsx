@@ -98,7 +98,7 @@ export default function AdminAnnouncementPage() {
                     <Label htmlFor="announcement-link">رابط (اختياري)</Label>
                     <Input 
                         id="announcement-link"
-                        type="url"
+                        type="text"
                         placeholder="https://example.com/live"
                         value={link}
                         onChange={(e) => setLink(e.target.value)}

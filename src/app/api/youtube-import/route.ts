@@ -58,7 +58,7 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
     try {
         let fullUrl = url;
         // Ensure the URL has a protocol for the URL constructor to work reliably.
-        if (!/^https?:\/\//.test(fullUrl)) {
+        if (!/^https?:\/\//i.test(fullUrl)) {
             fullUrl = `https://${fullUrl}`;
         }
         
@@ -71,34 +71,42 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
             }
         }
 
-        // 2. If not a video, proceed with channel/user/handle logic
         const parsedUrl = new URL(fullUrl);
         const pathParts = parsedUrl.pathname.split('/').filter(p => p);
 
         if (pathParts.length === 0) return null;
-
-        const identifier = pathParts[0];
-        const secondPart = pathParts[1];
-
-        // Handle /channel/UC...
-        if (identifier === 'channel' && secondPart) {
-            return secondPart;
+        
+        // Handle modern @handle format
+        const handleMatch = pathParts.find(part => part.startsWith('@'));
+        if (handleMatch) {
+            const handle = handleMatch.substring(1);
+            const { data } = await youtube.channels.list({ part: ['id'], forHandle: handle });
+            return data.items?.[0]?.id || null;
         }
 
-        // Handle /user/username (less common now but good to have)
-        if (identifier === 'user' && secondPart) {
-            const { data } = await youtube.channels.list({ part: ['id'], forUsername: secondPart });
+        // Handle /channel/UC... format
+        if (pathParts[0] === 'channel' && pathParts[1]) {
+            return pathParts[1];
+        }
+
+        // Handle /user/username format
+        if (pathParts[0] === 'user' && pathParts[1]) {
+            const { data } = await youtube.channels.list({ part: ['id'], forUsername: pathParts[1] });
             return data.items?.[0]?.id || null;
         }
         
-        // Handle @handle
-        if (identifier?.startsWith('@')) {
-            const { data } = await youtube.channels.list({ part: ['id'], forHandle: identifier.substring(1) });
-            return data.items?.[0]?.id || null;
+        // Final attempt for vanity URLs like /c/channelname which is deprecated
+        if(pathParts[0] === 'c' && pathParts[1]) {
+           const { data } = await youtube.search.list({ part: ['snippet'], q: pathParts[1], type: ['channel'], maxResults: 1 });
+           return data.items?.[0]?.snippet?.channelId || null;
+        }
+        
+        // If none of the above match, it might be an old vanity URL that is the whole path
+        if (pathParts.length === 1 && !pathParts[0].startsWith('@')) {
+           const { data } = await youtube.search.list({ part: ['snippet'], q: pathParts[0], type: ['channel'], maxResults: 1 });
+           return data.items?.[0]?.snippet?.channelId || null;
         }
 
-        // The /c/ vanity URLs are not reliably resolvable via the API anymore.
-        // The above methods cover the most common and current URL formats.
         return null;
 
     } catch (error) {
@@ -159,6 +167,12 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
+
+        // Prepend protocol if missing before validation
+        if (body.url && typeof body.url === 'string' && !/^https?:\/\//i.test(body.url)) {
+            body.url = `https://${body.url}`;
+        }
+        
         const validation = youtubeImportSchema.safeParse(body);
 
         if (!validation.success) {

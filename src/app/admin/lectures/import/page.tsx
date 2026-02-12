@@ -684,7 +684,7 @@ export default function AdminImportLecturesPage() {
                                 <div className="flex gap-2">
                                     <Input
                                         id="youtube-url"
-                                        type="url"
+                                        type="text"
                                         placeholder="https://www.youtube.com/..."
                                         value={youtubeUrl}
                                         onChange={(e) => setYoutubeUrl(e.target.value)}
@@ -981,6 +981,7 @@ export default function AdminImportLecturesPage() {
   
 
     
+
 
 
 
