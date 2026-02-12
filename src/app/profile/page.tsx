@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError, useAudioPlayer } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { DonationTierBadge } from "@/components/DonationTierBadge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AccountabilityTracker } from "@/components/accountability-tracker";
+import { useAudioPlayer } from "@/components/audio-player-provider";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
