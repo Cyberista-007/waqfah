@@ -25,7 +25,7 @@ import {
 import { useState, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
-import type { Series, Lecture, Program } from "@/lib/types";
+import type { Series, Lecture, Program, Channel } from "@/lib/types";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface LectureFormProps {
@@ -45,6 +45,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const isEditMode = !!lecture;
 
   const { data: programsList, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['name', 'asc'] });
+  const { data: channelsList, isLoading: channelsLoading } = useCollection<Channel>('channels', { orderBy: ['name', 'asc'] });
 
   const [title, setTitle] = useState(lecture?.title || "");
   const [description, setDescription] = useState(lecture?.description || "");
@@ -57,6 +58,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const [language, setLanguage] = useState(lecture?.language || "ar");
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
+  const [selectedChannelId, setSelectedChannelId] = useState<string>(lecture?.channelId || "none");
   const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
   const [publishedAt, setPublishedAt] = useState<string | null>(lecture?.publishedAt ? new Date(lecture.publishedAt).toISOString() : null);
 
@@ -77,6 +79,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
           setLanguage(savedData.language || "ar");
           setSelectedSeriesId(savedData.selectedSeriesId || "none");
           setSelectedProgramId(savedData.selectedProgramId || "none");
+          setSelectedChannelId(savedData.selectedChannelId || "none");
           setYoutubeViewCount(savedData.youtubeViewCount);
           setPublishedAt(savedData.publishedAt || null);
         } catch (e) {
@@ -90,11 +93,11 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   useEffect(() => {
     if (!isEditMode) {
       const dataToSave = {
-        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt
+        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, selectedChannelId, youtubeViewCount, publishedAt
       };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt]);
+  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, selectedChannelId, youtubeViewCount, publishedAt]);
 
   const handleClose = () => {
     if (!isEditMode) {
@@ -165,6 +168,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     
     const seriesData = selectedSeriesId !== 'none' ? seriesList?.find(s => s.id === selectedSeriesId) : null;
     const programData = selectedProgramId !== 'none' ? programsList?.find(p => p.id === selectedProgramId) : null;
+    const channelData = selectedChannelId !== 'none' ? channelsList?.find(c => c.id === selectedChannelId) : null;
     
     if (!title || !description || !audioSrc || !duration) {
         toast({
@@ -185,6 +189,9 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         programId: programData?.id || "",
         programName: programData?.name || "",
         programSlug: programData?.slug || "",
+        channelId: channelData?.id || "",
+        channelName: channelData?.name || "",
+        channelSlug: channelData?.slug || "",
         seriesId: seriesData?.id || "",
         seriesSlug: seriesData?.slug || "",
         seriesTitle: seriesData?.title || "",
@@ -271,7 +278,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     }
   };
   
-  const isLoading = programsLoading;
+  const isLoading = programsLoading || channelsLoading;
 
   return (
     <Card>
@@ -318,19 +325,35 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="series">السلسلة (اختياري)</Label>
-            <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
-                <SelectTrigger>
-                    <SelectValue placeholder={"اختر سلسلة..."} />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="none">بدون سلسلة</SelectItem>
-                    {seriesList.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="series">السلسلة (اختياري)</Label>
+              <Select name="series" onValueChange={setSelectedSeriesId} value={selectedSeriesId}>
+                  <SelectTrigger>
+                      <SelectValue placeholder={"اختر سلسلة..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="none">بدون سلسلة</SelectItem>
+                      {seriesList.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="channel">القناة (اختياري)</Label>
+                <Select name="channel" onValueChange={setSelectedChannelId} value={selectedChannelId} disabled={isLoading}>
+                    <SelectTrigger>
+                        <SelectValue placeholder={"اختر قناة..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">بدون قناة</SelectItem>
+                        {channelsList?.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
           
           <div>

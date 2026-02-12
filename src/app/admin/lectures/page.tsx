@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -546,6 +547,7 @@ export default function AdminLecturesPage() {
                                         <TableHead className="w-[50px]"></TableHead>
                                         <TableHead>عنوان العنصر</TableHead>
                                         <TableHead className="hidden md:table-cell">السلسلة</TableHead>
+                                        <TableHead className="hidden md:table-cell">القناة</TableHead>
                                         <TableHead>الاقتراحات</TableHead>
                                         <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
                                         <TableHead className="text-left">إجراءات</TableHead>
@@ -563,6 +565,7 @@ export default function AdminLecturesPage() {
                                             </TableCell>
                                             <TableCell className="font-medium">{lecture.title}</TableCell>
                                             <TableCell className="hidden md:table-cell">{lecture.seriesTitle || 'محاضرة مستقلة'}</TableCell>
+                                            <TableCell className="hidden md:table-cell">{lecture.channelName || 'غير محدد'}</TableCell>
                                             <TableCell>{lecture.suggestionCount || 0}</TableCell>
                                             <TableCell className="hidden md:table-cell">
                                                 {(lecture.createdAt as any)?.toDate?.().toLocaleDateString('ar-EG') || 'غير محدد'}
