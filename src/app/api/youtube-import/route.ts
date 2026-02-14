@@ -68,8 +68,25 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        if (body.url && typeof body.url === 'string' && !/^https?:\/\//i.test(body.url)) {
-            body.url = 'https://' + body.url;
+        if (body.url && typeof body.url === 'string') {
+            if (!/^https?:\/\//i.test(body.url)) {
+                body.url = 'https://' + body.url;
+            }
+            // Sanitize URL by removing unnecessary query parameters
+            if (body.url.includes('?')) {
+                const urlParts = body.url.split('?');
+                const mainUrl = urlParts[0];
+                const params = new URLSearchParams(urlParts[1]);
+                
+                if (params.has('v')) {
+                    body.url = `${mainUrl}?v=${params.get('v')}`;
+                } else if (params.has('list')) {
+                    body.url = `${mainUrl}?list=${params.get('list')}`;
+                } else {
+                    // This handles channel URLs with tracking params like ?si=...
+                    body.url = mainUrl;
+                }
+            }
         }
         
         const validation = youtubeImportSchema.safeParse(body);
@@ -256,7 +273,7 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error("YouTube Import API Error:", error);
-        let message = "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب.";
+        let message = "فشل جلب البيانات. حاول مرة أخرى أو تأكد من صحة الرابط.";
         if (error.message) {
             if (error.message.includes('404')) message = "لم يتم العثور على القناة أو قائمة التشغيل. يرجى التحقق من الرابط.";
             else if (error.message.toLowerCase().includes('private') || error.message.toLowerCase().includes('unavailable')) message = "هذا المحتوى خاص أو غير متوفر.";
