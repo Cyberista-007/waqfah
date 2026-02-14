@@ -304,7 +304,9 @@
         "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." },
         "quranIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Quran icon." },
         "hadithIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Hadith icon." },
-        "heroImageUrl": { "type": "string", "format": "uri", "description": "URL for the homepage hero banner image." }
+        "heroImageUrl": { "type": "string", "format": "uri", "description": "URL for the homepage hero banner image." },
+        "heroTitle": { "type": "string", "description": "The main headline on the homepage hero banner." },
+        "heroSubtitle": { "type": "string", "description": "The sub-headline on the homepage hero banner." }
       }
     },
     "AnnouncementSettings": {
@@ -639,3 +641,5 @@
     ]
   }
 }
+
+    

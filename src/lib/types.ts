@@ -46,6 +46,8 @@ export type AppearanceSettings = {
     quranIconUrl?: string;
     hadithIconUrl?: string;
     heroImageUrl?: string;
+    heroTitle?: string;
+    heroSubtitle?: string;
 };
 
 export type Stats = {
@@ -354,3 +356,5 @@ export type UserCurriculum = Serializable<{
     startedAt?: Timestamp;
     completedAt?: Timestamp;
 }>;
+
+    

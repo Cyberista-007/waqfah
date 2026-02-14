@@ -1,3 +1,4 @@
+
 'use client';
 
 import { HomeSearch } from '@/components/home-search';
@@ -99,7 +100,7 @@ export function HomePageClient() {
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 20 });
   const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  const { heroImageUrl: customHeroUrl } = useAppearance();
+  const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle } = useAppearance();
 
   const isLoading = seriesLoading || lecturesLoading || programsLoading;
 
@@ -175,10 +176,10 @@ export function HomePageClient() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="container relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 font-headline tracking-tight">
-            العلم الشرعي بين يديك
+            {heroTitle || 'العلم الشرعي بين يديك'}
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
-            منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.
+            {heroSubtitle || 'منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.'}
           </p>
           <HomeSearch />
         </div>
@@ -227,3 +228,5 @@ export function HomePageClient() {
     </div>
   );
 }
+
+    

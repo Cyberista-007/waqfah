@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -40,6 +41,8 @@ export function AppProviders({
     const quranIconUrl = appearanceSettings?.quranIconUrl;
     const hadithIconUrl = appearanceSettings?.hadithIconUrl;
     const heroImageUrl = appearanceSettings?.heroImageUrl;
+    const heroTitle = appearanceSettings?.heroTitle;
+    const heroSubtitle = appearanceSettings?.heroSubtitle;
     
     return (
         <ThemeProvider 
@@ -76,6 +79,8 @@ export function AppProviders({
             quranIconUrl={quranIconUrl}
             hadithIconUrl={hadithIconUrl}
             heroImageUrl={heroImageUrl}
+            heroTitle={heroTitle}
+            heroSubtitle={heroSubtitle}
           >
             <DynamicFirebaseProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
@@ -90,3 +95,5 @@ export function AppProviders({
         </ThemeProvider>
     )
 }
+
+    

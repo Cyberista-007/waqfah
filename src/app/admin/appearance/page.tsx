@@ -18,6 +18,7 @@ import { fonts } from '@/components/font-switcher';
 import { Switch } from '@/components/ui/switch';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function AdminAppearancePage() {
   const { toast } = useToast();
@@ -37,6 +38,9 @@ export default function AdminAppearancePage() {
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
 
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
+
   useEffect(() => {
     if (currentSettings) {
       setDefaultTheme(currentSettings.defaultTheme || 'theme-default-dark');
@@ -45,10 +49,14 @@ export default function AdminAppearancePage() {
       setQuranIconPreview(currentSettings.quranIconUrl || null);
       setHadithIconPreview(currentSettings.hadithIconUrl || null);
       setHeroImagePreview(currentSettings.heroImageUrl || null);
+      setHeroTitle(currentSettings.heroTitle || 'العلم الشرعي بين يديك');
+      setHeroSubtitle(currentSettings.heroSubtitle || 'منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.');
     } else if (!isLoading) {
       setDefaultTheme('theme-default-dark');
       setDefaultFont('font-body');
       setMaintenanceMode(false);
+      setHeroTitle('العلم الشرعي بين يديك');
+      setHeroSubtitle('منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.');
     }
   }, [currentSettings, isLoading]);
 
@@ -97,6 +105,8 @@ export default function AdminAppearancePage() {
             quranIconUrl: finalQuranIconUrl,
             hadithIconUrl: finalHadithIconUrl,
             heroImageUrl: finalHeroImageUrl,
+            heroTitle,
+            heroSubtitle,
         }, { merge: true });
 
         toast({ title: 'تم حفظ الإعدادات بنجاح!' });
@@ -158,10 +168,18 @@ export default function AdminAppearancePage() {
                             </Select>
                         </div>
                         
-                         <div className="space-y-2">
+                        <div className="space-y-2">
                             <Label htmlFor="hero-image">صورة البانر الرئيسي</Label>
                             {heroImagePreview && <Image src={heroImagePreview} alt="Hero Image Preview" width={300} height={150} className="rounded-md bg-muted p-1 object-cover" />}
                             <Input id="hero-image" type="file" accept="image/*" onChange={handleFileChange(setHeroImageFile, setHeroImagePreview)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="hero-title">العنوان الرئيسي للبانر</Label>
+                            <Input id="hero-title" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="hero-subtitle">العنوان الفرعي للبانر</Label>
+                            <Textarea id="hero-subtitle" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} rows={3} />
                         </div>
                     </div>
                      <div className="space-y-6">
@@ -202,3 +220,5 @@ export default function AdminAppearancePage() {
     </Card>
   );
 }
+
+    
