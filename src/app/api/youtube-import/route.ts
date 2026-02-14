@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
                 channelId = channelIdMatch[1];
             }
 
-            // 2. If no direct ID, try to search by handle or legacy URL part
+            // 2. If no direct ID, try to search by handle or legacy URL part using Google API first
             if (!channelId) {
                 const handleOrNameMatch = url.match(/@([\w.-]+)|\/c\/([\w-]+)|\/user\/([\w-]+)/);
                 const queryTerm = handleOrNameMatch?.[1] || handleOrNameMatch?.[2] || handleOrNameMatch?.[3];
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
                         });
                         channelId = searchResponse.data.items?.[0]?.id?.channelId;
                     } catch (searchError) {
-                        console.warn("Google API search for channel failed, will fall back.", searchError);
+                        console.warn("Google API search for channel failed, will fall back to play-dl.", searchError);
                     }
                 }
             }
@@ -198,20 +198,14 @@ export async function POST(req: NextRequest) {
         let info; // playlist_info result
         let channelIdForPlaylists: string | undefined = undefined;
 
-        // If it's a playlist URL, get info directly.
-        if (url.includes('playlist?list=')) {
+        const validationType = await play.yt_validate(url);
+        
+        if (validationType === 'playlist') {
             info = await play.playlist_info(url, { incomplete: true });
             channelIdForPlaylists = info.channel?.id;
-        } else { // Otherwise, it's a channel URL.
-            const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-            const channel = searchResults?.[0];
-            if (channel?.id) {
-                channelIdForPlaylists = channel.id;
-                // Get the 'uploads' playlist ID from the channel ID.
-                const uploadsPlaylistId = channel.id.replace(/^UC/, 'UU');
-                const playlistUrl = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
-                info = await play.playlist_info(playlistUrl, { incomplete: true });
-            }
+        } else if (validationType === 'channel') {
+            info = await play.channel_videos(url);
+            channelIdForPlaylists = info.channel?.id;
         }
         
         if (!info) {
