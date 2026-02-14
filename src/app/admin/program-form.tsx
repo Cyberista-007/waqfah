@@ -183,7 +183,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
 
         if (isEditMode && program) {
           const programRef = doc(firestore, 'programs', program.id);
-          await updateDocumentNonBlocking(programRef, programData);
+          updateDocumentNonBlocking(programRef, programData);
           toast({
               title: "تم التحديث بنجاح",
               description: `تم تحديث بيانات البرنامج "${name}".`,
