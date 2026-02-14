@@ -14,7 +14,7 @@ import { Loader2, Palette } from 'lucide-react';
 import { themes } from '@/components/theme-switcher';
 import { fonts } from '@/components/font-switcher';
 import { Switch } from '@/components/ui/switch';
-import { getDownloadURL, ref, uploadBytes, type FirebaseStorage } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -68,56 +68,67 @@ export default function AdminAppearancePage() {
 
   const handleSubmit = async () => {
     if (!firestore || !storage) {
-        toast({ variant: 'destructive', title: 'خدمات Firebase غير جاهزة.' });
-        return;
+      toast({ variant: 'destructive', title: 'خدمات Firebase غير جاهزة.' });
+      return;
     }
     if (!defaultTheme || !defaultFont) {
-        toast({ variant: 'destructive', title: 'يرجى اختيار الثيم والخط الافتراضي.' });
-        return;
+      toast({ variant: 'destructive', title: 'يرجى اختيار الثيم والخط الافتراضي.' });
+      return;
     }
 
     setIsSubmitting(true);
+
     try {
-        const settingsToUpdate: Partial<AppearanceSettings> = {
-            defaultTheme,
-            defaultFont,
-            maintenanceMode,
-            heroTitle,
-            heroSubtitle,
-        };
+      const settingsToUpdate: Partial<AppearanceSettings> = {
+        defaultTheme,
+        defaultFont,
+        maintenanceMode,
+        heroTitle,
+        heroSubtitle,
+      };
 
-        const processUpload = async (
-            file: File | null,
-            path: string,
-            key: keyof AppearanceSettings,
-            currentUrl: string | undefined | null
-        ) => {
-            if (file) {
-                const imageRef = ref(storage, path);
-                const snapshot = await uploadBytes(imageRef, file);
-                settingsToUpdate[key] = await getDownloadURL(snapshot.ref);
-            } else if (currentUrl) {
-                settingsToUpdate[key] = currentUrl;
-            } else {
-                settingsToUpdate[key] = '';
-            }
-        };
+      const processUpload = async (
+        file: File | null,
+        path: string,
+        key: keyof AppearanceSettings
+      ): Promise<{ key: keyof AppearanceSettings, url: string } | null> => {
+        if (!file) {
+          return null;
+        }
+        const storageRef = ref(storage, path);
+        const metadata = { contentType: file.type };
+        await uploadBytes(storageRef, file, metadata);
+        const downloadURL = await getDownloadURL(storageRef);
+        return { key, url: downloadURL };
+      };
 
-        await Promise.all([
-            processUpload(quranIconFile, 'system_icons/quran_icon.png', 'quranIconUrl', currentSettings?.quranIconUrl),
-            processUpload(hadithIconFile, 'system_icons/hadith_icon.png', 'hadithIconUrl', currentSettings?.hadithIconUrl),
-            processUpload(heroImageFile, 'system_icons/hero_banner.jpg', 'heroImageUrl', currentSettings?.heroImageUrl),
-        ]);
+      const uploadPromises = [
+        processUpload(quranIconFile, 'system_icons/quran_icon', 'quranIconUrl'),
+        processUpload(hadithIconFile, 'system_icons/hadith_icon', 'hadithIconUrl'),
+        processUpload(heroImageFile, 'system_icons/hero_banner', 'heroImageUrl'),
+      ];
 
-        const settingsRef = doc(firestore, 'settings', 'appearance');
-        await setDoc(settingsRef, settingsToUpdate, { merge: true });
+      const uploadResults = await Promise.all(uploadPromises);
 
-        toast({ title: 'تم حفظ الإعدادات بنجاح!' });
+      uploadResults.forEach(result => {
+        if (result) {
+          (settingsToUpdate as any)[result.key] = result.url;
+        }
+      });
+      
+      const settingsRef = doc(firestore, 'settings', 'appearance');
+      await setDoc(settingsRef, settingsToUpdate, { merge: true });
+
+      toast({ title: 'تم حفظ الإعدادات بنجاح!' });
     } catch (error) {
-        console.error("Error saving appearance settings:", error);
-        toast({ variant: 'destructive', title: 'فشل حفظ الإعدادات.', description: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.' });
+      console.error("Error saving appearance settings:", error);
+      toast({
+        variant: 'destructive',
+        title: 'فشل حفظ الإعدادات.',
+        description: 'حدث خطأ غير متوقع. يرجى التأكد من أن حجم الصورة مناسب والمحاولة مرة أخرى.',
+      });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -175,7 +186,7 @@ export default function AdminAppearancePage() {
                         <div className="space-y-2">
                             <Label htmlFor="hero-image">صورة البانر الرئيسي</Label>
                             {heroImagePreview && <Image src={heroImagePreview} alt="Hero Image Preview" width={300} height={150} className="rounded-md bg-muted p-1 object-cover" />}
-                            <Input id="hero-image" type="file" accept="image/*" onChange={handleFileChange(setHeroImageFile, setHeroImagePreview)} />
+                            <Input id="hero-image" type="file" accept="image/jpeg, image/png, image/webp" onChange={handleFileChange(setHeroImageFile, setHeroImagePreview)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="hero-title">العنوان الرئيسي للبانر</Label>
