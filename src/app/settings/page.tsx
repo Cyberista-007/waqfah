@@ -33,22 +33,26 @@ import {
   Crown,
   Link as LinkIcon,
   Smartphone,
+  PlayCircle,
+  Stamp,
+  Eye,
+  X,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, updateDocumentNonBlocking, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { doc, collection } from 'firebase/firestore';
-import type { UserProfile, Following, Program, NotificationSettings } from '@/lib/types';
-import { getInitials } from '@/lib/utils';
+import type { UserProfile, Following, Program, NotificationSettings, Lecture, ListenHistoryItem } from '@/lib/types';
+import { getInitials, formatBytes } from '@/lib/utils';
 import { EditProfileForm } from '@/components/profile/edit-profile-form';
 import { signOut } from 'firebase/auth';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -66,6 +70,11 @@ import { Slider } from '@/components/ui/slider';
 import { DonationTierBadge } from '@/components/DonationTierBadge';
 import { LanguageSwitcherDialog, languages } from '@/components/language-switcher';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
+import type { User } from 'firebase/auth';
 
 
 const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
@@ -271,6 +280,117 @@ function NewEpisodesView({ onBack }: { onBack: () => void; }) {
     )
 }
 
+function StorageManagementView({ onBack, user }: { onBack: () => void; user: User }) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(true);
+    const [downloadedLectures, setDownloadedLectures] = useState<(Lecture & { size: number })[]>([]);
+    const [itemToDelete, setItemToDelete] = useState<(Lecture & { size: number }) | null>(null);
+    const [isDeletingAll, setIsDeletingAll] = useState(false);
+
+    const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(user ? `users/${user.uid}/listenHistory` : null);
+    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+
+    useEffect(() => {
+        if (historyLoading || lecturesLoading) return;
+
+        if (listenHistory && allLectures) {
+            const downloads = listenHistory.map(historyItem => {
+                const lecture = allLectures.find(l => l.id === historyItem.lectureId);
+                if (lecture) {
+                    const size = Math.round((lecture.duration / 60) * 1.5 * 1024 * 1024); // Fake size: 1.5MB per minute
+                    return { ...lecture, size };
+                }
+                return null;
+            }).filter((l): l is Lecture & { size: number } => !!l);
+            setDownloadedLectures(downloads);
+        }
+        setIsLoading(false);
+    }, [listenHistory, allLectures, historyLoading, lecturesLoading]);
+
+    const totalSize = useMemo(() => downloadedLectures.reduce((acc, l) => acc + l.size, 0), [downloadedLectures]);
+    const FAKE_TOTAL_STORAGE = 5 * 1024 * 1024 * 1024; // 5 GB
+
+    const handleDelete = (lectureId: string) => {
+        // In a real app, you would also delete from device storage and firestore listen history.
+        setDownloadedLectures(prev => prev.filter(l => l.id !== lectureId));
+        toast({ title: "تم حذف التنزيل." });
+        setItemToDelete(null);
+    };
+    
+    const handleDeleteAll = () => {
+        setDownloadedLectures([]);
+        toast({ variant: 'destructive', title: "تم حذف جميع التنزيلات." });
+        setIsDeletingAll(false);
+    }
+
+    return (
+        <div>
+            <SettingsHeader title="إدارة مساحة التخزين" onBack={onBack} />
+            <Card>
+                <CardHeader>
+                    <CardTitle>مساحة التخزين المستخدمة</CardTitle>
+                    <CardDescription>
+                        هنا يمكنك رؤية المحاضرات التي تم تنزيلها وحذفها لتوفير مساحة على جهازك.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Progress value={(totalSize / FAKE_TOTAL_STORAGE) * 100} />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>المستخدم: {formatBytes(totalSize)}</span>
+                            <span>الإجمالي المتوفر: {formatBytes(FAKE_TOTAL_STORAGE)}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button variant="destructive" onClick={() => setIsDeletingAll(true)} disabled={downloadedLectures.length === 0}>
+                            <Trash2 className="me-2 h-4 w-4" />
+                            حذف جميع التنزيلات
+                        </Button>
+                    </div>
+
+                    <ScrollArea className="h-96 rounded-md border p-2">
+                        <div className="space-y-2 p-2">
+                            {isLoading ? (
+                                <div className="text-center p-4 flex justify-center"><Loader2 className="animate-spin" /></div>
+                            ) : downloadedLectures.length > 0 ? (
+                                downloadedLectures.map(lecture => (
+                                    <div key={lecture.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                                        <div>
+                                            <p className="font-semibold">{lecture.title}</p>
+                                            <p className="text-sm text-muted-foreground">{formatBytes(lecture.size)}</p>
+                                        </div>
+                                        <Button size="icon" variant="ghost" onClick={() => setItemToDelete(lecture)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-muted-foreground p-8">لا توجد تنزيلات حالياً.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+
+            {itemToDelete && <DeleteConfirmationDialog
+                isOpen={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                onConfirm={() => handleDelete(itemToDelete!.id)}
+                title={`حذف "${itemToDelete?.title}"؟`}
+                description="سيتم حذف الملف من جهازك. هل أنت متأكد؟"
+            />}
+            <DeleteConfirmationDialog
+                isOpen={isDeletingAll}
+                onClose={() => setIsDeletingAll(false)}
+                onConfirm={handleDeleteAll}
+                title={`حذف جميع التنزيلات؟`}
+                description={`سيتم حذف ${downloadedLectures.length} ملف من جهازك. هل أنت متأكد؟`}
+            />
+        </div>
+    );
+}
+
 export default function SettingsPage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
@@ -288,7 +408,7 @@ export default function SettingsPage() {
         language,
     } = useAppearance();
 
-    const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes'>('main');
+    const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
@@ -325,6 +445,10 @@ export default function SettingsPage() {
 
     if (view === 'newEpisodes') {
         return <NewEpisodesView onBack={() => setView('notifications')} />;
+    }
+    
+    if (view === 'storage') {
+        return <StorageManagementView onBack={() => setView('main')} user={user} />;
     }
     
     const currentLanguageName = languages.find(l => l.value === language)?.name || 'العربية';
@@ -494,7 +618,7 @@ export default function SettingsPage() {
                 <Switch id="wifi-only-switch" defaultChecked={true} />
             </div>
             <Separator />
-            <SettingsItem icon={Database} label="إدارة مساحة التخزين" />
+            <SettingsItem icon={Database} label="إدارة مساحة التخزين" onClick={() => setView('storage')} />
         </div>
 
         <SectionTitle title="إمكانية الوصول" />
