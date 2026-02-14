@@ -356,5 +356,3 @@ export type UserCurriculum = Serializable<{
     startedAt?: Timestamp;
     completedAt?: Timestamp;
 }>;
-
-    

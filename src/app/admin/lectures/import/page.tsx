@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, FileText, Youtube, ListChecks, Clapperboard, Video, ListVideo, ExternalLink, Podcast, Library, AlertTriangle, CheckCircle, Link as LinkIcon, RefreshCw, DownloadCloud } from "lucide-react";
 import { useCollection, useFirestore } from "@/firebase";
-import type { Series, Program, Lecture, Channel } from "@/lib/types";
+import type { Series, Program, Lecture } from "@/lib/types";
 import { writeBatch, doc, collection, Timestamp, increment, runTransaction } from "firebase/firestore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -68,7 +68,7 @@ interface FetchedPlaylist {
 }
 
 interface OpmlResult {
-    matched: (Program | Channel)[];
+    matched: Program[];
     unmatched: string[];
 }
 
@@ -95,7 +95,6 @@ export default function AdminImportLecturesPage() {
     const [selectedShorts, setSelectedShorts] = useState<string[]>([]);
     const [targetSeriesId, setTargetSeriesId] = useState<string>("none");
     const [targetProgramId, setTargetProgramId] = useState<string>("none");
-    const [targetChannelId, setTargetChannelId] = useState<string>("none");
     const [activeTab, setActiveTab] = useState("youtube-videos");
 
     // OPML State
@@ -106,7 +105,6 @@ export default function AdminImportLecturesPage() {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
-    const { data: allChannels, isLoading: channelsLoading } = useCollection<Channel>('channels');
     
     useEffect(() => {
         if (targetSeriesId && targetSeriesId !== 'none' && allSeries) {
@@ -160,9 +158,9 @@ export default function AdminImportLecturesPage() {
         const isPlaylistUrl = finalUrl.includes('playlist?list=');
         
         if (!isPlaylistUrl) {
-          const channelExists = allChannels?.some(c => c.youtubeUrl === finalUrl);
-          if (!channelExists && !urlToFetch) {
-              router.push(`/admin/channels?youtubeUrl=${encodeURIComponent(finalUrl)}`);
+          const programExists = allPrograms?.some(p => p.youtubeUrl === finalUrl);
+          if (!programExists && !urlToFetch) {
+              router.push(`/admin/programs?youtubeUrl=${encodeURIComponent(finalUrl)}`);
               return;
           }
         }
@@ -292,7 +290,7 @@ export default function AdminImportLecturesPage() {
             toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار بعض الفيديوهات للاستيراد."});
             return;
         }
-        if (!firestore || !allSeries || !allPrograms || !allChannels || !allLectures) return;
+        if (!firestore || !allSeries || !allPrograms || !allLectures) return;
         
         setIsSubmitting(true);
         
@@ -321,7 +319,6 @@ export default function AdminImportLecturesPage() {
 
             const series = (targetSeriesId && targetSeriesId !== 'none') ? allSeries.find(s => s.id === targetSeriesId) : null;
             const program = (targetProgramId && targetProgramId !== 'none') ? allPrograms.find(p => p.id === targetProgramId) : null;
-            const channel = (targetChannelId && targetChannelId !== 'none') ? allChannels.find(c => c.id === targetChannelId) : null;
             
             const placeholderAudios = [
               'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
@@ -344,9 +341,6 @@ export default function AdminImportLecturesPage() {
                     seriesId: series?.id || "",
                     seriesSlug: series?.slug || "",
                     seriesTitle: series?.title || "",
-                    channelId: channel?.id || "",
-                    channelName: channel?.name || "",
-                    channelSlug: channel?.slug || "",
                     audioSrc: placeholderAudios[index % placeholderAudios.length], // Using a placeholder MP3
                     duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`,
@@ -652,7 +646,7 @@ export default function AdminImportLecturesPage() {
     };
 
 
-    const isLoading = seriesLoading || programsLoading || channelsLoading || lecturesLoading;
+    const isLoading = seriesLoading || programsLoading || lecturesLoading;
     
     const hasFetchedYoutubeData = fetchedVideos.length > 0 || fetchedShorts.length > 0 || fetchedPlaylists.length > 0;
     
@@ -712,7 +706,7 @@ export default function AdminImportLecturesPage() {
                                     </TabsList>
                                      <div className="space-y-4 border p-4 rounded-lg mt-4">
                                         <h3 className="font-bold flex items-center gap-2"><ListChecks /> المحتوى الذي تم جلبه</h3>
-                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <Label htmlFor="target-series">اختر السلسلة (اختياري)</Label>
                                                 <Select value={targetSeriesId} onValueChange={setTargetSeriesId}>
@@ -737,18 +731,6 @@ export default function AdminImportLecturesPage() {
                                                     </SelectContent>
                                                 </Select>
                                              </div>
-                                             <div>
-                                                <Label htmlFor="target-channel">اختر القناة (اختياري)</Label>
-                                                <Select value={targetChannelId} onValueChange={setTargetChannelId}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="اختر قناة..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                         <SelectItem value="none">بدون قناة</SelectItem>
-                                                        {allChannels?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
                                          </div>
                                         <TabsContent value="youtube-videos">
                                            <div className="max-h-80 overflow-y-auto">
@@ -902,7 +884,7 @@ export default function AdminImportLecturesPage() {
                         <div className="mb-6 p-4 border-l-4 border-primary bg-primary/10 rounded-r-lg">
                             <h4 className="font-bold mb-2">استيراد الاشتراكات من ملف OPML</h4>
                             <p className="text-sm text-foreground/80">
-                                هذه الميزة تتيح لك استيراد اشتراكات البودكاست الخاصة بك من تطبيقات أخرى. سيقوم النظام بمحاولة مطابقة روابط الـ RSS الموجودة في الملف مع البرامج والقنوات الموجودة في قاعدة البيانات.
+                                هذه الميزة تتيح لك استيراد اشتراكات البودكاست الخاصة بك من تطبيقات أخرى. سيقوم النظام بمحاولة مطابقة روابط الـ RSS الموجودة في الملف مع البرامج الموجودة في قاعدة البيانات.
                             </p>
                         </div>
                         <div className="space-y-4">
@@ -933,14 +915,14 @@ export default function AdminImportLecturesPage() {
                              {opmlResults && (
                                 <div className="mt-6 space-y-6">
                                     <div>
-                                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle className="text-green-500"/>برامج وقنوات مطابقة ({opmlResults.matched.length})</h4>
+                                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle className="text-green-500"/>برامج مطابقة ({opmlResults.matched.length})</h4>
                                         {opmlResults.matched.length > 0 ? (
                                             <div className="space-y-2 rounded-lg border p-4">
                                                 {opmlResults.matched.map(item => (
                                                     <div key={item.id} className="flex items-center justify-between">
                                                         <span className="font-medium">{item.name}</span>
                                                         <Button variant="outline" size="sm" asChild>
-                                                            <Link href={`/admin/${'bio' in item ? 'programs' : 'channels'}`}>
+                                                            <Link href={`/admin/programs`}>
                                                                 عرض <LinkIcon className="h-4 w-4 mr-2"/>
                                                             </Link>
                                                         </Button>
@@ -975,13 +957,3 @@ export default function AdminImportLecturesPage() {
         </Card>
     );
 }
-
-    
-    
-  
-
-    
-
-
-
-

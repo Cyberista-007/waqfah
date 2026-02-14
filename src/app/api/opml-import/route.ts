@@ -1,6 +1,7 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeAdminApp } from '@/lib/firebase-admin';
-import type { Program, Channel } from '@/lib/types';
+import type { Program } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
     try {
@@ -27,25 +28,17 @@ export async function POST(req: NextRequest) {
             throw new Error("فشل تهيئة وصول المدير لقاعدة البيانات.");
         }
 
-        const [programsSnap, channelsSnap] = await Promise.all([
-            firestore.collection('programs').get(),
-            firestore.collection('channels').get()
-        ]);
+        const programsSnap = await firestore.collection('programs').get();
         
         const allPrograms = programsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Program));
-        const allChannels = channelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel));
 
-        const urlToItemMap = new Map<string, Program | Channel>();
+        const urlToItemMap = new Map<string, Program>();
         allPrograms.forEach(p => {
             if(p.youtubeUrl) urlToItemMap.set(p.youtubeUrl, p);
             if(p.rssFeedUrl) urlToItemMap.set(p.rssFeedUrl, p);
         });
-        allChannels.forEach(c => {
-            if(c.youtubeUrl) urlToItemMap.set(c.youtubeUrl, c);
-            if(c.rssFeedUrl) urlToItemMap.set(c.rssFeedUrl, c);
-        });
 
-        const matched: (Program | Channel)[] = [];
+        const matched: Program[] = [];
         const unmatched: string[] = [];
 
         feedUrls.forEach(url => {

@@ -56,6 +56,7 @@
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
+        "programId": { "type": "string" },
         "programName": { "type": "string" },
         "programSlug": { "type": "string" },
         "seriesId": { "type": "string" },
@@ -70,12 +71,13 @@
         "rating": { "type": "number", "minimum": 0, "maximum": 5 },
         "ratingCount": { "type": "number", "minimum": 0 },
         "viewCount": { "type": "number", "minimum": 0 },
+        "youtubeViewCount": { "type": "number", "minimum": 0 },
         "createdAt": { "type": "string", "format": "date-time" },
         "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." },
         "suggestionCount": { "type": "number", "minimum": 0, "description": "Number of times this lecture has been suggested for pinning." },
         "publishedAt": { "type": "string", "format": "date-time", "description": "The original publication date from the source (e.g., YouTube)." }
       },
-      "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
+      "required": ["slug", "title", "audioSrc", "imageId", "duration", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -641,5 +643,3 @@
     ]
   }
 }
-
-    

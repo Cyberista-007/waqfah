@@ -52,12 +52,6 @@ service cloud.firestore {
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
-
-    match /channels/{channelId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
-    }
     
     match /series/{seriesId} {
       allow get, list: if true;
@@ -67,8 +61,8 @@ service cloud.firestore {
     match /lectures/{lectureId} {
       allow get, list: if true;
       // Admins can perform any write operation.
-      allow write: if isAdmin();
       // Allow users to suggest lectures for pinning.
+      allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suggestionCount']);
 
       match /suggestions/{userId} {
