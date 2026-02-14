@@ -701,25 +701,25 @@ export default function ProfilePage() {
                   <TabsTrigger value="notes" className="px-4 py-2 rounded-full flex items-center gap-2"><Notebook className="h-5 w-5"/>ملاحظاتي</TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="history" className="mt-6">
+              <TabsContent value="history" className="mt-6" dir="rtl">
                 <ContinueWatchingSection />
               </TabsContent>
-              <TabsContent value="favorites" className="mt-6">
+              <TabsContent value="favorites" className="mt-6" dir="rtl">
                 <FavoritesSection />
               </TabsContent>
-               <TabsContent value="reports" className="mt-6">
+               <TabsContent value="reports" className="mt-6" dir="rtl">
                 <ReportsSection userProfile={userProfile} user={user} />
               </TabsContent>
                <TabsContent value="accountability" className="mt-6">
                 <AccountabilityTracker showHeader={false} redirectToOnAuth='/profile' />
               </TabsContent>
-              <TabsContent value="playlists" className="mt-6">
+              <TabsContent value="playlists" className="mt-6" dir="rtl">
                 <PlaylistsSection />
               </TabsContent>
-              <TabsContent value="following" className="mt-6">
+              <TabsContent value="following" className="mt-6" dir="rtl">
                 <FollowedProgramsSection />
               </TabsContent>
-              <TabsContent value="challenges" className="mt-6">
+              <TabsContent value="challenges" className="mt-6" dir="rtl">
                 <UserChallengesSection />
               </TabsContent>
                <TabsContent value="donations" className="mt-6">
@@ -739,3 +739,4 @@ export default function ProfilePage() {
     
 
     
+
