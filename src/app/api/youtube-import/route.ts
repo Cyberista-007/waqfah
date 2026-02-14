@@ -55,66 +55,55 @@ function getVideoIdFromUrl(url: string): string | null {
 
 async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Promise<string | null> {
     try {
-        let fullUrl = url;
-        // Ensure the URL has a protocol for the URL constructor to work reliably.
-        if (!/^https?:\/\//i.test(fullUrl)) {
-            fullUrl = 'https://' + fullUrl;
-        }
-        
-        // 1. Check if it's a video URL first.
+        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+
+        // 1. Check for video URL first, as it's the most specific
         const videoId = getVideoIdFromUrl(fullUrl);
         if (videoId) {
             const { data } = await youtube.videos.list({ part: ['snippet'], id: [videoId] });
-            if (data.items && data.items.length > 0) {
-              return data.items[0]?.snippet?.channelId || null;
-            }
+            return data.items?.[0]?.snippet?.channelId || null;
         }
 
+        // 2. If not a video, parse for channel path parts
         const parsedUrl = new URL(fullUrl);
         const pathParts = parsedUrl.pathname.split('/').filter(p => p);
 
         if (pathParts.length === 0) return null;
-        
-        // Handle modern @handle format
-        const handleMatch = pathParts.find(part => part.startsWith('@'));
-        if (handleMatch) {
-            const handle = handleMatch; // Use the full handle like '@handle'
-            const { data } = await youtube.search.list({
-                part: ['snippet'],
-                q: handle,
-                type: ['channel'],
-                maxResults: 1
-            });
-            return data.items?.[0]?.snippet?.channelId || null;
-        }
 
         // Handle /channel/UC... format
-        if (pathParts[0] === 'channel' && pathParts[1]) {
+        if (pathParts[0] === 'channel' && pathParts[1]?.startsWith('UC')) {
             return pathParts[1];
         }
 
-        // Handle /user/username format
+        // Handle modern /@handle format
+        const handle = pathParts.find(part => part.startsWith('@'));
+        if (handle) {
+            const { data } = await youtube.search.list({ part: ['id'], q: handle, type: ['channel'], maxResults: 1 });
+            return data.items?.[0]?.id?.channelId || null;
+        }
+
+        // Handle legacy /user/username format
         if (pathParts[0] === 'user' && pathParts[1]) {
-            const { data } = await youtube.channels.list({ part: ['id'], forUsername: pathParts[1] });
+            const { data } = await youtube.channels.list({ part: ['id'], forUsername: pathParts[1], maxResults: 1 });
             return data.items?.[0]?.id || null;
         }
-        
-        // Final attempt for vanity URLs like /c/channelname which is deprecated
-        if(pathParts[0] === 'c' && pathParts[1]) {
-           const { data } = await youtube.search.list({ part: ['snippet'], q: pathParts[1], type: ['channel'], maxResults: 1 });
-           return data.items?.[0]?.snippet?.channelId || null;
-        }
-        
-        // If none of the above match, it might be an old vanity URL that is the whole path
-        if (pathParts.length === 1 && !pathParts[0].startsWith('@')) {
-           const { data } = await youtube.search.list({ part: ['snippet'], q: pathParts[0], type: ['channel'], maxResults: 1 });
-           return data.items?.[0]?.snippet?.channelId || null;
+
+        // Handle deprecated /c/vanity format
+        if (pathParts[0] === 'c' && pathParts[1]) {
+           const { data } = await youtube.search.list({ part: ['id'], q: pathParts[1], type: ['channel'], maxResults: 1 });
+           return data.items?.[0]?.id?.channelId || null;
         }
 
-        return null;
+        // Fallback for root vanity URLs like youtube.com/channelname
+        if (pathParts.length === 1) {
+            const { data } = await youtube.search.list({ part: ['id'], q: pathParts[0], type: ['channel'], maxResults: 1 });
+            return data.items?.[0]?.id?.channelId || null;
+        }
+
+        return null; // No channel found
 
     } catch (error) {
-        console.error("Error parsing channel/video URL to get Channel ID:", error);
+        console.error("Error determining YouTube Channel ID:", error);
         return null;
     }
 }
