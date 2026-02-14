@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export default function ManagePlaylistsPage() {
     const { user } = useUser();
@@ -107,7 +108,12 @@ export default function ManagePlaylistsPage() {
                         {playlists.map(p => (
                             <div key={p.id} className="border p-4 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <h3 className="font-semibold text-lg">{p.name}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-lg">{p.name}</h3>
+                                        <Badge variant={p.isPublic ? "secondary" : "outline"}>
+                                            {p.isPublic ? "عامة" : "خاصة"}
+                                        </Badge>
+                                    </div>
                                     <p className="text-sm text-muted-foreground">{p.lectureIds?.length || 0} محاضرة</p>
                                 </div>
                                 <div className="flex gap-2">
