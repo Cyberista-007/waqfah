@@ -24,16 +24,6 @@ export async function OPTIONS(request: NextRequest) {
   });
 }
 
-function getPlaylistIdFromUrl(url: string): string | null {
-    try {
-        const parsedUrl = new URL(url);
-        const playlistId = parsedUrl.searchParams.get('list');
-        return playlistId;
-    } catch (error) {
-        return null;
-    }
-}
-
 function getVideoIdFromUrl(url: string): string | null {
     try {
         const parsedUrl = new URL(url);
@@ -140,14 +130,31 @@ export async function POST(req: NextRequest) {
             const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
             const channelData = searchResults[0];
             if (channelData) {
-                return NextResponse.json({ channelInfo: { name: channelData.title, description: channelData.description, imageUrl: channelData.thumbnails?.[0]?.url, bannerUrl: (channelData as any).banner?.[0]?.url } }, { headers: corsHeaders });
+                return NextResponse.json({ channelInfo: { name: channelData.title, description: channelData.description || '', imageUrl: channelData.thumbnails?.[0]?.url, bannerUrl: (channelData as any).banner?.[0]?.url } }, { headers: corsHeaders });
             } else {
                 return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404, headers: corsHeaders });
             }
         }
 
         // --- Default behavior: Fetch videos and playlists ---
-        const info = await play.playlist_info(url, { incomplete: true });
+        let info; // playlist_info result
+        let channelIdForPlaylists: string | undefined = undefined;
+
+        if (url.includes('playlist?list=')) {
+            info = await play.playlist_info(url, { incomplete: true });
+            channelIdForPlaylists = info.channel?.id;
+        } else {
+            // It's likely a channel URL. Search for it, get uploads playlist.
+            const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
+            const channel = searchResults?.[0];
+            if (channel?.id) {
+                channelIdForPlaylists = channel.id;
+                const uploadsPlaylistId = channel.id.replace(/^UC/, 'UU');
+                const playlistUrl = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
+                info = await play.playlist_info(playlistUrl, { incomplete: true });
+            }
+        }
+        
         if (!info) {
              return NextResponse.json({ message: "لم نتمكن من جلب البيانات. قد يكون الرابط غير صحيح أو القناة لا تحتوي على فيديوهات." }, { status: 404, headers: corsHeaders });
         }
@@ -181,10 +188,10 @@ export async function POST(req: NextRequest) {
         });
 
         let formattedPlaylists: any[] = [];
-        if (info.type === 'channel' && info.channel?.id) {
+        if (channelIdForPlaylists) {
             let nextPageToken: string | undefined = undefined;
             do {
-                const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: info.channel.id, maxResults: 50, pageToken: nextPageToken });
+                const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelIdForPlaylists, maxResults: 50, pageToken: nextPageToken });
                 if (playlistsResponse.data.items) {
                     formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
                 }
