@@ -18,20 +18,23 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
         <Card
             key={series.id}
             className={cn(
-                "transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 flex flex-col justify-between rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
+                "h-full flex flex-col transition-all duration-300 ease-in-out hover:shadow-2xl border-2 border-transparent hover:border-primary/50 hover:shadow-primary/20 rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
                 "animate-fade-in-up"
             )}
             style={{ animationDelay: `${index * 100}ms` }}
         >
-            <CardHeader>
-                <CardTitle className="font-headline text-xl">
-                    <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
-                </CardTitle>
-                <CardDescription className="flex items-center gap-2 pt-1 line-clamp-3">
-                    {series.description}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className='pt-4 flex flex-col gap-4'>
+            <div className="flex-grow">
+                <CardHeader>
+                    <CardTitle className="font-headline text-xl">
+                        <Link href={`/series/${series.slug}`} className="hover:text-primary transition-colors">{series.title}</Link>
+                    </CardTitle>
+                    <CardDescription className="pt-1 line-clamp-3">
+                        {series.description}
+                    </CardDescription>
+                </CardHeader>
+            </div>
+            
+            <CardFooter className="pt-4 flex flex-col items-stretch gap-4">
                 {pinnedMessage && (
                     <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 w-full flex items-center gap-1.5">
                         <MessageSquare className="w-3 h-3 shrink-0"/> 
@@ -47,7 +50,7 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
                         <Link href={`/series/${series.slug}`}>عرض السلسلة</Link>
                     </Button>
                 </div>
-            </CardContent>
+            </CardFooter>
         </Card>
     );
 }
