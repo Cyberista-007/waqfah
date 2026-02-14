@@ -78,9 +78,14 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         // Handle modern @handle format
         const handleMatch = pathParts.find(part => part.startsWith('@'));
         if (handleMatch) {
-            const handle = handleMatch.substring(1);
-            const { data } = await youtube.channels.list({ part: ['id'], forHandle: handle });
-            return data.items?.[0]?.id || null;
+            const handle = handleMatch; // Use the full handle like '@handle'
+            const { data } = await youtube.search.list({
+                part: ['snippet'],
+                q: handle,
+                type: ['channel'],
+                maxResults: 1
+            });
+            return data.items?.[0]?.snippet?.channelId || null;
         }
 
         // Handle /channel/UC... format
