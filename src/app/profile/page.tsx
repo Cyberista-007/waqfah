@@ -1,13 +1,15 @@
+
 'use client';
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart, BookCheck } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureClip, LectureNote } from "@/lib/types";
+import type { User } from 'firebase/auth';
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -239,8 +241,70 @@ function FollowedProgramsSection() {
     );
 }
 
-function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
+function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user: User }) {
     const { siteTimeInSeconds } = useAudioPlayer();
+    const firestore = useFirestore();
+    
+    const [extraStats, setExtraStats] = useState({
+        favorites: 0,
+        playlists: 0,
+        following: 0,
+        notes: 0,
+        completedChallenges: 0,
+        userBadges: 0,
+        clips: 0,
+    });
+    const [isLoadingExtra, setIsLoadingExtra] = useState(true);
+
+    useEffect(() => {
+        if (!user || !firestore) return;
+        
+        const fetchCounts = async () => {
+            setIsLoadingExtra(true);
+            try {
+                const favoritesRef = collection(firestore, 'users', user.uid, 'favorites');
+                const playlistsRef = collection(firestore, 'users', user.uid, 'playlists');
+                const followingRef = collection(firestore, 'users', user.uid, 'following');
+                const notesRef = collection(firestore, 'users', user.uid, 'notes');
+                const challengesRef = query(collection(firestore, 'users', user.uid, 'user_challenges'), where('status', '==', 'completed'));
+                const badgesRef = collection(firestore, 'users', user.uid, 'user_badges');
+                const clipsRef = query(collectionGroup(firestore, 'clips'), where('userId', '==', user.uid));
+
+                const [
+                    favoritesSnap,
+                    playlistsSnap,
+                    followingSnap,
+                    notesSnap,
+                    challengesSnap,
+                    badgesSnap,
+                    clipsSnap,
+                ] = await Promise.all([
+                    getDocs(favoritesRef),
+                    getDocs(playlistsRef),
+                    getDocs(followingRef),
+                    getDocs(notesRef),
+                    getDocs(challengesSnap),
+                    getDocs(badgesRef),
+                    getDocs(clipsSnap),
+                ]);
+
+                setExtraStats({
+                    favorites: favoritesSnap.size,
+                    playlists: playlistsSnap.size,
+                    following: followingSnap.size,
+                    notes: notesSnap.size,
+                    completedChallenges: challengesSnap.size,
+                    userBadges: badgesSnap.size,
+                    clips: clipsSnap.size,
+                });
+            } catch (e) {
+                console.error("Error fetching extra stats:", e);
+            } finally {
+                setIsLoadingExtra(false);
+            }
+        }
+        fetchCounts();
+    }, [user, firestore]);
 
     const totalSeconds = siteTimeInSeconds;
     
@@ -249,12 +313,35 @@ function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
     const seconds = Math.floor(totalSeconds % 60);
     const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     const lecturesCompleted = userProfile?.lecturesCompleted || 0;
+    const points = userProfile?.points || 0;
+    const seriesCompleted = userProfile?.seriesCompleted || 0;
+    const totalDonated = userProfile?.totalDonated || 0;
+
+    const renderStat = (title: string, value: string | number, icon: React.ElementType, loading?: boolean) => {
+        if (loading) {
+            return <Card className="text-center"><CardContent className="p-4 flex items-center justify-center h-full"><Loader2 className="h-8 w-8 mx-auto animate-spin" /></CardContent></Card>
+        }
+        return <StatCard title={title} value={value} icon={icon} />
+    }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
             <StatCard title="إجمالي الوقت في الموقع" value={formattedTime} icon={Clock} />
+            <StatCard title="النقاط المكتسبة" value={points} icon={Sparkles} />
+            <StatCard title="السلاسل المكتملة" value={seriesCompleted} icon={Trophy} />
+            
+            {renderStat("المحاضرات المفضلة", extraStats.favorites, Heart, isLoadingExtra)}
+            {renderStat("قوائم التشغيل", extraStats.playlists, ListMusic, isLoadingExtra)}
+            {renderStat("البرامج المتابعة", extraStats.following, UserPlus, isLoadingExtra)}
+            {renderStat("الملاحظات المدونة", extraStats.notes, Notebook, isLoadingExtra)}
+            {renderStat("المقاطع المحفوظة", extraStats.clips, Clapperboard, isLoadingExtra)}
+            {renderStat("التحديات المكتملة", extraStats.completedChallenges, Award, isLoadingExtra)}
+            {renderStat("الأوسمة المكتسبة", extraStats.userBadges, Medal, isLoadingExtra)}
+
             <StatCard title="أطول مداومة مستمرة دون انقطاع" value="1" icon={Flame} />
+            
+            {totalDonated > 0 && <StatCard title="إجمالي التبرعات" value={`${new Intl.NumberFormat('ar-EG').format(totalDonated)} جنيه`} icon={HandHeart} />}
         </div>
     )
 }
@@ -620,7 +707,7 @@ export default function ProfilePage() {
                 <FavoritesSection />
               </TabsContent>
                <TabsContent value="reports" className="mt-6">
-                <ReportsSection userProfile={userProfile} />
+                <ReportsSection userProfile={userProfile} user={user} />
               </TabsContent>
                <TabsContent value="accountability" className="mt-6">
                 <AccountabilityTracker showHeader={false} redirectToOnAuth='/profile' />
