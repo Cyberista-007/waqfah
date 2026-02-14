@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,45 +67,45 @@ export default function AdminAppearancePage() {
   }
 
   const handleSubmit = async () => {
-    if (!firestore || !storage || !defaultTheme || !defaultFont) {
+    if (!firestore || !storage) {
+        toast({ variant: 'destructive', title: 'خدمات Firebase غير جاهزة.' });
+        return;
+    }
+    if (!defaultTheme || !defaultFont) {
         toast({ variant: 'destructive', title: 'يرجى اختيار الثيم والخط الافتراضي.' });
         return;
     }
 
     setIsSubmitting(true);
     try {
-        const uploadIcon = async (file: File, name: string): Promise<string> => {
-            const imageRef = ref(storage, `system_icons/${name}_${Date.now()}`);
+        const uploadImageIfNeeded = async (file: File | null, path: string): Promise<string | null> => {
+            if (!file) return null;
+            const imageRef = ref(storage, path);
             const snapshot = await uploadBytes(imageRef, file);
-            return await getDownloadURL(snapshot.ref);
+            return getDownloadURL(snapshot.ref);
         };
         
-        let finalQuranIconUrl = currentSettings?.quranIconUrl || '';
-        if (quranIconFile) {
-            finalQuranIconUrl = await uploadIcon(quranIconFile, 'quran_icon');
-        }
+        // Process all image uploads in parallel for better performance
+        const [quranIconUrl, hadithIconUrl, heroImageUrl] = await Promise.all([
+            uploadImageIfNeeded(quranIconFile, 'system_icons/quran_icon.png'),
+            uploadImageIfNeeded(hadithIconFile, 'system_icons/hadith_icon.png'),
+            uploadImageIfNeeded(heroImageFile, 'system_icons/hero_banner.jpg'),
+        ]);
 
-        let finalHadithIconUrl = currentSettings?.hadithIconUrl || '';
-        if (hadithIconFile) {
-            finalHadithIconUrl = await uploadIcon(hadithIconFile, 'hadith_icon');
-        }
-
-        let finalHeroImageUrl = currentSettings?.heroImageUrl || '';
-        if (heroImageFile) {
-            finalHeroImageUrl = await uploadIcon(heroImageFile, 'hero_banner');
-        }
-
-        const settingsRef = doc(firestore, 'settings', 'appearance');
-        await setDoc(settingsRef, { 
+        const settingsData = { 
             defaultTheme, 
             defaultFont, 
             maintenanceMode,
-            quranIconUrl: finalQuranIconUrl,
-            hadithIconUrl: finalHadithIconUrl,
-            heroImageUrl: finalHeroImageUrl,
+            // Use the new URL if uploaded, otherwise fallback to the existing URL, finally to an empty string.
+            quranIconUrl: quranIconUrl ?? currentSettings?.quranIconUrl ?? '',
+            hadithIconUrl: hadithIconUrl ?? currentSettings?.hadithIconUrl ?? '',
+            heroImageUrl: heroImageUrl ?? currentSettings?.heroImageUrl ?? '',
             heroTitle,
             heroSubtitle,
-        }, { merge: true });
+        };
+
+        const settingsRef = doc(firestore, 'settings', 'appearance');
+        await setDoc(settingsRef, settingsData, { merge: true });
 
         toast({ title: 'تم حفظ الإعدادات بنجاح!' });
     } catch (error) {
@@ -220,5 +218,3 @@ export default function AdminAppearancePage() {
     </Card>
   );
 }
-
-    
