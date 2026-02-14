@@ -240,7 +240,29 @@ function FollowedProgramsSection() {
 }
 
 function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
-    const totalSeconds = Math.floor((userProfile?.minutesListened || 0) * 60);
+    const { isPlaying, track } = useAudioPlayer();
+
+    const initialMinutes = userProfile?.minutesListened || 0;
+    const [totalSeconds, setTotalSeconds] = useState(Math.floor(initialMinutes * 60));
+
+    // Effect to reset the counter when the profile data from firestore changes
+    useEffect(() => {
+        setTotalSeconds(Math.floor(initialMinutes * 60));
+    }, [initialMinutes]);
+
+    // Effect to tick up the counter every second when audio is playing
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+        if (isPlaying && track) { // Only count time when audio is actively playing
+            interval = setInterval(() => {
+                setTotalSeconds(prev => prev + 1);
+            }, 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isPlaying, track]);
+
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.floor(totalSeconds % 60);
@@ -250,7 +272,7 @@ function ReportsSection({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard title="محاضرة مكتملة" value={String(lecturesCompleted)} icon={CheckCircle} />
-            <StatCard title="الدقائق التي استخدمت فيها التطبيق" value={formattedTime} icon={Clock} />
+            <StatCard title="إجمالي وقت الاستماع" value={formattedTime} icon={Clock} />
             <StatCard title="أطول مداومة مستمرة دون انقطاع" value="1" icon={Flame} />
         </div>
     )
