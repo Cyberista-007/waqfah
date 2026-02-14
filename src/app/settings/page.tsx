@@ -423,15 +423,23 @@ export default function SettingsPage() {
                         />
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="particle-color">لون الجزيئات</Label>
+                        <Label htmlFor="particle-color-picker">لون الجزيئات</Label>
                          <div className="flex items-center gap-2">
+                             <Input 
+                                id="particle-color-picker" 
+                                type="color"
+                                value={particleColor}
+                                onChange={(e) => setParticleColor(e.target.value)}
+                                className="p-1 h-10 w-14 cursor-pointer"
+                                aria-label="Color picker"
+                            />
                             <Input 
-                                id="particle-color" 
+                                id="particle-color-text" 
                                 type="text"
                                 value={particleColor}
                                 onChange={(e) => setParticleColor(e.target.value)}
+                                aria-label="Hex color code"
                             />
-                            <div className="w-8 h-8 rounded-md border" style={{ backgroundColor: particleColor }} />
                          </div>
                     </div>
                      <div className="space-y-2">
