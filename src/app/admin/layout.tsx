@@ -68,7 +68,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       
       // Content Management
       { href: '/admin/programs', label: 'البرامج', icon: Podcast },
-      { href: '/admin/channels', label: 'القنوات', icon: Youtube },
       { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
       { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
       { href: '/admin/books', label: 'الكتب', icon: Book },

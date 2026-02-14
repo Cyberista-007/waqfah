@@ -52,12 +52,6 @@ service cloud.firestore {
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
-
-    match /channels/{channelId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
-    }
     
     match /series/{seriesId} {
       allow get, list: if true;
@@ -67,8 +61,13 @@ service cloud.firestore {
     match /lectures/{lectureId} {
       allow get, list: if true;
       // Admins can perform any write operation.
-      // This also implicitly allows batched deletes by admins.
+      // Allow users to suggest lectures for pinning.
       allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suggestionCount']);
+
+      match /suggestions/{userId} {
+        allow read, create, delete: if isOwner(userId);
+      }
     }
 
     match /books/{bookId} {
@@ -96,7 +95,32 @@ service cloud.firestore {
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount']);
     }
+    
+    match /curriculums/{curriculumId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentCount']);
+    }
 
+    match /settings/{settingsId} {
+      allow get: if true;
+      allow write: if isAdmin();
+    }
+
+    match /donations/{donationId} {
+      allow get, list: if true; // Allow public reading of donations for the wall
+      allow write: if isAdmin(); // Only admins can add/edit/delete donations for now
+    }
+    
+    match /destructive_sins/{sinId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /gamification_badges/{badgeId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
 
     // =====================================================================
     // User-Specific Data
@@ -105,14 +129,28 @@ service cloud.firestore {
     match /users/{userId} {
       // A user can create their own profile document.
       allow create: if isOwner(userId);
-      // Users can only read and update their own profile. No one can list all users.
-      allow get, update: if isOwner(userId) || isAdmin();
-      // Admins can list all users.
-      allow list: if isAdmin();
-      // No one can delete user profiles for now.
-      allow delete: if false;
+      // Anyone can read a user's public profile data
+      allow get: if true;
+      // Users can only update their own profile. Admins can update any profile.
+      allow update: if isOwner(userId) || isAdmin();
+      // Allow signed-in users to list profiles for leaderboard
+      allow list: if isSignedIn();
+      // A user can delete their own account.
+      allow delete: if isOwner(userId);
 
        match /user_challenges/{challengeId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      match /accountability/{entryId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      match /user_badges/{badgeId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /curriculum_progress/{curriculumId} {
         allow read, write, delete: if isOwner(userId);
       }
     }
@@ -129,7 +167,7 @@ service cloud.firestore {
     
     match /users/{userId}/listenHistory/{lectureId} {
       // Users can only read and write to their own listening history.
-      allow read, write: if isOwner(userId);
+      allow read, write, delete: if isOwner(userId);
     }
 
     match /users/{userId}/playlists/{playlistId} {

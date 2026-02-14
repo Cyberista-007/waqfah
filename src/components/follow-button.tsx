@@ -1,3 +1,4 @@
+
 "use client";
 
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
@@ -10,20 +11,17 @@ import { useEffect, useMemo, useState } from "react";
 
 interface FollowButtonProps {
     programId?: string;
-    channelId?: string;
 }
 
-export function FollowButton({ programId, channelId }: FollowButtonProps) {
+export function FollowButton({ programId }: FollowButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
 
-    const targetId = programId || channelId;
-    const targetCollection = programId ? 'programs' : 'channels';
-    // TODO: The following collection is currently specific to programs.
-    // To fully support channel follows, a new collection or a more generic schema is needed.
-    const followCollectionPath = programId ? 'following' : null;
+    const targetId = programId;
+    const targetCollection = 'programs';
+    const followCollectionPath = 'following';
 
     const followDocPath = useMemo(() => {
         if (!user || !targetId || !followCollectionPath) return null;
@@ -46,15 +44,6 @@ export function FollowButton({ programId, channelId }: FollowButtonProps) {
 
         if (isLoading) return;
         
-        // Disable follow for channels for now
-        if (channelId) {
-            toast({
-                title: "قريبا!",
-                description: "ميزة متابعة القنوات قيد التطوير.",
-            });
-            return;
-        }
-
         if (!user || !firestore) {
             toast({
                 variant: "destructive",
@@ -80,7 +69,7 @@ export function FollowButton({ programId, channelId }: FollowButtonProps) {
                     transaction.delete(followDocRef);
                     transaction.update(targetRef, { followerCount: increment(-1) });
                 } else {
-                    const followData = { [programId ? 'programId' : 'channelId']: targetId, followedAt: Timestamp.now() };
+                    const followData = { programId: targetId, followedAt: Timestamp.now() };
                     transaction.set(followDocRef, followData);
                     transaction.update(targetRef, { followerCount: increment(1) });
                 }
@@ -114,7 +103,7 @@ export function FollowButton({ programId, channelId }: FollowButtonProps) {
     }
 
     return (
-        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full" disabled={!!channelId}>
+        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full">
             {isFollowing ? (
                 <>
                     <UserCheck className="me-2 h-5 w-5" />

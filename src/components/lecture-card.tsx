@@ -173,8 +173,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
     return (lectureHistory.position / lectureHistory.duration) * 100;
   }, [lectureHistory]);
   
-  const hasChannel = lecture.channelName && lecture.channelSlug;
-
   const toDate = (timestamp: any): Date | null => {
     if (!timestamp) return null;
     if (timestamp.toDate && typeof timestamp.toDate === 'function') {
@@ -281,14 +279,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
                 </Tooltip>
             </div>
 
-          {hasChannel ? (
-            <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
-                <Link href={`/channels/${lecture.channelSlug}`} className="flex items-center gap-1 hover:underline">
-                    <Youtube className="w-3 h-3" />
-                    <span>{lecture.channelName}</span>
-                </Link>
-            </div>
-          ) : lecture.programName && lecture.programSlug && (
+          {lecture.programName && lecture.programSlug && (
              <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
                 <Link href={`/programs/${lecture.programSlug}`} className="flex items-center gap-1 hover:underline">
                     <Podcast className="w-3 h-3" />
