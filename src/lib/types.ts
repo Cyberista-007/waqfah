@@ -311,7 +311,7 @@ export type AccountabilityEntry = Serializable<{
   totalPoints?: number;
 }>;
 
-export type DestructiveSin = {
+export type DestructiveSin = Serializable<{
   id: string;
   title: string;
   dialogTitle: string;
@@ -319,7 +319,7 @@ export type DestructiveSin = {
   hadith?: string;
   hadith2?: string;
   icon: string;
-};
+}>;
 
 export type Suggestion = Serializable<{
     id: string; // userId
