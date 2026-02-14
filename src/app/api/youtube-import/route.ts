@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. لتفعيل هذه الميزة، يرجى اتباع التعليمات في ملف 'docs/youtube-api-key.md' لإضافة المفتاح إلى مشروعك." }, { status: 500, headers: corsHeaders });
     }
 
+    // Use cookie to bypass potential throttling/blocking on play-dl
+    await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
+
     try {
         const body = await req.json();
 
@@ -89,7 +92,6 @@ export async function POST(req: NextRequest) {
             }
              try {
                 const cleanUrl = `https://www.youtube.com/watch?v=${videoIdForInfo}`;
-                await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
                 const videoFormats = info.format.filter(f => f.qualityLabel && f.audio_channels && f.audio_channels > 0).map(f => ({ itag: f.itag, qualityLabel: f.qualityLabel, container: f.mimeType?.includes('webm') ? 'webm' : 'mp4', contentLength: f.content_length, type: 'video' }));
@@ -156,9 +158,13 @@ export async function POST(req: NextRequest) {
             
             // 3. As a fallback, use play-dl's search which might handle more URL variations
             if (!channelId) {
-                const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-                if (searchResults[0]?.id) {
-                    channelId = searchResults[0].id;
+                try {
+                    const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
+                    if (searchResults[0]?.id) {
+                        channelId = searchResults[0].id;
+                    }
+                } catch (playDlError) {
+                    console.error("play-dl search failed, could not determine channel ID.", playDlError);
                 }
             }
             
@@ -192,15 +198,16 @@ export async function POST(req: NextRequest) {
         let info; // playlist_info result
         let channelIdForPlaylists: string | undefined = undefined;
 
+        // If it's a playlist URL, get info directly.
         if (url.includes('playlist?list=')) {
             info = await play.playlist_info(url, { incomplete: true });
             channelIdForPlaylists = info.channel?.id;
-        } else {
-            // It's likely a channel URL. Search for it, get uploads playlist.
+        } else { // Otherwise, it's a channel URL.
             const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
             const channel = searchResults?.[0];
             if (channel?.id) {
                 channelIdForPlaylists = channel.id;
+                // Get the 'uploads' playlist ID from the channel ID.
                 const uploadsPlaylistId = channel.id.replace(/^UC/, 'UU');
                 const playlistUrl = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
                 info = await play.playlist_info(playlistUrl, { incomplete: true });
