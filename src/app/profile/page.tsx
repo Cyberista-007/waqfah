@@ -283,7 +283,7 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                     getDocs(playlistsRef),
                     getDocs(followingRef),
                     getDocs(notesRef),
-                    getDocs(challengesSnap),
+                    getDocs(challengesRef),
                     getDocs(badgesRef),
                     getDocs(clipsSnap),
                 ]);
@@ -734,3 +734,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
