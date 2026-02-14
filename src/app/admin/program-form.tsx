@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import {
@@ -223,7 +221,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
       <CardHeader>
         <CardTitle className="font-headline">{isEditMode ? `تعديل البرنامج: ${program?.name}` : 'إضافة برنامج جديد'}</CardTitle>
         <CardDescription>
-          املأ الحقول أدناه لإنشاء أو تعديل برنامج. يمكنك جلب البيانات تلقائيًا من يوتيوب.
+          هذه الصفحة لإدارة البرامج (العلماء، القنوات، إلخ). يمكنك لصق رابط قناة يوتيوب أو بودكاست RSS لجلب البيانات تلقائيًا، ثم تعديلها وحفظها.
         </CardDescription>
       </CardHeader>
       <CardContent>
