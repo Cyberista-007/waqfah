@@ -260,11 +260,11 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
           </div>
           <div>
             <Label htmlFor="name">اسم البرنامج</Label>
-            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting} />
+            <Input id="name" name="name" value={name || ''} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="bio">نبذة تعريفية</Label>
-            <Textarea id="bio" name="bio" value={bio} onChange={(e) => setBio(e.target.value)} required disabled={isSubmitting} rows={4} />
+            <Textarea id="bio" name="bio" value={bio || ''} onChange={(e) => setBio(e.target.value)} required disabled={isSubmitting} rows={4} />
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>

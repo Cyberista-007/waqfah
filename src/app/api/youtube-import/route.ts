@@ -127,12 +127,64 @@ export async function POST(req: NextRequest) {
         }
 
         if (fetchChannelInfo) {
-            const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-            const channelData = searchResults[0];
-            if (channelData) {
-                return NextResponse.json({ channelInfo: { name: channelData.title, description: channelData.description || '', imageUrl: channelData.thumbnails?.[0]?.url, bannerUrl: (channelData as any).banner?.[0]?.url } }, { headers: corsHeaders });
+            let channelId: string | undefined;
+
+            // 1. Try to extract ID directly from URL
+            const channelIdMatch = url.match(/channel\/(UC[\w-]{21,})/);
+            if (channelIdMatch?.[1]) {
+                channelId = channelIdMatch[1];
+            }
+
+            // 2. If no direct ID, try to search by handle or legacy URL part
+            if (!channelId) {
+                const handleOrNameMatch = url.match(/@([\w.-]+)|\/c\/([\w-]+)|\/user\/([\w-]+)/);
+                const queryTerm = handleOrNameMatch?.[1] || handleOrNameMatch?.[2] || handleOrNameMatch?.[3];
+                if (queryTerm) {
+                    try {
+                        const searchResponse = await youtube.search.list({
+                            part: ['id'],
+                            q: queryTerm,
+                            type: ['channel'],
+                            maxResults: 1
+                        });
+                        channelId = searchResponse.data.items?.[0]?.id?.channelId;
+                    } catch (searchError) {
+                        console.warn("Google API search for channel failed, will fall back.", searchError);
+                    }
+                }
+            }
+            
+            // 3. As a fallback, use play-dl's search which might handle more URL variations
+            if (!channelId) {
+                const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
+                if (searchResults[0]?.id) {
+                    channelId = searchResults[0].id;
+                }
+            }
+            
+            if (!channelId) {
+                return NextResponse.json({ message: "لم نتمكن من تحديد القناة من الرابط المقدم." }, { status: 404, headers: corsHeaders });
+            }
+
+            // 4. We have an ID, fetch detailed channel data using googleapis
+            const channelResponse = await youtube.channels.list({
+                part: ['snippet', 'brandingSettings'],
+                id: [channelId],
+            });
+            
+            const channelAPIData = channelResponse.data.items?.[0];
+
+            if (channelAPIData) {
+                const snippet = channelAPIData.snippet;
+                const branding = channelAPIData.brandingSettings;
+                return NextResponse.json({ channelInfo: {
+                    name: snippet?.title || '',
+                    description: snippet?.description || '',
+                    imageUrl: snippet?.thumbnails?.high?.url || snippet?.thumbnails?.default?.url || '',
+                    bannerUrl: branding?.image?.bannerExternalUrl || ''
+                }}, { headers: corsHeaders });
             } else {
-                return NextResponse.json({ message: "لم يتم العثور على معلومات القناة." }, { status: 404, headers: corsHeaders });
+                return NextResponse.json({ message: "لم يتم العثور على معلومات القناة باستخدام المعرّف." }, { status: 404, headers: corsHeaders });
             }
         }
 
