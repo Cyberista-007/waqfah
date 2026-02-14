@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,6 +34,8 @@ export default function AdminAppearancePage() {
   const [hadithIconFile, setHadithIconFile] = useState<File | null>(null);
   const [quranIconPreview, setQuranIconPreview] = useState<string | null>(null);
   const [hadithIconPreview, setHadithIconPreview] = useState<string | null>(null);
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentSettings) {
@@ -41,6 +44,7 @@ export default function AdminAppearancePage() {
       setMaintenanceMode(currentSettings.maintenanceMode || false);
       setQuranIconPreview(currentSettings.quranIconUrl || null);
       setHadithIconPreview(currentSettings.hadithIconUrl || null);
+      setHeroImagePreview(currentSettings.heroImageUrl || null);
     } else if (!isLoading) {
       setDefaultTheme('theme-default-dark');
       setDefaultFont('font-body');
@@ -80,6 +84,11 @@ export default function AdminAppearancePage() {
             finalHadithIconUrl = await uploadIcon(hadithIconFile, 'hadith_icon');
         }
 
+        let finalHeroImageUrl = currentSettings?.heroImageUrl || '';
+        if (heroImageFile) {
+            finalHeroImageUrl = await uploadIcon(heroImageFile, 'hero_banner');
+        }
+
         const settingsRef = doc(firestore, 'settings', 'appearance');
         await setDoc(settingsRef, { 
             defaultTheme, 
@@ -87,6 +96,7 @@ export default function AdminAppearancePage() {
             maintenanceMode,
             quranIconUrl: finalQuranIconUrl,
             hadithIconUrl: finalHadithIconUrl,
+            heroImageUrl: finalHeroImageUrl,
         }, { merge: true });
 
         toast({ title: 'تم حفظ الإعدادات بنجاح!' });
@@ -148,18 +158,10 @@ export default function AdminAppearancePage() {
                             </Select>
                         </div>
                         
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="maintenance-mode" className="text-base">وضع الصيانة</Label>
-                            <CardDescription>
-                              عند تفعيله، لن يتمكن سوى المديرين من الوصول للموقع.
-                            </CardDescription>
-                          </div>
-                          <Switch
-                            id="maintenance-mode"
-                            checked={maintenanceMode}
-                            onCheckedChange={setMaintenanceMode}
-                          />
+                         <div className="space-y-2">
+                            <Label htmlFor="hero-image">صورة البانر الرئيسي</Label>
+                            {heroImagePreview && <Image src={heroImagePreview} alt="Hero Image Preview" width={300} height={150} className="rounded-md bg-muted p-1 object-cover" />}
+                            <Input id="hero-image" type="file" accept="image/*" onChange={handleFileChange(setHeroImageFile, setHeroImagePreview)} />
                         </div>
                     </div>
                      <div className="space-y-6">
@@ -172,6 +174,19 @@ export default function AdminAppearancePage() {
                             <Label htmlFor="hadith-icon">أيقونة الحديث (في نافذة المهلكات)</Label>
                             {hadithIconPreview && <Image src={hadithIconPreview} alt="Hadith Icon Preview" width={64} height={64} className="rounded-md bg-muted p-1" />}
                             <Input id="hadith-icon" type="file" accept="image/png, image/svg+xml, image/jpeg" onChange={handleFileChange(setHadithIconFile, setHadithIconPreview)} />
+                        </div>
+                         <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="maintenance-mode" className="text-base">وضع الصيانة</Label>
+                            <CardDescription>
+                              عند تفعيله، لن يتمكن سوى المديرين من الوصول للموقع.
+                            </CardDescription>
+                          </div>
+                          <Switch
+                            id="maintenance-mode"
+                            checked={maintenanceMode}
+                            onCheckedChange={setMaintenanceMode}
+                          />
                         </div>
                     </div>
                 </div>

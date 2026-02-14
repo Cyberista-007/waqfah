@@ -39,6 +39,7 @@ export function AppProviders({
     const defaultFont = appearanceSettings?.defaultFont;
     const quranIconUrl = appearanceSettings?.quranIconUrl;
     const hadithIconUrl = appearanceSettings?.hadithIconUrl;
+    const heroImageUrl = appearanceSettings?.heroImageUrl;
     
     return (
         <ThemeProvider 
@@ -74,6 +75,7 @@ export function AppProviders({
             defaultFont={defaultFont}
             quranIconUrl={quranIconUrl}
             hadithIconUrl={hadithIconUrl}
+            heroImageUrl={heroImageUrl}
           >
             <DynamicFirebaseProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>

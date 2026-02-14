@@ -2,7 +2,7 @@
 
 import { HomeSearch } from '@/components/home-search';
 import { RecommendedLectures } from '@/components/recommended-lectures';
-import { ContinueListening } from '@/components/continue-listening';
+import { ContinueWatching } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
@@ -18,6 +18,7 @@ import { useCollection } from '@/firebase';
 import { HomePageSkeleton } from './skeletons';
 import { PinnedItems } from '@/app/pinned-items';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
+import { useAppearance } from '@/components/appearance-provider';
 
 // New Component for paginated sections
 function PaginatedSection({
@@ -98,6 +99,7 @@ export function HomePageClient() {
   const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 20 });
   const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
   const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { heroImageUrl: customHeroUrl } = useAppearance();
 
   const isLoading = seriesLoading || lecturesLoading || programsLoading;
 
@@ -117,10 +119,14 @@ export function HomePageClient() {
   }, [latestLectures]);
   
   const heroImage = getPlaceholderImage('hero-background');
-  const [heroImageUrl, setHeroImageUrl] = useState(heroImage?.imageUrl);
+  const [heroImageUrl, setHeroImageUrl] = useState(customHeroUrl || heroImage?.imageUrl);
 
 
   useEffect(() => {
+    if (customHeroUrl) {
+      setHeroImageUrl(customHeroUrl);
+      return;
+    }
     const featuredProgram = topPrograms?.[0];
     if (featuredProgram?.youtubeUrl) {
       const fetchBanner = async () => {
@@ -147,7 +153,7 @@ export function HomePageClient() {
     } else {
         setHeroImageUrl(heroImage?.imageUrl);
     }
-  }, [topPrograms, heroImage?.imageUrl]);
+  }, [topPrograms, heroImage?.imageUrl, customHeroUrl]);
 
   if (isLoading) {
     return <HomePageSkeleton />;
@@ -183,7 +189,7 @@ export function HomePageClient() {
             <PinnedItems />
         </Suspense>
         <Suspense>
-          <ContinueListening />
+          <ContinueWatching />
         </Suspense>
         <Suspense>
           <RecommendedLectures />

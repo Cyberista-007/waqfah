@@ -31,23 +31,6 @@
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
     },
-    "Channel": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Channel",
-      "type": "object",
-      "description": "Represents a YouTube Channel that provides lectures.",
-      "properties": {
-        "slug": { "type": "string", "description": "A URL-friendly identifier for the channel." },
-        "name": { "type": "string", "description": "The full name of the channel." },
-        "description": { "type": "string", "description": "A short description of the channel." },
-        "imageId": { "type": "string", "description": "An ID for a placeholder image for the channel." },
-        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the channel's image." },
-        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the channel's YouTube channel." },
-        "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the channel's podcast." },
-        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this channel." }
-      },
-      "required": ["slug", "name", "imageId", "youtubeUrl", "followerCount"]
-    },
     "Series": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Series",
@@ -75,9 +58,6 @@
         "description": { "type": "string" },
         "programName": { "type": "string" },
         "programSlug": { "type": "string" },
-        "channelId": { "type": "string" },
-        "channelName": { "type": "string" },
-        "channelSlug": { "type": "string" },
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
@@ -323,7 +303,8 @@
         "defaultFont": { "type": "string" },
         "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." },
         "quranIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Quran icon." },
-        "hadithIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Hadith icon." }
+        "hadithIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Hadith icon." },
+        "heroImageUrl": { "type": "string", "format": "uri", "description": "URL for the homepage hero banner image." }
       }
     },
     "AnnouncementSettings": {
@@ -542,10 +523,6 @@
       {
         "path": "/programs/{programId}",
         "definition": { "schema": { "$ref": "#/entities/Program" } }
-      },
-       {
-        "path": "/channels/{channelId}",
-        "definition": { "schema": { "$ref": "#/entities/Channel" } }
       },
       {
         "path": "/series/{seriesId}",

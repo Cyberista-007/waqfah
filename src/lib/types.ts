@@ -45,6 +45,7 @@ export type AppearanceSettings = {
     maintenanceMode?: boolean;
     quranIconUrl?: string;
     hadithIconUrl?: string;
+    heroImageUrl?: string;
 };
 
 export type Stats = {
