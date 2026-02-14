@@ -157,9 +157,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const player = videoPlayerRef.current;
     let interval: NodeJS.Timeout;
 
-    const checkTime = async () => {
+    const checkTime = () => {
         try {
-            const currentTime = await player.getCurrentTime();
+            const currentTime = player.getCurrentTime();
             if (currentTime >= videoClipEndTime) {
                 player.pauseVideo();
                 setVideoClipEndTime(null);

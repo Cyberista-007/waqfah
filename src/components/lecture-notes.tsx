@@ -116,13 +116,13 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     }, 2000); // Auto-save after 2 seconds of inactivity
   };
   
-    const getCurrentTime = async (): Promise<number | undefined> => {
+    const getCurrentTime = (): number | undefined => {
         let currentTime: number | undefined;
 
         if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-            const playerState = await videoPlayerRef.current.getPlayerState();
+            const playerState = videoPlayerRef.current.getPlayerState();
             if ([1, 2, 3].includes(playerState)) {
-                currentTime = await videoPlayerRef.current.getCurrentTime();
+                currentTime = videoPlayerRef.current.getCurrentTime();
             }
         } else if (iframeTrack?.type === 'soundcloud') {
             toast({
@@ -141,8 +141,8 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
         return currentTime;
     };
 
-  const handleSetStartTime = async () => {
-        const currentTime = await getCurrentTime();
+  const handleSetStartTime = () => {
+        const currentTime = getCurrentTime();
         if (currentTime === undefined) {
             toast({
                 variant: "default",
@@ -157,8 +157,8 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
         });
     };
 
-    const handleInsertClip = async () => {
-        const endTime = await getCurrentTime();
+    const handleInsertClip = () => {
+        const endTime = getCurrentTime();
         if (endTime === undefined || clipStartTime === null) {
             toast({ variant: 'destructive', title: "خطأ", description: "لم يتم تحديد وقت البدء أو النهاية." });
             return;
@@ -195,12 +195,13 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     };
 
   
-    const handleTimestampClick = async (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
+    const handleTimestampClick = (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
         if (isPlayerVisible && iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
-            const playerState = await videoPlayerRef.current.getPlayerState();
-            videoPlayerRef.current.seekTo(startTimeInSeconds, true);
+            const player = videoPlayerRef.current;
+            player.seekTo(startTimeInSeconds, true);
+            const playerState = player.getPlayerState();
             if (playerState !== 1) { // if not playing
-                videoPlayerRef.current.playVideo();
+                player.playVideo();
             }
             if (endTimeInSeconds) {
                 setVideoClipEndTime(endTimeInSeconds);

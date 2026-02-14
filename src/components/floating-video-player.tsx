@@ -167,11 +167,11 @@ export default function FloatingVideoPlayer() {
                     break;
                 case 'ArrowLeft':
                     event.preventDefault();
-                    player.getCurrentTime().then(currentTime => player.seekTo(currentTime - 10, true));
+                    player.seekTo(player.getCurrentTime() - 10, true);
                     break;
                 case 'ArrowRight':
                     event.preventDefault();
-                    player.getCurrentTime().then(currentTime => player.seekTo(currentTime + 10, true));
+                    player.seekTo(player.getCurrentTime() + 10, true);
                     break;
             }
         };

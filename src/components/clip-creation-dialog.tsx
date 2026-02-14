@@ -71,13 +71,13 @@ export function ClipCreationDialog({ isOpen, onOpenChange, lectureId, lectureDur
     }
   }, [isOpen, initialStartTime]);
 
-  const handleSetCurrentTime = async (field: 'start' | 'end') => {
+  const handleSetCurrentTime = (field: 'start' | 'end') => {
     let currentTime: number | undefined;
 
     if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-        const playerState = await videoPlayerRef.current.getPlayerState();
+        const playerState = videoPlayerRef.current.getPlayerState();
         if ([1, 2, 3].includes(playerState)) {
-            currentTime = await videoPlayerRef.current.getCurrentTime();
+            currentTime = videoPlayerRef.current.getCurrentTime();
         }
     } else if (iframeTrack?.type === 'soundcloud') {
         toast({
