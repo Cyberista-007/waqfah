@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { getAllLectures, getAllSeries, getAllPrograms, getAllTopics } from '@/lib/data';
+import { getAllLectures, getAllSeries, getAllPrograms, getAllTopics, getAllCurriculums } from '@/lib/data';
 
 // Helper function to convert Firestore Timestamp-like objects to Date
 const toDate = (timestamp: any): Date => {
@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const series = await getAllSeries();
   const programs = await getAllPrograms();
   const topics = await getAllTopics();
+  const curriculums = await getAllCurriculums();
 
   const lectureEntries: MetadataRoute.Sitemap = lectures.map(({ slug, createdAt }) => ({
     url: `${siteUrl}/lectures/${slug}`,
@@ -49,6 +50,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
+  const curriculumEntries: MetadataRoute.Sitemap = curriculums.map(({ slug, createdAt }) => ({
+    url: `${siteUrl}/curriculums/${slug}`,
+    lastModified: toDate(createdAt),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
   const staticPages = [
     '/',
     '/lectures',
@@ -60,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/schedule',
     '/contact',
     '/donations',
+    '/curriculums',
   ].map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified: new Date(),
@@ -73,5 +82,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...seriesEntries,
     ...programEntries,
     ...topicEntries,
+    ...curriculumEntries,
   ];
 }

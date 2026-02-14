@@ -3,7 +3,7 @@
 import 'server-only';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
-import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings } from '@/lib/types';
+import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings, Curriculum } from '@/lib/types';
 
 const getFirestore = () => {
     const { firestore } = initializeAdminApp();
@@ -51,6 +51,7 @@ export const getAllLectures = cache(() => getAllDocs<Lecture>('lectures'));
 export const getAllSeries = cache(() => getAllDocs<Series>('series'));
 export const getAllPrograms = cache(() => getAllDocs<Program>('programs'));
 export const getAllTopics = cache(() => getAllDocs<Topic>('topics'));
+export const getAllCurriculums = cache(() => getAllDocs<Curriculum>('curriculums'));
 
 export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings | null> => {
     const firestore = getFirestore();

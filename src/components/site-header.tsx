@@ -26,6 +26,7 @@ import {
   BookCheck,
   Hash,
   Trophy,
+  GraduationCap
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -79,6 +80,7 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
+  { href: "/curriculums", label: "المناهج التعليمية", icon: GraduationCap },
   { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
   { href: "/playlists", label: "قوائم التشغيل", icon: ListMusic },
   { href: "/books", label: "الكتب", icon: HelpCircle },

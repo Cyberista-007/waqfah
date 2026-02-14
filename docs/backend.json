@@ -476,6 +476,56 @@
         "earnedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["badgeId", "earnedAt"]
+    },
+    "CurriculumItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Curriculum Item",
+      "description": "Represents a single item (lecture or series) within a curriculum.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The ID of the lecture or series document." },
+        "type": { "type": "string", "enum": ["lecture", "series"] }
+      },
+      "required": ["id", "type"]
+    },
+    "Curriculum": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Curriculum",
+      "description": "Represents a structured learning path composed of lectures and series.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/entities/CurriculumItem"
+          }
+        },
+        "studentCount": { "type": "number", "minimum": 0, "default": 0 }
+      },
+      "required": ["slug", "title", "items"]
+    },
+    "UserCurriculum": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "User Curriculum Progress",
+        "description": "Tracks a user's enrollment and progress within a curriculum.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "curriculumId": { "type": "string" },
+            "completedItems": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "An array of IDs of the completed curriculum items (lectures/series)."
+            },
+            "status": { "type": "string", "enum": ["not-started", "in-progress", "completed"], "default": "not-started" },
+            "startedAt": { "type": "string", "format": "date-time" },
+            "completedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "curriculumId", "status"]
     }
   },
   "auth": {
@@ -550,6 +600,10 @@
         "definition": { "schema": { "$ref": "#/entities/UserBadge" } }
       },
       {
+        "path": "/users/{userId}/curriculum_progress/{curriculumId}",
+        "definition": { "schema": { "$ref": "#/entities/UserCurriculum" } }
+      },
+      {
         "path": "/lectures/{lectureId}/ratings/{userId}",
         "definition": { "schema": { "$ref": "#/entities/Rating" } }
       },
@@ -572,6 +626,10 @@
       {
         "path": "/scheduled_lessons/{lessonId}",
         "definition": { "schema": { "$ref": "#/entities/ScheduleItem" } }
+      },
+      {
+        "path": "/curriculums/{curriculumId}",
+        "definition": { "schema": { "$ref": "#/entities/Curriculum" } }
       },
       {
         "path": "/settings/appearance",

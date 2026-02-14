@@ -342,3 +342,29 @@ export type UserBadge = Serializable<{
   badgeId: string;
   earnedAt: Timestamp;
 }>;
+
+export type CurriculumItem = {
+    id: string; // The ID of the lecture or series document.
+    type: 'lecture' | 'series';
+};
+
+export type Curriculum = Serializable<{
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    imageId: string;
+    items: CurriculumItem[];
+    studentCount: number;
+    createdAt: Timestamp;
+}>;
+
+export type UserCurriculum = Serializable<{
+    id: string; // curriculumId
+    userId: string;
+    curriculumId: string;
+    completedItems: string[];
+    status: 'not-started' | 'in-progress' | 'completed';
+    startedAt?: Timestamp;
+    completedAt?: Timestamp;
+}>;
