@@ -285,7 +285,7 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                     getDocs(notesRef),
                     getDocs(challengesRef),
                     getDocs(badgesRef),
-                    getDocs(clipsSnap),
+                    getDocs(clipsRef),
                 ]);
 
                 setExtraStats({
@@ -734,5 +734,7 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
 
     
