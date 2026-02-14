@@ -14,7 +14,7 @@ import { Loader2, Palette } from 'lucide-react';
 import { themes } from '@/components/theme-switcher';
 import { fonts } from '@/components/font-switcher';
 import { Switch } from '@/components/ui/switch';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, type FirebaseStorage } from 'firebase/storage';
 import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -78,43 +78,49 @@ export default function AdminAppearancePage() {
 
     setIsSubmitting(true);
     try {
-        const uploadImageIfNeeded = async (file: File | null, path: string): Promise<string | null> => {
-            if (!file) return null;
-            const imageRef = ref(storage, path);
-            const snapshot = await uploadBytes(imageRef, file);
-            return getDownloadURL(snapshot.ref);
-        };
-        
-        // Process all image uploads in parallel for better performance
-        const [quranIconUrl, hadithIconUrl, heroImageUrl] = await Promise.all([
-            uploadImageIfNeeded(quranIconFile, 'system_icons/quran_icon.png'),
-            uploadImageIfNeeded(hadithIconFile, 'system_icons/hadith_icon.png'),
-            uploadImageIfNeeded(heroImageFile, 'system_icons/hero_banner.jpg'),
-        ]);
-
-        const settingsData = { 
-            defaultTheme, 
-            defaultFont, 
+        const settingsToUpdate: Partial<AppearanceSettings> = {
+            defaultTheme,
+            defaultFont,
             maintenanceMode,
-            // Use the new URL if uploaded, otherwise fallback to the existing URL, finally to an empty string.
-            quranIconUrl: quranIconUrl ?? currentSettings?.quranIconUrl ?? '',
-            hadithIconUrl: hadithIconUrl ?? currentSettings?.hadithIconUrl ?? '',
-            heroImageUrl: heroImageUrl ?? currentSettings?.heroImageUrl ?? '',
             heroTitle,
             heroSubtitle,
         };
 
+        const processUpload = async (
+            file: File | null,
+            path: string,
+            key: keyof AppearanceSettings,
+            currentUrl: string | undefined | null
+        ) => {
+            if (file) {
+                const imageRef = ref(storage, path);
+                const snapshot = await uploadBytes(imageRef, file);
+                settingsToUpdate[key] = await getDownloadURL(snapshot.ref);
+            } else if (currentUrl) {
+                settingsToUpdate[key] = currentUrl;
+            } else {
+                settingsToUpdate[key] = '';
+            }
+        };
+
+        await Promise.all([
+            processUpload(quranIconFile, 'system_icons/quran_icon.png', 'quranIconUrl', currentSettings?.quranIconUrl),
+            processUpload(hadithIconFile, 'system_icons/hadith_icon.png', 'hadithIconUrl', currentSettings?.hadithIconUrl),
+            processUpload(heroImageFile, 'system_icons/hero_banner.jpg', 'heroImageUrl', currentSettings?.heroImageUrl),
+        ]);
+
         const settingsRef = doc(firestore, 'settings', 'appearance');
-        await setDoc(settingsRef, settingsData, { merge: true });
+        await setDoc(settingsRef, settingsToUpdate, { merge: true });
 
         toast({ title: 'تم حفظ الإعدادات بنجاح!' });
     } catch (error) {
         console.error("Error saving appearance settings:", error);
-        toast({ variant: 'destructive', title: 'فشل حفظ الإعدادات.' });
+        toast({ variant: 'destructive', title: 'فشل حفظ الإعدادات.', description: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.' });
     } finally {
         setIsSubmitting(false);
     }
   };
+
 
   return (
     <Card>
