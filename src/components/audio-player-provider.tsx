@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { ReactNode } from "react";
@@ -59,7 +58,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [siteTimeInSeconds, setSiteTimeInSeconds] = useState(0);
-  const hasInitializedTime = useRef(false);
+  const [hasInitializedTime, setHasInitializedTime] = useState(false);
   const lastSaveTime = useRef(Date.now());
 
 
@@ -270,7 +269,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // --- New Site Time Logic ---
     // Initialize time from firestore
     useEffect(() => {
-        if (user && firestore && !hasInitializedTime.current) {
+        // Run only when user exists, firestore is available, and time hasn't been initialized yet.
+        if (user && firestore && !hasInitializedTime) {
             const fetchInitialTime = async () => {
                 const userRef = doc(firestore, 'users', user.uid);
                 try {
@@ -283,28 +283,36 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
                 } catch (e) {
                     console.error("Failed to fetch initial site time", e);
                 } finally {
-                    hasInitializedTime.current = true;
+                    // Mark as initialized to prevent re-fetching and to trigger the timer effect.
+                    setHasInitializedTime(true);
                 }
             };
             fetchInitialTime();
+        } else if (!user) {
+            // Reset when user logs out
+            setHasInitializedTime(false);
+            setSiteTimeInSeconds(0);
         }
-    }, [user, firestore]);
+    }, [user, firestore, hasInitializedTime]);
 
     // Timer to increment the counter
     useEffect(() => {
-        if (!user || !hasInitializedTime.current) return;
+        // Start timer only after user is loaded and initial time is fetched
+        if (!user || !hasInitializedTime) return;
+
         const interval = setInterval(() => {
             setSiteTimeInSeconds(prev => prev + 1);
         }, 1000);
         return () => clearInterval(interval);
-    }, [user]);
+    }, [user, hasInitializedTime]); // Dependency on initialization state is key
 
     // Periodically save to firestore
     useEffect(() => {
         if (!user || !firestore) return;
 
         const saveTimeToDb = () => {
-            if (hasInitializedTime.current && siteTimeInSeconds > 0) {
+            // Only save if initialization is complete and there's time to save
+            if (hasInitializedTime && siteTimeInSeconds > 0) {
                  const userRef = doc(firestore, 'users', user.uid);
                  // No need to await, just fire and forget.
                  setDoc(userRef, { minutesListened: siteTimeInSeconds / 60 }, { merge: true });
@@ -325,9 +333,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             clearInterval(saveInterval);
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            saveTimeToDb(); // Final save
+            saveTimeToDb(); // Final save on component unmount or user change
         };
-    }, [user, firestore, siteTimeInSeconds]);
+    }, [user, firestore, siteTimeInSeconds, hasInitializedTime]);
 
 
   return (
