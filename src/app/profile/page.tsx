@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
@@ -12,7 +11,7 @@ import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Prog
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ContinueListening } from "@/components/continue-listening";
+import { ContinueWatching } from "@/components/continue-listening";
 import { ProgramCard } from "@/components/program-card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
@@ -105,10 +104,10 @@ function FavoritesSection() {
     );
 }
 
-function ListenHistorySection() {
+function ContinueWatchingSection() {
     const { user } = useUser();
     if (!user) return null;
-    return <ContinueListening isProfilePage={true} />
+    return <ContinueWatching isProfilePage={true} />
 }
 
 function PlaylistsSection() {
@@ -602,7 +601,7 @@ export default function ProfilePage() {
             <Tabs defaultValue="history" className="w-full">
               <div className="flex justify-center overflow-x-auto pb-2">
                 <TabsList className="h-auto p-1.5 shrink-0">
-                  <TabsTrigger value="history" className="px-4 py-2 rounded-full flex items-center gap-2"><History className="h-5 w-5"/>أكمل الاستماع</TabsTrigger>
+                  <TabsTrigger value="history" className="px-4 py-2 rounded-full flex items-center gap-2"><History className="h-5 w-5"/>أكمل المشاهدة</TabsTrigger>
                   <TabsTrigger value="favorites" className="px-4 py-2 rounded-full flex items-center gap-2"><Heart className="h-5 w-5"/>المفضلة</TabsTrigger>
                   <TabsTrigger value="reports" className="px-4 py-2 rounded-full flex items-center gap-2"><FileText className="h-5 w-5"/>تقارير</TabsTrigger>
                   <TabsTrigger value="accountability" className="px-4 py-2 rounded-full flex items-center gap-2"><BookCheck className="h-5 w-5"/>محاسبة النفس</TabsTrigger>
@@ -615,7 +614,7 @@ export default function ProfilePage() {
                 </TabsList>
               </div>
               <TabsContent value="history" className="mt-6">
-                <ListenHistorySection />
+                <ContinueWatchingSection />
               </TabsContent>
               <TabsContent value="favorites" className="mt-6">
                 <FavoritesSection />

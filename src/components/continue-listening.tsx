@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,11 +10,11 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import Link from 'next/link';
 
-interface ContinueListeningProps {
+interface ContinueWatchingProps {
     isProfilePage?: boolean;
 }
 
-export function ContinueListening({ isProfilePage = false }: ContinueListeningProps) {
+export function ContinueWatching({ isProfilePage = false }: ContinueWatchingProps) {
   const { user } = useUser();
   const [inProgress, setInProgress] = useState<Lecture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +54,7 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
   if (isLoading) {
     return (
         <section>
-            <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل الاستماع</h2>
+            <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل المشاهدة</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-2">
@@ -75,8 +74,8 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
              <Card className="text-center py-16">
                 <CardContent className="flex flex-col items-center gap-4">
                     <History className="w-16 h-16 text-muted-foreground" />
-                    <p className="text-lg text-muted-foreground">لم تبدأ أي محاضرات بعد.</p>
-                    <Button asChild><Link href="/lectures">ابدأ الاستماع الآن</Link></Button>
+                    <p className="text-lg text-muted-foreground">لم تبدأ بمشاهدة أي محاضرات بعد.</p>
+                    <Button asChild><Link href="/lectures">ابدأ المشاهدة الآن</Link></Button>
                 </CardContent>
             </Card>
           )
@@ -86,7 +85,7 @@ export function ContinueListening({ isProfilePage = false }: ContinueListeningPr
 
   return (
     <section>
-        <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل الاستماع</h2>
+        <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل المشاهدة</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {inProgress.map(lecture => (
                 <LectureCard key={lecture.id} lecture={lecture} />

@@ -2,13 +2,13 @@
 
 import { HomeSearch } from '@/components/home-search';
 import { RecommendedLectures } from '@/components/recommended-lectures';
-import { ContinueListening } from '@/components/continue-listening';
+import { ContinueWatching } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import { Suspense, useState, useMemo } from 'react';
+import { Suspense, useState, useMemo, useEffect } from 'react';
 import type { Lecture, Series, Program } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -37,7 +37,25 @@ function PaginatedSection({
 }) {
   const [visibleCount, setVisibleCount] = useState(itemsPerPage);
 
-  if (!items || items.length === 0) {
+    if (!items || items.length === 0) {
+    if (title === "أحدث المحاضرات") {
+        return (
+             <section>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-3xl font-bold font-headline">{title}</h2>
+                     <Button asChild variant="outline">
+                        <Link href={viewAllHref}>
+                            <span>عرض الكل</span>
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                        </Link>
+                    </Button>
+                </div>
+                 <div className="text-center py-10 text-muted-foreground">
+                    لا يوجد محتوى لعرضه حالياً في هذا القسم.
+                </div>
+            </section>
+        )
+    }
     return null;
   }
 
@@ -97,19 +115,50 @@ export function HomePageClient() {
     });
     return { shorts: shortsArr, regularLectures: regularLecturesArr };
   }, [latestLectures]);
+  
+  const heroImage = getPlaceholderImage('hero-background');
+  const [heroImageUrl, setHeroImageUrl] = useState(heroImage?.imageUrl);
+
+
+  useEffect(() => {
+    const featuredProgram = topPrograms?.[0];
+    if (featuredProgram?.youtubeUrl) {
+      const fetchBanner = async () => {
+        try {
+          const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: featuredProgram.youtubeUrl, fetchChannelInfo: true }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.channelInfo?.bannerUrl) {
+              const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
+              setHeroImageUrl(highResBanner);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch YouTube banner for hero:", error);
+          setHeroImageUrl(heroImage?.imageUrl);
+        }
+      };
+      fetchBanner();
+    } else {
+        setHeroImageUrl(heroImage?.imageUrl);
+    }
+  }, [topPrograms, heroImage?.imageUrl]);
 
   if (isLoading) {
     return <HomePageSkeleton />;
   }
 
-  const heroImage = getPlaceholderImage('hero-background');
-
   return (
     <div className="space-y-12">
       <section className="relative -mt-[calc(4rem+1px)] flex h-[60vh] min-h-[500px] flex-col items-center justify-center text-center text-white rounded-b-3xl overflow-hidden">
-        {heroImage && (
+        {heroImageUrl && heroImage && (
           <Image
-            src={heroImage.imageUrl}
+            src={heroImageUrl}
             alt={heroImage.description}
             fill
             className="object-cover image-theme-filter"
@@ -134,7 +183,7 @@ export function HomePageClient() {
             <PinnedItems />
         </Suspense>
         <Suspense>
-          <ContinueListening />
+          <ContinueWatching />
         </Suspense>
         <Suspense>
           <RecommendedLectures />
