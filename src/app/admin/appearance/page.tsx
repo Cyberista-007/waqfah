@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 // This is a complete rebuild of the component to ensure robustness.
 
