@@ -18,68 +18,108 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
 
+// This is a complete rebuild of the component to ensure robustness.
+
 export default function AdminAppearancePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const storage = useStorage();
+
+  // Data fetching
   const { data: currentSettings, isLoading } = useDoc<AppearanceSettings>('settings/appearance');
 
-  const [defaultTheme, setDefaultTheme] = useState<string>('');
-  const [defaultFont, setDefaultFont] = useState<string>('');
+  // State for all form fields
+  const [defaultTheme, setDefaultTheme] = useState('');
+  const [defaultFont, setDefaultFont] = useState('');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [quranIconFile, setQuranIconFile] = useState<File | null>(null);
-  const [hadithIconFile, setHadithIconFile] = useState<File | null>(null);
-  const [quranIconPreview, setQuranIconPreview] = useState<string | null>(null);
-  const [hadithIconPreview, setHadithIconPreview] = useState<string | null>(null);
-  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
-  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
-
   const [heroTitle, setHeroTitle] = useState('');
   const [heroSubtitle, setHeroSubtitle] = useState('');
 
+  // State for file uploads and their previews
+  const [quranIconFile, setQuranIconFile] = useState<File | null>(null);
+  const [hadithIconFile, setHadithIconFile] = useState<File | null>(null);
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  
+  const [quranIconPreview, setQuranIconPreview] = useState<string | null>(null);
+  const [hadithIconPreview, setHadithIconPreview] = useState<string | null>(null);
+  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Effect to populate the form with data from Firestore
   useEffect(() => {
     if (currentSettings) {
       setDefaultTheme(currentSettings.defaultTheme || 'theme-default-dark');
       setDefaultFont(currentSettings.defaultFont || 'font-body');
       setMaintenanceMode(currentSettings.maintenanceMode || false);
+      setHeroTitle(currentSettings.heroTitle || 'العلم الشرعي بين يديك');
+      setHeroSubtitle(currentSettings.heroSubtitle || 'منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.');
+      
+      // Set initial previews from stored URLs
       setQuranIconPreview(currentSettings.quranIconUrl || null);
       setHadithIconPreview(currentSettings.hadithIconUrl || null);
       setHeroImagePreview(currentSettings.heroImageUrl || null);
-      setHeroTitle(currentSettings.heroTitle || 'العلم الشرعي بين يديك');
-      setHeroSubtitle(currentSettings.heroSubtitle || 'منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.');
     } else if (!isLoading) {
+      // Set defaults if no settings are found after loading
       setDefaultTheme('theme-default-dark');
       setDefaultFont('font-body');
-      setMaintenanceMode(false);
       setHeroTitle('العلم الشرعي بين يديك');
       setHeroSubtitle('منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.');
     }
   }, [currentSettings, isLoading]);
 
+  // Handles file input change by setting the file state and creating a temporary local URL for preview
   const handleFileChange = (setter: React.Dispatch<React.SetStateAction<File | null>>, previewSetter: React.Dispatch<React.SetStateAction<string | null>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        setter(file);
-        previewSetter(URL.createObjectURL(file));
+    const file = e.target.files?.[0];
+    if (file) {
+      setter(file);
+      previewSetter(URL.createObjectURL(file));
     }
-  }
+  };
 
+  // The new, robust handleSubmit function
   const handleSubmit = async () => {
     if (!firestore || !storage) {
       toast({ variant: 'destructive', title: 'خدمات Firebase غير جاهزة.' });
       return;
     }
-    if (!defaultTheme || !defaultFont) {
-      toast({ variant: 'destructive', title: 'يرجى اختيار الثيم والخط الافتراضي.' });
-      return;
-    }
-
+    
     setIsSubmitting(true);
 
     try {
-      const settingsToUpdate: Partial<AppearanceSettings> = {
+      // Helper function to upload a single image and return its download URL
+      const uploadImage = async (file: File, path: string): Promise<string | null> => {
+        if (!file) return null;
+        try {
+          const storageRef = ref(storage, path);
+          await uploadBytes(storageRef, file);
+          return await getDownloadURL(storageRef);
+        } catch (uploadError) {
+          console.error(`Failed to upload ${file.name}:`, uploadError);
+          // Return null on failure so Promise.all doesn't reject immediately
+          return null; 
+        }
+      };
+
+      // Create an array of upload promises for any new files selected
+      const uploadPromises = [
+        uploadImage(quranIconFile!, `system_icons/quran_icon_${Date.now()}`),
+        uploadImage(hadithIconFile!, `system_icons/hadith_icon_${Date.now()}`),
+        uploadImage(heroImageFile!, `system_icons/hero_banner_${Date.now()}`),
+      ];
+
+      // Run all uploads in parallel
+      const [quranIconUrl, hadithIconUrl, heroImageUrl] = await Promise.all(uploadPromises);
+
+      // Check if any upload failed
+      if ( (quranIconFile && !quranIconUrl) || (hadithIconFile && !hadithIconUrl) || (heroImageFile && !heroImageUrl) ) {
+          throw new Error('فشل رفع صورة واحدة أو أكثر. يرجى التأكد من أن حجم الصورة مناسب والمحاولة مرة أخرى.');
+      }
+
+      // Build the final data object to save in Firestore
+      // Start with existing settings to not lose any data
+      const newSettings: Partial<AppearanceSettings> = {
+        ...currentSettings,
         defaultTheme,
         defaultFont,
         maintenanceMode,
@@ -87,50 +127,62 @@ export default function AdminAppearancePage() {
         heroSubtitle,
       };
 
-      const processUpload = async (
-        file: File | null,
-        path: string,
-        key: keyof AppearanceSettings
-      ): Promise<{ key: keyof AppearanceSettings, url: string } | null> => {
-        if (!file) {
-          return null;
-        }
-        const storageRef = ref(storage, path);
-        const metadata = { contentType: file.type };
-        await uploadBytes(storageRef, file, metadata);
-        const downloadURL = await getDownloadURL(storageRef);
-        return { key, url: downloadURL };
-      };
-
-      const uploadPromises = [
-        processUpload(quranIconFile, 'system_icons/quran_icon', 'quranIconUrl'),
-        processUpload(hadithIconFile, 'system_icons/hadith_icon', 'hadithIconUrl'),
-        processUpload(heroImageFile, 'system_icons/hero_banner', 'heroImageUrl'),
-      ];
-
-      const uploadResults = await Promise.all(uploadPromises);
-
-      uploadResults.forEach(result => {
-        if (result) {
-          (settingsToUpdate as any)[result.key] = result.url;
-        }
-      });
+      // If a new URL was successfully generated, add it to the data object
+      if (quranIconUrl) newSettings.quranIconUrl = quranIconUrl;
+      if (hadithIconUrl) newSettings.hadithIconUrl = hadithIconUrl;
+      if (heroImageUrl) newSettings.heroImageUrl = heroImageUrl;
       
+      // Perform a single, atomic write to Firestore
       const settingsRef = doc(firestore, 'settings', 'appearance');
-      await setDoc(settingsRef, settingsToUpdate, { merge: true });
+      await setDoc(settingsRef, newSettings, { merge: true });
 
+      // Reset file states after successful submission
+      setQuranIconFile(null);
+      setHadithIconFile(null);
+      setHeroImageFile(null);
+      
       toast({ title: 'تم حفظ الإعدادات بنجاح!' });
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Error saving appearance settings:", error);
       toast({
         variant: 'destructive',
         title: 'فشل حفظ الإعدادات.',
-        description: 'حدث خطأ غير متوقع. يرجى التأكد من أن حجم الصورة مناسب والمحاولة مرة أخرى.',
+        description: error.message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const renderImageUploader = (
+    id: string,
+    label: string,
+    previewUrl: string | null,
+    fileSetter: React.Dispatch<React.SetStateAction<File | null>>,
+    previewSetter: React.Dispatch<React.SetStateAction<string | null>>,
+    imageClassName: string = "rounded-md"
+  ) => (
+    <div className="space-y-2">
+        <Label htmlFor={id}>{label}</Label>
+        {previewUrl && (
+            <Image 
+                src={previewUrl} 
+                alt={`${label} Preview`} 
+                width={300} 
+                height={150} 
+                className={cn("bg-muted p-1 object-contain", imageClassName)}
+            />
+        )}
+        <Input 
+            id={id} 
+            type="file" 
+            accept="image/jpeg,image/png,image/webp,image/svg+xml" 
+            onChange={handleFileChange(fileSetter, previewSetter)}
+            disabled={isSubmitting}
+        />
+    </div>
+  );
 
 
   return (
@@ -150,10 +202,11 @@ export default function AdminAppearancePage() {
         ) : (
             <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Left Column */}
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="default-theme">الثيم الافتراضي</Label>
-                            <Select value={defaultTheme} onValueChange={setDefaultTheme}>
+                            <Select value={defaultTheme} onValueChange={setDefaultTheme} disabled={isSubmitting}>
                                 <SelectTrigger id="default-theme">
                                     <SelectValue placeholder="اختر الثيم الافتراضي..." />
                                 </SelectTrigger>
@@ -169,7 +222,7 @@ export default function AdminAppearancePage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="default-font">الخط الافتراضي</Label>
-                            <Select value={defaultFont} onValueChange={setDefaultFont}>
+                            <Select value={defaultFont} onValueChange={setDefaultFont} disabled={isSubmitting}>
                                 <SelectTrigger id="default-font">
                                     <SelectValue placeholder="اختر الخط الافتراضي..." />
                                 </SelectTrigger>
@@ -183,31 +236,23 @@ export default function AdminAppearancePage() {
                             </Select>
                         </div>
                         
-                        <div className="space-y-2">
-                            <Label htmlFor="hero-image">صورة البانر الرئيسي</Label>
-                            {heroImagePreview && <Image src={heroImagePreview} alt="Hero Image Preview" width={300} height={150} className="rounded-md bg-muted p-1 object-cover" />}
-                            <Input id="hero-image" type="file" accept="image/jpeg, image/png, image/webp" onChange={handleFileChange(setHeroImageFile, setHeroImagePreview)} />
-                        </div>
+                        {renderImageUploader("hero-image", "صورة البانر الرئيسي", heroImagePreview, setHeroImageFile, setHeroImagePreview, "w-full object-cover")}
+                        
                         <div className="space-y-2">
                             <Label htmlFor="hero-title">العنوان الرئيسي للبانر</Label>
-                            <Input id="hero-title" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} />
+                            <Input id="hero-title" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} disabled={isSubmitting} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="hero-subtitle">العنوان الفرعي للبانر</Label>
-                            <Textarea id="hero-subtitle" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} rows={3} />
+                            <Textarea id="hero-subtitle" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} rows={3} disabled={isSubmitting} />
                         </div>
                     </div>
+
+                    {/* Right Column */}
                      <div className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="quran-icon">أيقونة المصحف (في نافذة المهلكات)</Label>
-                            {quranIconPreview && <Image src={quranIconPreview} alt="Quran Icon Preview" width={64} height={64} className="rounded-md bg-muted p-1" />}
-                            <Input id="quran-icon" type="file" accept="image/png, image/svg+xml, image/jpeg" onChange={handleFileChange(setQuranIconFile, setQuranIconPreview)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="hadith-icon">أيقونة الحديث (في نافذة المهلكات)</Label>
-                            {hadithIconPreview && <Image src={hadithIconPreview} alt="Hadith Icon Preview" width={64} height={64} className="rounded-md bg-muted p-1" />}
-                            <Input id="hadith-icon" type="file" accept="image/png, image/svg+xml, image/jpeg" onChange={handleFileChange(setHadithIconFile, setHadithIconPreview)} />
-                        </div>
+                        {renderImageUploader("quran-icon", "أيقونة المصحف (في نافذة المهلكات)", quranIconPreview, setQuranIconFile, setQuranIconPreview, "w-16 h-16")}
+                        {renderImageUploader("hadith-icon", "أيقونة الحديث (في نافذة المهلكات)", hadithIconPreview, setHadithIconFile, setHadithIconPreview, "w-16 h-16")}
+                         
                          <div className="flex items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <Label htmlFor="maintenance-mode" className="text-base">وضع الصيانة</Label>
@@ -219,12 +264,13 @@ export default function AdminAppearancePage() {
                             id="maintenance-mode"
                             checked={maintenanceMode}
                             onCheckedChange={setMaintenanceMode}
+                            disabled={isSubmitting}
                           />
                         </div>
                     </div>
                 </div>
 
-
+                {/* Save Button */}
                 <Button onClick={handleSubmit} disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     حفظ الإعدادات
