@@ -127,9 +127,9 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const data: { channelInfo?: YoutubeProgramInfo } = await response.json();
         
         if (data.channelInfo) {
-            setName(data.channelInfo.name);
-            setBio(data.channelInfo.description);
-            setImagePreview(data.channelInfo.imageUrl);
+            setName(data.channelInfo.name || '');
+            setBio(data.channelInfo.description || '');
+            setImagePreview(data.channelInfo.imageUrl || null);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات البرنامج بنجاح." });
         } else {

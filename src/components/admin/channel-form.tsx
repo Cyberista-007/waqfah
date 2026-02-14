@@ -118,9 +118,9 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
         const data: { channelInfo?: YoutubeChannelInfo } = await response.json();
         
         if (data.channelInfo) {
-            setName(data.channelInfo.name);
-            setDescription(data.channelInfo.description);
-            setImagePreview(data.channelInfo.imageUrl);
+            setName(data.channelInfo.name || '');
+            setDescription(data.channelInfo.description || '');
+            setImagePreview(data.channelInfo.imageUrl || null);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات القناة بنجاح." });
         } else {
