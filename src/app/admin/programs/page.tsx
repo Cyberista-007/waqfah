@@ -60,24 +60,45 @@ export default function AdminProgramsPage() {
         toast({ title: `بدء مزامنة بيانات "${program.name}"...` });
 
         try {
-            // The sync button is now only for checking for new content,
-            // not for updating program metadata (which is handled in the edit form).
-
-            const videosResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
+            // Fetch both channel info and video lists in one call
+            const response = await fetch(`${window.location.origin}/api/youtube-import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: program.youtubeUrl }),
+                body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
             });
 
-            if (!videosResponse.ok) {
-                const error = await videosResponse.json();
-                throw new Error(error.message || "فشل في جلب فيديوهات القناة.");
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || "فشل في جلب الفيديوهات أو معلومات القناة.");
             }
 
-            const data = await videosResponse.json();
+            const data = await response.json();
+            
+            let updatesApplied = false;
+
+            // Update program metadata if new info is available
+            if (data.channelInfo) {
+                const programRef = doc(firestore, 'programs', program.id);
+                const updatePayload: Partial<Program> = {};
+                if (data.channelInfo.name && data.channelInfo.name !== program.name) {
+                    updatePayload.name = data.channelInfo.name;
+                }
+                 if (data.channelInfo.description && data.channelInfo.description !== program.bio) {
+                    updatePayload.bio = data.channelInfo.description;
+                }
+                if (data.channelInfo.imageUrl && data.channelInfo.imageUrl !== program.imageUrl) {
+                    updatePayload.imageUrl = data.channelInfo.imageUrl;
+                }
+                
+                if (Object.keys(updatePayload).length > 0) {
+                    await updateDoc(programRef, updatePayload);
+                    updatesApplied = true;
+                }
+            }
+
+            // Check for new videos
             const fetchedVideos: any[] = [...(data.videos || []), ...(data.shorts || [])];
 
-            // Compare with existing lectures for this program
             const q = query(collection(firestore, 'lectures'), where("programId", "==", program.id));
             const lecturesSnapshot = await getDocs(q);
             const existingYoutubeUrls = new Set(lecturesSnapshot.docs.map(doc => doc.data().youtubeUrl));
@@ -91,15 +112,19 @@ export default function AdminProgramsPage() {
                     duration: 10000,
                     action: <ToastAction altText="اذهب للاستيراد" asChild><Link href={`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`}>اذهب للاستيراد</Link></ToastAction>,
                 });
+            } else if (updatesApplied) {
+                toast({
+                    title: 'تم تحديث بيانات البرنامج',
+                    description: 'لا توجد محاضرات جديدة لاستيرادها.',
+                });
             } else {
                  toast({
                     title: 'البرنامج محدّث',
-                    description: 'لا توجد محاضرات جديدة لاستيرادها.',
+                    description: 'لا توجد محاضرات جديدة لاستيرادها وبيانات البرنامج محدثة.',
                 });
             }
 
         } catch (error: any) {
-             // Handle the specific "Failed to fetch" TypeError, which likely indicates a timeout.
             if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
                  console.error("Sync failed, likely due to API route timeout:", error);
                  toast({
