@@ -56,7 +56,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ThemeSwitcherDialog } from '@/components/theme-switcher';
+import { ThemeSwitcherDialog, themes } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
 import { useAppearance, BackgroundEffect, ParticleSettings } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
@@ -395,6 +395,83 @@ export default function SettingsPage() {
                     onCheckedChange={toggleBackground}
                 />
             </div>
+        </div>
+        
+        <SectionTitle title="المؤثرات الخلفية" />
+        <div className="bg-card rounded-xl p-4 space-y-4">
+            <div>
+                <Label htmlFor="bg-effect-select">تأثير الخلفية</Label>
+                <Select value={backgroundEffect} onValueChange={(value) => setBackgroundEffect(value as 'none' | 'particles')}>
+                    <SelectTrigger id="bg-effect-select">
+                        <SelectValue placeholder="اختر تأثيرًا..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">بدون تأثير</SelectItem>
+                        <SelectItem value="particles">جزيئات متفاعلة</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {backgroundEffect === 'particles' && (
+                <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="particle-interaction" className="flex items-center gap-2">تفاعل مع الفأرة</Label>
+                        <Switch 
+                            id="particle-interaction" 
+                            checked={particleSettings.interaction}
+                            onCheckedChange={(checked) => setParticleSettings({ interaction: checked })}
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="particle-color">لون الجزيئات</Label>
+                         <div className="flex items-center gap-2">
+                            <Input 
+                                id="particle-color" 
+                                type="text"
+                                value={particleColor}
+                                onChange={(e) => setParticleColor(e.target.value)}
+                            />
+                            <div className="w-8 h-8 rounded-md border" style={{ backgroundColor: particleColor }} />
+                         </div>
+                    </div>
+                     <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Label>الكثافة</Label>
+                            <span className="text-sm text-muted-foreground">{particleSettings.count}</span>
+                        </div>
+                        <Slider 
+                            value={[particleSettings.count]}
+                            max={300}
+                            step={10}
+                            onValueChange={([value]) => setParticleSettings({ count: value })}
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Label>السرعة</Label>
+                            <span className="text-sm text-muted-foreground">{particleSettings.speed.toFixed(1)}</span>
+                        </div>
+                        <Slider 
+                            value={[particleSettings.speed]}
+                            max={2}
+                            step={0.1}
+                            onValueChange={([value]) => setParticleSettings({ speed: value })}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Label>مسافة الربط</Label>
+                            <span className="text-sm text-muted-foreground">{particleSettings.lineDistance}</span>
+                        </div>
+                        <Slider 
+                            value={[particleSettings.lineDistance]}
+                            max={300}
+                            step={10}
+                            onValueChange={([value]) => setParticleSettings({ lineDistance: value })}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
 
         <SectionTitle title="التنزيلات والتخزين" />
