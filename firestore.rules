@@ -116,6 +116,11 @@ service cloud.firestore {
       allow get, list: if true;
       allow write: if isAdmin();
     }
+    
+    match /gamification_badges/{badgeId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
 
     // =====================================================================
     // User-Specific Data
@@ -128,8 +133,8 @@ service cloud.firestore {
       allow get: if true;
       // Users can only update their own profile. Admins can update any profile.
       allow update: if isOwner(userId) || isAdmin();
-      // Admins can list all users.
-      allow list: if isAdmin();
+      // Allow signed-in users to list profiles for leaderboard
+      allow list: if isSignedIn();
       // A user can delete their own account.
       allow delete: if isOwner(userId);
 
@@ -139,6 +144,10 @@ service cloud.firestore {
 
       match /accountability/{entryId} {
         allow read, write, delete: if isOwner(userId);
+      }
+
+      match /user_badges/{badgeId} {
+        allow read, write: if isOwner(userId);
       }
     }
 

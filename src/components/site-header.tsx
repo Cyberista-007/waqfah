@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -24,6 +25,7 @@ import {
   Flame,
   BookCheck,
   Hash,
+  Trophy,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -77,6 +79,7 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
+  { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
   { href: "/playlists", label: "قوائم التشغيل", icon: ListMusic },
   { href: "/books", label: "الكتب", icon: HelpCircle },
   { href: "/challenges", label: "التحديات", icon: Flame },

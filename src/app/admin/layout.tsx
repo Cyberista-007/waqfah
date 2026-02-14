@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   AlertTriangle, Book, CalendarClock, Clapperboard, Flame, Hash, Heart, HelpCircle,
   LayoutDashboard, ListVideo, Loader2, LogOut, Megaphone, Palette, Pin, Podcast,
-  ShieldX, Upload, UserCog, Youtube, GripVertical
+  ShieldX, Upload, UserCog, Youtube, GripVertical, Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
       // Feature Management
       { href: '/admin/challenges', label: 'التحديات', icon: Flame },
+      { href: '/admin/badges', label: 'الأوسمة', icon: Trophy },
       { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
       { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
       { href: '/admin/sins', label: 'إدارة المهلكات', icon: AlertTriangle },

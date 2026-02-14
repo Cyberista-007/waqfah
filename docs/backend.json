@@ -450,6 +450,32 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "createdAt"]
+    },
+    "GamificationBadge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Gamification Badge",
+      "description": "Represents an achievement badge that users can earn.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string", "description": "Name of a Lucide icon or URL to an image." },
+        "metric": { "type": "string", "enum": ["minutesListened", "lecturesCompleted", "seriesCompleted", "totalDonated", "points", "fajrStreak"] },
+        "threshold": { "type": "number" },
+        "points": { "type": "number", "minimum": 0 }
+      },
+      "required": ["title", "description", "icon", "metric", "threshold", "points"]
+    },
+    "UserBadge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User Badge",
+      "description": "Represents a badge earned by a user.",
+      "type": "object",
+      "properties": {
+        "badgeId": { "type": "string" },
+        "earnedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["badgeId", "earnedAt"]
     }
   },
   "auth": {
@@ -519,6 +545,10 @@
         "path": "/users/{userId}/accountability/{entryId}",
         "definition": { "schema": { "$ref": "#/entities/AccountabilityEntry" } }
       },
+       {
+        "path": "/users/{userId}/user_badges/{badgeId}",
+        "definition": { "schema": { "$ref": "#/entities/UserBadge" } }
+      },
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",
         "definition": { "schema": { "$ref": "#/entities/Rating" } }
@@ -566,6 +596,10 @@
        {
         "path": "/destructive_sins/{sinId}",
         "definition": { "schema": { "$ref": "#/entities/DestructiveSin" } }
+      },
+      {
+        "path": "/gamification_badges/{badgeId}",
+        "definition": { "schema": { "$ref": "#/entities/GamificationBadge" } }
       }
     ]
   }

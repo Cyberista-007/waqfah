@@ -327,3 +327,18 @@ export type Suggestion = Serializable<{
     createdAt: Timestamp;
 }>;
     
+export type GamificationBadge = Serializable<{
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  metric: 'minutesListened' | 'lecturesCompleted' | 'seriesCompleted' | 'totalDonated' | 'points' | 'fajrStreak';
+  threshold: number;
+  points: number;
+}>;
+
+export type UserBadge = Serializable<{
+  id: string; // The badgeId
+  badgeId: string;
+  earnedAt: Timestamp;
+}>;
