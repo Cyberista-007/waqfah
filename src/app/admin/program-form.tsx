@@ -48,10 +48,10 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
   
   const isEditMode = !!program;
 
-  const [name, setName] = useState(program?.name || "");
-  const [bio, setBio] = useState(program?.bio || "");
-  const [youtubeUrl, setYoutubeUrl] = useState(program?.youtubeUrl || "");
-  const [rssFeedUrl, setRssFeedUrl] = useState(program?.rssFeedUrl || "");
+  const [name, setName] = useState(program?.name ?? "");
+  const [bio, setBio] = useState(program?.bio ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(program?.youtubeUrl ?? "");
+  const [rssFeedUrl, setRssFeedUrl] = useState(program?.rssFeedUrl ?? "");
   const [imagePreview, setImagePreview] = useState<string | null>(program?.imageUrl || null);
   
   useEffect(() => {
@@ -60,10 +60,10 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
       if (savedDataJSON) {
         try {
           const savedData = JSON.parse(savedDataJSON);
-          setName(savedData.name || "");
-          setBio(savedData.bio || "");
-          setYoutubeUrl(savedData.youtubeUrl || "");
-          setRssFeedUrl(savedData.rssFeedUrl || "");
+          setName(savedData.name ?? "");
+          setBio(savedData.bio ?? "");
+          setYoutubeUrl(savedData.youtubeUrl ?? "");
+          setRssFeedUrl(savedData.rssFeedUrl ?? "");
           setImagePreview(savedData.imagePreview || null);
         } catch (e) {
           console.error("Failed to parse autosaved program data", e);
@@ -74,7 +74,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
              setRssFeedUrl(initialYoutubeUrl);
              setYoutubeUrl(''); // Clear youtube url if it's an rss feed
         } else {
-             setYoutubeUrl(initialYoutubeUrl);
+             setYoutubeUrl(initialYoutubeUrl ?? '');
              setRssFeedUrl('');
              handleFetchFromYoutube(initialYoutubeUrl);
         }
@@ -127,8 +127,8 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const data: { channelInfo?: YoutubeProgramInfo } = await response.json();
         
         if (data.channelInfo) {
-            setName(data.channelInfo.name || '');
-            setBio(data.channelInfo.description || '');
+            setName(data.channelInfo.name ?? '');
+            setBio(data.channelInfo.description ?? '');
             setImagePreview(data.channelInfo.imageUrl || null);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات البرنامج بنجاح." });
@@ -161,7 +161,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
     const slug = name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     try {
-        let finalImageUrl = program?.imageUrl || '';
+        let finalImageUrl = program?.imageUrl ?? '';
 
         if (imageFile) {
             const imageRef = ref(storage, `program-images/${slug}/${imageFile.name}`);
@@ -253,6 +253,9 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
                     {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                 </Button>
             </div>
+             <p className="text-sm text-muted-foreground mt-1">
+                مثال: https://www.youtube.com/@somehandle أو https://www.youtube.com/channel/UC...
+            </p>
           </div>
            <div>
             <Label htmlFor="rssFeedUrl">رابط بودكاست RSS (اختياري)</Label>
@@ -260,11 +263,11 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
           </div>
           <div>
             <Label htmlFor="name">اسم البرنامج</Label>
-            <Input id="name" name="name" value={name || ''} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting} />
+            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="bio">نبذة تعريفية</Label>
-            <Textarea id="bio" name="bio" value={bio || ''} onChange={(e) => setBio(e.target.value)} required disabled={isSubmitting} rows={4} />
+            <Textarea id="bio" name="bio" value={bio} onChange={(e) => setBio(e.target.value)} required disabled={isSubmitting} rows={4} />
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
