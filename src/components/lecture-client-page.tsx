@@ -3,17 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, Clapperboard, ChevronsUpDown, X, Loader2, MessageCircle } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureHeader } from '@/components/lecture-header';
-import type { Lecture, LectureClip, ListenHistoryItem } from '@/lib/types';
+import type { Lecture, ListenHistoryItem } from '@/lib/types';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { LectureCard } from './lecture-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipCreationDialog } from './clip-creation-dialog';
 import dynamic from 'next/dynamic';
 import { DownloaderModal } from './downloader-modal';
 
@@ -26,10 +25,6 @@ const LectureNotes = dynamic(() => import('@/components/lecture-notes').then(mod
     ssr: false
 });
 const CommentsSection = dynamic(() => import('@/components/comments-section').then(mod => mod.CommentsSection), {
-    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
-    ssr: false
-});
-const ClipsSection = dynamic(() => import('@/components/clips-section').then(mod => mod.ClipsSection), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
     ssr: false
 });
@@ -60,14 +55,11 @@ interface LectureClientPageProps {
 }
 
 export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
-  const { playTrack, hidePlayer, playIframe, audioRef, videoPlayerRef, isPlaying, isPlayerVisible, setVideoClipEndTime } = useAudioPlayer();
+  const { playTrack, hidePlayer, playIframe } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const router = useRouter();
   const [shareUrl, setShareUrl] = useState('');
-  const [isClipCreationOpen, setIsClipCreationOpen] = useState(false);
-  const [clipCreationStartTime, setClipCreationStartTime] = useState<number | undefined>();
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
   const [downloadFormats, setDownloadFormats] = useState([]);
   const [isFetchingFormats, setIsFetchingFormats] = useState(false);
@@ -84,34 +76,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     if (typeof window !== 'undefined') {
         setShareUrl(window.location.href.split('?')[0]);
     }
-    
-    // This effect runs only once on the client after hydration to check for a clip
-    const searchParams = new URLSearchParams(window.location.search);
-    const clipId = searchParams.get('clip');
-
-    if (clipId && firestore) {
-      const fetchAndPlayClip = async () => {
-        try {
-          const clipRef = doc(firestore, 'lectures', lecture.id, 'clips', clipId);
-          const clipSnap = await getDoc(clipRef);
-          if (clipSnap.exists()) {
-            const clip = clipSnap.data() as LectureClip;
-            playTrack(lecture, clip.startTime, clip.endTime);
-            toast({
-              title: `تشغيل مقطع: ${clip.title}`,
-              description: "سيبدأ تشغيل المقطع المحدد تلقائيًا.",
-            });
-          } else {
-             toast({ variant: 'destructive', title: "المقطع غير موجود." });
-          }
-        } catch(e) {
-           console.error("Error fetching clip:", e);
-           toast({ variant: 'destructive', title: "خطأ في جلب المقطع." });
-        }
-      };
-      fetchAndPlayClip();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   if (!lecture) {
@@ -237,39 +201,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       handleCopyLink();
     }
   }, [shareText, shareUrl, handleCopyLink]);
-  
-  const handleCreateClip = async () => {
-      if (!user) {
-          toast({
-              variant: "destructive",
-              title: "يرجى تسجيل الدخول أولاً.",
-              description: "يجب أن تسجل دخولك لتتمكن من إنشاء المقاطع."
-          });
-          router.push(`/auth/login?redirect_to=/lectures/${lecture.slug}`);
-          return;
-      }
-      
-      let currentTime: number | undefined;
-
-      // Check YouTube player first, if it's active
-      if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-          const playerState = await videoPlayerRef.current.getPlayerState();
-          // States: 1 (playing), 2 (paused), 3 (buffering)
-          if ([1, 2, 3].includes(playerState)) {
-               currentTime = await videoPlayerRef.current.getCurrentTime();
-          }
-      }
-
-      // Fallback to audio player if video player isn't active or available
-      if (currentTime === undefined && audioRef.current) {
-           if (isPlaying || audioRef.current.currentTime > 0) {
-              currentTime = audioRef.current.currentTime;
-          }
-      }
-      
-      setClipCreationStartTime(currentTime);
-      setIsClipCreationOpen(true);
-  };
 
   return (
     <>
@@ -306,10 +237,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               {isFetchingFormats ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Download className="w-5 h-5 me-2" />}
               <span>تحميل</span>
           </Button>
-           <Button onClick={handleCreateClip}>
-              <Clapperboard className="w-5 h-5 me-2" />
-              <span>إنشاء مقطع</span>
-            </Button>
           {lecture.pdfUrl && (
             <Button asChild variant="secondary">
               <a href={lecture.pdfUrl} download>
@@ -362,9 +289,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       </section>
 
       <Tabs defaultValue="transcript" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="transcript">التفريغ النصي</TabsTrigger>
-          <TabsTrigger value="clips">المقاطع</TabsTrigger>
           <TabsTrigger value="comments">التعليقات</TabsTrigger>
           <TabsTrigger value="notes" disabled={!user}>ملاحظاتي</TabsTrigger>
         </TabsList>
@@ -377,19 +303,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
               <InteractiveTranscript transcript={lecture.transcript || []} />
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="clips">
-             <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2">
-                        <Clapperboard className="h-6 w-6" />
-                        مقاطع من المحاضرة
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ClipsSection lecture={lecture} />
-                </CardContent>
-            </Card>
         </TabsContent>
         <TabsContent value="comments">
           <CommentsSection lectureId={lecture.id} />
@@ -427,13 +340,6 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       )}
 
     </div>
-     <ClipCreationDialog 
-        isOpen={isClipCreationOpen} 
-        onOpenChange={setIsClipCreationOpen} 
-        lectureId={lecture.id}
-        lectureDuration={lecture.duration}
-        initialStartTime={clipCreationStartTime}
-    />
     <DownloaderModal
         isOpen={isDownloaderOpen}
         onOpenChange={setIsDownloaderOpen}

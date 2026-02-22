@@ -1,15 +1,13 @@
-
-
 'use client';
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, Clapperboard, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureClip, LectureNote } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureNote } from "@/lib/types";
 import type { User } from 'firebase/auth';
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
@@ -253,7 +251,6 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
         notes: 0,
         completedChallenges: 0,
         userBadges: 0,
-        clips: 0,
     });
     const [isLoadingExtra, setIsLoadingExtra] = useState(true);
 
@@ -269,7 +266,6 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                 const notesRef = collection(firestore, 'users', user.uid, 'notes');
                 const challengesRef = query(collection(firestore, 'users', user.uid, 'user_challenges'), where('status', '==', 'completed'));
                 const badgesRef = collection(firestore, 'users', user.uid, 'user_badges');
-                const clipsRef = query(collectionGroup(firestore, 'clips'), where('userId', '==', user.uid));
 
                 const [
                     favoritesSnap,
@@ -278,15 +274,13 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                     notesSnap,
                     challengesSnap,
                     badgesSnap,
-                    clipsSnap,
                 ] = await Promise.all([
                     getDocs(favoritesRef),
                     getDocs(playlistsRef),
                     getDocs(followingRef),
                     getDocs(notesRef),
-                    getDocs(challengesRef),
-                    getDocs(badgesRef),
-                    getDocs(clipsRef),
+                    getDocs(challengesSnap),
+                    getDocs(badgesSnap),
                 ]);
 
                 setExtraStats({
@@ -296,7 +290,6 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                     notes: notesSnap.size,
                     completedChallenges: challengesSnap.size,
                     userBadges: badgesSnap.size,
-                    clips: clipsSnap.size,
                 });
             } catch (e) {
                 console.error("Error fetching extra stats:", e);
@@ -336,7 +329,6 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
             {renderStat("قوائم التشغيل", extraStats.playlists, ListMusic, isLoadingExtra)}
             {renderStat("البرامج المتابعة", extraStats.following, UserPlus, isLoadingExtra)}
             {renderStat("الملاحظات المدونة", extraStats.notes, Notebook, isLoadingExtra)}
-            {renderStat("المقاطع المحفوظة", extraStats.clips, Clapperboard, isLoadingExtra)}
             {renderStat("التحديات المكتملة", extraStats.completedChallenges, Award, isLoadingExtra)}
             {renderStat("الأوسمة المكتسبة", extraStats.userBadges, Medal, isLoadingExtra)}
 
@@ -415,108 +407,6 @@ function UserChallengesSection() {
             ))}
         </div>
     )
-}
-
-function SavedClipsSection() {
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const [clips, setClips] = useState<LectureClip[]>([]);
-    const [lectures, setLectures] = useState<Record<string, Lecture>>({});
-    const [isLoading, setIsLoading] = useState(true);
-    const { playTrack } = useAudioPlayer();
-
-    useEffect(() => {
-        if (!firestore || !user) {
-            setIsLoading(false);
-            return;
-        };
-
-        const fetchClips = async () => {
-            setIsLoading(true);
-            try {
-                const clipsQuery = query(collectionGroup(firestore, 'clips'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-                const clipsSnap = await getDocs(clipsQuery);
-                const userClips = clipsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as LectureClip));
-                setClips(userClips);
-
-                if (userClips.length > 0) {
-                    const lectureIds = [...new Set(userClips.map(c => c.lectureId))];
-                    const lecturesData: Record<string, Lecture> = {};
-
-                     for (let i = 0; i < lectureIds.length; i += 30) {
-                        const chunk = lectureIds.slice(i, i + 30);
-                        const lecturesQuery = query(collection(firestore, 'lectures'), where('__name__', 'in', chunk));
-                        const lecturesSnap = await getDocs(lecturesQuery);
-                        lecturesSnap.forEach(doc => {
-                           lecturesData[doc.id] = { id: doc.id, ...doc.data() } as Lecture;
-                        });
-                    }
-                    setLectures(lecturesData);
-                }
-            } catch (error: any) {
-                console.error("Error fetching saved clips:", error);
-                if (error.code === 'permission-denied') {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: `clips (collectionGroup) or lectures`,
-                        operation: 'list',
-                    }));
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchClips();
-    }, [user, firestore]);
-
-     if (isLoading) {
-        return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-               <Card key={i} className="h-[150px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
-            ))}
-        </div>
-    }
-
-    if (clips.length === 0) {
-        return (
-            <Card className="text-center py-16">
-                <CardContent className="flex flex-col items-center gap-4">
-                    <Clapperboard className="w-16 h-16 text-muted-foreground" />
-                    <p className="text-lg text-muted-foreground">لم تقم بإنشاء أي مقاطع بعد.</p>
-                    <p className="text-sm text-muted-foreground">يمكنك إنشاء مقاطع من صفحة أي محاضرة.</p>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    return (
-        <div className="space-y-4">
-            {clips.map(clip => {
-                const lecture = lectures[clip.lectureId];
-                if (!lecture) return null;
-
-                return (
-                    <Card key={clip.id} className="p-4 flex justify-between items-center">
-                        <div>
-                            <p className="font-bold text-lg">{clip.title}</p>
-                            <Link href={`/lectures/${lecture.slug}`} className="text-sm text-muted-foreground hover:underline">
-                                من محاضرة: {lecture.title}
-                            </Link>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => playTrack(lecture, clip.startTime, clip.endTime)}
-                            >
-                                <Play className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </Card>
-                );
-            })}
-        </div>
-    );
 }
 
 function AllNotesSection() {
@@ -697,7 +587,6 @@ export default function ProfilePage() {
                   <TabsTrigger value="following" className="px-4 py-2 rounded-full flex items-center gap-2"><Podcast className="h-5 w-5"/>البرامج المتابعة</TabsTrigger>
                   <TabsTrigger value="challenges" className="px-4 py-2 rounded-full flex items-center gap-2"><Flame className="h-5 w-5"/>تحدياتي</TabsTrigger>
                   <TabsTrigger value="donations" className="px-4 py-2 rounded-full flex items-center gap-2"><HandHeart className="h-5 w-5"/>الدعم</TabsTrigger>
-                  <TabsTrigger value="clips" className="px-4 py-2 rounded-full flex items-center gap-2"><Clapperboard className="h-5 w-5"/>مقاطعي</TabsTrigger>
                   <TabsTrigger value="notes" className="px-4 py-2 rounded-full flex items-center gap-2"><Notebook className="h-5 w-5"/>ملاحظاتي</TabsTrigger>
                 </TabsList>
               </div>
@@ -725,9 +614,6 @@ export default function ProfilePage() {
                <TabsContent value="donations" className="mt-6">
                 <DonationsSection userProfile={userProfile} />
               </TabsContent>
-              <TabsContent value="clips" className="mt-6">
-                <SavedClipsSection />
-              </TabsContent>
               <TabsContent value="notes" className="mt-6">
                 <AllNotesSection />
               </TabsContent>
@@ -735,8 +621,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
-
-    
-

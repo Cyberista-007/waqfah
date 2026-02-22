@@ -246,16 +246,6 @@ export type UserChallenge = Serializable<{
     completedAt?: Timestamp;
 }>;
 
-export type LectureClip = Serializable<{
-    id: string;
-    lectureId: string;
-    userId: string; // Creator
-    title: string;
-    startTime: number; // in seconds
-    endTime: number; // in seconds
-    createdAt: Timestamp;
-}>;
-
 export type LectureNote = Serializable<{
     id: string; // lectureId
     userId: string;

@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Stats": {
@@ -25,26 +24,11 @@
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
         "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
         "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
+        "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the program's podcast." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
       },
       "required": ["slug", "name", "bio", "imageId", "createdAt"]
-    },
-    "Channel": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Channel",
-      "type": "object",
-      "description": "Represents a YouTube Channel that provides lectures.",
-      "properties": {
-        "slug": { "type": "string", "description": "A URL-friendly identifier for the channel." },
-        "name": { "type": "string", "description": "The full name of the channel." },
-        "description": { "type": "string", "description": "A short description of the channel." },
-        "imageId": { "type": "string", "description": "An ID for a placeholder image for the channel." },
-        "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the channel's image." },
-        "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the channel's YouTube channel." },
-        "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this channel." }
-      },
-      "required": ["slug", "name", "imageId", "youtubeUrl", "followerCount"]
     },
     "Series": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -71,11 +55,9 @@
         "slug": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
+        "programId": { "type": "string" },
         "programName": { "type": "string" },
         "programSlug": { "type": "string" },
-        "channelId": { "type": "string" },
-        "channelName": { "type": "string" },
-        "channelSlug": { "type": "string" },
         "seriesId": { "type": "string" },
         "seriesSlug": { "type": "string" },
         "seriesTitle": { "type": "string" },
@@ -88,10 +70,13 @@
         "rating": { "type": "number", "minimum": 0, "maximum": 5 },
         "ratingCount": { "type": "number", "minimum": 0 },
         "viewCount": { "type": "number", "minimum": 0 },
+        "youtubeViewCount": { "type": "number", "minimum": 0 },
         "createdAt": { "type": "string", "format": "date-time" },
-        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." }
+        "language": { "type": "string", "description": "The language of the lecture content (e.g., 'ar', 'en')." },
+        "suggestionCount": { "type": "number", "minimum": 0, "description": "Number of times this lecture has been suggested for pinning." },
+        "publishedAt": { "type": "string", "format": "date-time", "description": "The original publication date from the source (e.g., YouTube)." }
       },
-      "required": ["slug", "title", "programName", "programSlug", "seriesId", "seriesSlug", "seriesTitle", "audioSrc", "imageId", "duration", "createdAt"]
+      "required": ["slug", "title", "audioSrc", "imageId", "duration", "createdAt"]
     },
     "Book": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -254,21 +239,6 @@
       },
       "required": ["userId", "challengeId", "status", "startedAt"]
     },
-    "LectureClip": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LectureClip",
-      "description": "A short, shareable clip from a lecture.",
-      "type": "object",
-      "properties": {
-        "lectureId": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "startTime": { "type": "number" },
-        "endTime": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["lectureId", "userId", "title", "startTime", "endTime", "createdAt"]
-    },
     "ScheduleItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ScheduleItem",
@@ -317,7 +287,12 @@
       "properties": {
         "defaultTheme": { "type": "string" },
         "defaultFont": { "type": "string" },
-        "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." }
+        "maintenanceMode": { "type": "boolean", "description": "Toggles site-wide maintenance mode." },
+        "quranIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Quran icon." },
+        "hadithIconUrl": { "type": "string", "format": "uri", "description": "URL for the custom Hadith icon." },
+        "heroImageUrl": { "type": "string", "format": "uri", "description": "URL for the homepage hero banner image." },
+        "heroTitle": { "type": "string", "description": "The main headline on the homepage hero banner." },
+        "heroSubtitle": { "type": "string", "description": "The sub-headline on the homepage hero banner." }
       }
     },
     "AnnouncementSettings": {
@@ -389,6 +364,137 @@
         "totalPoints": { "type": "number" }
       },
       "required": ["userId", "date"]
+    },
+    "DestructiveSin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Destructive Sin",
+      "description": "A major sin to be warned against in the accountability tracker.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "dialogTitle": { "type": "string" },
+        "quranVerse": { "type": "string" },
+        "hadith": { "type": "string" },
+        "hadith2": { "type": "string" },
+        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." }
+      },
+      "required": ["title", "dialogTitle", "icon"]
+    },
+    "PinnedItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Pinned Item",
+      "description": "Represents an item pinned to the homepage, which can be a lecture, series, or program.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The document ID of the pinned item." },
+        "type": { "type": "string", "enum": ["lecture", "series", "program"], "description": "The type of the pinned item." },
+        "message": { "type": "string", "description": "A custom message to display with the pinned item." }
+      },
+      "required": ["id", "type"]
+    },
+    "PinnedItemSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Pinned Item Settings",
+      "description": "A singleton document to store pinned items for the homepage.",
+      "type": "object",
+      "properties": {
+        "pinnedItems": {
+          "type": "array",
+          "items": { "$ref": "#/entities/PinnedItem" },
+          "description": "An ordered array of items to pin on the homepage."
+        },
+        "isActive": { "type": "boolean", "description": "Toggles the visibility of the pinned items section." },
+        "startDate": { "type": "string", "format": "date-time", "description": "The date from which the pinned items should be visible." },
+        "endDate": { "type": "string", "format": "date-time", "description": "The date until which the pinned items should be visible." },
+        "layout": { "type": "string", "enum": ["grid", "carousel"], "description": "The display layout for pinned items." }
+      }
+    },
+    "Suggestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Suggestion",
+      "description": "Represents a user's suggestion to pin a lecture.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "createdAt"]
+    },
+    "GamificationBadge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Gamification Badge",
+      "description": "Represents an achievement badge that users can earn.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string", "description": "Name of a Lucide icon or URL to an image." },
+        "metric": { "type": "string", "enum": ["minutesListened", "lecturesCompleted", "seriesCompleted", "totalDonated", "points", "fajrStreak"] },
+        "threshold": { "type": "number" },
+        "points": { "type": "number", "minimum": 0 }
+      },
+      "required": ["title", "description", "icon", "metric", "threshold", "points"]
+    },
+    "UserBadge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User Badge",
+      "description": "Represents a badge earned by a user.",
+      "type": "object",
+      "properties": {
+        "badgeId": { "type": "string" },
+        "earnedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["badgeId", "earnedAt"]
+    },
+    "CurriculumItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Curriculum Item",
+      "description": "Represents a single item (lecture or series) within a curriculum.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The ID of the lecture or series document." },
+        "type": { "type": "string", "enum": ["lecture", "series"] }
+      },
+      "required": ["id", "type"]
+    },
+    "Curriculum": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Curriculum",
+      "description": "Represents a structured learning path composed of lectures and series.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/entities/CurriculumItem"
+          }
+        },
+        "studentCount": { "type": "number", "minimum": 0, "default": 0 }
+      },
+      "required": ["slug", "title", "items"]
+    },
+    "UserCurriculum": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "User Curriculum Progress",
+        "description": "Tracks a user's enrollment and progress within a curriculum.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "curriculumId": { "type": "string" },
+            "completedItems": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "An array of IDs of the completed curriculum items (lectures/series)."
+            },
+            "status": { "type": "string", "enum": ["not-started", "in-progress", "completed"], "default": "not-started" },
+            "startedAt": { "type": "string", "format": "date-time" },
+            "completedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "curriculumId", "status"]
     }
   },
   "auth": {
@@ -406,10 +512,6 @@
         "path": "/programs/{programId}",
         "definition": { "schema": { "$ref": "#/entities/Program" } }
       },
-       {
-        "path": "/channels/{channelId}",
-        "definition": { "schema": { "$ref": "#/entities/Channel" } }
-      },
       {
         "path": "/series/{seriesId}",
         "definition": { "schema": { "$ref": "#/entities/Series" } }
@@ -417,6 +519,10 @@
       {
         "path": "/lectures/{lectureId}",
         "definition": { "schema": { "$ref": "#/entities/Lecture" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/suggestions/{userId}",
+        "definition": { "schema": { "$ref": "#/entities/Suggestion" } }
       },
       {
         "path": "/books/{bookId}",
@@ -454,6 +560,14 @@
         "path": "/users/{userId}/accountability/{entryId}",
         "definition": { "schema": { "$ref": "#/entities/AccountabilityEntry" } }
       },
+       {
+        "path": "/users/{userId}/user_badges/{badgeId}",
+        "definition": { "schema": { "$ref": "#/entities/UserBadge" } }
+      },
+      {
+        "path": "/users/{userId}/curriculum_progress/{curriculumId}",
+        "definition": { "schema": { "$ref": "#/entities/UserCurriculum" } }
+      },
       {
         "path": "/lectures/{lectureId}/ratings/{userId}",
         "definition": { "schema": { "$ref": "#/entities/Rating" } }
@@ -471,12 +585,12 @@
         "definition": { "schema": { "$ref": "#/entities/Challenge" } }
       },
       {
-        "path": "/lectures/{lectureId}/clips/{clipId}",
-        "definition": { "schema": { "$ref": "#/entities/LectureClip" } }
-      },
-      {
         "path": "/scheduled_lessons/{lessonId}",
         "definition": { "schema": { "$ref": "#/entities/ScheduleItem" } }
+      },
+      {
+        "path": "/curriculums/{curriculumId}",
+        "definition": { "schema": { "$ref": "#/entities/Curriculum" } }
       },
       {
         "path": "/settings/appearance",
@@ -490,12 +604,22 @@
         "path": "/settings/donations",
         "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
       },
+       {
+        "path": "/settings/pinned_lecture",
+        "definition": { "schema": { "$ref": "#/entities/PinnedItemSettings" } }
+      },
       {
         "path": "/donations/{donationId}",
         "definition": { "schema": { "$ref": "#/entities/Donation" } }
+      },
+       {
+        "path": "/destructive_sins/{sinId}",
+        "definition": { "schema": { "$ref": "#/entities/DestructiveSin" } }
+      },
+      {
+        "path": "/gamification_badges/{badgeId}",
+        "definition": { "schema": { "$ref": "#/entities/GamificationBadge" } }
       }
     ]
   }
 }
-
-    
