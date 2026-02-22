@@ -89,7 +89,7 @@ function ImportPageComponent() {
 
             if (data.channelInfo && allPrograms) {
                 setChannelInfo(data.channelInfo);
-                const existingProgram = allPrograms.find(p => p.youtubeUrl && p.youtubeUrl.includes(data.channelInfo.id));
+                const existingProgram = allPrograms.find(p => p.channelId === data.channelInfo.id);
                 if (existingProgram) setProgramInfo(existingProgram);
                 else setProgramInfo({ name: data.channelInfo.name, youtubeUrl: `https://youtube.com/channel/${data.channelInfo.id}` } as Program);
             }
@@ -148,6 +148,7 @@ function ImportPageComponent() {
                 const slug = channelInfo.name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                 const newProgramData = {
                     name: channelInfo.name, slug, youtubeUrl: `https://youtube.com/channel/${channelInfo.id}`, bio: channelInfo.description, imageUrl: channelInfo.imageUrl,
+                    channelId: channelInfo.id,
                     createdAt: Timestamp.now(), followerCount: 0, imageId: `program-${slug}`,
                 };
                 const newProgramRef = doc(collection(firestore, 'programs'));

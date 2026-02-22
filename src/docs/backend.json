@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Stats": {
@@ -24,6 +25,7 @@
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
         "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
         "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
+        "channelId": { "type": "string", "description": "The unique YouTube channel ID." },
         "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the program's podcast." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
@@ -238,6 +240,21 @@
         "completedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "challengeId", "status", "startedAt"]
+    },
+    "LectureClip": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LectureClip",
+      "description": "A short, shareable clip from a lecture.",
+      "type": "object",
+      "properties": {
+        "lectureId": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "startTime": { "type": "number" },
+        "endTime": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["lectureId", "userId", "title", "startTime", "endTime", "createdAt"]
     },
     "ScheduleItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -583,6 +600,10 @@
       {
         "path": "/challenges/{challengeId}",
         "definition": { "schema": { "$ref": "#/entities/Challenge" } }
+      },
+      {
+        "path": "/lectures/{lectureId}/clips/{clipId}",
+        "definition": { "schema": { "$ref": "#/entities/LectureClip" } }
       },
       {
         "path": "/scheduled_lessons/{lessonId}",

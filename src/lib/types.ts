@@ -65,6 +65,7 @@ export type Program = Serializable<{
   imageId: string;
   imageUrl?: string;
   youtubeUrl?: string;
+  channelId?: string;
   rssFeedUrl?: string;
   createdAt: Timestamp;
   followerCount: number;

@@ -32,6 +32,7 @@ interface ProgramFormProps {
 }
 
 interface YoutubeProgramInfo {
+    id: string; // Channel ID
     name: string;
     description: string;
     imageUrl: string;
@@ -56,6 +57,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
   const [youtubeUrl, setYoutubeUrl] = useState(program?.youtubeUrl ?? "");
   const [rssFeedUrl, setRssFeedUrl] = useState(program?.rssFeedUrl ?? "");
   const [imagePreview, setImagePreview] = useState<string | null>(program?.imageUrl || null);
+  const [channelId, setChannelId] = useState<string | undefined>(program?.channelId);
   
   useEffect(() => {
     if (!isEditMode) {
@@ -68,6 +70,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
           setYoutubeUrl(savedData.youtubeUrl ?? "");
           setRssFeedUrl(savedData.rssFeedUrl ?? "");
           setImagePreview(savedData.imagePreview || null);
+          setChannelId(savedData.channelId || undefined);
         } catch (e) {
           console.error("Failed to parse autosaved program data", e);
           localStorage.removeItem(AUTOSAVE_KEY);
@@ -88,10 +91,10 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
   
   useEffect(() => {
     if (!isEditMode) {
-      const dataToSave = { name, bio, youtubeUrl, rssFeedUrl, imagePreview };
+      const dataToSave = { name, bio, youtubeUrl, rssFeedUrl, imagePreview, channelId };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, name, bio, youtubeUrl, rssFeedUrl, imagePreview]);
+  }, [isEditMode, name, bio, youtubeUrl, rssFeedUrl, imagePreview, channelId]);
 
   const handleClose = () => {
     if (!isEditMode) {
@@ -119,7 +122,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const response = await fetch(`${window.location.origin}/api/youtube-import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: finalUrl, fetchChannelInfo: true }),
+            body: JSON.stringify({ url: finalUrl }),
         });
 
         if (!response.ok) {
@@ -133,6 +136,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
             setName(data.channelInfo.name ?? '');
             setBio(data.channelInfo.description ?? '');
             setImagePreview(data.channelInfo.imageUrl || null);
+            setChannelId(data.channelInfo.id);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات البرنامج بنجاح." });
         } else {
@@ -179,6 +183,7 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
             slug,
             bio,
             youtubeUrl,
+            channelId,
             rssFeedUrl,
             imageUrl: finalImageUrl,
             imageId: program?.imageId || `program-${slug}`,
