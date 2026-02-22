@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -16,26 +17,8 @@ import { Input } from '@/components/ui/input';
 import { LectureListItem } from '@/components/lecture-list-item';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+import { getVideoIdFromUrl } from '@/lib/utils';
 
-function getYoutubeVideoId(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    const videoUrl = new URL(url);
-    if (videoUrl.hostname === 'youtu.be') {
-      return videoUrl.pathname.slice(1);
-    }
-    if (videoUrl.hostname.includes('youtube.com')) {
-      const videoId = videoUrl.searchParams.get('v');
-      if (videoId) {
-        return videoId;
-      }
-    }
-  } catch (error) {
-    console.error("Invalid YouTube URL", error);
-    return null;
-  }
-  return null;
-}
 
 interface SeriesClientPageProps {
   series: Series;
@@ -93,7 +76,7 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
 
   const placeholder = getPlaceholderImage(series.imageId);
   const featuredLecture = lecturesInSeries[0] || null;
-  const mainVideoId = getYoutubeVideoId(featuredLecture?.youtubeUrl);
+  const mainVideoId = getVideoIdFromUrl(featuredLecture?.youtubeUrl);
 
   const handlePlayVideo = () => {
     if (mainVideoId) {
