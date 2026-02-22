@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400, headers: corsHeaders });
         }
         
-        const { url, fetchChannelInfo, fetchVideoInfo, getFormats } = validation.data;
+        const { url, fetchVideoInfo, getFormats } = validation.data;
         const videoIdForInfo = getVideoIdFromUrl(url);
 
         const youtube = google.youtube({
@@ -153,43 +153,50 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // --- Refactored Logic ---
+        // --- UNIFIED MAIN FLOW ---
         let channelInfo: any = null;
-        let channelIdForPlaylists: string | undefined = undefined;
-
-        // First, determine channel ID. This is useful for both fetching channel info and getting playlists.
+        let channelId: string | undefined = undefined;
+        let singleVideoId: string | null = null;
+        
         const validationType = await play.yt_validate(url);
 
+        // 1. Determine Channel ID from any URL type
         if (validationType === 'channel') {
-            try {
-                // Use play-dl to robustly find the channel ID from any URL type (@handle, /c/, /channel/)
-                const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-                channelIdForPlaylists = searchResults[0]?.id;
-            } catch (e) {
-                console.error("play-dl channel search failed:", e);
-                // The flow will continue and might fail later, which is acceptable.
-            }
+            const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
+            channelId = searchResults[0]?.id;
         } else if (validationType === 'playlist') {
             const playlistData = await play.playlist_info(url, { incomplete: true });
-            channelIdForPlaylists = playlistData.channel?.id;
+            channelId = playlistData.channel?.id;
+        } else if (validationType === 'video') {
+            const videoId = getVideoIdFromUrl(url);
+            if (videoId) {
+                 try {
+                    const videoResponse = await youtube.videos.list({ part: ['snippet'], id: [videoId] });
+                    const videoData = videoResponse.data.items?.[0];
+                    if (videoData?.snippet?.channelId) {
+                        channelId = videoData.snippet.channelId;
+                        singleVideoId = videoId;
+                    }
+                } catch (e) {
+                    console.error("Failed to get channelId from videoId:", e);
+                }
+            }
         }
-
-        // If fetchChannelInfo is requested AND we found a channel ID, get the channel details.
-        if (fetchChannelInfo && channelIdForPlaylists) {
+        
+        // 2. Fetch Channel Info if an ID was found
+        if (channelId) {
              try {
                 const channelResponse = await youtube.channels.list({
                     part: ['snippet', 'brandingSettings'],
-                    id: [channelIdForPlaylists],
+                    id: [channelId],
                 });
                 const channelAPIData = channelResponse.data.items?.[0];
                 if (channelAPIData) {
-                    const snippet = channelAPIData.snippet;
-                    const branding = channelAPIData.brandingSettings;
                     channelInfo = {
-                        name: snippet?.title || '',
-                        description: snippet?.description || '',
-                        imageUrl: snippet?.thumbnails?.high?.url || snippet?.thumbnails?.default?.url || '',
-                        bannerUrl: branding?.image?.bannerExternalUrl || ''
+                        name: channelAPIData.snippet?.title || '',
+                        description: channelAPIData.snippet?.description || '',
+                        imageUrl: channelAPIData.snippet?.thumbnails?.high?.url || channelAPIData.snippet?.thumbnails?.default?.url || '',
+                        bannerUrl: channelAPIData.brandingSettings?.image?.bannerExternalUrl || ''
                     };
                 }
             } catch (e) {
@@ -197,31 +204,29 @@ export async function POST(req: NextRequest) {
             }
         }
         
-        // --- Now, proceed to fetch video/playlist content ---
-        let info; 
-
+        // 3. Fetch Video IDs
+        let videoIds: string[] = [];
         if (validationType === 'playlist') {
-            info = await play.playlist_info(url, { incomplete: true });
-        } else if (validationType === 'channel') {
-            const urlOrId = channelIdForPlaylists || url;
-            info = await play.channel_videos(urlOrId);
+            const info = await play.playlist_info(url, { incomplete: true });
+            const all_videos = await info.all_videos();
+            videoIds = all_videos.map(v => v.id).filter((id): id is string => !!id);
+        } else if (validationType === 'channel' && channelId) {
+            const info = await play.channel_videos(channelId);
+            const all_videos = await info.all_videos();
+            videoIds = all_videos.map(v => v.id).filter((id): id is string => !!id);
+        } else if (singleVideoId) {
+            videoIds.push(singleVideoId);
         }
-        
-        if (!info) {
-             // If we were only asked for channel info and we got it, it's not an error.
-             if (fetchChannelInfo && channelInfo) {
+
+        // 4. Handle cases with no videos found
+        if (videoIds.length === 0) {
+             if (channelInfo) { // If we at least found channel info, return that.
                 return NextResponse.json({ channelInfo, videos: [], shorts: [], playlists: [] }, { headers: corsHeaders });
              }
              return NextResponse.json({ message: "لم نتمكن من جلب البيانات. قد يكون الرابط غير صحيح أو القناة لا تحتوي على فيديوهات." }, { status: 404, headers: corsHeaders });
         }
         
-        const all_videos = await info.all_videos();
-        const videoIds = all_videos.map(v => v.id).filter((id): id is string => !!id);
-
-        if (videoIds.length === 0) {
-             return NextResponse.json({ videos: [], shorts: [], playlists: [], channelInfo }, { headers: corsHeaders });
-        }
-        
+        // 5. Fetch details for all collected video IDs
         let allVideosDetails: youtube_v3.Schema$Video[] = [];
         for (let i = 0; i < videoIds.length; i += 50) {
             const chunk = videoIds.slice(i, i + 50);
@@ -243,11 +248,12 @@ export async function POST(req: NextRequest) {
             }
         });
 
+        // 6. Fetch playlists for the channel
         let formattedPlaylists: any[] = [];
-        if (channelIdForPlaylists) {
+        if (channelId) {
             let nextPageToken: string | undefined = undefined;
             do {
-                const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelIdForPlaylists, maxResults: 50, pageToken: nextPageToken });
+                const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
                 if (playlistsResponse.data.items) {
                     formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
                 }
@@ -255,7 +261,7 @@ export async function POST(req: NextRequest) {
             } while (nextPageToken);
         }
         
-        // Return everything fetched in one response
+        // 7. Return everything
         return NextResponse.json({ videos, shorts, playlists: formattedPlaylists, channelInfo }, { headers: corsHeaders });
 
     } catch (error: any) {
