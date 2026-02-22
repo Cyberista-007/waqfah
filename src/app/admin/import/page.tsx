@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useCollection, useFirestore } from '@/firebase';
 import type { Lecture, Series, Program } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -35,6 +35,7 @@ interface FetchedPlaylist {
 }
 
 interface FetchedChannelInfo {
+    id: string;
     name: string;
     description: string;
     imageUrl: string;
@@ -91,7 +92,7 @@ function ImportPageComponent() {
                 setChannelInfo(data.channelInfo);
                 const existingProgram = allPrograms.find(p => p.youtubeUrl && p.youtubeUrl.includes(data.channelInfo.id));
                 if (existingProgram) setProgramInfo(existingProgram);
-                else setProgramInfo({ name: data.channelInfo.name, youtubeUrl: urlToFetch } as Program);
+                else setProgramInfo({ name: data.channelInfo.name, youtubeUrl: `https://youtube.com/channel/${data.channelInfo.id}` } as Program);
             }
             
             setFetchedVideos(data.videos || []);
@@ -146,7 +147,7 @@ function ImportPageComponent() {
             if (programInfo && !programInfo.id && channelInfo) {
                 const slug = channelInfo.name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                 const newProgramData = {
-                    name: channelInfo.name, slug, youtubeUrl: url, bio: channelInfo.description, imageUrl: channelInfo.imageUrl,
+                    name: channelInfo.name, slug, youtubeUrl: `https://youtube.com/channel/${channelInfo.id}`, bio: channelInfo.description, imageUrl: channelInfo.imageUrl,
                     createdAt: Timestamp.now(), followerCount: 0, imageId: `program-${slug}`,
                 };
                 const newProgramRef = doc(collection(firestore, 'programs'));
