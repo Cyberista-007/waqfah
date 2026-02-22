@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "مفتاح واجهة برمجة تطبيقات يوتيوب غير موجود. لتفعيل هذه الميزة، يرجى اتباع التعليمات في ملف 'docs/youtube-api-key.md' لإضافة المفتاح إلى مشروعك." }, { status: 500, headers: corsHeaders });
     }
 
+    // Use cookie to bypass potential throttling/blocking on play-dl
     await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
 
     try {
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
             if (!/^https?:\/\//i.test(body.url)) {
                 body.url = 'https://' + body.url;
             }
+            // Sanitize URL by removing unnecessary query parameters
             if (body.url.includes('?')) {
                 const urlParts = body.url.split('?');
                 const mainUrl = urlParts[0];
@@ -81,6 +83,7 @@ export async function POST(req: NextRequest) {
                 } else if (params.has('list')) {
                     body.url = `${mainUrl}?list=${params.get('list')}`;
                 } else {
+                    // This handles channel URLs with tracking params like ?si=...
                     body.url = mainUrl;
                 }
             }
@@ -136,7 +139,15 @@ export async function POST(req: NextRequest) {
             const videoResponse = await youtube.videos.list({ part: ['snippet', 'contentDetails', 'statistics'], id: [videoIdForInfo] });
             const videoData = videoResponse.data.items?.[0];
             if (videoData) {
-                return NextResponse.json({ videoInfo: { title: videoData.snippet?.title, description: videoData.snippet?.description, durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0, viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0, publishedAt: videoData.snippet?.publishedAt } }, { headers: corsHeaders });
+                return NextResponse.json({ videoInfo: { 
+                    title: videoData.snippet?.title, 
+                    description: videoData.snippet?.description, 
+                    durationInSeconds: videoData.contentDetails?.duration ? parseISO8601Duration(videoData.contentDetails.duration) : 0, 
+                    viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0, 
+                    publishedAt: videoData.snippet?.publishedAt,
+                    channelId: videoData.snippet?.channelId,
+                    channelTitle: videoData.snippet?.channelTitle
+                } }, { headers: corsHeaders });
             } else {
                 return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404, headers: corsHeaders });
             }
