@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,6 +16,7 @@ import { LectureCard } from './lecture-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import dynamic from 'next/dynamic';
 import { DownloaderModal } from './downloader-modal';
+import { getVideoIdFromUrl } from '@/lib/utils';
 
 const InteractiveTranscript = dynamic(() => import('@/components/interactive-transcript').then(mod => mod.InteractiveTranscript), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
@@ -28,26 +30,6 @@ const CommentsSection = dynamic(() => import('@/components/comments-section').th
     loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
     ssr: false
 });
-
-function getYoutubeVideoId(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    const videoUrl = new URL(url);
-    if (videoUrl.hostname === 'youtu.be') {
-      return videoUrl.pathname.slice(1);
-    }
-    if (videoUrl.hostname.includes('youtube.com')) {
-      const videoId = videoUrl.searchParams.get('v');
-      if (videoId) {
-        return videoId;
-      }
-    }
-  } catch (error) {
-    console.error("Invalid YouTube URL", error);
-    return null;
-  }
-  return null;
-}
 
 interface LectureClientPageProps {
     lecture: Lecture;
@@ -83,7 +65,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
     notFound();
   }
   
-  const videoId = getYoutubeVideoId(lecture?.youtubeUrl);
+  const videoId = getVideoIdFromUrl(lecture?.youtubeUrl);
 
   const handlePlay = () => {
     hidePlayer();

@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, doc, runTransaction, increment, Timestamp } from 'firebase/firestore';
 import Image from 'next/image';
-import { formatDuration } from '@/lib/utils';
+import { formatDuration, getVideoIdFromUrl } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Define fetched content types
@@ -87,7 +87,7 @@ function YoutubeImport() {
             
             const data: FetchedContent = await response.json();
             
-            const existingVideoIds = new Set(allLectures?.map(l => l.youtubeUrl?.split('v=')[1]?.split('&')[0]));
+            const existingVideoIds = new Set(allLectures?.map(l => getVideoIdFromUrl(l.youtubeUrl)).filter(vId => vId !== null));
             data.videos = data.videos.filter(v => !existingVideoIds.has(v.videoId));
             data.shorts = data.shorts.filter(v => !existingVideoIds.has(v.videoId));
 
@@ -200,7 +200,7 @@ function YoutubeImport() {
                    <CardDescription>العناصر الجديدة التي سيتم استيرادها.</CardDescription>
                 </div>
                 <div className="flex items-center space-x-2 space-x-reverse">
-                    <Checkbox id={`select-all-${type}`} onCheckedChange={() => handleSelectAll(type)} checked={items.every(item => selectedItems.includes(item.videoId))} />
+                    <Checkbox id={`select-all-${type}`} onCheckedChange={() => handleSelectAll(type)} checked={items.length > 0 && items.every(item => selectedItems.includes(item.videoId))} />
                     <Label htmlFor={`select-all-${type}`}>تحديد الكل</Label>
                 </div>
             </CardHeader>

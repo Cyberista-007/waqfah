@@ -83,3 +83,22 @@ export function normalizeArabic(text: string): string {
     .replace(/[أإآ]/g, 'ا') // Normalize hamzas to plain alif
     .replace(/ة/g, 'ه'); // Normalize taa marbuta to haa
 }
+
+export function getVideoIdFromUrl(url: string | undefined): string | null {
+    if (!url) return null;
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.hostname === 'youtu.be') {
+          return parsedUrl.pathname.split('/')[1];
+        }
+        if (parsedUrl.hostname.includes('youtube.com')) {
+          const videoId = parsedUrl.searchParams.get('v');
+          if (videoId) {
+            return videoId;
+          }
+        }
+    } catch (error) {
+        // Silently fail for invalid URLs
+    }
+    return null;
+}

@@ -17,7 +17,7 @@ import {
   CardFooter,
 } from "./ui/card"
 import { FavoriteButton } from "./favorite-button"
-import { cn, formatDuration, formatViews } from "@/lib/utils"
+import { cn, formatDuration, formatViews, getVideoIdFromUrl } from "@/lib/utils"
 import { getPlaceholderImage } from "@/lib/images"
 import { useCollection, useFirestore, useUser } from "@/firebase"
 import { Progress } from "./ui/progress"
@@ -30,26 +30,6 @@ interface LectureCardProps {
   index?: number
   onCollapse?: () => void;
   pinnedMessage?: string;
-}
-
-function getYoutubeVideoId(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    const videoUrl = new URL(url);
-    if (videoUrl.hostname === 'youtu.be') {
-      return videoUrl.pathname.slice(1);
-    }
-    if (videoUrl.hostname.includes('youtube.com')) {
-      const videoId = videoUrl.searchParams.get('v');
-      if (videoId) {
-        return videoId;
-      }
-    }
-  } catch (error) {
-    console.error("Invalid YouTube URL", error);
-    return null;
-  }
-  return null;
 }
 
 const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }: LectureCardProps) => {
@@ -68,7 +48,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
   const playlistsPath = user ? `users/${user.uid}/playlists` : null;
   const { data: playlists } = useCollection<Playlist>(playlistsPath);
 
-  const videoId = getYoutubeVideoId(lecture.youtubeUrl);
+  const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
 
   const imageUrl = videoId

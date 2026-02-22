@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
 import play from 'play-dl';
+import { getVideoIdFromUrl } from '@/lib/utils';
 
 const youtubeImportSchema = z.object({
   url: z.string().url("الرجاء إدخال رابط صحيح."),
@@ -23,25 +24,6 @@ export async function OPTIONS(request: NextRequest) {
     headers: corsHeaders,
   });
 }
-
-function getVideoIdFromUrl(url: string): string | null {
-    try {
-        const parsedUrl = new URL(url);
-        if (parsedUrl.hostname === 'youtu.be') {
-          return parsedUrl.pathname.slice(1);
-        }
-        if (parsedUrl.hostname.includes('youtube.com')) {
-          const videoId = parsedUrl.searchParams.get('v');
-          if (videoId) {
-            return videoId;
-          }
-        }
-    } catch (error) {
-        console.error("Invalid YouTube video URL", error);
-    }
-    return null;
-}
-
 
 function parseISO8601Duration(duration: string): number {
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);

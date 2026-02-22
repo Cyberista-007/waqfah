@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -5,7 +6,7 @@ import Image from 'next/image';
 import { MoreVertical } from 'lucide-react';
 import type { Lecture } from '@/lib/types';
 import { getPlaceholderImage } from '@/lib/images';
-import { formatViews } from '@/lib/utils';
+import { formatViews, getVideoIdFromUrl } from '@/lib/utils';
 import { useAudioPlayer } from './audio-player-provider';
 
 interface ShortCardProps {
@@ -13,30 +14,9 @@ interface ShortCardProps {
   index?: number;
 }
 
-function getYoutubeVideoId(url: string | undefined): string | null {
-    if (!url) return null;
-    try {
-      const videoUrl = new URL(url);
-      if (videoUrl.hostname === 'youtu.be') {
-        return videoUrl.pathname.slice(1);
-      }
-      if (videoUrl.hostname.includes('youtube.com')) {
-        const videoId = videoUrl.searchParams.get('v');
-        if (videoId) {
-          return videoId;
-        }
-      }
-    } catch (error) {
-      console.error("Invalid YouTube URL", error);
-      return null;
-    }
-    return null;
-  }
-  
-
 export function ShortCard({ lecture, index = 0 }: ShortCardProps) {
   const { playIframe } = useAudioPlayer();
-  const videoId = getYoutubeVideoId(lecture.youtubeUrl);
+  const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
   const imageUrl = videoId
     ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
