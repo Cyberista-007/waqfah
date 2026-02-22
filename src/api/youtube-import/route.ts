@@ -67,8 +67,23 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        if (body.url && typeof body.url === 'string' && !/^https?:\/\//i.test(body.url)) {
-            body.url = 'https://' + body.url;
+        if (body.url && typeof body.url === 'string') {
+            if (!/^https?:\/\//i.test(body.url)) {
+                body.url = 'https://' + body.url;
+            }
+            if (body.url.includes('?')) {
+                const urlParts = body.url.split('?');
+                const mainUrl = urlParts[0];
+                const params = new URLSearchParams(urlParts[1]);
+                
+                if (params.has('v')) {
+                    body.url = `${mainUrl}?v=${params.get('v')}`;
+                } else if (params.has('list')) {
+                    body.url = `${mainUrl}?list=${params.get('list')}`;
+                } else {
+                    body.url = mainUrl;
+                }
+            }
         }
         
         const validation = youtubeImportSchema.safeParse(body);
@@ -127,79 +142,62 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // --- Refactored Logic ---
         let channelInfo: any = null;
         let channelIdForPlaylists: string | undefined = undefined;
 
-        if (fetchChannelInfo) {
+        // First, determine channel ID. This is useful for both fetching channel info and getting playlists.
+        const validationType = await play.yt_validate(url);
+
+        if (validationType === 'channel') {
             try {
-                let channelId: string | undefined;
-
-                const channelIdMatch = url.match(/channel\/(UC[\w-]{21,})/);
-                if (channelIdMatch?.[1]) {
-                    channelId = channelIdMatch[1];
-                }
-
-                if (!channelId) {
-                    const handleOrNameMatch = url.match(/@([\w.-]+)|\/c\/([\w-]+)|\/user\/([\w-]+)/);
-                    const queryTerm = handleOrNameMatch?.[1] || handleOrNameMatch?.[2] || handleOrNameMatch?.[3];
-                    if (queryTerm) {
-                         const searchResponse = await youtube.search.list({
-                            part: ['id'],
-                            q: queryTerm,
-                            type: ['channel'],
-                            maxResults: 1
-                        });
-                        channelId = searchResponse.data.items?.[0]?.id?.channelId;
-                    }
-                }
-                
-                if (!channelId) {
-                    const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-                    if (searchResults[0]?.id) {
-                        channelId = searchResults[0].id;
-                    }
-                }
-                
-                if (channelId) {
-                    channelIdForPlaylists = channelId;
-                    const channelResponse = await youtube.channels.list({
-                        part: ['snippet', 'brandingSettings'],
-                        id: [channelId],
-                    });
-                    
-                    const channelAPIData = channelResponse.data.items?.[0];
-                    if (channelAPIData) {
-                        const snippet = channelAPIData.snippet;
-                        const branding = channelAPIData.brandingSettings;
-                        channelInfo = {
-                            name: snippet?.title || '',
-                            description: snippet?.description || '',
-                            imageUrl: snippet?.thumbnails?.high?.url || snippet?.thumbnails?.default?.url || '',
-                            bannerUrl: branding?.image?.bannerExternalUrl || ''
-                        };
-                    }
-                }
-            } catch(e) {
-                console.warn("Could not fetch supplementary channel info:", e);
-                // Don't fail the request, just proceed without this info.
+                // Use play-dl to robustly find the channel ID from any URL type (@handle, /c/, /channel/)
+                const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
+                channelIdForPlaylists = searchResults[0]?.id;
+            } catch (e) {
+                console.error("play-dl channel search failed:", e);
+                // The flow will continue and might fail later, which is acceptable.
             }
+        } else if (validationType === 'playlist') {
+            const playlistData = await play.playlist_info(url, { incomplete: true });
+            channelIdForPlaylists = playlistData.channel?.id;
         }
 
-        // --- Default behavior: Fetch videos and playlists ---
-        let info; // playlist_info result
-
-        const validationType = await play.yt_validate(url);
+        // If fetchChannelInfo is requested AND we found a channel ID, get the channel details.
+        if (fetchChannelInfo && channelIdForPlaylists) {
+             try {
+                const channelResponse = await youtube.channels.list({
+                    part: ['snippet', 'brandingSettings'],
+                    id: [channelIdForPlaylists],
+                });
+                const channelAPIData = channelResponse.data.items?.[0];
+                if (channelAPIData) {
+                    const snippet = channelAPIData.snippet;
+                    const branding = channelAPIData.brandingSettings;
+                    channelInfo = {
+                        name: snippet?.title || '',
+                        description: snippet?.description || '',
+                        imageUrl: snippet?.thumbnails?.high?.url || snippet?.thumbnails?.default?.url || '',
+                        bannerUrl: branding?.image?.bannerExternalUrl || ''
+                    };
+                }
+            } catch (e) {
+                console.warn("Could not fetch supplementary channel info via Google API:", e);
+            }
+        }
         
+        // --- Now, proceed to fetch video/playlist content ---
+        let info; 
+
         if (validationType === 'playlist') {
             info = await play.playlist_info(url, { incomplete: true });
-            if (!channelIdForPlaylists) channelIdForPlaylists = info.channel?.id;
         } else if (validationType === 'channel') {
             const urlOrId = channelIdForPlaylists || url;
             info = await play.channel_videos(urlOrId);
-            if (!channelIdForPlaylists) channelIdForPlaylists = info.channel?.id;
         }
         
         if (!info) {
+             // If we were only asked for channel info and we got it, it's not an error.
              if (fetchChannelInfo && channelInfo) {
                 return NextResponse.json({ channelInfo, videos: [], shorts: [], playlists: [] }, { headers: corsHeaders });
              }
@@ -246,11 +244,12 @@ export async function POST(req: NextRequest) {
             } while (nextPageToken);
         }
         
+        // Return everything fetched in one response
         return NextResponse.json({ videos, shorts, playlists: formattedPlaylists, channelInfo }, { headers: corsHeaders });
 
     } catch (error: any) {
         console.error("YouTube Import API Error:", error);
-        let message = "حدث خطأ غير متوقع أثناء الاتصال بواجهة يوتيوب.";
+        let message = "فشل جلب البيانات. حاول مرة أخرى أو تأكد من صحة الرابط.";
         if (error.message) {
             if (error.message.includes('404')) message = "لم يتم العثور على القناة أو قائمة التشغيل. يرجى التحقق من الرابط.";
             else if (error.message.toLowerCase().includes('private') || error.message.toLowerCase().includes('unavailable')) message = "هذا المحتوى خاص أو غير متوفر.";
