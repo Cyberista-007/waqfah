@@ -36,6 +36,62 @@ function parseISO8601Duration(duration: string): number {
     return (hours * 3600) + (minutes * 60) + seconds;
 }
 
+async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Promise<string | null> {
+    try {
+        const urlObj = new URL(url);
+        const pathname = urlObj.pathname;
+
+        // 1. Direct channel ID
+        if (pathname.startsWith('/channel/')) {
+            const channelId = pathname.split('/channel/')[1];
+            if (channelId) return channelId;
+        }
+
+        // 2. Handle (@handle)
+        if (pathname.startsWith('/@')) {
+            const handle = pathname.substring(2);
+            const searchResponse = await youtube.search.list({
+                part: ['id'],
+                q: handle,
+                type: ['channel'],
+                maxResults: 1
+            });
+            return searchResponse.data.items?.[0]?.id?.channelId || null;
+        }
+        
+        // 3. From video
+        const videoId = getVideoIdFromUrl(url);
+        if (videoId) {
+            const videoResponse = await youtube.videos.list({ part: ['snippet'], id: [videoId] });
+            return videoResponse.data.items?.[0]?.snippet?.channelId || null;
+        }
+
+        // 4. From playlist
+        const playlistId = urlObj.searchParams.get('list');
+        if (playlistId) {
+            const playlistResponse = await youtube.playlists.list({ part: ['snippet'], id: [playlistId] });
+            return playlistResponse.data.items?.[0]?.snippet?.channelId || null;
+        }
+        
+        // 5. Legacy /c/ or /user/
+        const legacyMatch = pathname.match(/^\/(c|user)\/([\w-]+)/);
+        if (legacyMatch?.[2]) {
+             const legacyName = legacyMatch[2];
+             const searchResponse = await youtube.search.list({
+                part: ['id'],
+                q: legacyName,
+                type: ['channel'],
+                maxResults: 1
+            });
+            return searchResponse.data.items?.[0]?.id?.channelId || null;
+        }
+
+    } catch (e) {
+        console.error("Error parsing URL to get channel ID:", e);
+    }
+    return null;
+}
+
 
 export async function POST(req: NextRequest) {
     const apiKey = process.env.YOUTUBE_API_KEY;
@@ -54,21 +110,6 @@ export async function POST(req: NextRequest) {
             if (!/^https?:\/\//i.test(body.url)) {
                 body.url = 'https://' + body.url;
             }
-            // Sanitize URL by removing unnecessary query parameters
-            if (body.url.includes('?')) {
-                const urlParts = body.url.split('?');
-                const mainUrl = urlParts[0];
-                const params = new URLSearchParams(urlParts[1]);
-                
-                if (params.has('v')) {
-                    body.url = `${mainUrl}?v=${params.get('v')}`;
-                } else if (params.has('list')) {
-                    body.url = `${mainUrl}?list=${params.get('list')}`;
-                } else {
-                    // This handles channel URLs with tracking params like ?si=...
-                    body.url = mainUrl;
-                }
-            }
         }
         
         const validation = youtubeImportSchema.safeParse(body);
@@ -78,14 +119,14 @@ export async function POST(req: NextRequest) {
         }
         
         const { url, fetchVideoInfo, getFormats } = validation.data;
-        const videoIdForInfo = getVideoIdFromUrl(url);
-
+        
         const youtube = google.youtube({
             version: 'v3',
             auth: apiKey,
         });
         
         if (getFormats) {
+            const videoIdForInfo = getVideoIdFromUrl(url);
             if (!videoIdForInfo) {
                 return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             }
@@ -117,6 +158,7 @@ export async function POST(req: NextRequest) {
         }
         
         if (fetchVideoInfo) {
+            const videoIdForInfo = getVideoIdFromUrl(url);
             if (!videoIdForInfo) return NextResponse.json({ message: "رابط الفيديو غير صالح." }, { status: 400, headers: corsHeaders });
             const videoResponse = await youtube.videos.list({ part: ['snippet', 'contentDetails', 'statistics'], id: [videoIdForInfo] });
             const videoData = videoResponse.data.items?.[0];
@@ -136,76 +178,80 @@ export async function POST(req: NextRequest) {
         }
 
         // --- UNIFIED MAIN FLOW ---
+        // 1. Get Channel ID robustly from any URL type
+        const channelId = await getChannelIdFromUrl(url, youtube);
+
+        if (!channelId) {
+            return NextResponse.json({ message: "لم نتمكن من تحديد القناة من الرابط المقدم. يرجى التأكد من أن الرابط صحيح." }, { status: 404, headers: corsHeaders });
+        }
+
+        // 2. Fetch Channel Info, Uploads Playlist ID, and other playlists
         let channelInfo: any = null;
-        let channelId: string | undefined = undefined;
-        let singleVideoId: string | null = null;
-        
-        const validationType = await play.yt_validate(url);
+        let uploadsPlaylistId: string | undefined = undefined;
+        let formattedPlaylists: any[] = [];
 
-        // 1. Determine Channel ID from any URL type
-        if (validationType === 'channel') {
-            const searchResults = await play.search(url, { limit: 1, source: { youtube: 'channel' } });
-            channelId = searchResults[0]?.id;
-        } else if (validationType === 'playlist') {
-            const playlistData = await play.playlist_info(url, { incomplete: true });
-            channelId = playlistData.channel?.id;
-        } else if (validationType === 'video') {
-            const videoId = getVideoIdFromUrl(url);
-            if (videoId) {
-                 try {
-                    const videoResponse = await youtube.videos.list({ part: ['snippet'], id: [videoId] });
-                    const videoData = videoResponse.data.items?.[0];
-                    if (videoData?.snippet?.channelId) {
-                        channelId = videoData.snippet.channelId;
-                        singleVideoId = videoId;
-                    }
-                } catch (e) {
-                    console.error("Failed to get channelId from videoId:", e);
-                }
-            }
+        const channelResponse = await youtube.channels.list({
+            part: ['snippet', 'contentDetails', 'brandingSettings'],
+            id: [channelId],
+        });
+        const channelAPIData = channelResponse.data.items?.[0];
+
+        if (!channelAPIData) {
+            return NextResponse.json({ message: "لم يتم العثور على القناة باستخدام المعرف المستخرج." }, { status: 404, headers: corsHeaders });
         }
-        
-        // 2. Fetch Channel Info if an ID was found
-        if (channelId) {
-             try {
-                const channelResponse = await youtube.channels.list({
-                    part: ['snippet', 'brandingSettings'],
-                    id: [channelId],
-                });
-                const channelAPIData = channelResponse.data.items?.[0];
-                if (channelAPIData) {
-                    channelInfo = {
-                        name: channelAPIData.snippet?.title || '',
-                        description: channelAPIData.snippet?.description || '',
-                        imageUrl: channelAPIData.snippet?.thumbnails?.high?.url || channelAPIData.snippet?.thumbnails?.default?.url || '',
-                        bannerUrl: channelAPIData.brandingSettings?.image?.bannerExternalUrl || ''
-                    };
-                }
-            } catch (e) {
-                console.warn("Could not fetch supplementary channel info via Google API:", e);
+
+        channelInfo = {
+            id: channelAPIData.id, // Store channel ID for later
+            name: channelAPIData.snippet?.title || '',
+            description: channelAPIData.snippet?.description || '',
+            imageUrl: channelAPIData.snippet?.thumbnails?.high?.url || channelAPIData.snippet?.thumbnails?.default?.url || '',
+            bannerUrl: channelAPIData.brandingSettings?.image?.bannerExternalUrl || ''
+        };
+        uploadsPlaylistId = channelAPIData.contentDetails?.relatedPlaylists?.uploads;
+
+        // Fetch playlists for the channel
+        let nextPageToken: string | undefined = undefined;
+        do {
+            const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
+            if (playlistsResponse.data.items) {
+                formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
             }
-        }
+            nextPageToken = playlistsResponse.data.nextPageToken || undefined;
+        } while (nextPageToken);
+
+        // 3. Determine which videos to fetch
+        const playlistIdFromUrl = new URL(url).searchParams.get('list');
+        const targetPlaylistId = playlistIdFromUrl || uploadsPlaylistId;
         
-        // 3. Fetch Video IDs
         let videoIds: string[] = [];
-        if (validationType === 'playlist') {
-            const info = await play.playlist_info(url, { incomplete: true });
-            const all_videos = await info.all_videos();
-            videoIds = all_videos.map(v => v.id).filter((id): id is string => !!id);
-        } else if (validationType === 'channel' && channelId) {
-            const info = await play.channel_videos(channelId);
-            const all_videos = await info.all_videos();
-            videoIds = all_videos.map(v => v.id).filter((id): id is string => !!id);
-        } else if (singleVideoId) {
-            videoIds.push(singleVideoId);
+        
+        if (targetPlaylistId) { // Fetching a playlist or all channel uploads
+            nextPageToken = undefined;
+            do {
+                const playlistItemsResponse = await youtube.playlistItems.list({
+                    part: ['contentDetails'],
+                    playlistId: targetPlaylistId,
+                    maxResults: 50,
+                    pageToken: nextPageToken,
+                });
+                if (playlistItemsResponse.data.items) {
+                    videoIds.push(...playlistItemsResponse.data.items
+                        .map(item => item.contentDetails?.videoId)
+                        .filter((id): id is string => !!id)
+                    );
+                }
+                nextPageToken = playlistItemsResponse.data.nextPageToken || undefined;
+            } while (nextPageToken);
+        } else { // Fallback for single video or channel URL without an uploads playlist
+            const videoIdFromUrl = getVideoIdFromUrl(url);
+            if (videoIdFromUrl) {
+                videoIds.push(videoIdFromUrl);
+            }
         }
-
+        
         // 4. Handle cases with no videos found
         if (videoIds.length === 0) {
-             if (channelInfo) { // If we at least found channel info, return that.
-                return NextResponse.json({ channelInfo, videos: [], shorts: [], playlists: [] }, { headers: corsHeaders });
-             }
-             return NextResponse.json({ message: "لم نتمكن من جلب البيانات. قد يكون الرابط غير صحيح أو القناة لا تحتوي على فيديوهات." }, { status: 404, headers: corsHeaders });
+             return NextResponse.json({ channelInfo, videos: [], shorts: [], playlists: formattedPlaylists }, { headers: corsHeaders });
         }
         
         // 5. Fetch details for all collected video IDs
@@ -222,7 +268,16 @@ export async function POST(req: NextRequest) {
         const shorts: any[] = [];
         allVideosDetails.forEach(item => {
             const durationInSeconds = item.contentDetails?.duration ? parseISO8601Duration(item.contentDetails.duration) : 0;
-            const videoData = { videoId: item.id, title: item.snippet?.title || 'بدون عنوان', description: item.snippet?.description || '', durationInSeconds, viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 0, publishedAt: item.snippet?.publishedAt };
+            const videoData = { 
+                videoId: item.id, 
+                title: item.snippet?.title || 'بدون عنوان', 
+                description: item.snippet?.description || '', 
+                durationInSeconds, 
+                viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 0, 
+                publishedAt: item.snippet?.publishedAt,
+                channelId: item.snippet?.channelId,
+                channelTitle: item.snippet?.channelTitle
+            };
             if (durationInSeconds > 0 && durationInSeconds <= 180) {
                 shorts.push(videoData);
             } else {
@@ -230,19 +285,6 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // 6. Fetch playlists for the channel
-        let formattedPlaylists: any[] = [];
-        if (channelId) {
-            let nextPageToken: string | undefined = undefined;
-            do {
-                const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
-                if (playlistsResponse.data.items) {
-                    formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
-                }
-                nextPageToken = playlistsResponse.data.nextPageToken || undefined;
-            } while (nextPageToken);
-        }
-        
         // 7. Return everything
         return NextResponse.json({ videos, shorts, playlists: formattedPlaylists, channelInfo }, { headers: corsHeaders });
 
@@ -253,7 +295,11 @@ export async function POST(req: NextRequest) {
             if (error.message.includes('404')) message = "لم يتم العثور على القناة أو قائمة التشغيل. يرجى التحقق من الرابط.";
             else if (error.message.toLowerCase().includes('private') || error.message.toLowerCase().includes('unavailable')) message = "هذا المحتوى خاص أو غير متوفر.";
             else if (error.message.toLowerCase().includes('no videos found')) message = "لم يتم العثور على فيديوهات في هذا الرابط.";
-            else message = "فشل جلب البيانات. حاول مرة أخرى أو تأكد من صحة الرابط.";
+            else if (error.response?.data?.error?.message) {
+                message = error.response.data.error.message;
+            } else {
+                message = "فشل جلب البيانات بسبب خطأ في الخادم. قد تكون هناك مشكلة في مفتاح API الخاص بك.";
+            }
         }
         return NextResponse.json({ message }, { status: 500, headers: corsHeaders });
     }
