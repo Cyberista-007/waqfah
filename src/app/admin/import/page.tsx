@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Youtube, Upload, Clapperboard, Video, ListVideo } from 'lucide-react';
 import { collection, runTransaction, doc, increment, Timestamp, writeBatch } from 'firebase/firestore';
-import { formatDuration, getInitials } from '@/lib/utils';
+import { formatDuration, getInitials, getVideoIdFromUrl } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/images';
@@ -115,11 +115,10 @@ function ImportPageComponent() {
 
     const existingYoutubeVideoIds = useMemo(() => {
         if (!allLectures) return new Set();
-        const urlRegex = /(?:v=)([\w-]+)/;
         return new Set(
             allLectures
-                .map(l => l.youtubeUrl?.match(urlRegex)?.[1])
-                .filter(Boolean)
+                .map(l => getVideoIdFromUrl(l.youtubeUrl))
+                .filter((id): id is string => !!id)
         );
     }, [allLectures]);
 
