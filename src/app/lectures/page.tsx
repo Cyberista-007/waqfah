@@ -30,7 +30,7 @@ function LecturesListPageClient() {
 
   const currentPage = Number(searchParams.get('page')) || 1;
   const seriesFilter = searchParams.get('series');
-  const sortOrder = searchParams.get('sort') || 'most_popular';
+  const sortOrder = searchParams.get('sort') || 'newest';
   
   const [searchTerm, setSearchTerm] = useState("");
 
