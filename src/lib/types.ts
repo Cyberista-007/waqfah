@@ -1,5 +1,4 @@
 
-
 import type { Timestamp } from 'firebase/firestore';
 
 // When passing data from server to client, Timestamps are serialized to strings.
@@ -347,3 +346,10 @@ export type UserCurriculum = Serializable<{
     startedAt?: Timestamp;
     completedAt?: Timestamp;
 }>;
+
+// Added for the new floating video player
+export type IframeTrack = {
+  type: 'youtube' | 'soundcloud';
+  src: string;
+  title: string;
+};

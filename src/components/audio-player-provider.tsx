@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { ReactNode } from "react";
@@ -60,7 +61,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [siteTimeInSeconds, setSiteTimeInSeconds] = useState(0);
   const [hasInitializedTime, setHasInitializedTime] = useState(false);
   const lastSaveTime = useRef(Date.now());
-
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const pauseTrack = useCallback(() => {
     setIsPlaying(false);
