@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ReactNode, useEffect } from 'react';
@@ -6,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   AlertTriangle, Book, CalendarClock, Clapperboard, Flame, Hash, Heart, HelpCircle,
   LayoutDashboard, ListVideo, Loader2, LogOut, Megaphone, Palette, Pin, Podcast,
-  ShieldX, UserCog, Trophy, GraduationCap
+  ShieldX, UserCog, Trophy, GraduationCap, Upload
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       { href: '/admin/programs', label: 'البرامج', icon: Podcast },
       { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
       { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
+      { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
       { href: '/admin/books', label: 'الكتب', icon: Book },
       
       // Content Organization
