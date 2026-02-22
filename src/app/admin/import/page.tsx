@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
@@ -128,22 +127,23 @@ function ImportPageComponent() {
 
     const handleImportSelected = async () => {
         if (!firestore) return;
-        
-        const itemsToImport = [
+
+        const videosToImport = [
             ...newVideos.filter(v => selectedVideos.includes(v.videoId)),
             ...newShorts.filter(s => selectedShorts.includes(s.videoId))
         ];
 
-        if (itemsToImport.length === 0) {
-            toast({ title: 'لم يتم تحديد أي محاضرات جديدة للاستيراد.' });
+        const playlistsToImport = fetchedPlaylists.filter(p => selectedPlaylists.includes(p.id));
+
+        if (videosToImport.length === 0 && playlistsToImport.length === 0) {
+            toast({ title: 'لم يتم تحديد أي عناصر جديدة للاستيراد.' });
             return;
         }
-        
-        setIsImporting(true);
-        
-        try {
-            let programToUse = programInfo;
 
+        setIsImporting(true);
+        let programToUse = programInfo;
+
+        try {
             if (programInfo && !programInfo.id && channelInfo) {
                 const slug = channelInfo.name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                 const newProgramData = {
@@ -164,7 +164,11 @@ function ImportPageComponent() {
             }
 
             const batch = writeBatch(firestore);
-            itemsToImport.forEach(video => {
+            let newLecturesCount = 0;
+            let newSeriesCount = 0;
+
+            // Import individual videos
+            videosToImport.forEach(video => {
                 const slug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                 const lectureRef = doc(collection(firestore, 'lectures'));
                 batch.set(lectureRef, {
@@ -175,11 +179,62 @@ function ImportPageComponent() {
                     viewCount: 0, youtubeViewCount: 0, transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
                     language: 'ar',
                 });
+                newLecturesCount++;
             });
             
-            batch.update(doc(firestore, 'stats', 'global'), { lectures: increment(itemsToImport.length) });
+            // Import playlists as series with their videos
+            for (const playlist of playlistsToImport) {
+                newSeriesCount++;
+                const seriesSlug = playlist.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                const seriesRef = doc(collection(firestore, 'series'));
+                
+                // Fetch videos for this specific playlist
+                const playlistUrl = `https://www.youtube.com/playlist?list=${playlist.id}`;
+                const response = await fetch('/api/youtube-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: playlistUrl }),
+                });
+                const playlistVideoData = await response.json();
+                if (!response.ok) throw new Error(`فشل جلب فيديوهات قائمة التشغيل: ${playlist.title}`);
+                
+                const playlistVideos: FetchedVideo[] = [...(playlistVideoData.videos || []), ...(playlistVideoData.shorts || [])];
+                const newPlaylistVideos = playlistVideos.filter(v => !existingYoutubeVideoIds.has(v.videoId));
+                
+                const seriesData = {
+                    title: playlist.title, slug: seriesSlug, description: playlist.description || "", imageId: `series-${seriesSlug}`,
+                    programId: programToUse!.id, programName: programToUse!.name, programSlug: programToUse!.slug,
+                    lectureCount: newPlaylistVideos.length, createdAt: Timestamp.now(),
+                };
+                batch.set(seriesRef, seriesData);
+
+                // Add lectures from this playlist
+                newPlaylistVideos.forEach(video => {
+                    const lectureSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                    const lectureRef = doc(collection(firestore, 'lectures'));
+                    batch.set(lectureRef, {
+                        title: video.title, slug: lectureSlug, description: video.description, 
+                        programId: programToUse!.id, programName: programToUse!.name, programSlug: programToUse!.slug,
+                        seriesId: seriesRef.id, seriesTitle: playlist.title, seriesSlug: seriesSlug,
+                        audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
+                        youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
+                        duration: video.durationInSeconds,
+                        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, 
+                        rating: 0, ratingCount: 0, viewCount: 0, youtubeViewCount: 0,
+                        transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
+                        language: 'ar',
+                    });
+                    newLecturesCount++;
+                });
+            }
+
+            const statsRef = doc(firestore, 'stats', 'global');
+            if (newLecturesCount > 0) batch.update(statsRef, { lectures: increment(newLecturesCount) });
+            if (newSeriesCount > 0) batch.update(statsRef, { series: increment(newSeriesCount) });
+            
             await batch.commit();
-            toast({ title: 'اكتمل الاستيراد!', description: `تم استيراد ${itemsToImport.length} عنصر.`});
+            
+            toast({ title: 'اكتمل الاستيراد!', description: `تم استيراد ${videosToImport.length} محاضرة و ${playlistsToImport.length} سلسلة جديدة.`});
             router.push('/admin/lectures');
         } catch (error: any) {
              toast({ variant: 'destructive', title: 'فشل الاستيراد', description: error.message });
@@ -217,7 +272,36 @@ function ImportPageComponent() {
         );
     }
     
-    const itemsSelectedCount = selectedVideos.length + selectedShorts.length;
+    const renderPlaylistsTable = (items: FetchedPlaylist[], selectedItems: string[], setSelectedItems: (ids: string[]) => void) => {
+        const isAllSelected = items.length > 0 && selectedItems.length === items.length;
+        const handleSelectAll = (checked: boolean) => setSelectedItems(checked ? items.map(p => p.id) : []);
+        const handleSelectOne = (id: string, checked: boolean) => setSelectedItems(checked ? [...selectedItems, id] : selectedItems.filter(i => i !== id));
+
+        return (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-12"><Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} /></TableHead>
+                        <TableHead>عنوان قائمة التشغيل</TableHead>
+                        <TableHead>عدد الفيديوهات</TableHead>
+                        <TableHead>الوصف</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {items.map(item => (
+                        <TableRow key={item.id}>
+                            <TableCell><Checkbox checked={selectedItems.includes(item.id)} onCheckedChange={(c) => handleSelectOne(item.id, !!c)} /></TableCell>
+                            <TableCell>{item.title}</TableCell>
+                            <TableCell>{item.videoCount}</TableCell>
+                            <TableCell className="line-clamp-2">{item.description}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        );
+    }
+    
+    const itemsSelectedCount = selectedVideos.length + selectedShorts.length + selectedPlaylists.length;
 
     return (
         <div className="space-y-6">
@@ -267,7 +351,7 @@ function ImportPageComponent() {
                             <ScrollArea className="h-96 mt-4">
                                 <TabsContent value="videos">{renderTable(newVideos, selectedVideos, setSelectedVideos, 'video')}</TabsContent>
                                 <TabsContent value="shorts">{renderTable(newShorts, selectedShorts, setSelectedShorts, 'short')}</TabsContent>
-                                <TabsContent value="playlists">{/* Playlist import UI can be added here */}</TabsContent>
+                                <TabsContent value="playlists">{renderPlaylistsTable(fetchedPlaylists, selectedPlaylists, setSelectedPlaylists)}</TabsContent>
                             </ScrollArea>
                         </Tabs>
                     </CardContent>
