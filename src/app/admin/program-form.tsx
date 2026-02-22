@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -208,12 +209,11 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         const newVideos = fetchedVideos.filter(v => !existingYoutubeUrls.has(`https://www.youtube.com/watch?v=${v.videoId}`));
 
         if (newVideos.length > 0) {
-             toast({
+            toast({
                 title: `تم العثور على ${newVideos.length} محاضرة جديدة`,
-                description: 'يمكنك استيرادها الآن.',
-                duration: 10000,
-                action: <ToastAction altText="اذهب للاستيراد" asChild><Link href={`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`}>اذهب للاستيراد</Link></ToastAction>,
+                description: 'جاري توجيهك لصفحة الاستيراد لتأكيد الإضافة.',
             });
+            router.push(`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`);
         } else if (updatesApplied) {
             toast({
                 title: 'تم تحديث بيانات البرنامج',
