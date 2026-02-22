@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -155,17 +155,6 @@ export default function AdminImportLecturesPage() {
             return;
         }
 
-        const isPlaylistUrl = finalUrl.includes('playlist?list=');
-        
-        if (!isPlaylistUrl) {
-          const programExists = allPrograms?.some(p => p.youtubeUrl === finalUrl);
-          if (!programExists && !urlToFetch) {
-              router.push(`/admin/programs?youtubeUrl=${encodeURIComponent(finalUrl)}`);
-              return;
-          }
-        }
-
-
         setIsFetching(true);
         // Only clear the list of playlists if we are fetching a new channel from the input field
         if (!urlToFetch) {
@@ -178,6 +167,63 @@ export default function AdminImportLecturesPage() {
         setSelectedShorts([]);
 
         try {
+            const isPlaylistUrl = finalUrl.includes('playlist?list=');
+            let programJustCreated = false;
+
+            if (!isPlaylistUrl) {
+              const programExists = allPrograms?.some(p => p.youtubeUrl === finalUrl);
+              if (!programExists && !urlToFetch) { // The !urlToFetch is important so we don't auto-create when fetching playlists for a channel that doesn't exist.
+                  // Program doesn't exist, so create it.
+                  toast({ title: "البرنامج غير موجود، جاري إضافته تلقائيًا..." });
+                  
+                  // 1. Fetch channel info
+                  const channelInfoResponse = await fetch(`${window.location.origin}/api/youtube-import`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ url: finalUrl, fetchChannelInfo: true }),
+                  });
+                  
+                  if (!channelInfoResponse.ok) {
+                      const error = await channelInfoResponse.json();
+                      throw new Error(error.message || "فشل في جلب بيانات البرنامج الجديد.");
+                  }
+                  
+                  const { channelInfo } = await channelInfoResponse.json();
+                  if (!channelInfo || !channelInfo.name) {
+                      throw new Error("لم يتم العثور على معلومات البرنامج لإنشائه.");
+                  }
+                  
+                  // 2. Create program document
+                  if (firestore) {
+                      const slug = channelInfo.name.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                      
+                      const newProgramData = {
+                          name: channelInfo.name,
+                          slug,
+                          bio: channelInfo.description || '',
+                          youtubeUrl: finalUrl,
+                          rssFeedUrl: '',
+                          imageUrl: channelInfo.imageUrl || '',
+                          imageId: `program-${slug}`,
+                          createdAt: Timestamp.now(),
+                          followerCount: 0,
+                      };
+                      
+                      const newProgramRef = doc(collection(firestore, 'programs'));
+                      const statsRef = doc(firestore, 'stats', 'global');
+                      
+                      await runTransaction(firestore, async (transaction) => {
+                          transaction.set(newProgramRef, newProgramData);
+                          transaction.set(statsRef, { programs: increment(1) }, { merge: true });
+                      });
+                      
+                      toast({ title: "تمت إضافة البرنامج بنجاح!", description: `تمت إضافة "${channelInfo.name}" إلى قائمة البرامج.` });
+                      programJustCreated = true;
+                  }
+              }
+            }
+            
+            // Now fetch videos, playlists etc.
             const response = await fetch(`${window.location.origin}/api/youtube-import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -200,7 +246,7 @@ export default function AdminImportLecturesPage() {
               setFetchedPlaylists(data.playlists || []);
             }
             
-            let message = "تم جلب البيانات بنجاح.";
+            let message = programJustCreated ? "تم جلب بيانات البرنامج الجديد بنجاح." : "تم جلب البيانات بنجاح.";
             if (data.videos?.length) message += ` ${data.videos.length} فيديو.`;
             if (data.shorts?.length) message += ` ${data.shorts.length} فيديو قصير.`;
             if (data.playlists?.length && !urlToFetch) message += ` ${data.playlists.length} قائمة تشغيل.`;
@@ -688,7 +734,7 @@ export default function AdminImportLecturesPage() {
                                         {isFetching ? <Loader2 className="h-4 w-4 animate-spin"/> : "جلب البيانات"}
                                     </Button>
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-2">إذا كان البرنامج غير مضاف، سيتم توجيهك لإضافته أولاً.</p>
+                                <p className="text-sm text-muted-foreground mt-2">إذا كان البرنامج غير مضاف، سيتم إضافته تلقائيًا عند جلب البيانات.</p>
                                 <p className="text-xs text-muted-foreground mt-1">ملاحظة: الفيديو الذي تقل مدته عن 3 دقائق سيُعامل على أنه "فيديو قصير".</p>
                             </div>
                             {hasFetchedYoutubeData && (
