@@ -13,14 +13,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { useFirestore, useStorage } from "@/firebase";
-import { collection, doc, Timestamp, runTransaction, increment } from "firebase/firestore";
-import type { Program } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { useFirestore, useStorage, useCollection } from "@/firebase";
+import { collection, doc, Timestamp, runTransaction, increment, updateDoc } from "firebase/firestore";
+import type { Program, Lecture } from "@/lib/types";
+import { Loader2, Upload } from "lucide-react";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
+import { ToastAction } from "@/components/ui/toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 
 interface ProgramFormProps {
     program?: Program | null;
@@ -40,10 +44,14 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
   const { toast } = useToast();
   const firestore = useFirestore();
   const storage = useStorage();
+  const router = useRouter();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
   const isEditMode = !!program;
 
   const [name, setName] = useState(program?.name ?? "");
@@ -140,6 +148,95 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
         setIsFetching(false);
     }
   }
+
+  const handleSyncContent = async () => {
+    if (!program || (!program.youtubeUrl && !program.rssFeedUrl) || !firestore) {
+        toast({
+            variant: "destructive",
+            title: "لا يوجد رابط للمزامنة",
+            description: `الرجاء إضافة رابط قناة يوتيوب أو RSS أولاً.`,
+        });
+        return;
+    }
+    
+    if (!program.youtubeUrl) {
+         toast({
+            title: "ميزة استيراد RSS قيد التطوير",
+            description: "يمكنك حاليًا الاستيراد من قنوات يوتيوب فقط.",
+        });
+        return;
+    }
+
+    setIsSyncing(true);
+    toast({ title: `بدء مزامنة محتوى "${program.name}"...` });
+
+    try {
+        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "فشل في جلب الفيديوهات.");
+        }
+
+        const data = await response.json();
+        
+        let updatesApplied = false;
+
+        if (data.channelInfo) {
+            const programRef = doc(firestore, 'programs', program.id);
+            const updatePayload: Partial<Program> = {};
+            if (data.channelInfo.name && data.channelInfo.name !== name) updatePayload.name = data.channelInfo.name;
+            if (data.channelInfo.description && data.channelInfo.description !== bio) updatePayload.bio = data.channelInfo.description;
+            if (data.channelInfo.imageUrl && data.channelInfo.imageUrl !== (imagePreview || program.imageUrl)) updatePayload.imageUrl = data.channelInfo.imageUrl;
+            
+            if (Object.keys(updatePayload).length > 0) {
+                await updateDoc(programRef, updatePayload);
+                if (updatePayload.name) setName(updatePayload.name);
+                if (updatePayload.bio) setBio(updatePayload.bio);
+                if (updatePayload.imageUrl) setImagePreview(updatePayload.imageUrl);
+                updatesApplied = true;
+            }
+        }
+
+        const fetchedVideos: any[] = [...(data.videos || []), ...(data.shorts || [])];
+        const lecturesForThisProgram = allLectures?.filter(l => l.programId === program.id);
+        const existingYoutubeUrls = new Set(lecturesForThisProgram?.map(doc => doc.youtubeUrl));
+        const newVideos = fetchedVideos.filter(v => !existingYoutubeUrls.has(`https://www.youtube.com/watch?v=${v.videoId}`));
+
+        if (newVideos.length > 0) {
+             toast({
+                title: `تم العثور على ${newVideos.length} محاضرة جديدة`,
+                description: 'يمكنك استيرادها الآن.',
+                duration: 10000,
+                action: <ToastAction altText="اذهب للاستيراد" asChild><Link href={`/admin/lectures/import?youtubeUrl=${encodeURIComponent(program.youtubeUrl!)}`}>اذهب للاستيراد</Link></ToastAction>,
+            });
+        } else if (updatesApplied) {
+            toast({
+                title: 'تم تحديث بيانات البرنامج',
+                description: 'لا توجد محاضرات جديدة لاستيرادها.',
+            });
+        } else {
+             toast({
+                title: 'البرنامج محدّث',
+                description: 'لا توجد محاضرات جديدة لاستيرادها وبيانات البرنامج محدثة.',
+            });
+        }
+    } catch (error: any) {
+         console.error("Error syncing program content:", error);
+         toast({
+            variant: "destructive",
+            title: "فشلت المزامنة",
+            description: error.message || "حدث خطأ غير متوقع.",
+        });
+    } finally {
+        setIsSyncing(false);
+    }
+  };
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -272,6 +369,12 @@ export function ProgramForm({ program, onFormClose, initialYoutubeUrl }: Program
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'حفظ التغييرات' : 'إنشاء البرنامج'}
             </Button>
+            {isEditMode && program && (program.youtubeUrl || program.rssFeedUrl) && (
+              <Button type="button" variant="secondary" onClick={handleSyncContent} disabled={isSyncing || lecturesLoading}>
+                {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                استيراد / مزامنة المحتوى
+              </Button>
+            )}
             <Button type="button" onClick={handleClose} variant="outline">
               إلغاء
             </Button>
