@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   AlertTriangle, Book, CalendarClock, Clapperboard, Flame, Hash, Heart, HelpCircle,
   LayoutDashboard, ListVideo, Loader2, LogOut, Megaphone, Palette, Pin, Podcast,
-  ShieldX, Upload, UserCog, Trophy, GraduationCap
+  ShieldX, UserCog, Trophy, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
       { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },
       { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
-      { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
     ];
     
       return (
