@@ -175,7 +175,6 @@ export default function AdminDashboardPage() {
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/announcement"><span>إدارة الإعلان</span><Megaphone /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/donations"><span>إدارة التبرعات</span><Heart /></Link></Button>
                         <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/sins"><span>إدارة المهلكات</span><AlertTriangle /></Link></Button>
-                        <Button asChild size="lg" className="w-full justify-between"><Link href="/admin/lectures/import"><span>استيراد المحتوى</span><Upload /></Link></Button>
                     </CardContent>
                 </Card>
             </section>

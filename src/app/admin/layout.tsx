@@ -44,7 +44,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       { href: '/admin/programs', label: 'البرامج', icon: Podcast },
       { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
       { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
-      { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
       { href: '/admin/books', label: 'الكتب', icon: Book },
       
       // Content Organization
