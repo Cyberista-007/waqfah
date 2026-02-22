@@ -65,8 +65,6 @@ export default function AdminLecturesPage() {
     const [batchSeriesId, setBatchSeriesId] = useState("");
     const [batchProgramId, setBatchProgramId] = useState("");
     const [isBatchUpdating, setIsBatchUpdating] = useState(false);
-    const [isUpdatingProgram, setIsUpdatingProgram] = useState<Record<string, boolean>>({});
-
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
@@ -116,7 +114,7 @@ export default function AdminLecturesPage() {
     const groupedItems = useMemo(() => {
         const groups: Record<string, Lecture[]> = {};
         filteredItems.forEach(lecture => {
-            const groupName = lecture.programName || 'محاضرات مستقلة';
+            const groupName = lecture.seriesTitle || 'محاضرات مستقلة';
             if (!groups[groupName]) {
                 groups[groupName] = [];
             }
@@ -413,96 +411,11 @@ export default function AdminLecturesPage() {
         setIsUpdatingAll(false);
     };
 
-    const handleUpdateProgramMetadata = async (lecturesToUpdate: Lecture[]) => {
-        if (!firestore) return;
-
-        const programName = lecturesToUpdate[0]?.programName || 'unknown';
-        
-        const lecturesWithYoutubeUrl = lecturesToUpdate.filter(l => l.youtubeUrl);
-        if (lecturesWithYoutubeUrl.length === 0) {
-            toast({ title: "لا يوجد ما يمكن تحديثه", description: "لم يتم العثور على محاضرات مرتبطة بيوتيوب في هذا البرنامج." });
-            return;
-        }
-
-        setIsUpdatingProgram(prev => ({...prev, [programName]: true}));
-        toast({ title: `بدء تحديث بيانات برنامج "${programName}"...`, description: `جاري تحديث ${lecturesWithYoutubeUrl.length} محاضرة.` });
-
-        const CHUNK_SIZE = 10;
-        const allUpdateData = new Map<string, Partial<Lecture>>();
-        let updatedCount = 0;
-
-        try {
-            for (let i = 0; i < lecturesWithYoutubeUrl.length; i += CHUNK_SIZE) {
-                const chunk = lecturesWithYoutubeUrl.slice(i, i + CHUNK_SIZE);
-                const promises = chunk.map(async (lecture) => {
-                    if (!lecture.youtubeUrl) return null;
-                    try {
-                        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
-                        });
-                        const data = await response.json();
-                        if (response.ok && data.videoInfo) {
-                            const updateData: Partial<Lecture> = {
-                                youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
-                                title: data.videoInfo.title || lecture.title,
-                                description: data.videoInfo.description || lecture.description,
-                                duration: data.videoInfo.durationInSeconds || lecture.duration,
-                            };
-                            if (data.videoInfo.publishedAt) {
-                                updateData.publishedAt = Timestamp.fromDate(new Date(data.videoInfo.publishedAt));
-                            }
-                            return { id: lecture.id, data: updateData };
-                        } else {
-                            console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
-                            return null;
-                        }
-                    } catch (error) {
-                        console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
-                        return null;
-                    }
-                });
-
-                const results = await Promise.all(promises);
-                results.forEach(result => {
-                    if (result) {
-                        allUpdateData.set(result.id, result.data);
-                    }
-                });
-            }
-
-            if (allUpdateData.size > 0) {
-                updatedCount = allUpdateData.size;
-                const batch = writeBatch(firestore);
-                allUpdateData.forEach((data, id) => {
-                    const lectureRef = doc(firestore, 'lectures', id);
-                    batch.update(lectureRef, data);
-                });
-                await batch.commit();
-            }
-
-            toast({
-                title: "اكتمل التحديث!",
-                description: `تم محاولة تحديث ${lecturesWithYoutubeUrl.length} محاضرة في برنامج "${programName}". تم تحديث ${updatedCount} منها بنجاح.`,
-            });
-        } catch (e) {
-            console.error(`Error in transaction for updating program ${programName} metadata:`, e);
-            toast({
-                variant: "destructive",
-                title: "فشل حفظ التحديثات",
-                description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
-            });
-        }
-
-        setIsUpdatingProgram(prev => ({...prev, [programName]: false}));
-    };
-
-    const toggleCollapsible = (programName: string) => {
+    const toggleCollapsible = (seriesName: string) => {
         setOpenCollapsibles(prev => 
-            prev.includes(programName) 
-                ? prev.filter(name => name !== programName)
-                : [...prev, programName]
+            prev.includes(seriesName) 
+                ? prev.filter(name => name !== seriesName)
+                : [...prev, seriesName]
         );
     };
 
@@ -517,28 +430,18 @@ export default function AdminLecturesPage() {
         }
         return (
             <div className="space-y-4 pt-4">
-                {Object.entries(groupedData).map(([programName, lectures]) => (
+                {Object.entries(groupedData).map(([seriesName, lectures]) => (
                     <Collapsible
-                        key={programName}
-                        open={openCollapsibles.includes(programName)}
-                        onOpenChange={() => toggleCollapsible(programName)}
+                        key={seriesName}
+                        open={openCollapsibles.includes(seriesName)}
+                        onOpenChange={() => toggleCollapsible(seriesName)}
                         className="border rounded-lg bg-card"
                     >
                          <div className="flex justify-between items-center w-full p-4 bg-muted/30 rounded-t-lg">
                             <CollapsibleTrigger className="flex items-center gap-4 font-semibold text-lg text-right flex-grow">
-                                <span>{programName} ({lectures.length})</span>
-                                <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", openCollapsibles.includes(programName) && "rotate-180")} />
+                                <span>{seriesName} ({lectures.length})</span>
+                                <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", openCollapsibles.includes(seriesName) && "rotate-180")} />
                             </CollapsibleTrigger>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateProgramMetadata(lectures)}
-                                disabled={isUpdatingProgram[programName] || isLoading}
-                                className="mr-4"
-                            >
-                                {isUpdatingProgram[programName] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                تحديث هذا البرنامج
-                            </Button>
                         </div>
                         <CollapsibleContent>
                             <Table>
@@ -546,8 +449,7 @@ export default function AdminLecturesPage() {
                                     <TableRow>
                                         <TableHead className="w-[50px]"></TableHead>
                                         <TableHead>عنوان العنصر</TableHead>
-                                        <TableHead className="hidden md:table-cell">السلسلة</TableHead>
-                                        <TableHead className="hidden md:table-cell">القناة</TableHead>
+                                        <TableHead className="hidden md:table-cell">البرنامج</TableHead>
                                         <TableHead>الاقتراحات</TableHead>
                                         <TableHead className="hidden md:table-cell">تاريخ الإضافة</TableHead>
                                         <TableHead className="text-left">إجراءات</TableHead>
@@ -564,8 +466,7 @@ export default function AdminLecturesPage() {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium">{lecture.title}</TableCell>
-                                            <TableCell className="hidden md:table-cell">{lecture.seriesTitle || 'محاضرة مستقلة'}</TableCell>
-                                            <TableCell className="hidden md:table-cell">{lecture.channelName || 'غير محدد'}</TableCell>
+                                            <TableCell className="hidden md:table-cell">{lecture.programName || 'غير محدد'}</TableCell>
                                             <TableCell>{lecture.suggestionCount || 0}</TableCell>
                                             <TableCell className="hidden md:table-cell">
                                                 {(lecture.createdAt as any)?.toDate?.().toLocaleDateString('ar-EG') || 'غير محدد'}
