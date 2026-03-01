@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -369,6 +368,10 @@ const ImanHarvestReport = () => {
     
     const componentRef = useRef<HTMLDivElement>(null);
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     const handleDownloadData = useCallback(() => {
         if (!rawEntries) {
             toast({
@@ -519,6 +522,89 @@ const ImanHarvestReport = () => {
     }
     
     const completionPercentage = stats.avgPoints > 0 ? Math.min(Math.round((stats.avgPoints / MAX_POSSIBLE_POINTS) * 100), 100) : 0;
+    
+    const PrintableReport = React.forwardRef<HTMLDivElement, { stats: any; period: string }>(({ stats, period }, ref) => (
+        <div ref={ref} className="p-10 bg-white text-black font-body" dir="rtl">
+            <div className="text-center mb-10 border-b pb-4">
+                <h1 className="text-4xl font-bold mb-2 font-headline">حصادك الإيماني</h1>
+                <p className="text-gray-600">تقرير {period} - صادر بتاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-6 mb-10 text-center">
+                 <div className="bg-gray-100 p-4 rounded-lg">
+                    <h3 className="text-lg font-bold text-gray-500">أيام الالتزام</h3>
+                    <p className="text-5xl font-bold text-blue-600">{stats.commitmentDays}</p>
+                </div>
+                 <div className="bg-gray-100 p-4 rounded-lg">
+                    <h3 className="text-lg font-bold text-gray-500">أفضل يوم</h3>
+                    <p className="text-5xl font-bold text-green-600">{stats.bestDay}</p>
+                </div>
+                 <div className="bg-gray-100 p-4 rounded-lg">
+                    <h3 className="text-lg font-bold text-gray-500">نسبة الإنجاز</h3>
+                    <p className="text-5xl font-bold text-red-600">{completionPercentage}%</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+                <div>
+                    <h2 className="text-2xl font-bold mb-4">تطور أدائك</h2>
+                    <div className="h-[300px] w-full">
+                       <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.performanceData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="points" name="النقاط" fill="#8884d8" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                 <div>
+                    <h2 className="text-2xl font-bold mb-4">توزيع العبادات</h2>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label>
+                                    {stats.categoryDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+            
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div>
+                    <h2 className="text-2xl font-bold mb-4 text-green-700">أكثر ما حافظت عليه</h2>
+                    <ul className="space-y-2">
+                        {stats.mostKept.map((item: any) => (
+                            <li key={item.id} className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+                                <span>{item.label}</span>
+                                <span className="font-bold">{Math.round(item.percentage)}%</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                 <div>
+                    <h2 className="text-2xl font-bold mb-4 text-yellow-700">يحتاج لتركيز أكبر</h2>
+                     <ul className="space-y-2">
+                        {stats.needsFocus.map((item: any) => (
+                            <li key={item.id} className="flex justify-between items-center p-2 bg-yellow-50 rounded-lg">
+                                <span>{item.label}</span>
+                                <span className="font-bold">{Math.round(item.percentage)}%</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+
+            <footer className="mt-10 pt-4 border-t text-center text-gray-500 text-sm">
+                تقرير صادر من منصة وقفة
+            </footer>
+        </div>
+    ));
 
 
     return (
@@ -571,7 +657,7 @@ const ImanHarvestReport = () => {
                                 <CardDescription className="text-slate-400">أيام الالتزام</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0 mt-2">
-                                <p className="text-4xl font-bold">{stats.commitmentDays}</p>
+                                <p className="text-5xl font-bold">{stats.commitmentDays}</p>
                             </CardContent>
                         </Card>
                         <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
@@ -593,7 +679,7 @@ const ImanHarvestReport = () => {
                                 <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0 mt-2">
-                                <p className="text-4xl font-bold text-red-400">{completionPercentage}%</p>
+                                <p className="text-5xl font-bold text-red-400">{completionPercentage}%</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -679,15 +765,20 @@ const ImanHarvestReport = () => {
                     </div>
                     
                     <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                        <Button onClick={handleDownloadData} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
+                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
                             <FileText className="me-2 h-5 w-5"/>
-                            تحميل بيانات التقرير (JSON)
-                        </Button>
-                         <Button onClick={handleDownloadData} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                             تحميل التقرير الأسبوعي (PDF)
+                         </Button>
+                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
                             <FileText className="me-2 h-5 w-5"/>
-                            تحميل بيانات التقرير (JSON)
-                        </Button>
+                            تحميل التقرير الشهري (PDF)
+                         </Button>
                     </footer>
+                </div>
+            </div>
+             <div className="hidden">
+                <div className="printable-area">
+                    <PrintableReport ref={componentRef} stats={stats} period={timeframe === 'weekly' ? 'الأسبوعي' : 'الشهري'} />
                 </div>
             </div>
         </>
@@ -718,13 +809,17 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [completedActions, setCompletedActions] = useState<string[]>([]);
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     
+    const gregorianFormatters = {
+        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-EG', { weekday: 'narrow' }).format(weekday),
+    };
+
     const hijriFormatters = {
         formatDay: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric' }).format(date),
         formatCaption: (date: Date, options?: { locale?: Locale }) => {
             const formatted = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { month: 'long', year: 'numeric' }).format(date);
             return formatted.includes('هـ') ? formatted : `${formatted}`;
         },
-        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-SA', { weekday: 'short' }).format(weekday).charAt(0),
+        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { weekday: 'narrow' }).format(weekday),
     };
     
     const formatGregorianForButton = (date: Date) => {
@@ -903,43 +998,58 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 flex" dir="rtl">
-                            <Calendar
-                                locale={ar}
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={handleDateSelect}
-                                month={hijriMonth}
-                                onMonthChange={setHijriMonth}
-                                formatters={hijriFormatters}
-                                dir="rtl"
-                                components={{
-                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
-                                }}
-                                classNames={{
-                                    caption_label: "font-bold text-primary",
-                                    nav_button_previous: "absolute right-1",
-                                    nav_button_next: "absolute right-auto left-1",
-                                }}
-                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                                className="bg-gradient-to-br from-gray-100 to-blue-100 p-2 border-4 border-dashed border-red-300"
+                            >
+                                <Calendar
+                                    locale={ar}
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={handleDateSelect}
+                                    month={hijriMonth}
+                                    onMonthChange={setHijriMonth}
+                                    formatters={hijriFormatters}
+                                    dir="rtl"
+                                    components={{
+                                        IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                        IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                    }}
+                                    classNames={{
+                                        caption_label: "font-bold text-primary",
+                                        nav_button_previous: "absolute right-1",
+                                        nav_button_next: "absolute right-auto left-1",
+                                    }}
+                                />
+                            </motion.div>
                             <Separator orientation="vertical" className="h-auto"/>
-                            <Calendar
-                                locale={ar}
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={handleDateSelect}
-                                month={gregorianMonth}
-                                onMonthChange={setGregorianMonth}
-                                dir="rtl"
-                                components={{
-                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
-                                }}
-                                classNames={{
-                                    nav_button_previous: "absolute right-1",
-                                    nav_button_next: "absolute right-auto left-1",
-                                }}
-                            />
+                             <motion.div
+                                initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
+                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                                className="bg-gradient-to-bl from-gray-100 to-green-100 p-2 border-4 border-dotted border-blue-300"
+                            >
+                                <Calendar
+                                    locale={ar}
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={handleDateSelect}
+                                    month={gregorianMonth}
+                                    onMonthChange={setGregorianMonth}
+                                    formatters={gregorianFormatters}
+                                    dir="rtl"
+                                    components={{
+                                        IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                        IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                    }}
+                                    classNames={{
+                                        nav_button_previous: "absolute right-1",
+                                        nav_button_next: "absolute right-auto left-1",
+                                    }}
+                                />
+                            </motion.div>
                         </PopoverContent>
                     </Popover>
                 </CardContent>
@@ -953,12 +1063,22 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                         <span>الحصاد الإيماني</span>
                     </TabsTrigger>
                     {Object.entries(accountabilityStructure).reverse().map(([key, { name }]) => {
-                         const Icon = prayerIcons[key as keyof typeof prayerIcons];
+                        const Icon = prayerIcons[key as keyof typeof prayerIcons];
+                        const isFajr = key === 'fajr';
                         return (
-                             <TabsTrigger key={key} value={key} className="px-4 py-2 rounded-full flex items-center gap-2">
+                            <motion.div
+                                key={key}
+                                layout
+                                animate={isFajr ? { scale: [1, 1.1, 1], transition: { duration: 1.5, repeat: Infinity } } : {}}
+                            >
+                             <TabsTrigger value={key} className={cn(
+                                 "px-4 py-2 rounded-full flex items-center gap-2",
+                                 isFajr && "bg-gradient-to-tr from-yellow-300 via-orange-400 to-red-500 text-white shadow-lg"
+                             )}>
                                 {Icon && <Icon className="h-5 w-5" />}
                                 <span>{name}</span>
                              </TabsTrigger>
+                            </motion.div>
                         )
                     })}
                 </TabsList>
@@ -973,7 +1093,16 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 ) : (
                     Object.entries(accountabilityStructure).reverse().map(([key, prayerConfig]) => (
                         <TabsContent key={key} value={key} className="mt-6">
-                            <h2 className="text-3xl font-bold text-center mb-6">{prayerConfig.name}</h2>
+                             <AnimatePresence>
+                                <motion.h2
+                                    key={key}
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-3xl font-bold text-center mb-6"
+                                >
+                                    {prayerConfig.name}
+                                </motion.h2>
+                            </AnimatePresence>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {prayerConfig.groups.map(group => (
                                     <ActionGroupCard
