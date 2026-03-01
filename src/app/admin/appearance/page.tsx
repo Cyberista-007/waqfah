@@ -41,8 +41,6 @@ export default function AdminAppearancePage() {
   const [hadithIconPreview, setHadithIconPreview] = useState<string | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   useEffect(() => {
     if (currentSettings) {
       setDefaultTheme(currentSettings.defaultTheme || 'theme-default-dark');
@@ -70,70 +68,60 @@ export default function AdminAppearancePage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!firestore || !storage) {
       toast({ variant: 'destructive', title: 'خدمات Firebase غير جاهزة.' });
       return;
     }
+
+    const settingsRef = doc(firestore, 'settings', 'appearance');
     
-    setIsSubmitting(true);
+    // --- Step 1: Immediately save all text-based data ---
+    const textSettings: Partial<AppearanceSettings> = {
+      defaultTheme,
+      defaultFont,
+      maintenanceMode,
+      heroTitle,
+      heroSubtitle,
+    };
+    setDocumentNonBlocking(settingsRef, textSettings, { merge: true });
 
-    try {
-      const uploadImage = async (file: File | null, path: string): Promise<string | null> => {
-        if (!file) return null;
-        try {
-          const storageRef = ref(storage, path);
-          await uploadBytes(storageRef, file);
-          return await getDownloadURL(storageRef);
-        } catch (uploadError) {
-          console.error(`Failed to upload ${file.name}:`, uploadError);
-          return null; 
-        }
-      };
+    // --- Step 2: Handle file uploads in the background ---
+    const filesToUpload = [
+      { file: quranIconFile, key: 'quranIconUrl', path: `system_icons/quran_icon_${Date.now()}` },
+      { file: hadithIconFile, key: 'hadithIconUrl', path: `system_icons/hadith_icon_${Date.now()}` },
+      { file: heroImageFile, key: 'heroImageUrl', path: `system_icons/hero_banner_${Date.now()}` },
+    ].filter(item => item.file);
 
-      const uploadPromises = [
-        uploadImage(quranIconFile, `system_icons/quran_icon_${Date.now()}`),
-        uploadImage(hadithIconFile, `system_icons/hadith_icon_${Date.now()}`),
-        uploadImage(heroImageFile, `system_icons/hero_banner_${Date.now()}`),
-      ];
+    if (filesToUpload.length > 0) {
+      toast({ title: 'تم حفظ الإعدادات النصية.', description: 'جاري الآن رفع الصور في الخلفية...' });
 
-      const [quranIconUrl, hadithIconUrl, heroImageUrl] = await Promise.all(uploadPromises);
-
-      if ( (quranIconFile && !quranIconUrl) || (hadithIconFile && !hadithIconUrl) || (heroImageFile && !heroImageUrl) ) {
-          throw new Error('فشل رفع صورة واحدة أو أكثر. يرجى التأكد من أن حجم الصورة مناسب والمحاولة مرة أخرى.');
-      }
-
-      const newSettings: Partial<AppearanceSettings> = {
-        ...currentSettings,
-        defaultTheme,
-        defaultFont,
-        maintenanceMode,
-        heroTitle,
-        heroSubtitle,
-      };
-
-      if (quranIconUrl) newSettings.quranIconUrl = quranIconUrl;
-      if (hadithIconUrl) newSettings.hadithIconUrl = hadithIconUrl;
-      if (heroImageUrl) newSettings.heroImageUrl = heroImageUrl;
+      // Process each file upload independently
+      filesToUpload.forEach(({ file, key, path }) => {
+        (async () => {
+          try {
+            const storageRef = ref(storage, path);
+            await uploadBytes(storageRef, file!);
+            const downloadURL = await getDownloadURL(storageRef);
+            // This is another non-blocking update
+            setDocumentNonBlocking(settingsRef, { [key]: downloadURL }, { merge: true });
+          } catch (uploadError) {
+            console.error(`Failed to upload ${file!.name}:`, uploadError);
+            toast({
+              variant: 'destructive',
+              title: `فشل رفع صورة: ${file!.name}`,
+            });
+          }
+        })(); // Fire and forget for each file
+      });
       
-      const settingsRef = doc(firestore, 'settings', 'appearance');
-      setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
-
+      // Clear file inputs optimistically
       setQuranIconFile(null);
       setHadithIconFile(null);
       setHeroImageFile(null);
-      
+    } else {
+      // No files, just a simple save message.
       toast({ title: 'تم حفظ الإعدادات بنجاح!' });
-
-    } catch (error: any) {
-      console.error("Error saving appearance settings:", error);
-      toast({
-        variant: 'destructive',
-        title: 'فشل حفظ الإعدادات.',
-        description: error.message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
-      });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -161,7 +149,6 @@ export default function AdminAppearancePage() {
             type="file" 
             accept="image/jpeg,image/png,image/webp,image/svg+xml" 
             onChange={handleFileChange(fileSetter, previewSetter)}
-            disabled={isSubmitting}
         />
     </div>
   );
@@ -188,7 +175,7 @@ export default function AdminAppearancePage() {
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="default-theme">الثيم الافتراضي</Label>
-                            <Select value={defaultTheme} onValueChange={setDefaultTheme} disabled={isSubmitting}>
+                            <Select value={defaultTheme} onValueChange={setDefaultTheme}>
                                 <SelectTrigger id="default-theme">
                                     <SelectValue placeholder="اختر الثيم الافتراضي..." />
                                 </SelectTrigger>
@@ -204,7 +191,7 @@ export default function AdminAppearancePage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="default-font">الخط الافتراضي</Label>
-                            <Select value={defaultFont} onValueChange={setDefaultFont} disabled={isSubmitting}>
+                            <Select value={defaultFont} onValueChange={setDefaultFont}>
                                 <SelectTrigger id="default-font">
                                     <SelectValue placeholder="اختر الخط الافتراضي..." />
                                 </SelectTrigger>
@@ -222,11 +209,11 @@ export default function AdminAppearancePage() {
                         
                         <div className="space-y-2">
                             <Label htmlFor="hero-title">العنوان الرئيسي للبانر</Label>
-                            <Input id="hero-title" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} disabled={isSubmitting} />
+                            <Input id="hero-title" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="hero-subtitle">العنوان الفرعي للبانر</Label>
-                            <Textarea id="hero-subtitle" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} rows={3} disabled={isSubmitting} />
+                            <Textarea id="hero-subtitle" value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} rows={3} />
                         </div>
                     </div>
 
@@ -246,15 +233,13 @@ export default function AdminAppearancePage() {
                             id="maintenance-mode"
                             checked={maintenanceMode}
                             onCheckedChange={setMaintenanceMode}
-                            disabled={isSubmitting}
                           />
                         </div>
                     </div>
                 </div>
 
                 {/* Save Button */}
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button onClick={handleSubmit}>
                     حفظ الإعدادات
                 </Button>
             </div>
