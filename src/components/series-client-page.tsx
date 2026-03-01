@@ -95,7 +95,12 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
       }
   };
 
-  const placeholder = getPlaceholderImage(series.imageId);
+  const placeholder = useMemo(() => {
+    if (lecturesInSeries && lecturesInSeries.length > 0 && lecturesInSeries[0].imageId) {
+        return getPlaceholderImage(lecturesInSeries[0].imageId);
+    }
+    return getPlaceholderImage(series.imageId);
+  }, [lecturesInSeries, series.imageId]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start mt-8">
