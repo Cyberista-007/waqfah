@@ -29,6 +29,7 @@ import { Separator } from './ui/separator';
 import type { Locale } from 'date-fns';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 const prayerIcons = {
@@ -366,15 +367,49 @@ const ImanHarvestReport = () => {
     const { user } = useUser();
     const [activeReportTab, setActiveReportTab] = useState('main');
     
-    const componentRef = useRef(null);
-    const [reportPeriod, setReportPeriod] = useState<'weekly' | 'monthly'>('weekly');
-    
-    const handleDownloadReport = (period: 'weekly' | 'monthly') => {
-        setReportPeriod(period);
-        setTimeout(() => {
-            window.print();
-        }, 200); 
-    };
+    const componentRef = useRef<HTMLDivElement>(null);
+
+    const handleDownloadData = useCallback(() => {
+        if (!rawEntries) {
+            toast({
+                variant: "destructive",
+                title: "لا توجد بيانات للتحميل",
+            });
+            return;
+        }
+
+        const dataToDownload = {
+            reportDate: new Date().toISOString(),
+            stats,
+            rawEntries,
+        };
+
+        const dataStr = JSON.stringify(dataToDownload, (key, value) => {
+             if (value && typeof value === 'object' && value.toDate instanceof Function) {
+                return value.toDate().toISOString();
+            }
+             if (key === 'date' && value && value.seconds) {
+                return new Date(value.seconds * 1000).toISOString();
+            }
+            return value;
+        }, 2);
+        
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const fileName = `iman-harvest-report-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+            title: "اكتمل التنزيل!",
+            description: "تم تنزيل بيانات تقريرك بنجاح بصيغة JSON.",
+        });
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     
     const thirtyDaysAgo = subDays(new Date(), 30);
     const accountabilityPath = user ? `users/${user.uid}/accountability` : null;
@@ -473,88 +508,6 @@ const ImanHarvestReport = () => {
         return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus };
     }, [rawEntries]);
 
-    const PrintableReport = React.forwardRef<HTMLDivElement, { stats: any; period: string }>(({ stats, period }, ref) => (
-        <div ref={ref} className="p-10 bg-white text-black font-body" dir="rtl">
-            <div className="text-center mb-10 border-b pb-4">
-                <h1 className="text-4xl font-bold mb-2 font-headline">حصادك الإيماني</h1>
-                <p className="text-lg text-gray-700">التقرير {period === 'weekly' ? 'الأسبوعي' : 'الشهري'}</p>
-                <p className="text-sm text-gray-500">تاريخ الإنشاء: {new Date().toLocaleDateString('ar-EG')}</p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-6 mb-8 text-center">
-                <div className="p-4 bg-gray-100 rounded-lg">
-                    <p className="text-sm text-gray-600">أيام الالتزام (آخر 30)</p>
-                    <p className="text-3xl font-bold">{stats.commitmentDays}</p>
-                </div>
-                <div className="p-4 bg-gray-100 rounded-lg">
-                    <p className="text-sm text-gray-600">أفضل يوم</p>
-                    <p className="text-3xl font-bold">{stats.bestDay}</p>
-                </div>
-                <div className="p-4 bg-gray-100 rounded-lg">
-                     <p className="text-sm text-gray-600">نسبة الإنجاز</p>
-                     <p className="text-3xl font-bold text-red-600">{Math.min(Math.round((stats.avgPoints / MAX_POSSIBLE_POINTS) * 100), 100) || 0}%</p>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div>
-                     <h2 className="text-2xl font-bold mb-4 text-right">تطور الأداء</h2>
-                     <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fill="#8884d8" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-                <div>
-                    <h2 className="text-2xl font-bold mb-4 text-right">توزيع العبادات</h2>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label>
-                                    {stats.categoryDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                     <h2 className="text-2xl font-bold mb-4 text-right text-green-600">أكثر ما حافظت عليه</h2>
-                     <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-                        {stats.mostKept.map((item: any) => (
-                            <div key={item.id} className="flex justify-between items-center text-sm">
-                                <span>{item.label}</span>
-                                <span className="font-mono font-bold">{Math.round(item.percentage)}%</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div>
-                    <h2 className="text-2xl font-bold mb-4 text-right text-yellow-600">يحتاج لتركيز أكبر</h2>
-                    <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-                        {stats.needsFocus.map((item: any) => (
-                            <div key={item.id} className="flex justify-between items-center text-sm">
-                                <span>{item.label}</span>
-                                <span className="font-mono font-bold">{Math.round(item.percentage)}%</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    ));
-    PrintableReport.displayName = 'PrintableReport';
-
-
     if (isLoading) {
       return (
         <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
@@ -570,9 +523,6 @@ const ImanHarvestReport = () => {
 
     return (
         <>
-            <div className="printable-area" style={{ display: 'none' }}>
-                <PrintableReport ref={componentRef} stats={stats} period={reportPeriod} />
-            </div>
             <div className="non-printable">
                 <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
                     <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -613,12 +563,12 @@ const ImanHarvestReport = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
+                         <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
                             <CardHeader className="p-0 items-center">
                                 <div className="p-3 bg-blue-500/20 rounded-full mb-2">
                                     <CalendarDays className="h-6 w-6 text-blue-400"/>
                                 </div>
-                                <CardDescription className="text-slate-400">أيام الالتزام (آخر 30)</CardDescription>
+                                <CardDescription className="text-slate-400">أيام الالتزام</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0 mt-2">
                                 <p className="text-4xl font-bold">{stats.commitmentDays}</p>
@@ -729,13 +679,13 @@ const ImanHarvestReport = () => {
                     </div>
                     
                     <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                        <Button onClick={() => handleDownloadReport('weekly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
+                        <Button onClick={handleDownloadData} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
                             <FileText className="me-2 h-5 w-5"/>
-                            تحميل التقرير الأسبوعي (PDF)
+                            تحميل بيانات التقرير (JSON)
                         </Button>
-                        <Button onClick={() => handleDownloadReport('monthly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                         <Button onClick={handleDownloadData} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
                             <FileText className="me-2 h-5 w-5"/>
-                            تحميل التقرير الشهري (PDF)
+                            تحميل بيانات التقرير (JSON)
                         </Button>
                     </footer>
                 </div>
