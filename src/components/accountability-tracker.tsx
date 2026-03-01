@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -360,6 +361,7 @@ const REPORT_TABS = [
 ];
 
 const ImanHarvestReport = () => {
+    const { toast } = useToast();
     const [timeframe, setTimeframe] = useState('weekly');
     const { user } = useUser();
     const [activeReportTab, setActiveReportTab] = useState('main');
@@ -460,6 +462,39 @@ const ImanHarvestReport = () => {
 
         return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus };
     }, [rawEntries]);
+    
+    const handleDownloadReport = (period: 'weekly' | 'monthly') => {
+        const dataToDownload = {
+            reportPeriod: period,
+            generationDate: new Date().toISOString(),
+            stats,
+            entries: period === 'weekly' ? rawEntries?.slice(0, 7) : rawEntries,
+        };
+
+        const dataStr = JSON.stringify(dataToDownload, (key, value) => {
+            // Firestore Timestamps need to be converted
+            if (value && typeof value === 'object' && value.toDate instanceof Function) {
+                return value.toDate().toISOString();
+            }
+            return value;
+        }, 2);
+        
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const fileName = `Iman_Harvest_Report_${period}_${new Date().toISOString().split('T')[0]}.json`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+            title: "بدء تنزيل التقرير!",
+            description: `تم تنزيل تقريرك كملف JSON.`,
+        });
+    };
 
 
     if (isLoading) {
@@ -483,34 +518,28 @@ const ImanHarvestReport = () => {
                 <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
                  <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
                     {REPORT_TABS.map(tab => (
-                        tab.id === 'main' ? (
-                            <Button 
-                                key={tab.id} 
-                                onClick={() => setActiveReportTab(tab.id)}
-                                variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
-                                className={cn(
-                                    'rounded-full',
-                                    activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white'
-                                )}>
-                                {tab.label}
-                            </Button>
-                        ) : (
-                            <TooltipProvider key={tab.id}>
-                                <ShadTooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button 
-                                            disabled 
-                                            variant='ghost' 
-                                            className="rounded-full text-muted-foreground/50 cursor-not-allowed">
-                                            {tab.label}
-                                        </Button>
-                                    </TooltipTrigger>
+                        <TooltipProvider key={tab.id}>
+                            <ShadTooltip>
+                                <TooltipTrigger asChild>
+                                    <Button 
+                                        onClick={() => activeReportTab !== 'main' && setActiveReportTab(tab.id)}
+                                        variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
+                                        disabled={tab.id !== 'main'}
+                                        className={cn(
+                                            'rounded-full',
+                                            activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white',
+                                            tab.id !== 'main' && 'cursor-not-allowed opacity-50'
+                                        )}>
+                                        {tab.label}
+                                    </Button>
+                                </TooltipTrigger>
+                                {tab.id !== 'main' && (
                                     <TooltipContent>
                                         <p>قريباً</p>
                                     </TooltipContent>
-                                </ShadTooltip>
-                            </TooltipProvider>
-                        )
+                                )}
+                            </ShadTooltip>
+                        </TooltipProvider>
                     ))}
                 </div>
             </header>
@@ -639,31 +668,14 @@ const ImanHarvestReport = () => {
             </div>
             
              <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                <TooltipProvider>
-                    <ShadTooltip>
-                        <TooltipTrigger asChild>
-                            <Button disabled size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white opacity-50 cursor-not-allowed">
-                                <FileText className="me-2 h-5 w-5"/>
-                                تحميل التقرير الأسبوعي
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>قريباً</p>
-                        </TooltipContent>
-                    </ShadTooltip>
-                    
-                    <ShadTooltip>
-                        <TooltipTrigger asChild>
-                            <Button disabled size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white opacity-50 cursor-not-allowed">
-                                <FileText className="me-2 h-5 w-5"/>
-                                تحميل التقرير الشهري
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>قريباً</p>
-                        </TooltipContent>
-                    </ShadTooltip>
-                </TooltipProvider>
+                 <Button onClick={() => handleDownloadReport('weekly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
+                    <FileText className="me-2 h-5 w-5"/>
+                    تحميل التقرير الأسبوعي (JSON)
+                </Button>
+                <Button onClick={() => handleDownloadReport('monthly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <FileText className="me-2 h-5 w-5"/>
+                    تحميل التقرير الشهري (JSON)
+                </Button>
             </footer>
         </div>
     );
@@ -798,8 +810,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     }, [completedActions, customActions]);
     
     const handleActionToggle = (actionId: string, groupId: string, type: 'single' | 'multi') => {
+        const isSelected = completedActions.includes(actionId);
+        
         let newCompleted = [...completedActions];
-        const isSelected = newCompleted.includes(actionId);
 
         if (type === 'single') {
             const group = Object.values(accountabilityStructure).flatMap(p => p.groups).find(g => g.id === groupId);
