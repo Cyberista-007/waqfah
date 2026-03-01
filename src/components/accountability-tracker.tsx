@@ -366,7 +366,16 @@ const ImanHarvestReport = () => {
     const { user } = useUser();
     const [activeReportTab, setActiveReportTab] = useState('main');
     
-    // 1. Fetch real data
+    const componentRef = useRef(null);
+    const [reportPeriod, setReportPeriod] = useState<'weekly' | 'monthly'>('weekly');
+    
+    const handleDownloadReport = (period: 'weekly' | 'monthly') => {
+        setReportPeriod(period);
+        setTimeout(() => {
+            window.print();
+        }, 200); 
+    };
+    
     const thirtyDaysAgo = subDays(new Date(), 30);
     const accountabilityPath = user ? `users/${user.uid}/accountability` : null;
     const { data: rawEntries, isLoading } = useCollection<AccountabilityEntry>(
@@ -374,7 +383,8 @@ const ImanHarvestReport = () => {
         { where: ['date', '>=', thirtyDaysAgo], orderBy: ['date', 'desc'] }
     );
     
-    // 2. Process data
+    const MAX_POSSIBLE_POINTS = 55;
+
     const stats = useMemo(() => {
         if (!rawEntries) return {
             commitmentDays: 0,
@@ -462,39 +472,87 @@ const ImanHarvestReport = () => {
 
         return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus };
     }, [rawEntries]);
-    
-    const handleDownloadReport = (period: 'weekly' | 'monthly') => {
-        const dataToDownload = {
-            reportPeriod: period,
-            generationDate: new Date().toISOString(),
-            stats,
-            entries: period === 'weekly' ? rawEntries?.slice(0, 7) : rawEntries,
-        };
 
-        const dataStr = JSON.stringify(dataToDownload, (key, value) => {
-            // Firestore Timestamps need to be converted
-            if (value && typeof value === 'object' && value.toDate instanceof Function) {
-                return value.toDate().toISOString();
-            }
-            return value;
-        }, 2);
-        
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const fileName = `Iman_Harvest_Report_${period}_${new Date().toISOString().split('T')[0]}.json`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        toast({
-            title: "بدء تنزيل التقرير!",
-            description: `تم تنزيل تقريرك كملف JSON.`,
-        });
-    };
+    const PrintableReport = React.forwardRef<HTMLDivElement, { stats: any; period: string }>(({ stats, period }, ref) => (
+        <div ref={ref} className="p-10 bg-white text-black font-body" dir="rtl">
+            <div className="text-center mb-10 border-b pb-4">
+                <h1 className="text-4xl font-bold mb-2 font-headline">حصادك الإيماني</h1>
+                <p className="text-lg text-gray-700">التقرير {period === 'weekly' ? 'الأسبوعي' : 'الشهري'}</p>
+                <p className="text-sm text-gray-500">تاريخ الإنشاء: {new Date().toLocaleDateString('ar-EG')}</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6 mb-8 text-center">
+                <div className="p-4 bg-gray-100 rounded-lg">
+                    <p className="text-sm text-gray-600">أيام الالتزام (آخر 30)</p>
+                    <p className="text-3xl font-bold">{stats.commitmentDays}</p>
+                </div>
+                <div className="p-4 bg-gray-100 rounded-lg">
+                    <p className="text-sm text-gray-600">أفضل يوم</p>
+                    <p className="text-3xl font-bold">{stats.bestDay}</p>
+                </div>
+                <div className="p-4 bg-gray-100 rounded-lg">
+                     <p className="text-sm text-gray-600">نسبة الإنجاز</p>
+                     <p className="text-3xl font-bold text-red-600">{Math.min(Math.round((stats.avgPoints / MAX_POSSIBLE_POINTS) * 100), 100) || 0}%</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div>
+                     <h2 className="text-2xl font-bold mb-4 text-right">تطور الأداء</h2>
+                     <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fill="#8884d8" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold mb-4 text-right">توزيع العبادات</h2>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label>
+                                    {stats.categoryDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                     <h2 className="text-2xl font-bold mb-4 text-right text-green-600">أكثر ما حافظت عليه</h2>
+                     <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                        {stats.mostKept.map((item: any) => (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                <span>{item.label}</span>
+                                <span className="font-mono font-bold">{Math.round(item.percentage)}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold mb-4 text-right text-yellow-600">يحتاج لتركيز أكبر</h2>
+                    <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                        {stats.needsFocus.map((item: any) => (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                <span>{item.label}</span>
+                                <span className="font-mono font-bold">{Math.round(item.percentage)}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    ));
+    PrintableReport.displayName = 'PrintableReport';
 
 
     if (isLoading) {
@@ -507,177 +565,182 @@ const ImanHarvestReport = () => {
       );
     }
     
-    // This is a rough estimation of a daily maximum. This can be improved.
-    const MAX_POSSIBLE_POINTS = 55; 
     const completionPercentage = stats.avgPoints > 0 ? Math.min(Math.round((stats.avgPoints / MAX_POSSIBLE_POINTS) * 100), 100) : 0;
 
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
-            <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
-                 <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
-                    {REPORT_TABS.map(tab => (
-                        <TooltipProvider key={tab.id}>
-                            <ShadTooltip>
-                                <TooltipTrigger asChild>
-                                    <Button 
-                                        onClick={() => activeReportTab !== 'main' && setActiveReportTab(tab.id)}
-                                        variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
-                                        disabled={tab.id !== 'main'}
-                                        className={cn(
-                                            'rounded-full',
-                                            activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white',
-                                            tab.id !== 'main' && 'cursor-not-allowed opacity-50'
-                                        )}>
-                                        {tab.label}
-                                    </Button>
-                                </TooltipTrigger>
-                                {tab.id !== 'main' && (
-                                    <TooltipContent>
-                                        <p>قريباً</p>
-                                    </TooltipContent>
-                                )}
-                            </ShadTooltip>
-                        </TooltipProvider>
-                    ))}
+        <>
+            <div className="printable-area" style={{ display: 'none' }}>
+                <PrintableReport ref={componentRef} stats={stats} period={reportPeriod} />
+            </div>
+            <div className="non-printable">
+                <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
+                    <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
+                        <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
+                            {REPORT_TABS.map(tab => (
+                                <TooltipProvider key={tab.id}>
+                                    <ShadTooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button 
+                                                onClick={() => tab.id === 'main' && setActiveReportTab(tab.id)}
+                                                variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
+                                                disabled={tab.id !== 'main'}
+                                                className={cn(
+                                                    'rounded-full',
+                                                    activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white',
+                                                    tab.id !== 'main' && 'cursor-not-allowed opacity-50'
+                                                )}>
+                                                {tab.label}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        {tab.id !== 'main' && (
+                                            <TooltipContent>
+                                                <p>قريباً</p>
+                                            </TooltipContent>
+                                        )}
+                                    </ShadTooltip>
+                                </TooltipProvider>
+                            ))}
+                        </div>
+                    </header>
+
+                    <div className="flex justify-end mb-6">
+                        <div className="flex items-center gap-1 p-1 bg-slate-800/60 rounded-full">
+                            <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">شهري</Button>
+                            <Button onClick={() => setTimeframe('weekly')} variant={timeframe === 'weekly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">أسبوعي</Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
+                            <CardHeader className="p-0 items-center">
+                                <div className="p-3 bg-blue-500/20 rounded-full mb-2">
+                                    <CalendarDays className="h-6 w-6 text-blue-400"/>
+                                </div>
+                                <CardDescription className="text-slate-400">أيام الالتزام (آخر 30)</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0 mt-2">
+                                <p className="text-4xl font-bold">{stats.commitmentDays}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
+                            <CardHeader className="p-0 items-center">
+                                <div className="p-3 bg-green-500/20 rounded-full mb-2">
+                                    <Trophy className="h-6 w-6 text-green-400"/>
+                                </div>
+                                <CardDescription className="text-slate-400">أفضل يوم</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0 mt-2">
+                                <p className="text-4xl font-bold">{stats.bestDay}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
+                            <CardHeader className="p-0 items-center">
+                                <div className="p-3 bg-red-500/20 rounded-full mb-2">
+                                    <CheckCircle2 className="h-6 w-6 text-red-400"/>
+                                </div>
+                                <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0 mt-2">
+                                <p className="text-4xl font-bold text-red-400">{completionPercentage}%</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-slate-300">
+                                    <TrendingUp className="h-5 w-5"/>
+                                    تطور أدائك (آخر 7 أيام)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                        <defs>
+                                            <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
+                                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                        <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                        <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)' }}/>
+                                        <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fillOpacity={1} fill="url(#colorPoints)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-slate-300">
+                                    <Scale className="h-5 w-5"/>
+                                    توزيع العبادات
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
+                                            {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-green-400">
+                                    <ThumbsUp className="h-5 w-5"/>
+                                    أكثر ما حافظت عليه
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {stats.mostKept.map(item => (
+                                    <div key={item.id} className="flex justify-between items-center text-sm">
+                                        <span>{item.label}</span>
+                                        <span className="font-mono">{Math.round(item.percentage)}%</span>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-yellow-400">
+                                    <AlertTriangle className="h-5 w-5"/>
+                                    يحتاج لتركيز أكبر
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {stats.needsFocus.map(item => (
+                                    <div key={item.id} className="flex justify-between items-center text-sm">
+                                        <span>{item.label}</span>
+                                        <span className="font-mono">{Math.round(item.percentage)}%</span>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+                    
+                    <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <Button onClick={() => handleDownloadReport('weekly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
+                            <FileText className="me-2 h-5 w-5"/>
+                            تحميل التقرير الأسبوعي (PDF)
+                        </Button>
+                        <Button onClick={() => handleDownloadReport('monthly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                            <FileText className="me-2 h-5 w-5"/>
+                            تحميل التقرير الشهري (PDF)
+                        </Button>
+                    </footer>
                 </div>
-            </header>
-
-            <div className="flex justify-end mb-6">
-                <div className="flex items-center gap-1 p-1 bg-slate-800/60 rounded-full">
-                    <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">شهري</Button>
-                    <Button onClick={() => setTimeframe('weekly')} variant={timeframe === 'weekly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">أسبوعي</Button>
-                </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                     <CardHeader className="p-0 items-center">
-                        <div className="p-3 bg-blue-500/20 rounded-full mb-2">
-                             <CalendarDays className="h-6 w-6 text-blue-400"/>
-                        </div>
-                        <CardDescription className="text-slate-400">أيام الالتزام (آخر 30)</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold">{stats.commitmentDays}</p>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                    <CardHeader className="p-0 items-center">
-                        <div className="p-3 bg-green-500/20 rounded-full mb-2">
-                             <Trophy className="h-6 w-6 text-green-400"/>
-                        </div>
-                        <CardDescription className="text-slate-400">أفضل يوم</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold">{stats.bestDay}</p>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                    <CardHeader className="p-0 items-center">
-                        <div className="p-3 bg-red-500/20 rounded-full mb-2">
-                             <CheckCircle2 className="h-6 w-6 text-red-400"/>
-                        </div>
-                        <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold text-red-400">{completionPercentage}%</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-300">
-                             <TrendingUp className="h-5 w-5"/>
-                             تطور أدائك (آخر 7 أيام)
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
-                                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)' }}/>
-                                <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fillOpacity={1} fill="url(#colorPoints)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-300">
-                            <Scale className="h-5 w-5"/>
-                            توزيع العبادات
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
-                                    {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-400">
-                            <ThumbsUp className="h-5 w-5"/>
-                            أكثر ما حافظت عليه
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {stats.mostKept.map(item => (
-                            <div key={item.id} className="flex justify-between items-center text-sm">
-                                <span>{item.label}</span>
-                                <span className="font-mono">{Math.round(item.percentage)}%</span>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-yellow-400">
-                            <AlertTriangle className="h-5 w-5"/>
-                            يحتاج لتركيز أكبر
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                         {stats.needsFocus.map(item => (
-                            <div key={item.id} className="flex justify-between items-center text-sm">
-                                <span>{item.label}</span>
-                                <span className="font-mono">{Math.round(item.percentage)}%</span>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </div>
-            
-             <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                 <Button onClick={() => handleDownloadReport('weekly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
-                    <FileText className="me-2 h-5 w-5"/>
-                    تحميل التقرير الأسبوعي (JSON)
-                </Button>
-                <Button onClick={() => handleDownloadReport('monthly')} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                    <FileText className="me-2 h-5 w-5"/>
-                    تحميل التقرير الشهري (JSON)
-                </Button>
-            </footer>
-        </div>
+        </>
     );
 };
 
