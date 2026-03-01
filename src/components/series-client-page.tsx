@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LectureListItem } from '@/components/lecture-list-item';
-import { formatTotalDuration } from '@/lib/utils';
+import { formatTotalDuration, getVideoIdFromUrl } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Card, CardContent } from './ui/card';
@@ -95,15 +95,30 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
       }
   };
 
-  const placeholder = useMemo(() => {
+  const { imageUrl, imageHint } = useMemo(() => {
     if (lecturesInSeries && lecturesInSeries.length > 0) {
-        const lectureWithImage = lecturesInSeries.find(l => l.imageId);
-        if (lectureWithImage && lectureWithImage.imageId) {
-            return getPlaceholderImage(lectureWithImage.imageId);
+        const lectureWithImage = lecturesInSeries.find(l => l.youtubeUrl || l.imageId);
+        if (lectureWithImage) {
+            const videoId = getVideoIdFromUrl(lectureWithImage.youtubeUrl);
+            if (videoId) {
+                return {
+                    imageUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                    imageHint: 'youtube thumbnail'
+                };
+            }
+            const placeholder = getPlaceholderImage(lectureWithImage.imageId);
+            if (placeholder) {
+                return { imageUrl: placeholder.imageUrl, imageHint: placeholder.imageHint };
+            }
         }
     }
-    return getPlaceholderImage(series.imageId);
-  }, [lecturesInSeries, series.imageId]);
+    const seriesPlaceholder = getPlaceholderImage(series.imageId);
+    return { 
+        imageUrl: seriesPlaceholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/600`,
+        imageHint: seriesPlaceholder?.imageHint || 'islamic art'
+    };
+  }, [lecturesInSeries, series.imageId, series.slug]);
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start mt-8">
@@ -112,12 +127,12 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
             <Card className="overflow-hidden shadow-lg">
                 <div className="relative aspect-square">
                     <Image
-                        src={placeholder?.imageUrl || `https://picsum.photos/seed/${series.slug}/600/600`}
+                        src={imageUrl}
                         alt={series.title}
                         fill
                         className="object-cover image-theme-filter"
                         priority
-                        data-ai-hint={placeholder?.imageHint || 'islamic art'}
+                        data-ai-hint={imageHint}
                     />
                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 </div>
