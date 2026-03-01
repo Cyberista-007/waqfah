@@ -417,6 +417,7 @@ export default function SettingsPage() {
     const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -434,6 +435,74 @@ export default function SettingsPage() {
         }
     }
     
+    const handleDownloadData = async () => {
+        if (isDownloading || !user || !firestore) {
+            if(!user) {
+                toast({
+                    variant: "destructive",
+                    title: "خطأ",
+                    description: "يجب تسجيل الدخول لتنزيل بياناتك.",
+                });
+            }
+            return;
+        }
+    
+        setIsDownloading(true);
+        toast({
+            title: "جاري تجهيز بياناتك...",
+            description: "قد تستغرق هذه العملية بضع لحظات.",
+        });
+    
+        try {
+            const userData: any = {
+                profile: userProfile,
+                subcollections: {},
+            };
+    
+            const subcollections = [
+                'favorites', 'following', 'listenHistory', 'playlists', 'notes',
+                'user_challenges', 'accountability', 'user_badges', 'curriculum_progress'
+            ];
+    
+            for (const subcollection of subcollections) {
+                const querySnapshot = await getDocs(collection(firestore, 'users', user.uid, subcollection));
+                userData.subcollections[subcollection] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+    
+            const dataStr = JSON.stringify(userData, (key, value) => {
+                if (value && typeof value === 'object' && value.toDate instanceof Function) {
+                    return value.toDate().toISOString();
+                }
+                return value;
+            }, 2);
+            
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `my_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            toast({
+                title: "اكتمل التنزيل!",
+                description: "تم تنزيل بياناتك بنجاح.",
+            });
+    
+        } catch (error) {
+            console.error("Error downloading data:", error);
+            toast({
+                variant: "destructive",
+                title: "فشل تنزيل البيانات",
+                description: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+            });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     const handleDeleteAccount = async () => {
         if (!user || !auth || !firestore) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'المستخدم غير مسجل دخوله أو أن خدمات Firebase غير جاهزة.' });
@@ -703,7 +772,12 @@ export default function SettingsPage() {
           <Separator />
           <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
           <Separator />
-          <SettingsItem icon={HardDriveDownload} label="تنزيل بياناتي" />
+          <SettingsItem 
+            icon={isDownloading ? Loader2 : HardDriveDownload} 
+            label={isDownloading ? "جاري التجهيز..." : "تنزيل بياناتي"} 
+            onClick={handleDownloadData} 
+            className={cn(isDownloading && "animate-pulse cursor-not-allowed")} 
+          />
           <Separator />
           <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive" onClick={() => setIsDeleteConfirmOpen(true)} />
         </div>
