@@ -352,145 +352,201 @@ function DestructiveSinsSection() {
 }
 
 const ImanHarvestReport = () => {
-  const [activeTab, setActiveTab] = useState('main');
-  
-  // Mock data for charts
-  const weeklyPointsData = useMemo(() => [
-    { date: '24 فبراير', points: 30 },
-    { date: '25 فبراير', points: 45 },
-    { date: '26 فبراير', points: 28 },
-    { date: '27 فبراير', points: 50 },
-    { date: '28 فبراير', points: 65 },
-    { date: '29 فبراير', points: 55 },
-    { date: '1 مارس', points: 75 },
-  ], []);
+    const [timeframe, setTimeframe] = useState('weekly');
 
-  const categoryData = useMemo(() => [
-    { name: 'الصلوات', value: 400, fill: 'hsl(var(--chart-1))' },
-    { name: 'الأذكار', value: 300, fill: 'hsl(var(--chart-2))' },
-    { name: 'القرآن', value: 300, fill: 'hsl(var(--chart-3))' },
-    { name: 'طلب العلم', value: 200, fill: 'hsl(var(--chart-4))' },
-    { name: 'نوافل أخرى', value: 278, fill: 'hsl(var(--chart-5))' },
-  ], []);
+    // Mock data based on the image
+    const weeklyPointsData = useMemo(() => [
+        { name: 'الخميس', points: 75 },
+        { name: 'الاربعاء', points: 80 },
+        { name: 'الثلاثاء', points: 60 },
+        { name: 'الاثنين', points: 90 },
+        { name: 'الأحد', points: 70 },
+        { name: 'السبت', points: 50 },
+        { name: 'الجمعة', points: 65 },
+    ].reverse(), []);
 
-  const mockStats = useMemo(() => ({
-    totalPoints: 1478,
-    streak: 12,
-    completedActions: 150,
-    bestDayPoints: 85
-  }), []);
+    const categoryData = useMemo(() => [
+        { name: 'الصلوات', value: 40, fill: '#8884d8' }, // Blueish
+        { name: 'الأذكار', value: 25, fill: '#82ca9d' },   // Greenish
+        { name: 'القرآن', value: 15, fill: '#ffc658' },    // Yellowish
+        { name: 'قيام الليل', value: 10, fill: '#ff8042' },   // Orangish
+        { name: 'السنن', value: 10, fill: '#ff5733' },     // Reddish
+    ], []);
 
-  const MainReportTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">مجموع النقاط</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockStats.totalPoints}</div>
-            <p className="text-xs text-muted-foreground">+201 عن الأسبوع الماضي</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">أطول مداومة</CardTitle>
-            <Flame className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockStats.streak} أيام</div>
-            <p className="text-xs text-muted-foreground">استمر في التقدم</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الأعمال المنجزة</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+{mockStats.completedActions}</div>
-            <p className="text-xs text-muted-foreground">هذا الأسبوع</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">أفضل يوم</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockStats.bestDayPoints} نقطة</div>
-            <p className="text-xs text-muted-foreground">في 28 فبراير</p>
-          </CardContent>
-        </Card>
-      </div>
+    const needsFocusData = [
+        { label: 'قيام الليل', value: 35 },
+        { label: 'السنن', value: 55 },
+        { label: 'الورد اليومي', value: 62 },
+    ];
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>النقاط خلال آخر 7 أيام</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyPointsData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
-                <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
-                <Area type="monotone" dataKey="points" name="النقاط" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorPoints)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>توزيع النقاط</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] w-full">
-             <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
-                </PieChart>
-              </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+    const mostConsistentData = [
+        { label: 'الصلوات', value: 100 },
+        { label: 'القرآن', value: 85 },
+        { label: 'الأذكار', value: 92 },
+    ];
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="main">الرئيسية</TabsTrigger>
-              <TabsTrigger value="progress" disabled>التقدم</TabsTrigger>
-              <TabsTrigger value="comparison" disabled>مقارنة</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon"><ChevronRight className="h-4 w-4" /></Button>
-            <span className="font-semibold">الأسبوع الماضي</span>
-            <Button variant="outline" size="icon"><ChevronLeft className="h-4 w-4" /></Button>
-          </div>
+    return (
+        <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
+                <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
+                    {['الرئيسية', 'التفاصيل اليومية', 'أرشيف الأسابيع', 'أرشيف الشهور'].map(tab => (
+                        <Button key={tab} variant={tab === 'الرئيسية' ? 'default' : 'ghost'} className={cn(
+                            'rounded-full',
+                            tab === 'الرئيسية' ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white'
+                        )}>
+                            {tab}
+                        </Button>
+                    ))}
+                </div>
+            </header>
+
+            {/* Timeframe Toggle */}
+            <div className="flex justify-end mb-6">
+                <div className="flex items-center gap-1 p-1 bg-slate-800/60 rounded-full">
+                    <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">شهري</Button>
+                    <Button onClick={() => setTimeframe('weekly')} variant={timeframe === 'weekly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">أسبوعي</Button>
+                </div>
+            </div>
+
+            {/* Top Stat Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
+                    <CardHeader className="p-0 items-center">
+                        <div className="p-3 bg-blue-500/20 rounded-full mb-2">
+                             <Calendar className="h-6 w-6 text-blue-400"/>
+                        </div>
+                        <CardDescription className="text-slate-400">أيام الالتزام التام</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 mt-2">
+                        <p className="text-4xl font-bold">12</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
+                    <CardHeader className="p-0 items-center">
+                        <div className="p-3 bg-green-500/20 rounded-full mb-2">
+                             <Trophy className="h-6 w-6 text-green-400"/>
+                        </div>
+                        <CardDescription className="text-slate-400">أفضل يوم</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 mt-2">
+                        <p className="text-4xl font-bold">الخميس</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
+                    <CardHeader className="p-0 items-center">
+                        <div className="p-3 bg-red-500/20 rounded-full mb-2">
+                             <ThumbsUp className="h-6 w-6 text-red-400"/>
+                        </div>
+                        <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 mt-2">
+                        <p className="text-4xl font-bold text-red-400">81%</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Pie Chart */}
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-slate-300">
+                            <Scale className="h-5 w-5"/>
+                            توزيع العبادات
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} labelLine={false} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
+                                    {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Area Chart */}
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-slate-300">
+                             <TrendingUp className="h-5 w-5"/>
+                             تطور أدائك
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={weeklyPointsData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                <defs>
+                                    <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
+                                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)' }}/>
+                                <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fillOpacity={1} fill="url(#colorPoints)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Needs Focus */}
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-red-400">
+                            <AlertTriangle className="h-5 w-5" />
+                            يحتاج لتركيز أكبر
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {needsFocusData.map(item => (
+                            <div key={item.label} className="flex justify-between items-center text-lg">
+                                <span className="text-slate-300">{item.label}</span>
+                                <span className="font-bold text-red-400">{item.value}%</span>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                {/* Most Consistent */}
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-400">
+                            <CheckCircle2 className="h-5 w-5" />
+                            أكثر ما حافظت عليه
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         {mostConsistentData.map(item => (
+                            <div key={item.label} className="flex justify-between items-center text-lg">
+                                <span className="text-slate-300">{item.label}</span>
+                                <span className="font-bold text-green-400">{item.value}%</span>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+            
+            {/* Footer Buttons */}
+             <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <Button size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white">
+                    <FileText className="me-2 h-5 w-5"/>
+                    تحميل التقرير الشهري
+                </Button>
+                 <Button size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white">
+                    <FileText className="me-2 h-5 w-5"/>
+                    تحميل التقرير الأسبوعي
+                </Button>
+            </footer>
         </div>
-      </CardHeader>
-      <CardContent>
-          {activeTab === 'main' && <MainReportTab />}
-      </CardContent>
-    </Card>
-  )
-}
+    );
+};
 
 export function AccountabilityTracker({ redirectToOnAuth = '/accountability', showHeader = true }: { redirectToOnAuth?: string, showHeader?: boolean }) {
     const { toast } = useToast();
