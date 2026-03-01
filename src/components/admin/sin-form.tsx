@@ -64,6 +64,8 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
 
   const [title, setTitle] = useState(item?.title || "");
   const [dialogTitle, setDialogTitle] = useState(item?.dialogTitle || "");
+  const [concept, setConcept] = useState(item?.concept || "");
+  const [dailyLifeExample, setDailyLifeExample] = useState(item?.daily_life_example || "");
   const [quranVerse, setQuranVerse] = useState(item?.quranVerse || "");
   const [hadith, setHadith] = useState(item?.hadith || "");
   const [hadith2, setHadith2] = useState(item?.hadith2 || "");
@@ -122,6 +124,8 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
         const itemData = {
             title,
             dialogTitle,
+            concept,
+            daily_life_example: dailyLifeExample,
             quranVerse,
             hadith,
             hadith2,
@@ -205,7 +209,8 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
                     </div>
                 </Card>
             </div>
-
+             <Textarea id="concept" name="concept" value={concept} onChange={e => setConcept(e.target.value)} disabled={isSubmitting} placeholder="المفهوم (اختياري)" rows={3} />
+             <Textarea id="daily_life_example" name="daily_life_example" value={dailyLifeExample} onChange={e => setDailyLifeExample(e.target.value)} disabled={isSubmitting} placeholder="مثال من واقعنا اليومي (اختياري)" rows={3} />
              <Textarea id="quranVerse" name="quranVerse" value={quranVerse} onChange={(e) => setQuranVerse(e.target.value)} disabled={isSubmitting} placeholder="الآية القرآنية (اختياري)" />
              <Textarea id="hadith" name="hadith" value={hadith} onChange={(e) => setHadith(e.target.value)} disabled={isSubmitting} placeholder="الحديث الأول (اختياري)" />
              <Textarea id="hadith2" name="hadith2" value={hadith2} onChange={(e) => setHadith2(e.target.value)} disabled={isSubmitting} placeholder="الحديث الثاني (اختياري)" />

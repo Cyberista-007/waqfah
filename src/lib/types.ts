@@ -297,6 +297,8 @@ export type DestructiveSin = Serializable<{
   hadith?: string;
   hadith2?: string;
   icon: string;
+  concept?: string;
+  daily_life_example?: string;
 }>;
 
 export type Suggestion = Serializable<{
