@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
 import { doc, setDoc, Timestamp, collection, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -251,7 +251,7 @@ function DestructiveSinsSection() {
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
-                className="group p-4 rounded-xl bg-destructive/80 hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/40 transform-gpu hover:-translate-y-1 hover:scale-105"
+                className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
                 >
                 <div className="transition-transform duration-300 group-hover:scale-125">
                     {getIcon(sin.icon)}
@@ -431,19 +431,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         };
     }, []);
 
-     useEffect(() => {
-        if (currentEntry) {
-            setCompletedActions(currentEntry.completedActionIds || []);
-            setCustomActions(currentEntry.customActions || {});
-            setTotalPoints(currentEntry.totalPoints || 0);
-        } else {
-            setCompletedActions([]);
-            setCustomActions({});
-            setTotalPoints(0);
-        }
-    }, [currentEntry]);
-    
-    const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
+     const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
         if (!entryDocRef || !user) return;
 
         let points = 0;
@@ -467,6 +455,35 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             totalPoints: points
         }, { merge: true });
     }, [entryDocRef, user, selectedDate]);
+    
+    useEffect(() => {
+        if (currentEntry) {
+            setCompletedActions(currentEntry.completedActionIds || []);
+            setCustomActions(currentEntry.customActions || {});
+            
+            // Recalculate points on load to ensure consistency
+            let points = 0;
+            const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions));
+            const allCustomActions = Object.values(currentEntry.customActions || {}).flat();
+            (currentEntry.completedActionIds || []).forEach(actionId => {
+                const action = allActions.find(a => a.id === actionId) || allCustomActions.find(a => a.id === actionId);
+                if (action) {
+                    points += action.points;
+                }
+            });
+            setTotalPoints(points);
+
+            if(points !== currentEntry.totalPoints) {
+                // If points are out of sync, trigger a save.
+                saveEntry(currentEntry.completedActionIds || [], currentEntry.customActions || {});
+            }
+
+        } else {
+            setCompletedActions([]);
+            setCustomActions({});
+            setTotalPoints(0);
+        }
+    }, [currentEntry, saveEntry]);
     
     const handleActionToggle = (actionId: string, groupId: string, type: 'single' | 'multi') => {
         let newCompleted = [...completedActions];
