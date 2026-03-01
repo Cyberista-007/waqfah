@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -249,7 +250,7 @@ function DestructiveSinsSection() {
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
-                className="group p-4 rounded-xl bg-destructive/80 hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square border-2 border-destructive/50 hover:border-destructive/70 hover:shadow-lg hover:shadow-destructive/20 hover:-translate-y-2"
+                className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/40 hover:-translate-y-2"
                 >
                 <div className="transition-transform duration-300 group-hover:scale-125">
                     {getIcon(sin.icon)}
