@@ -45,11 +45,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, deleteDoc, getDocs, writeBatch } from 'firebase/firestore';
 import type { UserProfile, Following, Program, NotificationSettings, Lecture, ListenHistoryItem } from '@/lib/types';
 import { getInitials, formatBytes } from '@/lib/utils';
 import { EditProfileForm } from '@/components/profile/edit-profile-form';
-import { signOut } from 'firebase/auth';
+import { signOut, deleteUser } from 'firebase/auth';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -396,6 +396,7 @@ export default function SettingsPage() {
     const auth = useAuth();
     const firestore = useFirestore();
     const router = useRouter();
+    const { toast } = useToast();
     const { 
         isBackgroundShown, 
         toggleBackground, 
@@ -414,6 +415,8 @@ export default function SettingsPage() {
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
     const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
     const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -430,6 +433,64 @@ export default function SettingsPage() {
             router.push('/');
         }
     }
+    
+    const handleDeleteAccount = async () => {
+        if (!user || !auth || !firestore) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'المستخدم غير مسجل دخوله أو أن خدمات Firebase غير جاهزة.' });
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const subcollections = [
+                'favorites', 
+                'following', 
+                'listenHistory', 
+                'playlists', 
+                'notes', 
+                'user_challenges', 
+                'accountability', 
+                'user_badges', 
+                'curriculum_progress'
+            ];
+
+            const batch = writeBatch(firestore);
+
+            for (const subcollection of subcollections) {
+                const querySnapshot = await getDocs(collection(firestore, 'users', user.uid, subcollection));
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+            }
+
+            const userDocRef = doc(firestore, 'users', user.uid);
+            batch.delete(userDocRef);
+
+            await batch.commit();
+            await deleteUser(user);
+            
+            toast({ title: 'تم حذف الحساب بنجاح', description: 'نأمل أن نراك مرة أخرى قريبًا.' });
+            
+        } catch (error: any) {
+            console.error("Error deleting account:", error);
+            let description = 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.';
+            if (error.code === 'auth/requires-recent-login') {
+                description = 'هذه عملية حساسة وتتطلب منك تسجيل الدخول مرة أخرى قبل حذف حسابك. الرجاء تسجيل الخروج ثم إعادة تسجيل الدخول والمحاولة مرة أخرى.';
+            } else if (error.code === 'permission-denied') {
+                 description = 'ليس لديك الصلاحية لحذف هذا الحساب.';
+            }
+            toast({
+                variant: 'destructive',
+                title: 'حدث خطأ',
+                description: description,
+                duration: 9000,
+            });
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteConfirmOpen(false);
+        }
+    };
+
 
     if (isUserLoading || isProfileLoading || !user || !userProfile) {
         return (
@@ -644,7 +705,7 @@ export default function SettingsPage() {
           <Separator />
           <SettingsItem icon={HardDriveDownload} label="تنزيل بياناتي" />
           <Separator />
-          <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive"/>
+          <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive" onClick={() => setIsDeleteConfirmOpen(true)} />
         </div>
       </div>
 
@@ -665,6 +726,15 @@ export default function SettingsPage() {
         <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
         <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
         <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
+        
+        <DeleteConfirmationDialog
+            isOpen={isDeleteConfirmOpen}
+            onClose={() => setIsDeleteConfirmOpen(false)}
+            onConfirm={handleDeleteAccount}
+            title="هل أنت متأكد من حذف حسابك؟"
+            description="سيتم حذف جميع بياناتك بشكل دائم، بما في ذلك قوائم التشغيل والمفضلة وسجل الاستماع. لا يمكن التراجع عن هذا الإجراء."
+            confirmButtonText={isDeleting ? "جاري الحذف..." : "نعم، قم بحذف حسابي"}
+        />
     </div>
   );
 }

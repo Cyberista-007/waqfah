@@ -147,7 +147,7 @@ service cloud.firestore {
       }
 
       match /user_badges/{badgeId} {
-        allow read, write: if isOwner(userId);
+        allow read, write, delete: if isOwner(userId);
       }
       
       match /curriculum_progress/{curriculumId} {
