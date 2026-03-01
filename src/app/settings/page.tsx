@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -480,7 +479,8 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `my_data_${new Date().toISOString().split('T')[0]}.json`;
+            const fileName = `${user.displayName} - تلك البيانات الخاصة بحسابك في موقع وقفة.json`;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
