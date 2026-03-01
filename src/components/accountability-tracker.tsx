@@ -1,8 +1,6 @@
-
-
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -328,6 +326,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const dateId = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
 
+    const sinsSectionRef = useRef<HTMLDivElement>(null);
+    const [isDateCardVisible, setIsDateCardVisible] = useState(true);
+
     const entryDocRef = useMemoFirebase(
         () => (user && firestore ? doc(firestore, 'users', user.uid, 'accountability', dateId) : null),
         [user, firestore, dateId]
@@ -345,6 +346,32 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             router.push(`/auth/login?redirect_to=${redirectToOnAuth}`);
         }
     }, [isUserLoading, user, router, redirectToOnAuth]);
+    
+    useEffect(() => {
+        const sinsRef = sinsSectionRef.current;
+        if (!sinsRef) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsDateCardVisible(false);
+                } else {
+                    if (entry.boundingClientRect.top > 0) {
+                        setIsDateCardVisible(true);
+                    }
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(sinsRef);
+
+        return () => {
+            if (sinsRef) {
+                observer.unobserve(sinsRef);
+            }
+        };
+    }, []);
 
      useEffect(() => {
         if (currentEntry) {
@@ -458,7 +485,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </header>
             )}
 
-             <Card className="max-w-md mx-auto sticky top-20 z-20">
+             <Card className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
                 <CardContent className="p-4 flex items-center justify-between gap-4">
                      <Button variant="outline" size="icon" onClick={() => setSelectedDate(prev => subDays(prev, 1))}>
                         <ChevronRight className="h-4 w-4" />
@@ -524,7 +551,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 )}
             </Tabs>
 
-            <DestructiveSinsSection />
+            <div ref={sinsSectionRef}>
+                <DestructiveSinsSection />
+            </div>
 
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
                  <Card className="p-2 rounded-full shadow-lg border-2 border-primary/50">
