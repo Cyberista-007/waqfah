@@ -8,7 +8,7 @@ import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } 
 import { doc, setDoc, Timestamp, collection, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll } from 'lucide-react';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -24,6 +24,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { destructiveSinsData } from '@/lib/sins-data';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from './ui/separator';
+import type { Locale } from 'date-fns';
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -249,7 +251,7 @@ function DestructiveSinsSection() {
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
-                className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/40 transform-gpu hover:-translate-y-2 hover:scale-105"
+                className="group p-4 rounded-xl bg-destructive/80 hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/40 transform-gpu hover:-translate-y-1 hover:scale-105"
                 >
                 <div className="transition-transform duration-300 group-hover:scale-125">
                     {getIcon(sin.icon)}
@@ -355,6 +357,8 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const { user, isUserLoading } = useUser();
     
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [gregorianMonth, setGregorianMonth] = useState<Date>(new Date());
+    const [hijriMonth, setHijriMonth] = useState<Date>(new Date());
     const dateId = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
 
     const sinsSectionRef = useRef<HTMLDivElement>(null);
@@ -370,6 +374,30 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [completedActions, setCompletedActions] = useState<string[]>([]);
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     const [totalPoints, setTotalPoints] = useState(0);
+    
+    const hijriFormatters = {
+        formatDay: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric' }).format(date),
+        formatCaption: (date: Date, options?: { locale?: Locale }) => {
+            const formatted = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { month: 'long', year: 'numeric' }).format(date);
+            return formatted.includes('هـ') ? formatted : `${formatted}`;
+        },
+        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-SA', { weekday: 'short' }).format(weekday).charAt(0),
+    };
+    
+    const formatGregorianForButton = (date: Date) => {
+        return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+    }
+    const formatHijriForButton = (date: Date) => {
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+    }
+
+    const handleDateSelect = (date: Date | undefined) => {
+        if (!date) return;
+        setSelectedDate(date);
+        setGregorianMonth(date);
+        setHijriMonth(date);
+    }
+
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -418,7 +446,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
         if (!entryDocRef || !user) return;
 
-        // Calculate points here
         let points = 0;
         const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions));
         const allCustomActions = Object.values(newCustom).flat();
@@ -430,10 +457,8 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             }
         });
 
-        // Update UI state for points
         setTotalPoints(points);
 
-        // Save everything in one go to reduce writes
         setDocumentNonBlocking(entryDocRef, { 
             userId: user.uid, 
             date: Timestamp.fromDate(selectedDate),
@@ -450,7 +475,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         if (type === 'single') {
             const group = Object.values(accountabilityStructure).flatMap(p => p.groups).find(g => g.id === groupId);
             const groupActionIds = group?.actions.map(a => a.id) || [];
-            // Deselect all other actions in the group
             newCompleted = newCompleted.filter(id => !groupActionIds.includes(id));
             if (!isSelected) {
                 newCompleted.push(actionId);
@@ -479,7 +503,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         newCustomActions[prayerKey].push(newAction);
         setCustomActions(newCustomActions);
 
-        // Also mark it as completed immediately
         const newCompleted = [...completedActions, newAction.id];
         setCompletedActions(newCompleted);
 
@@ -515,28 +538,55 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </header>
             )}
 
-             <Card className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                     <Button variant="outline" size="icon" onClick={() => setSelectedDate(prev => subDays(prev, 1))}>
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
+            <Card className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
+                <CardContent className="p-2">
                     <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        variant={"outline"}
-                        className={cn("w-full justify-center text-left font-normal text-lg", !selectedDate && "text-muted-foreground")}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "EEEE, d MMMM yyyy", { locale: ar }) : <span>اختر تاريخًا</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={selectedDate} onSelect={(d) => d && setSelectedDate(d)} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                     <Button variant="outline" size="icon" onClick={() => setSelectedDate(prev => addDays(prev, 1))}>
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" className="w-full h-auto text-lg p-2">
+                                {formatGregorianForButton(selectedDate)} | {formatHijriForButton(selectedDate)}
+                                <ChevronDown className="h-4 w-4 ms-2" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 flex" dir="rtl">
+                            <Calendar
+                                locale={ar}
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={handleDateSelect}
+                                month={hijriMonth}
+                                onMonthChange={setHijriMonth}
+                                formatters={hijriFormatters}
+                                dir="rtl"
+                                components={{
+                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                }}
+                                classNames={{
+                                    caption_label: "font-bold text-primary",
+                                    nav_button_previous: "absolute right-1",
+                                    nav_button_next: "absolute right-auto left-1",
+                                }}
+                            />
+                            <Separator orientation="vertical" className="h-auto"/>
+                            <Calendar
+                                locale={ar}
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={handleDateSelect}
+                                month={gregorianMonth}
+                                onMonthChange={setGregorianMonth}
+                                dir="rtl"
+                                components={{
+                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                }}
+                                classNames={{
+                                    nav_button_previous: "absolute right-1",
+                                    nav_button_next: "absolute right-auto left-1",
+                                }}
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </CardContent>
             </Card>
 
