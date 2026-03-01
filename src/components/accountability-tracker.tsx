@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -261,72 +262,86 @@ function DestructiveSinsSection() {
         </CardContent>
       </Card>
       <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="max-w-xl bg-transparent backdrop-blur-sm border-none shadow-none text-white p-0">
-            <DialogHeader>
-                <DialogTitle className="sr-only">{activeSin?.dialogTitle || 'Warning'}</DialogTitle>
-            </DialogHeader>
-            <div className="relative p-6">
-                 <div className="absolute top-4 left-4 z-10">
-                    <DialogClose asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10 text-white rounded-full">
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </DialogClose>
-                </div>
-                <div className="absolute top-4 right-4 font-headline text-2xl text-red-400">
-                    {activeSin?.dialogTitle}
-                </div>
-                <div className="absolute top-0 right-0 bottom-0 w-1.5 bg-red-500/70 shadow-[0_0_15px_3px_rgba(239,68,68,0.4)]"></div>
+        <DialogContent className="max-w-lg bg-gray-900/80 backdrop-blur-sm border-red-500/30 border-2 shadow-2xl shadow-red-500/20 text-white p-0 rounded-2xl overflow-hidden">
+            <div className="relative p-8 pt-16">
+                <DialogHeader className="absolute top-6 right-6 text-right p-0">
+                    <DialogTitle className="font-headline text-3xl text-red-400">
+                        {activeSin?.dialogTitle}
+                    </DialogTitle>
+                </DialogHeader>
 
-                <div className="space-y-6 pt-16">
+                <DialogClose asChild>
+                    <Button variant="ghost" size="icon" className="absolute top-4 left-4 h-9 w-9 hover:bg-white/10 text-white/70 hover:text-white rounded-full">
+                        <X className="h-6 w-6" />
+                    </Button>
+                </DialogClose>
+                
+                <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 via-purple-500 to-red-500"></div>
+
+                <div className="space-y-8">
                     {activeSin?.concept && (
-                        <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
-                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <Info className="h-10 w-10 text-red-400" />
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Info className="h-5 w-5 text-red-400"/>
+                                <h3 className="text-lg font-bold text-red-400">المفهوم:</h3>
                             </div>
-                            <p className="font-amiri text-2xl leading-relaxed">
-                                <span className="font-bold text-red-400">المفهوم:</span> {activeSin.concept}
-                            </p>
+                            <div className="bg-black/20 p-4 rounded-lg border border-slate-700/80">
+                                <p className="text-lg leading-relaxed text-white/90">
+                                    {activeSin.concept}
+                                </p>
+                            </div>
                         </div>
                     )}
                     {activeSin?.daily_life_example && (
-                        <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
-                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                <CalendarIcon className="h-10 w-10 text-red-400" />
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-5 w-5 text-red-400"/>
+                                <h3 className="text-lg font-bold text-red-400">مثال من واقعنا (يومي):</h3>
                             </div>
-                            <p className="font-amiri text-2xl leading-relaxed">
-                                <span className="font-bold text-red-400">مثال من واقعنا (يومي):</span> "{activeSin.daily_life_example}"
-                            </p>
+                            <div className="bg-black/20 p-4 rounded-lg border-2 border-dashed border-slate-600">
+                                <p className="text-lg leading-relaxed text-white/90">
+                                    "{activeSin.daily_life_example}"
+                                </p>
+                            </div>
                         </div>
                     )}
                     {activeSin?.quranVerse && (
-                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
-                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><path fill="#f87171" d="M10.5 5.572a2 2 0 0 0-1.923-1.62C8.253 3.91 8 4.14 8 4.5v13a.5.5 0 0 0 .5.5H10v-1a.5.5 0 0 1 .5-.5h.5v.5h.5a.5.5 0 0 0 .5-.5v-1.5h1.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-.5v-1h.5a.5.5 0 0 0 .5-.5v-1.5h.5a.5.5 0 0 0 .5-.5V8a2.5 2.5 0 0 0-2.5-2.5h-2.077zM9 5.5a.5.5 0 0 1-.5.5H7v1.5h1.5a.5.5 0 0 1 .5.5v2.5a.5.5 0 0 1-.5.5H6.5a.5.5 0 0 0-.5.5v1.5a.5.5 0 0 0 .5.5H8v1.5a.5.5 0 0 1-.5.5H5.5A.5.5 0 0 1 5 17V5.5a.5.5 0 0 1 .5-.5h2.25a1.25 1.25 0 0 1 1.25 1.25V7h-1.5a.5.5 0 0 0-.5.5v-.5z"/></svg>}
+                         <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-5 w-5" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24"><path fill="#f87171" d="M10.5 5.572a2 2 0 0 0-1.923-1.62C8.253 3.91 8 4.14 8 4.5v13a.5.5 0 0 0 .5.5H10v-1a.5.5 0 0 1 .5-.5h.5v.5h.5a.5.5 0 0 0 .5-.5v-1.5h1.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-.5v-1h.5a.5.5 0 0 0 .5-.5v-1.5h.5a.5.5 0 0 0 .5-.5V8a2.5 2.5 0 0 0-2.5-2.5h-2.077zM9 5.5a.5.5 0 0 1-.5.5H7v1.5h1.5a.5.5 0 0 1 .5.5v2.5a.5.5 0 0 1-.5.5H6.5a.5.5 0 0 0-.5.5v1.5a.5.5 0 0 0 .5.5H8v1.5a.5.5 0 0 1-.5.5H5.5A.5.5 0 0 1 5 17V5.5a.5.5 0 0 1 .5-.5h2.25a1.25 1.25 0 0 1 1.25 1.25V7h-1.5a.5.5 0 0 0-.5.5v-.5z"/></svg>}
+                                <h3 className="text-lg font-bold text-red-400">دليل من القرآن:</h3>
                             </div>
-                            <p className="font-amiri text-2xl leading-relaxed">
-                                <span className="font-bold text-red-400">قال تعالى:</span> ({activeSin.quranVerse})
-                            </p>
+                             <div className="bg-black/20 p-4 rounded-lg border border-slate-700/80">
+                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
+                                    "{activeSin.quranVerse}"
+                                </p>
+                            </div>
                         </div>
                     )}
                     {activeSin?.hadith && (
-                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
-                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
+                         <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                               {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
+                                <h3 className="text-lg font-bold text-red-400">دليل من السنة:</h3>
                             </div>
-                            <p className="font-amiri text-2xl leading-relaxed">
-                                 <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith}"
-                            </p>
+                             <div className="bg-black/20 p-4 rounded-lg border border-slate-700/80">
+                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
+                                    "{activeSin.hadith}"
+                                </p>
+                            </div>
                         </div>
                     )}
                      {activeSin?.hadith2 && (
-                         <div className="relative bg-slate-800/50 rounded-2xl p-6 pt-10 text-center border-t-2 border-s-2 border-red-500/50">
-                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-800 p-2 rounded-full border-2 border-red-500/50">
-                                {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-10 w-10" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
+                         <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                               {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24"><g fill="none" stroke="#f87171" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H13.5C13.7761 3 14 3.22386 14 3.5V11.5C14 11.7761 13.7761 12 13.5 12H6C4.89543 12 4 11.1046 4 10V5"/><path d="M15 19V5C15 3.89543 15.8954 3 17 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H17C15.8954 21 15 20.1046 15 19Z"/><path d="M10 19H6C4.89543 19 4 18.1046 4 17V12"/></g></svg>}
+                                <h3 className="text-lg font-bold text-red-400">دليل من السنة:</h3>
                             </div>
-                            <p className="font-amiri text-2xl leading-relaxed">
-                                <span className="font-bold text-red-400">قال رسول الله ﷺ:</span> "{activeSin.hadith2}"
-                            </p>
+                             <div className="bg-black/20 p-4 rounded-lg border border-slate-700/80">
+                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
+                                    "{activeSin.hadith2}"
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
