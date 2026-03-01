@@ -352,4 +352,6 @@ export type IframeTrack = {
   type: 'youtube' | 'soundcloud';
   src: string;
   title: string;
+  lectureId?: string;
+  seriesId?: string;
 };

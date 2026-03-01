@@ -11,7 +11,7 @@ import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
-import { cn, formatDuration } from "@/lib/utils";
+import { cn, formatDuration, getVideoIdFromUrl } from "@/lib/utils";
 import { useState, memo } from "react";
 import { LectureCard } from "./lecture-card";
 
@@ -109,7 +109,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
 
     const handleImageClick = () => {
         if (videoId) {
-            playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
         } else {
             handlePlay();
         }
@@ -123,7 +123,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
         e.preventDefault();
         e.stopPropagation();
         if (videoId) {
-            playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
         }
     }
 

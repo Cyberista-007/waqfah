@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -26,7 +27,7 @@ interface SeriesClientPageProps {
 }
 
 export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: SeriesClientPageProps) {
-  const { playTrack } = useAudioPlayer();
+  const { playTrack, playIframe } = useAudioPlayer();
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,21 +79,27 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
   };
   
   const handlePlayAll = () => {
-      if (lecturesInSeries.length > 0) {
-          playTrack({
-            audioSrc: lecturesInSeries[0].audioSrc,
-            title: lecturesInSeries[0].title,
-            id: lecturesInSeries[0].id,
-            seriesId: series.id,
-            seriesSlug: series.slug,
-            seriesTitle: series.title,
-            imageId: lecturesInSeries[0].imageId,
-            slug: lecturesInSeries[0].slug,
-            programName: lecturesInSeries[0].programName,
-          });
-      } else {
-          toast({ variant: 'destructive', title: 'لا توجد محاضرات في هذه السلسلة.'});
-      }
+    const firstLecture = lecturesInSeries[0];
+    if (firstLecture) {
+        const videoId = getVideoIdFromUrl(firstLecture.youtubeUrl);
+        if (videoId) {
+            playIframe({ type: 'youtube', src: videoId, title: firstLecture.title, lectureId: firstLecture.id, seriesId: series.id });
+        } else {
+            playTrack({
+                audioSrc: firstLecture.audioSrc,
+                title: firstLecture.title,
+                id: firstLecture.id,
+                seriesId: series.id,
+                seriesSlug: series.slug,
+                seriesTitle: series.title,
+                imageId: firstLecture.imageId,
+                slug: firstLecture.slug,
+                programName: firstLecture.programName,
+            });
+        }
+    } else {
+        toast({ variant: 'destructive', title: 'لا توجد محاضرات في هذه السلسلة.' });
+    }
   };
 
   const { imageUrl, imageHint } = useMemo(() => {

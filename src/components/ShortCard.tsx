@@ -24,7 +24,7 @@ export function ShortCard({ lecture, index = 0 }: ShortCardProps) {
 
   const handlePlay = () => {
     if (videoId) {
-        playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+        playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
     }
   };
 

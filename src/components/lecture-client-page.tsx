@@ -92,7 +92,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   
   const handleWatchVideo = () => {
       if (videoId) {
-          playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+          playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
       }
   }
 

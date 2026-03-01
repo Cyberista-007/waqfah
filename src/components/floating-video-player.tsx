@@ -15,7 +15,7 @@ const DEFAULT_HEIGHT = 300;
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
 export default function FloatingVideoPlayer() {
-    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer } = useAudioPlayer();
+    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer, onPlayerStateChange } = useAudioPlayer();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -43,12 +43,6 @@ export default function FloatingVideoPlayer() {
 
     const onPlayerReady: YouTubeProps['onReady'] = (event) => {
         if(videoPlayerRef) videoPlayerRef.current = event.target;
-    };
-
-    const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-        if (event.data === 1) { // playing
-            pauseTrack();
-        }
     };
     
     // --- Interaction Handlers ---

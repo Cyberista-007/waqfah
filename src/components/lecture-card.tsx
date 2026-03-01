@@ -127,7 +127,7 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
 
   const handleOpenVideo = () => {
     if (videoId) {
-        playIframe({ type: 'youtube', src: videoId, title: lecture.title });
+        playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
     } else {
         handlePlay();
     }

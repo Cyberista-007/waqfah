@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Lecture } from "@/lib/types";
-import type { YouTubePlayer } from "react-youtube";
+import type { YouTubePlayer, YouTubeProps } from "react-youtube";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, getDoc, setDoc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,8 @@ export type IframeTrack = {
     type: 'youtube' | 'soundcloud';
     src: string; // youtube videoId or soundcloud URL
     title: string;
+    lectureId?: string;
+    seriesId?: string;
 };
 
 type AudioPlayerContextType = {
@@ -30,10 +32,11 @@ type AudioPlayerContextType = {
   // Iframe player state
   iframeTrack: IframeTrack | null;
   isPlayerVisible: boolean;
-  videoPlayerRef: React.RefObject<YouTubePlayer | null>; // Kept for YouTube specific interactions
+  videoPlayerRef: React.RefObject<YouTubePlayer | null>;
   playIframe: (track: IframeTrack) => void;
   hidePlayer: () => void;
   setVideoClipEndTime: (endTime: number | null) => void;
+  onPlayerStateChange: YouTubeProps['onStateChange'];
 
   // New site time tracker
   siteTimeInSeconds: number;
@@ -53,6 +56,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const videoPlayerRef = useRef<YouTubePlayer | null>(null);
   const [videoClipEndTime, setVideoClipEndTime] = useState<number | null>(null);
+  const videoUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Site Time State
   const { user } = useUser();
@@ -223,6 +227,60 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     closePlayer();
   }, [user, firestore, track, audioRef, closePlayer]);
 
+  const updateVideoListenHistory = useCallback(async () => {
+    if (!user || !firestore || !iframeTrack || iframeTrack.type !== 'youtube' || !iframeTrack.lectureId || !videoPlayerRef.current) return;
+    
+    const player = videoPlayerRef.current;
+    if (typeof player.getCurrentTime !== 'function' || typeof player.getDuration !== 'function') return;
+
+    const currentTime = player.getCurrentTime();
+    const duration = player.getDuration();
+
+    if (currentTime > 0 && duration > 0) {
+        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', iframeTrack.lectureId);
+        setDoc(historyRef, {
+            lectureId: iframeTrack.lectureId,
+            seriesId: iframeTrack.seriesId,
+            position: currentTime,
+            duration: duration,
+            lastListened: Timestamp.now(),
+        }, { merge: true }).catch(error => {
+            console.error("Failed to update video listen history:", error);
+        });
+    }
+  }, [user, firestore, iframeTrack]);
+
+  const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
+    if (event.data === 1) { // playing
+        pauseTrack();
+        if (videoUpdateIntervalRef.current) clearInterval(videoUpdateIntervalRef.current);
+        videoUpdateIntervalRef.current = setInterval(updateVideoListenHistory, 10000);
+    } else if (event.data === 2) { // paused
+        if (videoUpdateIntervalRef.current) clearInterval(videoUpdateIntervalRef.current);
+        updateVideoListenHistory();
+    } else if (event.data === 0) { // ended
+        if (videoUpdateIntervalRef.current) clearInterval(videoUpdateIntervalRef.current);
+        if (user && firestore && iframeTrack?.lectureId) {
+            const userRef = doc(firestore, 'users', user.uid);
+            const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', iframeTrack.lectureId);
+            runTransaction(firestore, async (transaction) => {
+                const player = videoPlayerRef.current;
+                if (!player || typeof player.getDuration !== 'function') return;
+                const duration = player.getDuration();
+                transaction.set(historyRef, {
+                    position: duration,
+                    duration: duration,
+                    lastListened: Timestamp.now(),
+                }, { merge: true });
+                transaction.update(userRef, { lecturesCompleted: increment(1) });
+            }).catch(error => {
+                console.error("Transaction failed on video end:", error);
+            });
+        }
+        hidePlayer();
+    }
+  };
+
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -355,6 +413,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       playIframe,
       hidePlayer,
       setVideoClipEndTime,
+      onPlayerStateChange,
       siteTimeInSeconds,
     }}>
       {children}
