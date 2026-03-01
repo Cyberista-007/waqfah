@@ -27,6 +27,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from './ui/separator';
 import type { Locale } from 'date-fns';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const prayerIcons = {
@@ -535,14 +536,31 @@ const ImanHarvestReport = () => {
             
             {/* Footer Buttons */}
              <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                <Button size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white">
-                    <FileText className="me-2 h-5 w-5"/>
-                    تحميل التقرير الشهري
-                </Button>
-                 <Button size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white">
-                    <FileText className="me-2 h-5 w-5"/>
-                    تحميل التقرير الأسبوعي
-                </Button>
+                <TooltipProvider>
+                    <ShadTooltip>
+                        <TooltipTrigger asChild>
+                            <Button disabled size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white opacity-50 cursor-not-allowed">
+                                <FileText className="me-2 h-5 w-5"/>
+                                تحميل التقرير الأسبوعي
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>قريباً</p>
+                        </TooltipContent>
+                    </ShadTooltip>
+                    
+                    <ShadTooltip>
+                        <TooltipTrigger asChild>
+                            <Button disabled size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white opacity-50 cursor-not-allowed">
+                                <FileText className="me-2 h-5 w-5"/>
+                                تحميل التقرير الشهري
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>قريباً</p>
+                        </TooltipContent>
+                    </ShadTooltip>
+                </TooltipProvider>
             </footer>
         </div>
     );
@@ -571,7 +589,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     
     const [completedActions, setCompletedActions] = useState<string[]>([]);
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
-    const [totalPoints, setTotalPoints] = useState(0);
     
     const hijriFormatters = {
         formatDay: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric' }).format(date),
@@ -643,8 +660,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             }
         });
 
-        setTotalPoints(points);
-
         setDocumentNonBlocking(entryDocRef, { 
             userId: user.uid, 
             date: Timestamp.fromDate(selectedDate),
@@ -658,14 +673,26 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         if (currentEntry) {
             setCompletedActions(currentEntry.completedActionIds || []);
             setCustomActions(currentEntry.customActions || {});
-             setTotalPoints(currentEntry.totalPoints || 0);
 
         } else {
             setCompletedActions([]);
             setCustomActions({});
-            setTotalPoints(0);
         }
     }, [currentEntry]);
+
+     const totalPoints = useMemo(() => {
+        let points = 0;
+        const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions));
+        const allCustomActions = Object.values(customActions).flat();
+
+        completedActions.forEach(actionId => {
+            const action = allActions.find(a => a.id === actionId) || allCustomActions.find(a => a.id === actionId);
+            if(action) {
+                points += action.points;
+            }
+        });
+        return points;
+    }, [completedActions, customActions]);
     
     const handleActionToggle = (actionId: string, groupId: string, type: 'single' | 'multi') => {
         let newCompleted = [...completedActions];
