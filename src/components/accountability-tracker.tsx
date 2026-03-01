@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -373,7 +371,6 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     const [totalPoints, setTotalPoints] = useState(0);
 
-
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push(`/auth/login?redirect_to=${redirectToOnAuth}`);
@@ -410,39 +407,39 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         if (currentEntry) {
             setCompletedActions(currentEntry.completedActionIds || []);
             setCustomActions(currentEntry.customActions || {});
+            setTotalPoints(currentEntry.totalPoints || 0);
         } else {
             setCompletedActions([]);
             setCustomActions({});
+            setTotalPoints(0);
         }
     }, [currentEntry]);
     
-    useEffect(() => {
+    const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
+        if (!entryDocRef || !user) return;
+
+        // Calculate points here
         let points = 0;
         const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions));
-        const allCustomActions = Object.values(customActions).flat();
+        const allCustomActions = Object.values(newCustom).flat();
 
-        completedActions.forEach(actionId => {
+        newCompleted.forEach(actionId => {
             const action = allActions.find(a => a.id === actionId) || allCustomActions.find(a => a.id === actionId);
             if(action) {
                 points += action.points;
             }
         });
 
+        // Update UI state for points
         setTotalPoints(points);
-        if (entryDocRef) {
-            setDocumentNonBlocking(entryDocRef, { totalPoints: points }, { merge: true });
-        }
 
-    }, [completedActions, customActions, entryDocRef]);
-
-
-    const saveEntry = useCallback((newCompleted: string[], newCustom: typeof customActions) => {
-        if (!entryDocRef || !user) return;
+        // Save everything in one go to reduce writes
         setDocumentNonBlocking(entryDocRef, { 
             userId: user.uid, 
             date: Timestamp.fromDate(selectedDate),
             completedActionIds: newCompleted,
-            customActions: newCustom
+            customActions: newCustom,
+            totalPoints: points
         }, { merge: true });
     }, [entryDocRef, user, selectedDate]);
     
@@ -599,3 +596,5 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         </div>
     );
 }
+
+    
