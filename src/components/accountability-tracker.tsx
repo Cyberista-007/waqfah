@@ -352,9 +352,17 @@ function DestructiveSinsSection() {
   );
 }
 
+const REPORT_TABS = [
+  { id: 'main', label: 'الرئيسية' },
+  { id: 'daily', label: 'التفاصيل اليومية' },
+  { id: 'weekly', label: 'أرشيف الأسابيع' },
+  { id: 'monthly', label: 'أرشيف الشهور' },
+];
+
 const ImanHarvestReport = () => {
     const [timeframe, setTimeframe] = useState('weekly');
     const { user } = useUser();
+    const [activeReportTab, setActiveReportTab] = useState('main');
     
     // 1. Fetch real data
     const thirtyDaysAgo = subDays(new Date(), 30);
@@ -371,13 +379,13 @@ const ImanHarvestReport = () => {
             bestDay: '-',
             avgPoints: 0,
             performanceData: [],
-            categoryDistribution: []
+            categoryDistribution: [],
+            mostKept: [],
+            needsFocus: [],
         };
         
-        // Commitment Days
         const commitmentDays = rawEntries.length;
 
-        // Best Day (day with highest score in the last 30 days)
         let maxPoints = 0;
         let bestDayOfWeek = -1;
         rawEntries.forEach(entry => {
@@ -389,18 +397,15 @@ const ImanHarvestReport = () => {
         const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const bestDay = bestDayOfWeek !== -1 ? dayNames[bestDayOfWeek] : 'غير محدد';
 
-        // Average Daily Points
         const totalPoints = rawEntries.reduce((sum, entry) => sum + (entry.totalPoints || 0), 0);
         const avgPoints = commitmentDays > 0 ? Math.round(totalPoints / commitmentDays) : 0;
         
-        // Performance Data (last 7 entries)
         const recentEntries = rawEntries.slice(0, 7).reverse();
         const performanceData = recentEntries.map(entry => ({
             name: new Date(entry.date.seconds * 1000).toLocaleDateString('ar-EG', { weekday: 'short' }),
             points: entry.totalPoints || 0
         }));
 
-        // Category Distribution
         const categoryPoints: {[key: string]: number} = {
             'الصلوات': 0, 'الأذكار': 0, 'السنن': 0, 'النوافل': 0, 'القرآن والعلم': 0,
         };
@@ -411,6 +416,8 @@ const ImanHarvestReport = () => {
         };
 
         const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions.map(a => ({...a, groupId: g.id}))));
+        const actionCounts: {[key: string]: { count: number, label: string }} = {};
+        allActions.forEach(a => actionCounts[a.id] = { count: 0, label: a.label });
         
         rawEntries.forEach(entry => {
             const allCustomActions = Object.values(entry.customActions || {}).flat();
@@ -425,6 +432,7 @@ const ImanHarvestReport = () => {
                     const foundAction = allActions.find(a => a.id === actionId);
                     if (foundAction) {
                         action = foundAction;
+                        actionCounts[action.id].count++;
                         const groupKey = Object.keys(categoryMap).find(key => foundAction.groupId.includes(key));
                         categoryKey = groupKey ? categoryMap[groupKey] : 'النوافل';
                     }
@@ -442,8 +450,15 @@ const ImanHarvestReport = () => {
                 const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#ff5733'];
                 return { name, value, fill: colors[index % colors.length] };
             });
+        
+        const actionPerformance = Object.entries(actionCounts)
+            .map(([id, {count, label}]) => ({ id, label, percentage: (count / commitmentDays) * 100 }))
+            .sort((a,b) => a.percentage - b.percentage);
 
-        return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution };
+        const mostKept = actionPerformance.filter(a => a.percentage > 75).slice(-5).reverse();
+        const needsFocus = actionPerformance.filter(a => a.percentage <= 75).slice(0, 5);
+
+        return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus };
     }, [rawEntries]);
 
 
@@ -466,14 +481,36 @@ const ImanHarvestReport = () => {
         <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
             <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
-                <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
-                    {['الرئيسية', 'التفاصيل اليومية', 'أرشيف الأسابيع', 'أرشيف الشهور'].map(tab => (
-                        <Button key={tab} variant={tab === 'الرئيسية' ? 'default' : 'ghost'} className={cn(
-                            'rounded-full',
-                            tab === 'الرئيسية' ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white'
-                        )}>
-                            {tab}
-                        </Button>
+                 <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
+                    {REPORT_TABS.map(tab => (
+                        tab.id === 'main' ? (
+                            <Button 
+                                key={tab.id} 
+                                onClick={() => setActiveReportTab(tab.id)}
+                                variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
+                                className={cn(
+                                    'rounded-full',
+                                    activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white'
+                                )}>
+                                {tab.label}
+                            </Button>
+                        ) : (
+                            <TooltipProvider key={tab.id}>
+                                <ShadTooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button 
+                                            disabled 
+                                            variant='ghost' 
+                                            className="rounded-full text-muted-foreground/50 cursor-not-allowed">
+                                            {tab.label}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>قريباً</p>
+                                    </TooltipContent>
+                                </ShadTooltip>
+                            </TooltipProvider>
+                        )
                     ))}
                 </div>
             </header>
@@ -485,19 +522,19 @@ const ImanHarvestReport = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
                      <CardHeader className="p-0 items-center">
                         <div className="p-3 bg-blue-500/20 rounded-full mb-2">
                              <CalendarDays className="h-6 w-6 text-blue-400"/>
                         </div>
-                        <CardDescription className="text-slate-400">أيام الالتزام (آخر 30 يومًا)</CardDescription>
+                        <CardDescription className="text-slate-400">أيام الالتزام (آخر 30)</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 mt-2">
                         <p className="text-4xl font-bold">{stats.commitmentDays}</p>
                     </CardContent>
                 </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
                     <CardHeader className="p-0 items-center">
                         <div className="p-3 bg-green-500/20 rounded-full mb-2">
                              <Trophy className="h-6 w-6 text-green-400"/>
@@ -508,15 +545,15 @@ const ImanHarvestReport = () => {
                         <p className="text-4xl font-bold">{stats.bestDay}</p>
                     </CardContent>
                 </Card>
-                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
                     <CardHeader className="p-0 items-center">
                         <div className="p-3 bg-red-500/20 rounded-full mb-2">
-                             <ThumbsUp className="h-6 w-6 text-red-400"/>
+                             <CheckCircle2 className="h-6 w-6 text-red-400"/>
                         </div>
-                        <CardDescription className="text-slate-400">متوسط النقاط اليومي</CardDescription>
+                        <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold text-red-400">{stats.avgPoints}</p>
+                        <p className="text-4xl font-bold text-red-400">{completionPercentage}%</p>
                     </CardContent>
                 </Card>
             </div>
@@ -524,25 +561,6 @@ const ImanHarvestReport = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-300">
-                            <Scale className="h-5 w-5"/>
-                            توزيع العبادات
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
-                                    {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-slate-300">
                              <TrendingUp className="h-5 w-5"/>
                              تطور أدائك (آخر 7 أيام)
@@ -564,6 +582,58 @@ const ImanHarvestReport = () => {
                                 <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fillOpacity={1} fill="url(#colorPoints)" />
                             </AreaChart>
                         </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-slate-300">
+                            <Scale className="h-5 w-5"/>
+                            توزيع العبادات
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
+                                    {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-400">
+                            <ThumbsUp className="h-5 w-5"/>
+                            أكثر ما حافظت عليه
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {stats.mostKept.map(item => (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                <span>{item.label}</span>
+                                <span className="font-mono">{Math.round(item.percentage)}%</span>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-yellow-400">
+                            <AlertTriangle className="h-5 w-5"/>
+                            يحتاج لتركيز أكبر
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                         {stats.needsFocus.map(item => (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                <span>{item.label}</span>
+                                <span className="font-mono">{Math.round(item.percentage)}%</span>
+                            </div>
+                        ))}
                     </CardContent>
                 </Card>
             </div>
