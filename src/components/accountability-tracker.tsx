@@ -28,7 +28,6 @@ import { Separator } from './ui/separator';
 import type { Locale } from 'date-fns';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion, AnimatePresence } from 'framer-motion';
 
 
 const prayerIcons = {
@@ -432,6 +431,7 @@ const ImanHarvestReport = () => {
             categoryDistribution: [],
             mostKept: [],
             needsFocus: [],
+            fullCommitmentDays: 0
         };
         
         const commitmentDays = rawEntries.length;
@@ -446,6 +446,8 @@ const ImanHarvestReport = () => {
         });
         const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const bestDay = bestDayOfWeek !== -1 ? dayNames[bestDayOfWeek] : 'غير محدد';
+        const fullCommitmentDays = rawEntries.filter(entry => entry.totalPoints && entry.totalPoints >= MAX_POSSIBLE_POINTS).length;
+
 
         const totalPoints = rawEntries.reduce((sum, entry) => sum + (entry.totalPoints || 0), 0);
         const avgPoints = commitmentDays > 0 ? Math.round(totalPoints / commitmentDays) : 0;
@@ -508,7 +510,7 @@ const ImanHarvestReport = () => {
         const mostKept = actionPerformance.filter(a => a.percentage > 75).slice(-5).reverse();
         const needsFocus = actionPerformance.filter(a => a.percentage <= 75).slice(0, 5);
 
-        return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus };
+        return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution, mostKept, needsFocus, fullCommitmentDays };
     }, [rawEntries]);
 
     if (isLoading) {
@@ -605,6 +607,7 @@ const ImanHarvestReport = () => {
             </footer>
         </div>
     ));
+    PrintableReport.displayName = 'PrintableReport';
 
 
     return (
@@ -648,7 +651,7 @@ const ImanHarvestReport = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                          <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
                             <CardHeader className="p-0 items-center">
                                 <div className="p-3 bg-blue-500/20 rounded-full mb-2">
@@ -658,6 +661,17 @@ const ImanHarvestReport = () => {
                             </CardHeader>
                             <CardContent className="p-0 mt-2">
                                 <p className="text-5xl font-bold">{stats.commitmentDays}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
+                            <CardHeader className="p-0 items-center">
+                                <div className="p-3 bg-purple-500/20 rounded-full mb-2">
+                                    <Flame className="h-6 w-6 text-purple-400"/>
+                                </div>
+                                <CardDescription className="text-slate-400">أيام الالتزام التام</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0 mt-2">
+                                <p className="text-5xl font-bold">{stats.fullCommitmentDays}</p>
                             </CardContent>
                         </Card>
                         <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
@@ -765,14 +779,26 @@ const ImanHarvestReport = () => {
                     </div>
                     
                     <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
-                            <FileText className="me-2 h-5 w-5"/>
-                             تحميل التقرير الأسبوعي (PDF)
-                         </Button>
-                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                            <FileText className="me-2 h-5 w-5"/>
-                            تحميل التقرير الشهري (PDF)
-                         </Button>
+                         <TooltipProvider>
+                            <ShadTooltip>
+                                <TooltipTrigger asChild>
+                                    <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white" >
+                                        <FileText className="me-2 h-5 w-5"/>
+                                        تحميل التقرير الأسبوعي (PDF)
+                                    </Button>
+                                </TooltipTrigger>
+                            </ShadTooltip>
+                        </TooltipProvider>
+                         <TooltipProvider>
+                            <ShadTooltip>
+                                <TooltipTrigger asChild>
+                                     <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white" >
+                                        <FileText className="me-2 h-5 w-5"/>
+                                        تحميل التقرير الشهري (PDF)
+                                    </Button>
+                                </TooltipTrigger>
+                            </ShadTooltip>
+                        </TooltipProvider>
                     </footer>
                 </div>
             </div>
@@ -997,13 +1023,8 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                 <ChevronDown className="h-4 w-4 ms-2" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 flex" dir="rtl">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                                className="bg-gradient-to-br from-gray-100 to-blue-100 p-2 border-4 border-dashed border-red-300"
-                            >
+                        <PopoverContent className="w-auto p-0 flex bg-popover" dir="rtl">
+                            <div className="p-2">
                                 <Calendar
                                     locale={ar}
                                     mode="single"
@@ -1023,14 +1044,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                         nav_button_next: "absolute right-auto left-1",
                                     }}
                                 />
-                            </motion.div>
+                            </div>
                             <Separator orientation="vertical" className="h-auto"/>
-                             <motion.div
-                                initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                                className="bg-gradient-to-bl from-gray-100 to-green-100 p-2 border-4 border-dotted border-blue-300"
-                            >
+                            <div className="p-2">
                                 <Calendar
                                     locale={ar}
                                     mode="single"
@@ -1049,7 +1065,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                         nav_button_next: "absolute right-auto left-1",
                                     }}
                                 />
-                            </motion.div>
+                            </div>
                         </PopoverContent>
                     </Popover>
                 </CardContent>
@@ -1066,11 +1082,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                         const Icon = prayerIcons[key as keyof typeof prayerIcons];
                         const isFajr = key === 'fajr';
                         return (
-                            <motion.div
-                                key={key}
-                                layout
-                                animate={isFajr ? { scale: [1, 1.1, 1], transition: { duration: 1.5, repeat: Infinity } } : {}}
-                            >
+                            <div key={key}>
                              <TabsTrigger value={key} className={cn(
                                  "px-4 py-2 rounded-full flex items-center gap-2",
                                  isFajr && "bg-gradient-to-tr from-yellow-300 via-orange-400 to-red-500 text-white shadow-lg"
@@ -1078,7 +1090,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                 {Icon && <Icon className="h-5 w-5" />}
                                 <span>{name}</span>
                              </TabsTrigger>
-                            </motion.div>
+                            </div>
                         )
                     })}
                 </TabsList>
@@ -1093,16 +1105,12 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 ) : (
                     Object.entries(accountabilityStructure).reverse().map(([key, prayerConfig]) => (
                         <TabsContent key={key} value={key} className="mt-6">
-                             <AnimatePresence>
-                                <motion.h2
+                             <div
                                     key={key}
-                                    initial={{ opacity: 0, y: -20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-3xl font-bold text-center mb-6"
+                                className="text-3xl font-bold text-center mb-6"
                                 >
                                     {prayerConfig.name}
-                                </motion.h2>
-                            </AnimatePresence>
+                                </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {prayerConfig.groups.map(group => (
                                     <ActionGroupCard
