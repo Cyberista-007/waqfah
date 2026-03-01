@@ -35,7 +35,7 @@ export default function SeriesDetailPage() {
   const lecturesInSeries = useMemo(() => {
     if (!allLectures || !series?.id) return [];
     return allLectures
-        .filter(l => l.seriesId === series.id)
+        .filter(l => l.seriesId === series.id || l.seriesSlug === series.slug)
         .sort((a, b) => {
             const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
             return toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime();

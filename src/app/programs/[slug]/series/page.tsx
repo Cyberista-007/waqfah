@@ -20,7 +20,7 @@ function ProgramSeriesContent({ program }: { program: Program }) {
     const series = useMemo(() => {
         if (!allSeries) return [];
         const programSeries = allSeries
-            .filter(s => s.programId === program.id)
+            .filter(s => s.programId === program.id || s.programSlug === program.slug)
             .sort((a, b) => {
                 const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
                 return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
@@ -39,7 +39,7 @@ function ProgramSeriesContent({ program }: { program: Program }) {
 
         return fuse.search(searchTerm).map(result => result.item);
 
-    }, [allSeries, program.id, searchTerm]);
+    }, [allSeries, program.id, program.slug, searchTerm]);
 
     return (
         <div>
