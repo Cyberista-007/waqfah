@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
-import { doc, setDoc, Timestamp, collection, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, collection, writeBatch, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
@@ -354,41 +354,116 @@ function DestructiveSinsSection() {
 
 const ImanHarvestReport = () => {
     const [timeframe, setTimeframe] = useState('weekly');
+    const { user } = useUser();
+    
+    // 1. Fetch real data
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    const accountabilityPath = user ? `users/${user.uid}/accountability` : null;
+    const { data: rawEntries, isLoading } = useCollection<AccountabilityEntry>(
+        accountabilityPath,
+        { where: ['date', '>=', thirtyDaysAgo], orderBy: ['date', 'desc'] }
+    );
+    
+    // 2. Process data
+    const stats = useMemo(() => {
+        if (!rawEntries) return {
+            commitmentDays: 0,
+            bestDay: '-',
+            avgPoints: 0,
+            performanceData: [],
+            categoryDistribution: []
+        };
+        
+        // Commitment Days
+        const commitmentDays = rawEntries.length;
 
-    // Mock data based on the image
-    const weeklyPointsData = useMemo(() => [
-        { name: 'الخميس', points: 75 },
-        { name: 'الاربعاء', points: 80 },
-        { name: 'الثلاثاء', points: 60 },
-        { name: 'الاثنين', points: 90 },
-        { name: 'الأحد', points: 70 },
-        { name: 'السبت', points: 50 },
-        { name: 'الجمعة', points: 65 },
-    ].reverse(), []);
+        // Best Day (day with highest score in the last 30 days)
+        let maxPoints = 0;
+        let bestDayOfWeek = -1;
+        rawEntries.forEach(entry => {
+            if ((entry.totalPoints || 0) > maxPoints) {
+                maxPoints = entry.totalPoints || 0;
+                bestDayOfWeek = new Date(entry.date.seconds * 1000).getDay();
+            }
+        });
+        const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const bestDay = bestDayOfWeek !== -1 ? dayNames[bestDayOfWeek] : 'غير محدد';
 
-    const categoryData = useMemo(() => [
-        { name: 'الصلوات', value: 40, fill: '#8884d8' }, // Blueish
-        { name: 'الأذكار', value: 25, fill: '#82ca9d' },   // Greenish
-        { name: 'القرآن', value: 15, fill: '#ffc658' },    // Yellowish
-        { name: 'قيام الليل', value: 10, fill: '#ff8042' },   // Orangish
-        { name: 'السنن', value: 10, fill: '#ff5733' },     // Reddish
-    ], []);
+        // Average Daily Points
+        const totalPoints = rawEntries.reduce((sum, entry) => sum + (entry.totalPoints || 0), 0);
+        const avgPoints = commitmentDays > 0 ? Math.round(totalPoints / commitmentDays) : 0;
+        
+        // Performance Data (last 7 entries)
+        const recentEntries = rawEntries.slice(0, 7).reverse();
+        const performanceData = recentEntries.map(entry => ({
+            name: new Date(entry.date.seconds * 1000).toLocaleDateString('ar-EG', { weekday: 'short' }),
+            points: entry.totalPoints || 0
+        }));
 
-    const needsFocusData = [
-        { label: 'قيام الليل', value: 35 },
-        { label: 'السنن', value: 55 },
-        { label: 'الورد اليومي', value: 62 },
-    ];
+        // Category Distribution
+        const categoryPoints: {[key: string]: number} = {
+            'الصلوات': 0, 'الأذكار': 0, 'السنن': 0, 'النوافل': 0, 'القرآن والعلم': 0,
+        };
 
-    const mostConsistentData = [
-        { label: 'الصلوات', value: 100 },
-        { label: 'القرآن', value: 85 },
-        { label: 'الأذكار', value: 92 },
-    ];
+        const categoryMap: {[key: string]: string} = {
+            'prayer': 'الصلوات', 'adhkar': 'الأذكار', 'sunnah': 'السنن', 'witr': 'النوافل',
+            'quran': 'القرآن والعلم', 'knowledge': 'القرآن والعلم', 'charity': 'النوافل'
+        };
+
+        const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions.map(a => ({...a, groupId: g.id}))));
+        
+        rawEntries.forEach(entry => {
+            const allCustomActions = Object.values(entry.customActions || {}).flat();
+            entry.completedActionIds?.forEach(actionId => {
+                let action;
+                let categoryKey: string | undefined;
+
+                if (actionId.startsWith('custom_')) {
+                    action = allCustomActions.find(a => a.id === actionId);
+                    categoryKey = 'النوافل';
+                } else {
+                    const foundAction = allActions.find(a => a.id === actionId);
+                    if (foundAction) {
+                        action = foundAction;
+                        const groupKey = Object.keys(categoryMap).find(key => foundAction.groupId.includes(key));
+                        categoryKey = groupKey ? categoryMap[groupKey] : 'النوافل';
+                    }
+                }
+                
+                if (action && categoryKey && categoryPoints.hasOwnProperty(categoryKey)) {
+                    categoryPoints[categoryKey] += action.points;
+                }
+            });
+        });
+
+        const categoryDistribution = Object.entries(categoryPoints)
+            .filter(([, points]) => points > 0)
+            .map(([name, value], index) => {
+                const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#ff5733'];
+                return { name, value, fill: colors[index % colors.length] };
+            });
+
+        return { commitmentDays, bestDay, avgPoints, performanceData, categoryDistribution };
+    }, [rawEntries]);
+
+
+    if (isLoading) {
+      return (
+        <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
+          <div className="flex justify-center items-center h-96">
+            <Loader2 className="w-12 h-12 animate-spin text-slate-400" />
+          </div>
+        </div>
+      );
+    }
+    
+    // This is a rough estimation of a daily maximum. This can be improved.
+    const MAX_POSSIBLE_POINTS = 55; 
+    const completionPercentage = stats.avgPoints > 0 ? Math.min(Math.round((stats.avgPoints / MAX_POSSIBLE_POINTS) * 100), 100) : 0;
+
 
     return (
         <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
-            {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
                 <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
@@ -403,7 +478,6 @@ const ImanHarvestReport = () => {
                 </div>
             </header>
 
-            {/* Timeframe Toggle */}
             <div className="flex justify-end mb-6">
                 <div className="flex items-center gap-1 p-1 bg-slate-800/60 rounded-full">
                     <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">شهري</Button>
@@ -411,17 +485,16 @@ const ImanHarvestReport = () => {
                 </div>
             </div>
 
-            {/* Top Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
-                    <CardHeader className="p-0 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 lg:col-span-2">
+                     <CardHeader className="p-0 items-center">
                         <div className="p-3 bg-blue-500/20 rounded-full mb-2">
-                             <Calendar className="h-6 w-6 text-blue-400"/>
+                             <CalendarDays className="h-6 w-6 text-blue-400"/>
                         </div>
-                        <CardDescription className="text-slate-400">أيام الالتزام التام</CardDescription>
+                        <CardDescription className="text-slate-400">أيام الالتزام (آخر 30 يومًا)</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold">12</p>
+                        <p className="text-4xl font-bold">{stats.commitmentDays}</p>
                     </CardContent>
                 </Card>
                  <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
@@ -432,7 +505,7 @@ const ImanHarvestReport = () => {
                         <CardDescription className="text-slate-400">أفضل يوم</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold">الخميس</p>
+                        <p className="text-4xl font-bold">{stats.bestDay}</p>
                     </CardContent>
                 </Card>
                  <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6">
@@ -440,17 +513,15 @@ const ImanHarvestReport = () => {
                         <div className="p-3 bg-red-500/20 rounded-full mb-2">
                              <ThumbsUp className="h-6 w-6 text-red-400"/>
                         </div>
-                        <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
+                        <CardDescription className="text-slate-400">متوسط النقاط اليومي</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 mt-2">
-                        <p className="text-4xl font-bold text-red-400">81%</p>
+                        <p className="text-4xl font-bold text-red-400">{stats.avgPoints}</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Pie Chart */}
                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-slate-300">
@@ -461,8 +532,8 @@ const ImanHarvestReport = () => {
                     <CardContent className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} labelLine={false} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
-                                    {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
+                                    {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                                 </Pie>
                                 <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
                             </PieChart>
@@ -470,17 +541,16 @@ const ImanHarvestReport = () => {
                     </CardContent>
                 </Card>
 
-                {/* Area Chart */}
                 <Card className="bg-slate-800/50 border-slate-700/50 text-white">
                      <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-slate-300">
                              <TrendingUp className="h-5 w-5"/>
-                             تطور أدائك
+                             تطور أدائك (آخر 7 أيام)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={weeklyPointsData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                            <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                                 <defs>
                                     <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
@@ -496,45 +566,8 @@ const ImanHarvestReport = () => {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-
-                {/* Needs Focus */}
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-400">
-                            <AlertTriangle className="h-5 w-5" />
-                            يحتاج لتركيز أكبر
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {needsFocusData.map(item => (
-                            <div key={item.label} className="flex justify-between items-center text-lg">
-                                <span className="text-slate-300">{item.label}</span>
-                                <span className="font-bold text-red-400">{item.value}%</span>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-
-                {/* Most Consistent */}
-                <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-400">
-                            <CheckCircle2 className="h-5 w-5" />
-                            أكثر ما حافظت عليه
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                         {mostConsistentData.map(item => (
-                            <div key={item.label} className="flex justify-between items-center text-lg">
-                                <span className="text-slate-300">{item.label}</span>
-                                <span className="font-bold text-green-400">{item.value}%</span>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
             </div>
             
-            {/* Footer Buttons */}
              <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <TooltipProvider>
                     <ShadTooltip>
