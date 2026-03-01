@@ -7,9 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useDoc, useFirestore, useStorage } from '@/firebase';
+import { useDoc, useFirestore, useStorage, setDocumentNonBlocking } from '@/firebase';
 import type { AppearanceSettings } from '@/lib/types';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Palette } from 'lucide-react';
 import { themes } from '@/components/theme-switcher';
@@ -117,7 +117,7 @@ export default function AdminAppearancePage() {
       if (heroImageUrl) newSettings.heroImageUrl = heroImageUrl;
       
       const settingsRef = doc(firestore, 'settings', 'appearance');
-      await setDoc(settingsRef, newSettings, { merge: true });
+      setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
 
       setQuranIconFile(null);
       setHadithIconFile(null);
