@@ -233,12 +233,12 @@ function DestructiveSinsSection() {
     };
     
     if (isLoading && !sins) {
-        return <Card className="mt-8 bg-card/50"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
+        return <Card className="mt-8 bg-card"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
     }
     
   return (
     <>
-      <Card className="mt-8 bg-card/50">
+      <Card className="mt-8 bg-card">
         <CardHeader>
           <CardTitle className="text-2xl font-headline text-destructive text-center border-b-2 border-destructive/50 pb-2">
             احذر المهلكات
@@ -249,7 +249,7 @@ function DestructiveSinsSection() {
                 <button
                 key={sin.id}
                 onClick={() => setActiveSin(sin)}
-                className="group p-4 rounded-xl bg-destructive/10 hover:bg-destructive/20 transition-all duration-300 text-destructive flex flex-col items-center justify-center gap-4 aspect-square border-2 border-transparent hover:border-destructive/30 hover:shadow-lg hover:shadow-destructive/20 hover:-translate-y-2"
+                className="group p-4 rounded-xl bg-destructive/80 hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square border-2 border-destructive/50 hover:border-destructive/70 hover:shadow-lg hover:shadow-destructive/20 hover:-translate-y-2"
                 >
                 <div className="transition-transform duration-300 group-hover:scale-125">
                     {getIcon(sin.icon)}
