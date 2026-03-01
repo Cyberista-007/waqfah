@@ -96,8 +96,11 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
   };
 
   const placeholder = useMemo(() => {
-    if (lecturesInSeries && lecturesInSeries.length > 0 && lecturesInSeries[0].imageId) {
-        return getPlaceholderImage(lecturesInSeries[0].imageId);
+    if (lecturesInSeries && lecturesInSeries.length > 0) {
+        const lectureWithImage = lecturesInSeries.find(l => l.imageId);
+        if (lectureWithImage && lectureWithImage.imageId) {
+            return getPlaceholderImage(lectureWithImage.imageId);
+        }
     }
     return getPlaceholderImage(series.imageId);
   }, [lecturesInSeries, series.imageId]);
