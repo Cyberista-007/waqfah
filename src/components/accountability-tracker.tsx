@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
 import { doc, setDoc, Timestamp, collection, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -26,6 +26,8 @@ import { destructiveSinsData } from '@/lib/sins-data';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from './ui/separator';
 import type { Locale } from 'date-fns';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+
 
 const prayerIcons = {
     fajr: Sunrise,
@@ -248,15 +250,15 @@ function DestructiveSinsSection() {
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
             {sins?.map((sin) => (
-                <button
-                key={sin.id}
-                onClick={() => setActiveSin(sin)}
-                className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
-                >
-                <div className="transition-transform duration-300 group-hover:scale-125">
-                    {getIcon(sin.icon)}
-                </div>
-                <span className="font-bold text-lg">{sin.title}</span>
+                 <button
+                    key={sin.id}
+                    onClick={() => setActiveSin(sin)}
+                    className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
+                    >
+                    <div className="transition-transform duration-300 group-hover:scale-125">
+                        {getIcon(sin.icon)}
+                    </div>
+                    <span className="font-bold text-lg">{sin.title}</span>
                 </button>
             ))
           }
@@ -349,6 +351,146 @@ function DestructiveSinsSection() {
   );
 }
 
+const ImanHarvestReport = () => {
+  const [activeTab, setActiveTab] = useState('main');
+  
+  // Mock data for charts
+  const weeklyPointsData = useMemo(() => [
+    { date: '24 فبراير', points: 30 },
+    { date: '25 فبراير', points: 45 },
+    { date: '26 فبراير', points: 28 },
+    { date: '27 فبراير', points: 50 },
+    { date: '28 فبراير', points: 65 },
+    { date: '29 فبراير', points: 55 },
+    { date: '1 مارس', points: 75 },
+  ], []);
+
+  const categoryData = useMemo(() => [
+    { name: 'الصلوات', value: 400, fill: 'hsl(var(--chart-1))' },
+    { name: 'الأذكار', value: 300, fill: 'hsl(var(--chart-2))' },
+    { name: 'القرآن', value: 300, fill: 'hsl(var(--chart-3))' },
+    { name: 'طلب العلم', value: 200, fill: 'hsl(var(--chart-4))' },
+    { name: 'نوافل أخرى', value: 278, fill: 'hsl(var(--chart-5))' },
+  ], []);
+
+  const mockStats = useMemo(() => ({
+    totalPoints: 1478,
+    streak: 12,
+    completedActions: 150,
+    bestDayPoints: 85
+  }), []);
+
+  const MainReportTab = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">مجموع النقاط</CardTitle>
+            <Trophy className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.totalPoints}</div>
+            <p className="text-xs text-muted-foreground">+201 عن الأسبوع الماضي</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">أطول مداومة</CardTitle>
+            <Flame className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.streak} أيام</div>
+            <p className="text-xs text-muted-foreground">استمر في التقدم</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">الأعمال المنجزة</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">+{mockStats.completedActions}</div>
+            <p className="text-xs text-muted-foreground">هذا الأسبوع</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">أفضل يوم</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.bestDayPoints} نقطة</div>
+            <p className="text-xs text-muted-foreground">في 28 فبراير</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>النقاط خلال آخر 7 أيام</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={weeklyPointsData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
+                <Area type="monotone" dataKey="points" name="النقاط" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorPoints)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>توزيع النقاط</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px] w-full">
+             <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
+                </PieChart>
+              </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="main">الرئيسية</TabsTrigger>
+              <TabsTrigger value="progress" disabled>التقدم</TabsTrigger>
+              <TabsTrigger value="comparison" disabled>مقارنة</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon"><ChevronRight className="h-4 w-4" /></Button>
+            <span className="font-semibold">الأسبوع الماضي</span>
+            <Button variant="outline" size="icon"><ChevronLeft className="h-4 w-4" /></Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+          {activeTab === 'main' && <MainReportTab />}
+      </CardContent>
+    </Card>
+  )
+}
 
 export function AccountabilityTracker({ redirectToOnAuth = '/accountability', showHeader = true }: { redirectToOnAuth?: string, showHeader?: boolean }) {
     const { toast } = useToast();
@@ -460,30 +602,14 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         if (currentEntry) {
             setCompletedActions(currentEntry.completedActionIds || []);
             setCustomActions(currentEntry.customActions || {});
-            
-            // Recalculate points on load to ensure consistency
-            let points = 0;
-            const allActions = Object.values(accountabilityStructure).flatMap(p => p.groups.flatMap(g => g.actions));
-            const allCustomActions = Object.values(currentEntry.customActions || {}).flat();
-            (currentEntry.completedActionIds || []).forEach(actionId => {
-                const action = allActions.find(a => a.id === actionId) || allCustomActions.find(a => a.id === actionId);
-                if (action) {
-                    points += action.points;
-                }
-            });
-            setTotalPoints(points);
-
-            if(points !== currentEntry.totalPoints) {
-                // If points are out of sync, trigger a save.
-                saveEntry(currentEntry.completedActionIds || [], currentEntry.customActions || {});
-            }
+             setTotalPoints(currentEntry.totalPoints || 0);
 
         } else {
             setCompletedActions([]);
             setCustomActions({});
             setTotalPoints(0);
         }
-    }, [currentEntry, saveEntry]);
+    }, [currentEntry]);
     
     const handleActionToggle = (actionId: string, groupId: string, type: 'single' | 'multi') => {
         let newCompleted = [...completedActions];
@@ -607,9 +733,13 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="general" className="w-full">
+            <Tabs defaultValue="fajr" className="w-full">
               <div className="flex justify-center overflow-x-auto pb-2">
                 <TabsList className="h-auto p-1.5 shrink-0">
+                    <TabsTrigger value="iman-harvest" className="px-4 py-2 rounded-full flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        <span>الحصاد الإيماني</span>
+                    </TabsTrigger>
                     {Object.entries(accountabilityStructure).reverse().map(([key, { name }]) => {
                          const Icon = prayerIcons[key as keyof typeof prayerIcons];
                         return (
@@ -622,6 +752,10 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </TabsList>
               </div>
                 
+                <TabsContent value="iman-harvest" className="mt-6">
+                    <ImanHarvestReport />
+                </TabsContent>
+
                 {isLoading ? (
                      <div className="flex justify-center p-16"><Loader2 className="h-12 w-12 animate-spin" /></div>
                 ) : (
@@ -663,5 +797,3 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
         </div>
     );
 }
-
-    
