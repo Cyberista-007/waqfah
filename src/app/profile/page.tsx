@@ -2,7 +2,7 @@
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
@@ -22,6 +22,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AccountabilityTracker } from "@/components/accountability-tracker";
 import { useAudioPlayer } from "@/components/audio-player-provider";
+import { useToast } from "@/hooks/use-toast";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
@@ -412,9 +415,11 @@ function UserChallengesSection() {
 function AllNotesSection() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [notes, setNotes] = useState<LectureNote[]>([]);
     const [lectures, setLectures] = useState<Record<string, Lecture>>({});
     const [isLoading, setIsLoading] = useState(true);
+    const [noteToDelete, setNoteToDelete] = useState<LectureNote | null>(null);
 
     useEffect(() => {
         if (!firestore || !user) {
@@ -460,8 +465,24 @@ function AllNotesSection() {
 
         fetchNotes();
     }, [user, firestore]);
+    
+    const handleDeleteNote = async () => {
+        if (!noteToDelete || !firestore || !user) return;
+        
+        const noteRef = doc(firestore, 'users', user.uid, 'notes', noteToDelete.id);
+        deleteDocumentNonBlocking(noteRef);
 
-     if (isLoading) {
+        setNotes(prev => prev.filter(note => note.id !== noteToDelete.id));
+
+        toast({
+            variant: "destructive",
+            title: "تم حذف الملاحظة",
+        });
+        
+        setNoteToDelete(null);
+    };
+
+    if (isLoading) {
         return <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[...Array(2)].map((_, i) => (
                <Card key={i} className="h-[200px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
@@ -482,28 +503,46 @@ function AllNotesSection() {
     }
 
     return (
-        <div className="space-y-4">
-            {notes.map(note => {
-                const lecture = lectures[note.lectureId];
-                return (
-                    <Card key={note.id}>
-                        <CardHeader>
-                            <CardTitle>
-                                <Link href={`/lectures/${lecture?.slug}`} className="hover:underline">
-                                    {lecture?.title || 'محاضرة محذوفة'}
-                                </Link>
-                            </CardTitle>
-                             <CardDescription>
-                                آخر تحديث: {note.updatedAt ? formatDistanceToNow(note.updatedAt.toDate(), { addSuffix: true, locale: ar }) : ''}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground line-clamp-3 whitespace-pre-wrap">{note.content}</p>
-                        </CardContent>
-                    </Card>
-                );
-            })}
-        </div>
+        <>
+            <div className="space-y-4">
+                {notes.map(note => {
+                    const lecture = lectures[note.lectureId];
+                    return (
+                        <Card key={note.id} className="relative group">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 left-2 h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                onClick={() => setNoteToDelete(note)}
+                                aria-label="حذف الملاحظة"
+                            >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                            <CardHeader className="text-right">
+                                <CardTitle>
+                                    <Link href={`/lectures/${lecture?.slug || '#'}`} className="hover:underline">
+                                        {lecture?.title || 'محاضرة محذوفة'}
+                                    </Link>
+                                </CardTitle>
+                                 <CardDescription>
+                                    آخر تحديث: {note.updatedAt ? formatDistanceToNow(note.updatedAt.toDate(), { addSuffix: true, locale: ar }) : ''}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-right">
+                                <p className="text-muted-foreground whitespace-pre-wrap">{note.content}</p>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
+             <DeleteConfirmationDialog 
+              isOpen={!!noteToDelete}
+              onClose={() => setNoteToDelete(null)}
+              onConfirm={handleDeleteNote}
+              title="حذف الملاحظة"
+              description="هل أنت متأكد من رغبتك في حذف هذه الملاحظة بشكل دائم؟"
+            />
+        </>
     );
 }
 
