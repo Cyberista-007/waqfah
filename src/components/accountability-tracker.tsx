@@ -264,15 +264,10 @@ function DestructiveSinsSection() {
                       <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-destructive/0 via-destructive/70 to-destructive/0"></div>
                       <ScrollArea className="max-h-[80vh] custom-scrollbar-red">
                           <div className="p-6">
-                              <DialogHeader className="flex flex-row justify-between items-center mb-4 space-y-0">
-                                  <DialogTitle className="font-headline text-3xl text-destructive">
+                              <DialogHeader>
+                                  <DialogTitle className="font-headline text-3xl text-destructive pr-8 text-right">
                                       {sin.dialogTitle}
                                   </DialogTitle>
-                                  <DialogClose asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full">
-                                          <X className="h-5 w-5" />
-                                      </Button>
-                                  </DialogClose>
                               </DialogHeader>
                               
                               <div className="space-y-4 mt-4">
@@ -813,13 +808,14 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     
     const gregorianFormatters = {
-        formatWeekdayName: (weekday: Date) => new Intl.DateTimeFormat('ar-EG', { weekday: 'short' }).format(weekday),
+        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => 
+            new Intl.DateTimeFormat(options?.locale?.code === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short' }).format(weekday).substring(0, 1).toUpperCase(),
     };
 
     const hijriFormatters = {
         formatDay: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric' }).format(date),
         formatCaption: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { month: 'long', year: 'numeric' }).format(date),
-        formatWeekdayName: (weekday: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { weekday: 'short' }).format(weekday),
+        formatWeekdayName: (weekday: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { weekday: 'short' }).format(weekday).substring(0, 1),
     };
     
     const formatGregorianForButton = (date: Date) => {
@@ -991,7 +987,10 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             <div className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-auto text-lg p-4 rounded-xl shadow-lg border-2 bg-card hover:bg-muted">
+                         <Button
+                            variant="outline"
+                            className="w-full h-auto text-lg p-4 rounded-xl shadow-lg bg-card/80 backdrop-blur-md border-border hover:bg-muted"
+                        >
                             {formatGregorianForButton(selectedDate)} | {formatHijriForButton(selectedDate)}
                             <ChevronDown className="h-4 w-4 ms-2" />
                         </Button>
