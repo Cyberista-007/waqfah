@@ -260,75 +260,46 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-lg bg-card text-card-foreground p-0 rounded-xl border-destructive shadow-lg shadow-destructive/20 overflow-hidden">
-                      <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-destructive/0 via-destructive/70 to-destructive/0"></div>
-                      <ScrollArea className="max-h-[80vh] custom-scrollbar-red">
-                          <div className="p-6">
-                              <DialogHeader>
-                                  <DialogTitle className="font-headline text-3xl text-destructive pr-8 text-right">
-                                      {sin.dialogTitle}
-                                  </DialogTitle>
-                              </DialogHeader>
-                              
-                              <div className="space-y-4 mt-4">
-                                  {sin.concept && (
-                                      <div className="bg-muted/30 border border-border p-4 rounded-xl space-y-2">
-                                          <div className="flex items-center gap-2 font-bold text-foreground">
-                                              <Info className="h-5 w-5 text-primary"/>
-                                              <h3>المفهوم:</h3>
-                                          </div>
-                                          <p className="text-muted-foreground">{sin.concept}</p>
-                                      </div>
-                                  )}
-
-                                  {sin.daily_life_example && (
-                                      <div className="border-2 border-dashed border-border p-4 rounded-xl space-y-2">
-                                          <div className="flex items-center gap-2 font-bold text-foreground">
-                                              <CalendarDays className="h-5 w-5 text-primary"/>
-                                              <h3>مثال من واقعنا (يومي):</h3>
-                                          </div>
-                                          <p className="text-muted-foreground">"{sin.daily_life_example}"</p>
-                                      </div>
-                                  )}
-
-                                  {sin.quranVerse && (
-                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
-                                          <div className="flex items-center gap-2 font-bold text-foreground">
-                                              {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-5 w-5" /> : <BookOpen className="h-5 w-5 text-primary"/>}
-                                              <h3>دليل من القرآن:</h3>
-                                          </div>
-                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
-                                              "{sin.quranVerse}"
-                                          </p>
-                                      </div>
-                                  )}
-
-                                  {sin.hadith && (
-                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
-                                          <div className="flex items-center gap-2 font-bold text-foreground">
-                                              {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5 text-primary"/>}
-                                              <h3>دليل من السنة:</h3>
-                                          </div>
-                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
-                                              "{sin.hadith}"
-                                          </p>
-                                      </div>
-                                  )}
-                                  {sin.hadith2 && (
-                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
-                                          <div className="flex items-center gap-2 font-bold text-foreground">
-                                              {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5 text-primary"/>}
-                                              <h3>دليل آخر من السنة:</h3>
-                                          </div>
-                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
-                                              "{sin.hadith2}"
-                                          </p>
-                                      </div>
-                                  )}
-                              </div>
-                          </div>
-                      </ScrollArea>
-                  </DialogContent>
+                  <DialogContent className="bg-white border-4 border-blue-800 shadow-[20px_20px_0_rgba(0,0,0,0.5)] p-0 w-auto max-w-md rounded-none font-serif overflow-hidden" hideCloseButton style={{ fontFamily: 'Comic Sans MS, cursive' }}>
+                        <div className="bg-blue-800 text-white p-2 font-bold flex justify-between items-center cursor-move">
+                            <span className="font-headline text-lg">{sin.dialogTitle}</span>
+                            <DialogClose asChild>
+                                <button className="bg-gray-300 text-black px-2 py-0.5 border border-white hover:bg-gray-400">X</button>
+                            </DialogClose>
+                        </div>
+                        <div className="p-6 text-center space-y-4">
+                            {sin.concept && (
+                                <div className="bg-blue-100 border-2 border-dashed border-blue-400 p-3">
+                                    <Info className="mx-auto text-blue-600 mb-2"/>
+                                    <p className="text-blue-900">{sin.concept}</p>
+                                </div>
+                            )}
+                            {sin.daily_life_example && (
+                                <div className="bg-lime-100 border-2 border-dashed border-lime-400 p-3">
+                                    <CalendarDays className="mx-auto text-lime-600 mb-2"/>
+                                    <p className="text-lime-900">"{sin.daily_life_example}"</p>
+                                </div>
+                            )}
+                            {sin.quranVerse && (
+                                <div className="bg-yellow-100 border-2 border-dashed border-yellow-400 p-3">
+                                    <BookOpen className="mx-auto text-yellow-600 mb-2"/>
+                                    <p className="font-amiri text-lg text-yellow-900">"{sin.quranVerse}"</p>
+                                </div>
+                            )}
+                            {sin.hadith && (
+                                <div className="bg-green-100 border-2 border-dashed border-green-400 p-3">
+                                    <Scroll className="mx-auto text-green-600 mb-2"/>
+                                    <p className="font-amiri text-lg text-green-900">"{sin.hadith}"</p>
+                                </div>
+                            )}
+                            {sin.hadith2 && (
+                                <div className="bg-red-100 border-2 border-dashed border-red-400 p-3">
+                                    <Scroll className="mx-auto text-red-600 mb-2"/>
+                                    <p className="font-amiri text-lg text-red-900">"{sin.hadith2}"</p>
+                                </div>
+                            )}
+                        </div>
+                    </DialogContent>
               </Dialog>
           ))}
       </CardContent>
