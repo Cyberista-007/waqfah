@@ -85,70 +85,8 @@ export default function AdminDashboardPage() {
             </section>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div className="xl:col-span-2 space-y-8">
-                    <Card className="rounded-2xl">
-                         <CardHeader>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div>
-                                    <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
-                                    <CardDescription>بيانات تجريبية للعرض. لربط إحصائيات حقيقية، تحتاج إلى ربط خدمة تحليلات.</CardDescription>
-                                </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
-                                        <TabsList className="grid w-full grid-cols-4 sm:w-auto">
-                                            <TabsTrigger value="7d">آخر 7 أيام</TabsTrigger>
-                                            <TabsTrigger value="30d">آخر 30 يومًا</TabsTrigger>
-                                            <TabsTrigger value="12m">آخر 12 شهرًا</TabsTrigger>
-                                            <TabsTrigger value="custom">مخصص</TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
-                                    {timeRange === 'custom' && (
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                            <Button
-                                                id="date"
-                                                variant={"outline"}
-                                                className={cn(
-                                                "w-[260px] justify-start text-left font-normal",
-                                                !customDateRange && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {customDateRange?.from ? (
-                                                customDateRange.to ? (
-                                                    <>
-                                                    {format(customDateRange.from, "LLL dd, y")} -{" "}
-                                                    {format(customDateRange.to, "LLL dd, y")}
-                                                    </>
-                                                ) : (
-                                                    format(customDateRange.from, "LLL dd, y")
-                                                )
-                                                ) : (
-                                                <span>اختر نطاقًا</span>
-                                                )}
-                                            </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="end">
-                                            <Calendar
-                                                initialFocus
-                                                mode="range"
-                                                defaultMonth={customDateRange?.from}
-                                                selected={customDateRange}
-                                                onSelect={setCustomDateRange}
-                                                numberOfMonths={2}
-                                            />
-                                            </PopoverContent>
-                                        </Popover>
-                                    )}
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="h-[350px] w-full">
-                           <TrafficChart timeRange={timeRange} customDateRange={customDateRange} />
-                        </CardContent>
-                    </Card>
-
-                     <Card className="rounded-2xl">
+                <div className="xl:col-span-2">
+                     <Card className="rounded-2xl h-full">
                         <CardHeader>
                             <CardTitle className="text-2xl font-semibold font-headline">أكثر المحاضرات استماعًا</CardTitle>
                         </CardHeader>
@@ -213,6 +151,68 @@ export default function AdminDashboardPage() {
                     </Card>
                 </div>
             </div>
+            
+            <Card className="rounded-2xl">
+                 <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار</CardTitle>
+                            <CardDescription>بيانات تجريبية للعرض. لربط إحصائيات حقيقية، تحتاج إلى ربط خدمة تحليلات.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as any)} className="w-full sm:w-auto">
+                                <TabsList className="grid w-full grid-cols-4 sm:w-auto">
+                                    <TabsTrigger value="7d">آخر 7 أيام</TabsTrigger>
+                                    <TabsTrigger value="30d">آخر 30 يومًا</TabsTrigger>
+                                    <TabsTrigger value="12m">آخر 12 شهرًا</TabsTrigger>
+                                    <TabsTrigger value="custom">مخصص</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                            {timeRange === 'custom' && (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        id="date"
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-[260px] justify-start text-left font-normal",
+                                        !customDateRange && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {customDateRange?.from ? (
+                                        customDateRange.to ? (
+                                            <>
+                                            {format(customDateRange.from, "LLL dd, y")} -{" "}
+                                            {format(customDateRange.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(customDateRange.from, "LLL dd, y")
+                                        )
+                                        ) : (
+                                        <span>اختر نطاقًا</span>
+                                        )}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="end">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={customDateRange?.from}
+                                        selected={customDateRange}
+                                        onSelect={setCustomDateRange}
+                                        numberOfMonths={2}
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="h-[350px] w-full">
+                   <TrafficChart timeRange={timeRange} customDateRange={customDateRange} />
+                </CardContent>
+            </Card>
         </div>
     );
 }
