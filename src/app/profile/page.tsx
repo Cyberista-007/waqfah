@@ -28,7 +28,7 @@ import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 
 function StatCard({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) {
     return (
-        <Card className="text-center">
+        <Card className="text-center rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <CardContent className="p-4">
                 <Icon className="w-8 h-8 mx-auto mb-2 text-primary" />
                 <p className="text-2xl font-bold">{value}</p>
@@ -529,7 +529,7 @@ function AllNotesSection() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="text-right">
-                                <p className="text-muted-foreground whitespace-pre-wrap">{note.content}</p>
+                                <p className="text-muted-foreground whitespace-pre-wrap line-clamp-3">{note.content}</p>
                             </CardContent>
                         </Card>
                     );
