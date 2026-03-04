@@ -342,6 +342,19 @@
   .custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
     background-color: hsl(220 70% 80%);
   }
+
+  .custom-scrollbar-gradient::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar-gradient::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar-gradient::-webkit-scrollbar-thumb {
+    background-image: linear-gradient(to bottom, #4f46e5, #a855f7);
+    border-radius: 10px;
+  }
 }
 
 @media print {

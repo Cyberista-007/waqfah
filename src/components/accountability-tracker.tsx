@@ -8,7 +8,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
 import { doc, setDoc, Timestamp, collection, writeBatch, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties, ScrollText } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -172,7 +172,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
     )
 }
 
-function DestructiveSinsSection() {
+function DestructiveSinsSection({ quranIconUrl, hadithIconUrl }: { quranIconUrl?: string | null, hadithIconUrl?: string | null }) {
     const { data: sinsFromDB, isLoading } = useCollection<DestructiveSin>('destructive_sins');
     const firestore = useFirestore();
     const { isAdmin } = useAdminAuth();
@@ -201,15 +201,12 @@ function DestructiveSinsSection() {
     }, [sinsFromDB, isLoading, firestore, isAdmin]);
 
     const sins = useMemo(() => {
-        // If firestore has data, it is the source of truth.
         if (sinsFromDB && sinsFromDB.length > 0) {
             return sinsFromDB;
         }
-        // If firestore is still loading, wait.
         if (isLoading) {
             return null;
         }
-        // If firestore is done and empty, use the local seed data as a fallback for all users.
         return destructiveSinsData;
     }, [sinsFromDB, isLoading]);
 
@@ -260,71 +257,57 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                    <DialogContent className="max-w-2xl p-0 border-2 border-red-500/30 bg-[#0B1C33] text-white shadow-2xl shadow-red-500/20 overflow-hidden" dir="rtl">
-                       <div className="flex justify-between items-center px-6 py-4">
+                    <DialogContent className="max-w-2xl p-0 border border-red-500/30 bg-black/80 text-white shadow-[10px_0px_30px_-5px_rgba(239,68,68,0.3)] backdrop-blur-lg rounded-2xl overflow-hidden" dir="rtl">
+                       <div className="flex justify-between items-center px-6 py-4 border-b border-red-500/20">
+                            <DialogTitle className="text-2xl font-headline text-red-400">{sin.dialogTitle}</DialogTitle>
                             <DialogClose asChild>
                                 <button className="text-gray-400 hover:text-white">
                                     <X className="h-6 w-6" />
                                 </button>
                             </DialogClose>
-                            <DialogTitle className="text-2xl font-headline text-red-500">{sin.dialogTitle}</DialogTitle>
                         </div>
-                        <ScrollArea className="h-[70vh] px-6 custom-scrollbar-blue">
-                          <div className="space-y-8 pb-6">
+                        <ScrollArea className="h-[70vh] pl-4 custom-scrollbar-gradient">
+                          <div className="space-y-6 p-6">
                               {sin.concept && (
-                                <div className="space-y-4">
-                                  <div className="flex justify-center">
-                                      <div className="p-2 bg-red-500/20 rounded-md">
-                                          <Info className="h-6 w-6 text-red-400" />
+                                <div className="bg-slate-800/70 p-6 rounded-xl">
+                                  <div className="flex justify-center mb-4">
+                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
+                                          <Info className="h-5 w-5 text-red-400" />
                                       </div>
                                   </div>
-                                  <div className="p-6 rounded-2xl bg-slate-900/50 border border-red-500/20 text-center">
-                                      <p className="font-amiri text-xl leading-loose text-slate-200">{sin.concept}</p>
-                                  </div>
+                                  <p className="font-amiri text-xl text-center leading-loose text-slate-200">{sin.concept}</p>
                                 </div>
                               )}
-                              {sin.quranVerses && sin.quranVerses.length > 0 && (
-                                <div className="space-y-4">
-                                  <div className="flex justify-center">
-                                      <div className="p-2 bg-red-500/20 rounded-md">
-                                          <BookOpen className="h-6 w-6 text-red-400" />
+                              {sin.quranVerses?.map((verse, index) => (
+                                <div key={`quran-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
+                                  <div className="flex justify-center mb-4">
+                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
+                                          {quranIconUrl ? <img src={quranIconUrl} alt="Quran" className="h-6 w-6" /> : <BookOpen className="h-6 w-6 text-red-400" />}
                                       </div>
                                   </div>
-                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
-                                      {sin.quranVerses.map((verse, index) => (
-                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{verse}"</p>
-                                      ))}
-                                  </div>
+                                  <p className="font-amiri text-2xl text-center leading-loose text-slate-100">"{verse}"</p>
                                 </div>
-                              )}
-                              {sin.hadiths && sin.hadiths.length > 0 && (
-                                <div className="space-y-4">
-                                  <div className="flex justify-center">
-                                      <div className="p-2 bg-red-500/20 rounded-md">
-                                          <Scroll className="h-6 w-6 text-red-400" />
+                              ))}
+                              {sin.hadiths?.map((hadith, index) => (
+                                <div key={`hadith-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
+                                  <div className="flex justify-center mb-4">
+                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
+                                          {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith" className="h-6 w-6" /> : <ScrollText className="h-6 w-6 text-red-400" />}
                                       </div>
                                   </div>
-                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
-                                      {sin.hadiths.map((hadith, index) => (
-                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{hadith}"</p>
-                                      ))}
-                                  </div>
+                                  <p className="font-amiri text-2xl text-center leading-loose text-slate-100">"{hadith}"</p>
                                 </div>
-                              )}
-                              {sin.dailyLifeExamples && sin.dailyLifeExamples.length > 0 && (
-                                <div className="space-y-4">
-                                  <div className="flex justify-center">
-                                      <div className="p-2 bg-red-500/20 rounded-md">
-                                          <CalendarDays className="h-6 w-6 text-red-400" />
+                              ))}
+                              {sin.dailyLifeExamples?.map((example, index) => (
+                                <div key={`example-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
+                                  <div className="flex justify-center mb-4">
+                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
+                                          <CalendarDays className="h-5 w-5 text-red-400" />
                                       </div>
                                   </div>
-                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
-                                      {sin.dailyLifeExamples.map((example, index) => (
-                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{example}"</p>
-                                      ))}
-                                  </div>
+                                  <p className="font-amiri text-xl text-center leading-loose text-slate-200">"{example}"</p>
                                 </div>
-                              )}
+                              ))}
                           </div>
                       </ScrollArea>
                   </DialogContent>
@@ -787,6 +770,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const router = useRouter();
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
+    const { quranIconUrl, hadithIconUrl } = useAppearance();
     
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [gregorianMonth, setGregorianMonth] = useState<Date>(new Date());
@@ -1102,7 +1086,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             </Tabs>
 
             <div ref={sinsSectionRef}>
-                <DestructiveSinsSection />
+                <DestructiveSinsSection quranIconUrl={quranIconUrl} hadithIconUrl={hadithIconUrl} />
             </div>
 
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
