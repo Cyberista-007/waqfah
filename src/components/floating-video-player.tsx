@@ -1,11 +1,11 @@
-
 'use client';
 
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, X } from 'lucide-react';
+import { GripVertical, X, Bookmark } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 // Define constants for player dimensions
 const MIN_WIDTH = 320;
@@ -16,6 +16,7 @@ const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible 
 
 export default function FloatingVideoPlayer() {
     const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer, onPlayerStateChange } = useAudioPlayer();
+    const { toast } = useToast();
     
     // Player state
     const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
@@ -75,6 +76,16 @@ export default function FloatingVideoPlayer() {
             width: size.width,
             height: size.height,
         };
+    };
+
+    const handleWatchLater = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (iframeTrack) {
+            toast({
+                title: "تمت الإضافة إلى المشاهدة لاحقًا",
+                description: `"${iframeTrack.title}"`,
+            });
+        }
     };
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -229,7 +240,7 @@ export default function FloatingVideoPlayer() {
         <div
             ref={playerRef}
             style={playerStyle}
-            className="fixed z-50 rounded-lg shadow-2xl bg-black overflow-hidden flex flex-col group"
+            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex flex-col group"
         >
             {/* Control Bar */}
              <div
@@ -239,20 +250,31 @@ export default function FloatingVideoPlayer() {
                  tabIndex={0}
                  aria-roledescription="draggable"
             >
-                <Button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        hidePlayer();
-                    }}
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-white rounded-md hover:bg-red-500"
-                    aria-label="إغلاق المشغل"
-                >
-                    <X className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center">
+                    <Button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            hidePlayer();
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white rounded-md hover:bg-red-500"
+                        aria-label="إغلاق المشغل"
+                    >
+                        <X className="h-5 w-5" />
+                    </Button>
+                    <Button
+                        onClick={handleWatchLater}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white rounded-md hover:bg-blue-500"
+                        aria-label="مشاهدة لاحقاً"
+                    >
+                        <Bookmark className="h-4 w-4" />
+                    </Button>
+                </div>
                  <GripVertical className="h-5 w-5 pointer-events-none" />
-                 <div className="w-8"></div>
+                 <div className="w-16"></div>
             </div>
 
             {/* Video Content */}
