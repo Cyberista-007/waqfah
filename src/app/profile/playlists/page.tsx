@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { useCollection, useUser, useFirestore } from "@/firebase";
 import type { Playlist, Lecture } from "@/lib/types";
-import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Loader2, PlusCircle, Edit, Trash2, ArrowRight } from "lucide-react";
 import { PlaylistForm } from "@/components/profile/playlist-form";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { doc } from "firebase/firestore";
@@ -93,7 +92,10 @@ export default function ManagePlaylistsPage() {
                 </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                    <Button asChild variant="outline"><Link href="/profile">العودة للملف الشخصي</Link></Button>
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                        رجوع
+                    </Button>
                     <Button onClick={handleNew}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     إنشاء قائمة جديدة
@@ -106,7 +108,7 @@ export default function ManagePlaylistsPage() {
                 ): playlists && playlists.length > 0 ? (
                      <div className="space-y-4">
                         {playlists.map(p => (
-                            <div key={p.id} className="border p-4 rounded-lg flex justify-between items-center">
+                            <div key={p.id} className="border p-4 rounded-xl flex justify-between items-center">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-lg">{p.name}</h3>
