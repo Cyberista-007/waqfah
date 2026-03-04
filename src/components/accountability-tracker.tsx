@@ -173,7 +173,6 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 
 function DestructiveSinsSection() {
     const { data: sinsFromDB, isLoading } = useCollection<DestructiveSin>('destructive_sins');
-    const [activeSin, setActiveSin] = useState<DestructiveSin | null>(null);
     const { quranIconUrl, hadithIconUrl } = useAppearance();
     const firestore = useFirestore();
     const { isAdmin } = useAdminAuth();
@@ -242,113 +241,103 @@ function DestructiveSinsSection() {
     }
     
   return (
-    <>
-      <Card className="mt-8 bg-card">
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline text-destructive text-center border-b-2 border-destructive/50 pb-2">
-            احذر المهلكات
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-            {sins?.map((sin) => (
-                 <button
-                    key={sin.id}
-                    onClick={() => setActiveSin(sin)}
-                    className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
-                    >
-                    <div className="transition-transform duration-300 group-hover:scale-125">
-                        {getIcon(sin.icon)}
-                    </div>
-                    <span className="font-bold text-lg">{sin.title}</span>
-                </button>
-            ))
-          }
-        </CardContent>
-      </Card>
-      <Dialog open={!!activeSin} onOpenChange={(isOpen) => !isOpen && setActiveSin(null)}>
-        <DialogContent className="max-w-lg bg-slate-900/80 backdrop-blur-md text-white p-0 rounded-xl border-t-2 border-r-2 border-l-2 border-red-500/50 shadow-lg shadow-red-500/20 relative overflow-hidden">
-            <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-red-500/0 via-red-500/70 to-red-500/0"></div>
-            <ScrollArea className="max-h-[80vh] custom-scrollbar-red">
-                <div className="p-6">
-                    <DialogHeader className="flex flex-row justify-between items-center mb-4 space-y-0">
-                        <DialogTitle className="font-headline text-3xl text-red-400">
-                            {activeSin?.dialogTitle}
-                        </DialogTitle>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white rounded-full">
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </DialogClose>
-                    </DialogHeader>
-                    
-                    <div className="space-y-4 mt-4">
-                        {activeSin?.concept && (
-                            <div className="bg-red-950/40 border border-red-500/30 p-4 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 font-bold text-red-400">
-                                    <Info className="h-5 w-5"/>
-                                    <h3>المفهوم:</h3>
-                                </div>
-                                <p className="text-white/90">{activeSin.concept}</p>
-                            </div>
-                        )}
+    <Card className="mt-8 bg-card">
+      <CardHeader>
+        <CardTitle className="text-2xl font-headline text-destructive text-center border-b-2 border-destructive/50 pb-2">
+          احذر المهلكات
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+          {sins?.map((sin) => (
+              <Dialog key={sin.id}>
+                  <DialogTrigger asChild>
+                       <button
+                          className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
+                          >
+                          <div className="transition-transform duration-300 group-hover:scale-125">
+                              {getIcon(sin.icon)}
+                          </div>
+                          <span className="font-bold text-lg">{sin.title}</span>
+                      </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg bg-card text-card-foreground p-0 rounded-xl border-destructive shadow-lg shadow-destructive/20 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-destructive/0 via-destructive/70 to-destructive/0"></div>
+                      <ScrollArea className="max-h-[80vh] custom-scrollbar-red">
+                          <div className="p-6">
+                              <DialogHeader className="flex flex-row justify-between items-center mb-4 space-y-0">
+                                  <DialogTitle className="font-headline text-3xl text-destructive">
+                                      {sin.dialogTitle}
+                                  </DialogTitle>
+                                  <DialogClose asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full">
+                                          <X className="h-5 w-5" />
+                                      </Button>
+                                  </DialogClose>
+                              </DialogHeader>
+                              
+                              <div className="space-y-4 mt-4">
+                                  {sin.concept && (
+                                      <div className="bg-muted/30 border border-border p-4 rounded-xl space-y-2">
+                                          <div className="flex items-center gap-2 font-bold text-foreground">
+                                              <Info className="h-5 w-5 text-primary"/>
+                                              <h3>المفهوم:</h3>
+                                          </div>
+                                          <p className="text-muted-foreground">{sin.concept}</p>
+                                      </div>
+                                  )}
 
-                        {activeSin?.daily_life_example && (
-                            <div className="border-2 border-dashed border-slate-600 p-4 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 font-bold text-red-400">
-                                    <CalendarDays className="h-5 w-5"/>
-                                    <h3>مثال من واقعنا (يومي):</h3>
-                                </div>
-                                <p className="text-white/90">"{activeSin.daily_life_example}"</p>
-                            </div>
-                        )}
+                                  {sin.daily_life_example && (
+                                      <div className="border-2 border-dashed border-border p-4 rounded-xl space-y-2">
+                                          <div className="flex items-center gap-2 font-bold text-foreground">
+                                              <CalendarDays className="h-5 w-5 text-primary"/>
+                                              <h3>مثال من واقعنا (يومي):</h3>
+                                          </div>
+                                          <p className="text-muted-foreground">"{sin.daily_life_example}"</p>
+                                      </div>
+                                  )}
 
-                        {activeSin?.quranVerse && (
-                            <div className="bg-slate-800/50 p-4 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 font-bold text-red-400">
-                                    {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-5 w-5" /> : <BookOpen className="h-5 w-5"/>}
-                                    <h3>دليل من القرآن:</h3>
-                                </div>
-                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
-                                    "{activeSin.quranVerse}"
-                                </p>
-                            </div>
-                        )}
+                                  {sin.quranVerse && (
+                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
+                                          <div className="flex items-center gap-2 font-bold text-foreground">
+                                              {quranIconUrl ? <img src={quranIconUrl} alt="Quran Icon" className="h-5 w-5" /> : <BookOpen className="h-5 w-5 text-primary"/>}
+                                              <h3>دليل من القرآن:</h3>
+                                          </div>
+                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
+                                              "{sin.quranVerse}"
+                                          </p>
+                                      </div>
+                                  )}
 
-                        {activeSin?.hadith && (
-                            <div className="bg-slate-800/50 p-4 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 font-bold text-red-400">
-                                    {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5"/>}
-                                    <h3>دليل من السنة:</h3>
-                                </div>
-                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
-                                    "{activeSin.hadith}"
-                                </p>
-                            </div>
-                        )}
-                         {activeSin?.hadith2 && (
-                             <div className="bg-slate-800/50 p-4 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 font-bold text-red-400">
-                                    {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5"/>}
-                                    <h3>دليل آخر من السنة:</h3>
-                                </div>
-                                <p className="font-amiri text-xl text-center leading-relaxed text-white/90">
-                                    "{activeSin.hadith2}"
-                                </p>
-                            </div>
-                         )}
-                    </div>
-
-                    <DialogFooter className="mt-6">
-                        <Button className="w-full bg-red-800 hover:bg-red-900 border border-red-600 text-white">
-                            <BookOpen className="me-2 h-4 w-4"/>
-                            اقرأ قصة من السيرة
-                        </Button>
-                    </DialogFooter>
-                </div>
-            </ScrollArea>
-        </DialogContent>
-      </Dialog>
-    </>
+                                  {sin.hadith && (
+                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
+                                          <div className="flex items-center gap-2 font-bold text-foreground">
+                                              {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5 text-primary"/>}
+                                              <h3>دليل من السنة:</h3>
+                                          </div>
+                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
+                                              "{sin.hadith}"
+                                          </p>
+                                      </div>
+                                  )}
+                                  {sin.hadith2 && (
+                                      <div className="bg-muted/30 p-4 rounded-xl space-y-2">
+                                          <div className="flex items-center gap-2 font-bold text-foreground">
+                                              {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith Icon" className="h-5 w-5" /> : <Scroll className="h-5 w-5 text-primary"/>}
+                                              <h3>دليل آخر من السنة:</h3>
+                                          </div>
+                                          <p className="font-amiri text-xl text-center leading-relaxed text-foreground/90">
+                                              "{sin.hadith2}"
+                                          </p>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                      </ScrollArea>
+                  </DialogContent>
+              </Dialog>
+          ))}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -779,26 +768,14 @@ const ImanHarvestReport = () => {
                     </div>
                     
                     <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                         <TooltipProvider>
-                            <ShadTooltip>
-                                <TooltipTrigger asChild>
-                                    <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white" >
-                                        <FileText className="me-2 h-5 w-5"/>
-                                        تحميل التقرير الأسبوعي (PDF)
-                                    </Button>
-                                </TooltipTrigger>
-                            </ShadTooltip>
-                        </TooltipProvider>
-                         <TooltipProvider>
-                            <ShadTooltip>
-                                <TooltipTrigger asChild>
-                                     <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white" >
-                                        <FileText className="me-2 h-5 w-5"/>
-                                        تحميل التقرير الشهري (PDF)
-                                    </Button>
-                                </TooltipTrigger>
-                            </ShadTooltip>
-                        </TooltipProvider>
+                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white" >
+                            <FileText className="me-2 h-5 w-5"/>
+                            طباعة التقرير الأسبوعي (PDF)
+                        </Button>
+                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white" >
+                            <FileText className="me-2 h-5 w-5"/>
+                            طباعة التقرير الشهري (PDF)
+                        </Button>
                     </footer>
                 </div>
             </div>
