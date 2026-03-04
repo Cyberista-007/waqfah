@@ -116,62 +116,94 @@ function ContinueWatchingSection() {
 
 function PlaylistsSection() {
     const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
+
     const playlistsPath = user ? `users/${user.uid}/playlists` : null;
     const { data: playlists, isLoading } = useCollection<Playlist>(playlistsPath, { orderBy: ['createdAt', 'desc'] });
+
+    const handleDelete = () => {
+        if (!playlistToDelete || !firestore || !user) return;
+
+        const playlistRef = doc(firestore, 'users', user.uid, 'playlists', playlistToDelete.id);
+        deleteDocumentNonBlocking(playlistRef);
+
+        toast({
+            variant: "destructive",
+            title: "تم الحذف بنجاح",
+            description: `تم حذف قائمة التشغيل "${playlistToDelete.name}".`,
+        });
+        setPlaylistToDelete(null);
+    };
 
     if (isLoading) {
         return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
-                <Card key={i} className="h-[150px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
+               <Card key={i} className="h-[150px]"><CardContent className="flex items-center justify-center h-full"><Loader2 className="animate-spin"/></CardContent></Card>
             ))}
         </div>
     }
 
     return (
-        <div>
-            <div className="flex justify-end mb-4">
-                <Button asChild>
-                    <Link href="/profile/playlists">
-                        <Plus className="me-2 h-4 w-4" />
-                        إنشاء أو تعديل قائمة
-                    </Link>
-                </Button>
-            </div>
-            {playlists && playlists.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {playlists.map(playlist => (
-                        <Card key={playlist.id} className="hover:shadow-lg transition-shadow flex flex-col justify-between rounded-xl">
-                            <CardHeader className="flex-grow">
-                                <CardTitle className="font-headline text-xl">
-                                    <Link href={`/playlists/${playlist.id}`} className="hover:underline">
-                                        {playlist.name}
-                                    </Link>
-                                </CardTitle>
-                                {playlist.description && (
-                                    <CardDescription className="pt-2 line-clamp-2">{playlist.description}</CardDescription>
-                                )}
-                            </CardHeader>
-                            <CardFooter className="flex justify-between items-center pt-4 mt-auto">
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <Play className="h-4 w-4" />
-                                    <span>{playlist.lectureIds?.length || 0} محاضرة</span>
-                                </div>
-                                <Button asChild size="sm" variant="outline">
-                                    <Link href={`/playlists/${playlist.id}`}>عرض</Link>
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+        <>
+            <div>
+                <div className="flex justify-end mb-4">
+                    <Button asChild>
+                        <Link href="/profile/playlists">
+                            <Plus className="me-2 h-4 w-4" />
+                            إنشاء أو تعديل قائمة
+                        </Link>
+                    </Button>
                 </div>
-            ) : (
-                <Card className="text-center py-16">
-                    <CardContent className="flex flex-col items-center gap-4">
-                        <ListMusic className="w-16 h-16 text-muted-foreground" />
-                        <p className="text-lg text-muted-foreground">لم تقم بإنشاء أي قوائم تشغيل بعد.</p>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+                {playlists && playlists.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {playlists.map(playlist => (
+                            <Card key={playlist.id} className="hover:shadow-lg transition-shadow flex flex-col justify-between rounded-xl">
+                                <CardHeader className="flex-grow">
+                                     <div className="flex justify-between items-start">
+                                        <CardTitle className="font-headline text-xl">
+                                            <Link href={`/playlists/${playlist.id}`} className="hover:underline">
+                                                {playlist.name}
+                                            </Link>
+                                        </CardTitle>
+                                         <Button onClick={() => setPlaylistToDelete(playlist)} variant="ghost" size="icon" className="text-destructive h-8 w-8 -mt-2 -mr-2">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    {playlist.description && (
+                                        <CardDescription className="pt-2 line-clamp-2">{playlist.description}</CardDescription>
+                                    )}
+                                </CardHeader>
+                                <CardFooter className="flex justify-between items-center pt-4 mt-auto">
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                        <Play className="h-4 w-4" />
+                                        <span>{playlist.lectureIds?.length || 0} محاضرة</span>
+                                    </div>
+                                    <Button asChild size="sm" variant="outline">
+                                        <Link href={`/playlists/${playlist.id}`}>عرض</Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <Card className="text-center py-16">
+                        <CardContent className="flex flex-col items-center gap-4">
+                            <ListMusic className="w-16 h-16 text-muted-foreground" />
+                            <p className="text-lg text-muted-foreground">لم تقم بإنشاء أي قوائم تشغيل بعد.</p>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+             <DeleteConfirmationDialog 
+              isOpen={!!playlistToDelete}
+              onClose={() => setPlaylistToDelete(null)}
+              onConfirm={handleDelete}
+              title="حذف قائمة التشغيل"
+              description={`هل أنت متأكد من رغبتك في حذف قائمة التشغيل "${playlistToDelete?.name}"؟`}
+            />
+        </>
     );
 }
 
@@ -529,7 +561,7 @@ function AllNotesSection() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="text-right">
-                                <p className="text-muted-foreground whitespace-pre-wrap line-clamp-3">{note.content}</p>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{note.content}</p>
                             </CardContent>
                         </Card>
                     );
