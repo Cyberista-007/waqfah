@@ -174,7 +174,6 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 
 function DestructiveSinsSection() {
     const { data: sinsFromDB, isLoading } = useCollection<DestructiveSin>('destructive_sins');
-    const { quranIconUrl, hadithIconUrl } = useAppearance();
     const firestore = useFirestore();
     const { isAdmin } = useAdminAuth();
 
@@ -261,84 +260,74 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                    <DialogContent className="max-w-2xl p-0 border-red-500/50 bg-black/80 backdrop-blur-lg text-white shadow-2xl shadow-red-500/40 overflow-hidden" dir="rtl">
-                        <div className="flex justify-between items-center p-6 border-b border-red-500/20">
-                            <DialogTitle className="text-2xl font-headline text-red-500">{sin.dialogTitle}</DialogTitle>
+                    <DialogContent className="max-w-2xl p-0 border-2 border-red-500/30 bg-[#0B1C33] text-white shadow-2xl shadow-red-500/20 overflow-hidden" dir="rtl">
+                       <div className="flex justify-between items-center px-6 py-4">
                             <DialogClose asChild>
                                 <button className="text-gray-400 hover:text-white">
                                     <X className="h-6 w-6" />
                                 </button>
                             </DialogClose>
+                            <DialogTitle className="text-2xl font-headline text-red-500">{sin.dialogTitle}</DialogTitle>
                         </div>
-                        <div className="flex h-[70vh]">
-                             <div className="w-20 flex-shrink-0 flex justify-center py-8">
-                                <div className="h-full w-px bg-gradient-to-b from-blue-500/50 to-purple-500/50 relative">
-                                    <div className="absolute top-0 right-1/2 translate-x-1/2 h-4 w-4 rounded-full bg-blue-500 border-4 border-black" />
-                                    <div className="absolute bottom-0 right-1/2 translate-x-1/2 h-4 w-4 rounded-full bg-purple-500 border-4 border-black" />
+                        <ScrollArea className="h-[70vh] px-6 custom-scrollbar-blue">
+                          <div className="space-y-8 pb-6">
+                              {sin.concept && (
+                                <div className="space-y-4">
+                                  <div className="flex justify-center">
+                                      <div className="p-2 bg-red-500/20 rounded-md">
+                                          <Info className="h-6 w-6 text-red-400" />
+                                      </div>
+                                  </div>
+                                  <div className="p-6 rounded-2xl bg-slate-900/50 border border-red-500/20 text-center">
+                                      <p className="font-amiri text-xl leading-loose text-slate-200">{sin.concept}</p>
+                                  </div>
                                 </div>
-                            </div>
-                            <ScrollArea className="flex-grow h-full">
-                                <div className="p-6 space-y-8 text-right">
-                                    {sin.concept && (
-                                    <div className="space-y-3">
-                                        <h4 className="flex items-center gap-2 font-headline text-red-500 text-lg">
-                                            <Info className="h-5 w-5" />
-                                            <span>المفهوم:</span>
-                                        </h4>
-                                        <div className="p-4 rounded-lg border border-dashed border-white/10 bg-black/20">
-                                            <p>{sin.concept}</p>
-                                        </div>
-                                    </div>
-                                    )}
-                                    {sin.dailyLifeExamples && sin.dailyLifeExamples.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h4 className="flex items-center gap-2 font-headline text-red-500 text-lg">
-                                            <CalendarDays className="h-5 w-5" />
-                                            <span>أمثلة من واقعنا:</span>
-                                        </h4>
-                                        <div className="space-y-3">
-                                        {sin.dailyLifeExamples.map((example, index) => (
-                                            <div key={index} className="p-4 rounded-lg border border-dashed border-white/10 bg-black/20">
-                                                <p className="text-center">"{example}"</p>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                    )}
-                                    {sin.quranVerses && sin.quranVerses.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h4 className="flex items-center gap-2 font-headline text-red-500 text-lg">
-                                            <BookOpen className="h-5 w-5" />
-                                            <span>أدلة من القرآن:</span>
-                                        </h4>
-                                        <div className="space-y-3">
-                                        {sin.quranVerses.map((verse, index) => (
-                                            <div key={index} className="p-4 rounded-lg border border-dashed border-white/10 bg-black/20">
-                                                <p className="font-amiri text-xl text-center leading-relaxed">"{verse}"</p>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                    )}
-                                    {sin.hadiths && sin.hadiths.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h4 className="flex items-center gap-2 font-headline text-red-500 text-lg">
-                                            <Scroll className="h-5 w-5" />
-                                            <span>أدلة من السنة:</span>
-                                        </h4>
-                                         <div className="space-y-3">
-                                        {sin.hadiths.map((hadith, index) => (
-                                            <div key={index} className="p-4 rounded-lg border border-dashed border-white/10 bg-black/20">
-                                                <p className="font-amiri text-xl text-center leading-relaxed">"{hadith}"</p>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                    )}
+                              )}
+                              {sin.quranVerses && sin.quranVerses.length > 0 && (
+                                <div className="space-y-4">
+                                  <div className="flex justify-center">
+                                      <div className="p-2 bg-red-500/20 rounded-md">
+                                          <BookOpen className="h-6 w-6 text-red-400" />
+                                      </div>
+                                  </div>
+                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
+                                      {sin.quranVerses.map((verse, index) => (
+                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{verse}"</p>
+                                      ))}
+                                  </div>
                                 </div>
-                            </ScrollArea>
-                        </div>
-                    </DialogContent>
+                              )}
+                              {sin.hadiths && sin.hadiths.length > 0 && (
+                                <div className="space-y-4">
+                                  <div className="flex justify-center">
+                                      <div className="p-2 bg-red-500/20 rounded-md">
+                                          <Scroll className="h-6 w-6 text-red-400" />
+                                      </div>
+                                  </div>
+                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
+                                      {sin.hadiths.map((hadith, index) => (
+                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{hadith}"</p>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                              {sin.dailyLifeExamples && sin.dailyLifeExamples.length > 0 && (
+                                <div className="space-y-4">
+                                  <div className="flex justify-center">
+                                      <div className="p-2 bg-red-500/20 rounded-md">
+                                          <CalendarDays className="h-6 w-6 text-red-400" />
+                                      </div>
+                                  </div>
+                                  <div className="p-8 rounded-2xl bg-slate-900/50 border border-red-500/20">
+                                      {sin.dailyLifeExamples.map((example, index) => (
+                                          <p key={index} className="font-amiri text-2xl text-center leading-loose text-slate-100">"{example}"</p>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                      </ScrollArea>
+                  </DialogContent>
               </Dialog>
           ))}
       </CardContent>

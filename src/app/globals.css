@@ -66,410 +66,138 @@
     --gradient-extra: 210 82% 52%;
   }
 
-  /* 1. Emerald Mosque */
-  .theme-emerald-mosque {
-    --background: 165 40% 4%;
-    --foreground: 150 25% 96%;
-    --card: 165 40% 8%;
-    --card-foreground: 150 25% 96%;
-    --popover: 165 40% 6%;
-    --popover-foreground: 150 25% 96%;
-    --primary: 155 90% 70%;
-    --primary-foreground: 165 40% 4%;
-    --secondary: 160 30% 18%;
-    --secondary-foreground: 150 25% 96%;
-    --muted: 160 30% 12%;
-    --muted-foreground: 150 25% 65%;
-    --accent: 150 80% 55%;
-    --accent-foreground: 0 0% 100%;
-    --border: 160 30% 18%;
-    --input: 160 30% 22%;
-    --ring: 155 90% 75%;
-  }
-
-  /* 2. Desert Night */
-  .theme-desert-night {
-    --background: 30 25% 6%;
-    --foreground: 35 20% 92%;
-    --card: 30 25% 10%;
-    --card-foreground: 35 20% 92%;
-    --popover: 30 25% 8%;
-    --popover-foreground: 35 20% 92%;
-    --primary: 38 95% 75%;
-    --primary-foreground: 30 25% 4%;
-    --secondary: 35 20% 22%;
-    --secondary-foreground: 35 20% 92%;
-    --muted: 35 20% 16%;
-    --muted-foreground: 35 20% 60%;
-    --accent: 45 90% 65%;
-    --accent-foreground: 30 25% 4%;
-    --border: 35 20% 22%;
-    --input: 35 20% 28%;
-    --ring: 38 95% 80%;
-  }
-
-  /* 3. Royal Blue */
-  .theme-royal-blue {
-    --background: 225 50% 8%;
-    --foreground: 215 25% 94%;
-    --card: 225 50% 13%;
-    --card-foreground: 215 25% 94%;
-    --popover: 225 50% 10%;
-    --popover-foreground: 215 25% 94%;
-    --primary: 210 100% 80%;
-    --primary-foreground: 225 50% 8%;
-    --secondary: 220 35% 25%;
-    --secondary-foreground: 215 25% 94%;
-    --muted: 220 35% 18%;
-    --muted-foreground: 215 25% 62%;
-    --accent: 50 100% 70%;
-    --accent-foreground: 225 50% 8%;
-    --border: 220 35% 25%;
-    --input: 220 35% 30%;
-    --ring: 210 100% 85%;
-  }
-
-  /* 4. Crimson & Gold */
-  .theme-crimson-gold {
-    --background: 5 60% 6%;
-    --foreground: 35 25% 92%;
-    --card: 5 60% 12%;
-    --card-foreground: 35 25% 92%;
-    --popover: 5 60% 8%;
-    --popover-foreground: 35 25% 92%;
-    --primary: 45 100% 75%;
-    --primary-foreground: 5 60% 6%;
-    --secondary: 15 45% 22%;
-    --secondary-foreground: 35 25% 92%;
-    --muted: 15 45% 16%;
-    --muted-foreground: 35 25% 58%;
-    --accent: 355 90% 70%;
-    --accent-foreground: 5 60% 6%;
-    --border: 15 45% 22%;
-    --input: 15 45% 28%;
-    --ring: 45 100% 80%;
-  }
-
-  /* 5. Olive & Sage */
-  .theme-olive-sage {
-    --background: 95 20% 12%;
-    --foreground: 85 15% 95%;
-    --card: 95 20% 17%;
-    --card-foreground: 85 15% 95%;
-    --popover: 95 20% 14%;
-    --popover-foreground: 85 15% 95%;
-    --primary: 80 60% 80%;
-    --primary-foreground: 95 20% 8%;
-    --secondary: 90 15% 28%;
-    --secondary-foreground: 85 15% 95%;
-    --muted: 90 15% 22%;
-    --muted-foreground: 85 15% 65%;
-    --accent: 105 50% 65%;
-    --accent-foreground: 95 20% 8%;
-    --border: 90 15% 28%;
-    --input: 90 15% 33%;
-    --ring: 80 60% 85%;
-  }
-
-  /* 6. Mecca Nights */
-  .theme-mecca-nights {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 2%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 45 100% 70%; /* Gold */
-    --primary-foreground: 0 0% 4%;
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 4%;
-    --border: 0 0% 14%;
-    --input: 0 0% 18%;
-    --ring: 45 100% 75%;
-  }
-
-  /* 7. Medina Green */
-  .theme-medina-green {
-    --background: 145 70% 8%;
-    --foreground: 125 15% 96%;
-    --card: 145 70% 13%;
-    --card-foreground: 125 15% 96%;
-    --popover: 145 70% 10%;
-    --popover-foreground: 125 15% 96%;
-    --primary: 135 60% 75%;
-    --primary-foreground: 145 70% 8%;
-    --secondary: 140 45% 25%;
-    --secondary-foreground: 125 15% 96%;
-    --muted: 140 45% 18%;
-    --muted-foreground: 125 15% 65%;
-    --accent: 55 90% 70%;
-    --accent-foreground: 145 70% 8%;
-    --border: 140 45% 25%;
-    --input: 140 45% 30%;
-    --ring: 135 60% 80%;
-  }
-
-  /* 8. Andalusian Sunset */
-  .theme-andalusian-sunset {
-    --background: 25 30% 10%;
-    --foreground: 30 20% 94%;
-    --card: 25 30% 16%;
-    --card-foreground: 30 20% 94%;
-    --popover: 25 30% 12%;
-    --popover-foreground: 30 20% 94%;
-    --primary: 20 100% 72%;
-    --primary-foreground: 25 30% 6%;
-    --secondary: 30 25% 28%;
-    --secondary-foreground: 30 20% 94%;
-    --muted: 30 25% 22%;
-    --muted-foreground: 30 20% 62%;
-    --accent: 35 95% 80%;
-    --accent-foreground: 25 30% 6%;
-    --border: 30 25% 28%;
-    --input: 30 25% 33%;
-    --ring: 20 100% 76%;
-  }
-
-  /* NEW THEME: Sunset Flare */
-  .theme-sunset-flare {
-    --background: 220 45% 10%; /* Deep Navy Blue */
-    --foreground: 35 100% 96%; /* Cream White */
-    --card: 0 45% 18%; /* Dark Red */
-    --card-foreground: 35 100% 96%;
-    --popover: 220 45% 8%;
-    --popover-foreground: 35 100% 96%;
-    --primary: 20 90% 60%; /* Vibrant Orange */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 30% 25%;
-    --secondary-foreground: 35 100% 96%;
-    --muted: 0 30% 20%;
-    --muted-foreground: 35 20% 75%;
-    --accent: 35 100% 90%; /* Light Cream */
-    --accent-foreground: 220 45% 10%;
-    --destructive: 0 80% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 30% 25%;
-    --input: 0 30% 25%;
-    --ring: 20 90% 60%;
-  }
-
-  /* 9. Light Academia */
-  .theme-light-academia {
-    --background: 45 40% 98%;
-    --foreground: 35 25% 10%;
-    --card: 45 40% 100%;
-    --card-foreground: 35 25% 10%;
-    --popover: 45 40% 99%;
-    --popover-foreground: 35 25% 10%;
-    --primary: 30 50% 25%;
-    --primary-foreground: 45 40% 98%;
-    --secondary: 40 30% 94%;
-    --secondary-foreground: 30 50% 25%;
-    --muted: 40 30% 94%;
-    --muted-foreground: 35 25% 40%;
-    --accent: 25 65% 45%;
-    --accent-foreground: 45 40% 98%;
-    --border: 40 30% 90%;
-    --input: 40 30% 90%;
-    --ring: 30 50% 25%;
-  }
-
-  /* 10. Parchment */
-  .theme-parchment {
-    --background: 45 35% 94%;
-    --foreground: 40 30% 15%;
-    --card: 45 35% 99%;
-    --card-foreground: 40 30% 15%;
-    --popover: 45 35% 96%;
-    --popover-foreground: 40 30% 15%;
-    --primary: 15 55% 30%;
-    --primary-foreground: 45 35% 94%;
-    --secondary: 40 30% 90%;
-    --secondary-foreground: 15 55% 30%;
-    --muted: 40 30% 90%;
-    --muted-foreground: 40 30% 40%;
-    --accent: 145 40% 35%;
-    --accent-foreground: 45 35% 94%;
-    --border: 40 30% 85%;
-    --input: 40 30% 85%;
-    --ring: 15 55% 30%;
-  }
-
-  /* 11. Classic Dark */
-  .theme-classic-dark {
-    --background: 225 20% 10%;
-    --foreground: 215 20% 96%;
-    --card: 225 20% 15%;
-    --card-foreground: 215 20% 96%;
-    --popover: 225 20% 8%;
-    --popover-foreground: 215 20% 96%;
-    --primary: 215 25% 85%;
-    --primary-foreground: 225 20% 10%;
-    --secondary: 225 20% 25%;
-    --secondary-foreground: 215 20% 96%;
-    --muted: 225 20% 20%;
-    --muted-foreground: 215 20% 68%;
-    --accent: 215 25% 75%;
-    --accent-foreground: 225 20% 10%;
-    --border: 225 20% 25%;
-    --input: 225 20% 28%;
-    --ring: 215 25% 90%;
-  }
-
-  /* 12. Night Neon */
-  .theme-night-neon {
-    --background: 275 30% 4%;
-    --foreground: 275 25% 92%;
-    --card: 275 30% 8%;
-    --card-foreground: 275 25% 92%;
-    --popover: 275 30% 2%;
-    --popover-foreground: 275 25% 92%;
-    --primary: 305 100% 80%; /* Neon Pink/Purple */
-    --primary-foreground: 275 30% 4%;
-    --secondary: 275 25% 15%;
-    --secondary-foreground: 275 25% 92%;
-    --muted: 275 25% 11%;
-    --muted-foreground: 275 25% 58%;
-    --accent: 185 100% 55%; /* Neon Cyan */
-    --accent-foreground: 275 30% 4%;
-    --border: 275 25% 15%;
-    --input: 275 25% 18%;
-    --ring: 305 100% 85%;
-  }
-
-  /* 13. Red Volcano */
-  .theme-red-volcano {
-    --background: 20 70% 5%;
-    --foreground: 25 25% 94%;
-    --card: 20 70% 9%;
-    --card-foreground: 25 25% 94%;
-    --popover: 20 70% 3%;
-    --popover-foreground: 25 25% 94%;
-    --primary: 5 100% 75%; /* Fiery Red */
-    --primary-foreground: 20 70% 5%;
-    --secondary: 15 45% 18%;
-    --secondary-foreground: 25 25% 94%;
-    --muted: 15 45% 12%;
-    --muted-foreground: 25 25% 62%;
-    --accent: 35 100% 70%; /* Molten Orange */
-    --accent-foreground: 20 70% 5%;
-    --border: 15 45% 18%;
-    --input: 15 45% 22%;
-    --ring: 5 100% 80%;
-  }
-
-  /* 14. Hekla Volcano */
-  .theme-hekla-volcano {
-    --background: 225 8% 8%;
-    --foreground: 215 15% 88%;
-    --card: 225 8% 13%;
-    --card-foreground: 215 15% 88%;
-    --popover: 225 8% 6%;
-    --popover-foreground: 215 15% 88%;
-    --primary: 200 100% 75%; /* Icy Blue */
-    --primary-foreground: 225 8% 8%;
-    --secondary: 225 8% 22%;
-    --secondary-foreground: 215 15% 88%;
-    --muted: 225 8% 17%;
-    --muted-foreground: 215 15% 58%;
-    --accent: 10 90% 70%; /* Lava Red */
-    --accent-foreground: 225 8% 8%;
-    --border: 225 8% 22%;
-    --input: 225 8% 26%;
-    --ring: 200 100% 80%;
-  }
-
-  /* 15. Deep Space */
-  .theme-deep-space {
-    --background: 245 35% 5%;
-    --foreground: 245 20% 92%;
-    --card: 245 35% 9%;
-    --card-foreground: 245 20% 92%;
-    --popover: 245 35% 3%;
-    --popover-foreground: 245 20% 92%;
-    --primary: 265 100% 80%; /* Nebula Purple */
-    --primary-foreground: 245 35% 5%;
-    --secondary: 245 25% 18%;
-    --secondary-foreground: 245 20% 92%;
-    --muted: 245 25% 12%;
-    --muted-foreground: 245 20% 60%;
-    --accent: 225 100% 70%; /* Star Blue */
-    --accent-foreground: 245 35% 5%;
-    --border: 245 25% 18%;
-    --input: 245 25% 22%;
-    --ring: 265 100% 85%;
+  /* Pink Dawn */
+  .theme-pink-dawn {
+      --background: 345 50% 12%; /* Deep pinkish black */
+      --foreground: 345 30% 95%;
+      --card: 345 50% 18%;
+      --card-foreground: 345 30% 95%;
+      --popover: 345 50% 15%;
+      --popover-foreground: 345 30% 95%;
+      --primary: 330 100% 85%; /* Soft pink */
+      --primary-foreground: 345 50% 12%;
+      --secondary: 340 30% 28%;
+      --secondary-foreground: 345 30% 95%;
+      --muted: 340 30% 22%;
+      --muted-foreground: 345 20% 65%;
+      --accent: 320 80% 70%; /* Bright magenta */
+      --accent-foreground: 345 30% 95%;
+      --destructive: 0 70% 60%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 340 30% 28%;
+      --input: 340 30% 32%;
+      --ring: 330 100% 85%;
+      --gradient-start: 330 90% 65%;
+      --gradient-mid: 350 90% 70%;
+      --gradient-end: 20 100% 75%;
+      --gradient-extra: 300 85% 60%;
   }
   
-  /* 16. OLED */
-  .theme-oled {
+  /* Sapphire Sky */
+  .theme-sapphire-sky {
+      --background: 215 60% 10%; /* Deep sapphire blue */
+      --foreground: 210 30% 96%;
+      --card: 215 60% 15%;
+      --card-foreground: 210 30% 96%;
+      --popover: 215 60% 12%;
+      --popover-foreground: 210 30% 96%;
+      --primary: 200 100% 80%; /* Bright cyan/sky blue */
+      --primary-foreground: 215 60% 10%;
+      --secondary: 210 40% 25%;
+      --secondary-foreground: 210 30% 96%;
+      --muted: 210 40% 20%;
+      --muted-foreground: 210 25% 68%;
+      --accent: 180 80% 65%; /* Turquoise */
+      --accent-foreground: 215 60% 10%;
+      --destructive: 0 70% 65%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 210 40% 25%;
+      --input: 210 40% 30%;
+      --ring: 200 100% 80%;
+      --gradient-start: 190 90% 55%;
+      --gradient-mid: 210 95% 60%;
+      --gradient-end: 230 100% 70%;
+      --gradient-extra: 250 90% 65%;
+  }
+
+  /* Emerald Garden */
+  .theme-emerald-garden {
+      --background: 150 60% 8%; /* Deep green */
+      --foreground: 140 25% 94%;
+      --card: 150 60% 12%;
+      --card-foreground: 140 25% 94%;
+      --popover: 150 60% 10%;
+      --popover-foreground: 140 25% 94%;
+      --primary: 130 80% 75%; /* Bright, soft green */
+      --primary-foreground: 150 60% 8%;
+      --secondary: 145 40% 22%;
+      --secondary-foreground: 140 25% 94%;
+      --muted: 145 40% 16%;
+      --muted-foreground: 140 20% 65%;
+      --accent: 110 70% 65%; /* Lime green */
+      --accent-foreground: 150 60% 8%;
+      --destructive: 0 65% 60%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 145 40% 22%;
+      --input: 145 40% 26%;
+      --ring: 130 80% 75%;
+      --gradient-start: 120 80% 50%;
+      --gradient-mid: 140 85% 55%;
+      --gradient-end: 160 90% 60%;
+      --gradient-extra: 100 75% 55%;
+  }
+
+  /* Royal Blue - Light */
+  .theme-royal-blue-light {
+      --background: 220 50% 98%; /* Very light blue */
+      --foreground: 220 30% 15%;
+      --card: 220 50% 100%;
+      --card-foreground: 220 30% 15%;
+      --popover: 220 50% 97%;
+      --popover-foreground: 220 30% 15%;
+      --primary: 225 60% 50%; /* Strong blue */
+      --primary-foreground: 220 50% 98%;
+      --secondary: 220 40% 94%;
+      --secondary-foreground: 225 60% 50%;
+      --muted: 220 40% 94%;
+      --muted-foreground: 220 25% 45%;
+      --accent: 215 70% 88%; /* Lighter accent */
+      --accent-foreground: 225 60% 50%;
+      --destructive: 0 80% 60%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 220 40% 90%;
+      --input: 220 40% 90%;
+      --ring: 225 60% 50%;
+      --gradient-start: 210 90% 60%;
+      --gradient-mid: 225 95% 65%;
+      --gradient-end: 240 100% 75%;
+      --gradient-extra: 200 85% 60%;
+  }
+
+
+  /* High Contrast */
+  .theme-high-contrast {
     --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 2%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 215 100% 60%; /* Vibrant Blue */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 8%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 60 100% 50%; /* Bright Yellow */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
     --muted-foreground: 0 0% 70%;
-    --accent: 0 85% 65%; /* Vibrant Red */
-    --accent-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 18%;
-    --ring: 215 100% 65%;
+    --accent: 60 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%; /* Bright Red */
+    --destructive-foreground: 0 0% 0%;
+    --border: 0 0% 30%;
+    --input: 0 0% 15%;
+    --ring: 60 100% 50%;
   }
 
-  /* 17. Studio Simpatico */
-  .theme-studio-simpatico {
-    --background: 225 37% 16%;
-    --foreground: 0 0% 98%;
-    --card: 225 37% 22%;
-    --card-foreground: 0 0% 98%;
-    --popover: 225 37% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 16 100% 62%; /* Orange */
-    --primary-foreground: 225 37% 10%;
-    --secondary: 231 80% 78%; /* Light Blue/Purple */
-    --secondary-foreground: 225 37% 10%;
-    --muted: 225 37% 25%;
-    --muted-foreground: 225 10% 75%;
-    --accent: 49 89% 72%; /* Yellow */
-    --accent-foreground: 225 37% 10%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 225 37% 25%;
-    --input: 225 37% 28%;
-    --ring: 16 100% 62%;
-  }
-
-  /* 18. Digital Horizon */
-  .theme-digital-horizon {
-    --background: 250 50% 4%; /* Deep Night Blue */
-    --foreground: 250 50% 96%; /* Off-white */
-    --card: 250 45% 9%;
-    --card-foreground: 250 50% 96%;
-    --popover: 250 45% 6%;
-    --popover-foreground: 250 50% 96%;
-    --primary: 325 100% 75%; /* Neon Pink */
-    --primary-foreground: 325 50% 5%;
-    --secondary: 225 100% 80%; /* Sky Blue */
-    --secondary-foreground: 225 50% 10%;
-    --muted: 250 40% 14%;
-    --muted-foreground: 250 30% 68%;
-    --accent: 275 95% 75%; /* Electric Violet */
-    --accent-foreground: 275 50% 98%;
-    --destructive: 0 85% 70%; /* Bright Red */
-    --destructive-foreground: 0 0% 100%;
-    --border: 250 40% 18%;
-    --input: 250 40% 20%;
-    --ring: 325 100% 80%;
-  }
 }
 
 @layer base {
@@ -594,6 +322,25 @@
   
   .custom-scrollbar-red::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--destructive));
+  }
+
+  .custom-scrollbar-blue::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar-blue::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar-blue::-webkit-scrollbar-thumb {
+    background-color: hsl(220 70% 70% / 0.7);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  
+  .custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(220 70% 80%);
   }
 }
 
