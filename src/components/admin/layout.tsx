@@ -1,16 +1,18 @@
-
 'use client';
 
 import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Book, Clapperboard, Home, ListVideo, Users, LogOut, Hash, HelpCircle, CalendarClock, Upload, UserCog, LayoutDashboard, MicVocal, Loader2, ShieldX, Youtube, Podcast, Flame, Palette, Megaphone, Heart } from 'lucide-react';
+import {
+  AlertTriangle, Book, CalendarClock, Clapperboard, Flame, Hash, Heart, HelpCircle,
+  LayoutDashboard, ListVideo, Loader2, LogOut, Megaphone, Palette, Pin, Podcast,
+  ShieldX, UserCog, Trophy, GraduationCap, Upload
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -25,7 +27,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     router.push('/');
   }
 
-  // While checking auth, show a full-screen loader
   if (isLoading) {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -34,26 +35,37 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  // If we are done loading, and the user is an admin, show the layout
   if (isAdmin) {
-      const navItems = [
-        { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-        { href: '/admin/programs', label: 'البرامج', icon: Podcast },
-        { href: '/admin/channels', label: 'القنوات', icon: Youtube },
-        { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
-        { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
-        { href: '/admin/books', label: 'الكتب', icon: Book },
-        { href: '/admin/topics', label: 'المواضيع', icon: Hash },
-        { href: '/admin/challenges', label: 'التحديات', icon: Flame },
-        { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
-        { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
-        { href: '/admin/appearance', label: 'المظهر', icon: Palette },
-        { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
-        { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },
-        { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
-        { href: '/admin/lectures/import', label: 'استيراد', icon: Upload },
-      ];
+    const navItems = [
+      // Overview
+      { href: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
+      
+      // Content Management
+      { href: '/admin/programs', label: 'البرامج', icon: Podcast },
+      { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
+      { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
+      { href: '/admin/books', label: 'الكتب', icon: Book },
+      { href: '/admin/import', label: 'استيراد', icon: Upload },
 
+      // Content Organization
+      { href: '/admin/curriculums', label: 'المناهج', icon: GraduationCap },
+      { href: '/admin/topics', label: 'المواضيع', icon: Hash },
+      { href: '/admin/pinned', label: 'العناصر المثبتة', icon: Pin },
+
+      // Feature Management
+      { href: '/admin/challenges', label: 'التحديات', icon: Flame },
+      { href: '/admin/badges', label: 'الأوسمة', icon: Trophy },
+      { href: '/admin/schedule', label: 'جدول الدروس', icon: CalendarClock },
+      { href: '/admin/qa', label: 'سؤال وجواب', icon: HelpCircle },
+      { href: '/admin/sins', label: 'إدارة المهلكات', icon: AlertTriangle },
+
+      // Site Administration
+      { href: '/admin/appearance', label: 'المظهر', icon: Palette },
+      { href: '/admin/announcement', label: 'الإعلان', icon: Megaphone },
+      { href: '/admin/donations', label: 'إدارة التبرعات', icon: Heart },
+      { href: '/admin/users', label: 'المستخدمون', icon: UserCog },
+    ];
+    
       return (
           <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
             <aside className="hidden border-r bg-muted/40 md:block">
@@ -64,27 +76,27 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                     <span className="">لوحة التحكم</span>
                   </Link>
                 </div>
-                <div className="flex-1">
-                  <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-                    {navItems.map(item => {
-                        const Icon = item.icon;
-                        const isActive = pathname.startsWith(item.href);
-                        
-                        return (
-                          <Link
-                              key={item.label}
-                              href={item.href}
-                              className={cn(
-                                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                isActive ? "bg-primary/10 text-primary" : ""
-                              )}
-                          >
-                              <Icon className="h-4 w-4" />
-                              {item.label}
-                          </Link>
-                        )
-                    })}
-                  </nav>
+                <div className="flex-1 overflow-y-auto">
+                    <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+                        {navItems.map(item => {
+                            const Icon = item.icon;
+                            const isActive = pathname.startsWith(item.href);
+                            
+                            return (
+                              <Link
+                                  key={item.label}
+                                  href={item.href}
+                                  className={cn(
+                                      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                    isActive ? "bg-primary/10 text-primary" : ""
+                                  )}
+                              >
+                                  <Icon className="h-4 w-4" />
+                                  {item.label}
+                              </Link>
+                            )
+                        })}
+                      </nav>
                 </div>
                 <div className="mt-auto p-4 space-y-2">
                       <Button onClick={handleLogout} size="sm" variant="outline" className="w-full">
@@ -112,7 +124,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       );
   }
 
-  // If not loading and not an admin, show access denied message
   return (
     <div className="flex h-screen flex-col items-center justify-center text-center p-4">
         <ShieldX className="w-24 h-24 text-destructive mb-4"/>
