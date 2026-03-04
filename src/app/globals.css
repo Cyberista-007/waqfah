@@ -279,6 +279,32 @@
   .animate-slide-in {
       animation: slide-in 0.5s ease-out forwards;
   }
+
+  /* Supporter wall animation */
+  .supporter-sphere {
+    border-radius: 50%;
+    background-color: rgba(29, 78, 216, 0.1);
+    box-shadow: 0 0 10px rgba(29, 78, 216, 0.3), inset 0 0 10px rgba(29, 78, 216, 0.2);
+    border: 1px solid rgba(29, 78, 216, 0.2);
+    animation: float 20s infinite ease-in-out;
+    animation-delay: calc(var(--i, 0) * -1.2s);
+    transform-style: preserve-3d;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(20px) translateX(10px) translateZ(0) scale(1);
+    }
+    25% {
+      transform: translateY(-15px) translateX(-10px) translateZ(10px) scale(1.05);
+    }
+    50% {
+      transform: translateY(10px) translateX(20px) translateZ(-5px) scale(1);
+    }
+    75% {
+      transform: translateY(-10px) translateX(-15px) translateZ(5px) scale(0.95);
+    }
+  }
 }
 
 @keyframes gradient-move {
