@@ -988,62 +988,60 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </header>
             )}
 
-            <Card className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
-                <CardContent className="p-2">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" className="w-full h-auto text-lg p-2">
-                                {formatGregorianForButton(selectedDate)} | {formatHijriForButton(selectedDate)}
-                                <ChevronDown className="h-4 w-4 ms-2" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 flex bg-popover" dir="rtl">
-                             <div className="p-2">
-                                <Calendar
-                                    locale={ar}
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={handleDateSelect}
-                                    month={hijriMonth}
-                                    onMonthChange={setHijriMonth}
-                                    formatters={hijriFormatters}
-                                    dir="rtl"
-                                    components={{
-                                        IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                        IconRight: () => <ChevronLeft className="h-4 w-4" />,
-                                    }}
-                                    classNames={{
-                                        caption_label: "font-bold text-primary",
-                                        nav_button_previous: "absolute right-1",
-                                        nav_button_next: "absolute right-auto left-1",
-                                    }}
-                                />
-                            </div>
-                            <Separator orientation="vertical" className="h-auto"/>
-                            <div className="p-2">
-                                <Calendar
-                                    locale={ar}
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={handleDateSelect}
-                                    month={gregorianMonth}
-                                    onMonthChange={setGregorianMonth}
-                                    formatters={gregorianFormatters}
-                                    dir="rtl"
-                                    components={{
-                                        IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                        IconRight: () => <ChevronLeft className="h-4 w-4" />,
-                                    }}
-                                    classNames={{
-                                        nav_button_previous: "absolute right-1",
-                                        nav_button_next: "absolute right-auto left-1",
-                                    }}
-                                />
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                </CardContent>
-            </Card>
+            <div className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full h-auto text-lg p-4 rounded-xl shadow-lg border-2 bg-card hover:bg-muted">
+                            {formatGregorianForButton(selectedDate)} | {formatHijriForButton(selectedDate)}
+                            <ChevronDown className="h-4 w-4 ms-2" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 flex bg-popover" dir="rtl">
+                         <div className="p-2">
+                            <Calendar
+                                locale={ar}
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={handleDateSelect}
+                                month={hijriMonth}
+                                onMonthChange={setHijriMonth}
+                                formatters={hijriFormatters}
+                                dir="rtl"
+                                components={{
+                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                }}
+                                classNames={{
+                                    caption_label: "font-bold text-primary",
+                                    nav_button_previous: "absolute right-1",
+                                    nav_button_next: "absolute right-auto left-1",
+                                }}
+                            />
+                        </div>
+                        <Separator orientation="vertical" className="h-auto"/>
+                        <div className="p-2">
+                            <Calendar
+                                locale={ar}
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={handleDateSelect}
+                                month={gregorianMonth}
+                                onMonthChange={setGregorianMonth}
+                                formatters={gregorianFormatters}
+                                dir="rtl"
+                                components={{
+                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
+                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                }}
+                                classNames={{
+                                    nav_button_previous: "absolute right-1",
+                                    nav_button_next: "absolute right-auto left-1",
+                                }}
+                            />
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
 
             <Tabs defaultValue="fajr" className="w-full">
               <div className="flex justify-center overflow-x-auto pb-2">
