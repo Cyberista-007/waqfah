@@ -390,12 +390,11 @@
       "properties": {
         "title": { "type": "string" },
         "dialogTitle": { "type": "string" },
-        "quranVerse": { "type": "string" },
-        "hadith": { "type": "string" },
-        "hadith2": { "type": "string" },
+        "quranVerses": { "type": "array", "items": { "type": "string" } },
+        "hadiths": { "type": "array", "items": { "type": "string" } },
         "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." },
         "concept": { "type": "string", "description": "The definition or concept of the sin." },
-        "daily_life_example": { "type": "string", "description": "An example of the sin from daily life." }
+        "dailyLifeExamples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["title", "dialogTitle", "icon"]
     },

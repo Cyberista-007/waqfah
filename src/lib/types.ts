@@ -293,12 +293,11 @@ export type DestructiveSin = Serializable<{
   id: string;
   title: string;
   dialogTitle: string;
-  quranVerse?: string;
-  hadith?: string;
-  hadith2?: string;
+  quranVerses?: string[];
+  hadiths?: string[];
   icon: string;
   concept?: string;
-  daily_life_example?: string;
+  dailyLifeExamples?: string[];
 }>;
 
 export type Suggestion = Serializable<{

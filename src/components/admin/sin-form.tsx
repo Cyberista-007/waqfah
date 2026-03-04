@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import type { DestructiveSin } from "@/lib/types";
-import { Loader2, MessageSquareX, EyeOff, Angry, AlertTriangle } from "lucide-react";
+import { Loader2, MessageSquareX, EyeOff, Angry, AlertTriangle, X, Plus } from "lucide-react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,38 @@ const getIcon = (iconName: string, className?: string) => {
     }
 };
 
+const MultiInputSection = ({ label, values, onUpdate, onAdd, onRemove }: {
+  label: string,
+  values: string[],
+  onUpdate: (index: number, value: string) => void,
+  onAdd: () => void,
+  onRemove: (index: number) => void
+}) => (
+  <div>
+    <Label>{label}</Label>
+    <div className="space-y-2 mt-2">
+      {values.map((value, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <Textarea
+            value={value}
+            onChange={(e) => onUpdate(index, e.target.value)}
+            rows={2}
+          />
+          {values.length > 1 ? (
+            <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(index)}>
+              <X className="h-4 w-4 text-destructive" />
+            </Button>
+          ) : null}
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={onAdd}>
+        <Plus className="h-4 w-4 me-2" />
+        إضافة حقل جديد
+      </Button>
+    </div>
+  </div>
+);
+
 
 export function SinForm({ item, onFormClose }: SinFormProps) {
   const { toast } = useToast();
@@ -65,10 +97,10 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
   const [title, setTitle] = useState(item?.title || "");
   const [dialogTitle, setDialogTitle] = useState(item?.dialogTitle || "");
   const [concept, setConcept] = useState(item?.concept || "");
-  const [dailyLifeExample, setDailyLifeExample] = useState(item?.daily_life_example || "");
-  const [quranVerse, setQuranVerse] = useState(item?.quranVerse || "");
-  const [hadith, setHadith] = useState(item?.hadith || "");
-  const [hadith2, setHadith2] = useState(item?.hadith2 || "");
+  
+  const [dailyLifeExamples, setDailyLifeExamples] = useState<string[]>(item?.dailyLifeExamples || [""]);
+  const [quranVerses, setQuranVerses] = useState<string[]>(item?.quranVerses || [""]);
+  const [hadiths, setHadiths] = useState<string[]>(item?.hadiths || [""]);
 
   const [selectedIcon, setSelectedIcon] = useState(item?.icon && ICONS.includes(item.icon) ? item.icon : "");
   const [iconFile, setIconFile] = useState<File | null>(null);
@@ -88,6 +120,22 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
       setIconFile(null);
       setIconPreview(null);
   }
+
+  const handleArrayChange = (setter: React.Dispatch<React.SetStateAction<string[]>>, index: number, value: string) => {
+    setter(prev => {
+        const newArr = [...prev];
+        newArr[index] = value;
+        return newArr;
+    });
+  };
+
+  const addArrayItem = (setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+      setter(prev => [...prev, '']);
+  };
+
+  const removeArrayItem = (setter: React.Dispatch<React.SetStateAction<string[]>>, index: number) => {
+      setter(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,10 +173,9 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
             title,
             dialogTitle,
             concept,
-            daily_life_example: dailyLifeExample,
-            quranVerse,
-            hadith,
-            hadith2,
+            dailyLifeExamples: dailyLifeExamples.filter(v => v.trim() !== ''),
+            quranVerses: quranVerses.filter(v => v.trim() !== ''),
+            hadiths: hadiths.filter(v => v.trim() !== ''),
             icon: finalIconValue,
         };
 
@@ -210,10 +257,28 @@ export function SinForm({ item, onFormClose }: SinFormProps) {
                 </Card>
             </div>
              <Textarea id="concept" name="concept" value={concept} onChange={e => setConcept(e.target.value)} disabled={isSubmitting} placeholder="المفهوم (اختياري)" rows={3} />
-             <Textarea id="daily_life_example" name="daily_life_example" value={dailyLifeExample} onChange={e => setDailyLifeExample(e.target.value)} disabled={isSubmitting} placeholder="مثال من واقعنا اليومي (اختياري)" rows={3} />
-             <Textarea id="quranVerse" name="quranVerse" value={quranVerse} onChange={(e) => setQuranVerse(e.target.value)} disabled={isSubmitting} placeholder="الآية القرآنية (اختياري)" />
-             <Textarea id="hadith" name="hadith" value={hadith} onChange={(e) => setHadith(e.target.value)} disabled={isSubmitting} placeholder="الحديث الأول (اختياري)" />
-             <Textarea id="hadith2" name="hadith2" value={hadith2} onChange={(e) => setHadith2(e.target.value)} disabled={isSubmitting} placeholder="الحديث الثاني (اختياري)" />
+             
+             <MultiInputSection
+                label="أمثلة من واقعنا اليومي"
+                values={dailyLifeExamples}
+                onUpdate={(index, value) => handleArrayChange(setDailyLifeExamples, index, value)}
+                onAdd={() => addArrayItem(setDailyLifeExamples)}
+                onRemove={(index) => removeArrayItem(setDailyLifeExamples, index)}
+              />
+              <MultiInputSection
+                label="الآيات القرآنية"
+                values={quranVerses}
+                onUpdate={(index, value) => handleArrayChange(setQuranVerses, index, value)}
+                onAdd={() => addArrayItem(setQuranVerses)}
+                onRemove={(index) => removeArrayItem(setQuranVerses, index)}
+              />
+              <MultiInputSection
+                label="الأحاديث النبوية"
+                values={hadiths}
+                onUpdate={(index, value) => handleArrayChange(setHadiths, index, value)}
+                onAdd={() => addArrayItem(setHadiths)}
+                onRemove={(index) => removeArrayItem(setHadiths, index)}
+              />
 
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>
