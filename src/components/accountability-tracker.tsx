@@ -261,27 +261,27 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                    <DialogContent className="max-w-lg p-0 border-destructive bg-card text-card-foreground shadow-2xl shadow-destructive/20">
-                        <DialogHeader className="p-6 text-center border-b border-destructive/50">
+                    <DialogContent className="max-w-lg p-0 border-destructive bg-card/80 backdrop-blur-sm text-card-foreground shadow-2xl shadow-destructive/20" dir="rtl">
+                        <div className="flex justify-between items-center p-6 pb-2">
                             <DialogTitle className="text-2xl font-headline text-destructive">{sin.dialogTitle}</DialogTitle>
-                        </DialogHeader>
-                        <DialogClose asChild>
-                            <button className="absolute top-4 left-4 text-muted-foreground hover:text-foreground">
-                                <X className="h-6 w-6" />
-                            </button>
-                        </DialogClose>
+                            <DialogClose asChild>
+                                <button className="text-muted-foreground hover:text-foreground">
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </DialogClose>
+                        </div>
                         <ScrollArea className="h-[70vh]">
                             <div className="relative p-6">
-                                <div className="absolute top-6 bottom-6 right-8 w-px bg-gradient-to-b from-blue-500 to-purple-500">
+                                <div className="absolute top-6 bottom-6 right-8 w-px bg-gradient-to-b from-blue-500/50 to-purple-500/50">
                                     <div className="absolute -top-1 -right-1.5 h-4 w-4 rounded-full bg-blue-500 border-4 border-card" />
                                     <div className="absolute -bottom-1 -right-1.5 h-4 w-4 rounded-full bg-purple-500 border-4 border-card" />
                                 </div>
-                                <div className="space-y-8 pr-12">
+                                <div className="space-y-8 pr-12 text-right">
                                     {sin.concept && (
                                     <div className="space-y-2">
-                                        <h4 className="flex items-center gap-2 font-headline text-primary">
-                                            <Info className="h-5 w-5" />
+                                        <h4 className="flex items-center justify-end gap-2 font-headline text-destructive">
                                             <span>المفهوم:</span>
+                                            <Info className="h-5 w-5" />
                                         </h4>
                                         <div className="p-4 rounded-lg border border-dashed border-border bg-muted/50">
                                             <p>{sin.concept}</p>
@@ -290,14 +290,14 @@ function DestructiveSinsSection() {
                                     )}
                                     {sin.dailyLifeExamples && sin.dailyLifeExamples.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="flex items-center gap-2 font-headline text-primary">
-                                        <CalendarDays className="h-5 w-5" />
+                                        <h4 className="flex items-center justify-end gap-2 font-headline text-destructive">
                                         <span>أمثلة من واقعنا:</span>
+                                        <CalendarDays className="h-5 w-5" />
                                         </h4>
                                         <div className="space-y-2">
                                         {sin.dailyLifeExamples.map((example, index) => (
                                             <div key={index} className="p-4 rounded-lg border border-dashed border-border bg-muted/50">
-                                                <p>"{example}"</p>
+                                                <p className="text-center">"{example}"</p>
                                             </div>
                                         ))}
                                         </div>
@@ -305,9 +305,9 @@ function DestructiveSinsSection() {
                                     )}
                                     {sin.quranVerses && sin.quranVerses.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="flex items-center gap-2 font-headline text-primary">
-                                        <BookOpen className="h-5 w-5" />
+                                        <h4 className="flex items-center justify-end gap-2 font-headline text-destructive">
                                         <span>أدلة من القرآن:</span>
+                                        <BookOpen className="h-5 w-5" />
                                         </h4>
                                         <div className="space-y-2">
                                         {sin.quranVerses.map((verse, index) => (
@@ -320,9 +320,9 @@ function DestructiveSinsSection() {
                                     )}
                                     {sin.hadiths && sin.hadiths.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="flex items-center gap-2 font-headline text-primary">
-                                        <Scroll className="h-5 w-5" />
+                                        <h4 className="flex items-center justify-end gap-2 font-headline text-destructive">
                                         <span>أدلة من السنة:</span>
+                                        <Scroll className="h-5 w-5" />
                                         </h4>
                                          <div className="space-y-2">
                                         {sin.hadiths.map((hadith, index) => (
