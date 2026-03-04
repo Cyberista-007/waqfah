@@ -260,7 +260,7 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-lg bg-card text-card-foreground p-0 rounded-xl border-destructive shadow-lg shadow-destructive/20 relative overflow-hidden">
+                  <DialogContent className="max-w-lg bg-card text-card-foreground p-0 rounded-xl border-destructive shadow-lg shadow-destructive/20 overflow-hidden">
                       <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-destructive/0 via-destructive/70 to-destructive/0"></div>
                       <ScrollArea className="max-h-[80vh] custom-scrollbar-red">
                           <div className="p-6">
@@ -770,11 +770,11 @@ const ImanHarvestReport = () => {
                     <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                          <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-teal-500 to-cyan-600 text-white" >
                             <FileText className="me-2 h-5 w-5"/>
-                            طباعة التقرير الأسبوعي (PDF)
+                            تحميل التقرير الأسبوعي (PDF)
                         </Button>
-                         <Button onClick={handlePrint} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white" >
+                         <Button onClick={handleDownloadData} size="lg" className="h-14 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white" >
                             <FileText className="me-2 h-5 w-5"/>
-                            طباعة التقرير الشهري (PDF)
+                            تحميل بيانات التقرير (JSON)
                         </Button>
                     </footer>
                 </div>
@@ -813,16 +813,13 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     
     const gregorianFormatters = {
-        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-EG', { weekday: 'narrow' }).format(weekday),
+        formatWeekdayName: (weekday: Date) => new Intl.DateTimeFormat('ar-EG', { weekday: 'short' }).format(weekday),
     };
 
     const hijriFormatters = {
         formatDay: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { day: 'numeric' }).format(date),
-        formatCaption: (date: Date, options?: { locale?: Locale }) => {
-            const formatted = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { month: 'long', year: 'numeric' }).format(date);
-            return formatted.includes('هـ') ? formatted : `${formatted}`;
-        },
-        formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { weekday: 'narrow' }).format(weekday),
+        formatCaption: (date: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', { month: 'long', year: 'numeric' }).format(date),
+        formatWeekdayName: (weekday: Date) => new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { weekday: 'short' }).format(weekday),
     };
     
     const formatGregorianForButton = (date: Date) => {
@@ -1001,7 +998,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 flex bg-popover" dir="rtl">
-                            <div className="p-2">
+                             <div className="p-2">
                                 <Calendar
                                     locale={ar}
                                     mode="single"
