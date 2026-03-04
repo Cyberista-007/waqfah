@@ -260,45 +260,81 @@ function DestructiveSinsSection() {
                           <span className="font-bold text-lg">{sin.title}</span>
                       </button>
                   </DialogTrigger>
-                  <DialogContent className="bg-white border-4 border-blue-800 shadow-[20px_20px_0_rgba(0,0,0,0.5)] p-0 w-auto max-w-md rounded-none font-serif overflow-hidden" hideCloseButton style={{ fontFamily: 'Comic Sans MS, cursive' }}>
-                        <div className="bg-blue-800 text-white p-2 font-bold flex justify-between items-center cursor-move">
-                            <span className="font-headline text-lg">{sin.dialogTitle}</span>
-                            <DialogClose asChild>
-                                <button className="bg-gray-300 text-black px-2 py-0.5 border border-white hover:bg-gray-400">X</button>
-                            </DialogClose>
-                        </div>
-                        <div className="p-6 text-center space-y-4">
-                            {sin.concept && (
-                                <div className="bg-blue-100 border-2 border-dashed border-blue-400 p-3">
-                                    <Info className="mx-auto text-blue-600 mb-2"/>
-                                    <p className="text-blue-900">{sin.concept}</p>
+                    <DialogContent className="bg-slate-900/95 border border-red-500/50 text-white shadow-2xl shadow-red-500/10 rounded-2xl max-w-lg p-0 backdrop-blur-sm">
+                        <DialogHeader className="p-6 pb-2 text-center">
+                            <DialogTitle className="text-2xl font-headline text-red-400">{sin.dialogTitle}</DialogTitle>
+                        </DialogHeader>
+                        <DialogClose asChild>
+                            <button className="absolute top-4 left-4 text-gray-400 hover:text-white">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </DialogClose>
+                        <ScrollArea className="h-[70vh]">
+                            <div className="relative p-6">
+                                {/* Decorative timeline */}
+                                <div className="absolute top-6 bottom-6 right-8 w-px bg-gradient-to-b from-blue-500 to-purple-500">
+                                    <div className="absolute -top-1 -right-1.5 h-4 w-4 rounded-full bg-blue-500 border-4 border-slate-900" />
+                                    <div className="absolute -bottom-1 -right-1.5 h-4 w-4 rounded-full bg-purple-500 border-4 border-slate-900" />
                                 </div>
-                            )}
-                            {sin.daily_life_example && (
-                                <div className="bg-lime-100 border-2 border-dashed border-lime-400 p-3">
-                                    <CalendarDays className="mx-auto text-lime-600 mb-2"/>
-                                    <p className="text-lime-900">"{sin.daily_life_example}"</p>
+                                <div className="space-y-8 pr-12">
+                                    {sin.concept && (
+                                    <div className="space-y-2">
+                                        <h4 className="flex items-center gap-2 font-headline text-red-400">
+                                            <Info className="h-5 w-5" />
+                                            <span>المفهوم:</span>
+                                        </h4>
+                                        <div className="p-4 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/50">
+                                            <p>{sin.concept}</p>
+                                        </div>
+                                    </div>
+                                    )}
+                                    {sin.daily_life_example && (
+                                    <div className="space-y-2">
+                                        <h4 className="flex items-center gap-2 font-headline text-red-400">
+                                        <CalendarDays className="h-5 w-5" />
+                                        <span>مثال من واقعنا (يومي):</span>
+                                        </h4>
+                                        <div className="p-4 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/50">
+                                        <p>"{sin.daily_life_example}"</p>
+                                        </div>
+                                    </div>
+                                    )}
+                                    {sin.quranVerse && (
+                                    <div className="space-y-2">
+                                        <h4 className="flex items-center gap-2 font-headline text-red-400">
+                                        <BookOpen className="h-5 w-5" />
+                                        <span>دليل من القرآن:</span>
+                                        </h4>
+                                        <div className="p-4 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/50">
+                                        <p className="font-amiri text-lg text-center leading-relaxed">"{sin.quranVerse}"</p>
+                                        </div>
+                                    </div>
+                                    )}
+                                    {sin.hadith && (
+                                    <div className="space-y-2">
+                                        <h4 className="flex items-center gap-2 font-headline text-red-400">
+                                        <Scroll className="h-5 w-5" />
+                                        <span>دليل من السنة:</span>
+                                        </h4>
+                                        <div className="p-4 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/50">
+                                        <p className="font-amiri text-lg text-center leading-relaxed">"{sin.hadith}"</p>
+                                        </div>
+                                    </div>
+                                    )}
+                                    {sin.hadith2 && (
+                                    <div className="space-y-2">
+                                        <h4 className="flex items-center gap-2 font-headline text-red-400">
+                                        <Scroll className="h-5 w-5" />
+                                        <span>دليل آخر من السنة:</span>
+                                        </h4>
+                                        <div className="p-4 rounded-lg border-2 border-dashed border-slate-700 bg-slate-800/50">
+                                        <p className="font-amiri text-lg text-center leading-relaxed">"{sin.hadith2}"</p>
+                                        </div>
+                                    </div>
+                                    )}
                                 </div>
-                            )}
-                            {sin.quranVerse && (
-                                <div className="bg-yellow-100 border-2 border-dashed border-yellow-400 p-3">
-                                    <BookOpen className="mx-auto text-yellow-600 mb-2"/>
-                                    <p className="font-amiri text-lg text-yellow-900">"{sin.quranVerse}"</p>
-                                </div>
-                            )}
-                            {sin.hadith && (
-                                <div className="bg-green-100 border-2 border-dashed border-green-400 p-3">
-                                    <Scroll className="mx-auto text-green-600 mb-2"/>
-                                    <p className="font-amiri text-lg text-green-900">"{sin.hadith}"</p>
-                                </div>
-                            )}
-                            {sin.hadith2 && (
-                                <div className="bg-red-100 border-2 border-dashed border-red-400 p-3">
-                                    <Scroll className="mx-auto text-red-600 mb-2"/>
-                                    <p className="font-amiri text-lg text-red-900">"{sin.hadith2}"</p>
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        </ScrollArea>
                     </DialogContent>
               </Dialog>
           ))}
