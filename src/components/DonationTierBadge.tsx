@@ -1,11 +1,11 @@
 'use client';
 
-import { Star, Shield } from 'lucide-react';
+import { Star, Shield, Gem, Crown, HandHeart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
-type Tier = 'bronze' | 'silver' | 'gold';
+type Tier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'benefactor';
 
 interface DonationTierBadgeProps {
   tier?: Tier;
@@ -27,6 +27,21 @@ const tierConfig = {
     label: 'داعم ذهبي',
     className: 'bg-amber-200 text-amber-800 border-amber-300 hover:bg-amber-200 dark:bg-amber-500/30 dark:text-amber-300 dark:border-amber-500/50',
     icon: Shield,
+  },
+  platinum: {
+    label: 'داعم بلاتيني',
+    className: 'bg-cyan-100 text-cyan-800 border-cyan-300 hover:bg-cyan-100 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border-cyan-700',
+    icon: Gem,
+  },
+  diamond: {
+    label: 'داعم ماسي',
+    className: 'bg-violet-200 text-violet-800 border-violet-300 hover:bg-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:border-violet-700',
+    icon: Crown,
+  },
+  benefactor: {
+    label: 'محسن',
+    className: 'bg-rose-200 text-rose-800 border-rose-300 hover:bg-rose-200 dark:bg-rose-900/50 dark:text-rose-300 dark:border-rose-700',
+    icon: HandHeart,
   },
 };
 

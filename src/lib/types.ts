@@ -1,4 +1,3 @@
-
 import type { Timestamp } from 'firebase/firestore';
 
 // When passing data from server to client, Timestamps are serialized to strings.
@@ -156,7 +155,7 @@ export type UserProfile = Serializable<{
     seriesCompleted?: number;
     role: 'user' | 'admin';
     totalDonated?: number;
-    donationTier?: 'bronze' | 'silver' | 'gold';
+    donationTier?: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'benefactor';
     notificationSettings?: NotificationSettings;
     stripeCustomerId?: string;
     savedCardBrand?: string;

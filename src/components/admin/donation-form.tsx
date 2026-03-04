@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -67,7 +66,7 @@ export function DonationForm({ item, onFormClose }: DonationFormProps) {
         return;
     }
     
-    const tierThresholds = { gold: 5000, silver: 2500, bronze: 500 };
+    const tierThresholds = { benefactor: 50000, diamond: 25000, platinum: 10000, gold: 5000, silver: 2500, bronze: 500 };
 
     try {
       await runTransaction(firestore, async (transaction) => {
@@ -95,7 +94,10 @@ export function DonationForm({ item, onFormClose }: DonationFormProps) {
           const newTotalDonated = (userProfile.totalDonated || 0) - oldAmountForUser + Number(amount);
           
           let newTier = userProfile.donationTier;
-          if (newTotalDonated >= tierThresholds.gold) newTier = 'gold';
+          if (newTotalDonated >= tierThresholds.benefactor) newTier = 'benefactor';
+          else if (newTotalDonated >= tierThresholds.diamond) newTier = 'diamond';
+          else if (newTotalDonated >= tierThresholds.platinum) newTier = 'platinum';
+          else if (newTotalDonated >= tierThresholds.gold) newTier = 'gold';
           else if (newTotalDonated >= tierThresholds.silver) newTier = 'silver';
           else if (newTotalDonated >= tierThresholds.bronze) newTier = 'bronze';
           else newTier = undefined; // No tier

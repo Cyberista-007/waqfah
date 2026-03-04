@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2, Star, Shield } from 'lucide-react';
+import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2, Star, Shield, Gem, Crown, HandHeart } from 'lucide-react';
 import Link from 'next/link';
 import { useCollection, useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
@@ -398,7 +398,7 @@ export default function DonationsPage() {
 
         <section>
           <h2 className="text-3xl font-bold text-center mb-12 font-headline">مستويات الدعم التقديرية</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
               {/* Bronze */}
               <Card className="group text-center p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                   <CardHeader className="p-0">
@@ -413,28 +413,67 @@ export default function DonationsPage() {
               </Card>
 
               {/* Silver */}
-              <Card className="group text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
+              <Card className="group text-center p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
                   <CardHeader className="p-0">
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700/50 mb-4 ring-4 ring-slate-500/20 group-hover:ring-slate-500/40 transition-shadow duration-300">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700/50 mb-4 ring-4 ring-slate-500/20 group-hover:ring-slate-500/40 transition-shadow duration-300">
                           <Star className="h-8 w-8 text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
                       </div>
-                      <CardTitle className="font-headline text-2xl text-slate-700 dark:text-slate-200">داعم فضي</CardTitle>
+                      <CardTitle className="font-headline text-xl text-slate-700 dark:text-slate-200">داعم فضي</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 mt-2">
-                      <p className="text-lg text-muted-foreground">عند تجاوز 2500 جنيه مصري</p>
+                      <p className="text-base text-muted-foreground">عند تجاوز 2,500 جنيه مصري</p>
                   </CardContent>
               </Card>
               
-              {/* Gold - Highlighted */}
-              <Card className="group text-center p-8 transition-all duration-300 bg-card border-2 border-amber-400/50 shadow-2xl shadow-amber-500/10 rounded-2xl hover:shadow-amber-500/20 hover:-translate-y-2 hover:scale-110">
+              {/* Gold */}
+              <Card className="group text-center p-4 transition-all duration-300 bg-card/80 rounded-2xl hover:shadow-lg hover:-translate-y-2">
                   <CardHeader className="p-0">
-                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4 ring-4 ring-amber-500/20 group-hover:ring-amber-500/40 transition-shadow duration-300">
-                          <Shield className="h-10 w-10 text-amber-500 dark:text-amber-300 fill-current transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[-15deg]" />
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/30 mb-4 ring-4 ring-amber-500/20 group-hover:ring-amber-500/40 transition-shadow duration-300">
+                          <Shield className="h-7 w-7 text-amber-500 dark:text-amber-300 fill-current transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[-15deg]" />
                       </div>
-                      <CardTitle className="font-headline text-3xl text-amber-600 dark:text-amber-200">داعم ذهبي</CardTitle>
+                      <CardTitle className="font-headline text-xl text-amber-600 dark:text-amber-200">داعم ذهبي</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 mt-2">
-                      <p className="text-lg text-muted-foreground">عند تجاوز 5000 جنيه مصري</p>
+                      <p className="text-base text-muted-foreground">عند تجاوز 5,000 جنيه مصري</p>
+                  </CardContent>
+              </Card>
+
+              {/* Platinum */}
+              <Card className="group text-center p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
+                  <CardHeader className="p-0">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/50 mb-4 ring-4 ring-cyan-500/20 group-hover:ring-cyan-500/40 transition-shadow duration-300">
+                          <Gem className="h-7 w-7 text-cyan-500 dark:text-cyan-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
+                      </div>
+                      <CardTitle className="font-headline text-xl text-cyan-600 dark:text-cyan-400">داعم بلاتيني</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0 mt-2">
+                      <p className="text-base text-muted-foreground">عند تجاوز 10,000 جنيه مصري</p>
+                  </CardContent>
+              </Card>
+              
+              {/* Diamond */}
+              <Card className="group text-center p-6 border-2 border-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-2 bg-card/80 rounded-2xl">
+                  <CardHeader className="p-0">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/50 mb-4 ring-4 ring-violet-500/20 group-hover:ring-violet-500/40 transition-shadow duration-300">
+                          <Crown className="h-8 w-8 text-violet-500 dark:text-violet-400 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[15deg]" />
+                      </div>
+                      <CardTitle className="font-headline text-2xl text-violet-600 dark:text-violet-400">داعم ماسي</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0 mt-2">
+                      <p className="text-lg text-muted-foreground">عند تجاوز 25,000 جنيه مصري</p>
+                  </CardContent>
+              </Card>
+
+              {/* Benefactor */}
+              <Card className="group text-center p-8 transition-all duration-300 bg-card border-2 border-rose-400/50 shadow-2xl shadow-rose-500/10 rounded-2xl hover:shadow-rose-500/20 hover:-translate-y-2 hover:scale-110">
+                  <CardHeader className="p-0">
+                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-500/30 mb-4 ring-4 ring-rose-500/20 group-hover:ring-rose-500/40 transition-shadow duration-300">
+                          <HandHeart className="h-10 w-10 text-rose-500 dark:text-rose-300 fill-current transition-transform duration-300 group-hover:scale-125 group-hover:rotate-[-15deg]" />
+                      </div>
+                      <CardTitle className="font-headline text-3xl text-rose-600 dark:text-rose-200">محسن</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0 mt-2">
+                      <p className="text-lg text-muted-foreground">عند تجاوز 50,000 جنيه مصري</p>
                   </CardContent>
               </Card>
           </div>
