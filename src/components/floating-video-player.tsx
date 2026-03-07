@@ -7,10 +7,10 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 // Define constants for player dimensions
-const MIN_WIDTH = 320;
-const MIN_HEIGHT = 180;
+const MIN_WIDTH = 280;
+const MIN_HEIGHT = 158; // 16:9 ratio
 const DEFAULT_WIDTH = 500;
-const DEFAULT_HEIGHT = 300;
+const DEFAULT_HEIGHT = 281; // 16:9 ratio
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
 export default function FloatingVideoPlayer() {
@@ -33,11 +33,15 @@ export default function FloatingVideoPlayer() {
     // Set initial position when player becomes visible
     useEffect(() => {
         if (isPlayerVisible) {
+            const isMobile = window.innerWidth < 768; // md breakpoint
+            const initialWidth = isMobile ? MIN_WIDTH : DEFAULT_WIDTH;
+            const initialHeight = isMobile ? MIN_HEIGHT : DEFAULT_HEIGHT;
+            
             setPosition({
-                x: window.innerWidth - DEFAULT_WIDTH - 32, // 32 is padding
-                y: 80,
+                x: window.innerWidth - initialWidth - 16, // 16px padding
+                y: 80, // from top
             });
-            setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+            setSize({ width: initialWidth, height: initialHeight });
         }
     }, [isPlayerVisible]);
 
@@ -292,7 +296,7 @@ export default function FloatingVideoPlayer() {
         <div
             ref={playerRef}
             style={playerStyle}
-            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex-col group hidden md:flex"
+            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex flex-col group"
         >
             {/* Control Bar */}
              <div
