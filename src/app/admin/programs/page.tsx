@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -19,9 +20,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Program } from "@/lib/types";
+import type { Program, Series } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, runTransaction, collection, query, where, getDocs, increment } from "firebase/firestore";
 import { Loader2, Trash2, Edit, PlusCircle, Podcast, Upload } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { ProgramForm } from "@/app/admin/program-form";
@@ -46,47 +47,60 @@ export default function AdminProgramsPage() {
 
     const handleDelete = async () => {
         if (!programToDelete || !firestore) return;
-        
-        const programRef = doc(firestore, 'programs', programToDelete.id);
-        const statsRef = doc(firestore, 'stats', 'global');
-        const seriesRef = collection(firestore, 'series');
-        const lecturesRef = collection(firestore, 'lectures');
 
-        const seriesQuery = query(seriesRef, where("programId", "==", programToDelete.id));
-        const lecturesQuery = query(lecturesRef, where("programId", "==", programToDelete.id));
-        
         try {
-            const [seriesSnapshot, lecturesSnapshot] = await Promise.all([
-                getDocs(seriesQuery),
-                getDocs(lecturesQuery),
-            ]);
-
-            const seriesToDeleteCount = seriesSnapshot.size;
-            const lecturesToDeleteCount = lecturesSnapshot.size;
-            
             await runTransaction(firestore, async (transaction) => {
-                const statsDoc = await transaction.get(statsRef);
-                const currentStats = statsDoc.data() || {};
+                const programRef = doc(firestore, 'programs', programToDelete.id);
+                const statsRef = doc(firestore, 'stats', 'global');
                 
-                const newProgramsCount = Math.max(0, (currentStats.programs || 0) - 1);
-                const newSeriesCount = Math.max(0, (currentStats.series || 0) - seriesToDeleteCount);
-                const newLecturesCount = Math.max(0, (currentStats.lectures || 0) - lecturesToDeleteCount);
+                // Find all series belonging to this program
+                const seriesQuery = query(collection(firestore, 'series'), where("programId", "==", programToDelete.id));
+                const seriesSnapshot = await getDocs(seriesQuery);
+                const seriesIds = seriesSnapshot.docs.map(d => d.id);
+                
+                let lecturesToDeleteCount = 0;
 
-                transaction.set(statsRef, { 
-                    programs: newProgramsCount,
-                    series: newSeriesCount,
-                    lectures: newLecturesCount,
-                }, { merge: true });
+                // Delete lectures belonging directly to the program (if any)
+                const directLecturesQuery = query(collection(firestore, 'lectures'), where("programId", "==", programToDelete.id), where("seriesId", "==", ""));
+                const directLecturesSnapshot = await getDocs(directLecturesQuery);
+                directLecturesSnapshot.forEach(doc => {
+                    transaction.delete(doc.ref);
+                    lecturesToDeleteCount++;
+                });
 
+                // Delete lectures belonging to the program's series
+                if (seriesIds.length > 0) {
+                    // Firestore 'in' query is limited to 30 items per query
+                    for (let i = 0; i < seriesIds.length; i += 30) {
+                        const chunk = seriesIds.slice(i, i + 30);
+                        const seriesLecturesQuery = query(collection(firestore, 'lectures'), where("seriesId", "in", chunk));
+                        const seriesLecturesSnapshot = await getDocs(seriesLecturesQuery);
+                        seriesLecturesSnapshot.forEach(doc => {
+                            transaction.delete(doc.ref);
+                            lecturesToDeleteCount++;
+                        });
+                    }
+                }
+                
+                // Delete all series
                 seriesSnapshot.forEach(doc => transaction.delete(doc.ref));
-                lecturesSnapshot.forEach(doc => transaction.delete(doc.ref));
+
+                // Update stats
+                const seriesToDeleteCount = seriesSnapshot.size;
+                transaction.update(statsRef, {
+                    programs: increment(-1),
+                    series: increment(-seriesToDeleteCount),
+                    lectures: increment(-lecturesToDeleteCount),
+                });
+                
+                // Finally, delete the program itself
                 transaction.delete(programRef);
             });
 
             toast({
                 variant: "destructive",
                 title: "تم الحذف بنجاح",
-                description: `تم حذف البرنامج "${programToDelete.name}" وجميع سلاسله ومحاضراته.`,
+                description: `تم حذف البرنامج "${programToDelete.name}" وكل المحتوى المرتبط به.`,
             });
         
         } catch (error) {

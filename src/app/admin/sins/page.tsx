@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -21,20 +22,24 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { DestructiveSin } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle, AlertTriangle } from "lucide-react";
+import { doc, writeBatch, collection } from "firebase/firestore";
+import { Loader2, Trash2, Edit, PlusCircle, AlertTriangle, Database } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { SinForm } from "@/components/admin/sin-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
+import { destructiveSinsData } from "@/lib/sins-data";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 
 export default function AdminSinsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
+    const { isAdmin } = useAdminAuth();
     const [itemToDelete, setItemToDelete] = useState<DestructiveSin | null>(null);
     const [itemToEdit, setItemToEdit] = useState<DestructiveSin | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     const { data: allItems, isLoading } = useCollection<DestructiveSin>('destructive_sins', { orderBy: ['title', 'asc'] });
 
@@ -69,6 +74,26 @@ export default function AdminSinsPage() {
       setItemToEdit(null);
     }
 
+    const handleSeedData = async () => {
+        if (!firestore) return;
+        setIsSeeding(true);
+        const batch = writeBatch(firestore);
+        const sinsCollection = collection(firestore, 'destructive_sins');
+        destructiveSinsData.forEach(sin => {
+            const docRef = doc(sinsCollection, sin.id);
+            batch.set(docRef, sin);
+        });
+        try {
+            await batch.commit();
+            toast({ title: "تمت إضافة البيانات الأولية بنجاح." });
+        } catch (error) {
+            console.error("Error seeding sins data:", error);
+            toast({ variant: 'destructive', title: "فشل إضافة البيانات." });
+        } finally {
+            setIsSeeding(false);
+        }
+    };
+
     if (isFormOpen) {
       return <SinForm item={itemToEdit} onFormClose={handleFormClose} />
     }
@@ -83,10 +108,18 @@ export default function AdminSinsPage() {
                 أضف أو عدّل أو احذف بطاقات قسم "احذر المهلكات".
             </CardDescription>
             </div>
-            <Button onClick={handleNew}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              إضافة بطاقة جديدة
-            </Button>
+             <div className="flex gap-2">
+                {isAdmin && !isLoading && allItems?.length === 0 && (
+                    <Button onClick={handleSeedData} disabled={isSeeding}>
+                        {isSeeding ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Database className="me-2 h-4 w-4" />}
+                        إضافة البيانات الأولية
+                    </Button>
+                )}
+                <Button onClick={handleNew}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                إضافة بطاقة جديدة
+                </Button>
+            </div>
         </CardHeader>
         <CardContent>
             <Table>

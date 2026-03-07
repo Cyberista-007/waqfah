@@ -35,7 +35,7 @@ function SortableItem({ item, allData, onRemove, onMessageChange }: {
 
     // Find the corresponding data item from the collections
     const dataItem = useMemo(() => {
-        return (allData[item.type] || []).find(d => d.id === item.id);
+        return (allData[item.type as keyof typeof allData] || []).find(d => d.id === item.id);
     }, [allData, item.type, item.id]);
     
     if (!dataItem) return null; // Should not happen if data is loaded

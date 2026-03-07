@@ -123,6 +123,7 @@ export type Book = Serializable<{
   title: string;
   programName?: string;
   pdfUrl: string;
+  imageUrl?: string;
   imageId: string;
 }>;
 
@@ -292,11 +293,11 @@ export type DestructiveSin = Serializable<{
   id: string;
   title: string;
   dialogTitle: string;
+  concept?: string;
   quranVerses?: string[];
   hadiths?: string[];
-  icon: string;
-  concept?: string;
   dailyLifeExamples?: string[];
+  icon: string;
 }>;
 
 export type Suggestion = Serializable<{

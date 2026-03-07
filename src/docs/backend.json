@@ -90,6 +90,7 @@
         "title": { "type": "string" },
         "programName": { "type": "string", "description": "The name of the program authoring this book, if any." },
         "pdfUrl": { "type": "string", "format": "uri" },
+        "imageUrl": { "type": "string", "format": "uri" },
         "imageId": { "type": "string" }
       },
       "required": ["slug", "title", "pdfUrl", "imageId"]
@@ -390,11 +391,11 @@
       "properties": {
         "title": { "type": "string" },
         "dialogTitle": { "type": "string" },
+        "concept": { "type": "string", "description": "The definition or concept of the sin." },
         "quranVerses": { "type": "array", "items": { "type": "string" } },
         "hadiths": { "type": "array", "items": { "type": "string" } },
-        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." },
-        "concept": { "type": "string", "description": "The definition or concept of the sin." },
-        "dailyLifeExamples": { "type": "array", "items": { "type": "string" } }
+        "dailyLifeExamples": { "type": "array", "items": { "type": "string" } },
+        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." }
       },
       "required": ["title", "dialogTitle", "icon"]
     },
@@ -627,7 +628,7 @@
         "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
       },
        {
-        "path": "/settings/pinned_lecture",
+        "path": "/settings/pinned_items",
         "definition": { "schema": { "$ref": "#/entities/PinnedItemSettings" } }
       },
       {

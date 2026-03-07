@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
-import { doc, setDoc, Timestamp, collection, writeBatch, where } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties, ScrollText } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
@@ -14,7 +15,7 @@ import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Dialog, DialogContent, DialogTrigger, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
@@ -22,8 +23,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppearance } from './appearance-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { destructiveSinsData } from '@/lib/sins-data';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from './ui/separator';
 import type { Locale } from 'date-fns';
@@ -173,42 +172,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
 }
 
 function DestructiveSinsSection({ quranIconUrl, hadithIconUrl }: { quranIconUrl?: string | null, hadithIconUrl?: string | null }) {
-    const { data: sinsFromDB, isLoading } = useCollection<DestructiveSin>('destructive_sins');
-    const firestore = useFirestore();
-    const { isAdmin } = useAdminAuth();
-
-    // Seed the destructive_sins collection if it's empty and user is admin
-    useEffect(() => {
-        const seedData = async () => {
-            if (isAdmin && firestore && !isLoading && sinsFromDB && sinsFromDB.length === 0) {
-                console.log("Destructive sins collection is empty. Seeding data from local file...");
-                const batch = writeBatch(firestore);
-                const sinsCollection = collection(firestore, 'destructive_sins');
-                destructiveSinsData.forEach(sin => {
-                    const docRef = doc(sinsCollection, sin.id); // Use the ID from the local data
-                    batch.set(docRef, sin);
-                });
-                try {
-                    await batch.commit();
-                    console.log("Successfully seeded destructive sins data.");
-                } catch (error) {
-                    console.error("Error seeding destructive sins:", error);
-                }
-            }
-        };
-
-        seedData();
-    }, [sinsFromDB, isLoading, firestore, isAdmin]);
-
-    const sins = useMemo(() => {
-        if (sinsFromDB && sinsFromDB.length > 0) {
-            return sinsFromDB;
-        }
-        if (isLoading) {
-            return null;
-        }
-        return destructiveSinsData;
-    }, [sinsFromDB, isLoading]);
+    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
 
     const getIcon = (iconName: string) => {
         if (iconName?.startsWith('http')) {
@@ -233,8 +197,12 @@ function DestructiveSinsSection({ quranIconUrl, hadithIconUrl }: { quranIconUrl?
         }
     };
     
-    if (isLoading && !sins) {
+    if (isLoading) {
         return <Card className="mt-8 bg-card"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
+    }
+
+    if (!sins || sins.length === 0) {
+        return null; // Don't render the section if there's no data
     }
     
   return (

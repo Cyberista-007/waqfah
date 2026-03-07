@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDoc, useCollection } from '@/firebase';
@@ -30,7 +31,7 @@ function PinnedItemsSkeleton() {
 
 
 export function PinnedItems() {
-    const { data: settings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_lecture');
+    const { data: settings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_items');
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');

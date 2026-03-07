@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { HomeSearch } from '@/components/home-search';
@@ -15,8 +16,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useCollection } from '@/firebase';
-import { HomePageSkeleton } from './skeletons';
 import { PinnedItems } from '@/app/pinned-items';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 import { useAppearance } from '@/components/appearance-provider';
@@ -96,13 +95,14 @@ function PaginatedSection({
 }
 
 
-export function HomePageClient() {
-  const { data: latestLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 20 });
-  const { data: topPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
-  const { data: latestSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle } = useAppearance();
+interface HomePageClientProps {
+  latestLectures: Lecture[];
+  topPrograms: Program[];
+  latestSeries: Series[];
+}
 
-  const isLoading = seriesLoading || lecturesLoading || programsLoading;
+export function HomePageClient({ latestLectures, topPrograms, latestSeries }: HomePageClientProps) {
+  const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle } = useAppearance();
 
   const { shorts, regularLectures } = useMemo(() => {
     if (!latestLectures) return { shorts: [], regularLectures: [] };
@@ -132,10 +132,10 @@ export function HomePageClient() {
     if (featuredProgram?.youtubeUrl) {
       const fetchBanner = async () => {
         try {
-          const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+          const response = await fetch('/api/youtube-import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: featuredProgram.youtubeUrl, fetchChannelInfo: true }),
+            body: JSON.stringify({ url: featuredProgram.youtubeUrl }),
           });
 
           if (response.ok) {
@@ -156,9 +156,6 @@ export function HomePageClient() {
     }
   }, [topPrograms, heroImage?.imageUrl, customHeroUrl]);
 
-  if (isLoading) {
-    return <HomePageSkeleton />;
-  }
 
   return (
     <div className="space-y-12">
@@ -228,5 +225,3 @@ export function HomePageClient() {
     </div>
   );
 }
-
-    
