@@ -1,4 +1,3 @@
-
 "use client"
 
 import type { ReactNode } from "react";
@@ -36,6 +35,7 @@ type AudioPlayerContextType = {
   hidePlayer: () => void;
   setVideoClipEndTime: (endTime: number | null) => void;
   onPlayerStateChange: (event: any) => void;
+  markVideoAsComplete: () => Promise<void>;
 
   // New site time tracker
   siteTimeInSeconds: number;
@@ -235,7 +235,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const currentTime = player.getCurrentTime();
     const duration = player.getDuration();
 
-    if (currentTime > 0 && duration > 0) {
+    if (currentTime > 0 && duration > 0 && iframeTrack.lectureId) {
         const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', iframeTrack.lectureId);
         setDoc(historyRef, {
             lectureId: iframeTrack.lectureId,
@@ -248,6 +248,53 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         });
     }
   }, [user, firestore, iframeTrack]);
+  
+  const markVideoAsComplete = async () => {
+    if (!user || !firestore || !iframeTrack?.lectureId) {
+      toast({
+        title: "غير قادر على إتمام الإجراء",
+        description: "يرجى تسجيل الدخول والمحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userRef = doc(firestore, 'users', user.uid);
+    const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', iframeTrack.lectureId);
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const player = videoPlayerRef.current;
+        const duration = player && typeof player.getDuration === 'function' ? player.getDuration() : 0;
+        const historyDoc = await transaction.get(historyRef);
+
+        transaction.set(historyRef, {
+          lectureId: iframeTrack.lectureId,
+          seriesId: iframeTrack.seriesId,
+          position: duration,
+          duration: duration,
+          lastListened: Timestamp.now(),
+        }, { merge: true });
+
+        // Only increment if it wasn't already complete
+        if (!historyDoc.exists() || (historyDoc.data().duration > 0 && (historyDoc.data().position / historyDoc.data().duration) < 0.95)) {
+            transaction.update(userRef, { lecturesCompleted: increment(1) });
+        }
+      });
+      toast({
+        title: "اكتملت المحاضرة",
+        description: `تم تحديد "${iframeTrack.title}" كمكتملة.`,
+      });
+      hidePlayer();
+    } catch (error) {
+      console.error("Failed to mark as complete:", error);
+      toast({
+        title: "حدث خطأ",
+        description: "لم نتمكن من تحديد المحاضرة كمكتملة.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const onPlayerStateChange = (event: any) => {
     if (event.data === 1) { // playing
@@ -413,6 +460,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       hidePlayer,
       setVideoClipEndTime,
       onPlayerStateChange,
+      markVideoAsComplete,
       siteTimeInSeconds,
     }}>
       {children}

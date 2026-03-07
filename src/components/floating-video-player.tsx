@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, X, Bookmark } from 'lucide-react';
+import { GripVertical, X, Bookmark, Maximize, CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +14,7 @@ const DEFAULT_HEIGHT = 300;
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
 export default function FloatingVideoPlayer() {
-    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer, onPlayerStateChange } = useAudioPlayer();
+    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer, onPlayerStateChange, markVideoAsComplete } = useAudioPlayer();
     const { toast } = useToast();
     
     // Player state
@@ -86,6 +85,24 @@ export default function FloatingVideoPlayer() {
                 description: `"${iframeTrack.title}"`,
             });
         }
+    };
+    
+    const handleFullscreen = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (playerRef.current) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                playerRef.current.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            }
+        }
+    };
+
+    const handleMarkComplete = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        markVideoAsComplete();
     };
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -214,7 +231,7 @@ export default function FloatingVideoPlayer() {
                    <iframe
                         src={`https://www.youtube.com/embed/${iframeTrack.src}?autoplay=1&rel=0&controls=1&modestbranding=1`}
                         frameBorder="0"
-                        allow="autoplay; encrypted-media"
+                        allow="autoplay; encrypted-media; fullscreen"
                         allowFullScreen
                         title={iframeTrack.title}
                         className="w-full h-full"
@@ -263,6 +280,24 @@ export default function FloatingVideoPlayer() {
                         aria-label="إغلاق المشغل"
                     >
                         <X className="h-5 w-5" />
+                    </Button>
+                    <Button
+                        onClick={handleMarkComplete}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white rounded-md hover:bg-green-500"
+                        aria-label="تحديد كمكتمل"
+                    >
+                        <CheckCircle className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        onClick={handleFullscreen}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white rounded-md hover:bg-blue-500"
+                        aria-label="ملء الشاشة"
+                    >
+                        <Maximize className="h-4 w-4" />
                     </Button>
                     <Button
                         onClick={handleWatchLater}
