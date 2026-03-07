@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { ReactNode } from "react";
@@ -79,7 +80,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const playTrack = (newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
+  const playTrack = useCallback((newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
     if (isPlayerVisible) {
       pauseVideo();
     }
@@ -103,30 +104,30 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }).catch(e => console.error("Error playing audio:", e));
       }
     }, 50);
-  };
+  }, [isPlayerVisible, pauseVideo, track?.id]);
   
-  const playIframe = (track: IframeTrack) => {
+  const playIframe = useCallback((track: IframeTrack) => {
     pauseTrack();
     setClipEndTime(null);
     setIframeTrack(track);
     setIsPlayerVisible(true);
-  };
+  }, [pauseTrack]);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     if (isPlaying) {
       pauseTrack();
     } else if (track) {
       playTrack(track, audioRef.current?.currentTime || 0);
     }
-  }
+  }, [isPlaying, pauseTrack, track, playTrack]);
 
-  const closePlayer = () => {
+  const closePlayer = useCallback(() => {
     pauseTrack();
     setTrack(null);
     setClipEndTime(null);
-  };
+  }, [pauseTrack]);
 
-  const hidePlayer = () => {
+  const hidePlayer = useCallback(() => {
     if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
         videoPlayerRef.current.destroy();
         videoPlayerRef.current = null;
@@ -134,7 +135,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setIsPlayerVisible(false);
     setIframeTrack(null);
     setVideoClipEndTime(null);
-  };
+  }, []);
 
   // Effect to handle auto-pause for AUDIO clips
   useEffect(() => {
@@ -201,7 +202,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
             console.error("Failed to update listen history:", error);
         });
     }
-  }, [user, firestore, track, audioRef]);
+  }, [user, firestore, track]);
   
   const handleEnded = useCallback(() => {
     if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
@@ -224,7 +225,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     closePlayer();
-  }, [user, firestore, track, audioRef, closePlayer]);
+  }, [user, firestore, track, closePlayer]);
 
   const updateVideoListenHistory = useCallback(async () => {
     if (!user || !firestore || !iframeTrack || iframeTrack.type !== 'youtube' || !videoPlayerRef.current) return;
@@ -249,7 +250,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, firestore, iframeTrack]);
   
-  const markVideoAsComplete = async () => {
+  const markVideoAsComplete = useCallback(async () => {
     if (!user || !firestore || !iframeTrack?.lectureId) {
       toast({
         title: "غير قادر على إتمام الإجراء",
@@ -294,9 +295,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
-  };
+  }, [user, firestore, iframeTrack, toast, hidePlayer]);
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange = useCallback((event: any) => {
     if (event.data === 1) { // playing
         pauseTrack();
         if (videoUpdateIntervalRef.current) clearInterval(videoUpdateIntervalRef.current);
@@ -325,7 +326,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }
         hidePlayer();
     }
-  };
+  }, [pauseTrack, updateVideoListenHistory, user, firestore, iframeTrack, hidePlayer]);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -358,7 +359,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         clearInterval(updateIntervalRef.current);
       }
     };
-  }, [audioRef, track, updateListenHistory, handleEnded]);
+  }, [track, updateListenHistory, handleEnded]);
 
   useEffect(() => {
         const audioElement = audioRef.current;
@@ -368,7 +369,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         } else {
             audioElement.pause();
         }
-    }, [isPlaying, audioRef]);
+    }, [isPlaying]);
 
 
     // --- New Site Time Logic ---
@@ -475,3 +476,5 @@ export const useAudioPlayer = () => {
   }
   return context;
 };
+
+    
