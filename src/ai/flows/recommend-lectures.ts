@@ -67,7 +67,7 @@ const recommendLecturesFlow = ai.defineFlow(
     outputSchema: RecommendLecturesOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );
