@@ -16,6 +16,11 @@ import { ScrollArea } from "./ui/scroll-area"
 export const themes = [
   { name: "الافتراضي (داكن)", value: "theme-default-dark", colors: ["#09090b", "#fafafa", "#27272a"] },
   { name: "الافتراضي (فاتح)", value: "theme-default-light", colors: ["#ffffff", "#09090b", "#f4f4f5"] },
+  { name: "فجر وردي", value: "theme-pink-dawn", colors: ["#221C25", "#FBCFE8", "#4A2A3A"] },
+  { name: "سماء ياقوتية", value: "theme-sapphire-sky", colors: ["#0A192F", "#A8D8EA", "#1E3A5F"] },
+  { name: "حديقة الزمرد", value: "theme-emerald-garden", colors: ["#0D1A16", "#B4EAD7", "#1E4D3B"] },
+  { name: "أزرق ملكي (فاتح)", value: "theme-royal-blue-light", colors: ["#F0F4FA", "#3B82F6", "#D6E4F0"] },
+  { name: "تباين عالٍ", value: "theme-high-contrast", colors: ["#000000", "#FFFF00", "#DC2626"] },
   { name: "وهج الغروب", value: "theme-sunset-flare", colors: ["#0B1C33", "#F26B4B", "#7A1C33", "#EBD2B5"] },
   { name: "استوديو سيمباتيكو", value: "theme-studio-simpatico", colors: ["#292A5E", "#FF6B2E", "#BCA5FF", "#FDE245"] },
   { name: "الأفق الرقمي", value: "theme-digital-horizon", colors: ["#0C0B26", "#F278DE", "#83B4FF", "#A47DFF", "#2E2A4F", "#0C0B26", "#F04A4A"] },
