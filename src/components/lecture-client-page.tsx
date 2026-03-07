@@ -271,11 +271,13 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
       </section>
 
       <Tabs defaultValue="transcript" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="transcript">التفريغ النصي</TabsTrigger>
-          <TabsTrigger value="comments">التعليقات</TabsTrigger>
-          <TabsTrigger value="notes" disabled={!user}>ملاحظاتي</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="transcript">التفريغ النصي</TabsTrigger>
+              <TabsTrigger value="comments">التعليقات</TabsTrigger>
+              <TabsTrigger value="notes" disabled={!user}>ملاحظاتي</TabsTrigger>
+            </TabsList>
+        </div>
         <TabsContent value="transcript">
           <Card>
             <CardHeader>

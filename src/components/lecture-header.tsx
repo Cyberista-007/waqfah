@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -193,8 +194,8 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                     <ArrowRight className="w-5 h-5 me-2" />
                     <span>رجوع</span>
                 </Button>
-                <div className="flex justify-between items-start gap-4">
-                    <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex-grow">
                         {lecture.seriesTitle && seriesLink && (
                             <p className="text-primary font-semibold mb-2">
                                 <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
@@ -202,7 +203,7 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
                         )}
                         <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full sm:w-auto flex-shrink-0">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading}>

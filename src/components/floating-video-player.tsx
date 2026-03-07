@@ -292,7 +292,7 @@ export default function FloatingVideoPlayer() {
         <div
             ref={playerRef}
             style={playerStyle}
-            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex flex-col group"
+            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex-col group hidden md:flex"
         >
             {/* Control Bar */}
              <div
