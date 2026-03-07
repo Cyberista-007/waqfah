@@ -182,7 +182,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries }: Ho
         </div>
       </section>
 
-      <div className="py-8 space-y-16 px-4 sm:px-0">
+      <div className="py-8 space-y-16">
         <Suspense>
             <PinnedItems />
         </Suspense>
@@ -225,5 +225,3 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries }: Ho
     </div>
   );
 }
-
-    
