@@ -58,7 +58,7 @@ export default async function RootLayout({
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
-              <main className="flex-1 container py-8 pb-24 md:pb-8">
+              <main className="flex-1 w-full max-w-7xl mx-auto py-8 pb-24 md:pb-8 px-0 sm:px-8">
                 {children}
               </main>
               <SiteFooter />
