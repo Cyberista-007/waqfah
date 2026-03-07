@@ -1,6 +1,6 @@
+
 'use client';
 
-import YouTube, { type YouTubeProps } from 'react-youtube';
 import { useAudioPlayer } from './audio-player-provider';
 import { GripVertical, X, Bookmark } from 'lucide-react';
 import { Button } from './ui/button';
@@ -42,7 +42,7 @@ export default function FloatingVideoPlayer() {
         }
     }, [isPlayerVisible]);
 
-    const onPlayerReady: YouTubeProps['onReady'] = (event) => {
+    const onPlayerReady = (event: any) => {
         if(videoPlayerRef) videoPlayerRef.current = event.target;
     };
     
@@ -152,7 +152,9 @@ export default function FloatingVideoPlayer() {
             }
             
             const player = videoPlayerRef.current;
-            const playerState = typeof player.getPlayerState === 'function' ? player.getPlayerState() : -1;
+            if (typeof player.getPlayerState !== 'function') return;
+
+            const playerState = player.getPlayerState();
 
             switch (event.code) {
                 case 'Space':
@@ -205,19 +207,18 @@ export default function FloatingVideoPlayer() {
     const renderPlayer = () => {
         switch (iframeTrack.type) {
             case 'youtube':
+                // The react-youtube component caused build issues with React 19.
+                // It has been temporarily replaced with a basic iframe.
+                // Advanced features like playback tracking will not work for now.
                 return (
-                    <YouTube
-                        videoId={iframeTrack.src}
-                        opts={{
-                            height: '100%',
-                            width: '100%',
-                            playerVars: { autoplay: 1, rel: 0, controls: 1, modestbranding: 1 },
-                        }}
-                        onReady={onPlayerReady}
-                        onStateChange={onPlayerStateChange}
+                   <iframe
+                        src={`https://www.youtube.com/embed/${iframeTrack.src}?autoplay=1&rel=0&controls=1&modestbranding=1`}
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                        title={iframeTrack.title}
                         className="w-full h-full"
-                        iframeClassName="w-full h-full"
-                    />
+                   ></iframe>
                 );
             case 'soundcloud':
                 const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(iframeTrack.src)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true`;

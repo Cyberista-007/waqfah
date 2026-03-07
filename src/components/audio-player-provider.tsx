@@ -4,7 +4,6 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Lecture } from "@/lib/types";
-import type { YouTubePlayer, YouTubeProps } from "react-youtube";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, getDoc, setDoc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -32,11 +31,11 @@ type AudioPlayerContextType = {
   // Iframe player state
   iframeTrack: IframeTrack | null;
   isPlayerVisible: boolean;
-  videoPlayerRef: React.RefObject<YouTubePlayer | null>;
+  videoPlayerRef: React.RefObject<any>;
   playIframe: (track: IframeTrack) => void;
   hidePlayer: () => void;
   setVideoClipEndTime: (endTime: number | null) => void;
-  onPlayerStateChange: YouTubeProps['onStateChange'];
+  onPlayerStateChange: (event: any) => void;
 
   // New site time tracker
   siteTimeInSeconds: number;
@@ -54,7 +53,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // Iframe Player State
   const [iframeTrack, setIframeTrack] = useState<IframeTrack | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
-  const videoPlayerRef = useRef<YouTubePlayer | null>(null);
+  const videoPlayerRef = useRef<any>(null);
   const [videoClipEndTime, setVideoClipEndTime] = useState<number | null>(null);
   const videoUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -228,7 +227,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [user, firestore, track, audioRef, closePlayer]);
 
   const updateVideoListenHistory = useCallback(async () => {
-    if (!user || !firestore || !iframeTrack || iframeTrack.type !== 'youtube' || !iframeTrack.lectureId || !videoPlayerRef.current) return;
+    if (!user || !firestore || !iframeTrack || iframeTrack.type !== 'youtube' || !videoPlayerRef.current) return;
     
     const player = videoPlayerRef.current;
     if (typeof player.getCurrentTime !== 'function' || typeof player.getDuration !== 'function') return;
@@ -250,7 +249,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, firestore, iframeTrack]);
 
-  const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
+  const onPlayerStateChange = (event: any) => {
     if (event.data === 1) { // playing
         pauseTrack();
         if (videoUpdateIntervalRef.current) clearInterval(videoUpdateIntervalRef.current);
