@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -287,16 +286,21 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
                     </Fragment>
                 ))}
             </div>
-            <Tooltip>
+            <h3 className="font-headline text-lg leading-tight text-right w-full">
+              <Tooltip>
                 <TooltipTrigger asChild>
-                  <h3 className="font-headline text-lg leading-tight text-right w-full">
-                    <Link href={`/lectures/${lecture.slug}`} className="hover:text-primary transition-colors line-clamp-2">{lecture.title}</Link>
-                  </h3>
+                  <Link
+                    href={`/lectures/${lecture.slug}`}
+                    className="hover:text-primary transition-colors line-clamp-2"
+                  >
+                    {lecture.title}
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{lecture.title}</p>
                 </TooltipContent>
-            </Tooltip>
+              </Tooltip>
+            </h3>
           </div>
           {pinnedMessage && (
               <div className="pt-2 pb-1">
