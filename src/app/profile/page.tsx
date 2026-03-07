@@ -314,8 +314,8 @@ function ReportsSection({ userProfile, user }: { userProfile: UserProfile; user:
                     getDocs(playlistsRef),
                     getDocs(followingRef),
                     getDocs(notesRef),
-                    getDocs(challengesSnap),
-                    getDocs(badgesSnap),
+                    getDocs(challengesRef),
+                    getDocs(badgesRef),
                 ]);
 
                 setExtraStats({
