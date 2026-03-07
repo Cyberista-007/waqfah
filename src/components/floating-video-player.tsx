@@ -14,7 +14,7 @@ const DEFAULT_HEIGHT = 300;
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
 export default function FloatingVideoPlayer() {
-    const { iframeTrack, videoPlayerRef, isPlayerVisible, pauseTrack, hidePlayer, onPlayerStateChange, markVideoAsComplete } = useAudioPlayer();
+    const { iframeTrack, videoPlayerRef, isPlayerVisible, hidePlayer, onPlayerStateChange, markVideoAsComplete } = useAudioPlayer();
     const { toast } = useToast();
     
     // Player state
@@ -41,14 +41,65 @@ export default function FloatingVideoPlayer() {
         }
     }, [isPlayerVisible]);
 
-    const onPlayerReady = (event: any) => {
+    const onPlayerReady = useCallback((event: any) => {
         if(videoPlayerRef) videoPlayerRef.current = event.target;
-    };
-    
+        event.target.playVideo();
+    }, [videoPlayerRef]);
+
+    useEffect(() => {
+        if (!isPlayerVisible || !iframeTrack || iframeTrack.type !== 'youtube') {
+            if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
+                videoPlayerRef.current.destroy();
+                videoPlayerRef.current = null;
+            }
+            return;
+        }
+
+        const createPlayer = () => {
+            // Ensure previous player is destroyed before creating a new one
+            if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
+                videoPlayerRef.current.destroy();
+            }
+            const player = new (window as any).YT.Player('youtube-player-container', {
+                videoId: iframeTrack.src,
+                playerVars: {
+                    autoplay: 1,
+                    controls: 1,
+                    rel: 0,
+                    modestbranding: 1,
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                },
+            });
+        };
+
+        if (!(window as any).YT || !(window as any).YT.Player) {
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode!.insertBefore(tag, firstScriptTag);
+            
+            (window as any).onYouTubeIframeAPIReady = () => {
+                createPlayer();
+            };
+        } else {
+            createPlayer();
+        }
+
+        return () => {
+            if ((window as any).onYouTubeIframeAPIReady) {
+                (window as any).onYouTubeIframeAPIReady = null;
+            }
+        };
+
+    }, [isPlayerVisible, iframeTrack, onPlayerReady, onPlayerStateChange, videoPlayerRef]);
+
+
     // --- Interaction Handlers ---
 
     const handleDragStart = (e: React.MouseEvent) => {
-        // Check if the click is on a button inside the drag handle area
         if ((e.target as HTMLElement).closest('button')) {
             e.stopPropagation();
             return;
@@ -89,14 +140,11 @@ export default function FloatingVideoPlayer() {
     
     const handleFullscreen = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (playerRef.current) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                playerRef.current.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                });
-            }
+        const playerElement = document.getElementById('youtube-player-container');
+        if (playerElement && typeof (playerElement as any).requestFullscreen === 'function') {
+            (playerElement as any).requestFullscreen().catch((err: any) => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
         }
     };
 
@@ -113,7 +161,6 @@ export default function FloatingVideoPlayer() {
             let newX = dragStartRef.current.playerX + dx;
             let newY = dragStartRef.current.playerY + dy;
 
-            // Clamp position to ensure a part of it is always visible
             newX = Math.max(-(size.width - GRAB_HANDLE_SIZE), Math.min(newX, window.innerWidth - GRAB_HANDLE_SIZE));
             newY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
 
@@ -126,7 +173,6 @@ export default function FloatingVideoPlayer() {
             let newWidth = Math.max(MIN_WIDTH, resizeStartRef.current.width + dw);
             let newHeight = Math.max(MIN_HEIGHT, resizeStartRef.current.height + dh);
 
-            // Ensure resize doesn't go off-screen from its base position
             if (position.x + newWidth > window.innerWidth) {
                 newWidth = window.innerWidth - position.x;
             }
@@ -224,19 +270,7 @@ export default function FloatingVideoPlayer() {
     const renderPlayer = () => {
         switch (iframeTrack.type) {
             case 'youtube':
-                // The react-youtube component caused build issues with React 19.
-                // It has been temporarily replaced with a basic iframe.
-                // Advanced features like playback tracking will not work for now.
-                return (
-                   <iframe
-                        src={`https://www.youtube.com/embed/${iframeTrack.src}?autoplay=1&rel=0&controls=1&modestbranding=1`}
-                        frameBorder="0"
-                        allow="autoplay; encrypted-media; fullscreen"
-                        allowFullScreen
-                        title={iframeTrack.title}
-                        className="w-full h-full"
-                   ></iframe>
-                );
+                return <div id="youtube-player-container" className="w-full h-full"></div>;
             case 'soundcloud':
                 const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(iframeTrack.src)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
                 return (
