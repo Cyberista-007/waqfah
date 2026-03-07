@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
-// New component for quick links
 const QuickLink = ({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) => (
     <Button asChild variant="outline" className="h-auto w-full justify-start p-4 text-base">
         <Link href={href}>
@@ -37,7 +36,6 @@ export default function AdminDashboardPage() {
         to: new Date(),
     });
     
-    // Links grouped by category
     const contentLinks = [
       { href: '/admin/programs', label: 'البرامج', icon: Podcast },
       { href: '/admin/series', label: 'السلاسل', icon: ListVideo },
@@ -122,34 +120,29 @@ export default function AdminDashboardPage() {
                     </Card>
                 </div>
 
-                <div className="space-y-8">
-                    <Card className="rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-semibold font-headline">إدارة المحتوى</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-2">
-                           {contentLinks.map(link => <QuickLink key={link.href} {...link} />)}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-semibold font-headline">إدارة الميزات</CardTitle>
-                        </CardHeader>
-                         <CardContent className="flex flex-col gap-2">
-                           {featuresLinks.map(link => <QuickLink key={link.href} {...link} />)}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-semibold font-headline">إدارة الموقع</CardTitle>
-                        </CardHeader>
-                         <CardContent className="flex flex-col gap-2">
-                           {siteAdminLinks.map(link => <QuickLink key={link.href} {...link} />)}
-                        </CardContent>
-                    </Card>
-                </div>
+                <Card className="rounded-2xl">
+                    <CardHeader>
+                        <CardTitle className="text-2xl font-semibold font-headline">روابط سريعة</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs defaultValue="content" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="content">المحتوى</TabsTrigger>
+                                <TabsTrigger value="features">الميزات</TabsTrigger>
+                                <TabsTrigger value="admin">الإدارة</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="content" className="mt-4 flex flex-col gap-2">
+                                {contentLinks.map(link => <QuickLink key={link.href} {...link} />)}
+                            </TabsContent>
+                            <TabsContent value="features" className="mt-4 flex flex-col gap-2">
+                                {featuresLinks.map(link => <QuickLink key={link.href} {...link} />)}
+                            </TabsContent>
+                            <TabsContent value="admin" className="mt-4 flex flex-col gap-2">
+                                {siteAdminLinks.map(link => <QuickLink key={link.href} {...link} />)}
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
             </div>
             
             <Card className="rounded-2xl">

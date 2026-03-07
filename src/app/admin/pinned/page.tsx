@@ -82,7 +82,7 @@ const toDate = (timestamp: any): Date | undefined => {
 export default function AdminPinnedItemsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_lecture');
+  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_items');
   
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -126,7 +126,7 @@ export default function AdminPinnedItemsPage() {
 
     setIsSubmitting(true);
     try {
-        const settingsRef = doc(firestore, 'settings', 'pinned_lecture');
+        const settingsRef = doc(firestore, 'settings', 'pinned_items');
         await setDoc(settingsRef, { 
             pinnedItems, 
             isActive,

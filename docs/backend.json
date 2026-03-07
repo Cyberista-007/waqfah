@@ -25,6 +25,7 @@
         "imageId": { "type": "string", "description": "An ID for a placeholder image for the program." },
         "imageUrl": { "type": "string", "format": "uri", "description": "A direct URL to the program's image." },
         "youtubeUrl": { "type": "string", "format": "uri", "description": "A URL to the program's YouTube channel." },
+        "channelId": { "type": "string", "description": "The unique YouTube channel ID." },
         "rssFeedUrl": { "type": "string", "format": "uri", "description": "The URL of the RSS feed for the program's podcast." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the program was added." },
         "followerCount": { "type": "number", "minimum": 0, "description": "The number of users following this program." }
@@ -89,6 +90,7 @@
         "title": { "type": "string" },
         "programName": { "type": "string", "description": "The name of the program authoring this book, if any." },
         "pdfUrl": { "type": "string", "format": "uri" },
+        "imageUrl": { "type": "string", "format": "uri" },
         "imageId": { "type": "string" }
       },
       "required": ["slug", "title", "pdfUrl", "imageId"]
@@ -389,10 +391,11 @@
       "properties": {
         "title": { "type": "string" },
         "dialogTitle": { "type": "string" },
-        "quranVerse": { "type": "string" },
-        "hadith": { "type": "string" },
-        "hadith2": { "type": "string" },
-        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." }
+        "icon": { "type": "string", "description": "Name of a Lucide icon, a custom SVG identifier, or a public URL to an image." },
+        "concept": { "type": "string", "description": "The definition or concept of the sin." },
+        "quranVerses": { "type": "array", "items": { "type": "string" } },
+        "hadiths": { "type": "array", "items": { "type": "string" } },
+        "dailyLifeExamples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["title", "dialogTitle", "icon"]
     },
@@ -625,7 +628,7 @@
         "definition": { "schema": { "$ref": "#/entities/DonationSettings" } }
       },
        {
-        "path": "/settings/pinned_lecture",
+        "path": "/settings/pinned_items",
         "definition": { "schema": { "$ref": "#/entities/PinnedItemSettings" } }
       },
       {
