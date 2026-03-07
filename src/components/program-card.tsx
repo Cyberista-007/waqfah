@@ -59,7 +59,7 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                         <CardDescription className="line-clamp-3">{program.bio}</CardDescription>
                     </CardContent>
                 </Link>
-                <CardFooter className="flex flex-col items-center gap-3 p-0 pt-4 mt-auto w-full">
+                <CardFooter className="flex flex-col items-stretch gap-3 p-0 pt-4 mt-auto w-full">
                     {pinnedMessage && (
                         <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 w-full text-right mb-2 flex items-center gap-1.5">
                             <MessageSquare className="w-3 h-3 shrink-0"/> 
