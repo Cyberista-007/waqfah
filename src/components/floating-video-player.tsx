@@ -378,9 +378,12 @@ export default function FloatingVideoPlayer() {
             <div
                 onMouseDown={handleResizeStart}
                 onTouchStart={handleResizeStart}
-                className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-30"
+                className="absolute -bottom-2 -right-2 w-8 h-8 cursor-nwse-resize z-30"
+                aria-label="Resize player"
             >
-                <div className="w-full h-full border-r-2 border-b-2 border-white/40" />
+                <div className="absolute bottom-2 right-2 w-4 h-4">
+                    <div className="w-full h-full border-r-2 border-b-2 border-white/40" />
+                </div>
             </div>
         </div>
     );
