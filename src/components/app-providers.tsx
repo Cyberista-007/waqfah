@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -7,15 +6,7 @@ import { AppearanceProvider } from '@/components/appearance-provider';
 import dynamic from 'next/dynamic';
 import { MaintenanceHandler } from '@/components/maintenance-handler';
 import type { AppearanceSettings } from '@/lib/types';
-import { HomePageSkeleton } from './skeletons';
-
-const DynamicFirebaseProvider = dynamic(
-  () => import('@/firebase').then((mod) => mod.FirebaseProvider),
-  {
-    loading: () => <HomePageSkeleton />,
-    ssr: false,
-  }
-);
+import { FirebaseClientProvider } from '@/firebase';
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player'),
@@ -82,7 +73,7 @@ export function AppProviders({
             heroTitle={heroTitle}
             heroSubtitle={heroSubtitle}
           >
-            <DynamicFirebaseProvider>
+            <FirebaseClientProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
                     <AudioPlayerProvider>
                         {children}
@@ -90,10 +81,8 @@ export function AppProviders({
                         <FloatingVideoPlayer />
                     </AudioPlayerProvider>
               </MaintenanceHandler>
-            </DynamicFirebaseProvider>
+            </FirebaseClientProvider>
           </AppearanceProvider>
         </ThemeProvider>
     )
 }
-
-    
