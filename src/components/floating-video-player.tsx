@@ -13,6 +13,14 @@ const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 281; // 16:9 ratio
 const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
 
+const getCoords = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    if ('touches' in e) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+};
+
+
 export default function FloatingVideoPlayer() {
     const { iframeTrack, videoPlayerRef, isPlayerVisible, hidePlayer, onPlayerStateChange, markVideoAsComplete } = useAudioPlayer();
     const { toast } = useToast();
@@ -103,7 +111,7 @@ export default function FloatingVideoPlayer() {
 
     // --- Interaction Handlers ---
 
-    const handleDragStart = (e: React.MouseEvent) => {
+    const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
         if ((e.target as HTMLElement).closest('button')) {
             e.stopPropagation();
             return;
@@ -111,22 +119,24 @@ export default function FloatingVideoPlayer() {
         e.preventDefault();
         e.stopPropagation();
         
+        const coords = getCoords(e);
         setIsDragging(true);
         dragStartRef.current = {
-            x: e.clientX,
-            y: e.clientY,
+            x: coords.x,
+            y: coords.y,
             playerX: position.x,
             playerY: position.y,
         };
     };
 
-    const handleResizeStart = (e: React.MouseEvent) => {
+    const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        const coords = getCoords(e);
         setIsResizing(true);
         resizeStartRef.current = {
-            x: e.clientX,
-            y: e.clientY,
+            x: coords.x,
+            y: coords.y,
             width: size.width,
             height: size.height,
         };
@@ -157,10 +167,11 @@ export default function FloatingVideoPlayer() {
         markVideoAsComplete();
     };
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
+    const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+        const coords = getCoords(e);
         if (isDragging) {
-            const dx = e.clientX - dragStartRef.current.x;
-            const dy = e.clientY - dragStartRef.current.y;
+            const dx = coords.x - dragStartRef.current.x;
+            const dy = coords.y - dragStartRef.current.y;
             
             let newX = dragStartRef.current.playerX + dx;
             let newY = dragStartRef.current.playerY + dy;
@@ -171,8 +182,8 @@ export default function FloatingVideoPlayer() {
             setPosition({ x: newX, y: newY });
         }
         if (isResizing) {
-            const dw = e.clientX - resizeStartRef.current.x;
-            const dh = e.clientY - resizeStartRef.current.y;
+            const dw = coords.x - resizeStartRef.current.x;
+            const dh = coords.y - resizeStartRef.current.y;
             
             let newWidth = Math.max(MIN_WIDTH, resizeStartRef.current.width + dw);
             let newHeight = Math.max(MIN_HEIGHT, resizeStartRef.current.height + dh);
@@ -198,14 +209,20 @@ export default function FloatingVideoPlayer() {
         if (isDragging || isResizing) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('touchmove', handleMouseMove);
+            document.addEventListener('touchend', handleMouseUp);
         } else {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleMouseMove);
+            document.removeEventListener('touchend', handleMouseUp);
         }
 
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleMouseMove);
+            document.removeEventListener('touchend', handleMouseUp);
         };
     }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
     
@@ -301,6 +318,7 @@ export default function FloatingVideoPlayer() {
             {/* Control Bar */}
              <div
                 onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
                 className="flex-shrink-0 h-8 w-full flex items-center justify-between px-2 text-white/50 bg-black cursor-move"
                  role="button"
                  tabIndex={0}
@@ -359,6 +377,7 @@ export default function FloatingVideoPlayer() {
             {/* Resize Handle */}
             <div
                 onMouseDown={handleResizeStart}
+                onTouchStart={handleResizeStart}
                 className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-30"
             >
                 <div className="w-full h-full border-r-2 border-b-2 border-white/40" />
