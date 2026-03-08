@@ -52,7 +52,7 @@ export default function TopicDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-8 space-y-12">
+    <div className="py-8 space-y-12">
       <header className="text-center">
         <Hash className="mx-auto h-12 w-12 text-primary" />
         <h1 className="text-4xl lg:text-5xl font-extrabold mt-4 mb-2 font-headline">{topic.name}</h1>

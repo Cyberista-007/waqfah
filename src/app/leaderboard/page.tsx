@@ -68,7 +68,7 @@ function LeaderboardPage() {
     }
 
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+      <div className="py-8">
         <header className="text-center mb-12">
             <Trophy className="mx-auto h-16 w-16 text-amber-500 animate-icon-draw" />
             <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">لوحة الصدارة</h1>

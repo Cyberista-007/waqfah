@@ -188,7 +188,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, upco
         </div>
       </section>
 
-      <div className="container py-8 space-y-16">
+      <div className="py-8 space-y-16">
         <Suspense>
             <UpcomingLesson lesson={upcomingLesson} />
         </Suspense>

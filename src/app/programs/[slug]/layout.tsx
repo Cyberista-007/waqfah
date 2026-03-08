@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, notFound, usePathname } from 'next/navigation';
@@ -57,7 +58,7 @@ function ProgramHeader({ program, contentCounts }: { program: Program, contentCo
     const imageUrl = program.imageUrl || placeholder?.imageUrl;
 
     return (
-        <div className="container mx-auto px-0 py-0 -mt-8 space-y-8">
+        <div className="px-0 py-0 -mt-8 space-y-8">
             {/* Banner Image */}
             <div className="relative h-40 md:h-56 w-full bg-muted">
                 <Image
@@ -107,7 +108,7 @@ function ProgramHeader({ program, contentCounts }: { program: Program, contentCo
 
              {/* Tabs */}
              <div className="border-b">
-                <nav className="container -mb-px flex space-x-6 space-x-reverse" aria-label="Tabs">
+                <nav className="-mb-px flex space-x-6 space-x-reverse px-4 sm:px-6 lg:px-8" aria-label="Tabs">
                     {tabs.map((tab) => (
                         <Link
                             key={tab.label}
@@ -190,7 +191,7 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
     return (
         <div className="space-y-12">
             <ProgramHeader program={program} contentCounts={contentCounts} />
-            <main className="container py-8">{children}</main>
+            <main className="py-8">{children}</main>
         </div>
     )
 }
