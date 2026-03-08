@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useFirestore } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, Timestamp } from "firebase/firestore";
 import type { QAPair } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -97,7 +97,7 @@ export function QAForm({ item, onFormClose }: QAFormProps) {
         });
       } else {
         const itemsCollection = collection(firestore, 'question_answers');
-        addDocumentNonBlocking(itemsCollection, itemData);
+        addDocumentNonBlocking(itemsCollection, { ...itemData, createdAt: Timestamp.now() });
         toast({
             title: "تم الإنشاء بنجاح",
             description: `تمت إضافة السؤال الجديد.`,

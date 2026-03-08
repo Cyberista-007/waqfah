@@ -141,6 +141,7 @@ export type QAPair = Serializable<{
   id: string;
   question: string;
   answer: string;
+  createdAt: Timestamp;
 }>;
 
 export type UserProfile = Serializable<{

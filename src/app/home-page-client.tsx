@@ -10,7 +10,7 @@ import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { Suspense, useState, useMemo, useEffect } from 'react';
-import type { Lecture, Series, Program } from '@/lib/types';
+import type { Lecture, Series, Program, ScheduleItem, QAPair, Playlist } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +19,9 @@ import { HomePageSkeleton } from './skeletons';
 import { PinnedItems } from '@/app/pinned-items';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
 import { useAppearance } from '@/components/appearance-provider';
+import { UpcomingLesson } from '@/components/UpcomingLesson';
+import { FeaturedQA } from '@/components/FeaturedQA';
+import { PublicPlaylistsSection } from '@/components/PublicPlaylistsSection';
 
 // New Component for paginated sections
 function PaginatedSection({
@@ -99,9 +102,12 @@ interface HomePageClientProps {
   latestLectures: Lecture[];
   topPrograms: Program[];
   latestSeries: Series[];
+  upcomingLesson: ScheduleItem | null;
+  latestQAPair: QAPair | null;
+  publicPlaylists: Playlist[];
 }
 
-export function HomePageClient({ latestLectures, topPrograms, latestSeries }: HomePageClientProps) {
+export function HomePageClient({ latestLectures, topPrograms, latestSeries, upcomingLesson, latestQAPair, publicPlaylists }: HomePageClientProps) {
   const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle } = useAppearance();
 
   const { shorts, regularLectures } = useMemo(() => {
@@ -182,9 +188,15 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries }: Ho
         </div>
       </section>
 
-      <div className="py-8 space-y-16">
+      <div className="container py-8 space-y-16">
+        <Suspense>
+            <UpcomingLesson lesson={upcomingLesson} />
+        </Suspense>
         <Suspense>
             <PinnedItems />
+        </Suspense>
+        <Suspense>
+            <FeaturedQA qa={latestQAPair} />
         </Suspense>
         <Suspense>
           <ContinueWatching />
@@ -202,6 +214,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries }: Ho
           itemsPerPage={4}
           renderItem={(item, index) => <ProgramCard program={item} index={index} key={item.id} />}
         />
+        
+        <Suspense>
+            <PublicPlaylistsSection playlists={publicPlaylists} />
+        </Suspense>
         
         <PaginatedSection
             title="أحدث المحاضرات"

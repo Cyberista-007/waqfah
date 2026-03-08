@@ -3,7 +3,8 @@
 import 'server-only';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { cache } from 'react';
-import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings, Curriculum } from '@/lib/types';
+import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings, Curriculum, ScheduleItem, QAPair, Playlist } from '@/lib/types';
+import { Timestamp } from 'firebase-admin/firestore';
 
 const getFirestore = () => {
     const { firestore } = initializeAdminApp();
@@ -85,5 +86,68 @@ export const getAnnouncement = cache(async (): Promise<AnnouncementSettings | nu
     } catch (error) {
         console.error("Could not fetch announcement settings:", error);
         return null;
+    }
+});
+
+export const getUpcomingLesson = cache(async (): Promise<ScheduleItem | null> => {
+    const firestore = getFirestore();
+    if (!firestore) return null;
+
+    try {
+        const snapshot = await firestore.collection('scheduled_lessons')
+            .where('dateTime', '>=', Timestamp.now())
+            .orderBy('dateTime', 'asc')
+            .limit(1)
+            .get();
+            
+        if (snapshot.empty) {
+            return null;
+        }
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...(doc.data() as ScheduleItem) };
+    } catch (e) {
+        console.error("Failed to fetch upcoming lesson:", e);
+        return null;
+    }
+});
+
+export const getLatestQAPair = cache(async (): Promise<QAPair | null> => {
+    const firestore = getFirestore();
+    if (!firestore) return null;
+    try {
+        const snapshot = await firestore.collection('question_answers')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+            
+        if (snapshot.empty) {
+            return null;
+        }
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...(doc.data() as QAPair) };
+    } catch (e) {
+        console.error("Failed to fetch latest Q&A:", e);
+        return null;
+    }
+});
+
+export const getPublicPlaylists = cache(async (): Promise<Playlist[]> => {
+    const firestore = getFirestore();
+    if (!firestore) return [];
+
+    try {
+        const snapshot = await firestore.collectionGroup('playlists')
+            .where('isPublic', '==', true)
+            .orderBy('createdAt', 'desc')
+            .limit(3)
+            .get();
+
+        if (snapshot.empty) {
+            return [];
+        }
+        return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Playlist) }));
+    } catch (e) {
+        console.error("Failed to fetch public playlists:", e);
+        return [];
     }
 });

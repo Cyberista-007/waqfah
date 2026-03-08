@@ -95,6 +95,17 @@
       },
       "required": ["slug", "title", "pdfUrl", "imageId"]
     },
+    "QAPair": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Q&A Pair",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["question", "answer", "createdAt"]
+    },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
@@ -642,6 +653,10 @@
       {
         "path": "/gamification_badges/{badgeId}",
         "definition": { "schema": { "$ref": "#/entities/GamificationBadge" } }
+      },
+      {
+        "path": "/question_answers/{qaId}",
+        "definition": { "schema": { "$ref": "#/entities/QAPair" } }
       }
     ]
   }
