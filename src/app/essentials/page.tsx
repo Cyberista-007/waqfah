@@ -1,20 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { 
   Shield, 
   Droplets, 
   BookOpen, 
   Heart, 
   CheckCircle2, 
   Sparkles, 
-  ArrowRight,
-  ChevronLeft,
-  GraduationCap,
-  Star,
-  Info,
-  Trophy,
-  Video,
-  Book as BookIcon
+  ArrowRight, 
+  ChevronLeft, 
+  GraduationCap, 
+  Star, 
+  Info, 
+  Trophy, 
+  Video, 
+  Book as BookIcon 
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
