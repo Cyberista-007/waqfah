@@ -199,6 +199,10 @@ export type Book = Serializable<{
   pdfUrl: string;
   imageUrl?: string;
   imageId: string;
+  isPublic?: boolean; // New field for digital library
+  author?: string;
+  category?: string;
+  description?: string;
 }>;
 
 export type ScheduleItem = Serializable<{

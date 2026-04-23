@@ -23,11 +23,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface BookFormProps {
     book?: Book | null;
     onFormClose: () => void;
+    forcePublic?: boolean;
 }
 
-const AUTOSAVE_KEY = 'autosave_book_form';
+const AUTOSAVE_KEY = 'autosave_book_form_v2';
 
-export function BookForm({ book, onFormClose }: BookFormProps) {
+export function BookForm({ book, onFormClose, forcePublic = false }: BookFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,38 +38,11 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
   
   const [title, setTitle] = useState(book?.title || "");
   const [pdfUrl, setPdfUrl] = useState(book?.pdfUrl || "");
+  const [author, setAuthor] = useState((book as any)?.author || "");
+  const [description, setDescription] = useState((book as any)?.description || "");
+  const [category, setCategory] = useState((book as any)?.category || "العقيدة");
   const [selectedProgramName, setSelectedProgramName] = useState<string>(book?.programName || "none");
-
-  useEffect(() => {
-    if (!isEditMode) {
-      const savedDataJSON = localStorage.getItem(AUTOSAVE_KEY);
-      if (savedDataJSON) {
-        try {
-          const savedData = JSON.parse(savedDataJSON);
-          setTitle(savedData.title || "");
-          setPdfUrl(savedData.pdfUrl || "");
-          setSelectedProgramName(savedData.selectedProgramName || "none");
-        } catch (e) {
-          console.error("Failed to parse autosaved book data", e);
-          localStorage.removeItem(AUTOSAVE_KEY);
-        }
-      }
-    }
-  }, [isEditMode]);
-
-  useEffect(() => {
-    if (!isEditMode) {
-      const dataToSave = { title, pdfUrl, selectedProgramName };
-      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
-    }
-  }, [isEditMode, title, pdfUrl, selectedProgramName]);
-
-  const handleClose = () => {
-    if (!isEditMode) {
-      localStorage.removeItem(AUTOSAVE_KEY);
-    }
-    onFormClose();
-  };
+  const [isPublicType, setIsPublicType] = useState(forcePublic || book?.isPublic || false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,11 +50,7 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
     setIsSubmitting(true);
 
     if (!title || !pdfUrl) {
-        toast({
-            variant: "destructive",
-            title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة.",
-        });
+        toast({ variant: "destructive", title: "خطأ", description: "يرجى ملء جميع الحقول المطلوبة." });
         setIsSubmitting(false);
         return;
     }
@@ -88,92 +58,127 @@ export function BookForm({ book, onFormClose }: BookFormProps) {
     const slug = title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
 
     const bookData = {
+        id: book?.id || `book-${Date.now()}`,
         slug,
         title,
         pdfUrl,
-        programName: selectedProgramName === 'none' ? undefined : selectedProgramName,
+        author,
+        description,
+        category: isPublicType ? category : undefined,
+        programName: isPublicType ? undefined : (selectedProgramName === 'none' ? undefined : selectedProgramName),
+        imageUrl: (book as any)?.imageUrl || `https://picsum.photos/seed/${slug}/400/600`,
         imageId: book?.imageId || `book-cover-${Math.floor(Math.random() * 3) + 1}`,
+        isPublic: isPublicType
     };
 
     try {
-      if (isEditMode && book) {
-        const bookRef = doc(firestore, 'books', book.id);
-        updateDocumentNonBlocking(bookRef, bookData);
-        toast({
-            title: "تم التحديث بنجاح",
-            description: `تم تحديث كتاب "${title}".`,
-        });
+      if (isPublicType) {
+          // 🌐 SAVE TO PUBLIC LIBRARY (JSON)
+          const res = await fetch('/data/library.json');
+          const currentData = await res.json();
+          let updatedBooks = currentData.books || [];
+
+          if (isEditMode) {
+              updatedBooks = updatedBooks.map((b: any) => b.id === book?.id ? bookData : b);
+          } else {
+              updatedBooks.push(bookData);
+          }
+
+          const saveRes = await fetch('/api/admin/library', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ books: updatedBooks })
+          });
+
+          if (saveRes.ok) {
+              toast({ title: isEditMode ? "تم تحديث المكتبة العامة" : "تمت الإضافة للمكتبة العامة" });
+          }
       } else {
-        const newBookRef = doc(collection(firestore, 'books'));
-        const statsRef = doc(firestore, 'stats', 'global');
-
-        await runTransaction(firestore, async (transaction) => {
-            transaction.set(newBookRef, { ...bookData });
-            transaction.set(statsRef, { books: increment(1) }, { merge: true });
-        });
-
-        toast({
-            title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة كتاب "${title}" الجديد.`,
-        });
+          // 🔒 SAVE TO FIRESTORE (LOCAL)
+          if (isEditMode && book) {
+              const bookRef = doc(firestore, 'books', book.id);
+              updateDocumentNonBlocking(bookRef, bookData);
+              toast({ title: "تم التحديث بنجاح" });
+          } else {
+              const newBookRef = doc(collection(firestore, 'books'));
+              const statsRef = doc(firestore, 'stats', 'global');
+              await runTransaction(firestore, async (transaction) => {
+                  transaction.set(newBookRef, { ...bookData, id: newBookRef.id });
+                  transaction.set(statsRef, { books: increment(1) }, { merge: true });
+              });
+              toast({ title: "تمت الإضافة بنجاح" });
+          }
       }
-      handleClose();
+      onFormClose();
     } catch (error) {
       console.error("Error submitting book:", error);
-      toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: "لم نتمكن من حفظ الكتاب. يرجى المحاولة مرة أخرى.",
-      });
+      toast({ variant: "destructive", title: "حدث خطأ", description: "لم نتمكن من حفظ الكتاب." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline">{isEditMode ? `تعديل الكتاب: ${book?.title}` : 'إضافة كتاب جديد'}</CardTitle>
-        <CardDescription>
-          املأ الحقول أدناه لإنشاء أو تعديل كتاب.
-        </CardDescription>
+    <Card className="border-white/10 bg-white/[0.02] backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <CardHeader className="bg-white/5 p-8 border-b border-white/5">
+        <CardTitle className="text-3xl font-black font-headline text-white">{isEditMode ? `تعديل: ${book?.title}` : 'إضافة كتاب جديد'}</CardTitle>
+        <CardDescription className="text-lg">أدخل بيانات الكتاب بدقة لضمان أفضل تجربة للقراء.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="title">عنوان الكتاب</Label>
-            <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required disabled={isSubmitting} />
-          </div>
-           <div>
-              <Label htmlFor="program">البرنامج (اختياري)</Label>
-              <Select name="program" onValueChange={setSelectedProgramName} value={selectedProgramName} disabled={programsLoading}>
-                  <SelectTrigger>
-                      <SelectValue placeholder={"اختر برنامجًا..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="none">بدون برنامج</SelectItem>
-                      {allPrograms?.map(p => (
-                          <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
+      <CardContent className="p-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <Label className="text-sm font-bold uppercase tracking-widest text-white/40">نوع الكتاب</Label>
+              <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10">
+                <button type="button" onClick={() => setIsPublicType(false)} className={`flex-1 py-3 rounded-xl font-bold transition-all ${!isPublicType ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>خاص بالموقع</button>
+                <button type="button" onClick={() => setIsPublicType(true)} className={`flex-1 py-3 rounded-xl font-bold transition-all ${isPublicType ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>المكتبة العامة</button>
+              </div>
             </div>
-          <div>
-            <Label htmlFor="pdfUrl">رابط الكتاب (PDF)</Label>
-            <Input id="pdfUrl" name="pdfUrl" type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} required disabled={isSubmitting} />
+
+            <div className="space-y-3">
+              <Label htmlFor="title" className="text-sm font-bold uppercase tracking-widest text-white/40">عنوان الكتاب</Label>
+              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required className="h-14 rounded-2xl bg-white/5 border-white/10 text-lg font-bold" />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="author" className="text-sm font-bold uppercase tracking-widest text-white/40">المؤلف</Label>
+              <Input id="author" value={author} onChange={(e) => setAuthor(e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/10 text-lg font-bold" />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-bold uppercase tracking-widest text-white/40">{isPublicType ? 'القسم' : 'البرنامج'}</Label>
+              {isPublicType ? (
+                <Input value={category} onChange={(e) => setCategory(e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/10 text-lg font-bold" placeholder="مثال: العقيدة، الحديث..." />
+              ) : (
+                <Select value={selectedProgramName} onValueChange={setSelectedProgramName}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-lg font-bold">
+                    <SelectValue placeholder="اختر برنامجاً..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/10">
+                    <SelectItem value="none">بدون برنامج</SelectItem>
+                    {allPrograms?.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="col-span-1 md:col-span-2 space-y-3">
+              <Label htmlFor="pdfUrl" className="text-sm font-bold uppercase tracking-widest text-white/40">رابط الـ PDF</Label>
+              <Input id="pdfUrl" type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} required className="h-14 rounded-2xl bg-white/5 border-white/10 text-lg font-bold font-mono" placeholder="https://..." />
+            </div>
+
+            <div className="col-span-1 md:col-span-2 space-y-3">
+              <Label htmlFor="desc" className="text-sm font-bold uppercase tracking-widest text-white/40">وصف الكتاب</Label>
+              <textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full min-h-[120px] p-4 rounded-2xl bg-white/5 border border-white/10 text-lg font-medium focus:ring-2 ring-primary/20 transition-all outline-none" />
+            </div>
           </div>
-           <div>
-            <Label htmlFor="image">صورة الغلاف (اختياري)</Label>
-            <Input id="image" name="image" type="file" disabled={isSubmitting}/>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting || programsLoading}>
-                {(isSubmitting || programsLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditMode ? 'حفظ التغييرات' : 'إنشاء الكتاب'}
+
+          <div className="flex gap-4 pt-4">
+            <Button type="submit" disabled={isSubmitting} className="h-14 px-10 rounded-2xl text-lg font-black bg-primary hover:scale-105 transition-transform shadow-xl shadow-primary/20">
+                {isSubmitting && <Loader2 className="ml-2 h-5 w-5 animate-spin" />}
+                {isEditMode ? 'حفظ التعديلات' : 'إضافة الكتاب للمكتبة'}
             </Button>
-            <Button type="button" onClick={handleClose} variant="outline">
-              إلغاء
-            </Button>
+            <Button type="button" onClick={onFormClose} variant="outline" className="h-14 px-10 rounded-2xl text-lg font-bold border-white/10 bg-white/5">إلغاء</Button>
           </div>
         </form>
       </CardContent>
