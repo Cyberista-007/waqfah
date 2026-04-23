@@ -131,18 +131,30 @@ export default function HadithBookPage({ params }: { params: Promise<{ bookId: s
         try {
           const url = ALTERNATIVE_SOURCES[bookId];
           const res = await fetch(url, { cache: 'force-cache' });
-          if (res.ok) {
-            const data = await res.json();
-            BOOK_CACHE[bookId] = data; // Cache for hadith fetch later
-            if (data.chapters) {
-              const mappedSections: IndexData = {};
-              data.chapters.forEach((ch: any) => {
-                mappedSections[String(ch.id)] = ch.arabic;
-              });
-              setSections(mappedSections);
-              success = true;
+            if (res.ok) {
+              const data = await res.json();
+              BOOK_CACHE[bookId] = data; // Cache for hadith fetch later
+              
+              // Handle both formats (chapters or sections)
+              if (data.chapters || data.sections) {
+                const mappedSections: IndexData = {};
+                const sourceData = data.chapters || data.sections;
+                
+                if (Array.isArray(sourceData)) {
+                  sourceData.forEach((ch: any) => {
+                    mappedSections[String(ch.id)] = ch.arabic || ch.name || "";
+                  });
+                } else {
+                  // If it's a map (like our generated sections.json)
+                  Object.entries(sourceData).forEach(([id, name]: any) => {
+                    mappedSections[id] = name;
+                  });
+                }
+                
+                setSections(mappedSections);
+                success = true;
+              }
             }
-          }
         } catch (err) {
           console.error("Alt source index fetch failed", err);
         }
