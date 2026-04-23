@@ -48,18 +48,25 @@ function BooksList() {
     const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
+    
+    // ❤️ Favorites State
+    const [favorites, setFavorites] = useState<string[]>([]);
+    // 🔖 Reading Progress State
+    const [readingProgress, setReadingProgress] = useState<Record<string, number>>({});
 
     useEffect(() => {
+        // Load from localStorage
+        const savedFavs = localStorage.getItem('library_favorites');
+        if (savedFavs) setFavorites(JSON.parse(savedFavs));
+        
+        const savedProgress = localStorage.getItem('library_progress');
+        if (savedProgress) setReadingProgress(JSON.parse(savedProgress));
+
         const fetchPublicLibrary = async () => {
             try {
-                // 1. Try public GitHub first
                 const PUBLIC_LIB_URL = "https://raw.githubusercontent.com/Cyberista-007/Islamic-Books-Library/main/library.json";
                 let res = await fetch(PUBLIC_LIB_URL);
-                
-                // 2. Fallback to local if GitHub 404s
-                if (!res.ok) {
-                    res = await fetch('/data/library.json');
-                }
+                if (!res.ok) res = await fetch('/data/library.json');
 
                 if (res.ok) {
                     const data = await res.json();
@@ -88,6 +95,15 @@ function BooksList() {
         return [...firestoreList, ...publicBooks];
     }, [firestoreBooks, publicBooks]);
 
+    const toggleFavorite = (bookId: string) => {
+        const newFavs = favorites.includes(bookId) 
+            ? favorites.filter(id => id !== bookId)
+            : [...favorites, bookId];
+        setFavorites(newFavs);
+        localStorage.setItem('library_favorites', JSON.stringify(newFavs));
+        toast({ title: favorites.includes(bookId) ? "تمت الإزالة من المفضلة" : "أضيف للمفضلة ❤️" });
+    };
+
     const isLoading = isFirestoreLoading && publicBooks.length === 0;
 
     const filteredBooks = useMemo(() => {
@@ -95,22 +111,27 @@ function BooksList() {
         let filtered = allBooks;
 
         if (searchTerm) {
+            const lowTerm = searchTerm.toLowerCase();
             filtered = filtered.filter(book => 
-                book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (book.programName || '').toLowerCase().includes(searchTerm.toLowerCase())
+                book.title.toLowerCase().includes(lowTerm) ||
+                (book.programName || '').toLowerCase().includes(lowTerm) ||
+                ((book as any).author || '').toLowerCase().includes(lowTerm) ||
+                ((book as any).category || '').toLowerCase().includes(lowTerm)
             );
         }
 
-        if (selectedCategory !== 'all') {
-            filtered = filtered.filter(book => book.programName === selectedCategory);
+        if (selectedCategory === 'favorites') {
+            filtered = filtered.filter(book => favorites.includes(book.id));
+        } else if (selectedCategory !== 'all') {
+            filtered = filtered.filter(book => (book.programName === selectedCategory) || ((book as any).category === selectedCategory));
         }
 
         return filtered;
-    }, [allBooks, searchTerm, selectedCategory]);
+    }, [allBooks, searchTerm, selectedCategory, favorites]);
 
     const categories = useMemo(() => {
         if (!allBooks) return [];
-        const cats = new Set(allBooks.map(b => b.programName).filter(Boolean));
+        const cats = new Set(allBooks.map(b => b.programName || (b as any).category).filter(Boolean));
         return Array.from(cats);
     }, [allBooks]);
 
@@ -142,7 +163,7 @@ function BooksList() {
                     <Search className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
                     <input 
                         type="text"
-                        placeholder="ابحث في رفوف المكتبة..."
+                        placeholder="ابحث بالعنوان، المؤلف أو القسم..."
                         className="w-full h-16 pr-14 pl-6 bg-white/5 border-none rounded-3xl text-xl font-bold focus:ring-2 ring-primary/20 transition-all placeholder:text-white/10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -152,22 +173,14 @@ function BooksList() {
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto no-scrollbar">
                     <button 
                         onClick={() => setSelectedCategory('all')}
-                        className={cn(
-                            "px-6 h-12 rounded-2xl font-bold whitespace-nowrap transition-all border",
-                            selectedCategory === 'all' ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white/5 text-white/40 border-white/5 hover:border-white/20"
-                        )}
-                    >
-                        الكل
-                    </button>
+                        className={cn("px-6 h-12 rounded-2xl font-bold whitespace-nowrap transition-all border", selectedCategory === 'all' ? "bg-primary text-white border-primary shadow-lg" : "bg-white/5 text-white/40 border-white/5 hover:border-white/20")}
+                    > الكل </button>
+                    <button 
+                        onClick={() => setSelectedCategory('favorites')}
+                        className={cn("px-6 h-12 rounded-2xl font-bold whitespace-nowrap transition-all border flex items-center gap-2", selectedCategory === 'favorites' ? "bg-red-500 text-white border-red-500 shadow-lg" : "bg-white/5 text-red-400/40 border-white/5 hover:border-red-500/20")}
+                    > <Bookmark className="w-4 h-4" /> المفضلة </button>
                     {categories.map(cat => (
-                        <button 
-                            key={cat}
-                            onClick={() => setSelectedCategory(cat!)}
-                            className={cn(
-                                "px-6 h-12 rounded-2xl font-bold whitespace-nowrap transition-all border",
-                                selectedCategory === cat ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white/5 text-white/40 border-white/5 hover:border-white/20"
-                            )}
-                        >
+                        <button key={cat} onClick={() => setSelectedCategory(cat!)} className={cn("px-6 h-12 rounded-2xl font-bold whitespace-nowrap transition-all border", selectedCategory === cat ? "bg-primary text-white border-primary shadow-lg" : "bg-white/5 text-white/40 border-white/5 hover:border-white/20")}>
                             {cat}
                         </button>
                     ))}
@@ -180,33 +193,20 @@ function BooksList() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-12">
                     <AnimatePresence mode="popLayout">
                         {filteredBooks.map((book, idx) => (
-                            <motion.div
-                                key={book.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="group flex flex-col gap-4 relative"
-                            >
-                                {/* 📕 3D Book Container */}
+                            <motion.div key={book.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="group flex flex-col gap-4 relative">
                                 <div className="relative aspect-[3/4] w-full perspective-1000">
                                     <div className="w-full h-full relative transition-all duration-500 group-hover:rotate-y-[-20deg] group-hover:translate-x-[-10px] transform-style-3d shadow-[20px_20px_50px_rgba(0,0,0,0.5)]">
-                                        {/* Cover */}
                                         <div className="absolute inset-0 bg-zinc-900 rounded-r-lg overflow-hidden border border-white/10 z-20">
-                                            <Image
-                                                src={book.imageUrl || getPlaceholderImage(book.imageId)?.imageUrl || `https://picsum.photos/seed/${book.slug}/400/600`}
-                                                alt={book.title}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent opacity-40" />
+                                            <Image src={book.imageUrl || `https://picsum.photos/seed/${book.slug}/400/600`} alt={book.title} fill className="object-cover" />
+                                            {/* 🔖 Progress Ribbon */}
+                                            {readingProgress[book.id] && (
+                                                <div className="absolute top-0 right-4 w-8 h-12 bg-primary flex items-center justify-center rounded-b-lg shadow-lg z-30">
+                                                    <span className="text-[10px] font-black text-black">{readingProgress[book.id]}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        
-                                        {/* Spine / Thickness effect */}
                                         <div className="absolute top-0 bottom-0 -right-4 w-4 bg-zinc-800 border-y border-r border-white/5 rounded-r-lg origin-left rotate-y-[90deg] z-10" />
                                         
-                                        {/* Glass Overlay on Hover */}
                                         <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity z-30 flex items-center justify-center gap-4 backdrop-blur-sm rounded-r-lg">
                                             <Dialog>
                                                 <DialogTrigger asChild>
@@ -214,48 +214,47 @@ function BooksList() {
                                                         <Eye className="w-6 h-6" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="max-w-4xl h-[90vh] p-0 bg-zinc-950 border-white/10 overflow-hidden">
+                                                <DialogContent className="max-w-4xl h-[90vh] p-0 bg-zinc-950 border-white/10 overflow-hidden flex flex-col">
                                                     <DialogHeader className="p-4 border-b border-white/5 bg-zinc-900 flex flex-row items-center justify-between">
-                                                        <DialogTitle className="text-xl font-black">{book.title}</DialogTitle>
-                                                        <Button asChild size="sm" variant="outline" className="ml-8">
-                                                            <a href={book.pdfUrl} target="_blank" rel="noopener noreferrer" download>
-                                                                <Download className="w-4 h-4 ml-2" /> تحميل
-                                                            </a>
-                                                        </Button>
+                                                        <DialogTitle className="text-xl font-black truncate max-w-md">{book.title}</DialogTitle>
+                                                        <div className="flex items-center gap-4 ml-8">
+                                                            {/* 💾 Save Progress UI */}
+                                                            <div className="hidden sm:flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                                                                <span className="text-[10px] font-bold text-white/40 px-2 uppercase">الصفحة</span>
+                                                                <input 
+                                                                    type="number" 
+                                                                    defaultValue={readingProgress[book.id] || 1}
+                                                                    className="w-12 h-8 bg-zinc-950 border border-white/10 rounded-lg text-center text-xs font-bold"
+                                                                    onChange={(e) => updateProgress(book.id, parseInt(e.target.value))}
+                                                                />
+                                                            </div>
+
+                                                            <Button variant="outline" size="sm" onClick={() => toggleFavorite(book.id)} className="rounded-xl">
+                                                                <Bookmark className={cn("w-4 h-4 ml-2", favorites.includes(book.id) && "fill-red-500 text-red-500")} />
+                                                                {favorites.includes(book.id) ? "مفضل" : "تفضيل"}
+                                                            </Button>
+                                                            <Button asChild size="sm" className="rounded-xl">
+                                                                <a href={book.pdfUrl} target="_blank" download><Download className="w-4 h-4 ml-2" /> تحميل</a>
+                                                            </Button>
+                                                        </div>
                                                     </DialogHeader>
-                                                    <iframe src={`${book.pdfUrl}#toolbar=0`} className="w-full h-full border-none" />
+                                                    <iframe src={`${book.pdfUrl}#page=${readingProgress[book.id] || 1}`} className="flex-1 w-full border-none" />
                                                 </DialogContent>
                                             </Dialog>
                                             
-                                            <Button asChild size="icon" className="h-12 w-12 rounded-full bg-primary text-white hover:scale-110 transition-transform">
-                                                <a href={book.pdfUrl} target="_blank" rel="noopener noreferrer" download>
-                                                    <Download className="w-6 h-6" />
-                                                </a>
-                                            </Button>
-                                        </div>
-
-                                        {/* Admin Delete (Only for local books) */}
-                                        {isAdmin && !book.isPublic && (
-                                            <button 
-                                                onClick={(e) => { e.preventDefault(); setBookToDelete(book); }}
-                                                className="absolute top-4 left-4 z-40 p-2 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-xl"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
+                                            <button onClick={() => toggleFavorite(book.id)} className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform">
+                                                <Bookmark className={cn("w-6 h-6", favorites.includes(book.id) ? "fill-red-500 text-red-500" : "text-white")} />
                                             </button>
-                                        )}
+                                        </div>
                                     </div>
-                                    
-                                    {/* Shadow under the book */}
                                     <div className="absolute -bottom-4 left-4 right-4 h-8 bg-black/40 blur-xl rounded-full -z-10 group-hover:scale-110 transition-transform" />
                                 </div>
 
-                                {/* ℹ️ Book Info */}
                                 <div className="space-y-1 px-1">
                                     <h3 className="text-lg font-black text-white line-clamp-1 leading-snug tracking-tight">{book.title}</h3>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">{book.programName || "مؤلفات عامة"}</span>
-                                        <div className="w-1 h-1 rounded-full bg-primary/40" />
-                                        <span className="text-[10px] font-bold text-primary/60">PDF</span>
+                                    <p className="text-xs text-white/40 font-bold truncate">{(book as any).author || "مؤلف غير معروف"}</p>
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">{book.programName || (book as any).category}</span>
                                     </div>
                                 </div>
                             </motion.div>
