@@ -1,62 +1,106 @@
 'use client';
 
 import { useAudioPlayer } from './audio-player-provider';
-import { GripVertical, X, Bookmark, Maximize, CheckCircle } from 'lucide-react';
+import { X, Maximize2, GripHorizontal, CheckCircle2, Bookmark, Play, Pause, RotateCcw, RotateCw, Captions } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-// Define constants for player dimensions
-const MIN_WIDTH = 280;
-const MIN_HEIGHT = 158; // 16:9 ratio
-const DEFAULT_WIDTH = 500;
-const DEFAULT_HEIGHT = 281; // 16:9 ratio
-const GRAB_HANDLE_SIZE = 60; // The part of the player that must remain visible to be grabbed
-
-const getCoords = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
-    if ('touches' in e) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
-    return { x: e.clientX, y: e.clientY };
-};
-
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FloatingVideoPlayer() {
     const { iframeTrack, videoPlayerRef, isPlayerVisible, hidePlayer, onPlayerStateChange, markVideoAsComplete } = useAudioPlayer();
     const { toast } = useToast();
-    
-    // Player state
-    const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+
+    // Player State: Dimensions and Position
+    const [size, setSize] = useState({ width: 480, height: 270 }); // 16:9 ratio
     const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    // Interaction state
-    const [isDragging, setIsDragging] = useState(false);
-    const [isResizing, setIsResizing] = useState(false);
-    
-    // Refs for interaction logic
-    const playerRef = useRef<HTMLDivElement>(null);
-    const dragStartRef = useRef({ x: 0, y: 0, playerX: 0, playerY: 0 });
-    const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+    // Playback State
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
-    // Set initial position when player becomes visible
-    useEffect(() => {
-        if (isPlayerVisible) {
-            const isMobile = window.innerWidth < 768; // md breakpoint
-            const initialWidth = isMobile ? MIN_WIDTH : DEFAULT_WIDTH;
-            const initialHeight = isMobile ? MIN_HEIGHT : DEFAULT_HEIGHT;
-            
-            setPosition({
-                x: window.innerWidth - initialWidth - 16, // 16px padding
-                y: 80, // from top
-            });
-            setSize({ width: initialWidth, height: initialHeight });
-        }
-    }, [isPlayerVisible]);
+    // Resize state
+    const [activeHandle, setActiveHandle] = useState<string | null>(null);
+    const startPos = useRef({ x: 0, y: 0, w: 0, h: 0, posX: 0, posY: 0 });
 
     const onPlayerReady = useCallback((event: any) => {
-        if(videoPlayerRef) videoPlayerRef.current = event.target;
+        if (videoPlayerRef) videoPlayerRef.current = event.target;
+        setDuration(event.target.getDuration());
         event.target.playVideo();
+        setIsPlaying(true);
     }, [videoPlayerRef]);
+
+    const formatTime = (seconds: number) => {
+        if (!seconds || isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const togglePlay = () => {
+        if (!videoPlayerRef.current) return;
+        if (isPlaying) {
+            videoPlayerRef.current.pauseVideo();
+            setIsPlaying(false);
+        } else {
+            videoPlayerRef.current.playVideo();
+            setIsPlaying(true);
+        }
+    };
+
+    const skip = (seconds: number) => {
+        if (!videoPlayerRef.current) return;
+        const current = videoPlayerRef.current.getCurrentTime();
+        videoPlayerRef.current.seekTo(current + seconds, true);
+        setCurrentTime(current + seconds);
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!videoPlayerRef.current) return;
+        const val = parseFloat(e.target.value);
+        videoPlayerRef.current.seekTo(val, true);
+        setCurrentTime(val);
+    };
+
+    // Playback Sync
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isPlayerVisible && videoPlayerRef.current && isPlaying) {
+            interval = setInterval(() => {
+                const time = videoPlayerRef.current.getCurrentTime();
+                const total = videoPlayerRef.current.getDuration();
+                setCurrentTime(time);
+                if (total !== duration) setDuration(total);
+
+                // Update isPlaying state if changed externally (e.g. ended)
+                const state = videoPlayerRef.current.getPlayerState();
+                if (state === 1 && !isPlaying) setIsPlaying(true);
+                if (state !== 1 && isPlaying) setIsPlaying(false);
+            }, 500);
+        }
+        return () => clearInterval(interval);
+    }, [isPlayerVisible, videoPlayerRef, isPlaying, duration]);
+
+    // Initial positioning
+    useEffect(() => {
+        if (isPlayerVisible && !isInitialized) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const playerW = Math.min(480, w - 40);
+            const playerH = (playerW * 9) / 16;
+
+            setSize({ width: playerW, height: playerH });
+            setPosition({
+                x: w - playerW - 24,
+                y: h - playerH - 100 // Above the mobile nav if present
+            });
+            setIsInitialized(true);
+        }
+    }, [isPlayerVisible, isInitialized]);
 
     useEffect(() => {
         if (!isPlayerVisible || !iframeTrack || iframeTrack.type !== 'youtube') {
@@ -64,21 +108,22 @@ export default function FloatingVideoPlayer() {
                 videoPlayerRef.current.destroy();
                 videoPlayerRef.current = null;
             }
+            setIsInitialized(false);
             return;
         }
 
         const createPlayer = () => {
-            // Ensure previous player is destroyed before creating a new one
             if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
                 videoPlayerRef.current.destroy();
             }
-            const player = new (window as any).YT.Player('youtube-player-container', {
+            new (window as any).YT.Player('youtube-player-container', {
                 videoId: iframeTrack.src,
                 playerVars: {
                     autoplay: 1,
                     controls: 1,
                     rel: 0,
                     modestbranding: 1,
+                    enablejsapi: 1,
                 },
                 events: {
                     'onReady': onPlayerReady,
@@ -88,303 +133,322 @@ export default function FloatingVideoPlayer() {
         };
 
         if (!(window as any).YT || !(window as any).YT.Player) {
-            const tag = document.createElement('script');
-            tag.src = "https://www.youtube.com/iframe_api";
-            const firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode!.insertBefore(tag, firstScriptTag);
+            // Check if script already exists but YT is not yet ready
+            const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+            if (!existingScript) {
+                const tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode!.insertBefore(tag, firstScriptTag);
+            }
             
+            // Set the callback if not already ready
+            const previousCallback = (window as any).onYouTubeIframeAPIReady;
             (window as any).onYouTubeIframeAPIReady = () => {
+                if (previousCallback) previousCallback();
                 createPlayer();
             };
         } else {
-            createPlayer();
+            // Already loaded, create immediately
+            // But wait for a tick to ensure the DOM element is rendered
+            setTimeout(createPlayer, 0);
         }
 
         return () => {
-            if ((window as any).onYouTubeIframeAPIReady) {
-                (window as any).onYouTubeIframeAPIReady = null;
-            }
+            if ((window as any).onYouTubeIframeAPIReady) (window as any).onYouTubeIframeAPIReady = null;
         };
-
     }, [isPlayerVisible, iframeTrack, onPlayerReady, onPlayerStateChange, videoPlayerRef]);
 
-
-    // --- Interaction Handlers ---
-
-    const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-        if ((e.target as HTMLElement).closest('button')) {
-            e.stopPropagation();
-            return;
-        }
+    // Resize Logic
+    const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, handle: string) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        const coords = getCoords(e);
-        setIsDragging(true);
-        dragStartRef.current = {
-            x: coords.x,
-            y: coords.y,
-            playerX: position.x,
-            playerY: position.y,
+
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+        setActiveHandle(handle);
+        startPos.current = {
+            x: clientX,
+            y: clientY,
+            w: size.width,
+            h: size.height,
+            posX: position.x,
+            posY: position.y
         };
     };
 
-    const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const coords = getCoords(e);
-        setIsResizing(true);
-        resizeStartRef.current = {
-            x: coords.x,
-            y: coords.y,
-            width: size.width,
-            height: size.height,
-        };
-    };
+    const handleResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
+        if (!activeHandle) return;
 
-    const handleWatchLater = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (iframeTrack) {
-            toast({
-                title: "تمت الإضافة إلى المشاهدة لاحقًا",
-                description: `"${iframeTrack.title}"`,
-            });
-        }
-    };
-    
-    const handleFullscreen = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const playerElement = document.getElementById('youtube-player-container');
-        if (playerElement && typeof (playerElement as any).requestFullscreen === 'function') {
-            (playerElement as any).requestFullscreen().catch((err: any) => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        }
-    };
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-    const handleMarkComplete = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        markVideoAsComplete();
-    };
+        const dx = clientX - startPos.current.x;
+        const dy = clientY - startPos.current.y;
 
-    const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
-        const coords = getCoords(e);
-        if (isDragging) {
-            const dx = coords.x - dragStartRef.current.x;
-            const dy = coords.y - dragStartRef.current.y;
-            
-            let newX = dragStartRef.current.playerX + dx;
-            let newY = dragStartRef.current.playerY + dy;
+        let newWidth = startPos.current.w;
+        let newHeight = startPos.current.h;
+        let newX = startPos.current.posX;
+        let newY = startPos.current.posY;
 
-            newX = Math.max(-(size.width - GRAB_HANDLE_SIZE), Math.min(newX, window.innerWidth - GRAB_HANDLE_SIZE));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
+        const ASPECT_RATIO = 16 / 9;
+        const MIN_W = 240;
 
-            setPosition({ x: newX, y: newY });
-        }
-        if (isResizing) {
-            const dw = coords.x - resizeStartRef.current.x;
-            const dh = coords.y - resizeStartRef.current.y;
-            
-            let newWidth = Math.max(MIN_WIDTH, resizeStartRef.current.width + dw);
-            let newHeight = Math.max(MIN_HEIGHT, resizeStartRef.current.height + dh);
-
-            if (position.x + newWidth > window.innerWidth) {
-                newWidth = window.innerWidth - position.x;
-            }
-             if (position.y + newHeight > window.innerHeight) {
-                newHeight = window.innerHeight - position.y;
-            }
-
-            setSize({ width: newWidth, height: newHeight });
-        }
-    }, [isDragging, isResizing, size.width, size.height, position.x, position.y]);
-    
-    const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-        setIsResizing(false);
-    }, []);
-
-
-    useEffect(() => {
-        if (isDragging || isResizing) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-            document.addEventListener('touchmove', handleMouseMove);
-            document.addEventListener('touchend', handleMouseUp);
+        // 1. Calculate requested dimensions/position
+        if (activeHandle === 'move') {
+            newX = Math.max(0, Math.min(window.innerWidth - size.width, startPos.current.posX + dx));
+            newY = Math.max(0, Math.min(window.innerHeight - size.height, startPos.current.posY + dy));
+        } else if (activeHandle === 'top' || activeHandle === 'bottom') {
+            // Vertical primary
+            newHeight = activeHandle === 'bottom' 
+                ? Math.max(MIN_W / ASPECT_RATIO, startPos.current.h + dy)
+                : Math.max(MIN_W / ASPECT_RATIO, startPos.current.h - dy);
+            newWidth = newHeight * ASPECT_RATIO;
         } else {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.removeEventListener('touchmove', handleMouseMove);
-            document.removeEventListener('touchend', handleMouseUp);
+            // Horizontal primary or Corner
+            newWidth = activeHandle.includes('right')
+                ? Math.max(MIN_W, startPos.current.w + dx)
+                : Math.max(MIN_W, startPos.current.w - dx);
+            newHeight = newWidth / ASPECT_RATIO;
         }
 
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.removeEventListener('touchmove', handleMouseMove);
-            document.removeEventListener('touchend', handleMouseUp);
-        };
-    }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
-    
-    // --- Keyboard Shortcuts ---
+        // 2. Apply viewport constraints and keep ratio
+        // First pass: prevent exceeding screen from the right/bottom
+        if (newX + newWidth > window.innerWidth) {
+            newWidth = window.innerWidth - newX;
+            newHeight = newWidth / ASPECT_RATIO;
+        }
+        if (newY + newHeight > window.innerHeight) {
+            newHeight = window.innerHeight - newY;
+            newWidth = newHeight * ASPECT_RATIO;
+        }
+
+        // Second pass: prevent exceeding screen from left/top if moving those edges
+        if (activeHandle.includes('left')) {
+            const tempX = startPos.current.posX + startPos.current.w - newWidth;
+            if (tempX < 0) {
+                newWidth = startPos.current.posX + startPos.current.w;
+                newHeight = newWidth / ASPECT_RATIO;
+                newX = 0;
+            } else {
+                newX = tempX;
+            }
+        }
+        if (activeHandle.includes('top')) {
+            const tempY = startPos.current.posY + startPos.current.h - newHeight;
+            if (tempY < 0) {
+                newHeight = startPos.current.posY + startPos.current.h;
+                newWidth = newHeight * ASPECT_RATIO;
+                newY = 0;
+                // Re-sync newX if we were resizing from left-top
+                if (activeHandle.includes('left')) {
+                    newX = startPos.current.posX + startPos.current.w - newWidth;
+                }
+            } else {
+                newY = tempY;
+            }
+        }
+
+        setSize({ width: newWidth, height: newHeight });
+        setPosition({ x: newX, y: newY });
+    }, [activeHandle, size, position]);
+
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (!isPlayerVisible || !videoPlayerRef.current || iframeTrack?.type !== 'youtube') return;
-            
-            if (['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
-                return;
-            }
-            
-            const player = videoPlayerRef.current;
-            if (typeof player.getPlayerState !== 'function') return;
-
-            const playerState = player.getPlayerState();
-
-            switch (event.code) {
-                case 'Space':
-                    event.preventDefault();
-                    if (playerState === 1) { // playing
-                        player.pauseVideo();
-                    } else {
-                        player.playVideo();
-                    }
-                    break;
-                case 'KeyM':
-                    event.preventDefault();
-                    if (player.isMuted()) {
-                        player.unMute();
-                    } else {
-                        player.mute();
-                    }
-                    break;
-                case 'ArrowLeft':
-                    event.preventDefault();
-                    player.seekTo(player.getCurrentTime() - 10, true);
-                    break;
-                case 'ArrowRight':
-                    event.preventDefault();
-                    player.seekTo(player.getCurrentTime() + 10, true);
-                    break;
-            }
-        };
-        
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [isPlayerVisible, videoPlayerRef, iframeTrack]);
-
-
-    // --- Dynamic Styles ---
-    const playerStyle: React.CSSProperties = {
-        width: `${size.width}px`,
-        height: `${size.height}px`,
-        top: `${position.y}px`,
-        left: `${position.x}px`,
-        transition: isDragging || isResizing ? 'none' : 'top 0.1s ease-out, left 0.1s ease-out',
-    };
-
-    if (!isPlayerVisible || !iframeTrack) {
-        return null;
-    }
-
-    const renderPlayer = () => {
-        switch (iframeTrack.type) {
-            case 'youtube':
-                return <div id="youtube-player-container" className="w-full h-full"></div>;
-            case 'soundcloud':
-                const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(iframeTrack.src)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
-                return (
-                    <iframe
-                        width="100%"
-                        height="100%"
-                        scrolling="no"
-                        frameBorder="no"
-                        allow="autoplay"
-                        src={embedUrl}>
-                    </iframe>
-                );
-            default:
-                return null;
+        if (activeHandle) {
+            window.addEventListener('mousemove', handleResizeMove);
+            window.addEventListener('mouseup', () => setActiveHandle(null));
+            window.addEventListener('touchmove', handleResizeMove);
+            window.addEventListener('touchend', () => setActiveHandle(null));
         }
-    }
+        return () => {
+            window.removeEventListener('mousemove', handleResizeMove);
+            window.removeEventListener('touchmove', handleResizeMove);
+        };
+    }, [activeHandle, handleResizeMove]);
+
+    if (!isPlayerVisible || !iframeTrack) return null;
 
     return (
-        <div
-            ref={playerRef}
-            style={playerStyle}
-            className="fixed z-50 rounded-2xl shadow-2xl bg-black overflow-hidden flex flex-col group"
-        >
-            {/* Control Bar */}
-             <div
-                onMouseDown={handleDragStart}
-                onTouchStart={handleDragStart}
-                className="flex-shrink-0 h-8 w-full flex items-center justify-between px-2 text-white/50 bg-black cursor-move"
-                 role="button"
-                 tabIndex={0}
-                 aria-roledescription="draggable"
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                style={{
+                    width: size.width,
+                    height: size.height,
+                    left: position.x,
+                    top: position.y,
+                    position: 'fixed'
+                }}
+                className={cn(
+                    "z-[100] bg-[#0a0a0a] rounded-3xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(14,165,229,0.15)] border border-white/10 group select-none transition-shadow duration-300",
+                    activeHandle === 'move' ? "cursor-grabbing ring-2 ring-blue-500/50 shadow-[0_35px_80px_rgba(0,0,0,1)]" : "cursor-grab shadow-2xl"
+                )}
+                onMouseDown={(e) => handleResizeStart(e, 'move')}
+                onTouchStart={(e) => handleResizeStart(e, 'move')}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
             >
-                <div className="flex items-center">
-                    <Button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            hidePlayer();
-                        }}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-white rounded-md hover:bg-red-500"
-                        aria-label="إغلاق المشغل"
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
-                    <Button
-                        onClick={handleMarkComplete}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-white rounded-md hover:bg-green-500"
-                        aria-label="تحديد كمكتمل"
-                    >
-                        <CheckCircle className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        onClick={handleFullscreen}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-white rounded-md hover:bg-blue-500"
-                        aria-label="ملء الشاشة"
-                    >
-                        <Maximize className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        onClick={handleWatchLater}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-white rounded-md hover:bg-blue-500"
-                        aria-label="مشاهدة لاحقاً"
-                    >
-                        <Bookmark className="h-4 w-4" />
-                    </Button>
-                </div>
-                 <GripVertical className="h-5 w-5 pointer-events-none" />
-                 <div className="w-16"></div>
-            </div>
+                {/* 8-Point Resize Handles */}
+                <div className="absolute inset-0 pointer-events-none z-[100]">
+                    {/* Corners */}
+                    <div onMouseDown={(e) => handleResizeStart(e, 'top-left')} onTouchStart={(e) => handleResizeStart(e, 'top-left')} className="absolute top-0 left-0 w-6 h-6 pointer-events-auto cursor-nw-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'top-right')} onTouchStart={(e) => handleResizeStart(e, 'top-right')} className="absolute top-0 right-0 w-6 h-6 pointer-events-auto cursor-ne-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} onTouchStart={(e) => handleResizeStart(e, 'bottom-left')} className="absolute bottom-0 left-0 w-6 h-6 pointer-events-auto cursor-sw-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} onTouchStart={(e) => handleResizeStart(e, 'bottom-right')} className="absolute bottom-0 right-0 w-6 h-6 pointer-events-auto cursor-se-resize" />
 
-            {/* Video Content */}
-            <div className="flex-grow w-full h-full bg-black">
-                {renderPlayer()}
-            </div>
-            
-            {/* Resize Handle */}
-            <div
-                onMouseDown={handleResizeStart}
-                onTouchStart={handleResizeStart}
-                className="absolute -bottom-2 -right-2 w-8 h-8 cursor-nwse-resize z-30"
-                aria-label="Resize player"
-            >
-                <div className="absolute bottom-2 right-2 w-4 h-4">
-                    <div className="w-full h-full border-r-2 border-b-2 border-white/40" />
+                    {/* Edges */}
+                    <div onMouseDown={(e) => handleResizeStart(e, 'top')} onTouchStart={(e) => handleResizeStart(e, 'top')} className="absolute top-0 left-6 right-6 h-2 pointer-events-auto cursor-n-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom')} onTouchStart={(e) => handleResizeStart(e, 'bottom')} className="absolute bottom-0 left-6 right-6 h-2 pointer-events-auto cursor-s-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'left')} onTouchStart={(e) => handleResizeStart(e, 'left')} className="absolute left-0 top-6 bottom-6 w-2 pointer-events-auto cursor-w-resize" />
+                    <div onMouseDown={(e) => handleResizeStart(e, 'right')} onTouchStart={(e) => handleResizeStart(e, 'right')} className="absolute right-0 top-6 bottom-6 w-2 pointer-events-auto cursor-e-resize" />
                 </div>
-            </div>
-        </div>
+
+                {/* Visual Polish: Dark Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/60 pointer-events-none z-10" />
+
+                {/* Video Container */}
+                <div className="w-full h-full relative z-0 pointer-events-none">
+                    <div id="youtube-player-container" className="w-full h-full scale-[1.01]" />
+                </div>
+
+                {/* Center Playback Controls */}
+                <div className={cn(
+                    "absolute inset-0 z-30 flex items-center justify-center gap-6 transition-all duration-500",
+                    isHovered ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                )}>
+                    <button 
+                        onClick={() => skip(-10)} 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
+                        title="تأخر 10 ثواني"
+                    >
+                        <RotateCcw className="w-8 h-8 text-white drop-shadow-lg" />
+                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
+                    </button>
+
+                    <button 
+                        onClick={togglePlay} 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="w-14 h-14 flex items-center justify-center pointer-events-auto hover:scale-110 transition-all active:scale-90 group/btn"
+                    >
+                        {isPlaying ? (
+                            <Pause className="w-8 h-8 text-white fill-white drop-shadow-md" />
+                        ) : (
+                            <Play className="w-8 h-8 text-white fill-white translate-x-1 drop-shadow-md" />
+                        )}
+                    </button>
+
+                    <button 
+                        onClick={() => skip(10)} 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
+                        title="تقدم 10 ثواني"
+                    >
+                        <RotateCw className="w-8 h-8 text-white drop-shadow-lg" />
+                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
+                    </button>
+                </div>
+
+                {/* Bottom Control Bar */}
+                <div 
+                    onMouseDown={(e) => e.stopPropagation()}
+                    className={cn(
+                        "absolute bottom-0 left-0 right-0 p-6 z-30 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500",
+                        isHovered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
+                    )}
+                >
+                    {/* Time Display */}
+                    <div className="flex justify-between items-center text-white/90 text-sm font-bold font-mono tracking-tighter drop-shadow-md">
+                        <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full border border-white/5 backdrop-blur-md">
+                            <span className="text-white">{formatTime(currentTime)}</span>
+                            <span className="text-white/40">/</span>
+                            <span className="text-white/70">{formatTime(duration)}</span>
+                        </div>
+                        <button 
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors pointer-events-auto"
+                        >
+                            <Captions className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden group/progress cursor-pointer pointer-events-auto"
+                    >
+                        <div 
+                            className="absolute inset-y-0 left-0 bg-blue-500 transition-all duration-300" 
+                            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                        />
+                        <input 
+                            type="range"
+                            min="0"
+                            max={duration || 100}
+                            step="0.1"
+                            value={currentTime}
+                            onChange={handleSeek}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                    </div>
+                </div>
+
+                {/* Cinematic Floating Header (Visible on Hover, Drag Handle always present) */}
+                <div 
+                    className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/95 via-black/40 to-transparent opacity-40 group-hover:opacity-100 transition-all duration-500 z-40 translate-y-[-10px] group-hover:translate-y-0"
+                >
+                    <div className="flex gap-2 items-center">
+                        <button
+                            onClick={hidePlayer}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-red-500/80 flex items-center justify-center transition-all border border-white/10 pointer-events-auto backdrop-blur-md"
+                            title="إغلاق"
+                        >
+                            <X className="w-5 h-5 text-white" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                markVideoAsComplete();
+                                hidePlayer();
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/80 flex items-center justify-center transition-all border border-white/10 pointer-events-auto backdrop-blur-md"
+                            title="تحديد كمكتمل"
+                        >
+                            <CheckCircle2 className="w-5 h-5 text-white" />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 flex justify-center px-4">
+                        <GripHorizontal className="w-6 h-6 text-white drop-shadow-md" />
+                    </div>
+
+                    <div className="flex gap-2 items-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-blue-500/80 text-white border border-white/10 pointer-events-auto backdrop-blur-md"
+                            onClick={() => toast({ title: "تمت الإضافة للمشاهدة لاحقاً" })}
+                        >
+                            <Bookmark className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Glass Tag (Only visible when not hovered) */}
+                <div className={cn(
+                    "absolute bottom-4 left-4 z-20 flex items-center gap-2 transition-opacity duration-300",
+                    isHovered ? "opacity-0" : "opacity-60"
+                )}>
+                    <div className="bg-blue-500/20 backdrop-blur-md border border-blue-500/30 px-2 py-0.5 rounded-lg">
+                        <span className="text-[10px] font-black text-blue-400 tracking-tighter uppercase">Waqfah Cinematic</span>
+                    </div>
+                </div>
+            </motion.div>
+        </AnimatePresence>
     );
 }

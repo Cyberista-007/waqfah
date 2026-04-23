@@ -2,37 +2,44 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Youtube, ListPlus, Download, Clock, Minimize2, Podcast, Eye, PictureInPicture, MessageSquare, Calendar } from "lucide-react"
-import { useState, useMemo, useRef, memo, Fragment } from "react"
-import { formatDistanceToNow } from "date-fns";
+import { Headphones, Play, Share2, Eye, MessageSquare, Calendar, Download, ListPlus } from "lucide-react"
+import { useState, useMemo, useRef, memo } from "react"
+import { format, subDays } from "date-fns";
 import { ar } from 'date-fns/locale';
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
-import {
-  Card,
-  CardFooter,
-} from "./ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { cn, formatDuration, formatViews, getVideoIdFromUrl } from "@/lib/utils"
+import { cn, formatDuration, formatViews, getVideoIdFromUrl, getInitials } from "@/lib/utils"
 import { getPlaceholderImage } from "@/lib/images"
-import { useCollection, useFirestore, useUser } from "@/firebase"
-import { Progress } from "./ui/progress"
+import { useUser, useDoc } from "@/firebase"
+import { Program } from "@/lib/types"
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { motion } from "framer-motion"
+import { ThreeDTilt } from "./ui/three-d-tilt"
 
 interface LectureCardProps {
   lecture: Lecture
   index?: number
   onCollapse?: () => void;
   pinnedMessage?: string;
+  listenHistory?: ListenHistoryItem[];
+  playlists?: Playlist[];
 }
 
-const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }: LectureCardProps) => {
-  const { playTrack, playIframe } = useAudioPlayer();
+const LectureCardComponent = ({ 
+    lecture, 
+    index = 0, 
+    pinnedMessage,
+    listenHistory,
+    playlists 
+}: LectureCardProps) => {
+  const { playTrack } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -40,18 +47,13 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
-
-  const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
-  const { data: listenHistory } = useCollection<ListenHistoryItem>(listenHistoryPath);
-  
-  const playlistsPath = user ? `users/${user.uid}/playlists` : null;
-  const { data: playlists } = useCollection<Playlist>(playlistsPath);
+  const { data: programDoc } = useDoc<Program>(lecture.programId ? `programs/${lecture.programId}` : null);
 
   const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
 
   const imageUrl = videoId
-    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
     : placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/400/225`;
 
   const lectureHistory = useMemo(() => 
@@ -101,7 +103,6 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
       const newUrl = "ss" + url.substring(url.indexOf('youtube.com'));
       window.open(newUrl, '_blank');
     } else if (url) {
-      // Fallback for non-YouTube links
       const a = document.createElement('a');
       a.href = url;
       a.download = lecture.title || 'lecture';
@@ -124,19 +125,11 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
     setIsPlaylistDialogOpen(true);
   }
 
-  const handleOpenVideo = () => {
-    if (videoId) {
-        playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
-    } else {
-        handlePlay();
-    }
-  };
-
   const handleMouseEnter = () => {
       if (videoId) {
           hoverTimeout.current = setTimeout(() => {
               setIsHovering(true);
-          }, 500); // Delay before video starts playing
+          }, 500);
       }
   };
 
@@ -163,220 +156,218 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
 
   const publicationDate = toDate(lecture.publishedAt) || toDate(lecture.createdAt);
   const dateText = publicationDate 
-    ? formatDistanceToNow(publicationDate, { addSuffix: true, locale: ar })
+    ? format(publicationDate, 'EEEE، d MMMM yyyy', { locale: ar })
     : null;
 
-  const metaItems = [];
-    if (dateText) {
-        metaItems.push(
-            <div key="date" className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{dateText}</span>
-            </div>
-        );
-    }
-    if (lecture.youtubeViewCount && lecture.youtubeViewCount > 0) {
-        metaItems.push(
-            <div key="views" className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5" />
-                <span>{formatViews(lecture.youtubeViewCount)}</span>
-            </div>
-        );
-    }
-    if (lecture.duration > 0) {
-        metaItems.push(
-            <div key="duration" className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{formatDuration(lecture.duration)}</span>
-            </div>
-        );
-    }
+  const isNew = publicationDate && publicationDate > subDays(new Date(), 7);
 
   return (
-    <TooltipProvider>
-      <Card
-        className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out group border-2 border-transparent focus-within:border-primary/50 hover:border-primary/50 focus-within:shadow-primary/20 hover:shadow-primary/20 focus-within:shadow-lg hover:shadow-lg flex flex-col rounded-xl transform-gpu hover:-translate-y-2 hover:scale-105 hover:rotate-[-2deg]",
-          "animate-fade-in-up"
-        )}
-        style={{ animationDelay: `${index * 100}ms` }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+    <TooltipProvider delayDuration={100}>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="h-full"
       >
-        <div className="relative aspect-video overflow-hidden" >
-            <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0" aria-hidden="true" tabIndex={-1} />
-             {isHovering && videoId ? (
-                <div className="pip-wrapper absolute inset-0">
-                  <iframe
-                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}`}
-                      frameBorder="0"
-                      allow="autoplay; encrypted-media"
-                      className="w-full h-full"
-                  ></iframe>
-                </div>
-            ) : (
-                <Image
-                    src={imageUrl}
-                    alt={lecture.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105 image-theme-filter"
-                    data-ai-hint={placeholder?.imageHint || 'lecture content'}
-                />
-            )}
-
-              <div 
-                className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-                onClick={handleOpenVideo}
-              />
-          
+        <ThreeDTilt tiltMax={8} className="h-full">
             <div 
                 className={cn(
-                    "absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer",
-                    isHovering ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+                "group relative flex flex-col h-full rounded-2xl transition-all duration-300 transform-gpu",
+                "bg-card border border-white/10 overflow-hidden shadow-lg",
+                "hover:border-primary/40 hover:shadow-primary/5"
                 )}
-                 onClick={handleOpenVideo}
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
             >
-              <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                 <Play className="w-8 h-8 text-white fill-current ml-1" />
-              </div>
-            </div>
-            
-            <div className="absolute top-2 right-2 flex items-center gap-1">
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <button
-                            onClick={handleShare}
-                            className="h-8 w-8 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                            aria-label="Share"
-                        >
-                            <Share2 className="w-4 h-4 text-white" />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>مشاركة المحاضرة</p>
-                    </TooltipContent>
-                </Tooltip>
-            </div>
+                {/* Media Container */}
+                <div className="relative aspect-video overflow-hidden bg-zinc-900 flex-shrink-0">
+                    <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0 z-10" aria-hidden="true" tabIndex={-1} />
+                    <Image
+                        src={imageUrl}
+                        alt={lecture.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        priority={index < 4}
+                        className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-100"
+                    />
 
-          {lecture.programName && lecture.programSlug && (
-             <div className="absolute bottom-2 right-2 text-white text-xs font-semibold">
-                <Link href={`/programs/${lecture.programSlug}`} className="flex items-center gap-1 hover:underline">
-                    <Podcast className="w-3 h-3" />
-                    <span>{lecture.programName}</span>
-                </Link>
-            </div>
-          )}
+                    {/* Gradient Overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
+                    
+                    {/* Play Button Overlay */}
+                    <Link 
+                        href={`/lectures/${lecture.slug}`}
+                        className={cn(
+                            "absolute inset-0 flex items-center justify-center transition-all duration-500 z-20 cursor-pointer",
+                            isHovering ? "opacity-0" : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100"
+                        )}
+                    >
+                        <div className="h-14 w-14 bg-primary/20 backdrop-blur-xl border border-primary/40 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110">
+                            <Play className="w-6 h-6 text-white fill-white ml-1" />
+                        </div>
+                    </Link>
 
-
-          {progress > 0 && progress < 95 && (
-              <div className="absolute bottom-0 left-0 right-0 h-1.5">
-                  <Progress value={progress} className="h-full rounded-none" />
-              </div>
-          )}
-
-        </div>
-
-        <div className="p-3 bg-card flex-grow flex flex-col">
-          <div className="flex-grow pb-2">
-            <div className="mb-2 inline-flex items-center gap-x-2 bg-black/60 text-white/90 text-xs font-semibold rounded-full px-2.5 py-1">
-                {metaItems.map((item, index) => (
-                    <Fragment key={index}>
-                        {item}
-                        {index < metaItems.length - 1 && <span className="opacity-70">·</span>}
-                    </Fragment>
-                ))}
-            </div>
-            <h3 className="font-headline text-lg leading-tight text-right w-full">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`/lectures/${lecture.slug}`}
-                    className="hover:text-primary transition-colors line-clamp-2"
-                  >
-                    {lecture.title}
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{lecture.title}</p>
-                </TooltipContent>
-              </Tooltip>
-            </h3>
-          </div>
-          {pinnedMessage && (
-              <div className="pt-2 pb-1">
-                  <p className="text-xs text-muted-foreground italic border-r-2 border-primary/50 pr-2 flex items-center gap-1.5">
-                    <MessageSquare className="w-3 h-3 shrink-0"/> 
-                    <span className="line-clamp-2">{pinnedMessage}</span>
-                  </p>
-              </div>
-          )}
-          <div className="flex justify-between items-center mt-auto pt-2 border-t">
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button onClick={handlePlay} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                          <Headphones className="w-5 h-5" />
-                      </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                      <p>استماع صوتي</p>
-                  </TooltipContent>
-              </Tooltip>
-              {videoId && (
-                <>
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button onClick={handleOpenVideo} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-red-500">
-                              <Youtube className="w-5 h-5" />
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                          <p>مشاهدة على يوتيوب</p>
-                      </TooltipContent>
-                  </Tooltip>
-                </>
-              )}
-               <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button onClick={handleDownloadClick} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                            <Download className="w-5 h-5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>تحميل</p>
-                    </TooltipContent>
-                </Tooltip>
-            </div>
-                
-                <div className="flex items-center gap-1">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button onClick={handleAddToPlaylist} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                                <ListPlus className="w-5 h-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>إضافة إلى قائمة</p>
-                        </TooltipContent>
-                    </Tooltip>
-                    <FavoriteButton lectureId={lecture.id} className="h-9 w-9" />
-                    {onCollapse && (
+                    {/* Top Badges */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-30">
+                        {isNew && (
+                            <div className="px-3 py-1 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg animate-pulse flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                                جديد
+                            </div>
+                        )}
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button onClick={onCollapse} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-                                    <Minimize2 className="h-5 h-5" />
-                                </Button>
+                                <button
+                                    onClick={handleShare}
+                                    className="h-9 w-9 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-2xl hover:bg-primary transition-all duration-300 border border-white/10 group/share"
+                                >
+                                    <Share2 className="w-4 h-4 text-white group-hover/share:scale-110" />
+                                </button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                <p>تصغير</p>
-                            </TooltipContent>
+                            <TooltipContent side="left">مشاركة</TooltipContent>
                         </Tooltip>
+                    </div>
+
+                    {/* Duration Badge */}
+                    {lecture.duration > 0 && (
+                        <div className="absolute bottom-4 left-4 z-30">
+                            <div className="px-2 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-md text-white text-[10px] font-mono">
+                                {formatDuration(lecture.duration)}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Progress Bar */}
+                    {progress > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-30">
+                            <div 
+                                className="h-full bg-primary transition-all duration-500" 
+                                style={{ width: `${progress}%` }} 
+                            />
+                        </div>
                     )}
                 </div>
+
+                {/* Content Container */}
+                <div className="p-5 flex-grow flex flex-col gap-4">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
+                            {dateText && (
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{dateText}</span>
+                                </div>
+                            )}
+                            {(lecture.youtubeViewCount ?? 0) > 0 && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                    <div className="flex items-center gap-1.5">
+                                        <Eye className="w-3 h-3" />
+                                        <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        
+                        <h3 className="font-headline text-xl leading-snug group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[3.5rem]">
+                            <Link href={`/lectures/${lecture.slug}`}>
+                                {lecture.title}
+                            </Link>
+                        </h3>
+                    </div>
+
+                    {pinnedMessage && (
+                        <div className="bg-primary/5 p-3 rounded-2xl border border-primary/10">
+                            <p className="text-xs text-primary/80 italic leading-relaxed flex gap-2">
+                            <MessageSquare className="w-3.5 h-3.5 shrink-0 mt-0.5" /> 
+                            <span className="line-clamp-2">{pinnedMessage}</span>
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-border/50">
+                        <div className="flex items-center gap-2">
+                            {lecture.programSlug && (
+                                <Link 
+                                    href={`/programs/${lecture.programSlug}`}
+                                    className="transition-transform hover:scale-110 active:scale-95"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Avatar className="h-10 w-10 border-2 border-primary/20 bg-background shadow-lg">
+                                        <AvatarImage src={programDoc?.imageUrl} alt={lecture.programName} className="object-cover" />
+                                        <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                                            {getInitials(lecture.programName || "P")}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Link>
+                            )}
+                            <div className="flex items-center gap-1">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button 
+                                            onClick={handlePlay} 
+                                            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+                                        >
+                                            <Headphones className="w-5 h-5" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>استماع</TooltipContent>
+                                </Tooltip>
+                                
+                                {videoId && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <a 
+                                              href={`https://www.youtube.com/watch?v=${videoId}`} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="h-10 w-10 flex items-center justify-center p-2 hover:bg-red-500/10 rounded-xl transition-all"
+                                            >
+                                                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#FF0000]" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FFF" />
+                                                </svg>
+                                            </a>
+                                        </TooltipTrigger>
+                                        <TooltipContent>يوتيوب</TooltipContent>
+                                    </Tooltip>
+                                )}
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button 
+                                            onClick={handleDownloadClick} 
+                                            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-all"
+                                        >
+                                            <Download className="w-5 h-5" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>تحميل</TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button 
+                                        onClick={handleAddToPlaylist} 
+                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+                                    >
+                                        <ListPlus className="w-5 h-5" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>إضافة لقائمة</TooltipContent>
+                            </Tooltip>
+                            <FavoriteButton lectureId={lecture.id} className="h-10 w-10 rounded-xl" />
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-      </Card>
-       {user && (
+        </ThreeDTilt>
+      </motion.div>
+      
+      {user && (
         <AddToPlaylistDialog
             isOpen={isPlaylistDialogOpen}
             onOpenChange={setIsPlaylistDialogOpen}
@@ -387,4 +378,5 @@ const LectureCardComponent = ({ lecture, index = 0, onCollapse, pinnedMessage }:
     </TooltipProvider>
   )
 }
+
 export const LectureCard = memo(LectureCardComponent)

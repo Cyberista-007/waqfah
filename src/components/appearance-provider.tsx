@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { fonts } from "./font-switcher";
+import { HeroBanner } from "@/lib/types";
 
 type BackgroundState = {
   image: string | null;
@@ -39,6 +40,7 @@ type AppearanceContextType = {
   heroImageUrl?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  heroBanners?: HeroBanner[];
 };
 
 const AppearanceContext = createContext<AppearanceContextType | undefined>(undefined);
@@ -51,10 +53,11 @@ type AppearanceProviderProps = {
   heroImageUrl?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  heroBanners?: HeroBanner[];
 };
 
 
-export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle }: AppearanceProviderProps) {
+export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners }: AppearanceProviderProps) {
   const [font, setFont] = useState(defaultFont || "font-body");
   const [language, setLanguageState] = useState('ar');
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
@@ -218,7 +221,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     }
   }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
-  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle };
+  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners };
 
   return (
     <AppearanceContext.Provider value={value}>

@@ -26,7 +26,9 @@ import { useState, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, Timestamp, doc, runTransaction, increment } from "firebase/firestore";
 import type { Series, Lecture, Program } from "@/lib/types";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, ListVideo } from "lucide-react";
+import { ChaptersEditor } from '@/components/admin/chapters-editor';
+import type { LectureChapter } from '@/lib/types';
 
 interface LectureFormProps {
     seriesList: Series[];
@@ -59,6 +61,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
   const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
   const [publishedAt, setPublishedAt] = useState<string | null>(lecture?.publishedAt ? new Date(lecture.publishedAt).toISOString() : null);
+  const [chapters, setChapters] = useState<LectureChapter[]>(lecture?.chapters || []);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -198,6 +201,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
         youtubeViewCount: youtubeViewCount || 0,
         language: language,
         publishedAt: publishedAt ? Timestamp.fromDate(new Date(publishedAt)) : undefined,
+        chapters: chapters.length > 0 ? chapters : [],
     };
 
     try {
@@ -377,6 +381,11 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
               <Label htmlFor="telegramUrl">رابط تيليجرام (اختياري)</Label>
               <Input id="telegramUrl" name="telegramUrl" type="text" value={telegramUrl} onChange={(e) => setTelegramUrl(e.target.value)} />
             </div>
+          </div>
+
+          {/* Chapters */}
+          <div className="border border-border/50 rounded-xl p-5 bg-muted/10">
+            <ChaptersEditor chapters={chapters} onChange={setChapters} />
           </div>
 
           <div className="flex gap-2 pt-4 border-t">

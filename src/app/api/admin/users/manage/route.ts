@@ -19,6 +19,9 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { auth } = initializeAdminApp();
+    if (!auth) {
+      return NextResponse.json({ message: 'Internal Server Error: Admin services not initialized.' }, { status: 500, headers: corsHeaders });
+    }
 
     const idToken = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!idToken) {

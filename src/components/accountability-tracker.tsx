@@ -3,13 +3,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import type { AccountabilityEntry, CustomAccountabilityAction, DestructiveSin } from '@/lib/types';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties, ScrollText } from 'lucide-react';
+import { BookCheck, Calendar as CalendarIcon, Loader2, Save, Sunrise, Sun, Sunset, Moon, Sparkles, Plus, X, Angry, EyeOff, MessageSquareX, ChevronRight, ChevronLeft, AlertTriangle, Info, CalendarDays, BookOpen, Scroll, ChevronDown, FileText, TrendingUp, Scale, ThumbsUp, Trophy, Flame, CheckCircle2, TableProperties, ScrollText, Video, PieChart as PieChartIcon } from 'lucide-react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +18,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { accountabilityStructure, AccountabilityAction, AccountabilityActionGroup } from '@/lib/accountability-data';
 import { Dialog, DialogContent, DialogTrigger, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Input } from './ui/input';
@@ -30,56 +32,77 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
-const prayerIcons = {
-    fajr: Sunrise,
-    dhuhr: Sun,
-    asr: Sunset, // This is okay, as it's distinct from Maghrib
-    maghrib: Sunset,
-    isha: Moon,
-    general: Sparkles
-};
+
+
 
 
 const ActionButton = ({ action, isSelected, onToggle }: { action: AccountabilityAction, isSelected: boolean, onToggle: () => void }) => {
     return (
-        <Button
-            variant={isSelected ? 'default' : 'destructive'}
-            onClick={onToggle}
-            className={cn(
-                "h-auto text-wrap py-2 transition-all duration-200 transform-gpu",
-                isSelected ? 'bg-green-600 hover:bg-green-700' : 'bg-red-800/80 hover:bg-red-800',
-                 isSelected ? 'shadow-lg scale-105' : 'opacity-70'
-            )}
+        <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full"
         >
-            <div className="flex flex-col">
-                <span className="font-semibold">{action.label}</span>
-                <span className="text-xs">({action.points} نقاط)</span>
-            </div>
-        </Button>
+            <Button
+                variant="ghost"
+                onClick={onToggle}
+                className={cn(
+                    "h-auto text-wrap py-4 px-4 rounded-[2rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                    isSelected
+                        ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_25px_rgba(var(--primary-rgb),0.3)]'
+                        : 'bg-white/5 hover:bg-white/10 text-muted-foreground border-white/5 opacity-80'
+                )}
+            >
+                {isSelected && (
+                    <motion.div
+                        layoutId={`active-${action.id}`}
+                        className="absolute inset-0 bg-primary/10 blur-xl"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                    />
+                )}
+                <div className="flex flex-col gap-1 items-center justify-center relative z-10">
+                    <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight">{action.label}</span>
+                    <span className="text-[10px] font-black opacity-60 bg-white/10 px-2 py-0.5 rounded-full">({action.points} نقاط)</span>
+                </div>
+            </Button>
+        </motion.div>
     )
 }
 
 const CustomActionButton = ({ action, isSelected, onToggle, onRemove }: { action: CustomAccountabilityAction, isSelected: boolean, onToggle: () => void, onRemove: (e: React.MouseEvent) => void }) => {
     return (
-         <div className="relative">
-            <Button
-                variant={isSelected ? 'default' : 'secondary'}
-                onClick={onToggle}
-                className={cn(
-                    "h-auto text-wrap py-2 w-full transition-all duration-200 transform-gpu",
-                    isSelected ? 'bg-green-600 hover:bg-green-700' : 'bg-secondary hover:bg-secondary/80',
-                    isSelected ? 'shadow-lg scale-105' : 'opacity-90'
-                )}
+         <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="relative"
+        >
+            <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
             >
-                <div className="flex flex-col">
-                    <span className="font-semibold">{action.title}</span>
-                    <span className="text-xs">({action.points} نقاط)</span>
-                </div>
-            </Button>
-             <Button size="icon" variant="ghost" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card text-card-foreground hover:bg-destructive" onClick={onRemove}>
-                <X className="h-4 w-4"/>
+                <Button
+                    variant="ghost"
+                    onClick={onToggle}
+                    className={cn(
+                        "h-auto text-wrap py-4 px-4 rounded-[2rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                        isSelected
+                            ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_25px_rgba(var(--primary-rgb),0.3)]'
+                            : 'bg-white/5 hover:bg-white/10 text-muted-foreground border-white/5 opacity-80'
+                    )}
+                >
+                    <div className="flex flex-col gap-1 items-center justify-center relative z-10">
+                        <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight">{action.title}</span>
+                        <span className="text-[10px] font-black opacity-60 bg-white/10 px-2 py-0.5 rounded-full">({action.points} نقاط)</span>
+                    </div>
+                </Button>
+            </motion.div>
+             <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 hover:scale-110 transition-transform z-20" onClick={onRemove}>
+                <X className="h-3.5 w-3.5"/>
              </Button>
-        </div>
+        </motion.div>
     )
 }
 
@@ -101,36 +124,57 @@ const AddCustomActionCard = ({ onAdd }: { onAdd: (title: string, points: number)
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Card className="flex items-center justify-center p-4 min-h-[100px] border-dashed border-2 cursor-pointer hover:border-primary hover:text-primary transition-colors text-muted-foreground">
-                    <div className="text-center">
-                        <Plus className="mx-auto h-8 w-8" />
-                        <p className="mt-2 font-semibold">نافلة إضافية</p>
-                    </div>
-                </Card>
+                <motion.div
+                    whileHover={{ scale: 1.02, translateY: -5 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <Card className="flex items-center justify-center p-6 min-h-[120px] border-dashed border-2 border-white/10 bg-white/5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all rounded-[2.5rem] text-muted-foreground group overflow-hidden relative">
+                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="text-center relative z-10">
+                            <Plus className="mx-auto h-8 w-8 group-hover:scale-110 transition-transform text-primary/60 group-hover:text-primary" />
+                            <p className="mt-2 font-black tracking-tight">نافلة إضافية</p>
+                        </div>
+                    </Card>
+                </motion.div>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-[#12141d] border-white/10 text-white rounded-[2.5rem]">
                 <DialogHeader>
-                    <DialogTitle>إضافة نافلة جديدة</DialogTitle>
-                    <DialogDescription>أضف عملًا إضافيًا لتتبعه اليوم.</DialogDescription>
+                    <DialogTitle className="text-2xl font-black text-primary">إضافة نافلة جديدة</DialogTitle>
+                    <DialogDescription className="text-zinc-400">أضف عملًا إضافيًا لتتبعه اليوم.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div>
-                        <Label htmlFor="custom-action-title">عنوان العمل</Label>
-                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: قراءة ربع من القرآن" />
+                <div className="space-y-6 py-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="custom-action-title" className="font-bold text-zinc-300">عنوان العمل</Label>
+                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: قراءة ربع من القرآن" className="bg-white/5 border-white/10 rounded-xl h-12" />
                     </div>
-                     <div>
-                        <Label htmlFor="custom-action-points">النقاط</Label>
-                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} />
+                     <div className="space-y-2">
+                        <Label htmlFor="custom-action-points" className="font-bold text-zinc-300">النقاط</Label>
+                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} className="bg-white/5 border-white/10 rounded-xl h-12" />
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => setIsOpen(false)}>إلغاء</Button>
-                    <Button onClick={handleAdd}>إضافة</Button>
+                <DialogFooter className="gap-2">
+                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl">إلغاء</Button>
+                    <Button onClick={handleAdd} className="rounded-xl px-8 bg-primary hover:bg-primary/80">إضافة</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     )
 }
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+};
 
 const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle, customActions, onCustomActionToggle, onAddCustom, onRemoveCustom }: {
     group: AccountabilityActionGroup;
@@ -143,148 +187,53 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
     onRemoveCustom: (actionId: string) => void;
 }) => {
     return (
-        <Card className="p-4 bg-muted/30">
-            <CardTitle className="text-lg text-center mb-4">{group.title}</CardTitle>
-            <CardContent className="p-0 grid grid-cols-2 gap-3">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-6 lg:p-8 shadow-2xl relative overflow-hidden group frosted-glass"
+        >
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-[60px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700 z-0" />
+            <h3 className="text-2xl font-black font-headline text-center mb-8 relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 tracking-tight">{group.title}</h3>
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="relative z-10 grid grid-cols-2 gap-4"
+            >
                  {group.actions.map(action => (
-                    <ActionButton
-                        key={action.id}
-                        action={action}
-                        isSelected={completedActionIds.includes(action.id)}
-                        onToggle={() => onActionToggle(action.id, group.id, group.type)}
-                    />
+                    <motion.div key={action.id} variants={itemVariants}>
+                        <ActionButton
+                            action={action}
+                            isSelected={completedActionIds.includes(action.id)}
+                            onToggle={() => onActionToggle(action.id, group.id, group.type)}
+                        />
+                    </motion.div>
                 ))}
-                 {/* Render custom actions for this group/prayer if any */}
-                 {customActions.map(action => (
-                     <CustomActionButton
-                        key={action.id}
-                        action={action}
-                        isSelected={completedActionIds.includes(action.id)}
-                        onToggle={() => onCustomActionToggle(action)}
-                        onRemove={(e) => { e.stopPropagation(); onRemoveCustom(action.id); }}
-                    />
-                 ))}
-                 {/* Only show "add" card for the last group, or a specific group */}
-                 {group.id.includes('sunnah') && <AddCustomActionCard onAdd={onAddCustom} />}
-            </CardContent>
-        </Card>
+                 <AnimatePresence mode="popLayout">
+                    {customActions.map(action => (
+                        <motion.div key={action.id} variants={itemVariants} exit={{ opacity: 0, scale: 0.5 }}>
+                            <CustomActionButton
+                                action={action}
+                                isSelected={completedActionIds.includes(action.id)}
+                                onToggle={() => onCustomActionToggle(action)}
+                                onRemove={(e) => { e.stopPropagation(); onRemoveCustom(action.id); }}
+                            />
+                        </motion.div>
+                    ))}
+                 </AnimatePresence>
+                 {group.id.includes('sunnah') && (
+                    <motion.div variants={itemVariants} className="col-span-full mt-2">
+                        <AddCustomActionCard onAdd={onAddCustom} />
+                    </motion.div>
+                 )}
+            </motion.div>
+        </motion.div>
     )
 }
 
-function DestructiveSinsSection({ quranIconUrl, hadithIconUrl }: { quranIconUrl?: string | null, hadithIconUrl?: string | null }) {
-    const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
 
-    const getIcon = (iconName: string) => {
-        if (iconName?.startsWith('http')) {
-            return <img src={iconName} alt="icon" className="h-10 w-10 object-contain" />;
-        }
-        switch (iconName) {
-            case 'MessageSquareX': return <MessageSquareX className="h-10 w-10" />;
-            case 'EyeOff': return <EyeOff className="h-10 w-10" />;
-            case 'Angry': return <Angry className="h-10 w-10" />;
-            case 'custom-backbiting':
-                return (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        <line x1="2" y1="22" x2="22" y2="2" />
-                    </svg>
-                );
-            default:
-                return <AlertTriangle className="h-10 w-10" />;
-        }
-    };
-    
-    if (isLoading) {
-        return <Card className="mt-8 bg-card"><CardContent className="p-6 text-center"><Loader2 className="animate-spin mx-auto" /></CardContent></Card>
-    }
 
-    if (!sins || sins.length === 0) {
-        return null; // Don't render the section if there's no data
-    }
-    
-  return (
-    <Card className="mt-8 bg-card">
-      <CardHeader>
-        <CardTitle className="text-2xl font-headline text-destructive text-center border-b-2 border-destructive/50 pb-2">
-          احذر المهلكات
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-          {sins?.map((sin) => (
-              <Dialog key={sin.id}>
-                  <DialogTrigger asChild>
-                       <button
-                          className="group p-4 rounded-xl bg-destructive hover:bg-destructive/90 transition-all duration-300 text-destructive-foreground flex flex-col items-center justify-center gap-4 aspect-square transform-gpu hover:-translate-y-2 hover:scale-105"
-                          >
-                          <div className="transition-transform duration-300 group-hover:scale-125">
-                              {getIcon(sin.icon)}
-                          </div>
-                          <span className="font-bold text-lg">{sin.title}</span>
-                      </button>
-                  </DialogTrigger>
-                    <DialogContent className="max-w-2xl p-0 border border-red-500/30 bg-black/80 text-white shadow-[10px_0px_30px_-5px_rgba(239,68,68,0.3)] backdrop-blur-lg rounded-2xl overflow-hidden" dir="rtl">
-                       <div className="flex justify-between items-center px-6 py-4 border-b border-red-500/20">
-                            <DialogTitle className="text-2xl font-headline text-red-400">{sin.dialogTitle}</DialogTitle>
-                            <DialogClose asChild>
-                                <button className="text-gray-400 hover:text-white">
-                                    <X className="h-6 w-6" />
-                                </button>
-                            </DialogClose>
-                        </div>
-                        <ScrollArea className="h-[70vh] pl-4 custom-scrollbar-gradient">
-                          <div className="space-y-6 p-6">
-                              {sin.concept && (
-                                <div className="bg-slate-800/70 p-6 rounded-xl">
-                                  <div className="flex justify-center mb-4">
-                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
-                                          <Info className="h-5 w-5 text-red-400" />
-                                      </div>
-                                  </div>
-                                  <p className="font-amiri text-xl text-center leading-loose text-slate-200">{sin.concept}</p>
-                                </div>
-                              )}
-                              {sin.quranVerses?.map((verse, index) => (
-                                <div key={`quran-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
-                                  <div className="flex justify-center mb-4">
-                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
-                                          {quranIconUrl ? <img src={quranIconUrl} alt="Quran" className="h-6 w-6" /> : <BookOpen className="h-6 w-6 text-red-400" />}
-                                      </div>
-                                  </div>
-                                  <p className="font-amiri text-2xl text-center leading-loose text-slate-100">"{verse}"</p>
-                                </div>
-                              ))}
-                              {sin.hadiths?.map((hadith, index) => (
-                                <div key={`hadith-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
-                                  <div className="flex justify-center mb-4">
-                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
-                                          {hadithIconUrl ? <img src={hadithIconUrl} alt="Hadith" className="h-6 w-6" /> : <ScrollText className="h-6 w-6 text-red-400" />}
-                                      </div>
-                                  </div>
-                                  <p className="font-amiri text-2xl text-center leading-loose text-slate-100">"{hadith}"</p>
-                                </div>
-                              ))}
-                              {sin.dailyLifeExamples?.map((example, index) => (
-                                <div key={`example-${index}`} className="bg-slate-800/70 p-6 rounded-xl">
-                                  <div className="flex justify-center mb-4">
-                                      <div className="p-1 bg-red-900/50 rounded-md border border-red-500/30">
-                                          <CalendarDays className="h-5 w-5 text-red-400" />
-                                      </div>
-                                  </div>
-                                  <p className="font-amiri text-xl text-center leading-loose text-slate-200">"{example}"</p>
-                                </div>
-                              ))}
-                          </div>
-                      </ScrollArea>
-                  </DialogContent>
-              </Dialog>
-          ))}
-      </CardContent>
-    </Card>
-  );
-}
 
 const REPORT_TABS = [
   { id: 'main', label: 'الرئيسية' },
@@ -292,6 +241,40 @@ const REPORT_TABS = [
   { id: 'weekly', label: 'أرشيف الأسابيع' },
   { id: 'monthly', label: 'أرشيف الشهور' },
 ];
+
+const StatCard = ({ icon: Icon, label, value, color, delay, isSmall }: { icon: any, label: string, value: string | number, color: string, delay: number, isSmall?: boolean }) => {
+    const colorClasses: { [key: string]: string } = {
+        blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+        orange: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+        red: "bg-red-500/10 text-red-400 border-red-500/20",
+        green: "bg-green-500/10 text-green-400 border-green-500/20",
+    };
+
+    return (
+        <motion.div
+            variants={itemVariants}
+            whileHover={{ translateY: -5, transition: { duration: 0.2 } }}
+        >
+            <Card className={cn(
+                "h-full bg-white/5 backdrop-blur-3xl border border-white/10 p-6 rounded-[2.5rem] flex flex-col items-center justify-center relative overflow-hidden group shadow-2xl",
+                colorClasses[color]
+            )}>
+                <div className={cn("absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity", `bg-${color}-500`)} />
+                <div className={cn("p-4 rounded-3xl mb-4 relative z-10", colorClasses[color].split(' ')[0])}>
+                    <Icon className="h-8 w-8" />
+                </div>
+                <div className="text-center relative z-10">
+                    <p className="text-zinc-400 text-sm font-black uppercase tracking-widest mb-1 opacity-60">{label}</p>
+                    <p className={cn(
+                        "font-black tracking-tighter leading-none",
+                        isSmall ? "text-3xl" : "text-5xl"
+                    )}>{value}</p>
+                </div>
+            </Card>
+        </motion.div>
+    );
+};
 
 const ImanHarvestReport = () => {
     const { toast } = useToast();
@@ -375,7 +358,7 @@ const ImanHarvestReport = () => {
         rawEntries.forEach(entry => {
             if ((entry.totalPoints || 0) > maxPoints) {
                 maxPoints = entry.totalPoints || 0;
-                bestDayOfWeek = new Date(entry.date.seconds * 1000).getDay();
+                bestDayOfWeek = new Date(entry.date).getDay();
             }
         });
         const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -388,7 +371,7 @@ const ImanHarvestReport = () => {
         
         const recentEntries = rawEntries.slice(0, 7).reverse();
         const performanceData = recentEntries.map(entry => ({
-            name: new Date(entry.date.seconds * 1000).toLocaleDateString('ar-EG', { weekday: 'short' }),
+            name: new Date(entry.date).toLocaleDateString('ar-EG', { weekday: 'short' }),
             points: entry.totalPoints || 0
         }));
 
@@ -548,9 +531,16 @@ const ImanHarvestReport = () => {
         <>
             <div className="non-printable">
                 <div className="p-4 sm:p-6 md:p-8 bg-slate-900/50 rounded-2xl">
-                    <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                        <h1 className="text-4xl font-bold text-white font-headline">حصادك الإيماني</h1>
-                        <div className="flex items-center gap-2 p-1 bg-slate-800/60 rounded-full">
+                    <motion.header 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6"
+                    >
+                        <div className="space-y-1">
+                            <h1 className="text-5xl font-black text-white font-headline tracking-tight">حصادك الإيماني</h1>
+                            <p className="text-zinc-400 font-bold italic opacity-60">" وَنَكْتُبُ مَا قَدَّمُوا وَآثَارَهُمْ "</p>
+                        </div>
+                        <div className="flex items-center gap-3 p-1.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
                             {REPORT_TABS.map(tab => (
                                 <TooltipProvider key={tab.id}>
                                     <ShadTooltip>
@@ -560,118 +550,136 @@ const ImanHarvestReport = () => {
                                                 variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
                                                 disabled={tab.id !== 'main'}
                                                 className={cn(
-                                                    'rounded-full',
-                                                    activeReportTab === tab.id ? 'bg-primary/80 text-primary-foreground' : 'text-muted-foreground hover:bg-slate-700/50 hover:text-white',
-                                                    tab.id !== 'main' && 'cursor-not-allowed opacity-50'
+                                                    'rounded-xl px-6 font-black transition-all duration-300',
+                                                    activeReportTab === tab.id 
+                                                        ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]' 
+                                                        : 'text-zinc-500 hover:bg-white/5 hover:text-white',
+                                                    tab.id !== 'main' && 'opacity-30 cursor-not-allowed'
                                                 )}>
                                                 {tab.label}
                                             </Button>
                                         </TooltipTrigger>
-                                        {tab.id !== 'main' && (
-                                            <TooltipContent>
-                                                <p>قريباً</p>
-                                            </TooltipContent>
-                                        )}
+                                        {tab.id !== 'main' && <TooltipContent><p>قريباً</p></TooltipContent>}
                                     </ShadTooltip>
                                 </TooltipProvider>
                             ))}
                         </div>
-                    </header>
+                    </motion.header>
 
-                    <div className="flex justify-end mb-6">
-                        <div className="flex items-center gap-1 p-1 bg-slate-800/60 rounded-full">
-                            <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">شهري</Button>
-                            <Button onClick={() => setTimeframe('weekly')} variant={timeframe === 'weekly' ? 'secondary' : 'ghost'} size="sm" className="rounded-full">أسبوعي</Button>
+                    <div className="flex justify-end mb-8">
+                        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl border border-white/5">
+                            <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'secondary' : 'ghost'} size="sm" className="rounded-lg px-4 font-bold">شهري</Button>
+                            <Button onClick={() => setTimeframe('weekly')} variant={timeframe === 'weekly' ? 'secondary' : 'ghost'} size="sm" className="rounded-lg px-4 font-bold">أسبوعي</Button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                         <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                            <CardHeader className="p-0 items-center">
-                                <div className="p-3 bg-blue-500/20 rounded-full mb-2">
-                                    <CalendarDays className="h-6 w-6 text-blue-400"/>
-                                </div>
-                                <CardDescription className="text-slate-400">أيام الالتزام</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0 mt-2">
-                                <p className="text-5xl font-bold">{stats.commitmentDays}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                            <CardHeader className="p-0 items-center">
-                                <div className="p-3 bg-purple-500/20 rounded-full mb-2">
-                                    <Flame className="h-6 w-6 text-purple-400"/>
-                                </div>
-                                <CardDescription className="text-slate-400">أيام الالتزام التام</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0 mt-2">
-                                <p className="text-5xl font-bold">{stats.fullCommitmentDays}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                            <CardHeader className="p-0 items-center">
-                                <div className="p-3 bg-green-500/20 rounded-full mb-2">
-                                    <Trophy className="h-6 w-6 text-green-400"/>
-                                </div>
-                                <CardDescription className="text-slate-400">أفضل يوم</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0 mt-2">
-                                <p className="text-4xl font-bold">{stats.bestDay}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white text-center p-6 flex flex-col items-center justify-center">
-                            <CardHeader className="p-0 items-center">
-                                <div className="p-3 bg-red-500/20 rounded-full mb-2">
-                                    <CheckCircle2 className="h-6 w-6 text-red-400"/>
-                                </div>
-                                <CardDescription className="text-slate-400">نسبة الإنجاز</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0 mt-2">
-                                <p className="text-5xl font-bold text-red-400">{completionPercentage}%</p>
-                            </CardContent>
-                        </Card>
-                    </div>
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="show"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                    >
+                         <StatCard 
+                            icon={CalendarDays} 
+                            label="أيام الالتزام" 
+                            value={stats.commitmentDays} 
+                            color="blue" 
+                            delay={0}
+                        />
+                         <StatCard 
+                            icon={Flame} 
+                            label="التزام تام" 
+                            value={stats.fullCommitmentDays} 
+                            color="purple" 
+                            delay={0.1}
+                        />
+                         <StatCard 
+                            icon={Trophy} 
+                            label="أفضل يوم" 
+                            value={stats.bestDay} 
+                            color="orange" 
+                            delay={0.2}
+                            isSmall={true}
+                        />
+                         <StatCard 
+                            icon={CheckCircle2} 
+                            label="نسبة الإنجاز" 
+                            value={`${completionPercentage}%`} 
+                            color="red" 
+                            delay={0.3}
+                        />
+                    </motion.div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-300">
-                                    <TrendingUp className="h-5 w-5"/>
+                        <Card className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl">
+                            <CardHeader className="border-b border-white/5 pb-6">
+                                <CardTitle className="flex items-center gap-3 text-white font-black text-xl">
+                                    <TrendingUp className="h-6 w-6 text-primary"/>
                                     تطور أدائك (آخر 7 أيام)
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="h-[300px] w-full">
+                            <CardContent className="h-[350px] w-full pt-10">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={stats.performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                    <AreaChart data={stats.performanceData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="#d97706" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#d97706" stopOpacity={0}/>
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
-                                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                        <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                                        <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)' }}/>
-                                        <Area type="monotone" dataKey="points" name="النقاط" stroke="#8884d8" fillOpacity={1} fill="url(#colorPoints)" />
+                                        <XAxis 
+                                            dataKey="name" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#71717a', fontWeight: 'bold', fontSize: 12 }} 
+                                        />
+                                        <YAxis hide />
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px', fontWeight: 'bold' }}
+                                            itemStyle={{ color: '#fbbf24' }}
+                                        />
+                                        <Area 
+                                            type="monotone" 
+                                            dataKey="points" 
+                                            stroke="#fbbf24" 
+                                            strokeWidth={4}
+                                            fillOpacity={1} 
+                                            fill="url(#colorPoints)" 
+                                            animationDuration={2000}
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
-                        <Card className="bg-slate-800/50 border-slate-700/50 text-white">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-300">
-                                    <Scale className="h-5 w-5"/>
+                        <Card className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl">
+                            <CardHeader className="border-b border-white/5 pb-6">
+                                <CardTitle className="flex items-center gap-3 text-white font-black text-xl">
+                                    <PieChartIcon className="h-6 w-6 text-primary"/>
                                     توزيع العبادات
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="h-[300px] w-full">
+                            <CardContent className="h-[350px] w-full pt-10">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
-                                        <Pie data={stats.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
-                                            {stats.categoryDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                        <Pie 
+                                            data={stats.categoryDistribution} 
+                                            dataKey="value" 
+                                            nameKey="name" 
+                                            cx="50%" 
+                                            cy="50%" 
+                                            innerRadius={80} 
+                                            outerRadius={110} 
+                                            paddingAngle={8}
+                                            animationBegin={500}
+                                            animationDuration={1500}
+                                        >
+                                            {stats.categoryDistribution.map((entry: any, index: number) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
+                                            ))}
                                         </Pie>
-                                        <Tooltip contentStyle={{ backgroundColor: 'hsl(225 8% 13%)', border: '1px solid hsl(225 8% 22%)', color: 'white' }}/>
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px', fontWeight: 'bold' }}
+                                        />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </CardContent>
@@ -924,15 +932,83 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const isLoading = isEntryLoading;
 
     return (
-        <div className="space-y-8">
+        <div className="relative min-h-screen overflow-hidden bg-[#0a0a0c] selection:bg-primary/30 selection:text-white">
+            {/* Cinematic Background Orbs */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <motion.div 
+                    animate={{ 
+                        x: [0, 100, 0], 
+                        y: [0, -100, 0],
+                        scale: [1, 1.2, 1]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]" 
+                />
+                <motion.div 
+                    animate={{ 
+                        x: [0, -100, 0], 
+                        y: [0, 100, 0],
+                        scale: [1, 1.3, 1]
+                    }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] bg-amber-500/5 rounded-full blur-[150px]" 
+                />
+                <motion.div 
+                    animate={{ 
+                        opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05)_0%,transparent_70%)]" 
+                />
+            </div>
+
+            <div className="relative z-10 space-y-8 pb-20">
             {showHeader && (
-                <header className="space-y-4 text-center">
-                    <BookCheck className="mx-auto h-16 w-16 text-primary animate-icon-draw" />
-                    <h1 className="text-5xl font-extrabold mt-4 mb-3 font-headline tracking-tight">محاسبة النفس</h1>
-                    <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
-                        "حَاسِبُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُحَاسَبُوا، وَزِنُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُوزَنُوا" - عمر بن الخطاب رضي الله عنه
-                    </p>
-                </header>
+                <motion.header 
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="relative space-y-6 text-center py-16 px-4"
+                >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 rounded-full blur-[100px] pointer-events-none z-0" />
+                    
+                    <motion.div
+                        animate={{ 
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ 
+                            duration: 5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        className="relative z-10 w-fit mx-auto"
+                    >
+                        <BookCheck className="h-24 w-24 text-primary drop-shadow-[0_0_30px_rgba(var(--primary-rgb),0.8)]" />
+                    </motion.div>
+
+                    <h1 className="text-5xl md:text-8xl font-black mt-4 mb-4 font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-amber-200 relative z-10 drop-shadow-2xl">
+                        محاسبة النفس
+                    </h1>
+                    
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5, duration: 0.8 }}
+                    >
+                        <p className="max-w-3xl mx-auto text-xl md:text-2xl text-zinc-300 leading-relaxed font-bold relative z-10 italic">
+                            "حَاسِبُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُحَاسَبُوا، وَزِنُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُوزَنُوا"
+                        </p>
+                        <span className="text-sm md:text-base font-black text-primary tracking-[0.4em] mt-6 block uppercase relative z-10 opacity-80">- عمر بن الخطاب رضي الله عنه</span>
+                    </motion.div>
+
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1, duration: 1 }}
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-24 bg-gradient-to-b from-primary/50 to-transparent" 
+                    />
+                </motion.header>
             )}
 
             <div className={cn("max-w-md mx-auto sticky top-20 z-20 transition-all duration-500", !isDateCardVisible && "opacity-0 -translate-y-full pointer-events-none")}>
@@ -940,13 +1016,14 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                     <PopoverTrigger asChild>
                          <Button
                             variant="outline"
-                            className="w-full h-auto text-lg p-4 rounded-xl shadow-lg bg-card/80 backdrop-blur-md border-border hover:bg-muted"
+                            className="w-full h-14 text-lg font-bold rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.3)] bg-card/60 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-foreground"
                         >
+                            <CalendarIcon className="w-5 h-5 me-2 text-primary" />
                             {formatGregorianForButton(selectedDate)} | {formatHijriForButton(selectedDate)}
-                            <ChevronDown className="h-4 w-4 ms-2" />
+                            <ChevronDown className="w-4 h-4 ms-2 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 flex bg-popover" dir="rtl">
+                    <PopoverContent className="w-auto p-0 flex bg-card/80 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl" dir="rtl">
                          <div className="p-2">
                             <Calendar
                                 locale={ar}
@@ -958,8 +1035,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                 formatters={hijriFormatters}
                                 dir="rtl"
                                 components={{
-                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
+                                    Chevron: (props) => props.orientation === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />,
                                 }}
                                 classNames={{
                                     caption_label: "font-bold text-primary",
@@ -979,10 +1055,9 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                                 onMonthChange={setGregorianMonth}
                                 formatters={gregorianFormatters}
                                 dir="rtl"
-                                components={{
-                                    IconLeft: () => <ChevronRight className="h-4 w-4" />,
-                                    IconRight: () => <ChevronLeft className="h-4 w-4" />,
-                                }}
+                                 components={{
+                                     Chevron: (props) => props.orientation === 'left' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />,
+                                 }}
                                 classNames={{
                                     nav_button_previous: "absolute right-1",
                                     nav_button_next: "absolute right-auto left-1",
@@ -994,77 +1069,125 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             </div>
 
             <Tabs defaultValue="fajr" className="w-full">
-              <div className="flex justify-center overflow-x-auto pb-2">
-                <TabsList className="h-auto p-1.5 shrink-0">
-                    <TabsTrigger value="iman-harvest" className="px-4 py-2 rounded-full flex items-center gap-2">
+              <div className="flex justify-center overflow-x-auto pb-4 custom-scrollbar">
+                <TabsList className="h-auto p-2 shrink-0 bg-card/60 backdrop-blur-2xl border border-white/10 rounded-full shadow-xl gap-2">
+                    <TabsTrigger 
+                        value="iman-harvest" 
+                        className="px-6 py-3 rounded-full flex items-center gap-2 transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]"
+                    >
                         <FileText className="h-5 w-5" />
-                        <span>الحصاد الإيماني</span>
+                        <span className="font-bold">الحصاد الإيماني</span>
                     </TabsTrigger>
                     {Object.entries(accountabilityStructure).reverse().map(([key, { name }]) => {
                         const Icon = prayerIcons[key as keyof typeof prayerIcons];
                         const isFajr = key === 'fajr';
                         return (
-                            <div key={key}>
-                             <TabsTrigger value={key} className={cn(
-                                 "px-4 py-2 rounded-full flex items-center gap-2",
-                                 isFajr && "bg-gradient-to-tr from-yellow-300 via-orange-400 to-red-500 text-white shadow-lg"
-                             )}>
+                            <TabsTrigger 
+                                key={key}
+                                value={key} 
+                                className={cn(
+                                    "px-6 py-3 rounded-full flex items-center gap-2 transition-all",
+                                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_20_rgba(var(--primary-rgb),0.4)] font-bold",
+                                    isFajr && "data-[state=active]:bg-gradient-to-tr data-[state=active]:from-yellow-300 data-[state=active]:via-orange-400 data-[state=active]:to-red-500"
+                                )}
+                            >
                                 {Icon && <Icon className="h-5 w-5" />}
                                 <span>{name}</span>
-                             </TabsTrigger>
-                            </div>
+                            </TabsTrigger>
                         )
                     })}
                 </TabsList>
               </div>
                 
-                <TabsContent value="iman-harvest" className="mt-6">
-                    <ImanHarvestReport />
-                </TabsContent>
+                <AnimatePresence mode="wait">
+                    <TabsContent value="iman-harvest" key="iman-harvest" className="mt-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.4 }}
+                        >
+                            <ImanHarvestReport />
+                        </motion.div>
+                    </TabsContent>
 
-                {isLoading ? (
-                     <div className="flex justify-center p-16"><Loader2 className="h-12 w-12 animate-spin" /></div>
-                ) : (
-                    Object.entries(accountabilityStructure).reverse().map(([key, prayerConfig]) => (
-                        <TabsContent key={key} value={key} className="mt-6">
-                             <div
-                                    key={key}
-                                className="text-3xl font-bold text-center mb-6"
-                                >
-                                    {prayerConfig.name}
-                                </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {prayerConfig.groups.map(group => (
-                                    <ActionGroupCard
-                                        key={group.id}
-                                        group={group}
-                                        prayerKey={key}
-                                        completedActionIds={completedActions}
-                                        onActionToggle={handleActionToggle}
-                                        customActions={customActions[key] || []}
-                                        onCustomActionToggle={(action) => handleActionToggle(action.id, `custom-${key}`, 'multi')}
-                                        onAddCustom={handleAddCustomAction(key)}
-                                        onRemoveCustom={(actionId) => handleRemoveCustomAction(key, actionId)}
-                                    />
-                                ))}
-                            </div>
+                    {isLoading ? (
+                        <TabsContent value="loading" key="loading" className="flex justify-center p-16">
+                            <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
                         </TabsContent>
-                    ))
-                )}
+                    ) : (
+                        Object.entries(accountabilityStructure).reverse().map(([key, prayerConfig]) => (
+                            <TabsContent key={key} value={key} className="mt-6">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 1.02, y: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <div className="text-4xl font-black text-center mb-8 font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">
+                                        {prayerConfig.name}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {prayerConfig.groups.map(group => (
+                                            <ActionGroupCard
+                                                key={group.id}
+                                                group={group}
+                                                prayerKey={key}
+                                                completedActionIds={completedActions}
+                                                onActionToggle={handleActionToggle}
+                                                customActions={customActions[key] || []}
+                                                onCustomActionToggle={(action) => handleActionToggle(action.id, `custom-${key}`, 'multi')}
+                                                onAddCustom={handleAddCustomAction(key)}
+                                                onRemoveCustom={(actionId) => handleRemoveCustomAction(key, actionId)}
+                                            />
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            </TabsContent>
+                        ))
+                    )}
+                </AnimatePresence>
             </Tabs>
 
-            <div ref={sinsSectionRef}>
-                <DestructiveSinsSection quranIconUrl={quranIconUrl} hadithIconUrl={hadithIconUrl} />
-            </div>
 
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
-                 <Card className="p-2 rounded-full shadow-lg border-2 border-primary/50">
-                    <CardContent className="p-0 flex items-center gap-4 px-6">
-                        <div className="text-sm text-muted-foreground">مجموع النقاط</div>
-                        <div className="text-2xl font-bold text-primary">{totalPoints}</div>
-                    </CardContent>
-                 </Card>
+
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                 <div className="bg-card/80 backdrop-blur-3xl border border-primary/30 p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(var(--primary-rgb),0.2)] flex items-center">
+                    <div className="flex items-center gap-6 px-8 md:px-12 py-2">
+                        <motion.div
+                            animate={{ 
+                                scale: [1, 1.2, 1],
+                                rotate: [0, 10, -10, 0]
+                            }}
+                            key={totalPoints}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <Trophy className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]" />
+                        </motion.div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-primary/60">اجمالي الرصيد</span>
+                            <motion.span 
+                                key={totalPoints}
+                                initial={{ scale: 0.8, opacity: 0.5 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary via-white to-amber-200 leading-none mt-1 tracking-tighter"
+                            >
+                                {totalPoints}
+                            </motion.span>
+                        </div>
+                    </div>
+                 </div>
             </div>
+          </div>
         </div>
     );
 }
+
+const prayerIcons = {
+    fajr: Sunrise,
+    dhuhr: Sun,
+    asr: Sunset,
+    maghrib: Sunset,
+    isha: Moon,
+    general: Sparkles
+};

@@ -58,15 +58,15 @@ export function useCollection<T = any>(
 
   useEffect(() => {
     // If path is not ready, do nothing and reset state.
-    if (!path) {
-      setData(null);
-      setIsLoading(false); // Not loading if there's no path
-      setError(null);
+    if (!path || !firestore) {
+      if (!path) {
+        setData(null);
+        setIsLoading(false);
+        setError(null);
+      }
       return;
     }
 
-    // Only show loading skeleton if there's no data yet.
-    // This prevents the UI from flashing a loading state on re-renders.
     if (!data) {
         setIsLoading(true);
     }
@@ -77,12 +77,9 @@ export function useCollection<T = any>(
         constraints.push(orderBy(...options.orderBy));
     }
     if (options?.where) {
-        // Prevent crashes from invalid queries where the value is undefined
         if (options.where[2] === undefined) {
-            // This is not an error, but the query is not ready yet.
-            // We can return an empty loading state.
             setData(null);
-            setIsLoading(true); // Keep loading until the condition is valid
+            setIsLoading(true);
             setError(null);
             return;
         }
@@ -92,40 +89,53 @@ export function useCollection<T = any>(
         constraints.push(limit(options.limit));
     }
 
-    // This is the fix: Only 'playlists' is a collection group query.
-    // All others, including top-level ones like 'lectures', are standard collection queries.
     const isCollectionGroup = path === 'playlists';
-    const ref = isCollectionGroup ? collectionGroup(firestore, path) : collection(firestore, path);
-    const q = query(ref, ...constraints);
+    let isMounted = true;
+    let localUnsubscribe: (() => void) | null = null;
+    
+    try {
+        const ref = isCollectionGroup ? collectionGroup(firestore, path) : collection(firestore, path);
+        const q = query(ref, ...constraints);
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
-        setData(results);
-        setError(null);
+        localUnsubscribe = onSnapshot(
+          q,
+          (snapshot: QuerySnapshot<DocumentData>) => {
+            if (!isMounted) return;
+            const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
+            setData(results);
+            setError(null);
+            setIsLoading(false);
+          },
+          (err: FirestoreError) => {
+            if (!isMounted) return;
+            const contextualError = new FirestorePermissionError({
+                operation: 'list',
+                path: path,
+            })
+            
+            console.error(`Firestore useCollection error at [${path}]:`, err.message);
+            setError(contextualError);
+            setData(null);
+            setIsLoading(false);
+            errorEmitter.emit('permission-error', contextualError);
+          }
+        );
+    } catch (err: any) {
+        console.error(`Firestore initial subscription error at [${path}]:`, err.message);
+        setError(err);
         setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        // The raw error from onSnapshot might be an internal assertion.
-        // We wrap it in a more helpful permission error for the developer.
-        const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path: path,
-        })
-        
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
+    }
 
-        // This allows the global error listener to display it in development.
-        errorEmitter.emit('permission-error', contextualError);
-      }
-    );
-
-    return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, path, memoizedOptionsJSON]); // `data` is intentionally not in the dependency array
+    return () => {
+        isMounted = false;
+        if (localUnsubscribe) {
+            // Using a tiny timeout for unsubscription helps avoid 
+            // immediate SDK state conflicts during rapid HMR/Turbopack cycles.
+            const toUnsub = localUnsubscribe;
+            setTimeout(() => toUnsub(), 0);
+        }
+    };
+  }, [firestore, path, memoizedOptionsJSON]); 
 
   return { data, isLoading, error };
 }

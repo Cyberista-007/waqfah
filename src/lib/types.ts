@@ -37,6 +37,13 @@ export type DonationSettings = {
     currentAmount?: number;
 };
 
+export type HeroBanner = {
+    imageUrl: string;
+    title?: string;
+    subtitle?: string;
+    link?: string;
+};
+
 export type AppearanceSettings = {
     defaultTheme: string;
     defaultFont: string;
@@ -46,6 +53,66 @@ export type AppearanceSettings = {
     heroImageUrl?: string;
     heroTitle?: string;
     heroSubtitle?: string;
+    heroBanners?: HeroBanner[];
+};
+
+export type HomepagePathConfig = {
+    title: string;
+    desc: string;
+    parts: string[];
+    icon: string;
+    color: string;
+    border: string;
+    linkType?: 'series' | 'playlist' | 'lecture' | 'url' | 'none';
+    linkId?: string;  // series slug, playlist id, lecture slug, or full url
+};
+
+export type HomepageFeatureConfig = {
+    icon: string;
+    title: string;
+    desc: string;
+    color: string;
+};
+
+export type HomepageQuoteConfig = {
+    quote: string;
+    author: string;
+};
+
+export type HomepageStatConfig = {
+    label: string;
+    value: string;
+    icon: string;
+    color: string;
+};
+
+export type HomepageTestimonialConfig = {
+    name: string;
+    role: string;
+    quote: string;
+};
+
+export type HomepageFAQConfig = {
+    q: string;
+    a: string;
+};
+
+export type HomepageDetailedConfig = {
+    paths?: HomepagePathConfig[];
+    features?: HomepageFeatureConfig[];
+    stats?: HomepageStatConfig[];
+    quote?: HomepageQuoteConfig;
+    testimonials?: HomepageTestimonialConfig[];
+    faqs?: HomepageFAQConfig[];
+    featuredStrips?: HomepageFeaturedStripConfig[];
+};
+
+export type HomepageFeaturedStripConfig = {
+    title: string;
+    subtitle?: string;
+    accentColor: string;
+    lectureIds: string[];  // IDs of lectures to show
+    viewAllHref?: string;
 };
 
 export type Stats = {
@@ -69,6 +136,11 @@ export type Program = Serializable<{
   followerCount: number;
 }>;
 
+export type LectureChapter = {
+  title: string;       // e.g. "مقدمة"
+  startTime: number;   // seconds from start
+};
+
 export type Lecture = Serializable<{
   id: string; // Document ID from Firestore
   slug: string;
@@ -88,6 +160,7 @@ export type Lecture = Serializable<{
   soundcloudUrl?: string;
   description: string;
   transcript: TranscriptItem[];
+  chapters?: LectureChapter[];  // NEW: named timestamps
   rating: number;
   ratingCount: number;
   viewCount: number;
@@ -115,6 +188,7 @@ export type Series = Serializable<{
   imageId: string;
   createdAt: Timestamp;
   language?: string;
+  isCompleted?: boolean;
 }>;
 
 export type Book = Serializable<{
@@ -183,6 +257,15 @@ export type Following = Serializable<{
     followedAt: Timestamp;
     notificationsEnabled?: boolean;
 }>;
+
+export interface Inspiration {
+    id: string;
+    text: string;
+    author: string;
+    title?: string;
+    type?: 'hadith' | 'quote' | 'wisdom';
+    createdAt?: any;
+}
 
 export type Rating = Serializable<{
     id: string; // combination of userId_lectureId
@@ -299,6 +382,10 @@ export type DestructiveSin = Serializable<{
   hadiths?: string[];
   dailyLifeExamples?: string[];
   icon: string;
+  linkedVideoId?: string;
+  curePlan?: string[];
+  testQuestions?: string[];
+  relatedSinIds?: string[];
 }>;
 
 export type Suggestion = Serializable<{
@@ -357,3 +444,16 @@ export type IframeTrack = {
   lectureId?: string;
   seriesId?: string;
 };
+
+export type Shubha = Serializable<{
+  id: string; // Document ID
+  categoryId: string;
+  question: string;
+  summary: string;
+  answer: string;
+  sources?: string[];
+  tags?: string[];
+  views?: number;
+  isVerified?: boolean;
+  createdAt: Timestamp;
+}>;

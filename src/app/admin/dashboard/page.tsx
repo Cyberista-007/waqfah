@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Book, Clapperboard, ListVideo, Loader2, Hash, HelpCircle, CalendarClock, UserCog, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, AlertTriangle, Pin, Upload, GraduationCap, Trophy, Calendar as CalendarIcon } from "lucide-react";
+import { Book, Clapperboard, ListVideo, Loader2, Layers, HelpCircle, CalendarClock, UserCog, Podcast, Flame, LayoutDashboard, Palette, Megaphone, Heart, AlertTriangle, Pin, Upload, GraduationCap, Trophy, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import type { Lecture, Stats } from "@/lib/types";
 import { TrafficChart } from "@/components/admin/traffic-chart";
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
       { href: '/admin/lectures', label: 'المحاضرات', icon: Clapperboard },
       { href: '/admin/books', label: 'الكتب', icon: Book },
       { href: '/admin/curriculums', label: 'المناهج', icon: GraduationCap },
-      { href: '/admin/topics', label: 'المواضيع', icon: Hash },
+      { href: '/admin/topics', label: 'المسارات', icon: Layers },
       { href: '/admin/import', label: 'استيراد المحتوى', icon: Upload },
     ];
     
@@ -64,14 +64,32 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-4xl font-bold font-headline flex items-center gap-2"><LayoutDashboard className="h-9 w-9 animate-icon-draw"/>لوحة تحكم المدير</h1>
-                    <p className="text-muted-foreground mt-2">نظرة عامة على أداء الموقع والمحتوى.</p>
+            <header className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary/20 via-background to-background border border-primary/20 mb-8 w-full group">
+                <div className="absolute inset-0 bg-primary/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
+                
+                <div className="relative z-10 flex items-center gap-6">
+                    <div className="p-4 bg-primary/20 rounded-2xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md border border-primary/30">
+                        <LayoutDashboard className="h-10 w-10 text-primary drop-shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]"/>
+                    </div>
+                    <div>
+                        <h1 className="text-4xl lg:text-5xl font-bold font-headline mb-2 tracking-tighter mix-blend-plus-lighter text-foreground">لوحة القيادة</h1>
+                        <p className="text-muted-foreground text-lg">أهلاً بك، من هنا تصنع الأثر وتدير محتوى المنصة.</p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button asChild size="lg"><Link href="/admin/lectures/new">إضافة محاضرة</Link></Button>
-                    <Button asChild size="lg" variant="secondary"><Link href="/admin/series/new">إضافة سلسلة</Link></Button>
+                <div className="relative z-10 flex gap-3 w-full md:w-auto mt-2 md:mt-0">
+                    <Button asChild size="lg" className="rounded-xl flex-1 md:flex-none h-14 text-lg shadow-[0_0_20px_0_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_25px_0_rgba(var(--primary-rgb),0.5)] transition-all">
+                        <Link href="/admin/lectures/new">
+                            <Clapperboard className="ml-2 h-5 w-5" />
+                            محاضرة جديدة
+                        </Link>
+                    </Button>
+                    <Button asChild size="lg" variant="secondary" className="rounded-xl flex-1 md:flex-none h-14 text-lg border border-border/50 hover:bg-secondary/80 backdrop-blur-md">
+                        <Link href="/admin/series/new">
+                            <ListVideo className="ml-2 h-5 w-5" />
+                            سلسلة جديدة
+                        </Link>
+                    </Button>
                 </div>
             </header>
             

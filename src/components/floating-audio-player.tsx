@@ -2,8 +2,10 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, FastForward } from "lucide-react";
+import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, FastForward, ExternalLink, Maximize2, Minimize2, ChevronDown } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMood } from "./mood-provider";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { cn } from "@/lib/utils";
@@ -16,6 +18,7 @@ import { Slider } from "./ui/slider";
 import { getPlaceholderImage } from "@/lib/images";
 import Image from "next/image";
 import Link from "next/link";
+import { AudioVisualizer } from "./audio-visualizer";
 
 
 function formatTime(seconds: number) {
@@ -31,8 +34,10 @@ export function FloatingAudioPlayer() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { moodColor } = useMood();
   
   const [isMounted, setIsMounted] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -52,6 +57,11 @@ export function FloatingAudioPlayer() {
         if (audioRef.current) {
             audioRef.current.volume = parsedVolume;
         }
+    }
+    // Restore saved playback speed
+    const savedSpeed = localStorage.getItem('audioPlayerSpeed');
+    if (savedSpeed && audioRef.current) {
+        audioRef.current.playbackRate = parseFloat(savedSpeed);
     }
   }, [audioRef]);
   
@@ -184,6 +194,9 @@ export function FloatingAudioPlayer() {
     if (track) {
       audioElement.src = track.audioSrc;
       audioElement.load();
+      // Restore saved speed for the new track
+      const savedSpeed = localStorage.getItem('audioPlayerSpeed');
+      if (savedSpeed) audioElement.playbackRate = parseFloat(savedSpeed);
     }
 
     return () => {
@@ -271,10 +284,20 @@ export function FloatingAudioPlayer() {
     }
   };
 
-  const handleSpeedChange = (value: string) => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = parseFloat(value);
+  const [playbackSpeed, setPlaybackSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return parseFloat(localStorage.getItem('audioPlayerSpeed') || '1');
     }
+    return 1;
+  });
+
+  const handleSpeedChange = (value: string) => {
+    const speed = parseFloat(value);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+    setPlaybackSpeed(speed);
+    localStorage.setItem('audioPlayerSpeed', value);
   };
   
   const setSleepTimer = (minutes: number) => {
@@ -379,108 +402,271 @@ export function FloatingAudioPlayer() {
   const placeholder = getPlaceholderImage(track.imageId);
 
   return (
+    <>
+    <AnimatePresence>
+        {isExpanded && (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 100 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 100 }}
+                className="fixed inset-0 z-[100] flex flex-col bg-background/80 backdrop-blur-[100px] p-8 md:p-16 overflow-hidden"
+            >
+                {/* Immersive Background */}
+                <div className="absolute inset-0 z-[-1] opacity-30">
+                     <motion.div 
+                        animate={{ backgroundColor: moodColor }}
+                        className="absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] rounded-full blur-[150px] animate-blob" 
+                    />
+                    <motion.div 
+                        animate={{ backgroundColor: moodColor }}
+                        className="absolute bottom-[-20%] right-[-10%] w-[90vw] h-[90vw] rounded-full blur-[180px] animate-blob animation-delay-2000" 
+                    />
+                </div>
+
+                <div className="container mx-auto max-w-5xl h-full flex flex-col justify-between">
+                    <div className="flex justify-between items-center">
+                         <div className="text-3xl font-black font-headline text-primary italic">وقـــفــــة</div>
+                         <Button onClick={() => setIsExpanded(false)} variant="ghost" size="icon" className="w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all">
+                            <ChevronDown className="w-8 h-8 text-white" />
+                         </Button>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 flex-1 justify-center py-10" dir="rtl">
+                         <motion.div 
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[450px] lg:h-[450px] rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10"
+                        >
+                             <Image 
+                                src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/800/800`}
+                                alt={track.title}
+                                fill
+                                className="object-cover scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                         </motion.div>
+
+                         <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-right space-y-8 w-full">
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight mb-4">{track.title}</h1>
+                                <p className="text-xl lg:text-2xl text-primary font-bold">{track.seriesTitle}</p>
+                            </motion.div>
+
+                            <div className="w-full space-y-6">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between text-lg font-mono text-white/40">
+                                        <span>{formatTime(progress)}</span>
+                                        <span>{formatTime(duration)}</span>
+                                    </div>
+                                    <Slider
+                                        value={[progress]}
+                                        max={duration || 1}
+                                        step={1}
+                                        onValueChange={handleSeek}
+                                        className="h-4"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-center lg:justify-start gap-8">
+                                    <Button onClick={handleRewind} variant="ghost" size="icon" className="w-16 h-16 text-white/40 hover:text-white hover:bg-white/5 rounded-full">
+                                        <Rewind className="w-8 h-8" />
+                                    </Button>
+                                    
+                                    <div className="relative group">
+                                        <motion.div 
+                                            animate={{ backgroundColor: moodColor }}
+                                            className="absolute inset-0 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity" 
+                                        />
+                                        <Button onClick={togglePlayPause} size="icon" className="w-24 h-24 rounded-full shadow-2xl relative z-10 hover:scale-105 active:scale-95 transition-all">
+                                            {isPlaying ? <Pause className="w-10 h-10 fill-white"/> : <Play className="w-10 h-10 fill-white ml-2"/>}
+                                        </Button>
+                                    </div>
+
+                                    <Button onClick={handleFastForward} variant="ghost" size="icon" className="w-16 h-16 text-white/40 hover:text-white hover:bg-white/5 rounded-full">
+                                        <FastForward className="w-8 h-8" />
+                                    </Button>
+                                </div>
+
+                                <div className="flex items-center justify-center lg:justify-start gap-6 pt-4">
+                                     <Select onValueChange={handleSpeedChange} value={playbackSpeed.toString()}>
+                                        <SelectTrigger className="w-32 h-14 text-lg font-bold rounded-2xl bg-white/5 border-white/10 text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            {[0.5, 1, 1.25, 1.5, 2, 3].map(s => (
+                                                <SelectItem key={s} value={s.toString()}>{s}x</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 w-48">
+                                         <button onClick={toggleMute} className="text-white/60 hover:text-white transition-colors">
+                                            {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                                         </button>
+                                         <Slider
+                                            value={[isMuted ? 0 : volume * 100]}
+                                            max={100}
+                                            step={1}
+                                            onValueChange={(value) => handleVolumeChange(value[0])}
+                                            className="flex-grow"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                    
+                    <div className="h-20 flex items-center justify-center">
+                         <div className="w-full max-w-2xl px-10">
+                            <AudioVisualizer audioElement={audioRef.current} isPlaying={isPlaying} barColor={moodColor} />
+                         </div>
+                    </div>
+                </div>
+            </motion.div>
+        )}
+    </AnimatePresence>
+
     <div className={cn(
-      "sticky bottom-8 inset-x-4 max-w-xs mx-auto z-50 rounded-2xl shadow-xl transition-transform duration-300",
-      "bg-background/80 backdrop-blur-md border border-border",
-      track ? "translate-y-0" : "translate-y-[200%]"
+      "sticky bottom-8 inset-x-4 max-w-sm mx-auto z-50 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-700",
+      "bg-background/80 backdrop-blur-2xl border border-white/10",
+      track ? "translate-y-0 opacity-1" : "translate-y-[200%] opacity-0",
+      isExpanded && "scale-90 opacity-0 pointer-events-none"
     )}>
       <audio ref={audioRef} src={track.audioSrc} preload="metadata" className="hidden" />
 
-      <div className="flex flex-col p-4 gap-3">
+      <div className="flex flex-col p-5 gap-4">
         <div className="flex items-center gap-4">
-            <Image 
-                src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/100/100`}
-                alt={track.title}
-                width={64}
-                height={64}
-                className="w-16 h-16 rounded-md object-cover image-theme-filter"
-            />
-            <div className="flex-grow min-w-0">
-                <p className="text-sm font-bold truncate">
-                    <Link href={`/lectures/${track.slug}`} className="hover:underline">{track.title}</Link>
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                    <Link href={`/series/${track.seriesSlug}`} className="hover:underline">{track.seriesTitle}</Link>
-                </p>
-            </div>
-            <Button onClick={closePlayer} variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
-                <X className="w-4 h-4" />
-            </Button>
-        </div>
-
-        <div className="flex items-center justify-center gap-2">
-            <Button onClick={handleRewind} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-foreground/10">
-                <Rewind className="w-5 h-5" />
-            </Button>
-            <Button onClick={togglePlayPause} variant="ghost" size="icon" className="h-14 w-14 text-foreground hover:bg-foreground/10">
-                {isPlaying ? <Pause className="w-8 h-8"/> : <Play className="w-8 h-8"/>}
-            </Button>
-            <Button onClick={handleFastForward} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-foreground/10">
-                <FastForward className="w-5 h-5" />
-            </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-muted-foreground w-10 text-center">{formatTime(progress)}</span>
-            <Slider
-                value={[progress]}
-                max={duration || 1}
-                step={1}
-                onValueChange={handleSeek}
-                className="flex-grow"
-            />
-            <span className="text-xs font-mono text-muted-foreground w-10 text-center">
-              {sleepTimerRemaining > 0 ? `-${formatTime(sleepTimerRemaining)}` : formatTime(duration)}
-            </span>
-        </div>
-        <div className="px-2 pt-2 flex items-center justify-between">
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground relative">
-                        <Timer className="w-4 h-4" />
-                        {sleepTimerDuration > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2">
-                    <div className="space-y-1">
-                        <Button onClick={() => setSleepTimer(15)} variant="ghost" className="w-full justify-start">بعد 15 دقيقة</Button>
-                        <Button onClick={() => setSleepTimer(30)} variant="ghost" className="w-full justify-start">بعد 30 دقيقة</Button>
-                        <Button onClick={() => setSleepTimer(60)} variant="ghost" className="w-full justify-start">بعد 60 دقيقة</Button>
-                        {sleepTimerDuration > 0 && <Button onClick={clearSleepTimer} variant="destructive" className="w-full justify-start mt-2">إلغاء المؤقت</Button>}
-                    </div>
-                </PopoverContent>
-            </Popover>
-
-            <Select onValueChange={handleSpeedChange} defaultValue="1">
-                <SelectTrigger className="w-[75px] h-8 text-xs rounded-full">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="0.75">0.75x</SelectItem>
-                    <SelectItem value="1">1x</SelectItem>
-                    <SelectItem value="1.25">1.25x</SelectItem>
-                    <SelectItem value="1.5">1.5x</SelectItem>
-                    <SelectItem value="2">2x</SelectItem>
-                </SelectContent>
-            </Select>
-            
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                        {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-32 p-2">
-                    <Slider
-                        value={[isMuted ? 0 : volume * 100]}
-                        max={100}
-                        step={1}
-                        onValueChange={(value) => handleVolumeChange(value[0])}
+            <div className="relative group/thumb h-16 w-16 shrink-0 shadow-2xl">
+                 <motion.div 
+                    layoutId="artwork"
+                    className="absolute inset-0 rounded-2xl overflow-hidden"
+                >
+                    <Image 
+                        src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/100/100`}
+                        alt={track.title}
+                        fill
+                        className="object-cover image-theme-filter"
                     />
-                </PopoverContent>
-            </Popover>
+                </motion.div>
+                <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                    <button onClick={() => setIsExpanded(true)} className="p-2 bg-white/20 rounded-lg">
+                        <Maximize2 className="w-4 h-4 text-white" />
+                    </button>
+                </div>
+            </div>
+            <div className="flex-grow min-w-0">
+                <p className="text-sm font-black truncate leading-tight">
+                    <Link href={`/lectures/${track.slug}`} className="hover:text-primary transition-colors">{track.title}</Link>
+                </p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">
+                    {track.programName}
+                </p>
+                <div className="mt-2 h-[12px] flex items-center opacity-60">
+                    <AudioVisualizer audioElement={audioRef.current} isPlaying={isPlaying} barColor="hsl(var(--primary))" />
+                </div>
+            </div>
+            <div className="flex flex-col gap-1">
+                <Button onClick={closePlayer} variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 h-10 w-10 rounded-full hover:bg-destructive/10">
+                    <X className="w-5 h-5" />
+                </Button>
+                <button onClick={() => setIsExpanded(true)} className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                    <Maximize2 className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+
+        <div className="space-y-1">
+              <Slider
+                  value={[progress]}
+                  max={duration || 1}
+                  step={1}
+                  onValueChange={handleSeek}
+                  className="flex-grow h-2"
+              />
+              <div className="flex justify-between text-[9px] font-black text-muted-foreground/50 tracking-tighter">
+                <span>{formatTime(progress)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className={cn("h-10 w-10 text-muted-foreground rounded-2xl", sleepTimerDuration > 0 && "text-primary bg-primary/10")}>
+                            <Timer className="w-5 h-5" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-52 p-2 rounded-2xl border-border/50 backdrop-blur-xl">
+                        <div className="space-y-1">
+                            <p className="px-2 py-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">مؤقت النوم</p>
+                            {[15, 30, 45, 60].map(mins => (
+                                <Button key={mins} onClick={() => setSleepTimer(mins)} variant="ghost" className="w-full justify-start rounded-xl text-xs font-bold">
+                                    <div className={cn("w-2 h-2 rounded-full me-3", sleepTimerDuration === mins ? "bg-primary shadow-glow-primary" : "bg-white/10")} />
+                                    بعد {mins} دقيقة
+                                </Button>
+                            ))}
+                            {sleepTimerDuration > 0 && (
+                                <Button onClick={clearSleepTimer} variant="ghost" className="w-full justify-start text-destructive hover:bg-destructive/10 rounded-xl mt-2">
+                                    <X className="w-4 h-4 me-2" /> إيقاف المؤقت
+                                </Button>
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                <Select onValueChange={handleSpeedChange} value={playbackSpeed.toString()}>
+                    <SelectTrigger className="w-[64px] h-10 text-[10px] font-black rounded-2xl bg-white/5 border-none shadow-none">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                        {[1, 1.25, 1.5, 2].map(s => (
+                            <SelectItem key={s} value={s.toString()} className="text-[10px] font-black">{s}x</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="flex items-center justify-center gap-1">
+                <Button onClick={handleRewind} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-primary/10 rounded-full">
+                    <Rewind className="w-5 h-5" />
+                </Button>
+                
+                <Button onClick={togglePlayPause} size="icon" className="h-12 w-12 rounded-full shadow-lg shadow-primary/20 transition-transform active:scale-90">
+                    {isPlaying ? <Pause className="w-6 h-6 fill-white"/> : <Play className="w-6 h-6 fill-white ml-1"/>}
+                </Button>
+                
+                <Button onClick={handleFastForward} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-primary/10 rounded-full">
+                    <FastForward className="w-5 h-5" />
+                </Button>
+            </div>
+
+            <div className="flex items-center gap-1">
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-2xl">
+                            {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-12 h-40 p-4 rounded-full border-border/50 backdrop-blur-xl">
+                        <Slider
+                            value={[isMuted ? 0 : volume * 100]}
+                            max={100}
+                            step={1}
+                            orientation="vertical"
+                            onValueChange={(value) => handleVolumeChange(value[0])}
+                            className="h-full"
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
         </div>
       </div>
     </div>
+    </>
   );
 }

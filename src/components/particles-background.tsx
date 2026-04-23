@@ -3,6 +3,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 import { useAppearance } from './appearance-provider';
 
 interface ParticlesBackgroundProps {
@@ -73,7 +74,7 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     if (!ctx) return;
 
     let animationFrameId: number;
@@ -117,8 +118,13 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
           let dy = mouse.current.y - this.y;
           let distance = Math.sqrt(dx*dx + dy*dy);
           if (distance < mouse.current.radius) {
-            this.x -= dx / 20;
-            this.y -= dy / 20;
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (mouse.current.radius - distance) / mouse.current.radius;
+            const pushSpeed = force * 6; // Feel alive and responsive
+            
+            this.x -= forceDirectionX * pushSpeed;
+            this.y -= forceDirectionY * pushSpeed;
           }
         }
 
@@ -173,5 +179,5 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
     };
   }, [draw, particleSettings]);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return <canvas ref={canvasRef} className={cn("fixed inset-0 pointer-events-none z-[-1]", className)} />;
 };

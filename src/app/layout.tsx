@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { Toaster } from '@/components/ui/toaster';
+import { PWARegistry } from '@/components/pwa-registry';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
 import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
@@ -11,6 +12,14 @@ import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
+import { OfflineIndicator } from '@/components/offline-indicator';
+import { GlobalBackButton } from '@/components/global-back-button';
+import { FloatingTasbih } from '@/components/floating-tasbih';
+import { ReadingProvider } from '@/components/reading-provider';
+
+export const viewport: Viewport = {
+  themeColor: '#09090b',
+};
 
 export const metadata: Metadata = {
   title: {
@@ -18,6 +27,12 @@ export const metadata: Metadata = {
     template: '%s | منصة الدروس العلمية',
   },
   description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'وقفة',
+  },
   openGraph: {
     title: 'منصة الدروس العلمية',
     description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
@@ -31,6 +46,8 @@ export const metadata: Metadata = {
     description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
   },
 };
+
+import { PageTransition } from '@/components/page-transition';
 
 export default async function RootLayout({
   children,
@@ -52,18 +69,36 @@ export default async function RootLayout({
         <AppProviders 
           appearanceSettings={appearanceSettings}
         >
+          <ReadingProvider>
             {announcement?.isActive && announcement.text && (
-              <AnnouncementBar text={announcement.text} link={announcement.link} />
+              <div className="hide-in-reading-mode">
+                <AnnouncementBar text={announcement.text} link={announcement.link} />
+              </div>
             )}
             <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
-              <SiteHeader />
-              <main className="flex-1 w-full max-w-7xl mx-auto py-8 pb-24 md:pb-8 px-0 sm:px-8">
-                {children}
+              <div className="hide-in-reading-mode">
+                <SiteHeader />
+              </div>
+              <div className="hide-in-reading-mode">
+                <GlobalBackButton />
+              </div>
+              <main className="flex-1 w-full max-w-7xl mx-auto py-8 pb-24 md:pb-8 px-4 sm:px-8 overflow-hidden">
+                <PageTransition>
+                    {children}
+                </PageTransition>
               </main>
-              <SiteFooter />
+              <div className="hide-in-reading-mode">
+                <SiteFooter />
+              </div>
             </div>
             <Toaster />
+            <OfflineIndicator />
+            <PWARegistry />
+            <div className="hide-in-reading-mode">
+              <FloatingTasbih />
+            </div>
+          </ReadingProvider>
         </AppProviders>
         <Analytics />
       </body>

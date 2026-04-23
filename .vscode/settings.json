@@ -1,3 +1,3 @@
 {
-    "IDX.agenticWorkspace": true
+  "css.lint.unknownAtRules": "ignore"
 }

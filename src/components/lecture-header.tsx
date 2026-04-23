@@ -13,9 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { cn, getInitials } from "@/lib/utils";
 import { getPlaceholderImage } from "@/lib/images";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./ui/tooltip";
+import { Reveal } from "./reveal";
+import { HoloBadge } from "./ui/glow";
 
 interface LectureHeaderProps {
     lecture: Lecture;
@@ -189,59 +192,93 @@ export function LectureHeader({ lecture, seriesLink }: LectureHeaderProps) {
 
     return (
         <TooltipProvider>
-            <div className="space-y-4">
-                 <Button variant="ghost" onClick={() => router.back()} className="mb-4 text-muted-foreground">
-                    <ArrowRight className="w-5 h-5 me-2" />
-                    <span>رجوع</span>
-                </Button>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex-grow">
-                        {lecture.seriesTitle && seriesLink && (
-                            <p className="text-primary font-semibold mb-2">
-                                <Link href={seriesLink} className="hover:underline">{lecture.seriesTitle}</Link>
-                            </p>
-                        )}
-                        <h1 className="text-4xl lg:text-5xl font-bold font-headline">{lecture.title}</h1>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full sm:w-auto flex-shrink-0">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading}>
-                                    {isSuggesting || isSuggestionLoading ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Pin className="w-5 h-5 me-2" />}
-                                    <span>{hasSuggested ? "تم الاقتراح" : "اقترح للتثبيت"}</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>عند الضغط على زر اقتراح التثبيت يظهر لمنشئ الموقع أنك تقترح تثبيت المحاضرة في الصفحة الرئيسية ليشاهدها الجميع لأنها مهمة.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                         <Button variant="outline" onClick={handleAddToPlaylistClick}>
-                            <ListPlus className="w-5 h-5 me-2" />
-                            <span>إضافة لقائمة</span>
+            <div className="flex flex-col h-full justify-between gap-8 relative z-10">
+                <div className="flex flex-col gap-6">
+                    {/* Top Row: Series Info & Back Button */}
+                    <div className="flex justify-between items-center w-full">
+                        {lecture.seriesTitle && seriesLink ? (
+                            <Link href={seriesLink} className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-4 py-1.5 rounded-full font-bold text-sm transition-all group">
+                                <ListPlus className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                {lecture.seriesTitle}
+                            </Link>
+                        ) : <div />}
+                        
+                        <Button variant="ghost" onClick={() => router.back()} className="h-9 px-4 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-full text-sm font-bold border border-transparent hover:border-white/10 transition-all">
+                            <ArrowRight className="w-4 h-4 me-2" />
+                            <span>رجوع</span>
                         </Button>
-                        <FavoriteButton lectureId={lecture.id} showLabel />
+                    </div>
+
+                    {/* Title & Rating */}
+                    <div>
+                        <Reveal direction="up" delay={0.1}>
+                          <h1 className="text-4xl lg:text-5xl font-black font-headline text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/60 pb-2 drop-shadow-sm leading-normal">
+                              {lecture.title}
+                          </h1>
+                        </Reveal>
+
+                        <div className="flex items-center gap-4 flex-wrap bg-white/5 w-max px-5 py-2.5 rounded-2xl border border-white/10 backdrop-blur-md shadow-inner">
+                            <div className="flex items-center gap-2">
+                                <p className="text-xl font-black text-yellow-400 drop-shadow-md">{currentRating.toFixed(1)}</p>
+                                <div className="flex items-center text-yellow-400 gap-1" onMouseLeave={() => setHoverRating(null)}>
+                                    {[...Array(5)].map((_, i) => {
+                                        const ratingValue = i + 1;
+                                        const isActive = ratingValue <= (hoverRating || userRating || 0);
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                whileHover={{ scale: 1.3, rotate: 15 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                className="cursor-pointer p-0.5"
+                                                onClick={() => handleRating(ratingValue)}
+                                                onMouseEnter={() => setHoverRating(ratingValue)}
+                                            >
+                                                <Star
+                                                    className={cn(
+                                                        "w-6 h-6 transition-colors duration-500",
+                                                        isActive 
+                                                            ? "fill-current drop-shadow-[0_0_12px_rgba(250,204,21,0.8)] text-yellow-500" 
+                                                            : "text-white/10"
+                                                    )}
+                                                />
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                                <motion.p 
+                                    key={ratingCount}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="text-sm font-bold text-muted-foreground ms-2 italic"
+                                >
+                                    ({ratingCount} تقييم)
+                                </motion.p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 flex-wrap">
-                    <div className="flex items-center gap-2">
-                        <p className="text-lg font-bold text-foreground">{currentRating.toFixed(1)}</p>
-                        <div className="flex items-center text-yellow-400" onMouseLeave={() => setHoverRating(null)}>
-                            {[...Array(5)].map((_, i) => {
-                                const ratingValue = i + 1;
-                                return (
-                                    <Star
-                                        key={i}
-                                        className={`w-6 h-6 transition-colors cursor-pointer ${ratingValue <= (hoverRating || userRating || 0) ? 'fill-current' : 'text-gray-300'}`}
-                                        onMouseEnter={() => setHoverRating(ratingValue)}
-                                        onClick={() => handleRating(ratingValue)}
-                                    />
-                                );
-                            })}
-                        </div>
-                        <p className="text-sm text-muted-foreground ms-2">({ratingCount} تقييم)</p>
-                    </div>
-                </div>
+                {/* Bottom Action Bar */}
+                <Reveal direction="up" delay={0.3}>
+                  <div className="flex flex-wrap items-center justify-start gap-3 w-full border-t border-border/20 pt-6 mt-2">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="outline" onClick={handleSuggestPin} disabled={hasSuggested || isSuggesting || isSuggestionLoading} className="h-12 rounded-xl bg-white/5 hover:bg-primary/20 hover:text-primary hover:border-primary/50 text-foreground border-white/10 border font-bold transition-all shadow-md">
+                                {isSuggesting || isSuggestionLoading ? <Loader2 className="w-5 h-5 me-2 animate-spin" /> : <Pin className="w-5 h-5 me-2" />}
+                                <span>{hasSuggested ? "تم الاقتراح للتثبيت" : "اقترح للتثبيت"}</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-card/90 backdrop-blur-xl border-border/50">
+                            <p>عند الضغط على هذا الزر يظهر لمنشئ الموقع أنك تقترح تثبيت هذه المحاضرة في الرئيسية.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                        <Button variant="outline" onClick={handleAddToPlaylistClick} className="h-12 rounded-xl bg-white/5 hover:bg-white/10 hover:border-white/50 text-foreground border-white/10 border font-bold transition-all shadow-md">
+                        <ListPlus className="w-5 h-5 me-2 text-blue-400" />
+                        <span>إضافة لقائمة التشغيل</span>
+                    </Button>
+                    <FavoriteButton lectureId={lecture.id} showLabel className="h-12 rounded-xl bg-white/5 hover:bg-pink-500/10 hover:border-pink-500/50 hover:text-pink-500 text-foreground border-white/10 border font-bold transition-all shadow-md" />
+                  </div>
+                </Reveal>
             </div>
             {user && (
                 <AddToPlaylistDialog

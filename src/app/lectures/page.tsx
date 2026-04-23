@@ -10,7 +10,7 @@ import { LectureCard } from "@/components/lecture-card";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection } from "@/firebase";
 import type { Lecture, Series } from "@/lib/types";
-import { HomePageSkeleton } from "@/components/skeletons";
+import { CinematicAppLoader } from "@/components/skeletons";
 import { useMemo, useState, Suspense } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -116,7 +116,7 @@ function LecturesListPageClient() {
 
 
   if (isLoading) {
-    return <HomePageSkeleton />;
+    return <CinematicAppLoader />;
   }
 
   return (
@@ -186,7 +186,7 @@ function LecturesListPageClient() {
 
 export default function LecturesPage() {
     return (
-        <Suspense fallback={<HomePageSkeleton />}>
+        <Suspense fallback={<CinematicAppLoader />}>
             <LecturesListPageClient />
         </Suspense>
     );

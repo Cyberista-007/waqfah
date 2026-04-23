@@ -1,6 +1,6 @@
 'use client';
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useMemo, Suspense } from "react";
+import { useMemo, Suspense, useState, useEffect } from "react";
 import { Loader2, SearchIcon, Podcast, Book as BookIcon } from "lucide-react";
 import { LectureCard } from "@/components/lecture-card";
 import { SeriesCard } from "@/components/series-card";
@@ -24,6 +24,15 @@ function SearchPageComponent() {
     const languageFilter = searchParams?.get('lang') || 'all';
     const durationFilter = searchParams?.get('duration') || 'any';
     const transcriptSearch = searchParams?.get('transcript') === 'true';
+
+    // Debounce state to avoid heavy CPU usage during typing
+    const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
@@ -55,7 +64,7 @@ function SearchPageComponent() {
     };
 
     const { lectures, series, programs, books } = useMemo(() => {
-        if (!searchTerm.trim()) {
+        if (!debouncedSearch.trim()) {
             return { lectures: [], series: [], programs: [], books: [] };
         }
         
@@ -92,7 +101,7 @@ function SearchPageComponent() {
           lectureKeys.push('transcript.text');
         }
         const lectureFuse = new Fuse(filteredLectures, { ...fuseOptions, keys: lectureKeys });
-        const finalLectures = lectureFuse.search(searchTerm).map(result => result.item);
+        const finalLectures = lectureFuse.search(debouncedSearch).map(result => result.item);
 
         // Series
         let filteredSeries = allSeries || [];
@@ -100,15 +109,15 @@ function SearchPageComponent() {
             filteredSeries = filteredSeries.filter(s => s.language === languageFilter);
         }
         const seriesFuse = new Fuse(filteredSeries, { ...fuseOptions, keys: ['title', 'description', 'programName'] });
-        const finalSeries = seriesFuse.search(searchTerm).map(result => result.item);
+        const finalSeries = seriesFuse.search(debouncedSearch).map(result => result.item);
         
         // Programs
         const programsFuse = new Fuse(allPrograms || [], { ...fuseOptions, keys: ['name', 'bio'] });
-        const finalPrograms = programsFuse.search(searchTerm).map(result => result.item);
+        const finalPrograms = programsFuse.search(debouncedSearch).map(result => result.item);
         
         // Books
         const booksFuse = new Fuse(allBooks || [], { ...fuseOptions, keys: ['title', 'programName'] });
-        const finalBooks = booksFuse.search(searchTerm).map(result => result.item);
+        const finalBooks = booksFuse.search(debouncedSearch).map(result => result.item);
         
         return { 
             lectures: finalLectures, 
@@ -116,7 +125,7 @@ function SearchPageComponent() {
             programs: finalPrograms, 
             books: finalBooks 
         };
-    }, [searchTerm, allLectures, allSeries, allPrograms, allBooks, languageFilter, durationFilter, transcriptSearch]);
+    }, [debouncedSearch, allLectures, allSeries, allPrograms, allBooks, languageFilter, durationFilter, transcriptSearch]);
 
     const hasResults = lectures.length > 0 || series.length > 0 || programs.length > 0 || books.length > 0;
 

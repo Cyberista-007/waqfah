@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Topic } from "@/lib/types";
 import { useCollection, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Loader2, Trash2, Edit, PlusCircle, Hash } from "lucide-react";
+import { Loader2, Trash2, Edit, PlusCircle, Layers } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
 import { TopicForm } from "@/components/admin/topic-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -77,21 +77,21 @@ export default function AdminTopicsPage() {
         <Card>
         <CardHeader className="flex flex-row justify-between items-start">
             <div>
-            <CardTitle className="text-2xl font-headline flex items-center gap-2"><Hash/>إدارة المواضيع</CardTitle>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2"><Layers/>إدارة المسارات</CardTitle>
             <CardDescription>
-                أضف أو عدّل أو احذف المواضيع لتصنيف المحتوى.
+                أضف أو عدّل أو احذف مسارات التعلم لتصنيف المحتوى.
             </CardDescription>
             </div>
             <Button onClick={handleNew}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              إضافة موضوع جديد
+              إضافة مسار جديد
             </Button>
         </CardHeader>
         <CardContent>
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>اسم الموضوع</TableHead>
+                <TableHead>اسم المسار</TableHead>
                 <TableHead className="hidden md:table-cell">عدد المحاضرات</TableHead>
                 <TableHead className="hidden md:table-cell">عدد السلاسل</TableHead>
                 <TableHead className="text-left">إجراءات</TableHead>
@@ -124,7 +124,7 @@ export default function AdminTopicsPage() {
             </TableBody>
             </Table>
             {!isLoading && !allItems?.length && (
-              <p className="py-8 text-center text-muted-foreground">لم تتم إضافة أي مواضيع بعد.</p>
+              <p className="py-8 text-center text-muted-foreground">لم يتم إنشاء أي مسارات بعد.</p>
             )}
         </CardContent>
         </Card>
@@ -133,8 +133,8 @@ export default function AdminTopicsPage() {
           isOpen={!!itemToDelete}
           onClose={() => setItemToDelete(null)}
           onConfirm={handleDelete}
-          title="حذف الموضوع"
-          description={`هل أنت متأكد من رغبتك في حذف موضوع "${itemToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+          title="حذف المسار"
+          description={`هل أنت متأكد من رغبتك في حذف مسار "${itemToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.`}
         />
       </>
     );

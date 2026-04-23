@@ -58,9 +58,22 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>(lecture?.seriesId || "none");
   const [selectedProgramId, setSelectedProgramId] = useState<string>(lecture?.programId || "none");
   const [youtubeViewCount, setYoutubeViewCount] = useState<number | undefined>(lecture?.youtubeViewCount);
-  const [publishedAt, setPublishedAt] = useState<string | null>(lecture?.publishedAt ? new Date(lecture.publishedAt).toISOString() : null);
+  const getInitialPublishedAt = () => {
+    if (!lecture?.publishedAt) return null;
+    try {
+      if (typeof lecture.publishedAt.toDate === 'function') {
+        return lecture.publishedAt.toDate().toISOString();
+      } else if (lecture.publishedAt.seconds) {
+        return new Date(lecture.publishedAt.seconds * 1000).toISOString();
+      }
+      return new Date(lecture.publishedAt).toISOString();
+    } catch(e) {
+      return null;
+    }
+  };
+  const [publishedAt, setPublishedAt] = useState<string | null>(getInitialPublishedAt());
   const [newProgramInfo, setNewProgramInfo] = useState<{ channelId: string; channelTitle: string } | null>(null);
-
+  const [transcript, setTranscript] = useState<any[]>(lecture?.transcript || []);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -92,11 +105,11 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
   useEffect(() => {
     if (!isEditMode) {
       const dataToSave = {
-        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt
+        title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt, transcript
       };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt]);
+  }, [isEditMode, title, description, audioSrc, duration, pdfUrl, youtubeUrl, soundcloudUrl, telegramUrl, language, selectedSeriesId, selectedProgramId, youtubeViewCount, publishedAt, transcript]);
 
   const handleClose = () => {
     if (!isEditMode) {
@@ -151,6 +164,10 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
             setYoutubeViewCount(data.videoInfo.viewCount || 0);
             if (data.videoInfo.publishedAt) {
               setPublishedAt(new Date(data.videoInfo.publishedAt).toISOString());
+            }
+            if (data.videoInfo.transcript && data.videoInfo.transcript.length > 0) {
+              setTranscript(data.videoInfo.transcript);
+              toast({ title: `تم جلب التفريغ النصي بنجاح (${data.videoInfo.transcript.length} فقرة).` });
             }
 
             if (data.videoInfo.channelId && programsList) {
@@ -231,7 +248,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                 throw new Error("يجب توفير رابط يوتيوب أو رابط صوتي.");
             }
 
-            const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount' | 'transcript'> = {
+            const lectureData: Omit<Lecture, 'id' | 'createdAt' | 'rating' | 'ratingCount' | 'viewCount'> = {
                 title,
                 slug,
                 description,
@@ -251,6 +268,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
                 youtubeViewCount: youtubeViewCount || 0,
                 language,
                 publishedAt: publishedAt ? Timestamp.fromDate(new Date(publishedAt)) : undefined,
+                transcript: transcript,
             };
 
             if (isEditMode && lecture) {

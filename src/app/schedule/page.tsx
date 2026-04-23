@@ -17,7 +17,7 @@ function generateICSLink(item: ScheduleItem) {
     const endTime = new Date(startTime.getTime() + (item.duration || 60) * 60 * 1000); // Default to 60 minutes if no duration
 
     const toICSFormat = (date: Date) => {
-        return date.toISOString().replace(/[-:.]/g, '');
+        return date.toISOString().replace(/-/g, '').replace(/:/g, '').replace(/\./g, '');
     }
 
     const event = [

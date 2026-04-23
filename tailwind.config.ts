@@ -111,6 +111,14 @@ export default {
         'shimmer': {
             '100%': { transform: 'translateX(100%)' },
         },
+        'reveal': {
+          '0%': { transform: 'translateY(100%) skewY(10deg)', opacity: '0' },
+          '100%': { transform: 'translateY(0) skewY(0deg)', opacity: '1' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -119,6 +127,8 @@ export default {
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'scroll-rtl': 'scroll-rtl 40s linear infinite',
         'shimmer': 'shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'reveal': 'reveal 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards',
+        'float': 'float 6s ease-in-out infinite',
       },
        animationPlayState: {
           'paused': 'paused',

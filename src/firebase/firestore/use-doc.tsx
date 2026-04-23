@@ -47,10 +47,12 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    if (!pathOrRef) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+    if (!pathOrRef || !firestore) {
+      if (!pathOrRef) {
+        setData(null);
+        setIsLoading(false);
+        setError(null);
+      }
       return;
     }
 
@@ -70,42 +72,55 @@ export function useDoc<T = any>(
         return;
     }
 
+    let isMounted = true;
+    let localUnsubscribe: (() => void) | null = null;
+    
+    try {
+        localUnsubscribe = onSnapshot(
+          docRef,
+          (snapshot: DocumentSnapshot<DocumentData>) => {
+            if (!isMounted) return;
+            if (snapshot.exists()) {
+              const docData = { ...(snapshot.data() as T), id: snapshot.id } as any;
 
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (snapshot.exists()) {
-          const docData = { ...(snapshot.data() as T), id: snapshot.id } as any;
+              if (docRef.path.startsWith('users/') && docData.role === 'admin' && !docData.donationTier) {
+                docData.donationTier = 'gold';
+              }
+              
+              setData(docData);
+            } else {
+              setData(null);
+            }
+            setError(null); 
+            setIsLoading(false);
+          },
+          (err: FirestoreError) => {
+            if (!isMounted) return;
+            const contextualError = new FirestorePermissionError({
+              operation: 'get',
+              path: docRef.path,
+            })
 
-          // For demonstration purposes, if fetching an admin user without a donation tier, assign 'gold'.
-          if (docRef.path.startsWith('users/') && docData.role === 'admin' && !docData.donationTier) {
-            docData.donationTier = 'gold';
+            console.error(`Firestore useDoc error at [${docRef.path}]:`, err.message);
+            setError(contextualError)
+            setData(null)
+            setIsLoading(false)
+            errorEmitter.emit('permission-error', contextualError);
           }
-          
-          setData(docData);
-        } else {
-          // Document does not exist
-          setData(null);
-        }
-        setError(null); // Clear any previous error on successful snapshot (even if doc doesn't exist)
+        );
+    } catch (err: any) {
+        console.error(`Firestore useDoc initial subscription error at [${pathOrRef}]:`, err.message);
+        setError(err);
         setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        const contextualError = new FirestorePermissionError({
-          operation: 'get',
-          path: docRef.path,
-        })
+    }
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
-
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
-      }
-    );
-
-    return () => unsubscribe();
+    return () => {
+        isMounted = false;
+        if (localUnsubscribe) {
+            const toUnsub = localUnsubscribe;
+            setTimeout(() => toUnsub(), 0);
+        }
+    };
   }, [firestore, pathOrRef]);
 
   return { data, isLoading, error };

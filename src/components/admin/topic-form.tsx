@@ -96,7 +96,7 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "يرجى ملء جميع الحقول المطلوبة.",
+            description: "يرجى ملء جميع الحقول المطلوبة للمسار.",
         });
         setIsSubmitting(false);
         return;
@@ -117,14 +117,14 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
         updateDocumentNonBlocking(topicRef, topicData);
         toast({
             title: "تم التحديث بنجاح",
-            description: `تم تحديث موضوع "${name}".`,
+            description: `تم تحديث مسار "${name}".`,
         });
       } else {
         const topicsCollection = collection(firestore, 'topics');
         addDocumentNonBlocking(topicsCollection, topicData);
         toast({
             title: "تم الإنشاء بنجاح",
-            description: `تمت إضافة موضوع "${name}" الجديد.`,
+            description: `تم إنشاء مسار "${name}" الجديد.`,
         });
       }
       handleClose();
@@ -141,9 +141,9 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">{isEditMode ? `تعديل الموضوع: ${topic?.name}` : 'إضافة موضوع جديد'}</CardTitle>
+        <CardTitle className="font-headline">{isEditMode ? `تعديل المسار: ${topic?.name}` : 'إنشاء مسار جديد'}</CardTitle>
         <CardDescription>
-          {isEditMode ? 'قم بتحديث تفاصيل الموضوع والمحتوى المرتبط به.' : 'املأ الحقول أدناه لإنشاء موضوع جديد.'}
+          {isEditMode ? 'قم بتحديث تفاصيل المسار والمحتوى المرتبط به.' : 'املأ الحقول أدناه لإنشاء مسار تعليمي جديد.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -151,11 +151,11 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                    <Label htmlFor="name">اسم الموضوع</Label>
+                    <Label htmlFor="name">اسم المسار</Label>
                     <Input id="name" name="name" value={name} onChange={e => setName(e.target.value)} required disabled={isSubmitting} />
                 </div>
                 <div>
-                    <Label htmlFor="description">وصف الموضوع</Label>
+                    <Label htmlFor="description">وصف المسار</Label>
                     <Textarea id="description" name="description" value={description} onChange={e => setDescription(e.target.value)} required disabled={isSubmitting} />
                 </div>
               </div>
@@ -199,7 +199,7 @@ export function TopicForm({ topic, onFormClose }: TopicFormProps) {
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting || isLoading}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditMode ? 'حفظ التغييرات' : 'إنشاء الموضوع'}
+                {isEditMode ? 'حفظ التغييرات' : 'إنشاء المسار'}
             </Button>
             <Button type="button" onClick={handleClose} variant="outline">
               إلغاء

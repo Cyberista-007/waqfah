@@ -14,32 +14,36 @@ import { Check } from "lucide-react"
 import { ScrollArea } from "./ui/scroll-area"
 
 export const themes = [
-  { name: "الافتراضي (داكن)", value: "theme-default-dark", colors: ["#09090b", "#fafafa", "#27272a"] },
-  { name: "الافتراضي (فاتح)", value: "theme-default-light", colors: ["#ffffff", "#09090b", "#f4f4f5"] },
-  { name: "فجر وردي", value: "theme-pink-dawn", colors: ["#221C25", "#FBCFE8", "#4A2A3A"] },
-  { name: "سماء ياقوتية", value: "theme-sapphire-sky", colors: ["#0A192F", "#A8D8EA", "#1E3A5F"] },
-  { name: "حديقة الزمرد", value: "theme-emerald-garden", colors: ["#0D1A16", "#B4EAD7", "#1E4D3B"] },
-  { name: "أزرق ملكي (فاتح)", value: "theme-royal-blue-light", colors: ["#F0F4FA", "#3B82F6", "#D6E4F0"] },
-  { name: "تباين عالٍ", value: "theme-high-contrast", colors: ["#000000", "#FFFF00", "#DC2626"] },
-  { name: "وهج الغروب", value: "theme-sunset-flare", colors: ["#0B1C33", "#F26B4B", "#7A1C33", "#EBD2B5"] },
-  { name: "استوديو سيمباتيكو", value: "theme-studio-simpatico", colors: ["#292A5E", "#FF6B2E", "#BCA5FF", "#FDE245"] },
-  { name: "الأفق الرقمي", value: "theme-digital-horizon", colors: ["#0C0B26", "#F278DE", "#83B4FF", "#A47DFF", "#2E2A4F", "#0C0B26", "#F04A4A"] },
-  { name: "المسجد الزمردي", value: "theme-emerald-mosque", colors: ["#081412", "#a3f7b5", "#213d36"] },
-  { name: "ليالي الصحراء", value: "theme-desert-night", colors: ["#171311", "#fde0c8", "#2c2624"] },
-  { name: "الأزرق الملكي", value: "theme-royal-blue", colors: ["#0f172a", "#a9d7ff", "#293952"] },
-  { name: "قرمزي وذهبي", value: "theme-crimson-gold", colors: ["#240d0d", "#fde8c8", "#3a2020"] },
-  { name: "الزيتون والمريمية", value: "theme-olive-sage", colors: ["#212421", "#d4e0c4", "#3f453f"] },
-  { name: "ليالي مكة", value: "theme-mecca-nights", colors: ["#09090b", "#ffd700", "#1c1c1e"] },
-  { name: "أخضر مديني", value: "theme-medina-green", colors: ["#0a1a12", "#a3d9b1", "#214c33"] },
-  { name: "غروب أندلسي", value: "theme-andalusian-sunset", colors: ["#2a1a14", "#ffccb0", "#45312b"] },
-  { name: "أكاديمي فاتح", value: "theme-light-academia", colors: ["#fdf9f3", "#4d3a2a", "#f5efe6"] },
-  { name: "لون الرق", value: "theme-parchment", colors: ["#f5f1e9", "#7a3a23", "#e9e3d7"] },
-  { name: "داكن كلاسيكي", value: "theme-classic-dark", colors: ["#1e293b", "#e2e8f0", "#334155"] },
-  { name: "ليل نيون", value: "theme-night-neon", colors: ["#0b021d", "#d946ef", "#3b0764"] },
-  { name: "بركان أحمر", value: "theme-red-volcano", colors: ["#1f0a0a", "#ff6b6b", "#5e1e1e"] },
-  { name: "بركان هيكلا", value: "theme-hekla-volcano", colors: ["#191b22", "#93c5fd", "#e03131"] },
-  { name: "فضاء عميق", value: "theme-deep-space", colors: ["#0c0a1d", "#a5b4fc", "#4338ca"] },
-  { name: "OLED أسود", value: "theme-oled", colors: ["#000000", "#3b82f6", "#ef4444"] },
+  { 
+    name: "Deep Slate (الافتراضي)", 
+    value: "theme-deep-slate", 
+    colors: ["#0f1623", "#3b82f6", "#1e293b"],
+    desc: "أزرق رمادي عميق، احترافي وهادئ"
+  },
+  { 
+    name: "Midnight Indigo", 
+    value: "theme-midnight-indigo", 
+    colors: ["#100d1f", "#a78bfa", "#1e1a3d"],
+    desc: "بنفسجي فضائي غامق وراقٍ"
+  },
+  { 
+    name: "Golden Dusk", 
+    value: "theme-golden-dusk", 
+    colors: ["#100c08", "#f59e0b", "#1c1209"],
+    desc: "ذهبي داكن فاخر، مستوحى من ليالي العرب"
+  },
+  { 
+    name: "Forest Sage", 
+    value: "theme-forest-sage", 
+    colors: ["#061210", "#34d399", "#0d2218"],
+    desc: "أخضر طبيعي هادئ ومريح للعين"
+  },
+  { 
+    name: "Arctic White", 
+    value: "theme-arctic-white", 
+    colors: ["#f5f9ff", "#1d6cf0", "#e8f0fe"],
+    desc: "فاتح نظيف حديث وأنيق"
+  },
 ];
 
 
@@ -53,46 +57,45 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>اختر الثيم</DialogTitle>
+          <DialogTitle className="text-xl font-bold font-headline">اختر الثيم</DialogTitle>
           <DialogDescription>
-            اختر لوحة الألوان التي تفضلها لتخصيص مظهر الموقع.
+            اختر لوحة الألوان التي تمنح الموقع مظهرك المثالي.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh]">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4 pr-4">
-            {themes.map((theme) => {
-              const isActive = activeTheme === theme.value
-              return (
-                <div
-                  key={theme.name}
-                  onClick={() => setTheme(theme.value)}
-                  className={cn(
-                    "cursor-pointer rounded-lg border-2 p-2 transition-all",
-                    isActive ? "border-primary" : "border-muted hover:border-muted-foreground"
-                  )}
-                >
-                  <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                          {theme.colors.map((color, index) => (
-                              <div
-                              key={`${color}-${index}`}
-                              className="h-6 w-6 rounded-full border"
-                              style={{ backgroundColor: color }}
-                              />
-                          ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{theme.name}</span>
-                          {isActive && <Check className="h-5 w-5 text-primary" />}
-                      </div>
-                  </div>
+        <div className="grid grid-cols-1 gap-3 py-4">
+          {themes.map((theme) => {
+            const isActive = activeTheme === theme.value
+            return (
+              <div
+                key={theme.name}
+                onClick={() => { setTheme(theme.value); onOpenChange(false); }}
+                className={cn(
+                  "cursor-pointer rounded-2xl border-2 p-4 transition-all duration-300 flex items-center gap-4",
+                  isActive 
+                    ? "border-primary bg-primary/10 shadow-lg shadow-primary/20" 
+                    : "border-border/50 hover:border-primary/50 hover:bg-card/80"
+                )}
+              >
+                <div className="flex gap-1.5 shrink-0">
+                  {theme.colors.map((color, index) => (
+                    <div
+                      key={`${color}-${index}`}
+                      className="h-8 w-8 rounded-full border border-white/10 shadow-sm"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
-              )
-            })}
-          </div>
-        </ScrollArea>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-foreground">{theme.name}</p>
+                  {'desc' in theme && <p className="text-xs text-muted-foreground mt-0.5 truncate">{(theme as any).desc}</p>}
+                </div>
+                {isActive && <Check className="h-5 w-5 text-primary shrink-0" />}
+              </div>
+            )
+          })}
+        </div>
       </DialogContent>
     </Dialog>
   )

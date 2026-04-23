@@ -12,54 +12,48 @@ export default function SeriesDetailPage() {
   const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const slug = decodeURIComponent(slugParam as string);
 
-  // Fetch all data and let React re-render as it arrives.
-  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  const { data: seriesList, isLoading: seriesLoading } = useCollection<Series>('series', {
+    where: ['slug', '==', slug],
+    limit: 1
+  });
   
-  // Find the current series based on the slug.
-  const series = useMemo(() => {
-    if (!allSeries) return null;
-    return allSeries.find(s => s.slug === slug);
-  }, [allSeries, slug]);
+  const series = seriesList?.[0];
 
-  // Determine IDs for dependent fetches.
+  const { data: lecturesInSeries, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', {
+    where: ['seriesId', '==', series?.id || 'none'],
+    limit: 100
+  });
+
   const programId = series?.programId ?? null;
   
-  // Fetch the program/creator using the programId from the series.
-  const { data: seriesCreator, isLoading: programLoading } = useDoc<Program>(
+  const { data: creator, isLoading: programLoading } = useDoc<Program>(
     programId ? `programs/${programId}` : null
   );
   
-  // Filter and sort lectures for the current series.
-  // This is more robust than a Firestore 'where' query if indexes are missing.
-  const lecturesInSeries = useMemo(() => {
-    if (!allLectures || !series?.id) return [];
-    return allLectures
-        .filter(l => l.seriesId === series.id || l.seriesSlug === series.slug)
-        .sort((a, b) => {
-            const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
-            return toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime();
-        });
-  }, [allLectures, series]);
+  const sortedLectures = useMemo(() => {
+    if (!lecturesInSeries) return [];
+    return [...lecturesInSeries].sort((a, b) => {
+        const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
+        return toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime();
+    });
+  }, [lecturesInSeries]);
 
-  // Determine overall loading state.
-  const isLoading = seriesLoading || lecturesLoading || (!!series && !seriesCreator && !!programId && programLoading);
+  const isLoading = seriesLoading || (!!series && (lecturesLoading || (!!programId && programLoading)));
 
-  if (isLoading) {
+  if (seriesLoading) {
     return <SeriesPageSkeleton />;
   }
   
-  // If, after loading, the series still isn't found, show a 404 page.
-  if (!series) {
+  if (!series && !isLoading) {
     notFound();
     return null;
   }
 
   return (
     <SeriesClientPage
-      series={series}
-      lecturesInSeries={lecturesInSeries}
-      seriesCreator={seriesCreator}
+      series={series!}
+      lecturesInSeries={sortedLectures}
+      seriesCreator={creator || null}
     />
   );
 }

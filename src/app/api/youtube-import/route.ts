@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
 import play from 'play-dl';
+import { YoutubeTranscript } from 'youtube-transcript';
 import { getVideoIdFromUrl } from '@/lib/utils';
 
 const youtubeImportSchema = z.object({
@@ -99,7 +100,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Use cookie to bypass potential throttling/blocking on play-dl
-    await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE || '' } });
+    if (process.env.YOUTUBE_COOKIE) {
+        await play.setToken({ youtube: { cookie: process.env.YOUTUBE_COOKIE } });
+    }
 
     try {
         const body = await req.json();
@@ -132,10 +135,40 @@ export async function POST(req: NextRequest) {
                 const cleanUrl = `https://www.youtube.com/watch?v=${videoIdForInfo}`;
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
-                const videoFormats = info.format.filter(f => f.qualityLabel && f.audio_channels && f.audio_channels > 0).map(f => ({ itag: f.itag, qualityLabel: f.qualityLabel, container: f.mimeType?.includes('webm') ? 'webm' : 'mp4', contentLength: f.content_length, type: 'video' }));
-                const audioFormats = info.format.filter(f => f.mimeType?.startsWith('audio/') && !f.video_channels).map(f => ({ itag: f.itag, qualityLabel: null, container: f.mimeType?.includes('webm') ? 'weba' : 'm4a', contentLength: f.content_length, type: 'audio' }));
+                // Get all video formats
+                const videoFormats = info.format
+                    .filter(f => f.qualityLabel)
+                    .map(f => ({
+                        itag: f.itag,
+                        qualityLabel: f.qualityLabel,
+                        container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
+                        contentLength: f.contentLength,
+                        type: 'video',
+                        hasAudio: !!(f.audioChannels && f.audioChannels > 0)
+                    }));
+
+                // Get all audio formats
+                const audioFormats = info.format
+                    .filter(f => f.mimeType?.startsWith('audio/') && !f.qualityLabel)
+                    .map(f => ({
+                        itag: f.itag,
+                        qualityLabel: null,
+                        container: f.mimeType?.includes('webm') ? 'weba' : 'm4a',
+                        contentLength: f.contentLength,
+                        type: 'audio',
+                        hasAudio: true
+                    }));
                 
-                const combinedFormats = [...videoFormats, ...audioFormats].filter(f => f.itag);
+                // Sort videos by quality, prioritizing muxed (with audio)
+                const sortedVideoFormats = videoFormats.sort((a, b) => {
+                    const qA = parseInt(a.qualityLabel || '0');
+                    const qB = parseInt(b.qualityLabel || '0');
+                    if (qB !== qA) return qB - qA;
+                    // If same quality, put muxed first
+                    return (b.hasAudio ? 1 : 0) - (a.hasAudio ? 1 : 0);
+                });
+
+                const combinedFormats = [...sortedVideoFormats, ...audioFormats].filter(f => f.itag);
 
                 return NextResponse.json({ formats: combinedFormats }, { headers: corsHeaders });
             } catch (error: any) {
@@ -161,6 +194,28 @@ export async function POST(req: NextRequest) {
             const videoResponse = await youtube.videos.list({ part: ['snippet', 'contentDetails', 'statistics'], id: [videoIdForInfo] });
             const videoData = videoResponse.data.items?.[0];
             if (videoData) {
+                let transcript: any[] = [];
+                try {
+                    const ytTranscriptRaw = await YoutubeTranscript.fetchTranscript(videoIdForInfo, { lang: 'ar' });
+                    // Map to our generic format: { text: string, timestamp: number }
+                    transcript = ytTranscriptRaw.map(item => ({
+                        text: item.text,
+                        timestamp: Math.floor(item.offset / 1000)
+                    }));
+                } catch (tError) {
+                    console.log(`No Arabic transcript found or failed to fetch transcript for video: ${videoIdForInfo}`, tError);
+                    // Try without lang constraint if Arabic fails
+                    try {
+                        const fallBackRefRaw = await YoutubeTranscript.fetchTranscript(videoIdForInfo);
+                        transcript = fallBackRefRaw.map(item => ({
+                            text: item.text,
+                            timestamp: Math.floor(item.offset / 1000)
+                        }));
+                    } catch (e) {
+                         console.log(`Failed to fetch any transcript for video: ${videoIdForInfo}`);
+                    }
+                }
+
                 return NextResponse.json({ videoInfo: { 
                     title: videoData.snippet?.title, 
                     description: videoData.snippet?.description, 
@@ -168,7 +223,8 @@ export async function POST(req: NextRequest) {
                     viewCount: videoData.statistics?.viewCount ? parseInt(videoData.statistics.viewCount, 10) : 0, 
                     publishedAt: videoData.snippet?.publishedAt,
                     channelId: videoData.snippet?.channelId,
-                    channelTitle: videoData.snippet?.channelTitle
+                    channelTitle: videoData.snippet?.channelTitle,
+                    transcript: transcript
                 } }, { headers: corsHeaders });
             } else {
                 return NextResponse.json({ message: "لم يتم العثور على الفيديو." }, { status: 404, headers: corsHeaders });
@@ -210,9 +266,9 @@ export async function POST(req: NextRequest) {
         // Fetch playlists for the channel
         let nextPageToken: string | undefined = undefined;
         do {
-            const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
+            const playlistsResponse: any = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
             if (playlistsResponse.data.items) {
-                formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
+                formattedPlaylists.push(...playlistsResponse.data.items.map((item: any) => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
             }
             nextPageToken = playlistsResponse.data.nextPageToken || undefined;
         } while (nextPageToken);
@@ -226,7 +282,7 @@ export async function POST(req: NextRequest) {
         if (targetPlaylistId) { // Fetching a playlist or all channel uploads
             nextPageToken = undefined;
             do {
-                const playlistItemsResponse = await youtube.playlistItems.list({
+                const playlistItemsResponse: any = await youtube.playlistItems.list({
                     part: ['contentDetails'],
                     playlistId: targetPlaylistId,
                     maxResults: 50,
@@ -234,8 +290,8 @@ export async function POST(req: NextRequest) {
                 });
                 if (playlistItemsResponse.data.items) {
                     videoIds.push(...playlistItemsResponse.data.items
-                        .map(item => item.contentDetails?.videoId)
-                        .filter((id): id is string => !!id)
+                        .map((item: any) => item.contentDetails?.videoId)
+                        .filter((id: any): id is string => !!id)
                     );
                 }
                 nextPageToken = playlistItemsResponse.data.nextPageToken || undefined;

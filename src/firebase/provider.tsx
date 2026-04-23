@@ -12,6 +12,7 @@ import { HomePageSkeleton } from '@/components/skeletons';
 import type { UserProfile } from '@/lib/types';
 import { firebaseConfig } from './config';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { CinematicAppLoader } from '@/components/skeletons';
 
 
 interface FirebaseServices {
@@ -69,7 +70,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
                                 name: firebaseUser.displayName || "مستخدم جديد",
                                 email: firebaseUser.email!,
                                 photoURL: firebaseUser.photoURL || '',
-                                createdAt: Timestamp.now(),
+                                createdAt: Timestamp.now().toDate().toISOString() as any,
                                 minutesListened: 0,
                                 lecturesCompleted: 0,
                             };
@@ -98,7 +99,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     }), [services, authState]);
 
     if (!services || authState.isUserLoading) {
-        return <HomePageSkeleton />;
+        return <CinematicAppLoader />;
     }
 
     return (

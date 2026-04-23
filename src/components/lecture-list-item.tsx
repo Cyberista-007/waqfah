@@ -131,56 +131,73 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
     return (
         <>
         <div
-            className="bg-card text-card-foreground rounded-xl border p-3 flex items-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 animate-fade-in-up"
+            className="group relative bg-white/5 text-foreground rounded-[1.5rem] border border-white/10 p-4 pe-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-xl shadow-inner animate-fade-in-up overflow-hidden backdrop-blur-md"
             style={{ animationDelay: `${index * 50}ms` }}
         >
-            <span className="text-lg font-bold text-muted-foreground w-8 text-center">{index.toString().padStart(2, '0')}</span>
-            <div className="relative w-28 h-20 rounded-md overflow-hidden shrink-0">
+            {/* Number */}
+            <span className="text-2xl lg:text-3xl font-black text-primary/60 group-hover:text-primary transition-colors text-center w-10 shrink-0 select-none">
+                {index.toString().padStart(2, '0')}
+            </span>
+
+            {/* Thumbnail */}
+            <div className="relative w-full md:w-48 aspect-video rounded-2xl overflow-hidden shrink-0 shadow-lg border border-white/5">
                 <Image 
                     src={imageUrl}
                     alt={lecture.title}
                     fill
-                    className="object-cover image-theme-filter"
+                    className="object-cover image-theme-filter transition-transform duration-700 group-hover:scale-105"
                     data-ai-hint={placeholder?.imageHint || "lecture content"}
                 />
-                <div 
-                    className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                    onClick={handleImageClick}
+                <Link 
+                    href={`/lectures/${lecture.slug}`}
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                 >
-                    <Play className="w-8 h-8 text-white fill-current" />
-                </div>
+                    <div className="bg-primary/90 p-3 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                        <Play className="w-6 h-6 text-primary-foreground fill-current" />
+                    </div>
+                </Link>
             </div>
-            <div className="flex-grow">
-                <Link href={`/lectures/${lecture.slug}`} className="text-md font-semibold text-foreground hover:text-primary hover:underline">
+
+            {/* Content Container */}
+            <div className="flex-grow w-full text-center md:text-start flex flex-col justify-center">
+                <Link href={`/lectures/${lecture.slug}`} className="text-xl md:text-2xl font-bold font-headline text-foreground hover:text-primary transition-colors">
                     {lecture.title}
                 </Link>
-                 <div className="flex items-center gap-x-3 text-sm text-muted-foreground mt-1">
-                    {lecture.seriesTitle && <span>{lecture.seriesTitle}</span>}
-                    {lecture.duration > 0 && lecture.seriesTitle && <span className="text-xs">●</span>}
+                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-2 text-sm text-muted-foreground mt-2 font-medium">
                     {lecture.duration > 0 && (
-                        <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-1.5 text-foreground/80">
                             <span>{formatDuration(lecture.duration)}</span>
+                            <Clock className="w-4 h-4 text-primary" />
                         </div>
                     )}
+                    {lecture.duration > 0 && lecture.seriesTitle && <span className="text-primary/40 px-1">●</span>}
+                    {lecture.seriesTitle && <span>{lecture.seriesTitle}</span>}
                 </div>
             </div>
-            <div className="flex flex-col md:flex-row items-center gap-1">
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-1.5 bg-black/20 p-1.5 rounded-2xl border border-white/5 shrink-0 w-full md:w-auto mt-4 md:mt-0 shadow-inner">
                 {videoId && (
-                    <Button variant="ghost" size="icon" onClick={handleYoutubeClick}>
-                        <Youtube className="w-5 h-5 text-red-500"/>
+                    <Button asChild variant="ghost" size="icon" className="hover:bg-red-500/10 rounded-xl transition-all h-10 w-10 p-2">
+                        <a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24" className="w-full h-full fill-[#FF0000] drop-shadow-sm" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="white" />
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" />
+                                <path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FFFFFF" />
+                            </svg>
+                        </a>
                     </Button>
                 )}
-                <Button variant="ghost" size="icon" onClick={handleShare}>
-                    <Share2 className="w-5 h-5 text-muted-foreground" />
+                <Button variant="ghost" size="icon" onClick={handleShare} className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
+                    <Share2 className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                 </Button>
-                <Button asChild variant="ghost" size="icon">
+                <Button asChild variant="ghost" size="icon" className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
                     <a href={lecture.audioSrc} download>
-                        <Download className="w-5 h-5 text-muted-foreground" />
+                        <Download className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                     </a>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(true)}>
-                    <Maximize2 className="h-5 w-5 text-muted-foreground" />
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(true)} className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
+                    <Maximize2 className="h-5 w-5 text-muted-foreground hover:text-foreground" />
                     <span className="sr-only">توسيع</span>
                 </Button>
             </div>

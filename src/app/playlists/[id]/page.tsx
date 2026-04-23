@@ -22,7 +22,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableLectureItem({ lecture, index }: { lecture: Lecture, index: number, isOwner: boolean, onRemove: (lecture: Lecture) => void }) {
+function SortableLectureItem({ lecture, index, isOwner, onRemove }: { lecture: Lecture, index: number, isOwner: boolean, onRemove: (lecture: Lecture) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lecture.id });
 
     const style = {
@@ -32,16 +32,25 @@ function SortableLectureItem({ lecture, index }: { lecture: Lecture, index: numb
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes}>
-            <div className="flex items-center gap-2 group">
-                <div className="flex-grow">
+        <div ref={setNodeRef} style={style} {...attributes} className="w-full">
+            <div className="flex items-center gap-4 group w-full">
+                {isOwner && (
+                    <div className="flex items-center">
+                        <Button variant="ghost" size="icon" className="cursor-grab hover:bg-white/5 rounded-xl h-10 w-10" {...listeners}>
+                            <GripVertical className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                    </div>
+                )}
+                <div className="flex-grow min-w-0">
                     <LectureListItem lecture={lecture} index={index + 1} />
                 </div>
-                <div className="flex items-center">
-                    <Button variant="ghost" size="icon" className="cursor-grab" {...listeners}>
-                        <GripVertical className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                </div>
+                {isOwner && (
+                    <div className="flex items-center">
+                        <Button variant="ghost" size="icon" onClick={() => onRemove(lecture)} aria-label="حذف المحاضرة من القائمة" className="hover:bg-destructive/10 text-destructive h-10 w-10 rounded-xl">
+                            <Trash2 className="h-5 w-5" />
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -214,14 +223,15 @@ export default function PlaylistPage() {
                             isOwner ? (
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                                     <SortableContext items={orderedLectures.map(l => l.id)} strategy={verticalListSortingStrategy}>
-                                        <div className="space-y-4">
+                                        <div className="space-y-6">
                                             {orderedLectures.map((lecture, index) => (
-                                                 <div key={lecture.id} className="flex items-center gap-2 group">
-                                                    <SortableLectureItem lecture={lecture} index={index} isOwner={isOwner} onRemove={() => setLectureToRemove(lecture)} />
-                                                    <Button variant="ghost" size="icon" onClick={() => setLectureToRemove(lecture)} aria-label="حذف المحاضرة من القائمة">
-                                                        <Trash2 className="h-5 w-5 text-destructive" />
-                                                    </Button>
-                                                </div>
+                                                <SortableLectureItem 
+                                                    key={lecture.id} 
+                                                    lecture={lecture} 
+                                                    index={index} 
+                                                    isOwner={isOwner} 
+                                                    onRemove={() => setLectureToRemove(lecture)} 
+                                                />
                                             ))}
                                         </div>
                                     </SortableContext>

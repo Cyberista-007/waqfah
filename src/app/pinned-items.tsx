@@ -42,7 +42,7 @@ export function PinnedItems() {
         }
         
         return settings.pinnedItems.map(item => {
-            let data: Lecture | Series | Program | undefined;
+            let data: any;
             if (item.type === 'lecture') {
                 data = allLectures.find(d => d.id === item.id);
             } else if (item.type === 'series') {
@@ -53,7 +53,7 @@ export function PinnedItems() {
             
             if (data) return { ...item, data };
             return null;
-        }).filter((i): i is { id: string; type: string; message?: string; data: Lecture | Series | Program } => !!i);
+        }).filter((i): i is { id: string; type: "lecture" | "series" | "program"; message?: string; data: Lecture | Series | Program } => i !== null);
 
     }, [settings, allLectures, allSeries, allPrograms]);
 

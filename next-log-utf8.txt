@@ -1,0 +1,7 @@
+﻿Γû▓ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.202.1:3000
+- Environments: .env
+Γ£ô Ready in 748ms
+
+Γùï Compiling / ...

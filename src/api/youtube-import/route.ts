@@ -134,8 +134,8 @@ export async function POST(req: NextRequest) {
                 const cleanUrl = `https://www.youtube.com/watch?v=${videoIdForInfo}`;
                 const info = await play.video_info(cleanUrl, { htmldata: false });
                 
-                const videoFormats = info.format.filter(f => f.qualityLabel && f.audio_channels && f.audio_channels > 0).map(f => ({ itag: f.itag, qualityLabel: f.qualityLabel, container: f.mimeType?.includes('webm') ? 'webm' : 'mp4', contentLength: f.content_length, type: 'video' }));
-                const audioFormats = info.format.filter(f => f.mimeType?.startsWith('audio/') && !f.video_channels).map(f => ({ itag: f.itag, qualityLabel: null, container: f.mimeType?.includes('webm') ? 'weba' : 'm4a', contentLength: f.content_length, type: 'audio' }));
+                const videoFormats = info.format.filter(f => (f as any).qualityLabel && (f as any).audioChannels && (f as any).audioChannels > 0).map(f => ({ itag: f.itag, qualityLabel: (f as any).qualityLabel, container: f.mimeType?.includes('webm') ? 'webm' : 'mp4', contentLength: (f as any).contentLength, type: 'video' }));
+                const audioFormats = info.format.filter(f => f.mimeType?.startsWith('audio/') && !(f as any).video_channels).map(f => ({ itag: f.itag, qualityLabel: null, container: f.mimeType?.includes('webm') ? 'weba' : 'm4a', contentLength: (f as any).contentLength, type: 'audio' }));
                 
                 const combinedFormats = [...videoFormats, ...audioFormats].filter(f => f.itag);
 
@@ -212,9 +212,9 @@ export async function POST(req: NextRequest) {
         // Fetch playlists for the channel
         let nextPageToken: string | undefined = undefined;
         do {
-            const playlistsResponse = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
+            const playlistsResponse: any = await youtube.playlists.list({ part: ['snippet', 'contentDetails'], channelId: channelId, maxResults: 50, pageToken: nextPageToken });
             if (playlistsResponse.data.items) {
-                formattedPlaylists.push(...playlistsResponse.data.items.map(item => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
+                formattedPlaylists.push(...playlistsResponse.data.items.map((item: any) => ({ id: item.id, title: item.snippet?.title, description: item.snippet?.description || '', videoCount: item.contentDetails?.itemCount })));
             }
             nextPageToken = playlistsResponse.data.nextPageToken || undefined;
         } while (nextPageToken);
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
         if (targetPlaylistId) { // Fetching a playlist or all channel uploads
             nextPageToken = undefined;
             do {
-                const playlistItemsResponse = await youtube.playlistItems.list({
+                const playlistItemsResponse: any = await youtube.playlistItems.list({
                     part: ['contentDetails'],
                     playlistId: targetPlaylistId,
                     maxResults: 50,
@@ -236,8 +236,8 @@ export async function POST(req: NextRequest) {
                 });
                 if (playlistItemsResponse.data.items) {
                     videoIds.push(...playlistItemsResponse.data.items
-                        .map(item => item.contentDetails?.videoId)
-                        .filter((id): id is string => !!id)
+                        .map((item: any) => item.contentDetails?.videoId)
+                        .filter((id: any): id is string => !!id)
                     );
                 }
                 nextPageToken = playlistItemsResponse.data.nextPageToken || undefined;

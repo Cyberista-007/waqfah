@@ -32,13 +32,19 @@ service cloud.firestore {
     
     // Check if the user has the 'admin' role in their user profile document.
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // =====================================================================
     // Public Content Collections 
-    // Anyone can read, but write access is restricted.
     // =====================================================================
+
+    match /inspiration/{inspirationId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
 
     match /stats/{statsId} {
       allow get, list: if true;
@@ -80,6 +86,11 @@ service cloud.firestore {
       allow write: if isAdmin(); // Only admins can modify.
     }
 
+    match /shubuhat/{shubhaId} {
+      allow get, list: if true;
+      allow write: if isAdmin(); // Only admins can modify.
+    }
+
     match /scheduled_lessons/{lessonId} {
       allow get, list: if true;
       allow write: if isAdmin(); // Only admins can modify.
@@ -103,7 +114,7 @@ service cloud.firestore {
     }
 
     match /settings/{settingsId} {
-      allow get: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
@@ -138,7 +149,7 @@ service cloud.firestore {
       // A user can delete their own account.
       allow delete: if isOwner(userId);
 
-       match /user_challenges/{challengeId} {
+      match /user_challenges/{challengeId} {
         allow read, write, delete: if isOwner(userId);
       }
 
@@ -153,40 +164,45 @@ service cloud.firestore {
       match /curriculum_progress/{curriculumId} {
         allow read, write, delete: if isOwner(userId);
       }
-    }
 
-    match /users/{userId}/favorites/{lectureId} {
-      // Users can only manage their own favorites.
-      allow read, write, delete: if isOwner(userId);
-    }
-    
-    match /users/{userId}/following/{programId} {
-      // Users can only manage their own following list.
-      allow read, write, delete: if isOwner(userId);
-    }
-    
-    match /users/{userId}/listenHistory/{lectureId} {
-      // Users can only read and write to their own listening history.
-      allow read, write, delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/playlists/{playlistId} {
-      // A user can create their own playlist.
-      allow create: if isCreatingOwnResource(request.resource.data.userId);
-      
-      // A user can list their own playlists.
-      allow list: if isOwner(userId);
-
-      // Users can get, update, and delete their own playlists.
-      allow get, update, delete: if isResourceOwner();
-      
-      // Allow ANYONE to get a public playlist.
-      allow get: if resource.data.isPublic == true;
-    }
-    
-    match /users/{userId}/notes/{lectureId} {
-        // Users can only manage their own notes.
+      match /favorites/{lectureId} {
+        // Users can only manage their own favorites.
         allow read, write, delete: if isOwner(userId);
+      }
+      
+      match /following/{programId} {
+        // Users can only manage their own following list.
+        allow read, write, delete: if isOwner(userId);
+      }
+      
+      match /listenHistory/{lectureId} {
+        // Users can only read and write to their own listening history.
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      match /playlists/{playlistId} {
+        // A user can create their own playlist.
+        allow create: if isCreatingOwnResource(request.resource.data.userId);
+        
+        // A user can list their own playlists.
+        allow list: if isOwner(userId);
+
+        // Users can get, update, and delete their own playlists.
+        allow get, update, delete: if isResourceOwner();
+        
+        // Allow ANYONE to get a public playlist.
+        allow get: if resource.data.isPublic == true;
+      }
+      
+      match /notes/{lectureId} {
+          // Users can only manage their own notes.
+          allow read, write, delete: if isOwner(userId);
+      }
+
+      match /notifications/{notificationId} {
+          // Users can only manage their own notifications.
+          allow get, list, update, delete: if isOwner(userId);
+      }
     }
     
 
@@ -208,6 +224,14 @@ service cloud.firestore {
       allow delete: if false;
     }
     
+    match /lectures/{lectureId}/clips/{clipId} {
+      allow get, list: if true;
+      // User must be creator to create a clip.
+      allow create: if isCreatingOwnResource(request.resource.data.userId);
+      // Only the owner of the clip can delete it.
+      allow delete: if isResourceOwner();
+    }
+    
     match /lectures/{lectureId}/comments/{commentId} {
       allow list: if true;
       allow get: if true;
@@ -227,6 +251,13 @@ service cloud.firestore {
     // This ensures only public playlists are returned by the query.
     match /{path=**}/playlists/{playlistId} {
       allow list: if request.query.limit <= 30;
+    }
+
+    match /{path=**}/clips/{clipId} {
+      // Allow a user to query for their own clips.
+      // NOTE: This rule is permissive. The client query MUST include `where('userId', '==', request.auth.uid)`
+      // to prevent users from listing clips they don't own. Security rules cannot enforce this for collection group queries.
+      allow list: if isSignedIn();
     }
     
     match /{path=**}/notes/{lectureId} {

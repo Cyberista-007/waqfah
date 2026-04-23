@@ -1,19 +1,18 @@
-
-"use client";
-
-import { UserPlus, UserCheck, Loader2 } from "lucide-react";
-import { Button } from "./ui/button";
+import { UserPlus, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDoc, useFirestore, useUser, errorEmitter, FirestorePermissionError, useMemoFirebase } from "@/firebase";
 import { doc, runTransaction, increment, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { FluidButton } from "./ui/fluid-button";
 
 interface FollowButtonProps {
     programId?: string;
+    className?: string;
 }
 
-export function FollowButton({ programId }: FollowButtonProps) {
+export function FollowButton({ programId, className }: FollowButtonProps) {
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -36,14 +35,9 @@ export function FollowButton({ programId }: FollowButtonProps) {
     const { data: followDoc, isLoading: isFollowDocLoading } = useDoc(followDocRef);
     
     const isFollowing = !!followDoc;
-    const isLoading = isUserLoading || (user && isFollowDocLoading);
+    const isLoading = !!(isUserLoading || (user && isFollowDocLoading));
 
-    const handleFollow = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (isLoading) return;
-        
+    const handleFollow = async () => {
         if (!user || !firestore) {
             toast({
                 variant: "destructive",
@@ -87,6 +81,7 @@ export function FollowButton({ programId }: FollowButtonProps) {
                     requestResourceData: isFollowing ? undefined : { followedAt: 'server_timestamp' }
                 });
                 errorEmitter.emit('permission-error', permissionError);
+                throw error;
             } else {
                 console.error("Error following/unfollowing:", error);
                 toast({
@@ -94,16 +89,19 @@ export function FollowButton({ programId }: FollowButtonProps) {
                     title: "حدث خطأ",
                     description: "لم نتمكن من إتمام العملية. يرجى المحاولة مرة أخرى.",
                 });
+                throw error;
             }
         }
     };
 
-    if (isLoading && user) {
-        return <Button disabled size="lg" className="w-full"><Loader2 className="animate-spin" /></Button>;
-    }
-
     return (
-        <Button onClick={handleFollow} size="lg" variant={isFollowing ? "secondary" : "default"} className="w-full">
+        <FluidButton 
+            onClick={handleFollow} 
+            disabled={isLoading && !!user}
+            variant={isFollowing ? "outline" : "primary"} 
+            className={cn("w-full transition-all duration-300", className)}
+            successText={isFollowing ? "تم إلغاء المتابعة" : "تمت المتابعة"}
+        >
             {isFollowing ? (
                 <>
                     <UserCheck className="me-2 h-5 w-5" />
@@ -115,6 +113,6 @@ export function FollowButton({ programId }: FollowButtonProps) {
                     <span>متابعة</span>
                 </>
             )}
-        </Button>
+        </FluidButton>
     );
 }
