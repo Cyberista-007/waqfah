@@ -27,6 +27,17 @@
 *   **إدارة الميزات:** التحكم الكامل في العناصر المثبتة بالصفحة الرئيسية، التحديات، الأوسمة، جدول الدروس، والأسئلة الشائعة.
 *   **إدارة الموقع:** التحكم في إعدادات المظهر، شريط الإعلانات، حملات التبرع، وإدارة المستخدمين.
 
+## 📚 Hadith API (Musnad Ahmad)
+لقد قمنا بتوفير مسند الإمام أحمد بن حنبل كاملاً (أكثر من 26,000 حديث) بصيغة JSON مقسمة حسب مجلدات "طبعة مؤسسة الرسالة" (تحقيق شعيب الأرنؤوط).
+
+### How to use this API?
+يمكن للمبرمجين استخدام هذه البيانات في مشاريعهم عبر الروابط المباشرة:
+- **Index (الفهرس):** `https://raw.githubusercontent.com/Cyberista-007/waqfah/main/public/data/hadith/ahmad/sections.json`
+- **Hadiths (الأحاديث):** `https://raw.githubusercontent.com/Cyberista-007/waqfah/main/public/data/hadith/ahmad/sections/{id}.json`
+  *(استبدل `{id}` برقم المجلد من 1 إلى 50)*
+
+---
+
 ## 🚀 التقنيات المستخدمة
 
 *   **إطار العمل:** [Next.js](https://nextjs.org/) (مع App Router)
