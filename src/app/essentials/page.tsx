@@ -1,4 +1,6 @@
-import { 
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
   Shield, 
   Droplets, 
   BookOpen, 
