@@ -19,7 +19,7 @@ import { RIYADUSSALIHIN_FALLBACK_HADITHS } from '../riyadussalihin-data';
 const ALTERNATIVE_SOURCES: Record<string, string> = {
   'riyadussaliheen': 'https://raw.githubusercontent.com/AhmedBaset/hadith-json/main/db/by_book/other_books/riyad_assalihin.json',
   'malik': 'https://raw.githubusercontent.com/AhmedBaset/hadith-json/main/db/by_book/the_9_books/malik.json',
-  'ahmad': '/data/hadith/ahmad/sections.json', 
+  'ahmad': 'https://raw.githubusercontent.com/Cyberista-007/Musnad-Ahmad-API/main/sections.json', 
   'darimi': 'https://raw.githubusercontent.com/AhmedBaset/hadith-json/main/db/by_book/the_9_books/darimi.json'
 };
 
@@ -146,9 +146,14 @@ export default function HadithBookPage({ params }: { params: Promise<{ bookId: s
                     mappedSections[String(ch.id)] = ch.arabic || ch.name || "";
                   });
                 } else {
-                  // If it's a map (like our generated sections.json)
-                  Object.entries(sourceData).forEach(([id, name]: any) => {
-                    mappedSections[id] = name;
+                  // If it's a map
+                  Object.entries(sourceData).forEach(([id, val]: any) => {
+                    // Handle object format { name, file } or simple string
+                    if (typeof val === 'object') {
+                      mappedSections[id] = val.name;
+                    } else {
+                      mappedSections[id] = val;
+                    }
                   });
                 }
                 
@@ -202,9 +207,19 @@ export default function HadithBookPage({ params }: { params: Promise<{ bookId: s
         try {
           let data = null;
           
-          // Special case for local chunked Ahmad data
-          if (bookId === 'ahmad' && ALTERNATIVE_SOURCES[bookId].startsWith('/')) {
-             const chunkUrl = `/data/hadith/ahmad/sections/${selectedSection}.json`;
+          // Special case for Musnad Ahmad (Local or Public API)
+          if (bookId === 'ahmad' && BOOK_CACHE[bookId]) {
+             const indexData = BOOK_CACHE[bookId].sections;
+             const sectionInfo = indexData[selectedSection];
+             const filename = (typeof sectionInfo === 'object') ? sectionInfo.file : `${selectedSection}.json`;
+             
+             let chunkUrl = "";
+             if (ALTERNATIVE_SOURCES[bookId].startsWith('/')) {
+                chunkUrl = `/data/hadith/ahmad/sections/${filename}`;
+             } else {
+                // Building the URL for the public GitHub repo chunks
+                chunkUrl = ALTERNATIVE_SOURCES[bookId].replace('sections.json', `sections/${filename}`);
+             }
              const res = await fetch(chunkUrl);
              if (res.ok) data = await res.json();
           } else {

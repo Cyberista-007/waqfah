@@ -1,8 +1,14 @@
 import csv
 import json
 import os
+import re
 
-# --- Musnad Ahmad Ar-Risala Titles (50 Volumes) ---
+def slugify(text):
+    # Keep only Arabic characters, numbers, and spaces, then replace spaces with underscores
+    text = re.sub(r'[^\u0600-\u06FF0-9\s]', '', text)
+    return text.strip().replace(' ', '_')
+
+# --- Musnad Ahmad Ar-Risala Titles (52 Volumes) ---
 TITLES = [
     "مسند الخلفاء الراشدين (أبو بكر، عمر، عثمان، علي)",
     "تتمة مسند علي بن أبي طالب ومسند أهل البيت",
@@ -53,7 +59,9 @@ TITLES = [
     "مسند النساء (5)",
     "مسند النساء (6)",
     "مسند النساء (تتمة) والفهارس الأولية",
-    "تتمة مسند النساء وجوامع المسانيد"
+    "تتمة مسند النساء وجوامع المسانيد",
+    "الفهارس العامة (1)",
+    "الفهارس العامة (2)"
 ]
 
 input_csv = 'ahmad.csv' if os.path.exists('ahmad.csv') else 'ahmed.csv'
@@ -64,12 +72,15 @@ def convert():
         print(f"Error: {input_csv} not found.")
         return
 
-    if not os.path.exists(output_folder):
-        os.makedirs(f"{output_folder}/sections", exist_ok=True)
+    # Clean existing sections to avoid mixups
+    if os.path.exists(f"{output_folder}/sections"):
+        import shutil
+        shutil.rmtree(f"{output_folder}/sections")
+    os.makedirs(f"{output_folder}/sections", exist_ok=True)
 
-    print(f"Processing {input_csv} into {len(TITLES)} Ar-Risala Volumes...")
+    print(f"Processing {input_csv} into {len(TITLES)} Descriptive Ar-Risala Volumes...")
 
-    sections_index = {}
+    sections_index = {} # Will store { "id": { "title": "...", "file": "..." } }
     
     try:
         with open(input_csv, mode='r', encoding='utf-8') as f:
@@ -79,9 +90,6 @@ def convert():
                 if len(row) < 2: continue
                 all_hadiths.append({"id": row[0].strip(), "arabic": row[1].strip()})
 
-            print(f"Found {len(all_hadiths)} hadiths.")
-
-            # Calculate chunk size to fit into 50 volumes
             num_volumes = len(TITLES)
             chunk_size = (len(all_hadiths) // num_volumes) + 1
             
@@ -94,6 +102,11 @@ def convert():
                 chunk = all_hadiths[start_idx:end_idx]
                 section_id = i + 1
                 
+                # Create descriptive filename
+                title = TITLES[i]
+                safe_title = slugify(title)
+                filename = f"{section_id:02d}_{safe_title}.json"
+                
                 section_hadiths = []
                 for h in chunk:
                     section_hadiths.append({
@@ -104,16 +117,19 @@ def convert():
                         "english": {"narrator": "", "text": ""}
                     })
                 
-                title = TITLES[i]
-                sections_index[str(section_id)] = f"المجلد {section_id}: {title}"
+                sections_index[str(section_id)] = {
+                    "name": f"المجلد {section_id}: {title}",
+                    "file": filename
+                }
                 
-                with open(f"{output_folder}/sections/{section_id}.json", 'w', encoding='utf-8') as out:
+                with open(f"{output_folder}/sections/{filename}", 'w', encoding='utf-8') as out:
                     json.dump({"hadiths": section_hadiths}, out, ensure_ascii=False)
 
+            # Save the enhanced index
             with open(f"{output_folder}/sections.json", 'w', encoding='utf-8') as out:
                 json.dump({"sections": sections_index}, out, ensure_ascii=False)
 
-        print(f"Success! Created {len(sections_index)} scholarly volumes.")
+        print(f"Success! Created {len(sections_index)} scholarly volumes with descriptive filenames.")
         
     except Exception as e:
         print(f"Error: {e}")
