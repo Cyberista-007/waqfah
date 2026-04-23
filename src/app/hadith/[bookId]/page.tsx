@@ -130,7 +130,8 @@ export default function HadithBookPage({ params }: { params: Promise<{ bookId: s
       if (ALTERNATIVE_SOURCES[bookId]) {
         try {
           const url = ALTERNATIVE_SOURCES[bookId];
-          const res = await fetch(url, { cache: 'force-cache' });
+          // Use 'no-store' to force the browser to get the latest 50-volume index
+          const res = await fetch(url, { cache: 'no-store' });
             if (res.ok) {
               const data = await res.json();
               BOOK_CACHE[bookId] = data; // Cache for hadith fetch later
