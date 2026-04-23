@@ -52,21 +52,30 @@ function BooksList() {
     useEffect(() => {
         const fetchPublicLibrary = async () => {
             try {
-                // Pointing to the user's future public repo
+                // 1. Try public GitHub first
                 const PUBLIC_LIB_URL = "https://raw.githubusercontent.com/Cyberista-007/Islamic-Books-Library/main/library.json";
-                const res = await fetch(PUBLIC_LIB_URL).catch(() => fetch('/data/library.json'));
-                const data = await res.json();
-                if (data.books) {
-                    const mapped = data.books.map((b: any) => ({
-                        ...b,
-                        programName: b.category, // Map category to programName for filtering
-                        imageUrl: b.coverUrl,
-                        isPublic: true // Mark as public to avoid delete button
-                    }));
-                    setPublicBooks(mapped);
+                let res = await fetch(PUBLIC_LIB_URL);
+                
+                // 2. Fallback to local if GitHub 404s
+                if (!res.ok) {
+                    res = await fetch('/data/library.json');
+                }
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.books) {
+                        const mapped = data.books.map((b: any) => ({
+                            ...b,
+                            slug: b.slug || b.id,
+                            programName: b.programName || b.category || "مكتبة عامة",
+                            imageUrl: b.imageUrl || b.coverUrl,
+                            isPublic: true 
+                        }));
+                        setPublicBooks(mapped);
+                    }
                 }
             } catch (error) {
-                console.error("Failed to fetch public library", error);
+                console.error("Failed to fetch library", error);
             } finally {
                 setIsPublicLoading(false);
             }
@@ -75,13 +84,14 @@ function BooksList() {
     }, []);
 
     const allBooks = useMemo(() => {
-        return [...(firestoreBooks || []), ...publicBooks];
+        const firestoreList = Array.isArray(firestoreBooks) ? firestoreBooks : [];
+        return [...firestoreList, ...publicBooks];
     }, [firestoreBooks, publicBooks]);
 
-    const isLoading = isFirestoreLoading && isPublicLoading;
+    const isLoading = isFirestoreLoading && publicBooks.length === 0;
 
     const filteredBooks = useMemo(() => {
-        if (!allBooks) return [];
+        if (!allBooks || allBooks.length === 0) return [];
         let filtered = allBooks;
 
         if (searchTerm) {
