@@ -39,13 +39,46 @@ function BooksListSkeleton() {
 }
 
 function BooksList() {
-    const { data: allBooks, isLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc']});
+    const { data: firestoreBooks, isLoading: isFirestoreLoading } = useCollection<Book>('books', { orderBy: ['title', 'asc']});
+    const [publicBooks, setPublicBooks] = useState<Book[]>([]);
+    const [isPublicLoading, setIsPublicLoading] = useState(true);
     const { isAdmin } = useAdminAuth();
     const { toast } = useToast();
     const firestore = useFirestore();
     const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
+
+    useEffect(() => {
+        const fetchPublicLibrary = async () => {
+            try {
+                // Pointing to the user's future public repo
+                const PUBLIC_LIB_URL = "https://raw.githubusercontent.com/Cyberista-007/Islamic-Books-Library/main/library.json";
+                const res = await fetch(PUBLIC_LIB_URL).catch(() => fetch('/data/library.json'));
+                const data = await res.json();
+                if (data.books) {
+                    const mapped = data.books.map((b: any) => ({
+                        ...b,
+                        programName: b.category, // Map category to programName for filtering
+                        imageUrl: b.coverUrl,
+                        isPublic: true // Mark as public to avoid delete button
+                    }));
+                    setPublicBooks(mapped);
+                }
+            } catch (error) {
+                console.error("Failed to fetch public library", error);
+            } finally {
+                setIsPublicLoading(false);
+            }
+        };
+        fetchPublicLibrary();
+    }, []);
+
+    const allBooks = useMemo(() => {
+        return [...(firestoreBooks || []), ...publicBooks];
+    }, [firestoreBooks, publicBooks]);
+
+    const isLoading = isFirestoreLoading && isPublicLoading;
 
     const filteredBooks = useMemo(() => {
         if (!allBooks) return [];
@@ -191,8 +224,8 @@ function BooksList() {
                                             </Button>
                                         </div>
 
-                                        {/* Admin Delete */}
-                                        {isAdmin && (
+                                        {/* Admin Delete (Only for local books) */}
+                                        {isAdmin && !book.isPublic && (
                                             <button 
                                                 onClick={(e) => { e.preventDefault(); setBookToDelete(book); }}
                                                 className="absolute top-4 left-4 z-40 p-2 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-xl"

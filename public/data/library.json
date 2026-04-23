@@ -1,0 +1,22 @@
+{
+  "books": [
+    {
+      "id": "basaar-al-muslim",
+      "title": "بصائر للمسلم المعاصر",
+      "author": "عبد الرحمن بن حماد العمر",
+      "category": "العقيدة والمنهج",
+      "pdfUrl": "https://d1.islamhouse.com/data/ar/ih_books/single_010/ar-basaar.pdf",
+      "coverUrl": "https://picsum.photos/seed/basaar/400/600",
+      "description": "كتاب قيم يتناول بصائر هامة للمسلم في العصر الحديث."
+    },
+    {
+      "id": "public-1",
+      "title": "مختصر صحيح البخاري",
+      "author": "الإمام الزبيدي",
+      "category": "الحديث الشريف",
+      "pdfUrl": "https://raw.githubusercontent.com/Cyberista-007/Islamic-Books-Library/main/bukhari_summary.pdf",
+      "coverUrl": "https://picsum.photos/seed/bukhari/400/600",
+      "description": "كتاب جامع لمختصر أحاديث صحيح البخاري."
+    }
+  ]
+}
