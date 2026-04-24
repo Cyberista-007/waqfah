@@ -14,6 +14,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
+import { useSync } from '@/hooks/useSync';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -395,27 +396,31 @@ SinCard.displayName = 'SinCard';
 
 export default function MuhlikatPage() {
     const { isReadingMode, fontSize } = useReadingMode();
+    const { state: userState, updateState: syncUpdate } = useSync();
     const { data: sins, isLoading } = useCollection<DestructiveSin>('destructive_sins');
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('الكل');
-    const [focusedSins, setFocusedSins] = useState<string[]>([]);
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
-        const saved = localStorage.getItem('muhlikat_focus');
-        if (saved) {
-            try { setFocusedSins(JSON.parse(saved)); } catch (e) { }
-        }
     }, []);
+
+    const focusedSins = userState.muhlikatProgress ? Object.keys(userState.muhlikatProgress) : [];
 
     const toggleFocus = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        const next = focusedSins.includes(id)
-            ? focusedSins.filter(i => i !== id)
-            : [...focusedSins, id];
-        setFocusedSins(next);
-        localStorage.setItem('muhlikat_focus', JSON.stringify(next));
+        const currentProgress = userState.muhlikatProgress || {};
+        const isFocused = !!currentProgress[id];
+        
+        const nextProgress = { ...currentProgress };
+        if (isFocused) {
+            delete nextProgress[id];
+        } else {
+            nextProgress[id] = 1; // 1 means focused/started
+        }
+
+        syncUpdate({ muhlikatProgress: nextProgress });
     };
 
     const filteredSins = useMemo(() => {

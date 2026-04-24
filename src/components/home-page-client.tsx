@@ -11,9 +11,11 @@ import { ProgramCard } from '@/components/program-card';
 import { DownloaderModal } from './downloader-modal';
 import { SpiritualPrescription } from './spiritual-prescription';
 import { DailyChallenges } from './daily-challenges';
+import { TasbihCard } from './tasbih-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { Marquee } from './marquee';
+import { VerseOfTheDay } from './verse-of-the-day';
 import { Suspense, useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import type { Lecture, Series, Program, HomepageDetailedConfig, ScheduleItem, QAPair, Playlist, ListenHistoryItem, Inspiration, HeroBanner } from '@/lib/types';
@@ -526,6 +528,9 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </div>
       </section>
 
+      {/* 📖 Verse of the Day */}
+      <VerseOfTheDay />
+
       {/* ══════ Islamic Content Hub ══════ */}
       <section className="container px-4 py-16 relative overflow-hidden">
         {/* Background Decorative Glows */}
@@ -672,8 +677,27 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       {/* ══════ Spiritual Prescription Tool ══════ */}
       <SpiritualPrescription />
 
-      {/* ══════ Daily Challenges (Gamification) ══════ */}
-      <DailyChallenges />
+
+      {/* 🎯 Challenges & Tasbih Section */}
+      <section className="container px-4 py-16">
+        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <DailyChallenges />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            <TasbihCard />
+          </motion.div>
+        </div>
+      </section>
 
       {/* Learning Paths / Curriculum Highlights — MASTERCLASS ROADMAPS */}
       <section className="py-32 container px-4 relative">

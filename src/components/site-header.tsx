@@ -34,7 +34,8 @@ import {
   Headphones,
   HandHeart,
   TriangleAlert,
-  Shield
+  Shield,
+  Sparkles
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -97,12 +98,13 @@ const moreNavItems = [
   { href: "/dua", label: "الأدعية المأثورة", icon: HandHeart },
   { href: "/quran", label: "آيات قرآنية", icon: Layers },
   { href: "/muhlikat", label: "المهلكات", icon: TriangleAlert },
+  { href: "/shubuhat", label: "تفنيد الشبهات", icon: Shield },
   { href: "/essentials", label: "ما لا يسع المسلم جهله", icon: BookCheck },
   { href: "/aqeedah", label: "العقيدة", icon: Shield },
   { href: "/curriculums", label: "المناهج التعليمية", icon: GraduationCap },
   { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
   { href: "/playlists", label: "قوائم التشغيل", icon: ListMusic },
-  { href: "/books", label: "الكتب", icon: HelpCircle },
+  { href: "/books", label: "الكتب", icon: BookOpen },
   { href: "/challenges", label: "التحديات", icon: Flame },
   { href: "/accountability", label: "محاسبة النفس", icon: BookCheck },
   { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
@@ -292,34 +294,50 @@ export function SiteHeader() {
                       <span>المزيد</span>
                     </Button>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl" dir="rtl">
-                    <div className="flex flex-col space-y-1">
-                      <p className="px-3 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">أقسام إضافية</p>
-                      {dynamicMoreNavItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            className="flex justify-between w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group"
-                          >
-                            <div className="flex items-center gap-3">
-                              {Icon && <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />}
-                              <span>{item.label}</span>
-                            </div>
-                            <ChevronLeft className="h-4 w-4 opacity-0 group-hover:opacity-50 transition-opacity" />
-                          </Link>
-                        )
-                      })}
-                      <Separator className="my-2 bg-border/40" />
-                      <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <Palette className="h-4 w-4 text-primary" />
-                        <span>تغيير الثيم</span>
-                      </button>
-                      <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <CaseSensitive className="h-4 w-4 text-primary" />
-                        <span>تغيير الخط</span>
-                      </button>
+                  <HoverCardContent className="w-[850px] p-8 bg-zinc-950/80 backdrop-blur-2xl border-white/10 rounded-[3rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.8)] ring-1 ring-white/5" dir="rtl">
+                    <div className="space-y-8">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">أقسام إضافية ومميزات</p>
+                        <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+                        {dynamicMoreNavItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link
+                              key={item.label}
+                              href={item.href}
+                              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all group"
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-primary/10 border border-white/5 group-hover:border-primary/20">
+                                {Icon && <Icon className="h-5 w-5 text-white/40 group-hover:text-primary transition-colors" />}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-white/70 group-hover:text-white transition-colors text-sm">{item.label}</span>
+                                <span className="text-[9px] text-white/20 font-medium group-hover:text-primary/40 transition-colors uppercase tracking-widest">تصفح القسم</span>
+                              </div>
+                            </Link>
+                          )
+                        })}
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-6 border-t border-white/5">
+                        <button 
+                          onClick={() => setIsThemeSwitcherOpen(true)} 
+                          className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-primary hover:text-white transition-all font-black text-xs uppercase tracking-widest border border-white/5 group"
+                        >
+                          <Palette className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                          <span>تغيير الثيم</span>
+                        </button>
+                        <button 
+                          onClick={() => setIsFontSwitcherOpen(true)} 
+                          className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-primary hover:text-white transition-all font-black text-xs uppercase tracking-widest border border-white/5 group"
+                        >
+                          <CaseSensitive className="h-4 w-4 transition-transform group-hover:scale-110" />
+                          <span>تغيير الخط</span>
+                        </button>
+                      </div>
                     </div>
                   </HoverCardContent>
                 </HoverCard>

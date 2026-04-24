@@ -497,14 +497,6 @@
     scrollbar-width: none;  /* Firefox */
   }
 
-  /* ━━━━ CINEMATIC CURSOR ━━━━ */
-  .cursor-cinematic,
-  .cursor-cinematic a,
-  .cursor-cinematic button,
-  .cursor-cinematic [role="button"] {
-    cursor: none !important;
-  }
-
   /* ━━━━ IMAGE BLUR REVEAL ━━━━ */
   .img-reveal {
     filter: blur(0px);

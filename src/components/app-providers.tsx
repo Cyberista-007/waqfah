@@ -23,10 +23,7 @@ const FloatingAudioPlayer = dynamic(
   { ssr: false }
 );
 
-const CinematicCursor = dynamic(
-  () => import('./cinematic-cursor').then(mod => mod.CinematicCursor),
-  { ssr: false }
-);
+
 
 const AuroraBackground = dynamic(
   () => import('./aurora-background').then(mod => mod.AuroraBackground),
@@ -79,7 +76,6 @@ export function AppProviders({
                             <MoodProvider>
                                 {/* ══ Cinematic Global Layer ══ */}
                                 <ScrollProgressBar />
-                                <CinematicCursor />
                                 {/* ══ Content ══ */}
                                 {children}
                                 <FloatingAudioPlayer />

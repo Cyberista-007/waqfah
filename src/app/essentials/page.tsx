@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useSync } from "@/hooks/useSync";
 import { 
   Dialog, 
   DialogContent, 
@@ -93,28 +94,23 @@ const sections = [
 
 export default function EssentialsPage() {
   const { toast } = useToast();
-  const [completed, setCompleted] = useState<string[]>([]);
+  const { state: userState, updateState: syncUpdate } = useSync();
   const [activeItem, setActiveItem] = useState<any>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("waqfah_essentials_progress");
-    if (saved) setCompleted(JSON.parse(saved));
-  }, []);
+  // Derived state from sync hook
+  const completedMap = userState.essentialsProgress || {};
+  const completed = Object.keys(completedMap).filter(id => completedMap[id]);
 
   const toggleItem = (itemId: string, sectionId: string) => {
-    const isNowCompleted = !completed.includes(itemId);
-    const newCompleted = isNowCompleted
-      ? [...completed, itemId]
-      : completed.filter(i => i !== itemId);
+    const isNowCompleted = !completedMap[itemId];
+    const newCompletedMap = { ...completedMap, [itemId]: isNowCompleted };
     
-    setCompleted(newCompleted);
-    localStorage.setItem("waqfah_essentials_progress", JSON.stringify(newCompleted));
+    syncUpdate({ essentialsProgress: newCompletedMap });
 
     if (isNowCompleted) {
-      // Check if section is now fully completed
       const section = sections.find(s => s.id === sectionId);
       const sectionItemIds = section?.items.map(i => i.id) || [];
-      const allCompleted = sectionItemIds.every(id => newCompleted.includes(id));
+      const allCompleted = sectionItemIds.every(id => newCompletedMap[id]);
 
       if (allCompleted) {
         confetti({

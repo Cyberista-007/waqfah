@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useSync } from '@/hooks/useSync';
 import { doc, runTransaction } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -49,19 +50,13 @@ function BooksList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     
-    // ❤️ Favorites State
-    const [favorites, setFavorites] = useState<string[]>([]);
-    // 🔖 Reading Progress State
-    const [readingProgress, setReadingProgress] = useState<Record<string, number>>({});
+    const { state: userState, updateState: syncUpdate } = useSync();
+    
+    // Derived states for easier usage
+    const favorites = userState.favorites;
+    const readingProgress = userState.bookProgress;
 
     useEffect(() => {
-        // Load from localStorage
-        const savedFavs = localStorage.getItem('library_favorites');
-        if (savedFavs) setFavorites(JSON.parse(savedFavs));
-        
-        const savedProgress = localStorage.getItem('library_progress');
-        if (savedProgress) setReadingProgress(JSON.parse(savedProgress));
-
         const fetchPublicLibrary = async () => {
             try {
                 const PUBLIC_LIB_URL = "https://raw.githubusercontent.com/Cyberista-007/Islamic-Books-Library/main/library.json";
@@ -99,9 +94,14 @@ function BooksList() {
         const newFavs = favorites.includes(bookId) 
             ? favorites.filter(id => id !== bookId)
             : [...favorites, bookId];
-        setFavorites(newFavs);
-        localStorage.setItem('library_favorites', JSON.stringify(newFavs));
+        syncUpdate({ favorites: newFavs });
         toast({ title: favorites.includes(bookId) ? "تمت الإزالة من المفضلة" : "أضيف للمفضلة ❤️" });
+    };
+
+    const updateProgress = (bookId: string, page: number) => {
+        syncUpdate({ 
+            bookProgress: { ...readingProgress, [bookId]: page } 
+        });
     };
 
     const isLoading = isFirestoreLoading && publicBooks.length === 0;
@@ -196,49 +196,98 @@ function BooksList() {
                             <motion.div key={book.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="group flex flex-col gap-4 relative">
                                 <div className="relative aspect-[3/4] w-full perspective-1000">
                                     <div className="w-full h-full relative transition-all duration-500 group-hover:rotate-y-[-20deg] group-hover:translate-x-[-10px] transform-style-3d shadow-[20px_20px_50px_rgba(0,0,0,0.5)]">
-                                        <div className="absolute inset-0 bg-zinc-900 rounded-r-lg overflow-hidden border border-white/10 z-20">
+                                        <div className="absolute inset-0 bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/10 z-20 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
                                             <Image src={book.imageUrl || `https://picsum.photos/seed/${book.slug}/400/600`} alt={book.title} fill className="object-cover" />
                                             {/* 🔖 Progress Ribbon */}
                                             {readingProgress[book.id] && (
-                                                <div className="absolute top-0 right-4 w-8 h-12 bg-primary flex items-center justify-center rounded-b-lg shadow-lg z-30">
-                                                    <span className="text-[10px] font-black text-black">{readingProgress[book.id]}</span>
+                                                <div className="absolute top-0 left-6 w-10 h-14 bg-primary flex items-center justify-center rounded-b-xl shadow-lg z-30 animate-in slide-in-from-top duration-500">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-[10px] font-black text-black leading-none">{readingProgress[book.id]}</span>
+                                                        <div className="w-4 h-0.5 bg-black/20 mt-1 rounded-full" />
+                                                    </div>
                                                 </div>
                                             )}
+                                            
+                                            {/* Glass Overlay on Hover */}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] z-25" />
                                         </div>
-                                        <div className="absolute top-0 bottom-0 -right-4 w-4 bg-zinc-800 border-y border-r border-white/5 rounded-r-lg origin-left rotate-y-[90deg] z-10" />
                                         
-                                        <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity z-30 flex items-center justify-center gap-4 backdrop-blur-sm rounded-r-lg">
+                                        {/* Book Spine Detail */}
+                                        <div className="absolute top-0 bottom-0 -right-4 w-5 bg-gradient-to-l from-zinc-800 to-zinc-900 border-y border-r border-white/10 rounded-r-2xl origin-left rotate-y-[90deg] z-10 shadow-2xl" />
+                                        
+                                        <div className="absolute inset-0 z-40 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button size="icon" className="h-12 w-12 rounded-full bg-white text-black hover:scale-110 transition-transform">
-                                                        <Eye className="w-6 h-6" />
+                                                    <Button size="icon" className="h-14 w-14 rounded-2xl bg-white text-black hover:scale-110 transition-all shadow-2xl hover:bg-primary hover:text-white">
+                                                        <Eye className="w-7 h-7" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="max-w-4xl h-[90vh] p-0 bg-zinc-950 border-white/10 overflow-hidden flex flex-col">
-                                                    <DialogHeader className="p-4 border-b border-white/5 bg-zinc-900 flex flex-row items-center justify-between">
-                                                        <DialogTitle className="text-xl font-black truncate max-w-md">{book.title}</DialogTitle>
-                                                        <div className="flex items-center gap-4 ml-8">
-                                                            {/* 💾 Save Progress UI */}
-                                                            <div className="hidden sm:flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
-                                                                <span className="text-[10px] font-bold text-white/40 px-2 uppercase">الصفحة</span>
+                                                <DialogContent className="max-w-6xl w-full h-[92vh] md:h-[92vh] p-0 bg-[#09090b] border-white/10 overflow-hidden flex flex-col rounded-t-[2.5rem] md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+                                                    <DialogHeader className="p-2 md:p-5 px-3 md:px-8 border-b border-white/5 bg-[#0c0c0e] flex flex-row items-center justify-between gap-1 md:gap-6 shrink-0">
+                                                        <div className="flex items-center gap-1.5 md:gap-4 min-w-0 flex-1">
+                                                            <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                                                <BookIcon className="w-4 h-4 md:w-6 md:h-6 text-primary" />
+                                                            </div>
+                                                            <DialogTitle className="text-sm md:text-2xl font-black text-white truncate drop-shadow-md tracking-tight hidden xs:block">{book.title}</DialogTitle>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
+                                                            {/* 💾 Advanced Page Input */}
+                                                            <div className="flex items-center gap-1.5 md:gap-3 bg-black/40 p-1 md:p-1.5 pr-2 md:pr-4 rounded-xl md:rounded-2xl border border-white/10 group/input focus-within:border-primary/50 transition-all">
+                                                                <span className="text-[8px] md:text-[10px] font-black text-white/30 uppercase tracking-widest hidden sm:block">الصفحة</span>
                                                                 <input 
                                                                     type="number" 
                                                                     defaultValue={readingProgress[book.id] || 1}
-                                                                    className="w-12 h-8 bg-zinc-950 border border-white/10 rounded-lg text-center text-xs font-bold"
+                                                                    className="w-9 md:w-14 h-7 md:h-10 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-center text-[10px] md:text-sm font-black text-white outline-none focus:bg-white/10 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                                     onChange={(e) => updateProgress(book.id, parseInt(e.target.value))}
                                                                 />
                                                             </div>
 
-                                                            <Button variant="outline" size="sm" onClick={() => toggleFavorite(book.id)} className="rounded-xl">
-                                                                <Bookmark className={cn("w-4 h-4 ml-2", favorites.includes(book.id) && "fill-red-500 text-red-500")} />
-                                                                {favorites.includes(book.id) ? "مفضل" : "تفضيل"}
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="icon" 
+                                                                onClick={() => toggleFavorite(book.id)} 
+                                                                className={cn(
+                                                                    "rounded-xl md:rounded-2xl h-8 w-8 md:h-14 md:w-auto md:px-6 border-white/10 bg-white/5 hover:bg-white/10 transition-all font-black gap-2",
+                                                                    favorites.includes(book.id) && "border-red-500/20 bg-red-500/10 text-red-400"
+                                                                )}
+                                                            >
+                                                                <Bookmark className={cn("w-3.5 h-3.5 md:w-5 md:h-5", favorites.includes(book.id) && "fill-red-500 text-red-500")} />
+                                                                <span className="hidden md:inline">{favorites.includes(book.id) ? "مفضل" : "مفضل"}</span>
                                                             </Button>
-                                                            <Button asChild size="sm" className="rounded-xl">
-                                                                <a href={book.pdfUrl} target="_blank" download><Download className="w-4 h-4 ml-2" /> تحميل</a>
+                                                            
+                                                            <Button asChild size="icon" className="rounded-xl md:rounded-2xl h-8 w-8 md:h-14 md:w-auto md:px-8 bg-primary text-white hover:scale-105 transition-all font-black gap-2 shadow-lg shadow-primary/20">
+                                                                <a href={book.pdfUrl} target="_blank" download>
+                                                                    <Download className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                                                                    <span className="hidden md:inline">تحميل</span>
+                                                                </a>
                                                             </Button>
                                                         </div>
                                                     </DialogHeader>
-                                                    <iframe src={`${book.pdfUrl}#page=${readingProgress[book.id] || 1}`} className="flex-1 w-full border-none" />
+                                                    
+                                                    <div className="flex-1 bg-[#121214] relative overflow-hidden flex flex-col">
+                                                        {/* 📱 Mobile Fallback: Open in New Tab if iframe fails */}
+                                                        <div className="md:hidden absolute top-4 left-4 z-50">
+                                                            <Button asChild size="sm" variant="secondary" className="rounded-xl opacity-40 hover:opacity-100 backdrop-blur-md">
+                                                                <a href={book.pdfUrl} target="_blank">
+                                                                    <Eye className="w-4 h-4 ml-2" />
+                                                                    عرض ملء الشاشة
+                                                                </a>
+                                                            </Button>
+                                                        </div>
+
+                                                        <embed 
+                                                            src={`${book.pdfUrl}#view=FitH&scrollbar=0&toolbar=0&navpanes=0`} 
+                                                            type="application/pdf"
+                                                            className="flex-1 w-full h-full border-none opacity-90 hover:opacity-100 transition-opacity" 
+                                                            style={{ 
+                                                                width: '1px', 
+                                                                minWidth: '100%', 
+                                                                height: '100%',
+                                                                backgroundColor: '#121214'
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </DialogContent>
                                             </Dialog>
                                             

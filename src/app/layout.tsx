@@ -95,9 +95,6 @@ export default async function RootLayout({
             <Toaster />
             <OfflineIndicator />
             <PWARegistry />
-            <div className="hide-in-reading-mode">
-              <FloatingTasbih />
-            </div>
           </ReadingProvider>
         </AppProviders>
         <Analytics />

@@ -461,3 +461,13 @@ export type Shubha = Serializable<{
   isVerified?: boolean;
   createdAt: Timestamp;
 }>;
+export type UserState = Serializable<{
+  id: string; // userId
+  favorites: string[];
+  bookProgress: Record<string, number>;
+  essentialsProgress: Record<string, boolean>;
+  muhlikatProgress: Record<string, number>;
+  points: number;
+  completedChallenges: number[];
+  lastSync: Timestamp;
+}>;

@@ -7,26 +7,41 @@ import { Search, X, Loader2, Play, Podcast, Hash, ArrowRight, Sparkles, ChevronD
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
-import { Lecture, Program, Series } from '@/lib/types';
+import { Lecture, Program, Series, Book, Shubha, DestructiveSin } from '@/lib/types';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { getVideoIdFromUrl } from '@/lib/utils';
 import { SearchSkeleton } from './skeletons';
 import Fuse from 'fuse.js';
 import { ThreeDTilt } from './ui/three-d-tilt';
+import { BookOpen, ShieldAlert, TriangleAlert } from 'lucide-react';
 
 interface ImmersiveSearchProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-type SearchCategory = 'all' | 'lectures' | 'series' | 'programs';
+type SearchCategory = 'all' | 'lectures' | 'series' | 'programs' | 'books' | 'shubuhat' | 'muhlikat';
 
 export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const [query, setQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [category, setCategory] = useState<SearchCategory>('all');
-    const [results, setResults] = useState<{ lectures: Lecture[], programs: Program[], series: Series[] }>({ lectures: [], programs: [], series: [] });
+    const [results, setResults] = useState<{ 
+        lectures: Lecture[], 
+        programs: Program[], 
+        series: Series[],
+        books: Book[],
+        shubuhat: Shubha[],
+        muhlikat: DestructiveSin[]
+    }>({ 
+        lectures: [], 
+        programs: [], 
+        series: [],
+        books: [],
+        shubuhat: [],
+        muhlikat: []
+    });
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -37,6 +52,9 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const { data: allLectures } = useCollection<Lecture>('lectures', { limit: 100 });
     const { data: allPrograms } = useCollection<Program>('programs', { limit: 50 });
     const { data: allSeries } = useCollection<Series>('series', { limit: 50 });
+    const { data: allBooks } = useCollection<Book>('books', { limit: 50 });
+    const { data: allShubuhat } = useCollection<Shubha>('shubuhat', { limit: 50 });
+    const { data: allMuhlikat } = useCollection<DestructiveSin>('muhlikat', { limit: 50 });
 
     useEffect(() => {
         const stored = localStorage.getItem('recentSearches');
@@ -70,7 +88,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
 
     useEffect(() => {
         if (!debouncedQuery) {
-            setResults({ lectures: [], programs: [], series: [] });
+            setResults({ lectures: [], programs: [], series: [], books: [], shubuhat: [], muhlikat: [] });
             return;
         }
 
@@ -101,7 +119,16 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         const fuseSeries = new Fuse(allSeries || [], fuseOptions);
         const series = fuseSeries.search(q).slice(0, 5).map(r => r.item);
 
-        setResults({ lectures, programs, series });
+        const fuseBooks = new Fuse(allBooks || [], fuseOptions);
+        const books = fuseBooks.search(q).slice(0, 5).map(r => r.item);
+
+        const fuseShubuhat = new Fuse(allShubuhat || [], { ...fuseOptions, keys: ['question', 'summary', 'answer'] });
+        const shubuhat = fuseShubuhat.search(q).slice(0, 5).map(r => r.item);
+
+        const fuseMuhlikat = new Fuse(allMuhlikat || [], { ...fuseOptions, keys: ['title', 'dialogTitle', 'concept'] });
+        const muhlikat = fuseMuhlikat.search(q).slice(0, 5).map(r => r.item);
+
+        setResults({ lectures, programs, series, books, shubuhat, muhlikat });
         setSelectedIndex(-1);
     }, [debouncedQuery, allLectures, allPrograms, allSeries]);
 
@@ -117,9 +144,19 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         localStorage.removeItem('recentSearches');
     };
 
-    const handleSelect = (item: any, type: 'lecture' | 'program' | 'series') => {
-        addToRecent(debouncedQuery || query || item.title || item.name);
-        const path = type === 'lecture' ? `/lectures/${item.slug}` : type === 'program' ? `/programs/${item.slug}` : `/series/${item.id}`;
+    const handleSelect = (item: any, type: 'lecture' | 'program' | 'series' | 'book' | 'shubha' | 'muhlika') => {
+        addToRecent(debouncedQuery || query || item.title || item.name || item.question);
+        
+        let path = '';
+        switch(type) {
+            case 'lecture': path = `/lectures/${item.slug}`; break;
+            case 'program': path = `/programs/${item.slug}`; break;
+            case 'series': path = `/series/${item.id}`; break;
+            case 'book': path = `/books`; break; // Simple link for now, could be deeper
+            case 'shubha': path = `/shubuhat`; break;
+            case 'muhlika': path = `/muhlikat`; break;
+        }
+        
         router.push(path);
         onClose();
     };
@@ -128,7 +165,10 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         const allItems = [
             ...results.lectures.map(i => ({ ...i, type: 'lecture' })),
             ...results.programs.map(i => ({ ...i, type: 'program' })),
-            ...results.series.map(i => ({ ...i, type: 'series' }))
+            ...results.series.map(i => ({ ...i, type: 'series' })),
+            ...results.books.map(i => ({ ...i, type: 'book' })),
+            ...results.shubuhat.map(i => ({ ...i, type: 'shubha' })),
+            ...results.muhlikat.map(i => ({ ...i, type: 'muhlika' }))
         ];
         const totalResults = allItems.length;
 
@@ -182,6 +222,9 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         { id: 'lectures', label: 'المحاضرات' },
         { id: 'series', label: 'السلاسل' },
         { id: 'programs', label: 'البرامج' },
+        { id: 'books', label: 'المكتبة' },
+        { id: 'shubuhat', label: 'الشبهات' },
+        { id: 'muhlikat', label: 'المهلكات' },
     ];
 
     return (
@@ -350,7 +393,79 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                             </section>
                                         )}
 
-                                        {results.lectures.length === 0 && results.series.length === 0 && results.programs.length === 0 && (
+                                        {(category === 'all' || category === 'books') && results.books.length > 0 && (
+                                            <section>
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
+                                                    <div className="h-px w-8 bg-white/10" /> المكتبة الرقمية
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {results.books.map((book, idx) => {
+                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + idx;
+                                                        const isSelected = selectOffset === selectedIndex;
+                                                        return (
+                                                            <ThreeDTilt key={book.id} tiltMax={10}>
+                                                                <div onClick={() => handleSelect(book, 'book')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
+                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
+                                                                        <BookOpen className="w-5 h-5" />
+                                                                    </div>
+                                                                    <div className="font-bold text-white/80">{highlightMatch(book.title, debouncedQuery)}</div>
+                                                                </div>
+                                                            </ThreeDTilt>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </section>
+                                        )}
+
+                                        {(category === 'all' || category === 'shubuhat') && results.shubuhat.length > 0 && (
+                                            <section>
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
+                                                    <div className="h-px w-8 bg-white/10" /> تفنيد الشبهات
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {results.shubuhat.map((shubha, idx) => {
+                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + results.books.length + idx;
+                                                        const isSelected = selectOffset === selectedIndex;
+                                                        return (
+                                                            <ThreeDTilt key={shubha.id} tiltMax={10}>
+                                                                <div onClick={() => handleSelect(shubha, 'shubha')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
+                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
+                                                                        <ShieldAlert className="w-5 h-5" />
+                                                                    </div>
+                                                                    <div className="font-bold text-white/80">{highlightMatch(shubha.question, debouncedQuery)}</div>
+                                                                </div>
+                                                            </ThreeDTilt>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </section>
+                                        )}
+
+                                        {(category === 'all' || category === 'muhlikat') && results.muhlikat.length > 0 && (
+                                            <section>
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
+                                                    <div className="h-px w-8 bg-white/10" /> أمراض القلوب (المهلكات)
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {results.muhlikat.map((muhlika, idx) => {
+                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + results.books.length + results.shubuhat.length + idx;
+                                                        const isSelected = selectOffset === selectedIndex;
+                                                        return (
+                                                            <ThreeDTilt key={muhlika.id} tiltMax={10}>
+                                                                <div onClick={() => handleSelect(muhlika, 'muhlika')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
+                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
+                                                                        <TriangleAlert className="w-5 h-5" />
+                                                                    </div>
+                                                                    <div className="font-bold text-white/80">{highlightMatch(muhlika.title, debouncedQuery)}</div>
+                                                                </div>
+                                                            </ThreeDTilt>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </section>
+                                        )}
+
+                                        {results.lectures.length === 0 && results.series.length === 0 && results.programs.length === 0 && results.books.length === 0 && results.shubuhat.length === 0 && results.muhlikat.length === 0 && (
                                             <div className="flex flex-col items-center justify-center py-20 text-white/10">
                                                 <Search className="w-20 h-20 mb-6 opacity-5" />
                                                 <h2 className="text-3xl font-black italic tracking-tighter">لم نعثر على كنوز مطابقة...</h2>

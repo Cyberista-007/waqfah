@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Trophy, Star, Zap, Flame, Calendar, MousePointer2
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import confetti from 'canvas-confetti';
+import { useSync } from '@/hooks/useSync';
 
 const CHALLENGES = [
   { id: 1, title: 'الصلاة على النبي ﷺ', task: 'صلِّ على النبي 10 مرات بيقين', points: 10, icon: HeartPulse },
@@ -17,38 +18,43 @@ const CHALLENGES = [
 import { HeartPulse, BookOpen, Sparkles, HandHeart } from 'lucide-react';
 
 export function DailyChallenges() {
-  const [completed, setCompleted] = useState<number[]>([]);
+  const { state: userState, updateState: syncUpdate } = useSync();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('waqfah_daily_challenges');
+    // Handle daily reset logic
     const today = new Date().toDateString();
     const savedDate = localStorage.getItem('waqfah_challenges_date');
     
-    if (saved && savedDate === today) {
-      setCompleted(JSON.parse(saved));
-    } else {
+    if (savedDate !== today) {
       localStorage.setItem('waqfah_challenges_date', today);
-      localStorage.removeItem('waqfah_daily_challenges');
+      syncUpdate({ completedChallenges: [] });
     }
-  }, []);
+  }, [syncUpdate]);
+
+  const completed = userState.completedChallenges || [];
 
   const toggleChallenge = (id: number) => {
-    setCompleted(prev => {
-      const next = prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id];
-      localStorage.setItem('waqfah_daily_challenges', JSON.stringify(next));
-      
-      if (!prev.includes(id)) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#10b981', '#fbbf24', '#ffffff']
-        });
-      }
-      return next;
+    const isAlreadyDone = completed.includes(id);
+    const next = isAlreadyDone ? completed.filter(c => c !== id) : [...completed, id];
+    
+    const challenge = CHALLENGES.find(ch => ch.id === id);
+    const pointDiff = isAlreadyDone ? -(challenge?.points || 0) : (challenge?.points || 0);
+
+    syncUpdate({ 
+      completedChallenges: next,
+      points: (userState.points || 0) + pointDiff
     });
+    
+    if (!isAlreadyDone) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#fbbf24', '#ffffff']
+      });
+    }
   };
 
   if (!mounted) return null;
