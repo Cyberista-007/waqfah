@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useScroll, useTransform } from 'framer-motion';
 import { Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -144,15 +144,113 @@ export function CinematicCursor() {
 }
 
 /**
- * Palestine Map Overlay: Fixed background element.
+ * Scroll Progress Indicator: Flag colors progress bar.
+ */
+export function ScrollProgressIndicator() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const backgroundColor = useTransform(
+    scrollYProgress,
+    [0, 0.33, 0.66, 1],
+    ["#000000", "#FFFFFF", "#00843D", "#E4312B"]
+  );
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-1 z-[200] origin-left"
+      style={{ scaleX, backgroundColor }}
+    />
+  );
+}
+
+/**
+ * Background Soul Words: Floating parallax typography for depth.
+ */
+export function BackgroundSoulWords() {
+  const { scrollY } = useScroll();
+  
+  const y1 = useTransform(scrollY, [0, 5000], [0, -1000]);
+  const y2 = useTransform(scrollY, [0, 5000], [0, -1500]);
+  const y3 = useTransform(scrollY, [0, 5000], [0, -800]);
+
+  return (
+    <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden select-none">
+      <motion.div 
+        style={{ y: y1 }}
+        className="absolute top-[20%] -left-[10%] text-[25vw] font-black text-white/[0.02] whitespace-nowrap"
+      >
+        صمود
+      </motion.div>
+      <motion.div 
+        style={{ y: y2 }}
+        className="absolute top-[50%] -right-[5%] text-[20vw] font-black text-white/[0.01] whitespace-nowrap"
+      >
+        حرية
+      </motion.div>
+      <motion.div 
+        style={{ y: y3 }}
+        className="absolute top-[80%] left-[5%] text-[30vw] font-black text-white/[0.015] whitespace-nowrap"
+      >
+        وطن
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Palestine Map Overlay: Fixed background element with "Cities of Light" interaction.
  */
 export function PalestineMapOverlay() {
+  const [activeCity, setActiveCity] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleCityChange = (e: any) => setActiveCity(e.detail);
+    window.addEventListener('palestine-city-hover', handleCityChange);
+    return () => window.removeEventListener('palestine-city-hover', handleCityChange);
+  }, []);
+
+  const cityCoords: Record<string, { x: string, y: string }> = {
+    'القدس': { x: '52%', y: '45%' },
+    'غزة': { x: '45%', y: '65%' },
+    'يافا': { x: '48%', y: '35%' },
+    'حيفا': { x: '52%', y: '20%' },
+    'نابلس': { x: '55%', y: '38%' },
+    'الخليل': { x: '53%', y: '52%' },
+    'الناصرة': { x: '55%', y: '25%' },
+    'رام الله': { x: '54%', y: '42%' },
+  };
+
   return (
-    <div className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-[0.02] z-[-1] overflow-hidden">
+    <div className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-[0.03] z-[-1] overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vw] h-[140vh]">
-        <svg viewBox="0 0 200 600" className="w-full h-full fill-white">
+        <svg viewBox="0 0 200 600" className="w-full h-full fill-white/20">
           <path d="M100 0 C120 100, 150 200, 140 300 C130 400, 110 500, 100 600 L80 600 C70 500, 50 400, 60 300 C70 200, 80 100, 100 0" />
         </svg>
+
+        <AnimatePresence>
+          {activeCity && cityCoords[activeCity] && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute w-12 h-12 bg-emerald-500 rounded-full blur-2xl"
+              style={{ left: cityCoords[activeCity].x, top: cityCoords[activeCity].y }}
+            />
+          )}
+        </AnimatePresence>
+
+        {Object.entries(cityCoords).map(([name, pos]) => (
+          <div 
+            key={name}
+            className="absolute w-1.5 h-1.5 bg-white/20 rounded-full"
+            style={{ left: pos.x, top: pos.y }}
+          />
+        ))}
       </div>
     </div>
   );

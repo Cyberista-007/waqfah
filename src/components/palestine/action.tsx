@@ -321,3 +321,68 @@ export function CommitmentSection() {
     </section>
   );
 }
+/**
+ * Solidarity Living Wall: Cinematic marquee of global support.
+ */
+export function SolidarityLivingWall() {
+  const supports = [
+    { name: "أحمد محمد", location: "القاهرة", flag: "🇪🇬" },
+    { name: "Sarah J.", location: "London", flag: "🇬🇧" },
+    { name: "Yusuf K.", location: "Istanbul", flag: "🇹🇷" },
+    { name: "مريم علي", location: "الدوحة", flag: "🇶🇦" },
+    { name: "Jean Luc", location: "Paris", flag: "🇫🇷" },
+    { name: "Carlos R.", location: "Madrid", flag: "🇪🇸" },
+    { name: "فاطمة الزهراء", location: "الدار البيضاء", flag: "🇲🇦" },
+    { name: "Kenji M.", location: "Tokyo", flag: "🇯🇵" },
+    { name: "إبراهيم ناصر", location: "عمان", flag: "🇯🇴" },
+    { name: "Elena S.", location: "Rome", flag: "🇮🇹" },
+    { name: "نور الدين", location: "تونس", flag: "🇹🇳" },
+    { name: "David L.", location: "New York", flag: "🇺🇸" },
+  ];
+
+  return (
+    <section className="py-40 bg-black/40 relative overflow-hidden border-y border-white/5">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.02),transparent)]" />
+      
+      <div className="container px-6 mb-20 text-center">
+        <h2 className="text-4xl md:text-6xl font-black text-white/80">أصواتٌ <span className="text-emerald-500">من حول العالم</span></h2>
+      </div>
+
+      <div className="space-y-12">
+        {/* Row 1 */}
+        <div className="flex overflow-hidden select-none">
+          <motion.div 
+            animate={{ x: [0, -1920] }}
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+            className="flex gap-12 items-center whitespace-nowrap pr-12"
+          >
+            {[...supports, ...supports].map((s, i) => (
+              <div key={i} className="flex items-center gap-4 px-10 py-5 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+                <span className="text-2xl">{s.flag}</span>
+                <span className="text-xl font-black text-white">{s.name}</span>
+                <span className="text-sm font-bold text-white/20 uppercase tracking-widest">{s.location}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Row 2 */}
+        <div className="flex overflow-hidden select-none">
+          <motion.div 
+            animate={{ x: [-1920, 0] }}
+            transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+            className="flex gap-12 items-center whitespace-nowrap pr-12"
+          >
+            {[...supports.reverse(), ...supports].map((s, i) => (
+              <div key={i} className="flex items-center gap-4 px-10 py-5 rounded-full bg-emerald-500/5 border border-emerald-500/10 backdrop-blur-xl">
+                <span className="text-2xl">{s.flag}</span>
+                <span className="text-xl font-black text-white/80">{s.name}</span>
+                <span className="text-sm font-bold text-white/10 uppercase tracking-widest">{s.location}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}

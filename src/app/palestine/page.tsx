@@ -6,7 +6,9 @@ import {
   CinematicAudioPlayer, 
   GlassyBackground, 
   CinematicCursor, 
-  PalestineMapOverlay 
+  PalestineMapOverlay,
+  ScrollProgressIndicator,
+  BackgroundSoulWords
 } from '@/components/palestine/layout-elements';
 import { 
   HeroSection, 
@@ -56,6 +58,7 @@ import {
   PledgeCounterSection, 
   GlobalSolidarityCallSection, 
   SolidarityActionGrid, 
+  SolidarityLivingWall,
   CommitmentSection 
 } from '@/components/palestine/action';
 import { 
@@ -72,6 +75,8 @@ export default function PalestinePage() {
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-rose-500/30 selection:text-rose-400 overflow-x-hidden relative" dir="rtl">
       {/* Cinematic Overlays */}
+      <ScrollProgressIndicator />
+      <BackgroundSoulWords />
       <FilmGrain />
       <GlassyBackground />
       <CinematicCursor />
@@ -127,6 +132,7 @@ export default function PalestinePage() {
       <PledgeCounterSection />
       <GlobalSolidarityCallSection />
       <SolidarityActionGrid />
+      <SolidarityLivingWall />
       <CommitmentSection />
       <GlobalSolidarityCard />
       <FooterHeritage />

@@ -85,6 +85,11 @@ export function LestWeForgetMemorial() {
 export function CitiesExplorerSection() {
   const [activeCity, setActiveCity] = React.useState(0);
 
+  const handleCityChange = (index: number) => {
+    setActiveCity(index);
+    window.dispatchEvent(new CustomEvent('palestine-city-hover', { detail: CITIES[index].name }));
+  };
+
   return (
     <section className="py-60 relative overflow-hidden">
       <div className="container px-6">
@@ -116,7 +121,8 @@ export function CitiesExplorerSection() {
              {CITIES.map((city, i) => (
                <button
                  key={city.name}
-                 onClick={() => setActiveCity(i)}
+                 onClick={() => handleCityChange(i)}
+                 onMouseEnter={() => handleCityChange(i)}
                  className={cn(
                    "p-8 rounded-[3rem] text-right transition-all border group",
                    activeCity === i 
