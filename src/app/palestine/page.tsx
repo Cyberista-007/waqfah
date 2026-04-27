@@ -2084,6 +2084,98 @@ function AlAqsaDetail() {
 }
 
 /**
+ * Eternal Spirit: A high-energy artistic section inspired by modern graphic design.
+ * Evokes the soul, resilience, and eternal identity of Palestine.
+ */
+function EternalSpiritSection() {
+  return (
+    <section className="py-60 relative overflow-hidden">
+      {/* Dynamic Background elements */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.05),transparent)] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,rgba(228,49,43,0.05),transparent)] pointer-events-none" />
+      
+      <div className="container px-6 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-24">
+          {/* Artistic Image Container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 relative aspect-[4/5] w-full max-w-2xl rounded-[6rem] overflow-hidden group shadow-3xl border border-white/10"
+          >
+            <Image
+              src="/palestine_artistic_dribbble_inspiration_1777290333945.png"
+              alt="Palestine Eternal Spirit Art"
+              fill
+              className="object-cover scale-110 group-hover:scale-100 transition-transform duration-[3s] ease-out"
+            />
+            {/* Glossy Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+            <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-[6rem]" />
+            
+            {/* Floating Badge */}
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-12 left-12 px-8 py-3 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-full"
+            >
+              <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.4em]">الروح الأبدية</span>
+            </motion.div>
+          </motion.div>
+
+          {/* Text Content */}
+          <div className="flex-1 space-y-12 text-right">
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <h2 className="text-6xl md:text-9xl font-black font-headline tracking-tighter leading-[0.85] text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/30">
+                فلسطين <br />
+                <span className="text-emerald-500 text-glow-emerald">فكرة</span> <br />
+                والفكرة <span className="text-rose-500 text-glow-rose">لا تموت</span>
+              </h2>
+              <div className="h-1.5 w-32 bg-emerald-500/50 rounded-full" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-8"
+            >
+              <p className="text-3xl md:text-4xl font-bold text-white/80 leading-relaxed font-quran">
+                "ليست مجرد بقعة على الخارطة، بل هي نبضٌ يسكن في عروق الأحرار عبر الزمان."
+              </p>
+              <p className="text-xl md:text-2xl text-white/40 font-medium leading-relaxed max-w-2xl mr-auto">
+                أرض الأنبياء، قلب العروبة، وضمير الإنسانية الحي. هنا يلتقي التاريخ بالمستقبل، وتتحول المعاناة إلى أسطورة صمود تُدرس للأجيال.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-wrap justify-end gap-6"
+            >
+              {[
+                "القدس بوصلتنا",
+                "الحق لا يسقط بالتقادم",
+                "جيلٌ يسلم جيلاً"
+              ].map((tag, i) => (
+                <div key={i} className="px-6 py-2 bg-white/5 border border-white/10 rounded-2xl text-sm font-black text-white/30 hover:text-white/60 transition-colors">
+                  {tag}
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
  * Resistance Chronicles: A cinematic timeline of the struggle.
  */
 function ResistanceChroniclesSection() {
