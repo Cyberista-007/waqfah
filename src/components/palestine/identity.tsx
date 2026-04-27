@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Sparkles, Zap, Globe, Heart, Shield, Landmark } from 'lucide-react';
+import { Sparkles, Zap, Globe, Heart, Shield, Landmark, Star } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { FLAG_COLORS, VERSES } from './constants';
