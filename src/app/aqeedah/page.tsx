@@ -120,7 +120,7 @@ export default function AqeedahPage() {
                           <div className={cn("absolute inset-0 blur-3xl opacity-0 group-hover/evidence:opacity-10 transition-opacity duration-700", activePillar.bg)} />
                           <div className="relative p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all duration-500 text-center">
                             <p 
-                              className={cn("font-amiri text-3xl md:text-4xl text-white/90 leading-[1.7] transition-all", isReadingMode && "reading-text")}
+                              className={cn("font-quran text-3xl md:text-4xl text-white/90 leading-[1.7] transition-all", isReadingMode && "reading-text")}
                               style={isReadingMode ? { fontSize: `${fontSize + 8}px` } : {}}
                             >
                               "{article.evidence}"
@@ -136,7 +136,7 @@ export default function AqeedahPage() {
                 </div>
 
                 <div className="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-20">
-                   <p className="font-amiri text-3xl italic">وَتِلْكَ حُجَّتُنَا آتَيْنَاهَا إِبْرَاهِيمَ عَلَى قَوْمِهِ</p>
+                   <p className="font-quran text-3xl italic">وَتِلْكَ حُجَّتُنَا آتَيْنَاهَا إِبْرَاهِيمَ عَلَى قَوْمِهِ</p>
                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.5em]">
                       <div className="w-16 h-px bg-white/40" />
                       أصول الاعتقاد

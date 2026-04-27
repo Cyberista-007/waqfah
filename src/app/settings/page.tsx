@@ -36,6 +36,9 @@ import {
   Stamp,
   Eye,
   X,
+  ExternalLink,
+  CheckCircle2,
+  Info,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -406,6 +409,8 @@ export default function SettingsPage() {
         particleSettings,
         setParticleSettings,
         language,
+        aiApiKey,
+        setAiApiKey,
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
@@ -759,6 +764,54 @@ export default function SettingsPage() {
                     <span>وضع التباين العالي</span>
                 </Label>
                 <Switch id="high-contrast-switch" />
+            </div>
+        </div>
+
+        <SectionTitle title="المساعد الذكي (AI)" />
+        <div className="bg-card rounded-xl p-6 space-y-6">
+            <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <Sparkles className="w-6 h-6 text-primary" />
+                        <Label htmlFor="ai-api-key" className="text-lg">مفتاح Gemini API</Label>
+                    </div>
+                    <Link 
+                        href="https://aistudio.google.com/app/apikey" 
+                        target="_blank" 
+                        className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
+                    >
+                        احصل على مفتاح مجاني <ExternalLink className="w-3 h-3" />
+                    </Link>
+                </div>
+                <div className="relative group">
+                    <Input 
+                        id="ai-api-key"
+                        type="password"
+                        placeholder="أدخل مفتاح الـ API الخاص بك هنا..."
+                        value={aiApiKey || ''}
+                        onChange={(e) => setAiApiKey(e.target.value)}
+                        className="h-14 bg-white/5 border-white/5 rounded-2xl focus:bg-white/10 focus:ring-4 focus:ring-primary/10 transition-all font-mono"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                        {aiApiKey ? (
+                            <div className="flex items-center gap-2 text-emerald-500 animate-in fade-in zoom-in">
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span className="text-[10px] font-black uppercase">مفعل</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-white/20">
+                                <XCircle className="w-4 h-4" />
+                                <span className="text-[10px] font-black uppercase">غير مفعل</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
+                    <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-white/50 leading-relaxed font-medium">
+                        هذا المفتاح يتم تخزينه **محلياً في متصفحك فقط** ولا يرسل إلى خوادمنا. سيُستخدم لتمكين المساعد الذكي من الإجابة على تساؤلاتك المتعلقة بمحتوى المنصة وبناء خططك العلمية.
+                    </p>
+                </div>
             </div>
         </div>
 

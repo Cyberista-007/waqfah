@@ -240,6 +240,7 @@ export type UserProfile = Serializable<{
     stripeCustomerId?: string;
     savedCardBrand?: string;
     savedCardLast4?: string;
+    savedCardLast4_?: string; // typo protection
 }>;
 
 export type EditProfileForm = {
@@ -438,6 +439,8 @@ export type UserCurriculum = Serializable<{
     status: 'not-started' | 'in-progress' | 'completed';
     startedAt?: Timestamp;
     completedAt?: Timestamp;
+    lectureId?: string;
+    value?: number;
 }>;
 
 // Added for the new floating video player
@@ -461,13 +464,36 @@ export type Shubha = Serializable<{
   isVerified?: boolean;
   createdAt: Timestamp;
 }>;
+
 export type UserState = Serializable<{
   id: string; // userId
   favorites: string[];
   bookProgress: Record<string, number>;
   essentialsProgress: Record<string, boolean>;
   muhlikatProgress: Record<string, number>;
+  quranMemorization?: { [surahNumber: number]: 'not-started' | 'memorizing' | 'completed' | 'reviewed' };
+  activeMemoPlan?: {
+    planId: string;
+    startDate: string;
+    dailyReminderTime?: string;
+  };
   points: number;
   completedChallenges: number[];
   lastSync: Timestamp;
+}>;
+
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  correctAnswer: number; // Index of the correct option
+  explanation?: string;
+};
+
+export type Quiz = Serializable<{
+  id: string; // Document ID
+  lectureId?: string; // Optional link to a lecture
+  title: string;
+  questions: QuizQuestion[];
+  rewardPoints: number;
+  createdAt: Timestamp;
 }>;

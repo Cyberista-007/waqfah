@@ -42,26 +42,27 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
         >
             <ThreeDTilt tiltMax={8} className="h-full">
                 <Link href={`/series/${series.slug}`} className="block h-full group">
-                    <Card className="h-full flex flex-col relative overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl rounded-[2.5rem] transition-all duration-500 transform-gpu">
+                    <Card className="h-full flex flex-col relative overflow-hidden bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2.5rem] transition-all duration-500 transform-gpu group-hover:border-primary/30 group-hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] group-hover:bg-white/[0.08]">
+                    
                     {/* Background Visuals */}
                     <div className="absolute inset-0 z-0">
-                        <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute inset-0 overflow-hidden bg-[#09090b]">
                             <Image 
                                 src={imageUrl} 
                                 alt={series.title}
                                 fill
                                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 priority={index < 4}
-                                className="object-cover transition-transform duration-1000 group-hover:scale-110 brightness-[0.3] group-hover:brightness-[0.4]"
+                                className="object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 group-hover:opacity-50"
                             />
                         </div>
                         
                         {/* Overlay Gradients */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10" />
-                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent z-10" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/60 to-transparent z-10" />
+                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#09090b] via-[#09090b]/80 to-transparent z-10" />
                         
                         {/* Glowing Accents */}
-                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[120px] rounded-full group-hover:bg-primary/20 transition-colors duration-700" />
+                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[120px] rounded-full group-hover:bg-primary/20 transition-colors duration-700 z-10" />
                     </div>
 
                     {/* Content Layer */}

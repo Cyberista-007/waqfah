@@ -33,15 +33,15 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                 <Card 
                     className={cn(
                         "h-full flex flex-col relative overflow-hidden transition-all duration-500 transform-gpu",
-                        "bg-card border border-white/10 shadow-xl rounded-3xl group",
-                        "hover:border-primary/40 hover:shadow-primary/5"
+                        "bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] group",
+                        "hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:bg-white/[0.08]"
                     )}
                 >
                 {/* Banner Section */}
-                <div className="relative h-28 overflow-hidden bg-zinc-900 border-b border-white/5">
+                <div className="relative h-32 overflow-hidden bg-black/40 border-b border-white/10">
                     <div className="absolute inset-0 z-0">
                          <Image
-                            src={imageUrl || `https://picsum.photos/seed/${program.slug}/800/200`}
+                            src={imageUrl || `https://picsum.photos/seed/${program.slug}/800/300`}
                             alt={`${program.name} banner`}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -61,11 +61,11 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                 </div>
 
                 {/* Avatar Section - Floating */}
-                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30">
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30">
                     <Link href={`/programs/${program.slug}`} className="block relative">
-                        <Avatar className="h-20 w-20 border-4 border-card bg-zinc-950 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/40 group-hover:ring-8 group-hover:ring-primary/5">
+                        <Avatar className="h-24 w-24 border-[6px] border-[#0c0c0e] bg-[#0c0c0e] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20 group-hover:ring-8 group-hover:ring-primary/10 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
                             {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="object-cover" />}
-                            <AvatarFallback className="text-3xl font-black bg-primary/10 text-primary">
+                            <AvatarFallback className="text-3xl font-black bg-gradient-to-br from-primary/20 to-primary/5 text-primary backdrop-blur-md">
                                 {getInitials(program.name)}
                             </AvatarFallback>
                         </Avatar>
@@ -73,54 +73,54 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                 </div>
 
                 {/* Content Section */}
-                <div className="flex-grow flex flex-col text-center px-5 pb-5 pt-12 relative z-20">
+                <div className="flex-grow flex flex-col text-center px-5 pb-5 pt-16 relative z-20">
                      <Link href={`/programs/${program.slug}`} className="group/link flex flex-col items-center">
-                        <CardHeader className="p-0 mb-2">
-                            <CardTitle className="font-headline text-2xl font-black text-white group-hover/link:text-primary transition-colors tracking-tight leading-tight">
+                        <CardHeader className="p-0 mb-3">
+                            <CardTitle className="font-headline text-2xl font-black text-white group-hover/link:text-primary transition-colors tracking-tight leading-tight drop-shadow-md">
                                 {program.name}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <CardDescription className="text-muted-foreground font-medium line-clamp-2 text-xs leading-relaxed mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <CardDescription className="text-white/50 font-medium line-clamp-2 text-[13px] leading-relaxed mb-5 opacity-80 group-hover/link:opacity-100 transition-opacity">
                                 {program.bio || "استكشف كنوز العلم والمعرفة عبر هذا البرنامج المتميز."}
                             </CardDescription>
                         </CardContent>
                     </Link>
 
                     {/* Stats / Followers */}
-                    <div className="flex justify-center items-center gap-4 mb-5 text-muted-foreground">
-                        <div className="flex flex-col items-center gap-0.5">
-                            <div className="flex items-center gap-1 text-white/90 font-bold text-sm">
-                                <Users className="w-3 h-3 text-primary" />
+                    <div className="flex justify-center items-center gap-6 mb-5 text-white/50 bg-black/20 py-2.5 rounded-2xl border border-white/5 w-fit mx-auto px-6 backdrop-blur-sm">
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1.5 text-white/90 font-black text-sm">
+                                <Users className="w-3.5 h-3.5 text-primary" />
                                 <span>{program.followerCount || 0}</span>
                             </div>
-                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-60 italic">متابع</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">متابع</span>
                         </div>
-                        <div className="w-px h-5 bg-white/10" />
-                        <div className="flex flex-col items-center gap-0.5">
-                            <div className="flex items-center gap-1 text-white/90 font-bold text-sm">
-                                <MessageSquare className="w-3 h-3 text-primary" />
+                        <div className="w-px h-6 bg-white/10" />
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1.5 text-white/90 font-black text-sm">
+                                <MessageSquare className="w-3.5 h-3.5 text-primary" />
                                 <span>{(program.followerCount || 0) * 2 + 5}</span>
                             </div>
-                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-60 italic">تفاعل</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">تفاعل</span>
                         </div>
                     </div>
 
                     {pinnedMessage && (
-                        <div className="mb-5 bg-primary/5 p-3 rounded-2xl border border-primary/10">
-                            <p className="text-[10px] text-primary/80 italic leading-relaxed line-clamp-2">
+                        <div className="mb-5 bg-gradient-to-r from-transparent via-primary/10 to-transparent p-3 border-y border-primary/10">
+                            <p className="text-[11px] text-primary/90 italic leading-relaxed line-clamp-2 font-medium">
                                 "{pinnedMessage}"
                             </p>
                         </div>
                     )}
 
-                    <div className="mt-auto flex items-center justify-between gap-3 bg-white/5 p-2 rounded-2xl border border-white/5">
+                    <div className="mt-auto flex items-center justify-between gap-3 bg-white/[0.03] p-2 rounded-2xl border border-white/5 backdrop-blur-sm transition-colors group-hover:bg-white/[0.06]">
                         <div className="flex-1">
-                            <FollowButton programId={program.id} className="h-9 rounded-xl text-xs font-bold" />
+                            <FollowButton programId={program.id} className="h-10 rounded-xl text-xs font-black shadow-lg shadow-primary/20 w-full" />
                         </div>
                         <Link 
                             href={`/programs/${program.slug}`}
-                            className="flex-shrink-0 h-9 w-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all group/btn"
+                            className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all group/btn"
                         >
                             <ChevronLeft className="w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
                         </Link>

@@ -16,6 +16,7 @@ import { OfflineIndicator } from '@/components/offline-indicator';
 import { GlobalBackButton } from '@/components/global-back-button';
 import { FloatingTasbih } from '@/components/floating-tasbih';
 import { ReadingProvider } from '@/components/reading-provider';
+import { ChatWidget } from '@/components/chat-widget';
 
 export const viewport: Viewport = {
   themeColor: '#09090b',
@@ -93,6 +94,7 @@ export default async function RootLayout({
               </div>
             </div>
             <Toaster />
+            <ChatWidget />
             <OfflineIndicator />
             <PWARegistry />
           </ReadingProvider>

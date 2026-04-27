@@ -35,6 +35,8 @@ type AppearanceContextType = {
   setParticleColor: (color: string) => void;
   particleSettings: ParticleSettings;
   setParticleSettings: (settings: Partial<ParticleSettings>) => void;
+  aiApiKey: string | null;
+  setAiApiKey: (key: string | null) => void;
   quranIconUrl?: string | null;
   hadithIconUrl?: string | null;
   heroImageUrl?: string | null;
@@ -64,6 +66,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
   const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
   const [particleColor, setParticleColor] = useState('#FFFFFF');
+  const [aiApiKey, setAiApiKeyState] = useState<string | null>(null);
   
   const [particleSettings, setParticleSettingsState] = useState<ParticleSettings>({
     interaction: true,
@@ -137,6 +140,15 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     localStorage.setItem("site-language", newLang);
     setLanguageState(newLang);
   }, []);
+
+  const setAiApiKey = useCallback((key: string | null) => {
+    if (key) {
+        localStorage.setItem("site-ai-api-key", key);
+    } else {
+        localStorage.removeItem("site-ai-api-key");
+    }
+    setAiApiKeyState(key);
+  }, []);
   
   const handleSetBackground = useCallback((newBg: BackgroundState | null) => {
       if (newBg?.image) {
@@ -150,7 +162,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
       } else {
         localStorage.removeItem("site-background-color");
       }
-    
+      
       if (newBg?.type) {
         localStorage.setItem("site-background-type", newBg.type);
       } else {
@@ -191,6 +203,9 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     const initialLang = storedLang || 'ar';
     setLanguageState(initialLang);
 
+    const storedApiKey = localStorage.getItem("site-ai-api-key");
+    setAiApiKeyState(storedApiKey);
+
     const storedIsShown = localStorage.getItem("site-background-shown");
     const show = storedIsShown !== "false";
     
@@ -221,7 +236,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     }
   }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
-  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners };
+  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, aiApiKey, setAiApiKey, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners };
 
   return (
     <AppearanceContext.Provider value={value}>

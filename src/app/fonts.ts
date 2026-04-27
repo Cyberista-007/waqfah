@@ -8,6 +8,7 @@ import localFont from 'next/font/local';
 
 export const cairo = Cairo({
   subsets: ['arabic'],
+  weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
   variable: '--font-body',
 });
 
@@ -27,6 +28,7 @@ export const amiri = Amiri({
   weight: ['400', '700'],
   variable: '--font-amiri',
 });
+
 
 /*
 export const lazeez = localFont({

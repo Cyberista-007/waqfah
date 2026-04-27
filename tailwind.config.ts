@@ -21,6 +21,7 @@ export default {
         code: ['var(--font-code)'],
         'tajawal': ['var(--font-tajawal)'],
         'amiri': ['var(--font-amiri)'],
+        'quran': ['KFGQPC-v2', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

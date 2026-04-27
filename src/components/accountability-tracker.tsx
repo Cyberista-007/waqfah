@@ -39,31 +39,33 @@ import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger
 const ActionButton = ({ action, isSelected, onToggle }: { action: AccountabilityAction, isSelected: boolean, onToggle: () => void }) => {
     return (
         <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="w-full"
         >
             <Button
                 variant="ghost"
                 onClick={onToggle}
                 className={cn(
-                    "h-auto text-wrap py-4 px-4 rounded-[2rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                    "h-auto text-wrap py-5 px-4 rounded-[2.5rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
                     isSelected
-                        ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_25px_rgba(var(--primary-rgb),0.3)]'
-                        : 'bg-white/5 hover:bg-white/10 text-muted-foreground border-white/5 opacity-80'
+                        ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_30px_rgba(var(--primary-rgb),0.25)]'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/60 border-white/5 backdrop-blur-md'
                 )}
             >
                 {isSelected && (
                     <motion.div
                         layoutId={`active-${action.id}`}
-                        className="absolute inset-0 bg-primary/10 blur-xl"
+                        className="absolute inset-0 bg-primary/10 blur-2xl"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                     />
                 )}
-                <div className="flex flex-col gap-1 items-center justify-center relative z-10">
-                    <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight">{action.label}</span>
-                    <span className="text-[10px] font-black opacity-60 bg-white/10 px-2 py-0.5 rounded-full">({action.points} نقاط)</span>
+                <div className="flex flex-col gap-1.5 items-center justify-center relative z-10">
+                    <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight group-hover:text-white transition-colors">{action.label}</span>
+                    <span className="text-[9px] font-black opacity-40 bg-white/10 px-2.5 py-0.5 rounded-full uppercase tracking-tighter group-hover:opacity-80 transition-opacity">
+                        {action.points} نقاط
+                    </span>
                 </div>
             </Button>
         </motion.div>
@@ -80,27 +82,29 @@ const CustomActionButton = ({ action, isSelected, onToggle, onRemove }: { action
             className="relative"
         >
             <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
             >
                 <Button
                     variant="ghost"
                     onClick={onToggle}
                     className={cn(
-                        "h-auto text-wrap py-4 px-4 rounded-[2rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                        "h-auto text-wrap py-5 px-4 rounded-[2.5rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
                         isSelected
-                            ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_25px_rgba(var(--primary-rgb),0.3)]'
-                            : 'bg-white/5 hover:bg-white/10 text-muted-foreground border-white/5 opacity-80'
+                            ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_30px_rgba(var(--primary-rgb),0.25)]'
+                            : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/60 border-white/5 backdrop-blur-md'
                     )}
                 >
-                    <div className="flex flex-col gap-1 items-center justify-center relative z-10">
-                        <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight">{action.title}</span>
-                        <span className="text-[10px] font-black opacity-60 bg-white/10 px-2 py-0.5 rounded-full">({action.points} نقاط)</span>
+                    <div className="flex flex-col gap-1.5 items-center justify-center relative z-10">
+                        <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight group-hover:text-white transition-colors">{action.title}</span>
+                        <span className="text-[9px] font-black opacity-40 bg-white/10 px-2.5 py-0.5 rounded-full uppercase tracking-tighter group-hover:opacity-80 transition-opacity">
+                            {action.points} نقاط
+                        </span>
                     </div>
                 </Button>
             </motion.div>
-             <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 hover:scale-110 transition-transform z-20" onClick={onRemove}>
-                <X className="h-3.5 w-3.5"/>
+             <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-red-500/80 backdrop-blur-md text-white shadow-lg hover:bg-red-600 hover:scale-110 transition-transform z-20 border border-white/10" onClick={onRemove}>
+                <X className="h-4 w-4"/>
              </Button>
         </motion.div>
     )
@@ -137,24 +141,25 @@ const AddCustomActionCard = ({ onAdd }: { onAdd: (title: string, points: number)
                     </Card>
                 </motion.div>
             </DialogTrigger>
-            <DialogContent className="bg-[#12141d] border-white/10 text-white rounded-[2.5rem]">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl font-black text-primary">إضافة نافلة جديدة</DialogTitle>
-                    <DialogDescription className="text-zinc-400">أضف عملًا إضافيًا لتتبعه اليوم.</DialogDescription>
+            <DialogContent className="bg-zinc-950/90 backdrop-blur-3xl border border-white/10 text-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px] pointer-events-none" />
+                <DialogHeader className="relative z-10">
+                    <DialogTitle className="text-3xl font-black text-white tracking-tighter">إضافة <span className="text-primary italic">نافلة</span> جديدة</DialogTitle>
+                    <DialogDescription className="text-white/40 font-medium">أضف عملًا صالحاً إضافياً لتتبعه اليوم في ميزان حسناتك.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-6 py-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="custom-action-title" className="font-bold text-zinc-300">عنوان العمل</Label>
-                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: قراءة ربع من القرآن" className="bg-white/5 border-white/10 rounded-xl h-12" />
+                <div className="space-y-8 py-8 relative z-10">
+                    <div className="space-y-3">
+                        <Label htmlFor="custom-action-title" className="font-black text-white/60 text-xs uppercase tracking-widest px-1">عنوان العمل</Label>
+                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: ركعتي الضحى، ذكر الله..." className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-bold placeholder:text-white/10" />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="custom-action-points" className="font-bold text-zinc-300">النقاط</Label>
-                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} className="bg-white/5 border-white/10 rounded-xl h-12" />
+                     <div className="space-y-3">
+                        <Label htmlFor="custom-action-points" className="font-black text-white/60 text-xs uppercase tracking-widest px-1">النقاط المستحقة</Label>
+                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-black text-lg" />
                     </div>
                 </div>
-                <DialogFooter className="gap-2">
-                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl">إلغاء</Button>
-                    <Button onClick={handleAdd} className="rounded-xl px-8 bg-primary hover:bg-primary/80">إضافة</Button>
+                <DialogFooter className="gap-3 relative z-10">
+                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-2xl h-14 px-8 font-black text-white/40 hover:bg-white/5">إلغاء</Button>
+                    <Button onClick={handleAdd} className="rounded-2xl h-14 px-10 bg-primary text-white hover:bg-primary/90 font-black text-lg shadow-xl shadow-primary/20">إضافة العمل</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -189,12 +194,13 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
     return (
         <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-6 lg:p-8 shadow-2xl relative overflow-hidden group frosted-glass"
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3.5rem] p-8 lg:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.4)] relative overflow-hidden group transition-all duration-700 hover:bg-white/[0.05] hover:border-primary/20"
         >
-            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-[60px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700 z-0" />
-            <h3 className="text-2xl font-black font-headline text-center mb-8 relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 tracking-tight">{group.title}</h3>
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000 z-0" />
+            <h3 className="text-3xl font-black font-headline text-center mb-10 relative z-10 text-white tracking-tighter drop-shadow-lg">{group.title}</h3>
             <motion.div 
                 variants={containerVariants}
                 initial="hidden"
@@ -254,21 +260,21 @@ const StatCard = ({ icon: Icon, label, value, color, delay, isSmall }: { icon: a
     return (
         <motion.div
             variants={itemVariants}
-            whileHover={{ translateY: -5, transition: { duration: 0.2 } }}
+            whileHover={{ translateY: -8, transition: { duration: 0.4, ease: "easeOut" } }}
         >
             <Card className={cn(
-                "h-full bg-white/5 backdrop-blur-3xl border border-white/10 p-6 rounded-[2.5rem] flex flex-col items-center justify-center relative overflow-hidden group shadow-2xl",
+                "h-full bg-gradient-to-b from-white/[0.08] to-transparent backdrop-blur-2xl border border-white/10 p-8 rounded-[3rem] flex flex-col items-center justify-center relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500 hover:bg-white/[0.12]",
                 colorClasses[color]
             )}>
-                <div className={cn("absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity", `bg-${color}-500`)} />
-                <div className={cn("p-4 rounded-3xl mb-4 relative z-10", colorClasses[color].split(' ')[0])}>
-                    <Icon className="h-8 w-8" />
+                <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity duration-700", `bg-${color}-500`)} />
+                <div className={cn("p-5 rounded-[2rem] mb-5 relative z-10 bg-white/[0.03] border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-xl", colorClasses[color].split(' ')[1])}>
+                    <Icon className="h-10 w-10" />
                 </div>
                 <div className="text-center relative z-10">
-                    <p className="text-zinc-400 text-sm font-black uppercase tracking-widest mb-1 opacity-60">{label}</p>
+                    <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] mb-2 opacity-60 group-hover:opacity-100 transition-opacity">{label}</p>
                     <p className={cn(
-                        "font-black tracking-tighter leading-none",
-                        isSmall ? "text-3xl" : "text-5xl"
+                        "font-black tracking-tighter leading-none text-white",
+                        isSmall ? "text-4xl" : "text-6xl"
                     )}>{value}</p>
                 </div>
             </Card>
@@ -534,13 +540,13 @@ const ImanHarvestReport = () => {
                     <motion.header 
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6"
+                        className="flex flex-col lg:flex-row justify-between items-center mb-16 gap-8"
                     >
-                        <div className="space-y-1">
-                            <h1 className="text-5xl font-black text-white font-headline tracking-tight">حصادك الإيماني</h1>
-                            <p className="text-zinc-400 font-bold italic opacity-60">" وَنَكْتُبُ مَا قَدَّمُوا وَآثَارَهُمْ "</p>
+                        <div className="space-y-2 text-center lg:text-right">
+                            <h2 className="text-5xl md:text-7xl font-black text-white font-headline tracking-tighter">حصادك <span className="text-primary italic">الإيماني</span></h2>
+                            <p className="text-white/30 font-bold italic text-lg">" وَنَكْتُبُ مَا قَدَّمُوا وَآثَارَهُمْ "</p>
                         </div>
-                        <div className="flex items-center gap-3 p-1.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
+                        <div className="flex flex-wrap justify-center items-center gap-3 p-2 bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-2xl">
                             {REPORT_TABS.map(tab => (
                                 <TooltipProvider key={tab.id}>
                                     <ShadTooltip>
@@ -550,16 +556,16 @@ const ImanHarvestReport = () => {
                                                 variant={activeReportTab === tab.id ? 'default' : 'ghost'} 
                                                 disabled={tab.id !== 'main'}
                                                 className={cn(
-                                                    'rounded-xl px-6 font-black transition-all duration-300',
+                                                    'rounded-full px-8 py-6 font-black transition-all duration-500 h-auto',
                                                     activeReportTab === tab.id 
-                                                        ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]' 
-                                                        : 'text-zinc-500 hover:bg-white/5 hover:text-white',
-                                                    tab.id !== 'main' && 'opacity-30 cursor-not-allowed'
+                                                        ? 'bg-primary text-white shadow-[0_10px_30px_rgba(var(--primary-rgb),0.4)] scale-105' 
+                                                        : 'text-white/40 hover:bg-white/5 hover:text-white',
+                                                    tab.id !== 'main' && 'opacity-20 cursor-not-allowed'
                                                 )}>
                                                 {tab.label}
                                             </Button>
                                         </TooltipTrigger>
-                                        {tab.id !== 'main' && <TooltipContent><p>قريباً</p></TooltipContent>}
+                                        {tab.id !== 'main' && <TooltipContent><p>قريباً بإذن الله</p></TooltipContent>}
                                     </ShadTooltip>
                                 </TooltipProvider>
                             ))}
@@ -974,32 +980,35 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                     
                     <motion.div
                         animate={{ 
-                            scale: [1, 1.1, 1],
-                            rotate: [0, 5, -5, 0]
+                            scale: [1, 1.05, 1],
                         }}
                         transition={{ 
-                            duration: 5,
+                            duration: 6,
                             repeat: Infinity,
                             ease: "easeInOut"
                         }}
-                        className="relative z-10 w-fit mx-auto"
+                        className="relative z-10 w-fit mx-auto mb-8"
                     >
-                        <BookCheck className="h-24 w-24 text-primary drop-shadow-[0_0_30px_rgba(var(--primary-rgb),0.8)]" />
+                        <div className="absolute inset-0 bg-primary/40 blur-[40px] rounded-full opacity-50" />
+                        <BookCheck className="h-28 w-28 text-white relative z-10" />
                     </motion.div>
 
-                    <h1 className="text-5xl md:text-8xl font-black mt-4 mb-4 font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-amber-200 relative z-10 drop-shadow-2xl">
-                        محاسبة النفس
+                    <h1 className="text-6xl md:text-9xl font-black mt-4 mb-6 font-headline tracking-tighter text-white relative z-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                        محاسبة <span className="text-primary italic">النفس</span>
                     </h1>
                     
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5, duration: 1 }}
+                        className="space-y-6"
                     >
-                        <p className="max-w-3xl mx-auto text-xl md:text-2xl text-zinc-300 leading-relaxed font-bold relative z-10 italic">
+                        <p className="max-w-4xl mx-auto text-2xl md:text-3xl text-white/40 leading-relaxed font-bold relative z-10 italic drop-shadow-md">
                             "حَاسِبُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُحَاسَبُوا، وَزِنُوا أَنْفُسَكُمْ قَبْلَ أَنْ تُوزَنُوا"
                         </p>
-                        <span className="text-sm md:text-base font-black text-primary tracking-[0.4em] mt-6 block uppercase relative z-10 opacity-80">- عمر بن الخطاب رضي الله عنه</span>
+                        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                            <span className="text-xs md:text-sm font-black text-primary tracking-[0.3em] uppercase opacity-80 italic">عمر بن الخطاب رضي الله عنه</span>
+                        </div>
                     </motion.div>
 
                     <motion.div 
@@ -1069,8 +1078,8 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
             </div>
 
             <Tabs defaultValue="fajr" className="w-full">
-              <div className="flex justify-center overflow-x-auto pb-4 custom-scrollbar">
-                <TabsList className="h-auto p-2 shrink-0 bg-card/60 backdrop-blur-2xl border border-white/10 rounded-full shadow-xl gap-2">
+              <div className="flex justify-center overflow-x-auto pb-8 custom-scrollbar">
+                <TabsList className="h-auto p-2 shrink-0 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] gap-2">
                     <TabsTrigger 
                         value="iman-harvest" 
                         className="px-6 py-3 rounded-full flex items-center gap-2 transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]"
@@ -1151,26 +1160,28 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
 
 
 
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                 <div className="bg-card/80 backdrop-blur-3xl border border-primary/30 p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(var(--primary-rgb),0.2)] flex items-center">
-                    <div className="flex items-center gap-6 px-8 md:px-12 py-2">
+            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
+                 <div className="bg-black/40 backdrop-blur-3xl border border-white/10 p-3 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.8)] flex items-center justify-between relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-50" />
+                    <div className="flex items-center gap-8 px-8 py-3 relative z-10 w-full justify-center">
                         <motion.div
                             animate={{ 
-                                scale: [1, 1.2, 1],
-                                rotate: [0, 10, -10, 0]
+                                scale: [1, 1.15, 1],
                             }}
                             key={totalPoints}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.4 }}
+                            className="relative"
                         >
-                            <Trophy className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]" />
+                            <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full" />
+                            <Trophy className="w-10 h-10 text-white relative z-10 drop-shadow-lg" />
                         </motion.div>
                         <div className="flex flex-col items-center">
-                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-primary/60">اجمالي الرصيد</span>
+                            <span className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30 mb-1">الرصيد الإيماني</span>
                             <motion.span 
                                 key={totalPoints}
                                 initial={{ scale: 0.8, opacity: 0.5 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary via-white to-amber-200 leading-none mt-1 tracking-tighter"
+                                className="text-5xl font-black text-white leading-none tracking-tighter drop-shadow-2xl"
                             >
                                 {totalPoints}
                             </motion.span>

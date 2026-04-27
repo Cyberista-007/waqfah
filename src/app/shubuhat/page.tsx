@@ -142,7 +142,7 @@ export default function ShubuhatPage() {
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-indigo-500/30 pb-32">
       {/* 🌌 Cinematic Hero Section */}
-      <section className="relative pt-40 pb-20 px-4 overflow-hidden">
+      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 pt-40 pb-20 px-4 overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl bg-[#0a0a0a]">
         {/* Background Gradients & Noise */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none" />
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/3 animate-pulse duration-1000" />

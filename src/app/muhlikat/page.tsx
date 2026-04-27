@@ -260,7 +260,7 @@ const SinCard = memo(({
                                                         <div className="flex items-center gap-2 text-[9px] font-black text-amber-500/70 uppercase tracking-[0.4em]">
                                                             <BookOpen className="w-3.5 h-3.5" /> قرآن كريم
                                                         </div>
-                                                        <p className={cn("font-amiri text-xl text-amber-50/90 leading-loose text-center flex-1 transition-all", isReadingMode && "reading-text")} style={isReadingMode ? { fontSize: `${fontSize && fontSize + 6}px` } : {}}>
+                                                        <p className={cn("font-quran text-xl text-amber-50/90 leading-loose text-center flex-1 transition-all", isReadingMode && "reading-text")} style={isReadingMode ? { fontSize: `${fontSize && fontSize + 6}px` } : {}}>
                                                             {sin.quranVerses[0]}
                                                         </p>
                                                     </div>
@@ -270,7 +270,7 @@ const SinCard = memo(({
                                                         <div className="flex items-center gap-2 text-[9px] font-black text-emerald-500/70 uppercase tracking-[0.4em]">
                                                             <ScrollText className="w-3.5 h-3.5" /> حديث شريف
                                                         </div>
-                                                        <p className={cn("font-amiri text-xl text-emerald-50/90 leading-loose text-center flex-1 transition-all", isReadingMode && "reading-text")} style={isReadingMode ? { fontSize: `${fontSize && fontSize + 6}px` } : {}}>
+                                                        <p className={cn("font-quran text-xl text-emerald-50/90 leading-loose text-center flex-1 transition-all", isReadingMode && "reading-text")} style={isReadingMode ? { fontSize: `${fontSize && fontSize + 6}px` } : {}}>
                                                             {sin.hadiths[0]}
                                                         </p>
                                                     </div>

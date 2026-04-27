@@ -193,27 +193,16 @@ function BooksList() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-12">
                     <AnimatePresence mode="popLayout">
                         {filteredBooks.map((book, idx) => (
-                            <motion.div key={book.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="group flex flex-col gap-4 relative">
-                                <div className="relative aspect-[3/4] w-full perspective-1000">
-                                    <div className="w-full h-full relative transition-all duration-500 group-hover:rotate-y-[-20deg] group-hover:translate-x-[-10px] transform-style-3d shadow-[20px_20px_50px_rgba(0,0,0,0.5)]">
-                                        <div className="absolute inset-0 bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/10 z-20 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
-                                            <Image src={book.imageUrl || `https://picsum.photos/seed/${book.slug}/400/600`} alt={book.title} fill className="object-cover" />
-                                            {/* 🔖 Progress Ribbon */}
-                                            {readingProgress[book.id] && (
-                                                <div className="absolute top-0 left-6 w-10 h-14 bg-primary flex items-center justify-center rounded-b-xl shadow-lg z-30 animate-in slide-in-from-top duration-500">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-[10px] font-black text-black leading-none">{readingProgress[book.id]}</span>
-                                                        <div className="w-4 h-0.5 bg-black/20 mt-1 rounded-full" />
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
-                                            {/* Glass Overlay on Hover */}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] z-25" />
+                            <motion.div key={book.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="group relative flex flex-col rounded-[2rem] overflow-hidden bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:bg-white/[0.07]">
+                                <div className="relative aspect-[3/4] w-full bg-black/40 overflow-hidden">
+                                    <Image src={book.imageUrl || `https://picsum.photos/seed/${book.slug}/400/600`} alt={book.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-black/30 to-black/10" />
+                                    
+                                    {readingProgress[book.id] && (
+                                        <div className="absolute top-0 right-4 w-10 h-12 bg-primary flex items-center justify-center rounded-b-xl shadow-lg z-30">
+                                            <span className="text-[10px] font-black text-black leading-none pt-1">ص {readingProgress[book.id]}</span>
                                         </div>
-                                        
-                                        {/* Book Spine Detail */}
-                                        <div className="absolute top-0 bottom-0 -right-4 w-5 bg-gradient-to-l from-zinc-800 to-zinc-900 border-y border-r border-white/10 rounded-r-2xl origin-left rotate-y-[90deg] z-10 shadow-2xl" />
+                                    )}
                                         
                                         <div className="absolute inset-0 z-40 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                                             <Dialog>
@@ -296,16 +285,33 @@ function BooksList() {
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="absolute -bottom-4 left-4 right-4 h-8 bg-black/40 blur-xl rounded-full -z-10 group-hover:scale-110 transition-transform" />
-                                </div>
 
-                                <div className="space-y-1 px-1">
-                                    <h3 className="text-lg font-black text-white line-clamp-1 leading-snug tracking-tight">{book.title}</h3>
-                                    <p className="text-xs text-white/40 font-bold truncate">{(book as any).author || "مؤلف غير معروف"}</p>
-                                    <div className="flex items-center gap-2 pt-1">
-                                        <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">{book.programName || (book as any).category}</span>
+                                    {/* ── Info Section ── */}
+                                    <div className="flex flex-col gap-2 p-5 flex-1 relative z-10 bg-[#09090b]/40">
+                                        <h3 className="text-sm font-bold text-white leading-snug line-clamp-2 text-right">
+                                            {book.title}
+                                        </h3>
+                                        
+                                        <div className="flex items-center gap-1.5 justify-end mt-auto">
+                                            <span className="text-[11px] text-white/45 line-clamp-1">{(book as any).author || "مؤلف غير معروف"}</span>
+                                        </div>
+
+                                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
+
+                                        <div className="flex items-center justify-between mt-1">
+                                            <a 
+                                                href={book.pdfUrl} 
+                                                target="_blank" 
+                                                download 
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group/dl"
+                                            >
+                                                <Download size={14} className="text-white/50 group-hover/dl:text-primary group-hover/dl:-translate-y-0.5 transition-all" />
+                                            </a>
+                                            <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-md border border-primary/20">
+                                                {book.programName || (book as any).category || 'كتاب'}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
                             </motion.div>
                         ))}
                     </AnimatePresence>
@@ -341,7 +347,7 @@ export default function BooksPage() {
   return (
     <div className="space-y-20 pb-32 overflow-x-hidden">
         {/* 🏛️ Cinematic Library Hero */}
-        <section className="relative -mx-4 sm:-mx-8 -mt-[calc(4rem+2rem+1px)] h-[50vh] min-h-[450px] flex flex-col items-center justify-center text-center overflow-hidden border-b border-white/5">
+        <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 h-[50vh] min-h-[450px] flex flex-col items-center justify-center text-center overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl">
             {/* Background Decor */}
             <div className="absolute inset-0 bg-zinc-950">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.05)_0%,transparent_70%)]" />

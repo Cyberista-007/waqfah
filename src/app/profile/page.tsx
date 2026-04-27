@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureNote } from "@/lib/types";
+import type { Lecture, ListenHistoryItem, UserProfile, Playlist, Following, Program, UserChallenge, Challenge, LectureNote, GamificationBadge, UserBadge } from "@/lib/types";
 import type { User } from 'firebase/auth';
 import { LectureCard } from "@/components/lecture-card";
 import Link from "next/link";
@@ -663,6 +663,108 @@ function AllNotesSection() {
     );
 }
 
+function BadgesSection() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { data: allBadges, isLoading: loadingAll } = useCollection<GamificationBadge>('gamification_badges');
+    const { data: userBadges, isLoading: loadingUser } = useCollection<UserBadge>(user ? `users/${user.uid}/user_badges` : null);
+
+    const [enrichedBadges, setEnrichedBadges] = useState<(GamificationBadge & { isEarned: boolean, earnedAt?: any })[]>([]);
+
+    useEffect(() => {
+        if (loadingAll || loadingUser || !allBadges) return;
+
+        const earnedIds = userBadges ? userBadges.map(ub => ub.badgeId) : [];
+        const enriched = allBadges.map(badge => {
+            const userBadge = userBadges?.find(ub => ub.badgeId === badge.id);
+            return {
+                ...badge,
+                isEarned: earnedIds.includes(badge.id),
+                earnedAt: userBadge?.earnedAt
+            };
+        });
+
+        // Sort: Earned first, then by threshold
+        enriched.sort((a, b) => {
+            if (a.isEarned && !b.isEarned) return -1;
+            if (!a.isEarned && b.isEarned) return 1;
+            return a.threshold - b.threshold;
+        });
+
+        setEnrichedBadges(enriched);
+    }, [allBadges, userBadges, loadingAll, loadingUser]);
+
+    if (loadingAll || loadingUser) {
+        return <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,200px),1fr))] gap-6">
+            {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-48 rounded-[2.5rem] bg-white/5 animate-pulse" />
+            ))}
+        </div>
+    }
+
+    if (enrichedBadges.length === 0) {
+        return (
+            <Card className="text-center py-16">
+                <CardContent className="flex flex-col items-center gap-4">
+                    <Medal className="w-16 h-16 text-muted-foreground" />
+                    <p className="text-lg text-muted-foreground">لا توجد أوسمة متاحة حالياً.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,200px),1fr))] gap-6">
+            {enrichedBadges.map((badge) => (
+                <motion.div
+                    key={badge.id}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className={cn(
+                        "relative p-8 rounded-[2.5rem] border flex flex-col items-center text-center transition-all duration-500 overflow-hidden group",
+                        badge.isEarned 
+                            ? "bg-gradient-to-br from-primary/10 to-transparent border-primary/20 shadow-[0_20px_50px_-20px_rgba(var(--primary-rgb),0.3)]" 
+                            : "bg-white/[0.02] border-white/5 grayscale opacity-40 hover:grayscale-0 hover:opacity-100"
+                    )}
+                >
+                    {badge.isEarned && (
+                        <div className="absolute top-0 right-0 p-4">
+                            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                        </div>
+                    )}
+                    
+                    <div className={cn(
+                        "w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 relative z-10 transition-transform duration-700 group-hover:rotate-12",
+                        badge.isEarned ? "bg-primary/20 border border-primary/20" : "bg-white/5 border border-white/10"
+                    )}>
+                        <Medal className={cn("w-10 h-10", badge.isEarned ? "text-primary" : "text-white/20")} />
+                    </div>
+
+                    <div className="space-y-2 relative z-10">
+                        <h4 className="font-black text-white text-sm uppercase tracking-tight">{badge.title}</h4>
+                        <p className="text-[10px] text-white/30 font-medium leading-relaxed line-clamp-2">{badge.description}</p>
+                    </div>
+
+                    {badge.isEarned && badge.earnedAt && (
+                        <div className="mt-4 pt-4 border-t border-white/5 w-full">
+                            <p className="text-[8px] font-black text-primary/60 uppercase tracking-[0.2em]">تم الحصول عليه</p>
+                            <p className="text-[9px] text-white/20 font-bold mt-1">
+                                {formatDistanceToNow(toDateHelper(badge.earnedAt) || new Date(), { addSuffix: true, locale: ar })}
+                            </p>
+                        </div>
+                    )}
+
+                    {!badge.isEarned && (
+                        <div className="mt-4 pt-4 border-t border-white/5 w-full">
+                            <p className="text-[8px] font-black text-white/10 uppercase tracking-[0.2em]">المطلوب</p>
+                            <p className="text-[9px] text-white/30 font-bold mt-1">{badge.threshold} {badge.metric === 'points' ? 'نقطة' : 'وحدة'}</p>
+                        </div>
+                    )}
+                </motion.div>
+            ))}
+        </div>
+    )
+}
+
 function DonationsSection({ userProfile }: { userProfile: UserProfile }) {
     if (!userProfile.totalDonated || userProfile.totalDonated === 0) {
         return (
@@ -746,6 +848,7 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
         { id: 'favorites', label: 'المفضلة', icon: Heart, count: favorites?.length || 0, color: 'text-rose-500' },
         { id: 'accountability', label: 'محاسبة النفس', icon: BookCheck, count: null, color: 'text-emerald-500' },
         { id: 'playlists', label: 'قوائم التشغيل', icon: ListMusic, count: playlists?.length || 0, color: 'text-amber-500' },
+        { id: 'badges', label: 'الأوسمة', icon: Medal, count: null, color: 'text-yellow-500' },
         { id: 'following', label: 'البرامج المتابعة', icon: Podcast, count: following?.length || 0, color: 'text-purple-500' },
         { id: 'challenges', label: 'تحدياتي', icon: Flame, count: userChallenges?.length || 0, color: 'text-orange-500' },
         { id: 'notes', label: 'ملاحظاتي', icon: Notebook, count: notes?.length || 0, color: 'text-cyan-500' },
@@ -756,7 +859,7 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
     return (
         <div className="space-y-16 pb-20">
             {/* 👤 Immersive Profile Header */}
-            <section className="relative -mx-4 sm:-mx-8 -mt-[calc(4rem+2rem+1px)] py-32 flex flex-col items-center justify-center text-center overflow-hidden border-b border-white/5">
+            <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 py-32 flex flex-col items-center justify-center text-center overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl">
                 {/* Dynamic Background */}
                 <div className="absolute inset-0 bg-zinc-950">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.08)_0%,transparent_70%)]" />
@@ -877,6 +980,9 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
                     </TabsContent>
                     <TabsContent value="playlists" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <PlaylistsSection />
+                    </TabsContent>
+                    <TabsContent value="badges" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <BadgesSection />
                     </TabsContent>
                     <TabsContent value="following" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <FollowedProgramsSection />

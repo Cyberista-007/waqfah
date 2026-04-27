@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   name: 'recommendLecturesPrompt',
   input: {schema: RecommendLecturesInputSchema},
   output: {schema: RecommendLecturesOutputSchema},
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an intelligent lecture recommendation system for an Islamic studies platform. Your task is to recommend new lectures to a user based on their viewing history.
 
 You must follow these rules strictly:

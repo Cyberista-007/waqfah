@@ -306,9 +306,8 @@ function DuaCard({
 
         {/* Arabic Text */}
         <p
-          className={cn("text-white/95 text-right leading-[2.6] mb-6 text-xl md:text-2xl transition-all", isReadingMode && "reading-text")}
+          className={cn("text-white/95 text-right leading-[2.6] mb-6 text-xl md:text-2xl transition-all font-quran", isReadingMode && "reading-text")}
           style={{
-            fontFamily: 'var(--font-amiri, serif)',
             fontSize: isReadingMode ? `${fontSize && fontSize + 8}px` : undefined,
             lineHeight: isReadingMode ? '2' : '2.6'
           }}
@@ -542,7 +541,7 @@ export default function DuaPage() {
 
                     {/* Motivational Footer */}
                     <div className="mt-20 pt-12 border-t border-white/5 text-center">
-                      <p className="font-amiri text-2xl text-white/20 italic">
+                      <p className="font-quran text-2xl text-white/20 italic">
                         "وإذا سألك عبادي عني فإني قريب أجيب دعوة الداع إذا دعان"
                       </p>
                     </div>

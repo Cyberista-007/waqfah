@@ -19,8 +19,8 @@ import { collection, doc, runTransaction, increment } from "firebase/firestore";
 import type { Book, Program } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 

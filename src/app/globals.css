@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'KFGQPC-v2';
+  src: url('https://cdn.jsdelivr.net/gh/Ghalat-Correction/KFGQPC-Hafs-Uthmanic-Script-v2@master/KFGQPC%20Hafs%20Uthmanic%20Script%20v2-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -214,6 +222,9 @@
   .font-amiri {
     font-family: var(--font-amiri);
   }
+  .font-quran {
+    font-family: 'KFGQPC-v2', serif;
+  }
   .font-markazi-text {
     font-family: var(--font-markazi-text);
   }
@@ -376,6 +387,22 @@
     background-image: linear-gradient(to bottom, #4f46e5, #a855f7);
     border-radius: 10px;
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .shadow-glow-white { box-shadow: 0 0 30px rgba(255, 255, 255, 0.15); }
 }
 
 @media print {
@@ -631,8 +658,8 @@
 }
 
 .reading-mode-active .reading-text {
-  line-height: 2 !important;
-  font-family: var(--font-amiri), serif !important;
+  line-height: 2.3 !important;
+  font-family: 'KFGQPC-v2', serif !important;
 }
 
 .reading-mode-active body {

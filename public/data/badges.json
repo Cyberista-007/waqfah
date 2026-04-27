@@ -1,0 +1,39 @@
+
+[
+  {
+    "id": "first-lecture",
+    "title": "خطوة العلم الأولى",
+    "description": "أتممت أول محاضرة لك في المنصة.",
+    "icon": "Medal",
+    "metric": "lecturesCompleted",
+    "threshold": 1,
+    "points": 50
+  },
+  {
+    "id": "consistent-student",
+    "title": "طالب مثابر",
+    "description": "أتممت 10 محاضرات علمية.",
+    "icon": "Medal",
+    "metric": "lecturesCompleted",
+    "threshold": 10,
+    "points": 200
+  },
+  {
+    "id": "knowledge-seeker",
+    "title": "باحث عن المعرفة",
+    "description": "حصلت على أول 500 نقطة علمية.",
+    "icon": "Medal",
+    "metric": "points",
+    "threshold": 500,
+    "points": 150
+  },
+  {
+    "id": "series-master",
+    "title": "متمم السلاسل",
+    "description": "أتممت أول سلسلة علمية كاملة.",
+    "icon": "Medal",
+    "metric": "seriesCompleted",
+    "threshold": 1,
+    "points": 300
+  }
+]

@@ -99,7 +99,7 @@ export default function ProgramsPage() {
     return (
         <div className="min-h-screen pb-20 overflow-hidden" dir="rtl">
             {/* Hero Section */}
-            <section className="relative pt-16 pb-24 overflow-hidden">
+            <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 pt-16 pb-24 overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl bg-white/[0.02]">
                 {/* Background Blobs */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full translate-y-1/2 -translate-x-1/2" />

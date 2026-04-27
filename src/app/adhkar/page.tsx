@@ -359,9 +359,8 @@ function DhikrCard({
 
       {/* Arabic text */}
       <p
-        className={cn("text-white text-right font-amiri text-2xl md:text-3xl leading-relaxed mb-3 transition-all", isReadingMode && "reading-text")}
+        className={cn("text-white text-right font-quran text-2xl md:text-3xl leading-relaxed mb-3 transition-all", isReadingMode && "reading-text")}
         style={{
-          fontFamily: 'var(--font-amiri, serif)',
           fontSize: isReadingMode ? `${fontSize && fontSize + 6}px` : undefined,
           lineHeight: isReadingMode ? '2' : '1.6'
         }}
@@ -525,7 +524,7 @@ export default function AdhkarPage() {
 
                   {/* Motivational Footer */}
                   <div className="mt-20 pt-12 border-t border-white/5 text-center">
-                    <p className="font-amiri text-2xl text-white/20 italic">
+                    <p className="font-quran text-2xl text-white/20 italic">
                       "فاذكروني أذكركم واشكروا لي ولا تكفرون"
                     </p>
                   </div>

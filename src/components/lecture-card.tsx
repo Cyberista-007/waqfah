@@ -20,6 +20,9 @@ import { Program } from "@/lib/types"
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { Brain } from "lucide-react"
+import { QuizDialog } from "./quiz-dialog"
+import type { Quiz } from "@/lib/types"
 import { motion } from "framer-motion"
 import { ThreeDTilt } from "./ui/three-d-tilt"
 
@@ -42,6 +45,7 @@ const LectureCardComponent = ({
   const { playTrack } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
@@ -139,6 +143,34 @@ const LectureCardComponent = ({
       }
       setIsHovering(false);
   };
+
+  const sampleQuiz: Quiz = {
+    id: `quiz-${lecture.id}`,
+    lectureId: lecture.id,
+    title: `اختبار: ${lecture.title}`,
+    rewardPoints: 50,
+    createdAt: lecture.createdAt,
+    questions: [
+      {
+        question: "ما هو الهدف الرئيسي من هذه المحاضرة؟",
+        options: ["نشر الوعي العلمي", "الترفيه فقط", "تقديم معلومات عامة", "لا شيء مما سبق"],
+        correctAnswer: 0,
+        explanation: "تهدف محاضرات منصة وقفة دائماً إلى ترسيخ الوعي العلمي الشرعي الرصين."
+      },
+      {
+        question: "كيف يمكن لطالب العلم الاستفادة القصوى من المحتوى؟",
+        options: ["الاستماع السريع", "التدوين والتدبر", "تجاهل المصادر", "الاكتفاء بالعنوان"],
+        correctAnswer: 1,
+        explanation: "التدوين والتدبر هما مفتاح الحفظ والفهم في طلب العلم."
+      },
+      {
+        question: "هل المحتوى متاح للتحميل؟",
+        options: ["نعم، الصوتي فقط", "نعم، المرئي فقط", "نعم، كلاهما", "لا، متاح للاستماع فقط"],
+        correctAnswer: 2,
+        explanation: "تتيح المنصة تحميل المحتوى الصوتي والمرئي لسهولة الوصول إليه في أي وقت."
+      }
+    ]
+  };
   
   const progress = useMemo(() => {
     if (!lectureHistory || !lectureHistory.duration) return 0;
@@ -173,15 +205,15 @@ const LectureCardComponent = ({
         <ThreeDTilt tiltMax={8} className="h-full">
             <div 
                 className={cn(
-                "group relative flex flex-col h-full rounded-2xl transition-all duration-300 transform-gpu",
-                "bg-card border border-white/10 overflow-hidden shadow-lg",
-                "hover:border-primary/40 hover:shadow-primary/5"
+                "group relative flex flex-col h-full rounded-[2rem] transition-all duration-500 transform-gpu",
+                "bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl",
+                "hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:bg-white/[0.08]"
                 )}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
             >
                 {/* Media Container */}
-                <div className="relative aspect-video overflow-hidden bg-zinc-900 flex-shrink-0">
+                <div className="relative aspect-video overflow-hidden bg-black/40 flex-shrink-0 border-b border-white/10">
                     <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0 z-10" aria-hidden="true" tabIndex={-1} />
                     <Image
                         src={imageUrl}
@@ -250,7 +282,7 @@ const LectureCardComponent = ({
                 </div>
 
                 {/* Content Container */}
-                <div className="p-5 flex-grow flex flex-col gap-4">
+                <div className="p-5 flex-grow flex flex-col gap-4 relative z-20 bg-[#09090b]/40">
                     <div className="space-y-3">
                         <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
                             {dateText && (
@@ -286,7 +318,7 @@ const LectureCardComponent = ({
                         </div>
                     )}
 
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-border/50">
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5">
                         <div className="flex items-center gap-2">
                             {lecture.programSlug && (
                                 <Link 
@@ -360,6 +392,17 @@ const LectureCardComponent = ({
                                 <TooltipContent>إضافة لقائمة</TooltipContent>
                             </Tooltip>
                             <FavoriteButton lectureId={lecture.id} className="h-10 w-10 rounded-xl" />
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button 
+                                        onClick={() => setIsQuizOpen(true)} 
+                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+                                    >
+                                        <Brain className="w-5 h-5" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>اختبر معرفتك</TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
                 </div>
@@ -375,6 +418,12 @@ const LectureCardComponent = ({
             userPlaylists={playlists || []}
         />
       )}
+
+      <QuizDialog 
+        isOpen={isQuizOpen}
+        onOpenChange={setIsQuizOpen}
+        quiz={sampleQuiz}
+      />
     </TooltipProvider>
   )
 }

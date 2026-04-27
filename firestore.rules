@@ -13,13 +13,11 @@ service cloud.firestore {
     }
 
     function isBanned() {
-      // ban_expires is a custom claim set in seconds since epoch.
-      // request.time is a Timestamp object.
       return request.auth.token.ban_expires != null && request.auth.token.ban_expires > request.time.toMillis() / 1000;
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
 
     function isCreatingOwnResource(userId) {
@@ -30,7 +28,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
     
-    // Check if the user has the 'admin' role in their user profile document.
     function isAdmin() {
       return isSignedIn() && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -41,96 +38,68 @@ service cloud.firestore {
     // Public Content Collections 
     // =====================================================================
 
-    match /inspiration/{inspirationId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
+    match /inspiration/{id} { allow read, get, list: if true; allow write: if isAdmin(); }
+    match /shubuhat/{id} { allow read, get, list: if true; allow write: if isAdmin(); }
+    match /stats/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /books/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /question_answers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /muhlikat/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /scheduled_lessons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /topics/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /donations/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /destructive_sins/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /gamification_badges/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /series/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    match /stats/{statsId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+    // Palestine solidarity pledges — written ONLY by server-side Admin SDK.
+    // Client rules are restrictive because the API route uses firebase-admin
+    // which bypasses these rules. This is intentional security-in-depth.
+    match /palestine_pledges/{fingerprintId} {
+      allow read: if false;   // Fingerprints are never exposed to clients
+      allow write: if false;  // Only server-side Admin SDK can write
     }
 
     match /programs/{programId} {
-      allow get, list: if true;
-      // Allow admins to do any write.
-      // Allow any signed-in user to update only the followerCount.
+      allow read: if true;
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount']);
     }
-    
-    match /series/{seriesId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
+
+    match /challenges/{challengeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount']);
+    }
+
+    match /curriculums/{curriculumId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentCount']);
     }
 
     match /lectures/{lectureId} {
-      allow get, list: if true;
-      // Admins can perform any write operation.
-      // Allow users to suggest lectures for pinning.
+      allow read: if true;
       allow write: if isAdmin();
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suggestionCount']);
 
       match /suggestions/{userId} {
         allow read, create, delete: if isOwner(userId);
       }
-    }
-
-    match /books/{bookId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
-    }
-    
-    match /question_answers/{qaId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
-    }
-
-    match /shubuhat/{shubhaId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
-    }
-
-    match /scheduled_lessons/{lessonId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
-    }
-    
-    match /topics/{topicId} {
-      allow get, list: if true;
-      allow write: if isAdmin(); // Only admins can modify.
-    }
-    
-    match /challenges/{challengeId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount']);
-    }
-    
-    match /curriculums/{curriculumId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentCount']);
-    }
-
-    match /settings/{settingsId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /donations/{donationId} {
-      allow get, list: if true; // Allow public reading of donations for the wall
-      allow write: if isAdmin(); // Only admins can add/edit/delete donations for now
-    }
-    
-    match /destructive_sins/{sinId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-    
-    match /gamification_badges/{badgeId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
+      match /ratings/{userId} {
+        allow read: if true;
+        allow create, update: if isCreatingOwnResource(userId) && request.resource.data.value >= 1 && request.resource.data.value <= 5;
+      }
+      match /clips/{clipId} {
+        allow read: if true;
+        allow create: if isCreatingOwnResource(request.resource.data.userId);
+        allow delete: if isResourceOwner();
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid) && !isBanned();
+        allow update, delete: if isSignedIn() && (isResourceOwner() || isAdmin());
+      }
     }
 
     // =====================================================================
@@ -138,133 +107,51 @@ service cloud.firestore {
     // =====================================================================
 
     match /users/{userId} {
-      // A user can create their own profile document.
       allow create: if isOwner(userId);
-      // Anyone can read a user's public profile data
       allow get: if true;
-      // Users can only update their own profile. Admins can update any profile.
-      allow update: if isOwner(userId) || isAdmin();
-      // Allow signed-in users to list profiles for leaderboard
+      allow update, delete: if isOwner(userId) || isAdmin();
       allow list: if isSignedIn();
-      // A user can delete their own account.
-      allow delete: if isOwner(userId);
 
-      match /user_challenges/{challengeId} {
-        allow read, write, delete: if isOwner(userId);
+      // Notifications access
+      match /notifications/{id} {
+        allow read, write: if isOwner(userId);
       }
 
-      match /accountability/{entryId} {
-        allow read, write, delete: if isOwner(userId);
-      }
-
-      match /user_badges/{badgeId} {
-        allow read, write, delete: if isOwner(userId);
+      // State access
+      match /state/{document} {
+        allow read, write: if isOwner(userId);
       }
       
-      match /curriculum_progress/{curriculumId} {
-        allow read, write, delete: if isOwner(userId);
+      match /favorites/{document} {
+        allow read, write: if isOwner(userId);
       }
 
-      match /favorites/{lectureId} {
-        // Users can only manage their own favorites.
-        allow read, write, delete: if isOwner(userId);
-      }
-      
-      match /following/{programId} {
-        // Users can only manage their own following list.
-        allow read, write, delete: if isOwner(userId);
-      }
-      
-      match /listenHistory/{lectureId} {
-        // Users can only read and write to their own listening history.
-        allow read, write, delete: if isOwner(userId);
-      }
-
+      // Playlists
       match /playlists/{playlistId} {
-        // A user can create their own playlist.
-        allow create: if isCreatingOwnResource(request.resource.data.userId);
-        
-        // A user can list their own playlists.
-        allow list: if isOwner(userId);
-
-        // Users can get, update, and delete their own playlists.
-        allow get, update, delete: if isResourceOwner();
-        
-        // Allow ANYONE to get a public playlist.
-        allow get: if resource.data.isPublic == true;
-      }
-      
-      match /notes/{lectureId} {
-          // Users can only manage their own notes.
-          allow read, write, delete: if isOwner(userId);
+        allow create: if isCreatingOwnResource(request.resource.data.userId) || isOwner(userId);
+        allow read, update, delete: if isOwner(userId) || (resource != null && resource.data.isPublic == true);
       }
 
-      match /notifications/{notificationId} {
-          // Users can only manage their own notifications.
-          allow get, list, update, delete: if isOwner(userId);
+      // Recursive Wildcard for other private data
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
       }
     }
-    
 
-    // =====================================================================
-    // Subcollections for Lectures
-    // =====================================================================
-
-    match /lectures/{lectureId}/ratings/{userId} {
-      // Anyone can read ratings for a lecture.
-      allow get, list: if true;
-
-      // A user can create or update their own rating.
-      // The document ID must be the user's ID to enforce one rating per user.
-      allow create, update: if isCreatingOwnResource(userId) &&
-                      request.resource.data.lectureId == lectureId &&
-                      request.resource.data.value >= 1 &&
-                      request.resource.data.value <= 5;
-      // Users cannot delete ratings.
-      allow delete: if false;
-    }
-    
-    match /lectures/{lectureId}/clips/{clipId} {
-      allow get, list: if true;
-      // User must be creator to create a clip.
-      allow create: if isCreatingOwnResource(request.resource.data.userId);
-      // Only the owner of the clip can delete it.
-      allow delete: if isResourceOwner();
-    }
-    
-    match /lectures/{lectureId}/comments/{commentId} {
-      allow list: if true;
-      allow get: if true;
-      // Signed in users can create comments, if they are not banned
-      allow create: if isSignedIn() && isCreatingOwnResource(request.auth.uid) && !isBanned();
-      // Users can only update or delete their own comments, Admins can delete any.
-      allow update, delete: if isSignedIn() && (isResourceOwner() || isAdmin());
-    }
-    
     // =====================================================================
     // Collection Group Queries
     // =====================================================================
 
-    // This rule allows the client to query the 'playlists' collection group.
-    // It's secured because the client query always includes `where('isPublic', '==', true)`
-    // and the `get` rule for individual playlists (above) checks `resource.data.isPublic == true`.
-    // This ensures only public playlists are returned by the query.
     match /{path=**}/playlists/{playlistId} {
-      allow list: if request.query.limit <= 30;
+      allow list, get: if (resource == null) || (resource.data.isPublic == true) || (isSignedIn() && request.auth.uid in path);
     }
 
     match /{path=**}/clips/{clipId} {
-      // Allow a user to query for their own clips.
-      // NOTE: This rule is permissive. The client query MUST include `where('userId', '==', request.auth.uid)`
-      // to prevent users from listing clips they don't own. Security rules cannot enforce this for collection group queries.
-      allow list: if isSignedIn();
+      allow list, get: if isSignedIn();
     }
     
     match /{path=**}/notes/{lectureId} {
-      // Allow a user to query for their own notes.
-      // The profile page uses a direct collection query which is more secure.
-      // This rule is a fallback but relies on client-side filtering.
-      allow list: if isSignedIn();
+      allow list, get: if isSignedIn();
     }
   }
 }

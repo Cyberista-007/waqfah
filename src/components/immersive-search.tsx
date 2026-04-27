@@ -21,7 +21,7 @@ interface ImmersiveSearchProps {
     onClose: () => void;
 }
 
-type SearchCategory = 'all' | 'lectures' | 'series' | 'programs' | 'books' | 'shubuhat' | 'muhlikat';
+type SearchCategory = 'all' | 'lectures' | 'series' | 'programs' | 'books' | 'shubuhat' | 'destructive_sins';
 
 export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const [query, setQuery] = useState('');
@@ -33,14 +33,14 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         series: Series[],
         books: Book[],
         shubuhat: Shubha[],
-        muhlikat: DestructiveSin[]
+        destructive_sins: DestructiveSin[]
     }>({ 
         lectures: [], 
         programs: [], 
         series: [],
         books: [],
         shubuhat: [],
-        muhlikat: []
+        destructive_sins: []
     });
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -54,7 +54,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const { data: allSeries } = useCollection<Series>('series', { limit: 50 });
     const { data: allBooks } = useCollection<Book>('books', { limit: 50 });
     const { data: allShubuhat } = useCollection<Shubha>('shubuhat', { limit: 50 });
-    const { data: allMuhlikat } = useCollection<DestructiveSin>('muhlikat', { limit: 50 });
+    const { data: allDestructiveSins } = useCollection<DestructiveSin>('destructive_sins', { limit: 50 });
 
     useEffect(() => {
         const stored = localStorage.getItem('recentSearches');
@@ -88,7 +88,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
 
     useEffect(() => {
         if (!debouncedQuery) {
-            setResults({ lectures: [], programs: [], series: [], books: [], shubuhat: [], muhlikat: [] });
+            setResults({ lectures: [], programs: [], series: [], books: [], shubuhat: [], destructive_sins: [] });
             return;
         }
 
@@ -125,10 +125,10 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         const fuseShubuhat = new Fuse(allShubuhat || [], { ...fuseOptions, keys: ['question', 'summary', 'answer'] });
         const shubuhat = fuseShubuhat.search(q).slice(0, 5).map(r => r.item);
 
-        const fuseMuhlikat = new Fuse(allMuhlikat || [], { ...fuseOptions, keys: ['title', 'dialogTitle', 'concept'] });
-        const muhlikat = fuseMuhlikat.search(q).slice(0, 5).map(r => r.item);
+        const fuseDestructiveSins = new Fuse(allDestructiveSins || [], { ...fuseOptions, keys: ['title', 'dialogTitle', 'concept'] });
+        const destructive_sins = fuseDestructiveSins.search(q).slice(0, 5).map(r => r.item);
 
-        setResults({ lectures, programs, series, books, shubuhat, muhlikat });
+        setResults({ lectures, programs, series, books, shubuhat, destructive_sins });
         setSelectedIndex(-1);
     }, [debouncedQuery, allLectures, allPrograms, allSeries]);
 
@@ -154,7 +154,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
             case 'series': path = `/series/${item.id}`; break;
             case 'book': path = `/books`; break; // Simple link for now, could be deeper
             case 'shubha': path = `/shubuhat`; break;
-            case 'muhlika': path = `/muhlikat`; break;
+            case 'muhlika': path = `/muhlikat`; break; // Keeping route as /muhlikat for URL stability
         }
         
         router.push(path);
@@ -168,7 +168,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
             ...results.series.map(i => ({ ...i, type: 'series' })),
             ...results.books.map(i => ({ ...i, type: 'book' })),
             ...results.shubuhat.map(i => ({ ...i, type: 'shubha' })),
-            ...results.muhlikat.map(i => ({ ...i, type: 'muhlika' }))
+            ...results.destructive_sins.map(i => ({ ...i, type: 'muhlika' }))
         ];
         const totalResults = allItems.length;
 
@@ -224,7 +224,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         { id: 'programs', label: 'البرامج' },
         { id: 'books', label: 'المكتبة' },
         { id: 'shubuhat', label: 'الشبهات' },
-        { id: 'muhlikat', label: 'المهلكات' },
+        { id: 'destructive_sins', label: 'المهلكات' },
     ];
 
     return (
@@ -441,13 +441,13 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                             </section>
                                         )}
 
-                                        {(category === 'all' || category === 'muhlikat') && results.muhlikat.length > 0 && (
+                                        {(category === 'all' || category === 'destructive_sins') && results.destructive_sins.length > 0 && (
                                             <section>
                                                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
                                                     <div className="h-px w-8 bg-white/10" /> أمراض القلوب (المهلكات)
                                                 </h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.muhlikat.map((muhlika, idx) => {
+                                                    {results.destructive_sins.map((muhlika, idx) => {
                                                         const selectOffset = results.lectures.length + results.series.length + results.programs.length + results.books.length + results.shubuhat.length + idx;
                                                         const isSelected = selectOffset === selectedIndex;
                                                         return (
@@ -465,7 +465,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                             </section>
                                         )}
 
-                                        {results.lectures.length === 0 && results.series.length === 0 && results.programs.length === 0 && results.books.length === 0 && results.shubuhat.length === 0 && results.muhlikat.length === 0 && (
+                                        {results.lectures.length === 0 && results.series.length === 0 && results.programs.length === 0 && results.books.length === 0 && results.shubuhat.length === 0 && results.destructive_sins.length === 0 && (
                                             <div className="flex flex-col items-center justify-center py-20 text-white/10">
                                                 <Search className="w-20 h-20 mb-6 opacity-5" />
                                                 <h2 className="text-3xl font-black italic tracking-tighter">لم نعثر على كنوز مطابقة...</h2>

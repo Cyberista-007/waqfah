@@ -23,7 +23,8 @@ import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, ShieldCheck, Smartphone, Search, Zap, Headphones, Users, Music, 
   Globe, Quote, HeartHandshake, Mail, Send, MessageCircle, Layers,
-  BookOpen, Sparkles, Heart, Loader2, Star, Play, HandHeart, TriangleAlert, Shield
+  Library, BookOpenCheck, BookOpen, Sparkles, Heart, Loader2, Star, Play, HandHeart, TriangleAlert, Shield,
+  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -500,6 +501,26 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 border: "border-indigo-600/20",
                 shadow: "shadow-indigo-600/5",
                 href: "/shubuhat" 
+            },
+            { 
+                name: "الكتب", 
+                icon: Library, 
+                color: "text-amber-500", 
+                bg: "from-amber-600/20 to-transparent", 
+                border: "border-amber-600/20",
+                shadow: "shadow-amber-600/5",
+                href: "/books",
+                image: "/images/book_card_cover.png"
+            },
+            { 
+                name: "ما لا يسع جهله", 
+                icon: BookOpenCheck, 
+                color: "text-emerald-500", 
+                bg: "from-emerald-600/20 to-transparent", 
+                border: "border-emerald-600/20",
+                shadow: "shadow-emerald-600/5",
+                href: "/essential-knowledge",
+                image: "/images/essential_knowledge_cover.png"
             }
           ].map((cat, i) => (
             <motion.div
@@ -518,8 +539,21 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     "hover:-translate-y-2 hover:border-white/10"
                 )}
                 >
-                <div className={cn("p-5 rounded-2xl mb-6 bg-white/5 border border-white/5 transition-all duration-500 group-hover:scale-110", cat.border)}>
-                   <cat.icon className={cn("w-12 h-12 transition-transform", cat.color)} />
+                <div className={cn(
+                    "p-6 rounded-2xl bg-white/5 border border-white/10 mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 relative",
+                    cat.color,
+                    cat.image && "p-0 overflow-hidden aspect-[3/4] w-24 flex items-center justify-center bg-black/40 border-white/20 shadow-2xl"
+                )}>
+                    {cat.image ? (
+                        <Image 
+                            src={cat.image} 
+                            alt={cat.name} 
+                            fill 
+                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                    ) : (
+                        <cat.icon size={32} strokeWidth={1.5} />
+                    )}
                 </div>
                 <span className="font-black text-lg tracking-widest text-white/70 group-hover:text-white uppercase transition-colors">{cat.name}</span>
                 </Link>
@@ -671,6 +705,56 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               </Link>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* 🧭 Additional Sections (Discovery Zone) */}
+      <section className="container px-4 py-16">
+        <div className="mb-10 flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/5" />
+            <h2 className="text-xl font-black uppercase tracking-[0.4em] text-white/20 whitespace-nowrap">أقسام إضافية</h2>
+            <div className="h-px flex-1 bg-white/5" />
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[
+                { href: "/badges", label: "الأوسمة", icon: Medal, color: "text-amber-400" },
+                { href: "/adhkar", label: "الأذكار", icon: Headphones, color: "text-blue-400" },
+                { href: "/hadith", label: "الحديث", icon: BookOpen, color: "text-emerald-400" },
+                { href: "/dua", label: "الأدعية", icon: HandHeart, color: "text-rose-400" },
+                { href: "/quran", label: "القرآن", icon: Layers, color: "text-purple-400" },
+                { href: "/muhlikat", label: "المهلكات", icon: TriangleAlert, color: "text-red-400" },
+                { href: "/shubuhat", label: "الشبهات", icon: Shield, color: "text-indigo-400" },
+                { href: "/essentials", label: "الأساسيات", icon: BookCheck, color: "text-cyan-400" },
+                { href: "/aqeedah", label: "العقيدة", icon: ShieldCheck, color: "text-sky-400" },
+                { href: "/curriculums", label: "المناهج", icon: GraduationCap, color: "text-orange-400" },
+                { href: "/leaderboard", label: "الصدارة", icon: Trophy, color: "text-yellow-400" },
+                { href: "/playlists", label: "القوائم", icon: ListMusic, color: "text-pink-400" },
+                { href: "/books", label: "الكتب", icon: Library, color: "text-amber-500" },
+                { href: "/challenges", label: "التحديات", icon: Flame, color: "text-orange-500" },
+                { href: "/accountability", label: "المحاسبة", icon: BookCheck, color: "text-emerald-500" },
+                { href: "/qa", label: "سؤال وجواب", icon: HelpCircle, color: "text-indigo-500" },
+            ].map((section, idx) => (
+                <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.05, translateY: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: (idx % 6) * 0.05 }}
+                >
+                    <Link
+                        href={section.href}
+                        className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl hover:bg-white/[0.05] hover:border-white/10 transition-all group h-full"
+                    >
+                        <div className={cn("p-4 rounded-2xl bg-white/5 mb-3 group-hover:scale-110 transition-transform", section.color)}>
+                            <section.icon size={24} />
+                        </div>
+                        <span className="text-xs font-black text-white/50 group-hover:text-white transition-colors text-center">{section.label}</span>
+                    </Link>
+                </motion.div>
+            ))}
         </div>
       </section>
 
