@@ -40,7 +40,9 @@ import {
   GlobalVoicesSection, 
   GlobalMediaWatchSection, 
   DigitalLibrarySection, 
-  MediaGallery 
+  MediaGallery,
+  GazaResilienceSection,
+  DigitalAdvocacyKit
 } from '@/components/palestine/awareness';
 import { 
   KnowledgeQuiz, 
@@ -107,7 +109,9 @@ export default function PalestinePage() {
       <GlobalAwarenessGrid />
       <GlobalVoicesSection />
       <GlobalMediaWatchSection />
+      <GazaResilienceSection />
       <DigitalLibrarySection />
+      <DigitalAdvocacyKit />
       <MediaGallery />
 
       {/* ━━ PHASE 6: THE CONNECTION ━━ */}
