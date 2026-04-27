@@ -70,11 +70,16 @@ export function CinematicAudioPlayer() {
 }
 
 /**
- * Glassy Background: Animated colorful blobs behind a deep blur.
+ * Glassy Background: Animated colorful blobs and cultural patterns.
  */
 export function GlassyBackground() {
   return (
     <div className="fixed inset-0 z-[-2] overflow-hidden pointer-events-none">
+      {/* Cultural Pattern Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay grayscale">
+        <div className="absolute inset-0 bg-[url('/palestine_tatreez_pattern.jpg')] bg-repeat bg-[length:400px_auto]" />
+      </div>
+
       <motion.div 
         animate={{ 
           x: [0, 100, 0], 
