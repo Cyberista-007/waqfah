@@ -3004,6 +3004,8 @@ export default function PalestinePage() {
 
       <AlAqsaDetail />
 
+      <EternalSpiritSection />
+
       <ResistanceChroniclesSection />
 
       <MuseumOfHeritageSection />
