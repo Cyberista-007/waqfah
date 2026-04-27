@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Palette, Utensils, Star, Landmark, Mountain, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { TATREEZ_PATTERNS, SYMBOLS, ARCH_DETAILS } from './constants';
+import { TATREEZ_PATTERNS, SYMBOLS, ARCH_DETAILS, HERITAGE_ARTIFACTS } from './constants';
 import { ParallaxImage } from './shared';
 
 /**
@@ -160,7 +160,7 @@ export function MuseumOfHeritageSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {SYMBOLS.map((item, i) => (
+          {HERITAGE_ARTIFACTS.map((item, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
@@ -168,12 +168,15 @@ export function MuseumOfHeritageSection() {
               transition={{ delay: i * 0.1 }}
               className="group relative"
             >
-              <div className="aspect-[3/4] relative rounded-[4rem] overflow-hidden border border-white/5 shadow-2xl">
-                 <Image src={item.image || "/palestine_culture_tatreez_detail_1777282287481.png"} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-[2s]" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                 <div className="absolute bottom-10 left-10 right-10 text-right space-y-4">
+              <div className="aspect-[3/4] relative rounded-[4rem] overflow-hidden border border-white/5 shadow-2xl bg-white/[0.02]">
+                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
+                 <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity">
+                    <Sparkles className="w-40 h-40 text-white" />
+                 </div>
+                 <div className="absolute bottom-10 left-10 right-10 text-right space-y-4 z-20">
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{item.name}</span>
                     <h3 className="text-2xl font-black text-white">{item.name}</h3>
-                    <p className="text-xs text-white/60 leading-relaxed font-medium">{item.description}</p>
+                    <p className="text-xs text-white/40 leading-relaxed font-medium">{item.description}</p>
                  </div>
               </div>
             </motion.div>

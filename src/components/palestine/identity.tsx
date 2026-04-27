@@ -112,7 +112,7 @@ export function QuoteSection() {
  */
 export function AlAqsaDetail() {
   return (
-    <section id="alaqsa" className="py-60 relative">
+    <section id="alaqsa-detail" className="py-60 relative bg-black">
       <div className="container px-6">
         <div className="flex flex-col lg:flex-row items-center gap-24">
           <motion.div 
@@ -162,7 +162,7 @@ export function AlAqsaDetail() {
  */
 export function EternalSpiritSection() {
   return (
-    <section className="py-60 relative overflow-hidden">
+    <section id="spirit" className="py-60 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.05),transparent)] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,rgba(228,49,43,0.05),transparent)] pointer-events-none" />
       
@@ -286,7 +286,7 @@ export function FlagMeaningSection() {
  */
 export function SacredConnectionBento() {
   return (
-    <section className="py-40">
+    <section id="sacred" className="py-40 relative overflow-hidden">
       <div className="container px-6">
         <div className="grid grid-cols-1 md:grid-cols-12 grid-rows-2 gap-8 h-[auto] md:h-[1000px]">
           {/* Main Card: Al-Aqsa */}

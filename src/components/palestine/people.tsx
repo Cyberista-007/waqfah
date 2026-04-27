@@ -2,17 +2,17 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, Globe, Compass, Earth } from 'lucide-react';
+import { MapPin, Users, Globe, Compass, Earth, Key, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { NAKBA_VILLAGES_DATA, CITIES, FAMOUS_FIGURES } from './constants';
+import { NAKBA_VILLAGES_DATA, NAKBA_VILLAGES, CITIES, FAMOUS_FIGURES } from './constants';
 
 /**
  * Lest We Forget: Memorial for depopulated villages.
  */
 export function LestWeForgetMemorial() {
   return (
-    <section className="py-60 bg-rose-950/10 relative overflow-hidden">
+    <section id="nakba" className="py-60 bg-rose-950/10 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
       
       <div className="container px-6 relative z-10">
@@ -30,27 +30,49 @@ export function LestWeForgetMemorial() {
            </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
            {NAKBA_VILLAGES_DATA.map((v, i) => (
              <motion.div
                key={v.name}
                initial={{ opacity: 0, y: 20 }}
                whileInView={{ opacity: 1, y: 0 }}
                transition={{ delay: i * 0.05 }}
-               className="p-10 rounded-[3.5rem] bg-white/[0.02] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-right space-y-4 group"
+               className="p-10 rounded-[3.5rem] bg-white/[0.02] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-right space-y-4 group relative overflow-hidden"
              >
-                <div className="flex items-center justify-between">
+                <Key className="w-12 h-12 text-rose-500/10 absolute top-8 left-8 group-hover:rotate-45 transition-transform" />
+                <div className="flex items-center justify-between relative z-10">
                    <span className="text-xs font-black text-rose-500/60 uppercase tracking-widest">{v.district}</span>
-                   <span className="text-lg font-black text-white/20">{v.year}</span>
                 </div>
-                <h3 className="text-3xl font-black text-white group-hover:text-rose-400 transition-colors">{v.name}</h3>
-                <p className="text-sm text-white/40 leading-relaxed font-medium">{v.fact}</p>
-                <div className="pt-4 flex items-center gap-2 text-white/20">
-                   <Users className="w-4 h-4" />
-                   <span className="text-xs font-bold">عدد السكان: {v.population} نسمة</span>
+                <h3 className="text-3xl font-black text-white group-hover:text-rose-400 transition-colors relative z-10">{v.name}</h3>
+                <div className="space-y-2 relative z-10">
+                  <div className="flex items-center justify-end gap-3 text-white/40">
+                     <span className="text-sm font-bold">{v.year}</span>
+                     <Calendar className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center justify-end gap-3 text-white/20">
+                     <Users className="w-4 h-4" />
+                     <span className="text-xs font-bold">عدد السكان: {v.population}</span>
+                  </div>
                 </div>
+                <p className="mt-8 text-sm text-white/30 leading-relaxed group-hover:text-white/60 transition-colors relative z-10">{v.fact}</p>
              </motion.div>
            ))}
+        </div>
+
+        {/* Scrolling Marquee of all villages */}
+        <div className="relative py-24 border-y border-white/5 overflow-hidden">
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(228,49,43,0.03),transparent)]" />
+           <motion.div 
+             animate={{ x: [0, -4000] }}
+             transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+             className="flex gap-24 items-center whitespace-nowrap"
+           >
+              {[...NAKBA_VILLAGES, ...NAKBA_VILLAGES].map((village, i) => (
+                <span key={i} className="text-4xl md:text-7xl font-black text-white/5 hover:text-rose-500/40 transition-all duration-700 cursor-default select-none">
+                  {village}
+                </span>
+              ))}
+           </motion.div>
         </div>
       </div>
     </section>

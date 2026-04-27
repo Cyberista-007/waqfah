@@ -70,7 +70,7 @@ import { SectionGrid } from '@/components/palestine/navigation';
  */
 export default function PalestinePage() {
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-rose-500/30 selection:text-white">
+    <main className="min-h-screen bg-background text-foreground selection:bg-rose-500/30 selection:text-rose-400 overflow-x-hidden relative" dir="rtl">
       {/* Cinematic Overlays */}
       <FilmGrain />
       <GlassyBackground />
@@ -80,6 +80,7 @@ export default function PalestinePage() {
 
       {/* ━━ PHASE 1: THE SOUL ━━ */}
       <HeroSection />
+      <QuoteSection />
       <SectionGrid />
       <AlAqsaDetail />
       <EternalSpiritSection />

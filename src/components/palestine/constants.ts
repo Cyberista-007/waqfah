@@ -203,9 +203,9 @@ export const POETRY: PoetryItem[] = [
 
 export const GALLERY_IMAGES = [
   { src: '/palestine_hero_cinematic_1777220019628.png', title: 'المسجد الأقصى المبارك', location: 'القدس الشريف' },
-  { src: '/palestine_gallery_gaza_sunset_1777281374815.png', title: 'غروب الشمس في غزة', location: 'شاطئ بحر غزة' },
-  { src: '/palestine_gallery_jerusalem_old_city_1777281398422.png', title: 'أزقة البلدة القديمة', location: 'القدس، فلسطين' },
-  { src: '/palestine_landscape_olive_trees_1777280376366.png', title: 'أشجار الزيتون المعمرة', location: 'جبال الجليل' },
+  { src: '/palestine_gallery_gaza_sunset.png', title: 'غروب الشمس في غزة', location: 'شاطئ بحر غزة' },
+  { src: '/palestine_gallery_jerusalem_old_city.png', title: 'أزقة البلدة القديمة', location: 'القدس، فلسطين' },
+  { src: '/palestine_landscape_olive_trees.png', title: 'أشجار الزيتون المعمرة', location: 'جبال الجليل' },
 ];
 
 export const NAKBA_VILLAGES = [
