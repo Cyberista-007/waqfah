@@ -143,7 +143,7 @@ service cloud.firestore {
     // =====================================================================
 
     match /{path=**}/playlists/{playlistId} {
-      allow list, get: if (resource == null) || (resource.data.isPublic == true) || (isSignedIn() && request.auth.uid in path);
+      allow read: if true;
     }
 
     match /{path=**}/clips/{clipId} {

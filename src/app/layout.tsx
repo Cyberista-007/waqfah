@@ -84,7 +84,7 @@ export default async function RootLayout({
               <div className="hide-in-reading-mode">
                 <GlobalBackButton />
               </div>
-              <main className="flex-1 w-full max-w-7xl mx-auto py-8 pb-24 md:pb-8 px-4 sm:px-8 overflow-hidden">
+              <main className="flex-1 w-full overflow-hidden">
                 <PageTransition>
                     {children}
                 </PageTransition>

@@ -463,7 +463,7 @@ export default function AdhkarPage() {
         </div>
 
         {/* Cards Container */}
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}

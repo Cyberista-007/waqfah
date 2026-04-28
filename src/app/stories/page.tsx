@@ -60,7 +60,7 @@ export default function StoriesPage() {
               <h1 className="text-5xl md:text-7xl lg:text-9xl font-black font-headline tracking-tighter drop-shadow-2xl text-white">
                 قصصٌ <span className="text-primary italic">وعِبَر</span>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed italic opacity-80">
+              <p className="text-xl md:text-2xl text-muted-foreground font-medium w-full mx-auto leading-relaxed italic opacity-80">
                 أبحر في حكايات السلف ونور النبوة لتجد الحكمة التي تنير دربك.
               </p>
             </motion.div>
@@ -185,7 +185,7 @@ export default function StoriesPage() {
         {/* 📚 Stories Grid */}
         <div className={cn(
           "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-          isReadingMode && "max-w-4xl mx-auto grid-cols-1"
+          isReadingMode && "w-full mx-auto grid-cols-1"
         )}>
           <AnimatePresence mode="popLayout">
             {filteredStories.map((story, i) => (
@@ -373,7 +373,7 @@ function StoryDetailModal({ story, onClose }: { story: Story, onClose: () => voi
         exit={{ scale: 0.95, opacity: 0, y: 30 }}
         className={cn(
           "w-full overflow-hidden flex flex-col shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] relative transition-all duration-700 border border-white/10",
-          isReadingMode ? "h-full max-w-full rounded-none border-none" : "max-w-5xl max-h-full rounded-[3.5rem]",
+          isReadingMode ? "h-full w-full rounded-none border-none" : "w-full max-h-full rounded-[3.5rem]",
           readingTheme === 'antique' ? "bg-[#25221B] border-amber-900/20" : 
           readingTheme === 'deep' ? "bg-black" : "bg-[#080808]"
         )}
@@ -515,7 +515,7 @@ function StoryDetailModal({ story, onClose }: { story: Story, onClose: () => voi
                       <MessageSquareHeart className="w-4 h-4" /> وقفة تأمّل
                    </div>
                    <h5 className="text-3xl md:text-5xl font-black font-headline text-white italic">قف هنا للحظة..</h5>
-                   <p className="text-white/40 text-lg max-w-xl mx-auto font-medium leading-relaxed">
+                   <p className="text-white/40 text-lg w-full mx-auto font-medium leading-relaxed">
                       كيف يمكن لمعاني هذه القصة أن تغير شيئاً في يومك؟ خذ أنفاساً عميقة واستحضر نية العمل بما تعلمت.
                    </p>
                 </div>

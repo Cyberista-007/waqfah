@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { Shield, Share2, BookOpen, HeartPulse, Megaphone, Globe, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +32,27 @@ const PLACEHOLDER_NAMES = [
   "أحمد القدوة", "سارة اليافي", "محمد المقدسي", "ليلى الكرمل", "يوسف الغزاوي", "مريم النابلسي",
   "عمر الخليلي", "نور اليافاوية", "خالد الحيفاوي", "زينب القدسية", "إبراهيم الجليلي", "فاطمة النقبية"
 ];
+
+/**
+ * Rolling Number Component for cinematic counters.
+ */
+function RollingNumber({ value }: { value: number }) {
+  const motionValue = useMotionValue(0);
+  const springValue = useSpring(motionValue, { stiffness: 50, damping: 20 });
+  const [displayValue, setDisplayValue] = React.useState(0);
+
+  React.useEffect(() => {
+    motionValue.set(value);
+  }, [value, motionValue]);
+
+  React.useEffect(() => {
+    return springValue.on("change", (latest: number) => {
+      setDisplayValue(Math.floor(latest));
+    });
+  }, [springValue]);
+
+  return <span>{displayValue.toLocaleString('ar-SA')}</span>;
+}
 
 /**
  * Pledge Counter Section: Real-time solidarity recording.
@@ -86,7 +107,7 @@ export function PledgeCounterSection() {
   };
 
   return (
-    <section id="pledge" className="py-60 relative overflow-hidden">
+    <section id="pledge" className="py-60 relative overflow-hidden bg-black/5">
       <div className="container px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div 
@@ -107,7 +128,9 @@ export function PledgeCounterSection() {
                   animate={{ scale: 1 }}
                   className="inline-block px-12 py-6 rounded-[3rem] bg-emerald-500 text-black shadow-glow-emerald"
                 >
-                  <span className="text-4xl md:text-6xl font-black">{count.toLocaleString('ar-SA')}</span>
+                  <span className="text-4xl md:text-6xl font-black">
+                    <RollingNumber value={count} />
+                  </span>
                   <span className="text-lg font-bold block opacity-60">شخص أعلنوا دعمهم حتى الآن</span>
                 </motion.div>
               )}
@@ -206,7 +229,7 @@ export function GlobalSolidarityCallSection() {
   ];
 
   return (
-    <section className="py-40 relative overflow-hidden">
+    <section className="py-40 relative overflow-hidden bg-black/5">
       <div className="container px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -264,7 +287,7 @@ export function SolidarityActionGrid() {
   ];
 
   return (
-    <section className="py-20">
+    <section className="py-20 bg-black/5">
       <div className="container px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -341,7 +364,7 @@ export function SolidarityLivingWall() {
   ];
 
   return (
-    <section className="py-40 bg-black/40 relative overflow-hidden border-y border-white/5">
+    <section className="py-40 bg-black/10 relative overflow-hidden border-y border-white/5">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.02),transparent)]" />
       
       <div className="container px-6 mb-20 text-center">
@@ -357,11 +380,15 @@ export function SolidarityLivingWall() {
             className="flex gap-12 items-center whitespace-nowrap pr-12"
           >
             {[...supports, ...supports].map((s, i) => (
-              <div key={i} className="flex items-center gap-4 px-10 py-5 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-xl">
-                <span className="text-2xl">{s.flag}</span>
+              <motion.div 
+                key={i} 
+                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.08)" }}
+                className="flex items-center gap-4 px-10 py-5 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-xl cursor-default transition-colors group"
+              >
+                <span className="text-2xl group-hover:animate-bounce">{s.flag}</span>
                 <span className="text-xl font-black text-white">{s.name}</span>
                 <span className="text-sm font-bold text-white/20 uppercase tracking-widest">{s.location}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -374,11 +401,15 @@ export function SolidarityLivingWall() {
             className="flex gap-12 items-center whitespace-nowrap pr-12"
           >
             {[...supports.reverse(), ...supports].map((s, i) => (
-              <div key={i} className="flex items-center gap-4 px-10 py-5 rounded-full bg-emerald-500/5 border border-emerald-500/10 backdrop-blur-xl">
-                <span className="text-2xl">{s.flag}</span>
+              <motion.div 
+                key={i} 
+                whileHover={{ scale: 1.1, backgroundColor: "rgba(16,185,129,0.1)" }}
+                className="flex items-center gap-4 px-10 py-5 rounded-full bg-emerald-500/5 border border-emerald-500/10 backdrop-blur-xl cursor-default transition-colors group"
+              >
+                <span className="text-2xl group-hover:rotate-12 transition-transform">{s.flag}</span>
                 <span className="text-xl font-black text-white/80">{s.name}</span>
                 <span className="text-sm font-bold text-white/10 uppercase tracking-widest">{s.location}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>

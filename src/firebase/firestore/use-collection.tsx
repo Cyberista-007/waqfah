@@ -108,16 +108,20 @@ export function useCollection<T = any>(
           },
           (err: FirestoreError) => {
             if (!isMounted) return;
-            const contextualError = new FirestorePermissionError({
-                operation: 'list',
-                path: path,
-            })
+            const contextualError = err.message.includes('requires an index')
+                ? err
+                : new FirestorePermissionError({
+                    operation: 'list',
+                    path: path,
+                });
             
             console.error(`Firestore useCollection error at [${path}]:`, err.message);
             setError(contextualError);
             setData(null);
             setIsLoading(false);
-            errorEmitter.emit('permission-error', contextualError);
+            if (contextualError instanceof FirestorePermissionError) {
+                errorEmitter.emit('permission-error', contextualError);
+            }
           }
         );
     } catch (err: any) {

@@ -173,7 +173,7 @@ export function ImmersivePoetryWall() {
   const [active, setActive] = React.useState(0);
 
   return (
-    <section className="py-60 relative overflow-hidden bg-black/60">
+    <section className="py-60 relative overflow-hidden bg-black/20">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(225,29,72,0.05),transparent)]" />
       <div className="container px-6">
         <div className="max-w-6xl mx-auto mb-40">
@@ -242,7 +242,7 @@ export function ImmersivePoetryWall() {
  */
 export function PoetrySection() {
   return (
-    <section className="py-60 relative overflow-hidden bg-black">
+    <section className="py-60 relative overflow-hidden bg-black/40">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
          <p className="text-[30rem] font-quran select-none">فلسطين</p>
       </div>
@@ -374,7 +374,7 @@ export function PrayerCounter() {
   };
 
   return (
-    <section className="py-40 bg-black/80 text-center relative overflow-hidden">
+    <section className="py-40 bg-black/30 text-center relative overflow-hidden">
        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(225,29,72,0.02),transparent)]" />
        <div className="container px-6 space-y-12 relative z-10">
           <h2 className="text-3xl md:text-5xl font-black text-white/80">أرسل دعوة صادقة لأهلنا في فلسطين</h2>

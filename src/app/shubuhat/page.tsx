@@ -148,7 +148,7 @@ export default function ShubuhatPage() {
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/3 animate-pulse duration-1000" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[150px] translate-y-1/3 -translate-x-1/4" />
 
-        <div className="container relative z-10 mx-auto max-w-5xl text-center space-y-10">
+        <div className="container relative z-10 mx-auto w-full text-center space-y-10">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -180,7 +180,7 @@ export default function ShubuhatPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-4xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 w-full mx-auto"
           >
             {[
               { label: 'شبهة مفندة', value: '+1,200', icon: ShieldCheck, color: 'text-indigo-400' },
@@ -201,7 +201,7 @@ export default function ShubuhatPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="relative max-w-2xl mx-auto group mt-12"
+            className="relative w-full mx-auto group mt-12"
           >
             <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center">
@@ -219,7 +219,7 @@ export default function ShubuhatPage() {
       </section>
 
       {/* 🧭 Categories Browser */}
-      <section className="container mx-auto max-w-6xl px-4 mt-8">
+      <section className="container mx-auto w-full px-4 mt-8">
         <div className="flex flex-wrap items-center justify-center gap-3">
           {CATEGORIES.map((cat, i) => {
             const isActive = activeCategory === cat.id;
@@ -246,7 +246,7 @@ export default function ShubuhatPage() {
       </section>
 
       {/* 🛡️ Advanced Shubuhat Grid / Master-Detail Accordion */}
-      <section className="container mx-auto max-w-5xl px-4 mt-20 relative z-10">
+      <section className="container mx-auto w-full px-4 mt-20 relative z-10">
         <AnimatePresence mode="popLayout">
           {isLoading ? (
             <motion.div

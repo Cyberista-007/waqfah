@@ -37,13 +37,13 @@ export default function ContactPage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="max-w-2xl mx-auto text-xl text-white/40 font-medium leading-relaxed italic"
+                className="w-full mx-auto text-xl text-white/40 font-medium leading-relaxed italic"
             >
                 نسعد دائماً باستقبال اقتراحاتكم، استفساراتكم، وطلبات الانضمام لفريق العمل. نحن هنا لنسمع منكم.
             </motion.p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 w-full mx-auto">
             {/* ── Contact Info Cards ── */}
             <div className="lg:col-span-2 space-y-6">
                 {[

@@ -248,7 +248,7 @@ function PlaylistsSection() {
                                 <CardHeader className="flex-grow">
                                     <div className="flex justify-between items-start">
                                         <CardTitle className="font-headline text-xl">
-                                            <Link href={`/playlists/${playlist.id}`} className="hover:underline">
+                                            <Link href={`/playlists/${playlist.id}?u=${playlist.userId}`} className="hover:underline">
                                                 {playlist.name}
                                             </Link>
                                         </CardTitle>
@@ -266,7 +266,7 @@ function PlaylistsSection() {
                                         <span>{playlist.lectureIds?.length || 0} محاضرة</span>
                                     </div>
                                     <Button asChild size="sm" variant="outline">
-                                        <Link href={`/playlists/${playlist.id}`}>عرض</Link>
+                                        <Link href={`/playlists/${playlist.id}?u=${playlist.userId}`}>عرض</Link>
                                     </Button>
                                 </CardFooter>
                             </Card>

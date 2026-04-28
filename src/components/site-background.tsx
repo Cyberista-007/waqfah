@@ -38,6 +38,11 @@ export function SiteBackground() {
         className="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full blur-[150px] animate-blob animation-delay-4000 opacity-20" 
       />
 
+      {/* Global Cultural Texture Overlay */}
+      <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none">
+        <div className="absolute inset-0 bg-[url('/palestine_tatreez_pattern.jpg')] bg-repeat bg-[length:400px_auto] grayscale" />
+      </div>
+
       {/* Static Overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-tr from-background via-transparent to-background opacity-80" />
       <div className="absolute inset-0 backdrop-blur-[100px]" />

@@ -17,7 +17,7 @@ export default function AqeedahPage() {
     <div className="min-h-screen pb-24 px-4 sm:px-6">
       {/* ... prev header ... */}
       {/* Header Section */}
-      <div className={cn("max-w-4xl mx-auto text-center pt-16 pb-12 transition-all duration-500", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
+      <div className={cn("w-full mx-auto text-center pt-16 pb-12 transition-all duration-500", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -26,7 +26,7 @@ export default function AqeedahPage() {
           <Shield className="w-3 h-3" /> أصول الدين
         </motion.div>
         <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">علم العقيدة</h1>
-        <p className="text-white/40 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+        <p className="text-white/40 text-lg md:text-xl font-medium w-full mx-auto">
           أركان الإيمان الستة — شرح مبسط وأدلة شرعية من الكتاب والسنة
         </p>
       </div>
@@ -36,7 +36,7 @@ export default function AqeedahPage() {
       </div>
 
       {/* Pillars Tabs */}
-      <div className={cn("max-w-6xl mx-auto mb-12 hide-in-reading-mode")}>
+      <div className={cn("w-full mx-auto mb-12 hide-in-reading-mode")}>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {PILLARS.map((p) => {
             const Icon = p.icon;
@@ -61,7 +61,7 @@ export default function AqeedahPage() {
       </div>
 
       {/* Content Area */}
-      <div className={cn("max-w-5xl mx-auto transition-all duration-700", isReadingMode && "reading-content")}>
+      <div className={cn("w-full mx-auto transition-all duration-700", isReadingMode && "reading-content")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeId}
@@ -150,7 +150,7 @@ export default function AqeedahPage() {
       </div>
 
       {/* Basic Theological Concepts Section - Centered in Reading Mode */}
-      <div className={cn("max-w-7xl mx-auto mt-32 hide-in-reading-mode")}>
+      <div className={cn("w-full mx-auto mt-32 hide-in-reading-mode")}>
         <div className="flex items-center gap-4 mb-12">
            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
               <BookOpen className="w-6 h-6 text-indigo-400" />

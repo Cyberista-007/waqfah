@@ -201,11 +201,11 @@ export function SiteHeader() {
         className={cn(
           "sticky z-50 transition-all duration-700 ease-in-out px-4",
           scrolled 
-            ? "top-4 max-w-6xl mx-auto bg-zinc-950/60 backdrop-blur-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.7)] border border-white/10 rounded-[3rem] py-0.5 ring-1 ring-white/5" 
+            ? "top-4 w-full bg-zinc-950/60 backdrop-blur-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.7)] border border-white/10 rounded-[3rem] py-0.5 ring-1 ring-white/5" 
             : "top-0 bg-transparent border-transparent py-6"
         )}
       >
-        <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+        <nav className="w-full px-4 sm:px-12 py-3 flex justify-between items-center">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">

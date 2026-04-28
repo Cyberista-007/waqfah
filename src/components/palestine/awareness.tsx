@@ -12,7 +12,7 @@ import { GLOBAL_TRUTH_DATA, RESOURCES, GALLERY_IMAGES } from './constants';
  */
 export function GlobalAwarenessGrid() {
   return (
-    <section className="py-40 relative overflow-hidden bg-black/40">
+    <section className="py-40 relative overflow-hidden bg-black/10">
       <div className="container px-6">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -237,7 +237,7 @@ export function MediaGallery() {
  */
 export function GazaResilienceSection() {
   return (
-    <section className="py-60 relative overflow-hidden bg-zinc-950">
+    <section className="py-60 relative overflow-hidden bg-black/40">
       <div className="absolute inset-0 z-0">
         <Image 
           src="/palestine_resilience_gaza.png" 
@@ -315,7 +315,7 @@ export function DigitalAdvocacyKit() {
   ];
 
   return (
-    <section className="py-40 relative bg-zinc-950">
+    <section className="py-40 relative bg-black/40">
       <div className="container px-6">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}

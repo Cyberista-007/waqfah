@@ -1325,7 +1325,7 @@ export default function QuranPage() {
 
         {/* ── Recent Surahs ── */}
         {!isReadingMode && !selectedSurah && recentSurahs.length > 0 && (
-          <div className="max-w-4xl mx-auto mb-10 overflow-hidden">
+          <div className="w-full mb-10 overflow-hidden">
             <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-4 flex items-center gap-2 px-4"><History className="w-3.5 h-3.5" /> استكمل قراءتك</p>
             <div className="flex gap-3 overflow-x-auto no-scrollbar px-4">
               {recentSurahs.map(num => {
@@ -1339,7 +1339,7 @@ export default function QuranPage() {
 
         {/* ── Dashboard Bento Grid ── */}
         {!isReadingMode && !selectedSurah && view === 'full' && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto mb-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-16 grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Memorization Progress (Large, spans 2 columns) */}
             <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-[3rem] p-8 md:p-12 relative overflow-hidden group hover:border-white/20 transition-all cursor-default shadow-3xl">
@@ -1430,7 +1430,7 @@ export default function QuranPage() {
 
         {/* ── Daily Verse ── */}
         {!isReadingMode && !selectedSurah && view === 'collections' && (
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto mb-20 group">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-20 group">
             <div className="relative rounded-[3.5rem] p-1.5 bg-gradient-to-br from-primary/30 via-primary/5 to-transparent border border-primary/10">
               <div className="bg-[#050505]/80 backdrop-blur-3xl rounded-[3.4rem] p-10 md:p-14 overflow-hidden relative">
                 <Quote className="absolute -top-10 -left-10 w-40 h-40 text-primary/5 -rotate-12" />
@@ -1465,7 +1465,7 @@ export default function QuranPage() {
         )}
 
         {/* ── Tabs & Search ── */}
-        <div className={cn("max-w-4xl mx-auto mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
+        <div className={cn("w-full mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
           <div className="flex flex-wrap gap-4 justify-center">
             {['collections', 'full', 'plan'].map((v: any) => (
               <button
@@ -1545,7 +1545,7 @@ export default function QuranPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="max-w-4xl mx-auto mb-16 space-y-6"
+              className="w-full mb-16 space-y-6"
             >
               <div className="flex items-center justify-between px-6">
                 <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.3em] flex items-center gap-3">
@@ -1648,7 +1648,7 @@ export default function QuranPage() {
         </AnimatePresence>
 
         {/* ── Content View ── */}
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full">
           {view === 'collections' && !isReadingMode && (
             <div className="space-y-12">
               <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar justify-center">{TOPICS.map(topic => (<button key={topic.id} onClick={() => setActiveTopic(topic.id)} className={cn("px-8 py-3 rounded-2xl whitespace-nowrap font-bold transition-all border text-sm", activeTopic === topic.id ? "bg-primary border-primary text-primary-foreground shadow-glow-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>{topic.label}</button>))}</div>
@@ -1737,7 +1737,7 @@ export default function QuranPage() {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-10">
-                          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-4xl bg-[#080808] border border-white/5 rounded-[4rem] p-10 md:p-20 shadow-4xl relative overflow-hidden">
+                          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full bg-[#080808] border border-white/5 rounded-[4rem] p-10 md:p-20 shadow-4xl relative overflow-hidden">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
                             <div className="relative z-10">
                               {pages[currentPage] ? (
@@ -1768,7 +1768,7 @@ export default function QuranPage() {
                                             src={`https://raw.githubusercontent.com/OmarIthawi/quran-images/master/images/page${String(currentPage).padStart(3, '0')}.png`}
                                             onError={() => setMushafError(true)}
                                             alt={`Quran Page ${currentPage}`}
-                                            className="w-full h-auto max-w-2xl min-h-[500px] object-contain mix-blend-multiply opacity-95"
+                                            className="w-full h-auto min-h-[500px] object-contain mix-blend-multiply opacity-95"
                                             loading="lazy"
                                           />
                                           {/* Paper Texture Overlay */}
@@ -1788,7 +1788,7 @@ export default function QuranPage() {
 
                                           {/* Bismillah Box */}
                                           {selectedSurah !== 1 && selectedSurah !== 9 && currentPage === pageNumbers[0] && (
-                                            <div className={cn("relative mx-auto max-w-2xl mb-12 py-10 px-8 border border-primary/20 rounded-3xl bg-primary/[0.02] overflow-hidden", selectedScript.font)}>
+                                            <div className={cn("relative mx-auto w-full mb-12 py-10 px-8 border border-primary/20 rounded-3xl bg-primary/[0.02] overflow-hidden", selectedScript.font)}>
                                               <p className="text-4xl md:text-6xl text-white/90">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
                                             </div>
                                           )}

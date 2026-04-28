@@ -69,46 +69,6 @@ export function CinematicAudioPlayer() {
   );
 }
 
-/**
- * Glassy Background: Animated colorful blobs and cultural patterns.
- */
-export function GlassyBackground() {
-  return (
-    <div className="fixed inset-0 z-[-2] overflow-hidden pointer-events-none">
-      {/* Cultural Pattern Overlay */}
-      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay grayscale">
-        <div className="absolute inset-0 bg-[url('/palestine_tatreez_pattern.jpg')] bg-repeat bg-[length:400px_auto]" />
-      </div>
-
-      <motion.div 
-        animate={{ 
-          x: [0, 100, 0], 
-          y: [0, -50, 0],
-          scale: [1, 1.1, 1]
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-500/[0.07] rounded-full blur-[120px]"
-      />
-      <motion.div 
-        animate={{ 
-          x: [0, -100, 0], 
-          y: [0, 100, 0],
-          scale: [1, 1.2, 1]
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-rose-500/[0.07] rounded-full blur-[150px]"
-      />
-      <motion.div 
-        animate={{ 
-          x: [0, 50, 0], 
-          y: [0, 150, 0],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-        className="absolute top-[20%] right-[10%] w-[40vw] h-[40vw] bg-amber-500/[0.04] rounded-full blur-[100px]"
-      />
-    </div>
-  );
-}
 
 /**
  * Cinematic Cursor: A custom cursor that reacts to the environment.
@@ -208,6 +168,35 @@ export function BackgroundSoulWords() {
 }
 
 /**
+ * Interactive Background Glow: A light that follows the mouse for immersion.
+ */
+export function InteractiveBackgroundGlow() {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden"
+      style={{
+        background: useTransform(
+          [mouseX, mouseY],
+          ([x, y]) => `radial-gradient(circle 600px at ${x}px ${y}px, rgba(16,185,129,0.03), transparent)`
+        )
+      }}
+    />
+  );
+}
+
+/**
  * Palestine Map Overlay: Fixed background element with "Cities of Light" interaction.
  */
 export function PalestineMapOverlay() {
@@ -257,6 +246,61 @@ export function PalestineMapOverlay() {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Glassy Background: Animated colorful blobs and cultural patterns.
+ */
+export function GlassyBackground() {
+  return (
+    <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+      {/* Cultural Pattern Overlay */}
+      <div className="absolute inset-0 opacity-[0.2]">
+        <div className="absolute inset-0 bg-[url('/palestine_tatreez_pattern.jpg')] bg-repeat bg-[length:300px_auto]" />
+      </div>
+
+      <motion.div 
+        animate={{ 
+          x: [0, 100, 0], 
+          y: [0, -50, 0],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-500/[0.07] rounded-full blur-[120px]"
+      />
+      <motion.div 
+        animate={{ 
+          x: [0, -100, 0], 
+          y: [0, 100, 0],
+          scale: [1, 1.2, 1]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-rose-500/[0.07] rounded-full blur-[150px]"
+      />
+
+      {/* Floating Dust Particles */}
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          animate={{
+            y: [0, -100, 0],
+            x: [0, Math.random() * 50, 0],
+            opacity: [0, 0.4, 0]
+          }}
+          transition={{
+            duration: 10 + Math.random() * 20,
+            repeat: Infinity,
+            delay: Math.random() * 10
+          }}
+          className="absolute w-1 h-1 bg-white/20 rounded-full blur-[1px]"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`
+          }}
+        />
+      ))}
     </div>
   );
 }

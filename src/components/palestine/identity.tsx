@@ -112,7 +112,7 @@ export function QuoteSection() {
  */
 export function AlAqsaDetail() {
   return (
-    <section id="alaqsa-detail" className="py-60 relative bg-black">
+    <section id="alaqsa-detail" className="py-60 relative bg-black/40">
       <div className="container px-6">
         <div className="flex flex-col lg:flex-row items-center gap-24">
           <motion.div 
@@ -293,7 +293,7 @@ export function SacredConnectionBento() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            className="md:col-span-8 md:row-span-2 rounded-[5rem] bg-gradient-to-br from-emerald-900/20 to-black border border-white/5 relative overflow-hidden group shadow-3xl p-16"
+            className="md:col-span-8 md:row-span-2 rounded-[5rem] bg-gradient-to-br from-emerald-900/20 to-black/40 border border-white/5 relative overflow-hidden group shadow-3xl p-16"
           >
              <Image src="/palestine_hero_cinematic_1777220019628.png" alt="Sacred Mosque" fill className="object-cover opacity-20 group-hover:scale-110 transition-transform duration-[5s]" />
              <div className="relative z-10 h-full flex flex-col justify-end text-right space-y-8">

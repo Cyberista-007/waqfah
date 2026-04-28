@@ -13,7 +13,7 @@ import { ParallaxImage } from './shared';
  */
 export function TatreezPatternsGrid() {
   return (
-    <section className="py-40 bg-zinc-950/20">
+    <section className="py-40 bg-black/10">
       <div className="container px-6">
         <div className="text-right mb-24 space-y-6">
           <div className="inline-flex items-center gap-4 px-8 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-xl">
@@ -104,7 +104,7 @@ export function FoodCultureSection() {
  */
 export function SymbolsSection() {
   return (
-    <section id="symbols" className="py-40">
+    <section id="symbols" className="py-40 bg-black/10">
       <div className="container px-6">
         <div className="text-right mb-24 space-y-6">
           <h2 className="text-5xl md:text-8xl font-black tracking-tighter">رموز <span className="text-rose-500">لا تنكسر</span></h2>
@@ -116,17 +116,46 @@ export function SymbolsSection() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={symbol.name === 'حنظلة' ? { 
+                rotateY: 10, 
+                rotateX: -5,
+                scale: 1.05,
+                transition: { type: "spring", stiffness: 300 }
+              } : { scale: 1.02 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-12 rounded-[4.5rem] bg-white/[0.03] backdrop-blur-2xl border border-white/5 hover:bg-white/[0.06] transition-all text-right group relative overflow-hidden shadow-xl"
+              className={cn(
+                "p-12 rounded-[4.5rem] bg-white/[0.03] backdrop-blur-2xl border border-white/5 transition-all text-right group relative overflow-hidden shadow-xl",
+                symbol.name === 'حنظلة' && "hover:shadow-rose-500/10 hover:border-rose-500/30"
+              )}
             >
               <div className={cn("absolute top-0 right-0 w-3 h-full opacity-20", symbol.color)} />
-              <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center text-4xl mb-10 group-hover:scale-110 transition-transform">
-                {symbol.icon || <Star className="w-10 h-10 text-rose-500" />}
+              
+              {/* Specialized Icon/Image Area */}
+              <div className="relative w-32 h-32 mb-10 group-hover:scale-110 transition-transform duration-500 mx-auto md:mx-0 md:mr-0">
+                <div className="absolute inset-0 bg-white/5 rounded-3xl -rotate-6 group-hover:rotate-0 transition-transform" />
+                <div className="relative w-full h-full rounded-3xl bg-white/5 flex items-center justify-center text-5xl overflow-hidden border border-white/10">
+                  {symbol.image ? (
+                    <Image src={symbol.image} alt={symbol.name} fill className="object-contain p-4 group-hover:scale-125 transition-transform duration-700" />
+                  ) : (
+                    <span>{symbol.icon || '✨'}</span>
+                  )}
+                </div>
+                {symbol.name === 'حنظلة' && (
+                  <motion.div 
+                    animate={{ opacity: [0.2, 0.5, 0.2] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -inset-4 bg-rose-500/10 blur-2xl rounded-full -z-10" 
+                  />
+                )}
               </div>
-              <h3 className="text-3xl font-black text-white mb-4">{symbol.name}</h3>
+
+              <h3 className="text-3xl font-black text-white mb-4 group-hover:text-rose-400 transition-colors">{symbol.name}</h3>
               <p className="text-lg text-white/50 leading-relaxed mb-6">{symbol.description}</p>
               <p className="text-xs font-bold text-white/20 italic">{symbol.detail}</p>
+              
+              {/* Micro-interaction: Shine effect on hover */}
+              <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
             </motion.div>
           ))}
         </div>

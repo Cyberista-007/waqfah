@@ -124,7 +124,7 @@ function SearchPageComponent() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed max-w-2xl mx-auto"
+                        className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed w-full mx-auto"
                     >
                         {searchTerm.trim() ? (
                             <>جاري البحث عن <span className="text-white">"{searchTerm}"</span> في كامل أروقة الموسوعة العلمية والمحاضرات.</>
@@ -139,7 +139,7 @@ function SearchPageComponent() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="max-w-5xl mx-auto"
+                    className="w-full mx-auto"
                 >
                     <Card className="border-white/5 bg-white/[0.02] backdrop-blur-3xl rounded-[2.5rem] overflow-hidden p-8 mb-16 shadow-2xl">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
@@ -266,7 +266,7 @@ function SearchPageComponent() {
                                 </div>
                                 <div className="space-y-3">
                                     <h3 className="text-3xl font-black font-headline text-white/40">لا توجد نتائج مطابقة</h3>
-                                    <p className="text-white/20 font-medium max-w-md mx-auto leading-relaxed italic">
+                                    <p className="text-white/20 font-medium w-full mx-auto leading-relaxed italic">
                                         لم نجد نتائج للبحث عن <span className="text-white">"{searchTerm}"</span>. حاول البحث بكلمات أبسط أو استخدم التصنيفات المتاحة.
                                     </p>
                                 </div>
@@ -280,7 +280,7 @@ function SearchPageComponent() {
                     <motion.div 
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="max-w-4xl mx-auto py-32 text-center space-y-12"
+                        className="w-full mx-auto py-32 text-center space-y-12"
                     >
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {[

@@ -230,7 +230,7 @@ const SinCard = memo(({
                     </div>
 
                     <ScrollArea className="flex-1 min-h-0">
-                        <div className={cn("px-8 pb-8 pt-6", isReadingMode && "max-w-xl mx-auto py-20")}>
+                        <div className={cn("px-8 pb-8 pt-6", isReadingMode && "w-full mx-auto py-20")}>
                             
                             <AnimatePresence mode="wait">
                                 {activeTab === 'info' && (
@@ -450,7 +450,7 @@ export default function MuhlikatPage() {
                 </div>
                 
                 {/* ── The "Frame" (Main Container) ── */}
-                <div className="relative group/frame max-w-7xl mx-auto rounded-[4rem] p-1 bg-gradient-to-br from-red-500/20 via-white/5 to-transparent shadow-2xl">
+                <div className="relative group/frame w-full mx-auto rounded-[4rem] p-1 bg-gradient-to-br from-red-500/20 via-white/5 to-transparent shadow-2xl">
                     <div className="relative bg-[#0d0d10] rounded-[3.9rem] overflow-hidden p-8 md:p-16">
                         
                         {/* Background Decor inside frame */}
@@ -465,7 +465,7 @@ export default function MuhlikatPage() {
                                 <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
                                     موسوعة <span className="text-red-500">المهلكات</span>
                                 </h1>
-                                <p className="text-white/30 text-lg md:text-2xl max-w-3xl mx-auto leading-relaxed font-tajawal">
+                                <p className="text-white/30 text-lg md:text-2xl w-full mx-auto leading-relaxed font-tajawal">
                                     تشخيص دقيق لأدوية القلوب المهلكة وسبل الوقاية منها — رحلة التزكية تبدأ من هنا.
                                 </p>
 
@@ -485,7 +485,7 @@ export default function MuhlikatPage() {
                         </div>
 
                         {/* ── Search & Filter ── */}
-                        <div className={cn("max-w-4xl mx-auto mb-20 hide-in-reading-mode relative z-10")}>
+                        <div className={cn("w-full mx-auto mb-20 hide-in-reading-mode relative z-10")}>
                             <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-3 flex flex-col md:flex-row items-center gap-4 group focus-within:border-red-500/20 transition-all">
                                 <div className="relative flex-1 w-full">
                                     <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-red-500 transition-colors" />

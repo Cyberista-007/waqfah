@@ -27,7 +27,7 @@ const PlaylistCardComponent = ({ playlist, userProfile, index = 0 }: PlaylistCar
         >
             <CardHeader className="text-right">
                 <CardTitle className="font-headline text-xl">
-                    <Link href={`/playlists/${playlist.id}`} className="hover:text-primary transition-colors">{playlist.name}</Link>
+                    <Link href={`/playlists/${playlist.id}?u=${playlist.userId}`} className="hover:text-primary transition-colors">{playlist.name}</Link>
                 </CardTitle>
                 {userProfile && (
                      <CardDescription className="flex items-center justify-end gap-2 pt-1">
@@ -41,7 +41,7 @@ const PlaylistCardComponent = ({ playlist, userProfile, index = 0 }: PlaylistCar
             </CardHeader>
             <CardFooter className='flex justify-between items-center pt-4'>
                 <Button asChild size="sm" variant="outline">
-                    <Link href={`/playlists/${playlist.id}`}>عرض القائمة</Link>
+                    <Link href={`/playlists/${playlist.id}?u=${playlist.userId}`}>عرض القائمة</Link>
                 </Button>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <span>{playlist.lectureIds?.length || 0} محاضرة</span>

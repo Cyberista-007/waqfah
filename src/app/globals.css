@@ -666,6 +666,11 @@
   background: #050505 !important;
 }
 
+/* Hide header/footer on Palestine Portal for true immersion */
+body:has(#palestine-portal-root) .hide-in-reading-mode {
+  display: none !important;
+}
+
 @keyframes pulse-subtle {
   0%, 100% {
     box-shadow: 0 0 0 0 hsl(var(--primary)/0.4);

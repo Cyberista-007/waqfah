@@ -430,7 +430,7 @@ export default function DuaPage() {
         </div>
 
         {/* Search */}
-        <div className={cn("max-w-2xl mx-auto mb-12 px-2 hide-in-reading-mode")}>
+        <div className={cn("w-full mb-12 px-2 hide-in-reading-mode")}>
           <div className="relative group">
             <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 group-focus-within:text-sky-400 transition-colors pointer-events-none" />
             <input
@@ -492,7 +492,7 @@ export default function DuaPage() {
         )}
 
         {/* Content Area */}
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full">
           <AnimatePresence mode="wait">
             {!isSearching ? (
               <motion.div
