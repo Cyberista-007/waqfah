@@ -19,6 +19,7 @@ import { doc, runTransaction } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CosmicLibrary } from '@/components/books/cosmic-library';
 
 
 function BooksListSkeleton() {
@@ -404,7 +405,9 @@ export default function BooksPage() {
             </div>
         </section>
 
-        <div className="container px-4">
+        <CosmicLibrary />
+
+        <div className="container px-4 mt-24">
             <BooksList />
         </div>
     </div>

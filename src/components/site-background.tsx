@@ -20,7 +20,7 @@ export function SiteBackground() {
 
   // Animated Mesh Gradient (Blobs) with Mood Sync
   return (
-    <div className="fixed top-0 left-0 w-full h-full z-[-1] pointer-events-none bg-background overflow-hidden">
+    <div data-site-background="" className="fixed top-0 left-0 w-full h-full z-[-1] pointer-events-none bg-background overflow-hidden">
       {/* Dynamic Blobs */}
       <motion.div 
         animate={{ backgroundColor: moodColor }}

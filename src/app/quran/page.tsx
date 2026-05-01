@@ -19,6 +19,7 @@ import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { useSync } from '@/hooks/useSync';
 import { QURAN_DATA, Verse as VerseType } from '@/lib/quran-data';
+import { LuminousMushaf } from '@/components/quran/luminous-mushaf';
 
 // ━━━━━━━━━━━ TYPES & CONSTANTS ━━━━━━━━━━━
 
@@ -792,7 +793,7 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
 export default function QuranPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const { state, updateState } = useSync();
-  const [view, setView] = useState<'collections' | 'full' | 'plan'>('collections');
+  const [view, setView] = useState<'collections' | 'full' | 'plan' | 'luminous'>('collections');
   const [activeCollection, setActiveCollection] = useState(QURAN_DATA[0].id);
   const [activeTopic, setActiveTopic] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1467,7 +1468,7 @@ export default function QuranPage() {
         {/* ── Tabs & Search ── */}
         <div className={cn("w-full mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
           <div className="flex flex-wrap gap-4 justify-center">
-            {['collections', 'full', 'plan'].map((v: any) => (
+            {['collections', 'full', 'plan', 'luminous'].map((v: any) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -1476,7 +1477,7 @@ export default function QuranPage() {
                   view === v ? "bg-white text-black border-white shadow-glow-white" : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10"
                 )}
               >
-                {v === 'collections' ? 'آيات مختارة' : v === 'full' ? 'المصحف كاملاً' : 'خطة الحفظ'}
+                {v === 'collections' ? 'آيات مختارة' : v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : 'خطة الحفظ'}
                 {view === v && <motion.div layoutId="tab-glow" className="absolute inset-0 bg-primary/20 blur-xl" />}
               </button>
             ))}
@@ -2002,6 +2003,18 @@ export default function QuranPage() {
           )}
         </div>
       </div>
+
+      {/* ── Luminous Mushaf View ── */}
+      {view === 'luminous' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[200] bg-black overflow-y-auto">
+              <div className="sticky top-4 left-4 z-50 flex justify-end px-4">
+                  <button onClick={() => setView('collections')} className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full backdrop-blur-md">
+                      <X className="w-6 h-6" />
+                  </button>
+              </div>
+              <LuminousMushaf />
+          </motion.div>
+      )}
 
       <AnimatePresence>
         {currentAudio && (

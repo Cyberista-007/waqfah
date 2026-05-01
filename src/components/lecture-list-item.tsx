@@ -4,7 +4,7 @@
 import type { Lecture, ListenHistoryItem } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2, Maximize2, Youtube, Clock, Calendar } from "lucide-react";
+import { Download, Play, Share2, Maximize2, Clock, Calendar } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";

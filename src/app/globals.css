@@ -679,3 +679,14 @@ body:has(#palestine-portal-root) .hide-in-reading-mode {
     box-shadow: 0 0 0 10px hsl(var(--primary)/0);
   }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SEERAH PAGE — Full Immersive Starfield Mode
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(#seerah-page) {
+  background-color: #02050a !important;
+}
+
+body:has(#seerah-page) [data-site-background] {
+  display: none !important;
+}

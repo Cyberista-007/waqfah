@@ -6,6 +6,8 @@ import { Sun, Moon, Star, BookOpen, RefreshCw, Check, Heart, Fingerprint } from 
 import { cn } from '@/lib/utils';
 import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
+import { DewAdhkar } from '@/components/adhkar/dew-adhkar';
+import { GravityTasbih } from '@/components/adhkar/gravity-tasbih';
 
 // ━━━━━━━━━━━ DATA ━━━━━━━━━━━
 
@@ -432,6 +434,16 @@ export default function AdhkarPage() {
               "ألا بذكر الله تطمئن القلوب" — حَصِّن يومك بأذكار الصباح والمساء المأثورة.
             </p>
           </motion.div>
+        </div>
+
+        {/* 💧 Dew Adhkar Section (New Visual Mode) */}
+        <div className={cn("mb-12", isReadingMode && "hidden")}>
+           <DewAdhkar />
+        </div>
+
+        {/* 📿 Gravity Tasbih Section */}
+        <div className={cn("mb-24", isReadingMode && "hidden")}>
+           <GravityTasbih />
         </div>
 
         {/* Category Tabs */}

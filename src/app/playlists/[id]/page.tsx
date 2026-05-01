@@ -178,6 +178,30 @@ function PlaylistPageContent() {
     };
 
 
+    const handleShare = useCallback(async () => {
+        const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+        const shareText = `شاهد قائمة تشغيل "${playlist?.name}" على منصة وقفة`;
+
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            try {
+                await navigator.share({
+                    title: shareText,
+                    text: shareText,
+                    url: shareUrl,
+                });
+            } catch (error) {
+                console.log('Share was cancelled or failed.', error);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast({ title: 'تم نسخ الرابط!', description: 'تم نسخ رابط القائمة إلى الحافظة.' });
+            } catch (err) {
+                toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
+            }
+        }
+    }, [playlist?.name, toast]);
+
     if (isLoading) {
         return <HomePageSkeleton />;
     }
@@ -249,13 +273,13 @@ function PlaylistPageContent() {
                             <div className="flex items-center justify-center md:justify-start gap-4 flex-wrap w-full">
                                 {orderedLectures.length > 0 && (
                                     <Button asChild className="h-16 px-10 rounded-[2rem] bg-primary text-primary-foreground font-black text-xl gap-4 hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 group/play">
-                                        <Link href={`/lectures/${orderedLectures[0].slug}?playlist=${playlist.id}`}>
+                                        <Link href={`/lectures/${orderedLectures[0].slug}?playlist=${playlist.id}&u=${userId}`}>
                                             <Play className="w-6 h-6 fill-current transition-transform group-hover/play:scale-110" />
                                             بدء المشاهدة
                                         </Link>
                                     </Button>
                                 )}
-                                <Button variant="outline" className="h-16 w-16 rounded-[2rem] bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all group/share">
+                                <Button variant="outline" onClick={handleShare} className="h-16 w-16 rounded-[2rem] bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all group/share">
                                     <Share2 className="w-6 h-6 transition-transform group-hover/share:rotate-12" />
                                 </Button>
                                 <Button variant="outline" className="h-16 w-16 rounded-[2rem] bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all group/shuffle">

@@ -40,6 +40,7 @@ import { ShortsCarousel } from '@/components/ShortsCarousel';
 import { FeaturedStrips } from '@/components/featured-strips';
 import { useAppearance } from '@/components/appearance-provider';
 import { useUser, useCollection } from '@/firebase';
+import { PageIndex } from './home-page-index';
 import {
   Accordion,
   AccordionContent,
@@ -325,7 +326,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         transition={{ duration: 1 }}
         className="space-y-16"
     >
-      <section className="relative z-10 px-4 sm:px-0 pt-2 pb-12">
+      <section id="hero" className="relative z-10 px-4 sm:px-0 pt-2 pb-12">
         <div className="relative w-full h-[70vh] min-h-[550px] max-h-[800px] overflow-hidden rounded-[2.5rem] sm:rounded-[4rem] border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5 group/hero">
             <AnimatePresence mode="wait">
                 <motion.div 
@@ -427,7 +428,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </section>
 
       {/* Premium Quick Access Categories */}
-      <section className="container px-4 mt-20 relative z-20">
+      <section id="categories" className="container px-4 mt-20 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {[
             { 
@@ -468,12 +469,12 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             },
             { 
                 name: "السيرة", 
-                icon: Users, 
+                icon: BookOpen, 
                 color: "text-rose-400", 
                 bg: "from-rose-500/20 to-transparent", 
                 border: "border-rose-500/20",
                 shadow: "shadow-rose-500/5",
-                href: "/search?category=السيرة" 
+                href: "/seerah" 
             },
             { 
                 name: "القصص", 
@@ -566,7 +567,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       <VerseOfTheDay />
 
       {/* ══════ Islamic Content Hub ══════ */}
-      <section className="container px-4 py-16 relative overflow-hidden">
+      <section id="hub" className="container px-4 py-16 relative overflow-hidden">
         {/* Background Decorative Glows */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[80px] rounded-full pointer-events-none -z-10" />
@@ -784,7 +785,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </section>
 
       {/* Learning Paths / Curriculum Highlights — MASTERCLASS ROADMAPS */}
-      <section className="py-32 container px-4 relative">
+      <section id="pathways" className="py-32 container px-4 relative">
         <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -z-10" />
         
         <div className="text-center mb-24 space-y-6">
@@ -872,7 +873,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </section>
 
       {/* Merits / Landing Page Features — PREMIUM BENTO GRID */}
-      <section className="relative py-32 overflow-hidden">
+      <section id="merits" className="relative py-32 overflow-hidden">
         {/* Cinematic Background Decoration */}
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
@@ -986,7 +987,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </section>
 
       {/* App Showcase / Offline Mode — CINEMATIC UPGRADE */}
-      <section className="py-32 relative overflow-hidden">
+      <section id="app" className="py-32 relative overflow-hidden">
         <div className="container px-4">
           <div className="bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 rounded-[4rem] p-8 md:p-20 overflow-hidden relative">
             {/* Background Glow */}
@@ -1191,7 +1192,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         )}
 
         {/* Channel Categories / Browsing */}
-        <div className="space-y-20 mt-4">
+        <div id="latest" className="space-y-20 mt-4">
           <PaginatedSection
             title="أبرز البرامج 🎙️"
             items={topPrograms}
@@ -1263,7 +1264,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </div>
 
         {/* Frequently Asked Questions (FAQ) */}
-        <section className="py-24 container px-4 max-w-4xl mx-auto">
+        <section id="faq" className="py-24 container px-4 max-w-4xl mx-auto">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tighter">الأسئلة الشائعة</h2>
             <p className="text-muted-foreground text-lg italic">كل ما تحتاج معرفته عن استخدام المنصة ودعم المشروع.</p>
@@ -1361,6 +1362,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
           </div>
         </section>
 
+        <PageIndex />
       </motion.div>
   );
 }

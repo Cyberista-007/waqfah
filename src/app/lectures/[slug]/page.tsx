@@ -3,11 +3,14 @@
 import { useParams, notFound } from 'next/navigation';
 import { useCollection } from '@/firebase';
 import { useMemo } from 'react';
-import type { Lecture } from '@/lib/types';
+import type { Lecture, Playlist } from '@/lib/types';
 import { LectureClientPage } from '@/components/lecture-client-page';
 import { CinematicAppLoader } from '@/components/skeletons';
 import { useMood } from '@/components/mood-provider';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { doc, getDoc, query, collection, where, getDocs, documentId } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const MOOD_COLORS: Record<string, string> = {
     'رقائق': '#f59e0b', // Amber/Gold
@@ -23,6 +26,13 @@ export default function LecturePage() {
   const params = useParams();
   const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const slug = decodeURIComponent(slugParam as string);
+  const searchParams = useSearchParams();
+  const playlistId = searchParams.get('playlist');
+  const playlistOwnerId = searchParams.get('u');
+  const firestore = useFirestore();
+  const [playlistLectures, setPlaylistLectures] = useState<Lecture[] | null>(null);
+  const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
+  const [isPlaylistLoading, setIsPlaylistLoading] = useState(false);
 
   const { data: lectures, isLoading: lectureLoading } = useCollection<Lecture>('lectures', {
     where: ['slug', '==', slug],
@@ -31,12 +41,62 @@ export default function LecturePage() {
   
   const lecture = lectures?.[0];
 
+  useEffect(() => {
+    async function fetchPlaylistContext() {
+        if (!playlistId || !firestore) return;
+        setIsPlaylistLoading(true);
+        try {
+            // Determine userId: either from 'u' param or extracted from 'userId_playlistId' format
+            let userId = playlistOwnerId;
+            if (!userId && playlistId.includes('_')) {
+                userId = playlistId.split('_')[0];
+            }
+
+            if (!userId) {
+                console.error("Could not determine playlist owner ID");
+                setIsPlaylistLoading(false);
+                return;
+            }
+
+            const playlistDoc = await getDoc(doc(firestore, 'users', userId, 'playlists', playlistId));
+            if (playlistDoc.exists()) {
+                const data = playlistDoc.data() as Playlist;
+                setPlaylistData(data);
+                const lectureIds = data.lectureIds || [];
+                
+                if (lectureIds.length > 0) {
+                    const fetchedLectures: Lecture[] = [];
+                    // Firestore 'in' query limit is usually 10-30. Let's do it in chunks.
+                    const chunks = [];
+                    for (let i = 0; i < lectureIds.length; i += 10) {
+                        chunks.push(lectureIds.slice(i, i + 10));
+                    }
+
+                    for (const chunk of chunks) {
+                        const q = query(collection(firestore, 'lectures'), where(documentId(), 'in', chunk));
+                        const snapshot = await getDocs(q);
+                        snapshot.forEach(doc => fetchedLectures.push({ id: doc.id, ...doc.data() } as Lecture));
+                    }
+                    
+                    const sorted = lectureIds.map((id: string) => fetchedLectures.find(l => l.id === id)).filter(Boolean) as Lecture[];
+                    setPlaylistLectures(sorted);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching playlist context:", error);
+        } finally {
+            setIsPlaylistLoading(false);
+        }
+    }
+    fetchPlaylistContext();
+  }, [playlistId, firestore]);
+
   const { data: relatedLectures, isLoading: relatedLoading } = useCollection<Lecture>('lectures', {
-    where: ['seriesId', '==', lecture?.seriesId || 'none'],
+    where: ['seriesId', '==', (!playlistId && lecture?.seriesId) ? lecture.seriesId : 'none'],
     limit: 10
   });
 
-  const isLoading = lectureLoading || (!!lecture && relatedLoading);
+  const isLoading = lectureLoading || isPlaylistLoading || (!!lecture && !playlistId && relatedLoading);
 
   useEffect(() => {
     if (lecture) {
@@ -69,5 +129,5 @@ export default function LecturePage() {
     return null;
   }
 
-  return <LectureClientPage lecture={lecture} relatedLectures={relatedLectures || []} />;
+  return <LectureClientPage lecture={lecture} relatedLectures={playlistLectures || relatedLectures || []} playlist={playlistData || undefined} />;
 }

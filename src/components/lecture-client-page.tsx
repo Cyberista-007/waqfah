@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter, notFound } from 'next/navigation';
+import { useRouter, notFound, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle, Sparkles, Zap, Star, ShieldCheck, Headphones, Eye, Info, Layers } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle, Sparkles, Zap, Star, ShieldCheck, Headphones, Eye, Info, Layers, Shuffle, ListMusic, Repeat, Repeat1 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureHeader } from '@/components/lecture-header';
 import type { Lecture, ListenHistoryItem, Playlist } from '@/lib/types';
@@ -43,6 +43,7 @@ const CommentsSection = dynamic(() => import('@/components/comments-section').th
 interface LectureClientPageProps {
     lecture: Lecture;
     relatedLectures: Lecture[];
+    playlist?: Playlist;
 }
 
 const revealVariant: Variants = {
@@ -55,7 +56,11 @@ const revealVariant: Variants = {
   }
 };
 
-export function LectureClientPage({ lecture, relatedLectures }: LectureClientPageProps) {
+export function LectureClientPage({ lecture, relatedLectures, playlist }: LectureClientPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const playlistId = searchParams.get('playlist');
+  const userId = searchParams.get('u');
   const { playTrack, hidePlayer, playIframe } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -67,6 +72,8 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
   const playerSeekRef = useRef<((t: number) => void) | null>(null);
 
   const historyDocRef = useMemoFirebase(
@@ -223,6 +230,31 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
   const prevLecture = currentIndex > 0 ? relatedLectures[currentIndex - 1] : null;
   const nextLecture = currentIndex >= 0 && currentIndex < relatedLectures.length - 1 ? relatedLectures[currentIndex + 1] : null;
 
+  const handleVideoEnded = useCallback(() => {
+    if (repeatMode === 'one') {
+        // Just reload the same page or trigger a restart
+        window.location.reload();
+        return;
+    }
+
+    if (isShuffle) {
+        const otherLectures = relatedLectures.filter(l => l.id !== lecture.id);
+        if (otherLectures.length > 0) {
+            const randomIdx = Math.floor(Math.random() * otherLectures.length);
+            const target = otherLectures[randomIdx];
+            router.push(`/lectures/${target.slug}${playlistId ? `?playlist=${playlistId}${userId ? `&u=${userId}` : ''}` : ''}`);
+            return;
+        }
+    }
+
+    if (nextLecture) {
+        router.push(`/lectures/${nextLecture.slug}${playlistId ? `?playlist=${playlistId}${userId ? `&u=${userId}` : ''}` : ''}`);
+    } else if (repeatMode === 'all' && relatedLectures.length > 0) {
+        const first = relatedLectures[0];
+        router.push(`/lectures/${first.slug}${playlistId ? `?playlist=${playlistId}${userId ? `&u=${userId}` : ''}` : ''}`);
+    }
+  }, [repeatMode, isShuffle, relatedLectures, lecture.id, nextLecture, router, playlistId, userId]);
+
   return (
     <>
     {/* 🎭 Cinematic Backdrop Glow */}
@@ -269,6 +301,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                     className="w-full h-full rounded-none" 
                     startTime={initialTime}
                     onTimeUpdate={setPlayerCurrentTime}
+                    onEnded={handleVideoEnded}
                     transcript={lecture.transcript}
                 />
                 ) : (
@@ -355,116 +388,139 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                         </div>
                     </div>
                 </div>
-            )}
-         </div>
+             )}
+          </div>
 
           <AnimatePresence>
-          {isSidebarOpen && !isTheaterMode && (
+          {isSidebarOpen && (
           <motion.div 
             initial={{ opacity: 0, x: 50, width: 0 }}
             animate={{ opacity: 1, x: 0, width: 'auto' }}
             exit={{ opacity: 0, x: 50, width: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className={cn(
-                "lg:col-span-4 order-2 flex flex-col bg-background/40 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-inner h-[450px] lg:h-[calc(100vh-250px)] lg:max-h-[700px] transition-all duration-500",
+                "lg:col-span-4 order-2 flex flex-col bg-[#0f0f0f] rounded-3xl border border-white/5 overflow-hidden shadow-2xl h-[450px] lg:h-[calc(100vh-250px)] lg:max-h-[700px] transition-all duration-500",
                 isTheaterMode && "hidden lg:flex lg:col-span-3 lg:rounded-none lg:border-l lg:h-screen lg:max-h-none"
             )}
           >
-            <div className="p-6 border-b border-white/5 bg-background/20 backdrop-blur-md z-10 flex items-center justify-between">
-               <div className="space-y-1">
-                <h3 className="font-black text-xl font-headline flex items-center gap-3 text-foreground">
-                    <ListVideo className="w-6 h-6 text-primary" />
-                    رحلة الاستماع
-                </h3>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60">دروس السلسلة</p>
+            <div className="p-4 border-b border-white/5 bg-[#1a1a1a] z-10">
+               <div className="flex items-start justify-between mb-4">
+                  <div className="min-w-0">
+                    <h3 className="font-black text-lg font-headline text-white line-clamp-1">
+                        {playlist ? playlist.name : 'رحلة الاستماع'}
+                    </h3>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
+                        {lecture.programName || 'Abdallah El Ghamry'} - {relatedLectures.findIndex(l => l.id === lecture.id) + 1} من {relatedLectures.length}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/60 h-8 w-8">
+                        <ChevronsUpDown className="w-4 h-4 rotate-90" />
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="rounded-full hover:bg-white/5 text-white/60 h-8 w-8"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                </div>
+               
                <div className="flex items-center gap-2">
-                 <span className="hidden sm:inline-block text-xs font-black text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">{relatedLectures.length} محطة</span>
-                 <Button 
+                  <Button 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="rounded-full hover:bg-white/10 text-muted-foreground"
-                 >
-                    <X className="w-5 h-5" />
-                 </Button>
+                    onClick={() => setIsShuffle(!isShuffle)}
+                    className={cn(
+                        "rounded-full transition-all h-8 w-8",
+                        isShuffle ? "bg-primary text-white shadow-lg" : "hover:bg-white/5 text-white/60"
+                    )}
+                    title={isShuffle ? "إيقاف الترتيب العشوائي" : "تشغيل الترتيب العشوائي"}
+                  >
+                      <Shuffle className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                        if (repeatMode === 'none') setRepeatMode('all');
+                        else if (repeatMode === 'all') setRepeatMode('one');
+                        else setRepeatMode('none');
+                    }}
+                    className={cn(
+                        "rounded-full transition-all h-8 w-8",
+                        repeatMode !== 'none' ? "bg-primary text-white shadow-lg" : "hover:bg-white/5 text-white/60"
+                    )}
+                    title={repeatMode === 'none' ? "تكرار الكل" : repeatMode === 'all' ? "تكرار هذه الحلقة" : "إيقاف التكرار"}
+                  >
+                      {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+                  </Button>
                </div>
             </div>
             <ScrollArea className="flex-1">
-               <div className="p-4 space-y-3">
-                  {/* Current Playing Indicator */}
-                  <div className="relative p-4 rounded-3xl bg-primary/10 border-2 border-primary/30 shadow-lg group">
-                      <div className="absolute top-2 left-2 flex gap-1">
-                        <div className="w-1 h-3 bg-primary animate-bounce-slow" />
-                        <div className="w-1 h-3 bg-primary animate-bounce-slow" style={{ animationDelay: '0.2s' }} />
-                        <div className="w-1 h-3 bg-primary animate-bounce-slow" style={{ animationDelay: '0.4s' }} />
-                      </div>
-                      <div className="flex gap-4">
-                        <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-2xl">
-                            <Image src={getLectureImageUrl(lecture)} alt={lecture.title} fill className="object-cover" />
-                            <div className="absolute inset-0 bg-primary/20 backdrop-blur-[1px]" />
-                        </div>
-                        <div className="flex flex-col justify-center">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">الآن تستمع إلى</span>
-                            <h4 className="font-black text-sm text-foreground line-clamp-2 leading-tight">{lecture.title}</h4>
-                            <div className="flex items-center gap-2 mt-2 text-[10px] font-bold text-muted-foreground">
-                                <Headphones className="w-3 h-3" />
-                                <span>{formatDuration(lecture.duration ?? 0)}</span>
-                            </div>
-                        </div>
-                      </div>
-                  </div>
-
-                  {relatedLectures.filter(l => l.id !== lecture.id).map((item, idx) => {
+               <div className="p-0">
+                  {relatedLectures.map((item, idx) => {
+                     const isCurrent = item.id === lecture.id;
                      const history = allHistory?.find(h => h.id === item.id);
                      const progress = history && history.duration ? (history.position / history.duration) * 100 : 0;
 
                      return (
                         <motion.div
                           key={item.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
                           transition={{ delay: idx * 0.05 }}
-                          viewport={{ once: true }}
                         >
                           <Link 
-                            href={`/lectures/${item.slug}`} 
-                            className="flex gap-5 p-4 rounded-[2rem] hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group items-center relative overflow-hidden active:scale-95"
+                            href={`/lectures/${item.slug}${playlistId ? `?playlist=${playlistId}${userId ? `&u=${userId}` : ''}` : ''}`} 
+                            className={cn(
+                                "flex gap-4 p-4 hover:bg-white/[0.05] transition-all group items-center relative active:scale-[0.98]",
+                                isCurrent ? "bg-white/[0.08]" : ""
+                            )}
                           >
-                              <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-muted/20 shadow-lg group-hover:shadow-2xl transition-all group-hover:scale-105">
+                              {/* Index / Indicator */}
+                              <div className="w-6 flex shrink-0 items-center justify-center">
+                                  {isCurrent ? (
+                                      <Play className="w-3 h-3 text-white fill-current" />
+                                  ) : (
+                                      <span className="text-[10px] font-black text-white/30 group-hover:text-white/60 transition-colors">{idx + 1}</span>
+                                  )}
+                              </div>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                 <h4 className={cn(
+                                     "font-black text-sm line-clamp-2 transition-colors leading-relaxed",
+                                     isCurrent ? "text-white" : "text-white/80 group-hover:text-white"
+                                 )}>{item.title}</h4>
+                                 <div className="mt-1">
+                                     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">{item.programName || 'Abdallah El Ghamry'}</p>
+                                 </div>
+                              </div>
+
+                              {/* Thumbnail */}
+                              <div className="relative w-28 h-16 rounded-lg overflow-hidden shrink-0 bg-zinc-900 shadow-lg">
                                  <Image 
                                     src={getLectureImageUrl(item)} 
                                     alt={item.title} 
                                     fill 
-                                    className="object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all opacity-90 group-hover:opacity-100" 
+                                    className={cn(
+                                        "object-cover transition-all",
+                                        isCurrent ? "opacity-100" : "opacity-60 group-hover:opacity-100"
+                                    )}
                                  />
                                  
                                  {/* Progress Bar Overlay */}
                                  {progress > 0 && (
-                                    <div className="absolute bottom-0 left-0 h-1.5 bg-primary/40 w-full z-10">
-                                        <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+                                    <div className="absolute bottom-0 left-0 h-1 bg-red-600/30 w-full z-10">
+                                        <div className="h-full bg-red-600" style={{ width: `${progress}%` }} />
                                     </div>
                                  )}
 
-                                 <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-black px-2.5 py-1.5 rounded-xl backdrop-blur-md border border-white/10 z-20">
+                                 <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-black px-1.5 py-0.5 rounded transition-opacity z-20">
                                      {formatDuration(item.duration ?? 0)}
-                                 </div>
-                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-primary/40 backdrop-blur-[2px] z-30">
-                                     <Play className="w-10 h-10 text-white fill-current scale-50 group-hover:scale-100 transition-transform duration-300" />
-                                 </div>
-                              </div>
-                              <div className="flex-1 space-y-2">
-                                 <h4 className="font-black text-sm md:text-md line-clamp-2 group-hover:text-primary transition-colors leading-relaxed">{item.title}</h4>
-                                 <div className="flex items-center gap-4 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">
-                                     <div className="flex items-center gap-1.5">
-                                         <Eye className="w-3.5 h-3.5" />
-                                         <span>2.4k</span>
-                                     </div>
-                                     <span className="w-1 h-1 rounded-full bg-white/10" />
-                                     <div className="flex items-center gap-1.5 text-primary/60">
-                                         <Sparkles className="w-3.5 h-3.5" />
-                                         <span>مميز</span>
-                                     </div>
                                  </div>
                               </div>
                           </Link>
@@ -472,13 +528,10 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
                      );
                   })}
                </div>
-             </ScrollArea>
+            </ScrollArea>
           </motion.div>
           )}
           </AnimatePresence>
-
-          {/* Floating Show Button removed as it's now in the Action Bar */}
-
       </motion.div>
 
       {/* 🚀 Next / Prev Navigation */}
@@ -492,7 +545,7 @@ export function LectureClientPage({ lecture, relatedLectures }: LectureClientPag
         >
           {nextLecture ? (
             <Button asChild variant="default" className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg gap-3 order-1 sm:order-2 shadow-lg hover:scale-[1.02] transition-transform">
-               <Link href={`/lectures/${nextLecture.slug}`}>
+               <Link href={`/lectures/${nextLecture.slug}${playlistId ? `?playlist=${playlistId}${userId ? `&u=${userId}` : ''}` : ''}`}>
                  <div className="flex flex-col items-start leading-tight">
                     <span className="text-[10px] text-white/70 uppercase tracking-widest font-black">المحطة التالية</span>
                     <span className="truncate max-w-[200px] block">{nextLecture.title}</span>

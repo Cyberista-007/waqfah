@@ -18,6 +18,8 @@ import {
   Book as BookIcon 
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { QiblaCompass } from "@/components/essentials/qibla-compass";
+import { HolographicCards } from "@/components/aqeedah/holographic-cards";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -197,6 +199,16 @@ export default function EssentialsPage() {
           <div className="w-1 h-12 rounded-full bg-gradient-to-b from-primary to-transparent" />
         </div>
       </section>
+
+      {/* 🧭 Qibla Compass Simulator */}
+      <div className="mb-24">
+        <QiblaCompass />
+      </div>
+
+      {/* 🔮 Holographic Aqeedah Cards */}
+      <div className="mb-24">
+        <HolographicCards />
+      </div>
 
       {/* 🧩 Interactive Grid */}
       <div className="container px-4">

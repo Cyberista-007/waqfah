@@ -16,15 +16,29 @@ import Fuse from 'fuse.js';
 function ProgramLecturesContent({ program }: { program: Program }) {
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState<'newest' | 'trending' | 'oldest'>('newest');
 
     const lectures = useMemo(() => {
         if (!allLectures) return [];
-        const programLectures = allLectures
-            .filter(l => (l.programId === program.id) && l.duration > 180)
-            .sort((a, b) => {
-                const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
-                return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
-            });
+        const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
+
+        let programLectures = allLectures
+            .filter(l => (l.programId === program.id) && l.duration > 180);
+
+        // Apply sort
+        if (sortOrder === 'newest') {
+            programLectures = programLectures.sort((a, b) =>
+                toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime()
+            );
+        } else if (sortOrder === 'oldest') {
+            programLectures = programLectures.sort((a, b) =>
+                toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime()
+            );
+        } else if (sortOrder === 'trending') {
+            programLectures = programLectures.sort((a, b) =>
+                ((b as any).viewCount ?? 0) - ((a as any).viewCount ?? 0)
+            );
+        }
 
         if (!searchTerm) {
             return programLectures;
@@ -38,19 +52,46 @@ function ProgramLecturesContent({ program }: { program: Program }) {
         });
         return fuse.search(searchTerm).map(result => result.item);
 
-    }, [allLectures, program.id, searchTerm]);
+    }, [allLectures, program.id, searchTerm, sortOrder]);
+
+    const sortButtons: { key: typeof sortOrder; label: string }[] = [
+        { key: 'newest',   label: 'الأحدث' },
+        { key: 'trending', label: 'الرائجة' },
+        { key: 'oldest',   label: 'الأقدم' },
+    ];
 
     return (
         <div>
-            <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                    type="search"
-                    placeholder={`ابحث في محاضرات برنامج ${program.name}...`}
-                    className="w-full ps-10 h-12 text-lg"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            {/* Sort + Search row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+                {/* Sort Buttons */}
+                <div className="flex items-center gap-1.5 bg-muted/40 border border-border rounded-full p-1 shrink-0">
+                    {sortButtons.map(btn => (
+                        <button
+                            key={btn.key}
+                            onClick={() => setSortOrder(btn.key)}
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 ${
+                                sortOrder === btn.key
+                                    ? 'bg-white text-black shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {btn.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Search */}
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        type="search"
+                        placeholder={`ابحث في محاضرات برنامج ${program.name}...`}
+                        className="w-full ps-10 h-12 text-lg"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
             </div>
 
             {lecturesLoading ? (

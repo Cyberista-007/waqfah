@@ -64,7 +64,8 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog, themes } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance, BackgroundEffect, ParticleSettings } from '@/components/appearance-provider';
+import { GradientSwitcherDialog } from '@/components/gradient-switcher';
+import { useAppearance, BackgroundEffect, ParticleSettings, gradientPresets } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -417,6 +418,7 @@ export default function SettingsPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
+    const [isGradientSwitcherOpen, setIsGradientSwitcherOpen] = useState(false);
     const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
     const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -639,6 +641,8 @@ export default function SettingsPage() {
             <Separator />
             <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
             <Separator />
+            <SettingsItem icon={Sparkles} label="تدرجات الألوان" onClick={() => setIsGradientSwitcherOpen(true)} />
+            <Separator />
             <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
             <SettingsItem icon={Grid} label="اختيار نمط خلفية" onClick={() => setIsPatternSwitcherOpen(true)} />
@@ -851,6 +855,7 @@ export default function SettingsPage() {
 
         <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
         <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
+        <GradientSwitcherDialog isOpen={isGradientSwitcherOpen} onOpenChange={setIsGradientSwitcherOpen} />
         <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
         <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
         

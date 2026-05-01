@@ -11,6 +11,23 @@ type BackgroundState = {
   type?: 'image' | 'pattern';
 };
 
+export type GradientPreset = {
+  name: string;
+  value: string;
+  colors: [string, string, string, string]; // HSL values like "217 91% 60%"
+};
+
+export const gradientPresets: GradientPreset[] = [
+  { name: "Cinematic Blue", value: "cinematic-blue", colors: ["217 91% 60%", "240 80% 65%", "270 75% 62%", "200 85% 58%"] },
+  { name: "Midnight Purple", value: "midnight-purple", colors: ["262 80% 65%", "285 75% 60%", "320 75% 65%", "200 90% 65%"] },
+  { name: "Desert Gold", value: "desert-gold", colors: ["40 95% 58%", "25 90% 55%", "10 85% 55%", "50 100% 65%"] },
+  { name: "Deep Forest", value: "deep-forest", colors: ["150 65% 50%", "130 65% 50%", "100 60% 50%", "80 70% 55%"] },
+  { name: "Arctic Blue", value: "arctic-blue", colors: ["217 91% 55%", "240 80% 60%", "270 75% 60%", "200 80% 55%"] },
+  { name: "Sunset Glow", value: "sunset-glow", colors: ["15 90% 60%", "340 80% 60%", "300 70% 55%", "40 95% 65%"] },
+  { name: "Ocean Deep", value: "ocean-deep", colors: ["190 90% 50%", "210 85% 55%", "230 80% 60%", "170 95% 45%"] },
+  { name: "Cyberpunk", value: "cyberpunk", colors: ["320 100% 60%", "280 90% 60%", "190 90% 50%", "250 80% 65%"] },
+];
+
 export type BackgroundEffect = 'none' | 'particles';
 
 export type ParticleSettings = {
@@ -31,6 +48,8 @@ type AppearanceContextType = {
   toggleBackground: (shown: boolean) => void;
   backgroundEffect: BackgroundEffect;
   setBackgroundEffect: (effect: BackgroundEffect) => void;
+  gradientPreset: string;
+  setGradientPreset: (preset: string) => void;
   particleColor: string;
   setParticleColor: (color: string) => void;
   particleSettings: ParticleSettings;
@@ -65,6 +84,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
   const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
+  const [gradientPreset, setGradientPresetState] = useState<string>('cinematic-blue');
   const [particleColor, setParticleColor] = useState('#FFFFFF');
   const [aiApiKey, setAiApiKeyState] = useState<string | null>(null);
   
@@ -74,6 +94,23 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     speed: 0.3,
     lineDistance: 120,
   });
+
+  const applyGradientPreset = useCallback((presetValue: string) => {
+    const preset = gradientPresets.find(p => p.value === presetValue);
+    if (!preset) return;
+
+    const root = document.documentElement;
+    root.style.setProperty('--gradient-start', preset.colors[0]);
+    root.style.setProperty('--gradient-mid', preset.colors[1]);
+    root.style.setProperty('--gradient-end', preset.colors[2]);
+    root.style.setProperty('--gradient-extra', preset.colors[3]);
+  }, []);
+
+  const setGradientPreset = useCallback((preset: string) => {
+    setGradientPresetState(preset);
+    localStorage.setItem("site-gradient-preset", preset);
+    applyGradientPreset(preset);
+  }, [applyGradientPreset]);
 
   const applyBackground = useCallback(() => {
     const customBgImage = localStorage.getItem("site-background-image");
@@ -223,6 +260,12 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
         setBackgroundEffectState('none');
     }
 
+    const storedGradient = localStorage.getItem("site-gradient-preset");
+    if (storedGradient) {
+      setGradientPresetState(storedGradient);
+      applyGradientPreset(storedGradient);
+    }
+
     const storedParticleColor = localStorage.getItem("site-particle-color");
     if (storedParticleColor) {
       setParticleColor(storedParticleColor);
@@ -236,7 +279,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     }
   }, [defaultFont, applyBackground, clearBackgroundStyles]);
 
-  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, aiApiKey, setAiApiKey, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners };
+  const value = { font, setFont: handleSetFont, language, setLanguage: handleSetLanguage, background, setBackground: handleSetBackground, isBackgroundShown, toggleBackground, backgroundEffect, setBackgroundEffect, gradientPreset, setGradientPreset, particleColor, setParticleColor: handleSetParticleColor, particleSettings, setParticleSettings, aiApiKey, setAiApiKey, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners };
 
   return (
     <AppearanceContext.Provider value={value}>

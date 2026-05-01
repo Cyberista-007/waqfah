@@ -15,6 +15,7 @@ import Image from 'next/image';
 import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { useSync } from '@/hooks/useSync';
+import { DeedsScale } from '@/components/muhlikat/deeds-scale';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -80,7 +81,7 @@ const SinCard = memo(({
     const [isHovered, setIsHovered] = useState(false);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
@@ -114,7 +115,7 @@ const SinCard = memo(({
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <motion.button
+                <motion.div
                     variants={itemVariants}
                     animate={calculateTilt()}
                     onMouseEnter={() => setIsHovered(true)}
@@ -122,8 +123,10 @@ const SinCard = memo(({
                     onMouseMove={handleMouseMove}
                     whileTap={{ scale: 0.98 }}
                     style={{ transformStyle: "preserve-3d" }}
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                        "group relative h-[420px] rounded-[3.5rem] overflow-hidden border transition-all duration-300 w-full text-right flex flex-col",
+                        "group relative h-[420px] rounded-[3.5rem] overflow-hidden border transition-all duration-300 w-full text-right flex flex-col cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-red-500",
                         "bg-[#09090b] border-white/5",
                         "hover:border-white/20 hover:bg-zinc-900/40",
                         isFocused ? "ring-1 ring-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]" : theme.shadow
@@ -139,7 +142,10 @@ const SinCard = memo(({
                             {theme.level}
                         </div>
                         <button
-                            onClick={(e) => toggleFocus(sin.id, e)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFocus(sin.id, e);
+                            }}
                             className={cn(
                                 "h-10 w-10 rounded-xl border flex items-center justify-center transition-all",
                                 isFocused ? "bg-red-500 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]" : "bg-white/5 text-white/10 border-white/10 hover:text-white hover:bg-white/10"
@@ -172,7 +178,7 @@ const SinCard = memo(({
                             <span className="text-[9px] font-black text-white/40 group-hover:text-white uppercase tracking-[0.3em]">العيادة القلبية</span>
                         </div>
                     </div>
-                </motion.button>
+                </motion.div>
             </DialogTrigger>
 
             <DialogContent hideCloseButton className="max-w-2xl p-0 border-0 bg-transparent text-white shadow-none overflow-visible" dir="rtl">
@@ -577,6 +583,11 @@ export default function MuhlikatPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* ⚖️ Interactive Deeds Scale */}
+            <div className="mt-24">
+                <DeedsScale />
             </div>
 
             {/* 💬 Floating Action Button */}

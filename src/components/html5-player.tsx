@@ -24,10 +24,11 @@ interface Html5PlayerProps {
   className?: string;
   startTime?: number;
   onTimeUpdate?: (time: number) => void;
+  onEnded?: () => void;
   transcript?: any[];
 }
 
-export function Html5Player({ videoId, title, thumbnailUrl, className, startTime = 0, onTimeUpdate, transcript }: Html5PlayerProps) {
+export function Html5Player({ videoId, title, thumbnailUrl, className, startTime = 0, onTimeUpdate, onEnded, transcript }: Html5PlayerProps) {
 
   const [mounted, setMounted] = useState(false);
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
@@ -117,9 +118,10 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
             }, 250);
           },
           onStateChange: (event: any) => {
-            // 1 = playing, 2 = paused
+            // 0 = ended, 1 = playing, 2 = paused
             if (event.data === 1) setIsPlaying(true);
             else if (event.data === 2) setIsPlaying(false);
+            else if (event.data === 0 && onEnded) onEnded();
           }
         }
       });

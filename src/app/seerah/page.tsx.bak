@@ -1,0 +1,180 @@
+'use client';
+
+import React from 'react';
+import { 
+  SeerahHero, 
+  SeerahGlassyBackground, 
+  SeerahScrollProgress, 
+  SeerahSoulWords,
+  SeerahTimelineItem,
+  SeerahCinematicCursor,
+  SeerahInteractiveBackgroundGlow
+} from '@/components/seerah/layout-elements';
+import { motion } from 'framer-motion';
+import { Sparkles, Star, Moon, Heart, Shield, BookOpen } from 'lucide-react';
+
+export default function SeerahPage() {
+  const makkahHeroImage = "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?q=80&w=2070&auto=format&fit=crop"; // Placeholder or use generated
+  const madinahHeroImage = "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?q=80&w=2070&auto=format&fit=crop"; // Placeholder
+
+  return (
+    <main className="min-h-screen text-foreground selection:bg-amber-500/30 selection:text-amber-400 overflow-x-hidden relative bg-[#050505]" dir="rtl">
+      <SeerahScrollProgress />
+      <SeerahGlassyBackground />
+      <SeerahSoulWords />
+      <SeerahCinematicCursor />
+      <SeerahInteractiveBackgroundGlow />
+
+      {/* 🕋 Phase 1: Makkah - The Dawn of Revelation */}
+      <SeerahHero 
+        title="مكة المكرمة"
+        subtitle="حيث بدأ النور، ومنبع الرسالة الخالدة.."
+        image="/seerah_hero_cinematic_1777413309420.png"
+      />
+
+      <section className="container mx-auto px-4 py-32 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-gradient-to-b from-amber-500/50 via-amber-500/10 to-transparent" />
+        
+        <div className="text-center mb-32 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-4 px-8 py-4 rounded-3xl bg-amber-500/5 border border-amber-500/10 backdrop-blur-3xl mb-12"
+          >
+            <Sparkles className="w-6 h-6 text-amber-500" />
+            <span className="text-2xl font-black text-white font-headline">العهد المكي</span>
+          </motion.div>
+          <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8">من الميلاد إلى الهجرة</h2>
+          <p className="text-xl text-white/40 max-w-3xl mx-auto font-bold leading-relaxed">ثلاثة عشر عاماً من الصبر، الدعوة، وبناء العقيدة في قلوب الرجال.</p>
+        </div>
+
+        <div className="max-w-6xl mx-auto">
+          <SeerahTimelineItem 
+            year="عام الفيل" 
+            title="ميلاد خير البرية" 
+            description="في مكة المكرمة، وُلد النبي صلى الله عليه وسلم يتيماً، فكان ميلاده فجراً جديداً للبشرية جمعاء."
+            side="right"
+          />
+          <SeerahTimelineItem 
+            year="40 من العمر" 
+            title="نزول الوحي (اقرأ)" 
+            description="في غار حراء، نزل جبريل عليه السلام بأول كلمات القرآن الكريم، لتبدأ أعظم رحلة في تاريخ الإنسان."
+            side="left"
+          />
+          <SeerahTimelineItem 
+            year="السنة 3 للبعثة" 
+            title="الجهر بالدعوة" 
+            description="صعد النبي صلى الله عليه وسلم على الصفا، ونادى في قريش معلناً رسالة التوحيد، فواجه الصدّ والتكذيب."
+            side="right"
+          />
+          <SeerahTimelineItem 
+            year="السنة 10 للبعثة" 
+            title="عام الحزن" 
+            description="فقد النبي نصيره عمه أبا طالب، وزوجته الحنون خديجة رضي الله عنها، ثم كانت رحلة الإسراء والمعراج تثبيتاً له."
+            side="left"
+          />
+        </div>
+      </section>
+
+      {/* 🌴 Phase 2: The Hijrah - The Great Transition */}
+      <section className="relative py-48 bg-[#080808] border-y border-white/5">
+        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="space-y-12"
+          >
+             <div className="w-32 h-32 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-12 group hover:scale-110 transition-transform duration-500 shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+                <Moon className="w-16 h-16 text-amber-500" />
+             </div>
+             <h2 className="text-6xl md:text-8xl font-black font-headline text-white tracking-tight">طريق الهجرة</h2>
+             <p className="text-2xl text-white/50 max-w-4xl mx-auto font-bold leading-relaxed">
+               تركوا الديار والأموال، لا لشيء إلا لله.. فانطلق النبي وصاحبه أبو بكر نحو يثرب، لتبدأ صفحة جديدة في تاريخ الإسلام.
+             </p>
+             <div className="pt-16">
+                 <div className="inline-grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+                    <StatCard icon={<Heart className="text-rose-500" />} label="الإيثار" value="الأنصار والمهاجرين" />
+                    <StatCard icon={<Shield className="text-blue-500" />} label="التخطيط" value="الأخذ بالأسباب" />
+                    <StatCard icon={<Star className="text-amber-500" />} label="التوكل" value="الله معنا" />
+                 </div>
+             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 🕌 Phase 3: Madinah - The State of Light */}
+      <SeerahHero 
+        title="المدينة المنورة"
+        subtitle="طابة الطيبة، ومأرز الإيمان، وعاصمة الإسلام الأولى.."
+        image="/madinah_early_mosque_cinematic_1777413331481.png"
+      />
+
+      <section className="container mx-auto px-4 py-32 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-gradient-to-b from-amber-500/50 via-amber-500/10 to-transparent" />
+        
+        <div className="max-w-6xl mx-auto">
+          <SeerahTimelineItem 
+            year="1 هـ" 
+            title="بناء المسجد النبوي" 
+            description="أول عمل قام به النبي هو بناء المسجد، ليكون مركز العبادة، والتعليم، وقيادة الدولة الناشئة."
+            side="right"
+          />
+          <SeerahTimelineItem 
+            year="2 هـ" 
+            title="غزوة بدر الكبرى" 
+            description="يوم الفرقان، حيث أعز الله جنده ونصر عبده، وكانت نقطة تحول في موازين القوى."
+            side="left"
+          />
+          <SeerahTimelineItem 
+            year="8 هـ" 
+            title="فتح مكة" 
+            description="عاد النبي إلى مكة فاتحاً، عافياً عن أهلها، ليدخل الناس في دين الله أفواجاً."
+            side="right"
+          />
+          <SeerahTimelineItem 
+            year="10 هـ" 
+            title="حجة الوداع" 
+            description="ألقى النبي خطبته الجامعة التي أرست قواعد العدل والمساواة، مودعاً أمته."
+            side="left"
+          />
+          <SeerahTimelineItem 
+            year="11 هـ" 
+            title="الرفيق الأعلى" 
+            description="في يوم الاثنين، 12 ربيع الأول، انتقل النبي صلى الله عليه وسلم إلى الرفيق الأعلى، تاركاً فينا ما إن تمسكنا به لن نضل أبداً: كتاب الله وسنته."
+            side="right"
+          />
+        </div>
+      </section>
+
+      {/* 📜 Final Quote */}
+      <section className="py-48 text-center bg-black">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            className="container mx-auto px-4"
+          >
+            <BookOpen className="w-20 h-20 text-amber-500 mx-auto mb-12 opacity-30" />
+            <h2 className="text-4xl md:text-6xl font-black text-white font-headline leading-tight mb-12">
+              "لقد تركت فيكم ما إن تمسكتم به لن تضلوا بعدي أبداً: <br/>
+              <span className="text-amber-500">كتاب الله وسنتي</span>"
+            </h2>
+            <p className="text-xl text-white/30 font-bold uppercase tracking-[0.5em]">صلى الله عليه وسلم</p>
+          </motion.div>
+      </section>
+      
+    </main>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
+    return (
+        <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 backdrop-blur-xl hover:bg-white/[0.05] transition-all group text-right">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                {icon}
+            </div>
+            <p className="text-white/40 text-xs font-black uppercase tracking-widest mb-2">{label}</p>
+            <h4 className="text-2xl font-black text-white">{value}</h4>
+        </div>
+    );
+}
