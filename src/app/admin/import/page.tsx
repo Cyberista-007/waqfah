@@ -156,7 +156,7 @@ function ImportPageComponent() {
                     t.set(newProgramRef, newProgramData);
                     t.update(doc(firestore, 'stats', 'global'), { programs: increment(1) });
                 });
-                programToUse = { ...newProgramData, id: newProgramRef.id };
+                programToUse = { ...newProgramData, id: newProgramRef.id } as any as Program;
                 toast({ title: 'تم إنشاء برنامج جديد', description: `"${programToUse.name}"` });
             }
             

@@ -108,7 +108,7 @@ export default function AdminSchedulePage() {
                 <TableRow key={item.id}>
                     <TableCell className="font-medium max-w-sm truncate">{item.title}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                        {item.dateTime?.toDate ? item.dateTime.toDate().toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' }) : 'غير محدد'}
+                        {item.dateTime ? (typeof (item.dateTime as any).toDate === 'function' ? (item.dateTime as any).toDate().toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' }) : new Date(item.dateTime as any).toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' })) : 'غير محدد'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                         {item.isLive && <Badge variant="destructive" className="animate-pulse">بث مباشر</Badge>}

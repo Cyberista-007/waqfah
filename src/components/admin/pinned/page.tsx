@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
-import type { PinnedLectureSettings, Lecture } from '@/lib/types';
+import type { PinnedItemSettings, Lecture } from '@/lib/types';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Pin, Check, ChevronsUpDown } from 'lucide-react';
@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 export default function AdminPinnedLecturePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedLectureSettings>('settings/pinned_lecture');
+  const { data: currentSettings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_lecture');
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc']});
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

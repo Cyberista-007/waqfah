@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
                         }
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                        {user.createdAt ? format(user.createdAt.toDate(), 'yyyy/MM/dd') : 'غير معروف'}
+                        {user.createdAt ? format(typeof (user.createdAt as any).toDate === 'function' ? (user.createdAt as any).toDate() : new Date(user.createdAt as any), 'yyyy/MM/dd') : 'غير معروف'}
                     </TableCell>
                 </TableRow>
                 ))}

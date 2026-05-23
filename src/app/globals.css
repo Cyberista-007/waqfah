@@ -13,152 +13,181 @@
 @layer base {
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 1 — DEEP SLATE (Default)
-     احترافي داكن، أزرق رمادي عميق
+     THEME 1 — DEEP SLATE (Default) ✨ UPGRADED
+     احترافي داكن، أزرق رمادي عميق متطور
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   :root, .theme-deep-slate {
-    --background: 222 20% 7%;
-    --foreground: 210 20% 96%;
-    --card: 222 20% 11%;
-    --card-foreground: 210 20% 96%;
-    --popover: 222 20% 9%;
-    --popover-foreground: 210 20% 96%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 20% 7%;
-    --secondary: 222 15% 18%;
-    --secondary-foreground: 210 20% 85%;
-    --muted: 222 15% 15%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 222 20% 7%;
-    --destructive: 0 72% 51%;
+    --background: 224 22% 5%;
+    --foreground: 210 22% 97%;
+    --card: 224 20% 8%;
+    --card-foreground: 210 22% 97%;
+    --popover: 224 22% 7%;
+    --popover-foreground: 210 22% 97%;
+    --primary: 213 95% 62%;
+    --primary-rgb: 56, 145, 241;
+    --primary-foreground: 224 22% 5%;
+    --secondary: 224 18% 14%;
+    --secondary-foreground: 210 22% 88%;
+    --muted: 224 18% 11%;
+    --muted-foreground: 218 16% 52%;
+    --accent: 213 95% 62%;
+    --accent-foreground: 224 22% 5%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 15% 18%;
-    --input: 222 15% 20%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 160 60% 50%;
-    --chart-3: 35 90% 60%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 350 75% 55%;
-    --gradient-start: 217 91% 60%;
-    --gradient-mid: 240 80% 65%;
-    --gradient-end: 270 75% 62%;
-    --gradient-extra: 200 85% 58%;
+    --border: 224 16% 16%;
+    --input: 224 16% 18%;
+    --ring: 213 95% 62%;
+    --chart-1: 213 95% 62%;
+    --chart-2: 163 65% 52%;
+    --chart-3: 38 95% 62%;
+    --chart-4: 280 70% 65%;
+    --chart-5: 350 80% 58%;
+    --gradient-start: 213 95% 60%;
+    --gradient-mid: 235 85% 65%;
+    --gradient-end: 265 80% 65%;
+    --gradient-extra: 195 90% 60%;
+    /* Aurora Enhancement Variables */
+    --aurora-speed: 1.2;
+    --aurora-blur: 1.3;
+    --aurora-complexity: 7;
+    --aurora-chaos: 1.1;
+    --aurora-saturation: 120;
+    --aurora-grain: 0.025;
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 2 — MIDNIGHT INDIGO
-     بنفسجي أزرق داكن، مستوحى من الفضاء
+     THEME 2 — MIDNIGHT INDIGO ✨ UPGRADED
+     بنفسجي أزرق داكن، مستوحى من الكون الواسع
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   .theme-midnight-indigo {
-    --background: 250 25% 6%;
-    --foreground: 250 20% 95%;
-    --card: 250 25% 10%;
-    --card-foreground: 250 20% 95%;
-    --popover: 250 25% 8%;
-    --popover-foreground: 250 20% 95%;
-    --primary: 262 80% 70%;
-    --primary-foreground: 250 25% 6%;
-    --secondary: 250 20% 18%;
-    --secondary-foreground: 250 20% 85%;
-    --muted: 250 20% 14%;
-    --muted-foreground: 250 15% 52%;
-    --accent: 200 90% 65%;
-    --accent-foreground: 250 25% 6%;
-    --destructive: 0 72% 51%;
+    --background: 248 28% 5%;
+    --foreground: 248 22% 96%;
+    --card: 248 26% 9%;
+    --card-foreground: 248 22% 96%;
+    --popover: 248 28% 7%;
+    --popover-foreground: 248 22% 96%;
+    --primary: 258 85% 72%;
+    --primary-rgb: 145, 94, 239;
+    --primary-foreground: 248 28% 5%;
+    --secondary: 248 22% 16%;
+    --secondary-foreground: 248 22% 86%;
+    --muted: 248 22% 12%;
+    --muted-foreground: 248 16% 54%;
+    --accent: 195 95% 68%;
+    --accent-foreground: 248 28% 5%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
-    --border: 250 20% 18%;
-    --input: 250 20% 20%;
-    --ring: 262 80% 70%;
-    --chart-1: 262 80% 70%;
-    --chart-2: 200 90% 65%;
-    --chart-3: 320 75% 65%;
-    --chart-4: 40 85% 60%;
-    --chart-5: 160 65% 50%;
-    --gradient-start: 262 80% 65%;
-    --gradient-mid: 285 75% 60%;
-    --gradient-end: 320 75% 65%;
-    --gradient-extra: 200 90% 65%;
+    --border: 248 22% 17%;
+    --input: 248 22% 19%;
+    --ring: 258 85% 72%;
+    --chart-1: 258 85% 72%;
+    --chart-2: 195 95% 68%;
+    --chart-3: 320 80% 68%;
+    --chart-4: 42 90% 62%;
+    --chart-5: 163 70% 52%;
+    --gradient-start: 258 85% 68%;
+    --gradient-mid: 280 80% 65%;
+    --gradient-end: 318 80% 68%;
+    --gradient-extra: 195 95% 68%;
+    --aurora-speed: 0.9;
+    --aurora-blur: 1.4;
+    --aurora-complexity: 8;
+    --aurora-chaos: 1.2;
+    --aurora-saturation: 130;
+    --aurora-grain: 0.02;
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 3 — GOLDEN DUSK
-     ذهبي داكن فاخر، مستوحى من ليالي العرب
+     THEME 3 — GOLDEN DUSK ✨ UPGRADED
+     ذهبي داكن فاخر، ليالي العرب والصحاري الملكية
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   .theme-golden-dusk {
-    --background: 24 18% 6%;
-    --foreground: 40 30% 94%;
-    --card: 24 18% 10%;
-    --card-foreground: 40 30% 94%;
-    --popover: 24 18% 8%;
-    --popover-foreground: 40 30% 94%;
-    --primary: 40 95% 58%;
-    --primary-foreground: 24 18% 6%;
-    --secondary: 24 15% 18%;
-    --secondary-foreground: 40 30% 85%;
-    --muted: 24 15% 14%;
-    --muted-foreground: 35 15% 52%;
-    --accent: 15 80% 55%;
-    --accent-foreground: 40 30% 94%;
-    --destructive: 0 72% 51%;
+    --background: 22 20% 5%;
+    --foreground: 42 35% 95%;
+    --card: 22 20% 9%;
+    --card-foreground: 42 35% 95%;
+    --popover: 22 20% 7%;
+    --popover-foreground: 42 35% 95%;
+    --primary: 42 98% 60%;
+    --primary-rgb: 250, 185, 12;
+    --primary-foreground: 22 20% 5%;
+    --secondary: 22 17% 16%;
+    --secondary-foreground: 42 35% 86%;
+    --muted: 22 17% 12%;
+    --muted-foreground: 36 16% 54%;
+    --accent: 18 88% 58%;
+    --accent-foreground: 42 35% 95%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
-    --border: 24 15% 20%;
-    --input: 24 15% 22%;
-    --ring: 40 95% 58%;
-    --chart-1: 40 95% 58%;
-    --chart-2: 15 80% 55%;
-    --chart-3: 200 70% 55%;
-    --chart-4: 280 60% 60%;
-    --chart-5: 160 55% 50%;
-    --gradient-start: 40 95% 58%;
-    --gradient-mid: 25 90% 55%;
-    --gradient-end: 10 85% 55%;
-    --gradient-extra: 50 100% 65%;
+    --border: 22 17% 19%;
+    --input: 22 17% 21%;
+    --ring: 42 98% 60%;
+    --chart-1: 42 98% 60%;
+    --chart-2: 18 88% 58%;
+    --chart-3: 205 72% 58%;
+    --chart-4: 280 62% 62%;
+    --chart-5: 163 58% 52%;
+    --gradient-start: 42 98% 60%;
+    --gradient-mid: 28 92% 56%;
+    --gradient-end: 12 88% 54%;
+    --gradient-extra: 52 100% 68%;
+    --aurora-speed: 0.8;
+    --aurora-blur: 1.5;
+    --aurora-complexity: 6;
+    --aurora-chaos: 0.9;
+    --aurora-saturation: 110;
+    --aurora-grain: 0.03;
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 4 — FOREST SAGE
-     أخضر طبيعي هادئ، مستوحى من الغابات
+     THEME 4 — FOREST SAGE ✨ UPGRADED
+     أخضر طبيعي هادئ، سكينة الغابات والبحر
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   .theme-forest-sage {
-    --background: 155 25% 6%;
-    --foreground: 145 20% 93%;
-    --card: 155 25% 10%;
-    --card-foreground: 145 20% 93%;
-    --popover: 155 25% 8%;
-    --popover-foreground: 145 20% 93%;
-    --primary: 150 65% 55%;
-    --primary-foreground: 155 25% 6%;
-    --secondary: 155 20% 17%;
-    --secondary-foreground: 145 20% 85%;
-    --muted: 155 20% 13%;
-    --muted-foreground: 150 15% 50%;
-    --accent: 80 70% 55%;
-    --accent-foreground: 155 25% 6%;
-    --destructive: 0 72% 51%;
+    --background: 152 28% 5%;
+    --foreground: 148 22% 94%;
+    --card: 152 28% 9%;
+    --card-foreground: 148 22% 94%;
+    --popover: 152 28% 7%;
+    --popover-foreground: 148 22% 94%;
+    --primary: 152 68% 57%;
+    --primary-rgb: 46, 195, 118;
+    --primary-foreground: 152 28% 5%;
+    --secondary: 152 22% 16%;
+    --secondary-foreground: 148 22% 86%;
+    --muted: 152 22% 12%;
+    --muted-foreground: 150 16% 52%;
+    --accent: 82 75% 58%;
+    --accent-foreground: 152 28% 5%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
-    --border: 155 20% 18%;
-    --input: 155 20% 20%;
-    --ring: 150 65% 55%;
-    --chart-1: 150 65% 55%;
-    --chart-2: 80 70% 55%;
-    --chart-3: 200 70% 55%;
-    --chart-4: 40 85% 60%;
-    --chart-5: 320 65% 60%;
-    --gradient-start: 150 65% 50%;
-    --gradient-mid: 130 65% 50%;
-    --gradient-end: 100 60% 50%;
-    --gradient-extra: 80 70% 55%;
+    --border: 152 22% 17%;
+    --input: 152 22% 19%;
+    --ring: 152 68% 57%;
+    --chart-1: 152 68% 57%;
+    --chart-2: 82 75% 58%;
+    --chart-3: 205 72% 58%;
+    --chart-4: 42 90% 62%;
+    --chart-5: 320 68% 62%;
+    --gradient-start: 152 68% 52%;
+    --gradient-mid: 132 68% 52%;
+    --gradient-end: 102 62% 52%;
+    --gradient-extra: 82 75% 58%;
+    --aurora-speed: 0.7;
+    --aurora-blur: 1.2;
+    --aurora-complexity: 6;
+    --aurora-chaos: 0.8;
+    --aurora-saturation: 115;
+    --aurora-grain: 0.025;
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 5 — ARCTIC WHITE
-     فاتح نظيف حديث، خفيف وأنيق
+     THEME 5 — ARCTIC WHITE ✨ UPGRADED
+     فاتح نظيف وأنيق، تصميم Apple-inspired
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   .theme-arctic-white {
-    --background: 210 30% 98%;
-    --foreground: 222 25% 12%;
+    --background: 212 32% 97%;
+    --foreground: 222 28% 10%;
     --card: 0 0% 100%;
     --card-foreground: 222 25% 12%;
     --popover: 0 0% 100%;
@@ -402,7 +431,102 @@
     background: rgba(255, 255, 255, 0.3);
   }
 
-  .shadow-glow-white { box-shadow: 0 0 30px rgba(255, 255, 255, 0.15); }
+  /* ━━━━ GLOW SHADOWS ━━━━ */
+  .shadow-glow-white   { box-shadow: 0 0 30px rgba(255,255,255,0.15); }
+  .shadow-glow-primary {
+    box-shadow:
+      0 0 12px hsl(var(--primary) / 0.35),
+      0 0 30px hsl(var(--primary) / 0.15),
+      0 0 60px hsl(var(--primary) / 0.06);
+  }
+  .shadow-glow-primary-sm {
+    box-shadow:
+      0 0 8px hsl(var(--primary) / 0.45),
+      0 0 20px hsl(var(--primary) / 0.2);
+  }
+  .shadow-glow-primary-lg {
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.5),
+      0 0 50px hsl(var(--primary) / 0.25),
+      0 0 100px hsl(var(--primary) / 0.1);
+  }
+
+  /* ━━━━ GLASSMORPHISM PREMIUM ━━━━ */
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.6) 0%,
+      hsl(var(--card) / 0.3) 100%
+    );
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid hsl(var(--border) / 0.6);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.4),
+      inset 0 1px 0 hsl(var(--foreground) / 0.06);
+  }
+  .glass-card-hover {
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .glass-card-hover:hover {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.75) 0%,
+      hsl(var(--card) / 0.45) 100%
+    );
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.5),
+      0 0 30px hsl(var(--primary) / 0.1),
+      inset 0 1px 0 hsl(var(--foreground) / 0.1);
+    transform: translateY(-4px);
+  }
+
+  /* ━━━━ BORDER GLOW ANIMATE ━━━━ */
+  .border-glow-primary {
+    position: relative;
+  }
+  .border-glow-primary::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.6), transparent, hsl(var(--gradient-end) / 0.6));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .border-glow-primary:hover::after {
+    opacity: 1;
+  }
+
+  /* ━━━━ TEXT GRADIENT ━━━━ */
+  .text-gradient-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)),
+      hsl(var(--gradient-mid)),
+      hsl(var(--gradient-end))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ━━━━ MICRO SHINE ━━━━ */
+  /* Adds a subtle top-left specular highlight to cards */
+  .shine-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.15), transparent);
+    pointer-events: none;
+  }
 }
 
 @media print {

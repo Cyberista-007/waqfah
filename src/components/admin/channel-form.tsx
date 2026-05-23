@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useFirestore, useStorage } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
-import type { Channel } from "@/lib/types";
+import type { Program } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 interface ChannelFormProps {
-    item?: Channel | null;
+    item?: Program | null;
     onFormClose: () => void;
     initialYoutubeUrl?: string;
 }
@@ -48,7 +48,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
   const isEditMode = !!item;
 
   const [name, setName] = useState(item?.name || "");
-  const [description, setDescription] = useState(item?.description || "");
+  const [bio, setBio] = useState(item?.bio || "");
   const [youtubeUrl, setYoutubeUrl] = useState(item?.youtubeUrl || initialYoutubeUrl || "");
   const [imagePreview, setImagePreview] = useState<string | null>(item?.imageUrl || null);
   
@@ -59,7 +59,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
         try {
           const savedData = JSON.parse(savedDataJSON);
           setName(savedData.name || "");
-          setDescription(savedData.description || "");
+          setBio(savedData.bio || "");
           setYoutubeUrl(savedData.youtubeUrl || "");
           setImagePreview(savedData.imagePreview || null);
         } catch (e) {
@@ -76,10 +76,10 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
 
   useEffect(() => {
     if (!isEditMode) {
-      const dataToSave = { name, description, youtubeUrl, imagePreview };
+      const dataToSave = { name, bio, youtubeUrl, imagePreview };
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
     }
-  }, [isEditMode, name, description, youtubeUrl, imagePreview]);
+  }, [isEditMode, name, bio, youtubeUrl, imagePreview]);
 
   const handleClose = () => {
     if (!isEditMode) {
@@ -119,7 +119,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
         
         if (data.channelInfo) {
             setName(data.channelInfo.name || '');
-            setDescription(data.channelInfo.description || '');
+            setBio(data.channelInfo.description || '');
             setImagePreview(data.channelInfo.imageUrl || null);
             setImageFile(null); 
             toast({ title: "تم جلب بيانات القناة بنجاح." });
@@ -162,13 +162,14 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
             finalImageUrl = imagePreview;
         }
 
-        const itemData: Omit<Channel, 'id'> = {
+        const itemData: Omit<Program, 'id'> = {
             name,
             slug,
-            description,
+            bio,
             youtubeUrl,
             imageUrl: finalImageUrl,
             imageId: item?.imageId || `channel-${slug}`,
+            createdAt: item?.createdAt ? (typeof (item.createdAt as any).toDate === 'function' ? (item.createdAt as any).toDate() : new Date(item.createdAt as any)) : new Date(),
             followerCount: item?.followerCount || 0,
         };
         
@@ -242,7 +243,7 @@ export function ChannelForm({ item, onFormClose, initialYoutubeUrl }: ChannelFor
           </div>
           <div>
             <Label htmlFor="description">وصف القناة (اختياري)</Label>
-            <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} disabled={isSubmitting} rows={4} />
+            <Textarea id="description" name="description" value={bio} onChange={(e) => setBio(e.target.value)} disabled={isSubmitting} rows={4} />
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting}>

@@ -5,15 +5,40 @@ import { useAppearance } from './appearance-provider';
 import { ParticlesBackground } from './particles-background';
 import { useMood } from './mood-provider';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LiquidImage } from '@/components/ui/liquid-image';
 
 export function SiteBackground() {
-  const { backgroundEffect } = useAppearance();
+  const {
+    backgroundEffect,
+    liquidImageSourceType,
+    liquidImageImage,
+    liquidImageVideo,
+    liquidImageStrength,
+    liquidImageSpeed
+  } = useAppearance();
   const { moodColor } = useMood();
 
   if (backgroundEffect === 'particles') {
     return (
       <div className="fixed top-0 left-0 w-full h-full z-[-1] pointer-events-none bg-background">
         <ParticlesBackground />
+      </div>
+    );
+  }
+
+  if (backgroundEffect === 'liquid-image') {
+    return (
+      <div className="fixed top-0 left-0 w-full h-full z-[-1] bg-background">
+        <LiquidImage
+          sourceType={liquidImageSourceType}
+          image={liquidImageImage}
+          video={liquidImageVideo}
+          strength={liquidImageStrength}
+          speed={liquidImageSpeed}
+          fit="cover"
+          borderRadius={0}
+          className="w-full h-full absolute inset-0"
+        />
       </div>
     );
   }

@@ -61,7 +61,7 @@ const generateCustomData = (range: DateRange) => {
 
 
 interface TrafficChartProps {
-    timeRange: '7d' | '30d' | '12m' | 'custom';
+    timeRange?: '7d' | '30d' | '12m' | 'custom';
     customDateRange?: DateRange;
 }
 

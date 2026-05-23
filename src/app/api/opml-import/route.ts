@@ -1,5 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import type { Program } from '@/lib/types';
 

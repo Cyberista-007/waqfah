@@ -22,6 +22,8 @@ import {
   CaseSensitive,
   Grid,
   XCircle,
+  Bot,
+
   DownloadCloud,
   Wifi,
   Database,
@@ -39,6 +41,12 @@ import {
   ExternalLink,
   CheckCircle2,
   Info,
+  Wind,
+  Layers as LayersIcon,
+  Zap,
+  Activity,
+  Droplets,
+  Waves,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -64,9 +72,9 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog, themes } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { GradientSwitcherDialog } from '@/components/gradient-switcher';
-import { useAppearance, BackgroundEffect, ParticleSettings, gradientPresets } from '@/components/appearance-provider';
+import { useAppearance, BackgroundEffect, ParticleSettings, gradientPresets, liquidImagePresets } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
+import { SolidColorSwitcherDialog } from '@/components/solid-color-switcher';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -394,6 +402,33 @@ function StorageManagementView({ onBack, user }: { onBack: () => void; user: Use
     );
 }
 
+const hexToHSL = (hex: string): string => {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+        r = parseInt(hex[1] + hex[1], 16);
+        g = parseInt(hex[2] + hex[2], 16);
+        b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+        r = parseInt(hex.substring(1, 3), 16);
+        g = parseInt(hex.substring(3, 5), 16);
+        b = parseInt(hex.substring(5, 7), 16);
+    }
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
 export default function SettingsPage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
@@ -412,15 +447,43 @@ export default function SettingsPage() {
         language,
         aiApiKey,
         setAiApiKey,
+        aiModel,
+        setAiModel,
+        gradientPreset: activePreset, 
+        setGradientPreset,
+        customColors,
+        setCustomColors,
+        auroraSpeed,
+        setAuroraSpeed,
+        auroraBlur,
+        setAuroraBlur,
+        auroraComplexity,
+        setAuroraComplexity,
+        auroraChaos,
+        setAuroraChaos,
+        auroraSaturation,
+        setAuroraSaturation,
+        auroraGrain,
+        setAuroraGrain,
+        liquidImageSourceType,
+        setLiquidImageSourceType,
+        liquidImageImage,
+        setLiquidImageImage,
+        liquidImageVideo,
+        setLiquidImageVideo,
+        liquidImageStrength,
+        setLiquidImageStrength,
+        liquidImageSpeed,
+        setLiquidImageSpeed
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
     const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
-    const [isGradientSwitcherOpen, setIsGradientSwitcherOpen] = useState(false);
     const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
     const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
+    const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -428,11 +491,8 @@ export default function SettingsPage() {
     const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
-    useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.push('/auth/login?redirect_to=/settings');
-        }
-    }, [user, isUserLoading, router]);
+    // Guest users are allowed to access settings to change appearance/AI keys.
+    // So we do not redirect them to login page.
 
     const onLogout = async () => {
         if (auth) {
@@ -568,7 +628,7 @@ export default function SettingsPage() {
     };
 
 
-    if (isUserLoading || isProfileLoading || !user || !userProfile) {
+    if (isUserLoading || (user && isProfileLoading)) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-16 w-16 animate-spin" />
@@ -576,7 +636,7 @@ export default function SettingsPage() {
         )
     }
     
-    if (view === 'notifications') {
+    if (view === 'notifications' && userProfile && user) {
         return <NotificationsView onBack={() => setView('main')} onSelectNewEpisodes={() => setView('newEpisodes')} userProfile={userProfile} userId={user.uid} />;
     }
 
@@ -584,7 +644,7 @@ export default function SettingsPage() {
         return <NewEpisodesView onBack={() => setView('notifications')} />;
     }
     
-    if (view === 'storage') {
+    if (view === 'storage' && user) {
         return <StorageManagementView onBack={() => setView('main')} user={user} />;
     }
     
@@ -593,33 +653,50 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       
-      <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl mb-8">
-        <Avatar className="h-24 w-24">
-            <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
-            <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
-        </Avatar>
-        <div className="text-center sm:text-right">
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-                <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
-                <DonationTierBadge tier={userProfile.donationTier} />
-                {userProfile.role === 'admin' && (
-                  <Link href="/admin/dashboard">
-                    <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/80">وضع المدير</Badge>
-                  </Link>
-                )}
-            </div>
-            <p className="text-muted-foreground">{user.email}</p>
-            {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
-            <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                    <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
-                </Button>
-                <Button onClick={onLogout} variant="secondary" size="sm">
-                    <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
-                </Button>
-            </div>
-        </div>
-      </header>
+      {user ? (
+        <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl mb-8">
+          <Avatar className="h-24 w-24">
+              <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
+              <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
+          </Avatar>
+          <div className="text-center sm:text-right">
+              <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+                  {userProfile && <DonationTierBadge tier={userProfile.donationTier} />}
+                  {userProfile?.role === 'admin' && (
+                    <Link href="/admin/dashboard">
+                      <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/80">وضع المدير</Badge>
+                    </Link>
+                  )}
+              </div>
+              <p className="text-muted-foreground">{user.email}</p>
+              {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
+              <div className="flex gap-2 mt-4 justify-center sm:justify-start">
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                      <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
+                  </Button>
+                  <Button onClick={onLogout} variant="secondary" size="sm">
+                      <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
+                  </Button>
+              </div>
+          </div>
+        </header>
+      ) : (
+        <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl mb-8">
+          <Avatar className="h-24 w-24">
+              <AvatarFallback className="text-3xl bg-primary/20 text-primary">زائر</AvatarFallback>
+          </Avatar>
+          <div className="text-center sm:text-right">
+              <h2 className="text-2xl font-bold font-headline">زائر المنصة</h2>
+              <p className="text-muted-foreground text-sm">سجل الدخول لحفظ سجل استماعك وقوائم تشغيلك ومزامنتها عبر أجهزتك المختلفة.</p>
+              <div className="flex gap-2 mt-4 justify-center sm:justify-start">
+                  <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground font-black">
+                      <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول / إنشاء حساب</Link>
+                  </Button>
+              </div>
+          </div>
+        </header>
+      )}
         
       <h1 className="text-4xl font-bold mb-6 font-headline text-center">
         الإعدادات
@@ -628,8 +705,12 @@ export default function SettingsPage() {
       <div className="space-y-2 mt-8">
         <SectionTitle title="عام" />
         <div className="bg-card rounded-xl p-2">
-          <SettingsItem icon={Bell} label="الإشعارات" onClick={() => setView('notifications')}/>
-          <Separator />
+          {user && (
+            <>
+              <SettingsItem icon={Bell} label="الإشعارات" onClick={() => setView('notifications')}/>
+              <Separator />
+            </>
+          )}
           <SettingsItem icon={Globe} label="اللغة" value={currentLanguageName} onClick={() => setIsLanguageSwitcherOpen(true)} />
           <Separator />
           <SettingsItem icon={Headphones} label="إعدادات الصوت" />
@@ -641,7 +722,7 @@ export default function SettingsPage() {
             <Separator />
             <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
             <Separator />
-            <SettingsItem icon={Sparkles} label="تدرجات الألوان" onClick={() => setIsGradientSwitcherOpen(true)} />
+            <SettingsItem icon={Droplets} label="الألوان السادة" onClick={() => setIsSolidColorSwitcherOpen(true)} />
             <Separator />
             <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
             <Separator />
@@ -664,13 +745,14 @@ export default function SettingsPage() {
         <div className="bg-card rounded-xl p-4 space-y-4">
             <div>
                 <Label htmlFor="bg-effect-select">تأثير الخلفية</Label>
-                <Select value={backgroundEffect} onValueChange={(value) => setBackgroundEffect(value as 'none' | 'particles')}>
+                <Select value={backgroundEffect} onValueChange={(value) => setBackgroundEffect(value as 'none' | 'particles' | 'liquid-image')}>
                     <SelectTrigger id="bg-effect-select">
                         <SelectValue placeholder="اختر تأثيرًا..." />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="none">بدون تأثير</SelectItem>
                         <SelectItem value="particles">جزيئات متفاعلة</SelectItem>
+                        <SelectItem value="liquid-image">خلفية مائية تفاعلية WebGL</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -743,22 +825,142 @@ export default function SettingsPage() {
                     </div>
                 </div>
             )}
+
+            {backgroundEffect === 'liquid-image' && (
+                <div className="space-y-6 pt-4 border-t border-white/5">
+                    {/* Source Type Selector */}
+                    <div className="space-y-2">
+                        <Label>نوع مصدر الخلفية</Label>
+                        <div className="grid grid-cols-2 gap-2 bg-white/5 p-1 rounded-xl border border-white/5">
+                            <Button 
+                                type="button"
+                                variant={liquidImageSourceType === 'image' ? 'default' : 'ghost'}
+                                onClick={() => setLiquidImageSourceType('image')}
+                                className={cn(
+                                    "py-2 h-9 rounded-lg text-xs font-bold transition-all",
+                                    liquidImageSourceType === 'image' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                                )}
+                            >
+                                <ImageIcon className="w-4 h-4 me-2" />
+                                <span>صورة</span>
+                            </Button>
+                            <Button 
+                                type="button"
+                                variant={liquidImageSourceType === 'video' ? 'default' : 'ghost'}
+                                onClick={() => setLiquidImageSourceType('video')}
+                                className={cn(
+                                    "py-2 h-9 rounded-lg text-xs font-bold transition-all",
+                                    liquidImageSourceType === 'video' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                                )}
+                            >
+                                <PlayCircle className="w-4 h-4 me-2" />
+                                <span>فيديو</span>
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Preset Picker */}
+                    <div className="space-y-2">
+                        <Label>المحتوى المختار</Label>
+                        {liquidImageSourceType === 'image' ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {liquidImagePresets.images.map((img, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setLiquidImageImage(img.src)}
+                                        className={cn(
+                                            "flex flex-col gap-2 p-2 rounded-xl border text-right transition-all group overflow-hidden",
+                                            liquidImageImage === img.src ? 'bg-primary/10 border-primary shadow-lg' : 'bg-white/[0.01] border-white/5 hover:bg-white/5'
+                                        )}
+                                    >
+                                        <div className="aspect-[16/9] w-full rounded-lg overflow-hidden relative border border-white/5">
+                                            <img 
+                                                src={img.src} 
+                                                alt={img.name} 
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        </div>
+                                        <span className="text-[10px] font-bold text-zinc-300 truncate w-full text-center block">{img.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {liquidImagePresets.videos.map((vid, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setLiquidImageVideo(vid.src)}
+                                        className={cn(
+                                            "flex items-center gap-3 p-3 rounded-xl border text-right transition-all group",
+                                            liquidImageVideo === vid.src ? 'bg-primary/10 border-primary shadow-lg' : 'bg-white/[0.01] border-white/5 hover:bg-white/5'
+                                        )}
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center shrink-0">
+                                            <PlayCircle className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 truncate text-start">
+                                            <span className="text-xs font-bold text-zinc-200 truncate">{vid.name}</span>
+                                            <span className="text-[9px] text-zinc-500 truncate">{vid.src}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Strength Slider */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Label>قوة التموج (Strength)</Label>
+                            <span className="text-sm font-bold text-primary font-mono">{liquidImageStrength.toFixed(2)}</span>
+                        </div>
+                        <Slider 
+                            value={[liquidImageStrength]}
+                            min={0.01}
+                            max={0.40}
+                            step={0.01}
+                            onValueChange={([value]) => setLiquidImageStrength(value)}
+                        />
+                    </div>
+
+                    {/* Speed Slider */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Label>سرعة الحركة (Speed)</Label>
+                            <span className="text-sm font-bold text-primary font-mono">{liquidImageSpeed.toFixed(2)}</span>
+                        </div>
+                        <Slider 
+                            value={[liquidImageSpeed]}
+                            min={0.01}
+                            max={0.80}
+                            step={0.01}
+                            onValueChange={([value]) => setLiquidImageSpeed(value)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
 
-        <SectionTitle title="التنزيلات والتخزين" />
-         <div className="bg-card rounded-xl p-2">
-            <SettingsItem icon={DownloadCloud} label="جودة التنزيل" value="عالية" />
-            <Separator />
-            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                <Label htmlFor="wifi-only-switch" className="text-lg cursor-pointer flex items-center gap-4">
-                    <Wifi className="w-6 h-6 text-muted-foreground" />
-                    <span>التنزيل عبر Wi-Fi فقط</span>
-                </Label>
-                <Switch id="wifi-only-switch" defaultChecked={true} />
+
+
+        {user && (
+          <>
+            <SectionTitle title="التنزيلات والتخزين" />
+            <div className="bg-card rounded-xl p-2">
+                <SettingsItem icon={DownloadCloud} label="جودة التنزيل" value="عالية" />
+                <Separator />
+                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                    <Label htmlFor="wifi-only-switch" className="text-lg cursor-pointer flex items-center gap-4">
+                        <Wifi className="w-6 h-6 text-muted-foreground" />
+                        <span>التنزيل عبر Wi-Fi فقط</span>
+                    </Label>
+                    <Switch id="wifi-only-switch" defaultChecked={true} />
+                </div>
+                <Separator />
+                <SettingsItem icon={Database} label="إدارة مساحة التخزين" onClick={() => setView('storage')} />
             </div>
-            <Separator />
-            <SettingsItem icon={Database} label="إدارة مساحة التخزين" onClick={() => setView('storage')} />
-        </div>
+          </>
+        )}
 
         <SectionTitle title="إمكانية الوصول" />
         <div className="bg-card rounded-xl p-2">
@@ -817,27 +1019,59 @@ export default function SettingsPage() {
                     </p>
                 </div>
             </div>
+            
+            <div className="space-y-4 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-3">
+                    <Bot className="w-6 h-6 text-primary" />
+                    <Label htmlFor="ai-model-select" className="text-lg">نموذج الذكاء الاصطناعي (Gemini Model)</Label>
+                </div>
+                <Select value={aiModel} onValueChange={(value) => setAiModel(value)}>
+                    <SelectTrigger id="ai-model-select" className="h-12 bg-white/5 border-white/5 rounded-xl">
+                        <SelectValue placeholder="اختر نموذجًا..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (الأحدث - سريع وذكي)</SelectItem>
+                        <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (الأقوى - للمسائل والخطط العلمية المعقدة)</SelectItem>
+                        <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (سرعة فائقة واستقرار)</SelectItem>
+                        <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash (الكلاسيكي السريع)</SelectItem>
+                        <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro (الكلاسيكي المحترف - للكتب الطويلة)</SelectItem>
+                    </SelectContent>
+                </Select>
+                <p className="text-[10px] text-white/30 leading-normal font-medium">
+                    إذا كان النموذج المختار غير معتمد لمفتاحك، سيتحول النظام تلقائياً للنموذج المستقر التالي لضمان عدم توقف الخدمة.
+                </p>
+            </div>
         </div>
 
         <SectionTitle title="الحساب والبيانات" />
-        <div className="bg-card rounded-xl p-2">
-          <SettingsItem icon={Crown} label="إدارة الاشتراكات" />
-          <Separator />
-          <SettingsItem icon={LinkIcon} label="الحسابات المرتبطة" />
-          <Separator />
-          <SettingsItem icon={Smartphone} label="الأجهزة المتصلة" />
-          <Separator />
-          <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
-          <Separator />
-          <SettingsItem 
-            icon={isDownloading ? Loader2 : HardDriveDownload} 
-            label={isDownloading ? "جاري التجهيز..." : "تنزيل بياناتي"} 
-            onClick={handleDownloadData} 
-            className={cn(isDownloading && "animate-pulse cursor-not-allowed")} 
-          />
-          <Separator />
-          <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive" onClick={() => setIsDeleteConfirmOpen(true)} />
-        </div>
+        {user ? (
+            <div className="bg-card rounded-xl p-2">
+              <SettingsItem icon={Crown} label="إدارة الاشتراكات" />
+              <Separator />
+              <SettingsItem icon={LinkIcon} label="الحسابات المرتبطة" />
+              <Separator />
+              <SettingsItem icon={Smartphone} label="الأجهزة المتصلة" />
+              <Separator />
+              <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
+              <Separator />
+              <SettingsItem 
+                icon={isDownloading ? Loader2 : HardDriveDownload} 
+                label={isDownloading ? "جاري التجهيز..." : "تنزيل بياناتي"} 
+                onClick={handleDownloadData} 
+                className={cn(isDownloading && "animate-pulse cursor-not-allowed")} 
+              />
+              <Separator />
+              <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive" onClick={() => setIsDeleteConfirmOpen(true)} />
+            </div>
+        ) : (
+            <Card className="border-2 border-dashed bg-card/50">
+                <CardContent className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
+                    <Crown className="w-10 h-10 text-primary opacity-30" />
+                    <p className="font-bold">الحساب والبيانات محمية</p>
+                    <p className="text-xs">يرجى تسجيل الدخول للوصول إلى إدارة الاشتراكات، الحسابات المرتبطة، ومسح سجلات الاستماع.</p>
+                </CardContent>
+            </Card>
+        )}
       </div>
 
        <Dialog open={isEditing} onOpenChange={setIsEditing}>
@@ -845,19 +1079,21 @@ export default function SettingsPage() {
                 <DialogHeader className="sr-only">
                   <DialogTitle>تعديل الملف الشخصي</DialogTitle>
                 </DialogHeader>
-                <EditProfileForm 
-                    user={user} 
-                    userProfile={userProfile}
-                    onClose={() => setIsEditing(false)}
-                />
+                {user && userProfile && (
+                    <EditProfileForm 
+                        user={user} 
+                        userProfile={userProfile}
+                        onClose={() => setIsEditing(false)}
+                    />
+                )}
             </DialogContent>
         </Dialog>
 
         <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
         <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
-        <GradientSwitcherDialog isOpen={isGradientSwitcherOpen} onOpenChange={setIsGradientSwitcherOpen} />
         <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
         <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
+        <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />
         
         <DeleteConfirmationDialog
             isOpen={isDeleteConfirmOpen}

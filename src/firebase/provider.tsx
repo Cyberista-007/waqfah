@@ -49,48 +49,53 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
     });
 
     useEffect(() => {
-        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-        const auth = getAuth(app);
-        const firestore = getFirestore(app);
-        const functions = getFunctions(app);
-        const storage = getStorage(app);
+        try {
+            const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+            const auth = getAuth(app);
+            const firestore = getFirestore(app);
+            const functions = getFunctions(app);
+            const storage = getStorage(app);
 
-        const loadedServices = { app, auth, firestore, functions, storage };
-        setServices(loadedServices);
+            const loadedServices = { app, auth, firestore, functions, storage };
+            setServices(loadedServices);
 
-        const unsubscribe = onAuthStateChanged(
-            auth,
-            async (firebaseUser) => {
-                if (firebaseUser) {
-                    const userRef = doc(firestore, "users", firebaseUser.uid);
+            const unsubscribe = onAuthStateChanged(
+                auth,
+                async (firebaseUser) => {
                     try {
-                        const userSnap = await getDoc(userRef);
-                        if (!userSnap.exists()) {
-                            const newUserProfile: Omit<UserProfile, 'id' | 'role'> = {
-                                name: firebaseUser.displayName || "مستخدم جديد",
-                                email: firebaseUser.email!,
-                                photoURL: firebaseUser.photoURL || '',
-                                createdAt: Timestamp.now().toDate().toISOString() as any,
-                                minutesListened: 0,
-                                lecturesCompleted: 0,
-                            };
-                            await setDoc(userRef, {
-                                ...newUserProfile,
-                                role: 'user',
-                            });
+                        if (firebaseUser) {
+                            const userRef = doc(firestore, "users", firebaseUser.uid);
+                            const userSnap = await getDoc(userRef);
+                            if (!userSnap.exists()) {
+                                const newUserProfile: Omit<UserProfile, 'id' | 'role'> = {
+                                    name: firebaseUser.displayName || "مستخدم جديد",
+                                    email: firebaseUser.email!,
+                                    photoURL: firebaseUser.photoURL || '',
+                                    createdAt: Timestamp.now().toDate().toISOString() as any,
+                                    minutesListened: 0,
+                                    lecturesCompleted: 0,
+                                };
+                                await setDoc(userRef, {
+                                    ...newUserProfile,
+                                    role: 'user',
+                                });
+                            }
                         }
-                    } catch (e) {
-                        console.error("Error checking or creating user profile:", e);
+                        setAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+                    } catch (e: any) {
+                        alert("FirebaseProvider onAuthStateChanged inner error: " + e.message);
+                        setAuthState({ user: firebaseUser, isUserLoading: false, userError: e });
                     }
+                },
+                (error) => {
+                    alert("FirebaseProvider: onAuthStateChanged callback error: " + error.message);
+                    setAuthState({ user: null, isUserLoading: false, userError: error });
                 }
-                setAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-            },
-            (error) => {
-                console.error("FirebaseProvider: onAuthStateChanged error:", error);
-                setAuthState({ user: null, isUserLoading: false, userError: error });
-            }
-        );
-        return () => unsubscribe();
+            );
+            return () => unsubscribe();
+        } catch (e: any) {
+            alert("FirebaseProvider outer error: " + e.message + "\n" + e.stack);
+        }
     }, []);
 
     const contextValue = useMemo(() => ({

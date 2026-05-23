@@ -60,6 +60,16 @@ export default async function RootLayout({
   
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.onerror = function(message, source, lineno, colno, error) {
+            alert("GLOBAL CRASH: " + message + "\\nSource: " + source + "\\nLine: " + lineno + ":" + colno + "\\nStack: " + (error ? error.stack : 'No stack'));
+          };
+          window.onunhandledrejection = function(event) {
+            alert("UNHANDLED REJECTION: " + (event.reason ? (event.reason.message || event.reason) : 'No reason') + "\\nStack: " + (event.reason ? event.reason.stack : 'No stack'));
+          };
+        `}} />
+      </head>
       <body className={cn(
         'min-h-screen bg-background font-body antialiased body-background',
         sourceCodePro.variable,

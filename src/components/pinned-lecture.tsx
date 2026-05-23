@@ -2,7 +2,7 @@
 'use client';
 
 import { useDoc, useCollection } from '@/firebase';
-import type { PinnedLectureSettings, Lecture } from '@/lib/types';
+import type { PinnedItemSettings, Lecture } from '@/lib/types';
 import { LectureCard } from './lecture-card';
 import { Skeleton } from './ui/skeleton';
 import { Pin } from 'lucide-react';
@@ -29,7 +29,7 @@ function PinnedLectureSkeleton() {
 
 
 export function PinnedLecture() {
-    const { data: settings, isLoading: settingsLoading } = useDoc<PinnedLectureSettings>('settings/pinned_lecture');
+    const { data: settings, isLoading: settingsLoading } = useDoc<PinnedItemSettings>('settings/pinned_lecture');
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     
     const pinnedLectures = useMemo(() => {

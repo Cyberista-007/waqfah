@@ -161,7 +161,7 @@ export function NotificationBell() {
                         <p className="text-sm font-bold leading-tight">{notif.title}</p>
                         <p className="text-xs text-muted-foreground line-clamp-2">{notif.body}</p>
                         <p className="text-[10px] text-muted-foreground/60">
-                        {notif.createdAt?.toDate ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true, locale: ar }) : "الآن"}
+                        {notif.createdAt ? formatDistanceToNow(typeof (notif.createdAt as any).toDate === 'function' ? (notif.createdAt as any).toDate() : new Date(notif.createdAt as any), { addSuffix: true, locale: ar }) : "الآن"}
                         </p>
                     </div>
                     {!notif.isRead && <span className="absolute top-4 right-2 w-2 h-2 rounded-full bg-primary" />}

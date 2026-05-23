@@ -33,6 +33,169 @@ const iconMap: Record<string, React.ElementType> = {
   BookOpen, Sparkles, Heart, Loader2, Star, Play
 };
 
+const renderFeatureMockup = (id: string) => {
+  switch (id) {
+    case 'sharia':
+      return (
+        <div className="mt-auto pt-6 flex flex-wrap gap-2.5 items-center justify-center p-4 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md relative overflow-hidden group-hover:border-primary/20 transition-all duration-500 w-full">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
+          {[
+            { label: 'العقيدة والتوحيد', icon: Shield, col: 'text-blue-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40 hover:bg-blue-500/10' },
+            { label: 'القرآن والتفسير', icon: BookOpenCheck, col: 'text-amber-400 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40 hover:bg-amber-500/10' },
+            { label: 'الحديث والسيرة', icon: BookCheck, col: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10' },
+            { label: 'الفقه والأحكام', icon: GraduationCap, col: 'text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40 hover:bg-purple-500/10' },
+          ].map((badge, i) => {
+            const BadgeIcon = badge.icon;
+            return (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05 }}
+                className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold transition-all duration-300", badge.col)}
+              >
+                <BadgeIcon className="w-3.5 h-3.5" />
+                <span>{badge.label}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      );
+    case 'ux':
+      return (
+        <div className="mt-auto pt-6 relative h-40 w-full flex items-center justify-center overflow-hidden rounded-2xl bg-white/[0.01] border border-white/5">
+          {/* Miniature Phone Mockup */}
+          <motion.div 
+            className="absolute bottom-[-30px] left-[15%] w-[130px] h-[170px] bg-zinc-950 border border-white/10 rounded-[1.5rem] p-2 shadow-2xl flex flex-col gap-1.5 transition-all duration-500 group-hover:translate-y-[-12px] group-hover:rotate-[-3deg]"
+            style={{ transform: 'rotate(-6deg)' }}
+          >
+            <div className="w-8 h-1 bg-zinc-800 rounded-full mx-auto" />
+            <div className="h-4 w-full bg-white/5 rounded-md flex items-center justify-between px-1.5">
+              <div className="w-2.5 h-2 bg-primary/20 rounded-full animate-pulse" />
+              <div className="w-4 h-1 bg-white/10 rounded-full" />
+            </div>
+            <div className="bg-white/5 rounded-lg p-1.5 flex flex-col gap-1 border border-white/5">
+              <div className="w-8 h-1 bg-primary rounded-full" />
+              <div className="w-full h-0.5 bg-white/10 rounded-full" />
+              <div className="w-2/3 h-0.5 bg-white/10 rounded-full" />
+            </div>
+            <div className="mt-auto h-7 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-center gap-1">
+              <Play className="w-2 h-2 text-primary fill-primary" />
+              <span className="text-[6px] font-black text-primary">استماع الآن</span>
+            </div>
+          </motion.div>
+
+          {/* Miniature Tablet Screen Behind it */}
+          <motion.div 
+            className="absolute bottom-[-50px] right-[12%] w-[170px] h-[130px] bg-zinc-900 border border-white/5 rounded-[1rem] p-2 shadow-xl flex flex-col gap-2 opacity-50 transition-all duration-500 group-hover:opacity-75 group-hover:translate-y-[-8px] group-hover:rotate-[3deg]"
+            style={{ transform: 'rotate(5deg)' }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 mx-auto" />
+            <div className="grid grid-cols-3 gap-1">
+              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
+              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
+              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
+            </div>
+            <div className="w-full h-1 bg-white/5 rounded-full" />
+          </motion.div>
+        </div>
+      );
+    case 'search':
+      return (
+        <div className="mt-auto pt-6 flex flex-col gap-3 w-full">
+          {/* Simulated Search Input */}
+          <div className="relative flex items-center w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white/30 text-xs">
+            <Search className="w-4 h-4 ml-2 text-white/30" />
+            <span>ابحث عن درس، شيخ، أو كتاب...</span>
+            <span className="absolute left-3 w-1.5 h-4 bg-primary/80 animate-[pulse_1s_infinite] rounded-full" />
+          </div>
+          {/* Autocomplete suggestions */}
+          <div className="flex flex-wrap gap-2 justify-start">
+            {[
+              { text: 'شرح السيرة النبوية', active: true },
+              { text: 'العقيدة الطحاوية', active: false },
+              { text: 'ابن عثيمين', active: false },
+            ].map((tag, i) => (
+              <span 
+                key={i} 
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors",
+                  tag.active 
+                    ? "bg-primary/10 border-primary/30 text-primary" 
+                    : "bg-white/5 border-white/10 text-white/40 group-hover:border-white/20"
+                )}
+              >
+                {tag.text}
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    case 'speed':
+      return (
+        <div className="mt-auto pt-6 flex flex-col items-center justify-center relative w-full">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            {/* Speed Meter Ring */}
+            <svg className="w-full h-full transform -rotate-90">
+              <circle cx="48" cy="48" r="40" className="stroke-white/5 fill-none" strokeWidth="5" />
+              <motion.circle 
+                cx="48" cy="48" r="40" 
+                className="stroke-amber-400 fill-none" 
+                strokeWidth="5" 
+                strokeDasharray="251.2"
+                initial={{ strokeDashoffset: 251.2 }}
+                whileInView={{ strokeDashoffset: 50.2 }} // 80% filled
+                viewport={{ once: true }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+              />
+            </svg>
+            {/* Central Info */}
+            <div className="absolute flex flex-col items-center justify-center text-center">
+              <span className="text-lg font-black text-white leading-none">0.08s</span>
+              <span className="text-[7px] font-bold text-amber-400 mt-1 uppercase tracking-wider">استجابة</span>
+            </div>
+          </div>
+          {/* Status badge */}
+          <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] text-emerald-400 font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            <span>اتصال فائق السرعة</span>
+          </div>
+        </div>
+      );
+    case 'audio':
+      return (
+        <div className="mt-auto pt-6 flex flex-col gap-4 items-center justify-center p-3 rounded-2xl bg-white/[0.01] border border-white/5 w-full">
+          {/* Equalizer Audio Waves */}
+          <div className="flex items-end justify-center gap-1.5 h-10 w-full px-2">
+            {[10, 22, 34, 18, 28, 12, 22, 32, 16, 8].map((h, i) => (
+              <span 
+                key={i} 
+                className="w-1 bg-rose-500 rounded-full wave-bar"
+                style={{ 
+                  height: `${h}px`, 
+                  animationDelay: `${i * 0.1}s`,
+                  opacity: 0.85
+                }} 
+              />
+            ))}
+          </div>
+          {/* Controls mockup */}
+          <div className="flex items-center gap-3">
+            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10">
+              <ArrowLeft className="w-2.5 h-2.5 text-white/60 rotate-180" />
+            </span>
+            <span className="w-7 h-7 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+              <Play className="w-3 h-3 text-rose-400 fill-rose-400" />
+            </span>
+            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10">
+              <ArrowLeft className="w-2.5 h-2.5 text-white/60" />
+            </span>
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
+
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { PinnedItems } from '@/app/pinned-items';
@@ -880,6 +1043,17 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         <div className="absolute top-1/2 left-0 w-96 h-96 bg-primary/10 blur-[150px] rounded-full -translate-x-1/2 -z-10" />
         <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full translate-x-1/2 -z-10" />
         
+        {/* Style block for equalizer waves animation */}
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes bounceWave {
+            0%, 100% { height: 10px; }
+            50% { height: 36px; }
+          }
+          .wave-bar {
+            animation: bounceWave 1.2s ease-in-out infinite;
+          }
+        `}} />
+
         <div className="container relative z-10 px-4">
           <div className="text-center mb-20 space-y-4">
             <motion.div 
@@ -897,58 +1071,63 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[100px]">
+          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[110px]">
              {[
                {
+                 id: "sharia",
                  icon: "ShieldCheck",
                  title: "محتوى شرعي موثوق",
                  desc: "نخبة من المشايخ والعلماء لضمان تقديم العلم الشرعي بوسطية واعتدال وفق منهج أهل السنة.",
                  color: "text-blue-400",
                  iconBg: "bg-blue-500/10",
                  border: "border-blue-500/20",
-                 glow: "group-hover:shadow-blue-500/20",
-                 className: "md:col-span-3 lg:col-span-8 lg:row-span-3",
+                 glow: "group-hover:border-blue-500/40 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]",
+                 className: "md:col-span-3 lg:col-span-7 lg:row-span-4",
                  featured: true
                },
                {
+                 id: "ux",
                  icon: "Smartphone",
                  title: "تجربة مستخدم حديثة",
                  desc: "واجهة سلسة تدعم جميع الأجهزة لراحتك الكاملة.",
                  color: "text-purple-400",
                  iconBg: "bg-purple-500/10",
                  border: "border-purple-500/20",
-                 glow: "group-hover:shadow-purple-500/20",
-                 className: "md:col-span-3 lg:col-span-4 lg:row-span-3"
+                 glow: "group-hover:border-purple-500/40 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]",
+                 className: "md:col-span-3 lg:col-span-5 lg:row-span-4"
                },
                {
+                 id: "speed",
                  icon: "Zap",
                  title: "سرعة وتفاعلية فائقة",
-                 desc: "مشغل فيديو وصوت ذكي يواكب تطلعاتك.",
+                 desc: "مشغل فيديو وصوت ذكي يواكب تطلعاتك ويعمل بكفاءة عالية دون تباطؤ.",
                  color: "text-amber-400",
                  iconBg: "bg-amber-500/10",
                  border: "border-amber-500/20",
-                 glow: "group-hover:shadow-amber-500/20",
-                 className: "md:col-span-3 lg:col-span-4 lg:row-span-3"
+                 glow: "group-hover:border-amber-500/40 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]",
+                 className: "md:col-span-3 lg:col-span-4 lg:row-span-4"
                },
                {
+                 id: "search",
                  icon: "Search",
                  title: "محرك بحث ذكي",
-                 desc: "صل لما تريد في ثوانٍ من بين آلاف الدروس والمحاضرات.",
+                 desc: "صل لما تريد في ثوانٍ من بين آلاف الدروس والمحاضرات المفهرسة بدقة.",
                  color: "text-emerald-400",
                  iconBg: "bg-emerald-500/10",
                  border: "border-emerald-500/20",
-                 glow: "group-hover:shadow-emerald-500/20",
-                 className: "md:col-span-3 lg:col-span-5 lg:row-span-3"
+                 glow: "group-hover:border-emerald-500/40 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
+                 className: "md:col-span-3 lg:col-span-5 lg:row-span-4"
                },
                {
+                 id: "audio",
                  icon: "Headphones",
                  title: "جودة صوت نقية",
-                 desc: "استمتع بأفضل نقاء صوتي لتجربة استماع مريحة.",
+                 desc: "استمتع بأفضل نقاء صوتي لتجربة استماع مريحة وممتازة.",
                  color: "text-rose-400",
                  iconBg: "bg-rose-500/10",
                  border: "border-rose-500/20",
-                 glow: "group-hover:shadow-rose-500/20",
-                 className: "md:col-span-6 lg:col-span-3 lg:row-span-3"
+                 glow: "group-hover:border-rose-500/40 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.15)]",
+                 className: "md:col-span-6 lg:col-span-3 lg:row-span-4"
                }
              ].map((feature, idx) => {
                const IconComponent = iconMap[feature.icon as string] || Star;
@@ -960,22 +1139,29 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                    viewport={{ once: true }}
                    transition={{ delay: idx * 0.1 }}
                    className={cn(
-                     "group relative rounded-[2.5rem] border bg-white/[0.02] backdrop-blur-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.04]",
+                     "group relative rounded-[2.5rem] border bg-gradient-to-b from-white/[0.01] to-white/[0.003] backdrop-blur-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.03] flex flex-col justify-between",
                      feature.border,
+                     feature.glow,
                      feature.className
                    )}
                  >
                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent pointer-events-none" />
-                   <div className="p-10 flex flex-col h-full">
-                      <div className={cn("inline-flex p-5 rounded-3xl mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", feature.iconBg, feature.border)}>
-                        <IconComponent className={cn("w-10 h-10", feature.color)} />
+                   
+                   <div className="p-6 sm:p-10 flex flex-col h-full justify-between gap-6">
+                      <div className="flex flex-col items-start w-full">
+                         <div className={cn("inline-flex p-4 rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 self-start items-center justify-center border", feature.iconBg, feature.border)}>
+                           <IconComponent className={cn("w-8 h-8 sm:w-10 sm:h-10", feature.color)} />
+                         </div>
+                         <h3 className={cn("font-black mb-3 tracking-tighter text-white font-headline", feature.featured ? "text-2xl sm:text-3xl lg:text-4xl" : "text-xl sm:text-2xl")}>{feature.title}</h3>
+                         <p className={cn("text-white/40 leading-[1.8] font-medium text-xs sm:text-sm")}>
+                           {feature.desc}
+                         </p>
                       </div>
-                      <h3 className={cn("font-black mb-4 tracking-tighter text-white", feature.featured ? "text-3xl lg:text-4xl" : "text-2xl")}>{feature.title}</h3>
-                      <p className={cn("text-white/40 leading-[1.8] font-medium", feature.featured ? "text-lg lg:text-xl" : "text-base")}>
-                        {feature.desc}
-                      </p>
+
+                      {/* Render custom micro-mockup inside card */}
+                      {renderFeatureMockup(feature.id)}
                       
-                      <div className="mt-auto pt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/10 group-hover:text-primary transition-colors">
+                      <div className="pt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/10 group-hover:text-primary transition-colors mt-auto self-start">
                         إتقان في التفاصيل <ArrowLeft className="w-4 h-4" />
                       </div>
                    </div>

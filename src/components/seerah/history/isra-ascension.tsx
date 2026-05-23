@@ -79,7 +79,7 @@ export function IsraAscension() {
                                     className="absolute inset-0 flex items-center justify-center origin-center"
                                 >
                                     {/* Concentric Heaven Ring */}
-                                    <div className={cn("absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] max-w-[600px] max-h-[600px] rounded-full border-[4px] border-dashed shadow-[0_0_100px_rgba(0,0,0,0.5)_inset,0_0_100px_rgba(0,0,0,0.5)] bg-black/40 backdrop-blur-[2px]", heaven.border, heaven.color.replace('from-', 'shadow-').split(' ')[0] + '/20')} style={{ rotateX: '60deg' }} />
+                                    <div className={cn("absolute w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] max-w-[600px] max-h-[600px] rounded-full border-[4px] border-dashed shadow-[0_0_100px_rgba(0,0,0,0.5)_inset,0_0_100px_rgba(0,0,0,0.5)] bg-black/40 backdrop-blur-[2px]", heaven.border, heaven.color.replace('from-', 'shadow-').split(' ')[0] + '/20')} style={{ transform: 'rotateX(60deg)' }} />
                                     
                                     {/* Text Content */}
                                     <div className="relative z-10 text-center bg-black/60 backdrop-blur-xl px-10 py-8 rounded-[3rem] border border-white/10 shadow-2xl">

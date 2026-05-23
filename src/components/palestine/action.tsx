@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Shield, Share2, BookOpen, HeartPulse, Megaphone, Globe, ExternalLink } from 'lucide-react';
+import { Shield, Share2, BookOpen, HeartPulse, Megaphone, Globe, ExternalLink, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -62,6 +62,8 @@ export function PledgeCounterSection() {
   const [pledgedName, setPledgedName] = React.useState('');
   const [isPledged, setIsPledged] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isFormulating, setIsFormulating] = React.useState(false);
+  const [formulationStep, setFormulationStep] = React.useState(0);
   const [status, setStatus] = React.useState<'idle' | 'pledged' | 'already_pledged' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = React.useState('');
 
@@ -77,14 +79,23 @@ export function PledgeCounterSection() {
 
   const handlePledge = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pledgedName.trim() || isLoading) return;
+    if (!pledgedName.trim() || isLoading || isFormulating) return;
     setIsLoading(true);
+    setIsFormulating(true);
+    setFormulationStep(0);
+
+    const step1 = setTimeout(() => setFormulationStep(1), 650);
+    const step2 = setTimeout(() => setFormulationStep(2), 1300);
+    const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
+
     try {
-      const res = await fetch('/api/palestine/pledge', {
+      const apiPromise = fetch('/api/palestine/pledge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: pledgedName.trim() })
       });
+
+      const [res] = await Promise.all([apiPromise, minDelay]);
       const data = await res.json();
       if (res.ok) {
         setIsPledged(true);
@@ -102,7 +113,10 @@ export function PledgeCounterSection() {
       setStatus('error');
       setErrorMsg(err.message);
     } finally {
+      clearTimeout(step1);
+      clearTimeout(step2);
       setIsLoading(false);
+      setIsFormulating(false);
     }
   };
 
@@ -115,6 +129,64 @@ export function PledgeCounterSection() {
             whileInView={{ opacity: 1, y: 0 }}
             className="p-16 md:p-32 rounded-[6rem] bg-white/[0.03] backdrop-blur-3xl border border-white/10 text-center space-y-16 relative overflow-hidden shadow-3xl"
           >
+            {/* Formulation Overlay */}
+            <AnimatePresence>
+              {isFormulating && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center z-50 p-8 text-center"
+                >
+                  <div className="relative w-40 h-40 mb-8 flex items-center justify-center">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border border-emerald-500/20 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-2 border-2 border-dashed border-emerald-500/10 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="w-24 h-24 rounded-full bg-emerald-500/5 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+                    >
+                      <FileText className="w-10 h-10 text-emerald-400 animate-pulse" />
+                    </motion.div>
+                  </div>
+
+                  <div className="space-y-4 max-w-md w-full">
+                    {[
+                      { label: "توثيق العهد والميثاق...", icon: "📜" },
+                      { label: "ربط صوتك بجدار التضامن العالمي...", icon: "🌐" },
+                      { label: "إضافة اسمك في لوح الشرف الإنساني...", icon: "🤲" }
+                    ].map((step, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "flex items-center gap-4 px-6 py-3 rounded-full border transition-all duration-300 text-right",
+                          formulationStep === idx
+                            ? "bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)] scale-105"
+                            : formulationStep > idx
+                            ? "bg-white/5 border-white/10 text-white/40"
+                            : "bg-white/[0.01] border-white/5 text-white/10"
+                        )}
+                      >
+                        <span className="text-xl">{step.icon}</span>
+                        <span className="font-bold text-sm md:text-base">{step.label}</span>
+                        {formulationStep > idx && (
+                          <span className="mr-auto text-emerald-400 text-sm">✓</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-rose-500/5" />
             <div className="relative z-10 space-y-8">
               <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-none">أعلن <span className="text-emerald-500">تضامنك</span></h2>
@@ -151,13 +223,13 @@ export function PledgeCounterSection() {
                       required
                       value={pledgedName}
                       onChange={(e) => setPledgedName(e.target.value)}
-                      className="h-24 px-10 rounded-[2.5rem] bg-white/5 border border-white/10 text-white text-xl focus:outline-none focus:border-emerald-500 transition-all flex-1 text-right"
+                      className="h-20 px-10 rounded-full bg-white/5 border border-white/10 text-white text-xl focus:outline-none focus:border-emerald-500 transition-all flex-1 text-right focus:ring-2 focus:ring-emerald-500/20"
                     />
                     <motion.button 
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      disabled={isLoading}
-                      className="h-24 px-12 bg-white text-black rounded-[2.5rem] font-black text-xl shadow-glow-white disabled:opacity-50 transition-all"
+                      disabled={isLoading || isFormulating}
+                      className="h-20 px-12 bg-emerald-500 text-black rounded-full font-black text-xl hover:bg-emerald-400 transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] disabled:opacity-50 hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 cursor-pointer"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-3">

@@ -1,4 +1,6 @@
 import { MetadataRoute } from 'next';
+
+export const dynamic = 'force-static';
 import { getAllLectures, getAllSeries, getAllPrograms, getAllTopics, getAllCurriculums } from '@/lib/data';
 
 // Helper function to convert Firestore Timestamp-like objects to Date

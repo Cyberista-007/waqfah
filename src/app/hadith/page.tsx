@@ -4,14 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Book, Search, Star, Heart, Share2, Library, Sparkles,
-  ChevronLeft, BookOpen, Quote, ShieldCheck, Clock, Layers,
-  Compass, Hash, ArrowRight, Zap, RefreshCw, Copy, Download
+  BookOpen, Quote, ShieldCheck, Layers,
+  ArrowRight, Zap, RefreshCw, Copy
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { HADITH_SECTIONS_FALLBACK } from './hadith-data-hub';
+import { usePathname } from 'next/navigation';
+import HadithPageClient from './[bookId]/HadithPageClient';
 
 interface HadithStat {
   label: string;
@@ -134,11 +136,16 @@ const MAIN_BOOKS = [
 ];
 
 export default function HadithHubPage() {
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<'books' | 'about'>('books');
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
+
+  // Handle SPA sub-routing for Electron
+  const pathParts = pathname.split('/').filter(Boolean);
+  const bookIdFromPath = pathParts.length > 1 ? pathParts[1] : null;
 
   // 📖 Daily Hadith State
   const [dailyHadith, setDailyHadith] = useState({
@@ -155,6 +162,10 @@ export default function HadithHubPage() {
     setMounted(true);
     fetchRandomHadith();
   }, []);
+
+  if (bookIdFromPath) {
+    return <HadithPageClient params={Promise.resolve({ bookId: bookIdFromPath })} />;
+  }
 
   const fetchRandomHadith = async () => {
     setRefreshing(true);
@@ -420,7 +431,7 @@ export default function HadithHubPage() {
               exit={{ opacity: 0, y: -30 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              {MAIN_BOOKS.map((book, idx) => (
+              {MAIN_BOOKS.map((book) => (
                 <Link key={book.id} href={`/hadith/${book.id}`}>
                   <motion.div
                     whileHover={{ y: -10 }}

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { createHash } from 'crypto';

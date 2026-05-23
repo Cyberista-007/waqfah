@@ -198,7 +198,7 @@ function DonationsListTab() {
               <TableRow key={d.id}>
                 <TableCell>{d.donorName}</TableCell>
                 <TableCell>{d.amount ? new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(d.amount) : 'N/A'}</TableCell>
-                <TableCell>{d.donatedAt ? format(d.donatedAt.toDate(), 'yyyy/MM/dd') : '-'}</TableCell>
+                <TableCell>{d.donatedAt ? format(typeof (d.donatedAt as any).toDate === 'function' ? (d.donatedAt as any).toDate() : new Date(d.donatedAt as any), 'yyyy/MM/dd') : '-'}</TableCell>
                 <TableCell>{d.isAnonymous ? 'نعم' : 'لا'}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">

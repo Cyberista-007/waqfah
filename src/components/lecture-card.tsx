@@ -2,13 +2,20 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Eye, MessageSquare, Calendar, Download, ListPlus } from "lucide-react"
+import { Headphones, Play, Share2, Eye, MessageSquare, Calendar, Download, ListPlus, MoreVertical, Clock, Ban, Flag, PlaySquare, Loader2 } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
 import { format, subDays } from "date-fns";
 import { ar } from 'date-fns/locale';
 
 import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
 import { Button } from "@/components/ui/button"
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -22,6 +29,7 @@ import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Brain } from "lucide-react"
 import { QuizDialog } from "./quiz-dialog"
+import { DownloaderModal } from "./downloader-modal"
 import type { Quiz } from "@/lib/types"
 import { motion } from "framer-motion"
 import { ThreeDTilt } from "./ui/three-d-tilt"
@@ -47,6 +55,10 @@ const LectureCardComponent = ({
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
+  const [downloadFormats, setDownloadFormats] = useState<any[]>([]);
+  const [isFetchingFormats, setIsFetchingFormats] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -99,20 +111,52 @@ const LectureCardComponent = ({
     }
   };
 
-  const handleDownloadClick = (e: React.MouseEvent) => {
+  const handleDownloadClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (isFetchingFormats) return;
+
+    const ytUrl = lecture.youtubeUrl;
+    if (ytUrl && (ytUrl.includes('youtube.com') || ytUrl.includes('youtu.be'))) {
+      setIsFetchingFormats(true);
+      try {
+        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: ytUrl, getFormats: true }),
+        });
+        const data = await response.json();
+        if (!response.ok || (data.status && data.status >= 400)) {
+            throw new Error(data.description || data.message || 'فشل في جلب صيغ التنزيل.');
+        }
+        if (data.formats && data.formats.length > 0) {
+            setDownloadFormats(data.formats);
+            setIsDownloaderOpen(true);
+        } else {
+            toast({ variant: 'destructive', title: 'لم يتم العثور على صيغ تنزيل متاحة.' });
+        }
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+      } finally {
+        setIsFetchingFormats(false);
+      }
+      return;
+    }
+
     const url = lecture.audioSrc;
-    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
-      const newUrl = "ss" + url.substring(url.indexOf('youtube.com'));
-      window.open(newUrl, '_blank');
-    } else if (url) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = lecture.title || 'lecture';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    if (url) {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${lecture.title || 'lecture'}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast({ title: 'بدأ التحميل!', description: 'جاري تحميل الملف الصوتي...' });
+      } catch (err) {
+        toast({ variant: 'destructive', title: 'حدث خطأ أثناء محاولة التنزيل' });
+      }
     } else {
         toast({ variant: 'destructive', title: 'رابط التحميل غير متوفر' });
     }
@@ -334,75 +378,85 @@ const LectureCardComponent = ({
                                     </Avatar>
                                 </Link>
                             )}
-                            <div className="flex items-center gap-1">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button 
-                                            onClick={handlePlay} 
-                                            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
-                                        >
-                                            <Headphones className="w-5 h-5" />
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>استماع</TooltipContent>
-                                </Tooltip>
-                                
-                                {videoId && (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
+                            <FavoriteButton lectureId={lecture.id} className="h-10 w-10 rounded-xl" />
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                            <DropdownMenu dir="rtl">
+                                <DropdownMenuTrigger asChild>
+                                    <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all">
+                                        <MoreVertical className="w-5 h-5" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10">
+                                    <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                        <Headphones className="w-4 h-4" />
+                                        <span>استماع للمحاضرة</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                        <Clock className="w-4 h-4" />
+                                        <span>الحفظ في قائمة "المشاهدة لاحقاً"</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                        <ListPlus className="w-4 h-4" />
+                                        <span>حفظ في قائمة تشغيل</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem 
+                                        onClick={handleDownloadClick} 
+                                        disabled={isFetchingFormats}
+                                        className="gap-3 cursor-pointer py-2 focus:bg-white/10"
+                                    >
+                                        {isFetchingFormats ? (
+                                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                        ) : (
+                                            <Download className="w-4 h-4" />
+                                        )}
+                                        <span>{isFetchingFormats ? 'جاري جلب صيغ التنزيل...' : 'تنزيل'}</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuItem onClick={handleShare} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                        <Share2 className="w-4 h-4" />
+                                        <span>مشاركة</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuSeparator className="bg-white/10" />
+
+                                    {videoId && (
+                                        <DropdownMenuItem asChild className="py-2 focus:bg-white/10">
                                             <a 
                                               href={`https://www.youtube.com/watch?v=${videoId}`} 
                                               target="_blank" 
                                               rel="noopener noreferrer"
-                                              className="h-10 w-10 flex items-center justify-center p-2 hover:bg-red-500/10 rounded-xl transition-all"
+                                              className="gap-3 cursor-pointer flex w-full items-center"
+                                              onClick={(e) => e.stopPropagation()}
                                             >
-                                                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#FF0000]" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FFF" />
-                                                </svg>
+                                                <PlaySquare className="w-4 h-4" />
+                                                <span>مشاهدة على يوتيوب</span>
                                             </a>
-                                        </TooltipTrigger>
-                                        <TooltipContent>يوتيوب</TooltipContent>
-                                    </Tooltip>
-                                )}
+                                        </DropdownMenuItem>
+                                    )}
 
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button 
-                                            onClick={handleDownloadClick} 
-                                            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-all"
-                                        >
-                                            <Download className="w-5 h-5" />
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>تحميل</TooltipContent>
-                                </Tooltip>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <button 
-                                        onClick={handleAddToPlaylist} 
-                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
-                                    >
-                                        <ListPlus className="w-5 h-5" />
-                                    </button>
-                                </TooltipTrigger>
-                                <TooltipContent>إضافة لقائمة</TooltipContent>
-                            </Tooltip>
-                            <FavoriteButton lectureId={lecture.id} className="h-10 w-10 rounded-xl" />
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <button 
-                                        onClick={() => setIsQuizOpen(true)} 
-                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
-                                    >
-                                        <Brain className="w-5 h-5" />
-                                    </button>
-                                </TooltipTrigger>
-                                <TooltipContent>اختبر معرفتك</TooltipContent>
-                            </Tooltip>
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setIsQuizOpen(true); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                        <Brain className="w-4 h-4" />
+                                        <span>اختبر معرفتك</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuSeparator className="bg-white/10" />
+                                    
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "تم إخفاء المحاضرة من الاقتراحات." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100 focus:bg-white/10">
+                                        <Ban className="w-4 h-4" />
+                                        <span>لا يهمني</span>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "شكراً لبلاغك. سيتم مراجعة المحتوى." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100 focus:bg-white/10">
+                                        <Flag className="w-4 h-4" />
+                                        <span>إبلاغ</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </div>
@@ -423,6 +477,14 @@ const LectureCardComponent = ({
         isOpen={isQuizOpen}
         onOpenChange={setIsQuizOpen}
         quiz={sampleQuiz}
+      />
+
+      <DownloaderModal
+        isOpen={isDownloaderOpen}
+        onOpenChange={setIsDownloaderOpen}
+        formats={downloadFormats}
+        title={lecture.title}
+        videoId={videoId}
       />
     </TooltipProvider>
   )

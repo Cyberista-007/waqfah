@@ -1,14 +1,14 @@
 'use client';
 
-import { Podcast, Loader2, Search, Sparkles, Flame, Users, BookOpen, GraduationCap } from 'lucide-react';
+import { Podcast, Search, Sparkles, Flame, Users, BookOpen, GraduationCap } from 'lucide-react';
 import type { Program } from '@/lib/types';
 import { ProgramCard } from '@/components/program-card';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection } from '@/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
+import { usePathname } from 'next/navigation';
+import ProgramPageClient from './[slug]/ProgramPageClient';
 
 function ProgramsListSkeleton() {
     return (
@@ -96,6 +96,14 @@ function ProgramsList() {
 }
 
 export default function ProgramsPage() {
+    const pathname = usePathname();
+    const pathParts = pathname.split('/').filter(Boolean);
+    const isIndividualProgram = pathParts.length > 1;
+
+    if (isIndividualProgram) {
+        return <ProgramPageClient />;
+    }
+
     return (
         <div className="min-h-screen pb-20 overflow-hidden" dir="rtl">
             {/* Hero Section */}

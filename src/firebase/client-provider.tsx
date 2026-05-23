@@ -19,10 +19,31 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!getApps().length) {
-      initializeApp(firebaseConfig);
+    const handleGlobalError = (event: ErrorEvent) => {
+      alert(`Global Error: ${event.message}\nFile: ${event.filename}\nLine: ${event.lineno}:${event.colno}\nStack: ${event.error?.stack}`);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      alert(`Unhandled Promise Rejection: ${event.reason?.message || event.reason}\nStack: ${event.reason?.stack}`);
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    try {
+      if (!getApps().length) {
+        initializeApp(firebaseConfig);
+      }
+    } catch (e: any) {
+      alert("FirebaseClientProvider: Failed to initialize Firebase: " + e.message + "\n" + e.stack);
     }
+    
     setIsInitialized(true);
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, []);
 
   if (!isInitialized) {

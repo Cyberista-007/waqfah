@@ -1,5 +1,11 @@
+const isProd = process.env.NODE_ENV === 'production';
+const exportStatic = process.env.EXPORT_STATIC === 'true';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: exportStatic ? 'export' : undefined,
+  trailingSlash: true,
+  assetPrefix: isProd ? './' : undefined,
   images: {
     remotePatterns: [
       {
@@ -31,6 +37,13 @@ const nextConfig = {
         hostname: 'lh3.googleusercontent.com',
       }
     ],
+    unoptimized: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 

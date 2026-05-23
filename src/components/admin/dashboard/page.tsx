@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
                         <CardTitle className="text-2xl font-semibold font-headline">إحصائيات الزوار (آخر 7 أيام)</CardTitle>
                     </CardHeader>
                     <CardContent className="h-[350px] w-full">
-                    <TrafficChart />
+                    <TrafficChart timeRange="7d" />
                     </CardContent>
                 </Card>
                 <Card className="rounded-2xl">

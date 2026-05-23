@@ -36,75 +36,200 @@ import { TooltipProvider, Tooltip as ShadTooltip, TooltipContent, TooltipTrigger
 
 
 
-const ActionButton = ({ action, isSelected, onToggle }: { action: AccountabilityAction, isSelected: boolean, onToggle: () => void }) => {
+const PRAYER_THEMES: Record<string, { hexColor: string; glowColor: string; bgGradient: string; colorClass: string }> = {
+  fajr: {
+    hexColor: '#fbbf24',
+    glowColor: 'rgba(251, 191, 36, 0.35)',
+    bgGradient: 'from-amber-500/20 via-yellow-500/5 to-transparent',
+    colorClass: 'text-amber-400'
+  },
+  dhuhr: {
+    hexColor: '#fb923c',
+    glowColor: 'rgba(251, 146, 60, 0.35)',
+    bgGradient: 'from-orange-500/20 via-yellow-500/5 to-transparent',
+    colorClass: 'text-orange-400'
+  },
+  asr: {
+    hexColor: '#f43f5e',
+    glowColor: 'rgba(244, 63, 94, 0.35)',
+    bgGradient: 'from-rose-500/20 via-red-500/5 to-transparent',
+    colorClass: 'text-rose-400'
+  },
+  maghrib: {
+    hexColor: '#c084fc',
+    glowColor: 'rgba(192, 132, 252, 0.35)',
+    bgGradient: 'from-purple-500/20 via-fuchsia-500/5 to-transparent',
+    colorClass: 'text-purple-400'
+  },
+  isha: {
+    hexColor: '#60a5fa',
+    glowColor: 'rgba(96, 165, 250, 0.35)',
+    bgGradient: 'from-blue-500/20 via-indigo-500/5 to-transparent',
+    colorClass: 'text-blue-400'
+  },
+  general: {
+    hexColor: '#34d399',
+    glowColor: 'rgba(52, 211, 153, 0.35)',
+    bgGradient: 'from-emerald-500/20 via-teal-500/5 to-transparent',
+    colorClass: 'text-emerald-400'
+  }
+};
+
+const ActionButton = ({ action, isSelected, onToggle, prayerKey = 'general' }: { action: AccountabilityAction, isSelected: boolean, onToggle: () => void, prayerKey?: string }) => {
+    const theme = PRAYER_THEMES[prayerKey] || PRAYER_THEMES.general;
     return (
         <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             className="w-full"
         >
             <Button
                 variant="ghost"
                 onClick={onToggle}
                 className={cn(
-                    "h-auto text-wrap py-5 px-4 rounded-[2.5rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                    "h-auto text-wrap py-5 px-6 rounded-full w-full transition-all duration-500 transform-gpu border relative overflow-hidden group text-right flex items-center justify-between",
                     isSelected
-                        ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_30px_rgba(var(--primary-rgb),0.25)]'
-                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/60 border-white/5 backdrop-blur-md'
+                        ? 'bg-white/[0.04] text-white shadow-2xl'
+                        : 'bg-white/[0.01] hover:bg-white/[0.04] text-white/50 border-white/5 backdrop-blur-xl'
                 )}
+                style={isSelected ? {
+                    borderColor: theme.hexColor,
+                    boxShadow: `0 0 25px ${theme.glowColor}, inset 0 1px 2px rgba(255,255,255,0.1)`
+                } : {
+                    borderColor: 'rgba(255, 255, 255, 0.05)'
+                }}
+                onMouseEnter={(e) => {
+                    if (!isSelected) {
+                        e.currentTarget.style.borderColor = theme.hexColor;
+                        e.currentTarget.style.boxShadow = `0 0 15px ${theme.glowColor}, inset 0 1px 1px rgba(255,255,255,0.05)`;
+                        e.currentTarget.style.color = '#ffffff';
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (!isSelected) {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+                    }
+                }}
             >
-                {isSelected && (
-                    <motion.div
-                        layoutId={`active-${action.id}`}
-                        className="absolute inset-0 bg-primary/10 blur-2xl"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                    />
-                )}
-                <div className="flex flex-col gap-1.5 items-center justify-center relative z-10">
-                    <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight group-hover:text-white transition-colors">{action.label}</span>
-                    <span className="text-[9px] font-black opacity-40 bg-white/10 px-2.5 py-0.5 rounded-full uppercase tracking-tighter group-hover:opacity-80 transition-opacity">
+                <div 
+                    className={cn(
+                        "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-r pointer-events-none",
+                        theme.bgGradient
+                    )} 
+                />
+
+                <div className="flex flex-col text-right relative z-10 flex-grow">
+                    <span className={cn(
+                        "font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full transition-colors",
+                        isSelected ? "text-white" : "text-white/60 group-hover:text-white"
+                    )}>
+                        {action.label}
+                    </span>
+                    <span className="text-[10px] font-black opacity-30 mt-0.5 tracking-tighter transition-opacity group-hover:opacity-75">
                         {action.points} نقاط
                     </span>
+                </div>
+
+                <div className="flex items-center justify-center w-6 h-6 shrink-0 relative z-10">
+                    <div 
+                        className="w-2.5 h-2.5 rounded-full transition-all duration-500 group-hover:scale-125 relative"
+                        style={{ backgroundColor: isSelected ? theme.hexColor : 'rgba(255,255,255,0.15)' }} 
+                    >
+                        {isSelected && (
+                            <span 
+                                className="absolute inset-0 rounded-full animate-ping opacity-75" 
+                                style={{ backgroundColor: theme.hexColor }}
+                            />
+                        )}
+                    </div>
                 </div>
             </Button>
         </motion.div>
     )
 }
 
-const CustomActionButton = ({ action, isSelected, onToggle, onRemove }: { action: CustomAccountabilityAction, isSelected: boolean, onToggle: () => void, onRemove: (e: React.MouseEvent) => void }) => {
+const CustomActionButton = ({ action, isSelected, onToggle, onRemove, prayerKey = 'general' }: { action: CustomAccountabilityAction, isSelected: boolean, onToggle: () => void, onRemove: (e: React.MouseEvent) => void, prayerKey?: string }) => {
+    const theme = PRAYER_THEMES[prayerKey] || PRAYER_THEMES.general;
     return (
          <motion.div
             layout
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="relative"
+            className="relative w-full"
         >
             <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
             >
                 <Button
                     variant="ghost"
                     onClick={onToggle}
                     className={cn(
-                        "h-auto text-wrap py-5 px-4 rounded-[2.5rem] w-full transition-all duration-500 transform-gpu border relative overflow-hidden group",
+                        "h-auto text-wrap py-5 px-6 rounded-full w-full transition-all duration-500 transform-gpu border relative overflow-hidden group text-right flex items-center justify-between",
                         isSelected
-                            ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_30px_rgba(var(--primary-rgb),0.25)]'
-                            : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/60 border-white/5 backdrop-blur-md'
+                            ? 'bg-white/[0.04] text-white shadow-2xl'
+                            : 'bg-white/[0.01] hover:bg-white/[0.04] text-white/50 border-white/5 backdrop-blur-xl'
                     )}
+                    style={isSelected ? {
+                        borderColor: theme.hexColor,
+                        boxShadow: `0 0 25px ${theme.glowColor}, inset 0 1px 2px rgba(255,255,255,0.1)`
+                    } : {
+                        borderColor: 'rgba(255, 255, 255, 0.05)'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!isSelected) {
+                            e.currentTarget.style.borderColor = theme.hexColor;
+                            e.currentTarget.style.boxShadow = `0 0 15px ${theme.glowColor}, inset 0 1px 1px rgba(255,255,255,0.05)`;
+                            e.currentTarget.style.color = '#ffffff';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!isSelected) {
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                            e.currentTarget.style.boxShadow = 'none';
+                            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
+                        }
+                    }}
                 >
-                    <div className="flex flex-col gap-1.5 items-center justify-center relative z-10">
-                        <span className="font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full text-center tracking-tight group-hover:text-white transition-colors">{action.title}</span>
-                        <span className="text-[9px] font-black opacity-40 bg-white/10 px-2.5 py-0.5 rounded-full uppercase tracking-tighter group-hover:opacity-80 transition-opacity">
+                    <div 
+                        className={cn(
+                            "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-r pointer-events-none",
+                            theme.bgGradient
+                        )} 
+                    />
+
+                    <div className="flex flex-col text-right relative z-10 flex-grow">
+                        <span className={cn(
+                            "font-black text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis w-full transition-colors",
+                            isSelected ? "text-white" : "text-white/60 group-hover:text-white"
+                        )}>
+                            {action.title}
+                        </span>
+                        <span className="text-[10px] font-black opacity-30 mt-0.5 tracking-tighter transition-opacity group-hover:opacity-75">
                             {action.points} نقاط
                         </span>
                     </div>
+
+                    <div className="flex items-center justify-center w-6 h-6 shrink-0 relative z-10">
+                        <div 
+                            className="w-2.5 h-2.5 rounded-full transition-all duration-500 group-hover:scale-125 relative"
+                            style={{ backgroundColor: isSelected ? theme.hexColor : 'rgba(255,255,255,0.15)' }} 
+                        >
+                            {isSelected && (
+                                <span 
+                                    className="absolute inset-0 rounded-full animate-ping opacity-75" 
+                                    style={{ backgroundColor: theme.hexColor }}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </Button>
             </motion.div>
-             <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-red-500/80 backdrop-blur-md text-white shadow-lg hover:bg-red-600 hover:scale-110 transition-transform z-20 border border-white/10" onClick={onRemove}>
-                <X className="h-4 w-4"/>
+             <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-rose-500/80 backdrop-blur-md text-white shadow-lg hover:bg-rose-600 hover:scale-110 transition-transform z-20 border border-white/10" onClick={onRemove}>
+                <X className="h-3.5 w-3.5"/>
              </Button>
         </motion.div>
     )
@@ -129,16 +254,15 @@ const AddCustomActionCard = ({ onAdd }: { onAdd: (title: string, points: number)
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <motion.div
-                    whileHover={{ scale: 1.02, translateY: -5 }}
+                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    className="w-full"
                 >
-                    <Card className="flex items-center justify-center p-6 min-h-[120px] border-dashed border-2 border-white/10 bg-white/5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all rounded-[2.5rem] text-muted-foreground group overflow-hidden relative">
-                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="text-center relative z-10">
-                            <Plus className="mx-auto h-8 w-8 group-hover:scale-110 transition-transform text-primary/60 group-hover:text-primary" />
-                            <p className="mt-2 font-black tracking-tight">نافلة إضافية</p>
-                        </div>
-                    </Card>
+                    <div className="flex items-center justify-between p-5 rounded-full border border-dashed border-white/10 bg-white/[0.01] hover:bg-white/[0.03] hover:border-primary/40 cursor-pointer text-white/40 hover:text-primary transition-all group overflow-hidden relative">
+                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                         <span className="font-black text-sm md:text-base tracking-tight relative z-10 group-hover:text-primary transition-colors">نافلة إضافية</span>
+                         <Plus className="h-5 w-5 shrink-0 relative z-10 group-hover:scale-110 transition-transform group-hover:text-primary" />
+                    </div>
                 </motion.div>
             </DialogTrigger>
             <DialogContent className="bg-zinc-950/90 backdrop-blur-3xl border border-white/10 text-white rounded-[3rem] shadow-2xl overflow-hidden p-8">
@@ -150,11 +274,11 @@ const AddCustomActionCard = ({ onAdd }: { onAdd: (title: string, points: number)
                 <div className="space-y-8 py-8 relative z-10">
                     <div className="space-y-3">
                         <Label htmlFor="custom-action-title" className="font-black text-white/60 text-xs uppercase tracking-widest px-1">عنوان العمل</Label>
-                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: ركعتي الضحى، ذكر الله..." className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-bold placeholder:text-white/10" />
+                        <Input id="custom-action-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: ركعتي الضحى، ذكر الله..." className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-bold placeholder:text-white/10 text-right" />
                     </div>
                      <div className="space-y-3">
                         <Label htmlFor="custom-action-points" className="font-black text-white/60 text-xs uppercase tracking-widest px-1">النقاط المستحقة</Label>
-                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-black text-lg" />
+                        <Input id="custom-action-points" type="number" value={points} onChange={e => setPoints(Number(e.target.value))} className="bg-white/5 border-white/10 rounded-2xl h-14 focus:ring-primary/20 transition-all font-black text-lg text-right" />
                     </div>
                 </div>
                 <DialogFooter className="gap-3 relative z-10">
@@ -197,7 +321,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3.5rem] p-8 lg:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.4)] relative overflow-hidden group transition-all duration-700 hover:bg-white/[0.05] hover:border-primary/20"
+            className="bg-white/[0.01] backdrop-blur-3xl border border-white/5 rounded-[3.5rem] p-8 lg:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.4)] relative overflow-hidden group transition-all duration-700 hover:bg-white/[0.03] hover:border-primary/20"
         >
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000 z-0" />
             <h3 className="text-3xl font-black font-headline text-center mb-10 relative z-10 text-white tracking-tighter drop-shadow-lg">{group.title}</h3>
@@ -213,6 +337,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
                             action={action}
                             isSelected={completedActionIds.includes(action.id)}
                             onToggle={() => onActionToggle(action.id, group.id, group.type)}
+                            prayerKey={prayerKey}
                         />
                     </motion.div>
                 ))}
@@ -224,6 +349,7 @@ const ActionGroupCard = ({ group, prayerKey, completedActionIds, onActionToggle,
                                 isSelected={completedActionIds.includes(action.id)}
                                 onToggle={() => onCustomActionToggle(action)}
                                 onRemove={(e) => { e.stopPropagation(); onRemoveCustom(action.id); }}
+                                prayerKey={prayerKey}
                             />
                         </motion.div>
                     ))}
@@ -772,6 +898,32 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
     const [completedActions, setCompletedActions] = useState<string[]>([]);
     const [customActions, setCustomActions] = useState<{[key: string]: CustomAccountabilityAction[]}>({});
     
+    const [activeTab, setActiveTab] = useState('fajr');
+    const [isFormulatingReport, setIsFormulatingReport] = useState(false);
+    const [formulationStep, setFormulationStep] = useState(0);
+
+    const handleTabChange = (value: string) => {
+        if (value === 'iman-harvest') {
+            setIsFormulatingReport(true);
+            setFormulationStep(0);
+            
+            const timer1 = setTimeout(() => {
+                setFormulationStep(1);
+            }, 800);
+            
+            const timer2 = setTimeout(() => {
+                setFormulationStep(2);
+            }, 1600);
+            
+            const timer3 = setTimeout(() => {
+                setIsFormulatingReport(false);
+                setActiveTab('iman-harvest');
+            }, 2400);
+        } else {
+            setActiveTab(value);
+        }
+    };
+    
     const gregorianFormatters = {
         formatWeekdayName: (weekday: Date, options?: { locale?: Locale }) => 
             new Intl.DateTimeFormat(options?.locale?.code === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short' }).format(weekday).substring(0, 1).toUpperCase(),
@@ -1077,7 +1229,7 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                 </Popover>
             </div>
 
-            <Tabs defaultValue="fajr" className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <div className="flex justify-center overflow-x-auto pb-8 custom-scrollbar">
                 <TabsList className="h-auto p-2 shrink-0 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] gap-2">
                     <TabsTrigger 
@@ -1116,7 +1268,143 @@ export function AccountabilityTracker({ redirectToOnAuth = '/accountability', sh
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.4 }}
                         >
-                            <ImanHarvestReport />
+                            {isFormulatingReport ? (
+                                <div className="bg-white/[0.01] backdrop-blur-3xl border border-white/5 rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden flex flex-col items-center justify-center min-h-[520px] shadow-2xl relative z-10">
+                                    <style dangerouslySetInnerHTML={{ __html: `
+                                        @keyframes orb-pulse-ac {
+                                            0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.2; }
+                                            50% { transform: scale(1.1) translate(5px, -5px); opacity: 0.3; }
+                                        }
+                                        @keyframes scan-line-ac {
+                                            0% { transform: translateY(-5px); opacity: 0; }
+                                            10% { opacity: 1; }
+                                            90% { opacity: 1; }
+                                            100% { transform: translateY(180px); opacity: 0; }
+                                        }
+                                        @keyframes particle-rise-ac {
+                                            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+                                            10% { opacity: 0.8; }
+                                            90% { opacity: 0.4; }
+                                            100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+                                        }
+                                        .animate-orb-pulse-ac {
+                                            animation: orb-pulse-ac 5s ease-in-out infinite;
+                                        }
+                                        .animate-scan-ac {
+                                            animation: scan-line-ac 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                                        }
+                                        .animate-particle-ac1 {
+                                            animation: particle-rise-ac 2.2s ease-out infinite;
+                                        }
+                                        .animate-particle-ac2 {
+                                            animation: particle-rise-ac 2.8s ease-out infinite 0.6s;
+                                        }
+                                        .animate-particle-ac3 {
+                                            animation: particle-rise-ac 2.5s ease-out infinite 1.2s;
+                                        }
+                                    `}} />
+
+                                    <div 
+                                        className="absolute w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-30 animate-orb-pulse-ac"
+                                        style={{
+                                            background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)'
+                                        }}
+                                    />
+
+                                    <div className="relative z-10 flex flex-col items-center w-full max-w-lg">
+                                        <div className="relative w-36 h-48 flex items-center justify-center mb-12">
+                                            <div 
+                                                className="absolute inset-0 rounded-[2.5rem] border border-white/20 backdrop-blur-md overflow-hidden flex flex-col justify-between"
+                                                style={{
+                                                    boxShadow: '0 0 40px rgba(251,191,36,0.15), inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.5)',
+                                                    borderColor: 'rgba(255, 255, 255, 0.15)'
+                                                }}
+                                            >
+                                                <div className="h-1/3 w-full bg-white/[0.07] border-b border-white/10 relative">
+                                                    <div className="absolute inset-x-3 top-2 h-3 rounded-full bg-white/10 blur-[1px]" />
+                                                </div>
+
+                                                <div className="h-2/3 w-full relative overflow-hidden">
+                                                    <div 
+                                                        className="absolute inset-x-0 bottom-0 top-[30%] transition-all duration-1000 ease-in-out"
+                                                        style={{
+                                                            background: 'linear-gradient(to top, rgba(251,191,36,0.2), rgba(251,191,36,0.05))',
+                                                        }}
+                                                    />
+                                                    <div 
+                                                        className="absolute left-0 right-0 h-[2px] bg-white opacity-80 pointer-events-none animate-scan-ac"
+                                                        style={{
+                                                            boxShadow: '0 0 10px 2px #fbbf24',
+                                                        }}
+                                                    />
+                                                    <div className="absolute inset-x-0 bottom-0 top-0">
+                                                        <div className="absolute w-1.5 h-1.5 rounded-full bg-white opacity-70 animate-particle-ac1 left-[25%] bottom-2" />
+                                                        <div className="absolute w-2 h-2 rounded-full bg-white opacity-40 animate-particle-ac2 left-[50%] bottom-1" />
+                                                        <div className="absolute w-1.5 h-1.5 rounded-full bg-white opacity-60 animate-particle-ac3 left-[75%] bottom-3" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="absolute w-52 h-52 rounded-full border border-dashed border-amber-500/20 animate-spin-slow" />
+                                            <div className="absolute w-44 h-44 rounded-full border border-double border-amber-500/10 animate-spin-reverse-slow" />
+                                        </div>
+
+                                        <div className="w-full space-y-4">
+                                            {[
+                                                { label: 'تحليل سجل العبادات اليومية...', icon: BookCheck },
+                                                { label: 'موازنة النقاط وتوزيع الحصاد...', icon: Scale },
+                                                { label: 'تجهيز التقرير الإيماني الروحي...', icon: FileText },
+                                            ].map((step, idx) => {
+                                                const isCompleted = formulationStep > idx;
+                                                const isActive = formulationStep === idx;
+                                                const StepIcon = step.icon;
+
+                                                return (
+                                                    <div 
+                                                        key={idx}
+                                                        className={cn(
+                                                            "flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-500",
+                                                            isActive 
+                                                                ? "bg-white/[0.03] border-white/10 shadow-lg scale-[1.02]" 
+                                                                : isCompleted 
+                                                                    ? "bg-transparent border-transparent opacity-60" 
+                                                                    : "bg-transparent border-transparent opacity-20"
+                                                        )}
+                                                        style={isActive ? {
+                                                            borderColor: 'rgba(251,191,36,0.15)',
+                                                            boxShadow: '0 4px 20px -5px rgba(251,191,36,0.2)'
+                                                        } : {}}
+                                                    >
+                                                        <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 relative">
+                                                            {isCompleted ? (
+                                                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30">✓</div>
+                                                            ) : isActive ? (
+                                                                <div className="w-6 h-6 rounded-full flex items-center justify-center">
+                                                                    <span className="w-2.5 h-2.5 rounded-full absolute animate-ping bg-amber-400" />
+                                                                    <span className="w-2 h-2 rounded-full relative bg-amber-400" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-grow text-right flex items-center gap-3">
+                                                            <StepIcon className={cn("w-5 h-5 shrink-0", isActive ? "animate-pulse" : "")} style={{ color: isActive ? '#fbbf24' : 'inherit' }} />
+                                                            <span className={cn(
+                                                                "font-bold text-sm md:text-base transition-colors",
+                                                                isActive ? "text-white" : isCompleted ? "text-white/60" : "text-white/20"
+                                                            )}>
+                                                                {step.label}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <ImanHarvestReport />
+                            )}
                         </motion.div>
                     </TabsContent>
 

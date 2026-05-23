@@ -62,7 +62,7 @@ export function LectureForm({ seriesList, lecture }: LectureFormProps) {
     if (!lecture?.publishedAt) return null;
     try {
       if (typeof lecture.publishedAt.toDate === 'function') {
-        return lecture.publishedAt.toDate().toISOString();
+        return (typeof (lecture.publishedAt as any).toDate === 'function' ? (lecture.publishedAt as any).toDate() : new Date(lecture.publishedAt as any)).toISOString();
       } else if (lecture.publishedAt.seconds) {
         return new Date(lecture.publishedAt.seconds * 1000).toISOString();
       }

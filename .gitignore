@@ -43,3 +43,22 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# build outputs and binaries
+dist-electron/
+out/
+build/
+
+# temporary and log files
+ts_errors.txt
+next-log-utf8.txt
+next-log.txt
+
+# debug and auxiliary scripts
+inspect-play-dl.js
+mass_replace.js
+remove_bgs.js
+replace_touch.js
+run-waqfah.bat
+run-waqfah.bat.lnk
+test-download.js

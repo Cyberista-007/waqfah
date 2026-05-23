@@ -26,6 +26,8 @@ export type PinnedItem = {
 
 export type PinnedItemSettings = {
     pinnedItems?: PinnedItem[];
+    lectureIds?: string[]; // Added for backward compatibility
+    message?: string;      // Added for backward compatibility
     isActive?: boolean;
     startDate?: Timestamp;
     endDate?: Timestamp;
@@ -465,12 +467,20 @@ export type Shubha = Serializable<{
   createdAt: Timestamp;
 }>;
 
+export type MuhlikatProgressItem = {
+  status: 'focused' | 'completed';
+  score?: number;
+  checkedSteps?: number[];
+  lastTestedAt?: string;
+  pointsAwarded?: boolean;
+};
+
 export type UserState = Serializable<{
   id: string; // userId
   favorites: string[];
   bookProgress: Record<string, number>;
   essentialsProgress: Record<string, boolean>;
-  muhlikatProgress: Record<string, number>;
+  muhlikatProgress: Record<string, number | MuhlikatProgressItem>;
   quranMemorization?: { [surahNumber: number]: 'not-started' | 'memorizing' | 'completed' | 'reviewed' };
   activeMemoPlan?: {
     planId: string;

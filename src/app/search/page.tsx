@@ -60,7 +60,16 @@ function SearchPageComponent() {
     const { lectures, series, programs, books } = useMemo(() => {
         if (!debouncedSearch.trim()) return { lectures: [], series: [], programs: [], books: [] };
         
-        const fuseOptions = { includeScore: false, threshold: 0.4, ignoreLocation: true, preprocessor: normalizeArabic };
+        const fuseOptions = { 
+            includeScore: false, 
+            threshold: 0.4, 
+            ignoreLocation: true, 
+            getFn: (obj: any, path: any) => {
+                const value = (Fuse as any).defaultGetFn(obj, path);
+                if (typeof value === 'string') return normalizeArabic(value);
+                return value;
+            }
+        };
 
         let filteredLectures = allLectures || [];
         if (languageFilter !== 'all') filteredLectures = filteredLectures.filter(l => l.language === languageFilter);

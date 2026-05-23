@@ -1,9 +1,16 @@
-
 'use client';
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+  type SpeechRecognition = any;
+  type SpeechRecognitionEvent = any;
+}
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Loader2, Play, Podcast, Hash, ArrowRight, Sparkles, ChevronDown } from 'lucide-react';
+import { Search, X, Loader2, Play, Podcast, Hash, ArrowRight, Sparkles, ChevronDown, Mic, MicOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useCollection } from '@/firebase';
@@ -48,6 +55,43 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const [isSearching, setIsSearching] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const [isListening, setIsListening] = useState(false);
+    const [voiceSupported, setVoiceSupported] = useState(false);
+
+    useEffect(() => {
+        const hasApi = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+        setVoiceSupported(hasApi);
+    }, []);
+
+    const startVoiceSearch = () => {
+        if (!voiceSupported || isListening) return;
+        const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition: SpeechRecognition = new SR();
+        recognitionRef.current = recognition;
+        recognition.lang = 'ar-SA';
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        recognition.onstart = () => setIsListening(true);
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+            const result = event.results[event.resultIndex];
+            const text = result[0].transcript;
+            setQuery(text);
+            if (result.isFinal) {
+                setIsListening(false);
+                inputRef.current?.focus();
+            }
+        };
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
+        recognition.start();
+    };
+
+    const stopVoiceSearch = () => {
+        recognitionRef.current?.stop();
+        setIsListening(false);
+    };
 
     const { data: allLectures } = useCollection<Lecture>('lectures', { limit: 100 });
     const { data: allPrograms } = useCollection<Program>('programs', { limit: 50 });
@@ -245,8 +289,8 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                         </div>
 
                         <div className="relative mb-8">
-                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-                                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="relative flex items-center">
+                                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 z-10">
                                     {isSearching && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
                                     <Search className="w-8 h-8 text-primary shadow-glow-primary opacity-50" />
                                 </div>
@@ -256,10 +300,70 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="ما الذي تبحث عنه..."
-                                    className="w-full h-24 md:h-32 bg-transparent text-3xl md:text-5xl lg:text-7xl font-black text-white placeholder:text-white/10 outline-none ps-24 pe-6 border-b-2 border-white/5 focus:border-primary transition-all duration-500"
+                                    placeholder={isListening ? 'جارٍ الاستماع... تحدث الآن' : 'ما الذي تبحث عنه...'}
+                                    className="w-full h-24 md:h-32 bg-transparent text-3xl md:text-5xl lg:text-7xl font-black text-white placeholder:text-white/10 outline-none ps-24 pe-24 border-b-2 border-white/5 focus:border-primary transition-all duration-500"
                                 />
+                                {/* Voice Search Button */}
+                                {voiceSupported && (
+                                    <motion.button
+                                        type="button"
+                                        onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                                        className={`absolute right-4 top-1/2 -translate-y-1/2 p-4 rounded-2xl border transition-all duration-500 z-10 relative overflow-hidden ${
+                                            isListening
+                                                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
+                                                : 'bg-white/5 border-white/10 text-white/30 hover:bg-primary/10 hover:text-primary hover:border-primary/30'
+                                        }`}
+                                        title={isListening ? 'إيقاف الاستماع' : 'بحث صوتي'}
+                                    >
+                                        {isListening && (
+                                            <>
+                                                <motion.div
+                                                    className="absolute inset-0 rounded-2xl bg-primary/20"
+                                                    animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
+                                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                                />
+                                                <motion.div
+                                                    className="absolute inset-0 rounded-2xl bg-primary/10"
+                                                    animate={{ scale: [1, 2.2, 1], opacity: [0.3, 0, 0.3] }}
+                                                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                                                />
+                                            </>
+                                        )}
+                                        <motion.div
+                                            animate={isListening ? { scale: [1, 1.2, 1] } : {}}
+                                            transition={{ duration: 0.8, repeat: Infinity }}
+                                            className="relative z-10"
+                                        >
+                                            {isListening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
+                                        </motion.div>
+                                    </motion.button>
+                                )}
                             </motion.div>
+                            {/* Listening Status Bar */}
+                            <AnimatePresence>
+                                {isListening && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="flex items-center gap-3 pt-3 pb-1 px-1">
+                                            <div className="flex items-center gap-0.5 h-5">
+                                                {[0, 0.1, 0.2, 0.15, 0.05].map((delay, i) => (
+                                                    <motion.div
+                                                        key={i}
+                                                        className="w-1 bg-primary rounded-full"
+                                                        animate={{ height: ['4px', '18px', '4px'] }}
+                                                        transition={{ duration: 0.6, repeat: Infinity, delay, ease: 'easeInOut' }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-primary text-sm font-bold">جارٍ التعرف على الصوت...</span>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-12 animate-reveal" dir="rtl">

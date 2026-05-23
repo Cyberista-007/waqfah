@@ -37,7 +37,8 @@ import {
   Shield,
   Medal,
   Flag,
-  Sparkles
+  Sparkles,
+  Droplets
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -70,7 +71,7 @@ import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useState } from "react"
 import { ThemeSwitcherDialog, themes } from "./theme-switcher"
 import { FontSwitcherDialog } from "./font-switcher"
-import { GradientSwitcherDialog } from "./gradient-switcher"
+import { SolidColorSwitcherDialog } from "./solid-color-switcher"
 import { getInitials } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 import { Separator } from "./ui/separator"
@@ -108,7 +109,7 @@ const moreNavItems = [
   { href: "/aqeedah", label: "العقيدة", icon: Shield },
   { href: "/curriculums", label: "المناهج التعليمية", icon: GraduationCap },
   { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
-  { href: "/playlists", label: "قوائم التشغيل", icon: ListMusic },
+  { href: "/playlists", label: "قוائم التشغيل", icon: ListMusic },
   { href: "/books", label: "الكتب", icon: BookOpen },
   { href: "/challenges", label: "التحديات", icon: Flame },
   { href: "/accountability", label: "محاسبة النفس", icon: BookCheck },
@@ -135,7 +136,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
   const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
-  const [isGradientSwitcherOpen, setIsGradientSwitcherOpen] = useState(false);
+  const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const { isBackgroundShown, toggleBackground } = useAppearance();
@@ -335,9 +336,9 @@ export function SiteHeader() {
                         <CaseSensitive className="h-4 w-4 text-primary" />
                         <span>تغيير الخط</span>
                       </button>
-                      <button onClick={() => setIsGradientSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        <span>تدرجات الألوان</span>
+                      <button onClick={() => setIsSolidColorSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
+                        <Droplets className="h-4 w-4 text-primary" />
+                        <span>الألوان السادة</span>
                       </button>
                     </div>
                   </HoverCardContent>
@@ -473,7 +474,7 @@ export function SiteHeader() {
 
       <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
       <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
-      <GradientSwitcherDialog isOpen={isGradientSwitcherOpen} onOpenChange={setIsGradientSwitcherOpen} />
+      <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />
       <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
     </>
   )

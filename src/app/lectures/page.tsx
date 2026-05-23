@@ -16,9 +16,10 @@ import { useMemo, useState, Suspense } from "react";
 import { Search, Sparkles, Play, Clock, Users, Headphones, Zap, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Fuse from 'fuse.js';
-import { normalizeArabic, cn } from "@/lib/utils";
+import { normalizeArabic } from "@/lib/utils";
 import { Pagination } from "@/components/pagination";
 import { motion, AnimatePresence } from "framer-motion";
+import LecturePageClient from "./[slug]/LecturePageClient";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -26,6 +27,14 @@ function LecturesListPageClient() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Handle SPA sub-routing for Electron
+  const pathParts = pathname.split('/').filter(Boolean);
+  const isIndividualLecture = pathParts.length > 1;
+
+  if (isIndividualLecture) {
+    return <LecturePageClient />;
+  }
 
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'] });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { orderBy: ['title', 'asc'] });
@@ -75,10 +84,14 @@ function LecturesListPageClient() {
           keys: ['title', 'description', 'programName', 'seriesTitle'],
           threshold: 0.4,
           ignoreLocation: true,
-          preprocessor: normalizeArabic,
+          getFn: (obj: any, path: string | string[]) => {
+            const value = (Fuse as any).defaultGetFn(obj, path);
+            if (typeof value === 'string') return normalizeArabic(value);
+            return value;
+          }
         };
         const fuse = new Fuse(lectures, fuseOptions);
-        lectures = fuse.search(searchTerm).map(result => result.item);
+        lectures = fuse.search(normalizeArabic(searchTerm)).map(result => result.item);
     }
     
     lectures.sort((a, b) => {

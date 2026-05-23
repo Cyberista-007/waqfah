@@ -239,7 +239,7 @@ function DayCard({ slot, index, onInView, isActive }: { slot: any, index: number
                 initial={{ opacity: 0, y: 100, rotateX: 20 }}
                 animate={isActive ? { opacity: 1, y: 0, rotateX: 0 } : { opacity: 0.3, y: 50, rotateX: 10 }}
                 transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
-                style={{ rotateX: isActive ? tiltX : 0, rotateY: isActive ? tiltY : 0, transformStyle: "preserve-3d" }}
+                style={{ rotateX: isActive ? tiltX : 0, rotateY: isActive ? tiltY : 0, transformStyle: "preserve-3d" } as any}
                 onPointerMove={handlePointerMove}
                 className={cn(
                     "relative p-10 md:p-16 rounded-[4rem] bg-[#0a0a0a]/80 backdrop-blur-3xl border transition-all duration-700 shadow-[0_30px_60px_rgba(0,0,0,0.8)]",

@@ -55,7 +55,7 @@ export function KiswaSimulator() {
 
             <motion.div 
                 className="relative z-10 w-full max-w-5xl px-8 flex flex-col items-center gap-16 pointer-events-none transform-gpu"
-                style={{ rotateX: tiltX, rotateY: tiltY, transformStyle: "preserve-3d" }}
+                style={{ rotateX: tiltX, rotateY: tiltY, transformStyle: "preserve-3d" } as any}
             >
                 {/* Decorative border top */}
                 <div className="w-full h-12 border-y-[3px] border-amber-600/40 flex items-center justify-between px-6 bg-amber-900/10 shadow-[0_5px_20px_rgba(0,0,0,0.5)]">

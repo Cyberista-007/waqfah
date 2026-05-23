@@ -1,5 +1,6 @@
-
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { google, youtube_v3 } from 'googleapis';
 import { z } from 'zod';
 import play from 'play-dl';

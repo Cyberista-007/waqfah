@@ -40,8 +40,8 @@ export function ScheduleForm({ item, onFormClose }: ScheduleFormProps) {
 
   const [title, setTitle] = useState(item?.title || "");
   const [duration, setDuration] = useState(item?.duration || 60);
-  const [date, setDate] = useState<Date | undefined>(item?.dateTime?.toDate());
-  const [time, setTime] = useState<string>(item?.dateTime?.toDate() ? format(item.dateTime.toDate(), "HH:mm") : "12:00");
+  const [date, setDate] = useState<Date | undefined>(item?.dateTime ? (typeof (item.dateTime as any).toDate === 'function' ? (item.dateTime as any).toDate() : new Date(item.dateTime as any)) : undefined);
+  const [time, setTime] = useState<string>(item?.dateTime ? format(typeof (item.dateTime as any).toDate === 'function' ? (item.dateTime as any).toDate() : new Date(item.dateTime as any), "HH:mm") : "12:00");
   const [isLive, setIsLive] = useState<boolean>(item?.isLive || false);
   
   useEffect(() => {

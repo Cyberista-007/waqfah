@@ -18,7 +18,7 @@ interface TrianglifyBackgroundProps {
 
 export const TrianglifyBackground: React.FC<TrianglifyBackgroundProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { trianglifySettings } = useAppearance();
+  const trianglifySettings = { cellSize: 100, variance: 0.75, palette: ['#000000', '#111111'], interaction: true };
 
   const mouse = useRef({ x: 0, y: 0 });
 

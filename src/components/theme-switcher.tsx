@@ -18,32 +18,62 @@ export const themes = [
   { 
     name: "Deep Slate (الافتراضي)", 
     value: "theme-deep-slate", 
-    colors: ["#0f1623", "#3b82f6", "#1e293b"],
-    desc: "أزرق رمادي عميق، احترافي وهادئ"
+    colors: ["#090e1a", "#3891f1", "#101828"],
+    desc: "أزرق رمادي عميق — احترافي وهادئ ومتطور"
   },
   { 
     name: "Midnight Indigo", 
     value: "theme-midnight-indigo", 
-    colors: ["#100d1f", "#a78bfa", "#1e1a3d"],
-    desc: "بنفسجي فضائي غامق وراقٍ"
+    colors: ["#0d0b1f", "#9171ef", "#1a1640"],
+    desc: "بنفسجي كوني عميق — مستوحى من الكون الواسع"
   },
   { 
     name: "Golden Dusk", 
     value: "theme-golden-dusk", 
-    colors: ["#100c08", "#f59e0b", "#1c1209"],
-    desc: "ذهبي داكن فاخر، مستوحى من ليالي العرب"
+    colors: ["#0e0a06", "#fabc0c", "#1a1108"],
+    desc: "ذهبي ملكي فاخر — ليالي العرب والصحاري الملكية"
   },
   { 
     name: "Forest Sage", 
     value: "theme-forest-sage", 
-    colors: ["#061210", "#34d399", "#0d2218"],
-    desc: "أخضر طبيعي هادئ ومريح للعين"
+    colors: ["#060e09", "#2ec376", "#0c1e10"],
+    desc: "أخضر الطبيعة الهادئ — سكينة الغابات والبحر"
   },
   { 
     name: "Arctic White", 
     value: "theme-arctic-white", 
-    colors: ["#f5f9ff", "#1d6cf0", "#e8f0fe"],
-    desc: "فاتح نظيف حديث وأنيق"
+    colors: ["#f2f7ff", "#0a84ff", "#e5effc"],
+    desc: "فاتح نظيف وأنيق — مستوحى من تصميم Apple"
+  },
+  { 
+    name: "Desert Gold 🏜️", 
+    value: "theme-desert-gold", 
+    colors: ["#0f0b05", "#f0a216", "#1a1108"],
+    desc: "بُني ذهبي صحراوي — دافئ وفاخر كرمال الغرب"
+  },
+  { 
+    name: "Ruby Ember 🔥", 
+    value: "theme-ruby-ember", 
+    colors: ["#0f0505", "#e92c2c", "#1a0808"],
+    desc: "أحمر ياقوتي ناري — قوي وجريء كالجمر المتأجج"
+  },
+  { 
+    name: "Aqua Deep 🌊", 
+    value: "theme-aqua-deep", 
+    colors: ["#030c0d", "#0cd7d2", "#061518"],
+    desc: "أزرق مائي عميق — هادئ وحديث كعمق البحار"
+  },
+  { 
+    name: "Rose Garden 🌸", 
+    value: "theme-rose-garden", 
+    colors: ["#0e0609", "#f24b82", "#1a0c11"],
+    desc: "وردي فاخر راقٍ — دافئ كبتلات الورد الجوري"
+  },
+  { 
+    name: "Obsidian Neon ⚫", 
+    value: "theme-obsidian-neon", 
+    colors: ["#080808", "#1edc64", "#0d0d0d"],
+    desc: "أسود عميق ونيون أخضر — عالم السايبربانك الرقمي"
   },
 ];
 
