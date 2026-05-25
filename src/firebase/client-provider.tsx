@@ -20,11 +20,11 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
 
   useEffect(() => {
     const handleGlobalError = (event: ErrorEvent) => {
-      alert(`Global Error: ${event.message}\nFile: ${event.filename}\nLine: ${event.lineno}:${event.colno}\nStack: ${event.error?.stack}`);
+      console.error(`Global Error: ${event.message}\nFile: ${event.filename}\nLine: ${event.lineno}:${event.colno}\nStack: ${event.error?.stack}`);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      alert(`Unhandled Promise Rejection: ${event.reason?.message || event.reason}\nStack: ${event.reason?.stack}`);
+      console.error(`Unhandled Promise Rejection: ${event.reason?.message || event.reason}\nStack: ${event.reason?.stack}`);
     };
 
     window.addEventListener('error', handleGlobalError);
@@ -35,7 +35,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeApp(firebaseConfig);
       }
     } catch (e: any) {
-      alert("FirebaseClientProvider: Failed to initialize Firebase: " + e.message + "\n" + e.stack);
+      console.error("FirebaseClientProvider: Failed to initialize Firebase: ", e.message, e.stack);
     }
     
     setIsInitialized(true);
