@@ -19,6 +19,7 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import Fuse from 'fuse.js';
 import { normalizeArabic } from '@/lib/utils';
+import { ImanCardGenerator } from '@/components/iman-card-generator';
 
 export default function QAPage() {
   const { data: qanda, isLoading } = useCollection<QAPair>('question_answers');
@@ -179,10 +180,18 @@ export default function QAPage() {
                             <AccordionTrigger className="text-xl md:text-2xl text-right font-black font-headline hover:no-underline py-8 gap-4">
                               <span className="flex-1 text-right leading-tight group-hover:text-primary transition-colors">{item.question}</span>
                             </AccordionTrigger>
-                            <AccordionContent className="text-lg text-white/50 leading-[2] font-medium pb-8 border-t border-white/5 pt-6 animate-in slide-in-from-top-2 duration-500">
+                            <AccordionContent className="text-lg text-white/50 leading-[2] font-medium pb-8 border-t border-white/5 pt-6 animate-in slide-in-from-top-2 duration-500 space-y-6">
                               <div className="flex gap-4">
                                 <div className="w-1 bg-primary/20 rounded-full shrink-0" />
-                                <div>{item.answer}</div>
+                                <div className="flex-1">{item.answer}</div>
+                              </div>
+                              <div className="flex justify-end pt-4 border-t border-white/5">
+                                <ImanCardGenerator 
+                                  title="سؤال وجواب"
+                                  content={item.question}
+                                  secondaryContent={item.answer}
+                                  source="فتاوى واستشارات - منصة وقفة"
+                                />
                               </div>
                             </AccordionContent>
                           </AccordionItem>

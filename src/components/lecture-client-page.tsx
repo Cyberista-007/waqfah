@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, notFound, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle, Sparkles, Zap, Star, ShieldCheck, Headphones, Eye, Info, Layers, Shuffle, ListMusic, Repeat, Repeat1 } from 'lucide-react';
+import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle, Sparkles, Zap, Star, ShieldCheck, Headphones, Eye, Info, Layers, Shuffle, ListMusic, Repeat, Repeat1, Brain, Check, AlertCircle, Award, Wifi, WifiOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LectureHeader } from '@/components/lecture-header';
 import type { Lecture, ListenHistoryItem, Playlist } from '@/lib/types';
@@ -12,6 +12,7 @@ import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { LectureCard } from './lecture-card';
+import { downloadAudioForOffline, deleteAudioFromOffline, checkIsAudioOffline } from '@/lib/offline-audio';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import dynamic from 'next/dynamic';
 import { DownloaderModal } from './downloader-modal';
@@ -89,6 +90,96 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const { data: playlists } = useCollection<Playlist>(playlistsPath);
 
   const [initialTime, setInitialTime] = useState(0);
+
+  const [aiData, setAiData] = useState<{
+    summary: string;
+    keyTakeaways: string[];
+    quiz: Array<{
+      question: string;
+      options: string[];
+      correctAnswer: number;
+      explanation: string;
+    }>;
+  } | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+
+  const [isOfflineCached, setIsOfflineCached] = useState(false);
+  const [isOfflineDownloading, setIsOfflineDownloading] = useState(false);
+  const [offlineDownloadProgress, setOfflineDownloadProgress] = useState(0);
+
+  useEffect(() => {
+    const checkCache = async () => {
+      const isCached = await checkIsAudioOffline(lecture.audioSrc);
+      setIsOfflineCached(isCached);
+    };
+    checkCache();
+  }, [lecture.audioSrc]);
+
+  const handleOfflineToggle = async () => {
+    if (isOfflineCached) return;
+    setIsOfflineDownloading(true);
+    setOfflineDownloadProgress(0);
+    try {
+      await downloadAudioForOffline(lecture, (progress) => {
+        setOfflineDownloadProgress(progress);
+      });
+      setIsOfflineCached(true);
+      toast({
+        title: 'تم الحفظ للاستماع دون اتصال!',
+        description: 'يمكنك الآن الاستماع لهذه المحاضرة في أي وقت بدون إنترنت.',
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحفظ دون اتصال',
+        description: error.message || 'حدث خطأ غير متوقع.',
+      });
+    } finally {
+      setIsOfflineDownloading(false);
+    }
+  };
+
+  const handleDeleteOffline = async () => {
+    try {
+      await deleteAudioFromOffline(lecture.id, lecture.audioSrc);
+      setIsOfflineCached(false);
+      toast({
+        title: 'تم إزالة المحاضرة من الذاكرة المؤقتة',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل حذف الملف',
+        description: error.message,
+      });
+    }
+  };
+
+  const fetchAiSummary = async () => {
+    if (aiData) return;
+    setIsAiLoading(true);
+    setAiError(null);
+    try {
+      const response = await fetch('/api/ai/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lectureSlug: lecture.slug })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'حدث خطأ أثناء الاتصال بالخادم.');
+      }
+      setAiData(data);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || 'فشل تحميل التحليل الذكي للمحاضرة.');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -632,6 +723,50 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                             </a>
                         </Button>
                     )}
+                    {lecture.audioSrc && (
+                        <Button 
+                            onClick={handleOfflineToggle} 
+                            disabled={isOfflineDownloading}
+                            className={cn(
+                                "w-full justify-between h-16 px-6 rounded-2xl transition-all group/btn shadow-lg",
+                                isOfflineCached 
+                                    ? "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400" 
+                                    : "bg-white/5 hover:bg-white/10 border border-white/10 text-foreground"
+                            )}
+                        >
+                            <div className="flex items-center w-full justify-between">
+                                <div className="flex items-center">
+                                    {isOfflineDownloading ? (
+                                        <Loader2 className="w-6 h-6 me-4 animate-spin text-primary" />
+                                    ) : isOfflineCached ? (
+                                        <Check className="w-6 h-6 me-4 text-emerald-400" />
+                                    ) : (
+                                        <Wifi className="w-6 h-6 me-4 text-primary transition-transform group-hover/btn:scale-110" />
+                                    )}
+                                    <span className="font-black text-lg">
+                                        {isOfflineDownloading 
+                                            ? `جاري الحفظ دون اتصال (${offlineDownloadProgress}%)` 
+                                            : isOfflineCached 
+                                                ? 'محفوظة للاستماع دون اتصال' 
+                                                : 'حفظ للاستماع دون اتصال'}
+                                    </span>
+                                </div>
+                                {isOfflineCached ? (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteOffline();
+                                        }}
+                                        className="text-xs font-black bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded-full border border-red-500/20 transition-colors z-20"
+                                    >
+                                        حذف من الجهاز
+                                    </button>
+                                ) : (
+                                    <div className="text-[10px] font-black bg-primary/20 text-primary px-3 py-1 rounded-full border border-primary/20">Offline</div>
+                                )}
+                            </div>
+                        </Button>
+                    )}
                 </div>
             </section>
             
@@ -673,15 +808,18 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
       >
         <Tabs defaultValue="transcript" className="w-full mt-10">
             <div className="flex justify-center mb-10">
-                <TabsList className="grid max-w-2xl grid-cols-3 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] h-20 p-2 shadow-2xl relative overflow-hidden group">
+                <TabsList className="grid max-w-3xl grid-cols-4 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] h-20 p-2 shadow-2xl relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <TabsTrigger value="transcript" className="rounded-[1.5rem] text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
-                    <FileText className="w-5 h-5 me-2" /> التفريغ التفاعلي
+                <TabsTrigger value="transcript" className="rounded-[1.5rem] text-sm md:text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
+                    <FileText className="w-4 h-4 md:w-5 md:h-5 md:me-2" /> التفريغ
                 </TabsTrigger>
-                <TabsTrigger value="notes" disabled={!user} className="rounded-[1.5rem] text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
+                <TabsTrigger value="ai" onClick={fetchAiSummary} className="rounded-[1.5rem] text-sm md:text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
+                    <Brain className="w-4 h-4 md:w-5 md:h-5 md:me-2" /> الذكاء الاصطناعي
+                </TabsTrigger>
+                <TabsTrigger value="notes" disabled={!user} className="rounded-[1.5rem] text-sm md:text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
                     ملاحظاتي
                 </TabsTrigger>
-                <TabsTrigger value="comments" className="rounded-[1.5rem] text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
+                <TabsTrigger value="comments" className="rounded-[1.5rem] text-sm md:text-lg font-black data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all h-full">
                     التعليقات
                 </TabsTrigger>
                 </TabsList>
@@ -703,6 +841,143 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                     </div>
                     <div className="relative z-10 h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
                         <InteractiveTranscript transcript={lecture.transcript || []} />
+                    </div>
+                </div>
+            </TabsContent>
+
+            <TabsContent value="ai" className="mt-0 outline-none">
+                <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-[4rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
+                    
+                    <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 border-b border-white/5 pb-10">
+                        <div className="flex items-center gap-5">
+                            <div className="p-5 bg-primary/20 rounded-[2rem] shadow-inner">
+                                <Brain className="h-10 w-10 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-4xl font-black font-headline text-white tracking-tighter">المساعد التعليمي الذكي</h2>
+                                <p className="text-muted-foreground text-lg font-bold mt-1 opacity-70 italic">تلخيص ذكي للمحاضرة واختبارات تفاعلية لقياس الفهم.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 min-h-[300px]">
+                        {isAiLoading && (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <Loader2 className="animate-spin h-12 w-12 text-primary" />
+                                <p className="text-muted-foreground font-bold text-lg">جاري تحليل المحاضرة وتلخيصها وتوليد الاختبار...</p>
+                            </div>
+                        )}
+
+                        {aiError && (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                                <h3 className="text-2xl font-black text-white mb-2">فشل التحليل الذكي</h3>
+                                <p className="text-muted-foreground font-bold max-w-md">{aiError}</p>
+                                <Button onClick={fetchAiSummary} className="mt-6 rounded-xl">إعادة المحاولة</Button>
+                            </div>
+                        )}
+
+                        {!isAiLoading && !aiError && !aiData && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <Brain className="w-20 h-20 text-white/10 mb-6" />
+                                <h3 className="text-2xl font-black text-white/50 mb-2">الملخص الذكي والاختبار</h3>
+                                <p className="text-muted-foreground font-bold max-w-md mb-8">اضغط على زر التوليد لبدء تحليل المحاضرة بالذكاء الاصطناعي والحصول على ملخص شامل واختبار فهم ذاتي.</p>
+                                <Button onClick={fetchAiSummary} className="rounded-2xl h-14 px-8 font-black text-lg bg-primary hover:bg-primary/95 text-white">توليد التلخيص الذكي</Button>
+                            </div>
+                        )}
+
+                        {aiData && (
+                            <div className="space-y-12" dir="rtl">
+                                {/* Summary Section */}
+                                <section className="space-y-6 text-right">
+                                    <h3 className="text-2xl font-black text-white font-headline border-r-4 border-primary pr-3 leading-none">الملخص العام للمحاضرة</h3>
+                                    <div className="bg-white/5 rounded-3xl p-6 md:p-8 border border-white/10 text-zinc-300 text-lg leading-relaxed whitespace-pre-line font-medium">
+                                        {aiData.summary}
+                                    </div>
+                                </section>
+
+                                {/* Key Takeaways */}
+                                {aiData.keyTakeaways && aiData.keyTakeaways.length > 0 && (
+                                    <section className="space-y-6 text-right">
+                                        <h3 className="text-2xl font-black text-white font-headline border-r-4 border-primary pr-3 leading-none">الفوائد والفرائد المستخلصة</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            {aiData.keyTakeaways.map((takeaway, idx) => (
+                                                <div key={idx} className="bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 rounded-3xl p-6 relative overflow-hidden group">
+                                                    <span className="absolute -top-4 -left-4 text-8xl font-black text-primary/5 select-none">{idx + 1}</span>
+                                                    <span className="inline-flex items-center justify-center h-10 w-10 bg-primary/20 rounded-xl mb-4 text-primary font-black">{idx + 1}</span>
+                                                    <p className="text-zinc-200 text-base font-bold leading-relaxed relative z-10">{takeaway}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
+
+                                {/* Interactive Quiz */}
+                                {aiData.quiz && aiData.quiz.length > 0 && (
+                                    <section className="space-y-6 pt-6 border-t border-white/5 text-right">
+                                        <div className="flex items-center gap-3 justify-start">
+                                            <Award className="w-7 h-7 text-amber-500" />
+                                            <h3 className="text-2xl font-black text-white font-headline leading-none">اختبر فهمك للدرس</h3>
+                                        </div>
+                                        <p className="text-muted-foreground font-medium text-base">أسئلة تفاعلية مبنية على محتوى الدرس، اختر الإجابة المناسبة وتعرف على مستواك.</p>
+
+                                        <div className="space-y-8 mt-6">
+                                            {aiData.quiz.map((q, qIdx) => {
+                                                const isAnswered = selectedAnswers[qIdx] !== undefined;
+                                                const selectedOpt = selectedAnswers[qIdx];
+                                                
+                                                return (
+                                                    <div key={qIdx} className="bg-white/5 rounded-3xl p-6 md:p-8 border border-white/10 space-y-4">
+                                                        <h4 className="text-xl font-black text-white leading-relaxed">السؤال {qIdx + 1}: {q.question}</h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            {q.options.map((opt, optIdx) => {
+                                                                const isSelected = selectedOpt === optIdx;
+                                                                const isCorrectOpt = q.correctAnswer === optIdx;
+                                                                
+                                                                let optBg = "bg-white/5 hover:bg-white/10 text-white/90 border-white/10";
+                                                                if (isAnswered) {
+                                                                    if (isCorrectOpt) {
+                                                                        optBg = "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold";
+                                                                    } else if (isSelected) {
+                                                                        optBg = "bg-red-500/20 text-red-400 border-red-500/40 font-bold";
+                                                                    } else {
+                                                                        optBg = "bg-white/2 text-white/40 border-white/5";
+                                                                    }
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        key={optIdx}
+                                                                        disabled={isAnswered}
+                                                                        onClick={() => setSelectedAnswers(prev => ({ ...prev, [qIdx]: optIdx }))}
+                                                                        className={cn(
+                                                                            "w-full text-right p-4 rounded-xl border text-base font-bold transition-all flex items-center justify-between",
+                                                                            optBg
+                                                                        )}
+                                                                    >
+                                                                        <span>{opt}</span>
+                                                                        {isAnswered && isCorrectOpt && <Check className="w-5 h-5 text-emerald-400 shrink-0" />}
+                                                                        {isAnswered && isSelected && !isCorrectOpt && <X className="w-5 h-5 text-red-400 shrink-0" />}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {isAnswered && (
+                                                            <div className="mt-4 p-4 bg-primary/10 rounded-2xl border border-primary/20 space-y-1">
+                                                                <span className="text-xs font-black text-primary uppercase tracking-widest block">الشرح والتوضيح:</span>
+                                                                <p className="text-sm text-zinc-300 leading-relaxed font-bold">{q.explanation}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </section>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </TabsContent>

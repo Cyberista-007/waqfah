@@ -2,7 +2,8 @@
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal, Trash2, Layers } from "lucide-react";
+import { Loader2, Heart, ListMusic, History, Clock, CheckCircle, Plus, Youtube, Flame, FileText, Podcast, Play, Notebook, HandHeart, BookCheck, Sparkles, Trophy, UserPlus, Award, Medal, Trash2, Layers, Wifi } from "lucide-react";
+import { getOfflineLectures, deleteAudioFromOffline } from "@/lib/offline-audio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { collection, query, where, getDocs, doc, orderBy, limit, collectionGroup } from "firebase/firestore";
@@ -22,12 +23,17 @@ import { ar } from 'date-fns/locale';
 import { DonationTierBadge } from "@/components/DonationTierBadge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { AccountabilityTracker } from "@/components/accountability-tracker";
+import dynamic from "next/dynamic";
+const AccountabilityTracker = dynamic(() => import("@/components/accountability-tracker").then(mod => mod.AccountabilityTracker), { 
+    ssr: false, 
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div> 
+});
 import { useAudioPlayer } from "@/components/audio-player-provider";
 import { useToast } from "@/hooks/use-toast";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { cn } from "@/lib/utils";
+import { cn, getVideoIdFromUrl } from "@/lib/utils";
+import { getPlaceholderImage } from "@/lib/images";
 
 const toDateHelper = (timestamp: any): Date | null => {
     if (!timestamp) return null;
@@ -808,6 +814,121 @@ function DonationsSection({ userProfile }: { userProfile: UserProfile }) {
     )
 }
 
+function OfflineSection() {
+    const [offlineLectures, setOfflineLectures] = useState<Lecture[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        setOfflineLectures(getOfflineLectures());
+        setIsLoading(false);
+    }, []);
+
+    const handleDelete = async (lecture: Lecture) => {
+        try {
+            await deleteAudioFromOffline(lecture.id, lecture.audioSrc);
+            setOfflineLectures(prev => prev.filter(l => l.id !== lecture.id));
+            toast({
+                title: "تم الحذف بنجاح",
+                description: `تم إزالة "${lecture.title}" من التخزين المؤقت.`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "فشل الحذف",
+                description: error.message,
+            });
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-16">
+                <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-black flex items-center gap-3">
+                    <Wifi className="w-6 h-6 text-emerald-400" />
+                    المحاضرات المحفوظة دون اتصال
+                </h3>
+                <span className="text-sm font-bold text-white/40">
+                    المساحة التخزينية محلية بالكامل على هذا المتصفح.
+                </span>
+            </div>
+
+            {offlineLectures.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {offlineLectures.map(lecture => {
+                        const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
+                        const placeholder = getPlaceholderImage(lecture.imageId);
+                        const imageUrl = videoId
+                            ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+                            : placeholder?.imageUrl || `https://picsum.photos/seed/${lecture.slug}/400/225`;
+
+                        return (
+                            <div key={lecture.id} className="relative p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/5 backdrop-blur-3xl overflow-hidden group flex flex-col justify-between transition-all duration-500 hover:scale-[1.02]">
+                                <div className="flex gap-4">
+                                    {imageUrl && (
+                                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-white/10">
+                                            <NextImage src={imageUrl} alt={lecture.title} fill className="object-cover" />
+                                        </div>
+                                    )}
+                                    <div className="space-y-1">
+                                        <h4 className="font-headline font-black text-lg text-white line-clamp-1">
+                                            <Link href={`/lectures/${lecture.slug}`} className="hover:underline">
+                                                {lecture.title}
+                                            </Link>
+                                        </h4>
+                                        <p className="text-xs text-white/40 font-medium">
+                                            {lecture.seriesTitle || "محاضرة منفردة"}
+                                        </p>
+                                        <p className="text-xs text-primary font-bold">
+                                            {lecture.duration ? `المدة: ${Math.round(lecture.duration / 60)} دقيقة` : "المدة غير معروفة"}
+                                        </p>
+                                    </div>
+                                </div>
+                            <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/5">
+                                <Button asChild size="sm" className="rounded-xl px-6">
+                                    <Link href={`/lectures/${lecture.slug}`}>
+                                        <Play className="w-4 h-4 me-2 fill-current" />
+                                        استماع الآن
+                                    </Link>
+                                </Button>
+                                <Button 
+                                    onClick={() => handleDelete(lecture)} 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-destructive hover:bg-destructive/10 rounded-xl"
+                                >
+                                    <Trash2 className="w-4 h-4 me-2" />
+                                    حذف
+                                </Button>
+                            </div>
+                        </div>
+                    );
+                })}
+                </div>
+            ) : (
+                <Card className="text-center py-16">
+                    <CardContent className="flex flex-col items-center gap-4">
+                        <Wifi className="w-16 h-16 text-muted-foreground opacity-20" />
+                        <p className="text-lg text-muted-foreground">لا توجد محاضرات محفوظة دون اتصال بعد.</p>
+                        <p className="text-sm text-muted-foreground/60 max-w-sm">
+                            يمكنك الانتقال لصفحة أي محاضرة والضغط على "حفظ للاستماع دون اتصال" لحفظها هنا.
+                        </p>
+                        <Button asChild><Link href="/lectures">تصفح المحاضرات</Link></Button>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+}
+
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -842,11 +963,17 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
     const { data: userChallenges } = useCollection<UserChallenge>(`users/${user.uid}/user_challenges`);
     const { data: notes } = useCollection<LectureNote>(`users/${user.uid}/notes`);
 
+    const [offlineCount, setOfflineCount] = useState(0);
+    useEffect(() => {
+        setOfflineCount(getOfflineLectures().length);
+    }, []);
+
     const tabs = [
         { id: 'overview', label: 'لوحة التحكم', icon: Layers, count: null, color: 'text-primary' },
         { id: 'history', label: 'أكمل المشاهدة', icon: History, count: history?.length || 0, color: 'text-sky-500' },
         { id: 'favorites', label: 'المفضلة', icon: Heart, count: favorites?.length || 0, color: 'text-rose-500' },
         { id: 'accountability', label: 'محاسبة النفس', icon: BookCheck, count: null, color: 'text-emerald-500' },
+        { id: 'offline', label: 'التحميلات (دون اتصال)', icon: Wifi, count: offlineCount, color: 'text-emerald-400' },
         { id: 'playlists', label: 'قوائم التشغيل', icon: ListMusic, count: playlists?.length || 0, color: 'text-amber-500' },
         { id: 'badges', label: 'الأوسمة', icon: Medal, count: null, color: 'text-yellow-500' },
         { id: 'following', label: 'البرامج المتابعة', icon: Podcast, count: following?.length || 0, color: 'text-purple-500' },
@@ -933,7 +1060,7 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
             <Tabs defaultValue="overview" className="w-full relative px-4 sm:px-0">
               <div className="sticky top-[72px] md:top-[80px] z-40 py-2 md:py-8 -mx-4 px-4 overflow-x-auto md:overflow-visible no-scrollbar scroll-smooth touch-pan-x">
                 <TabsList className={cn(
-                    "h-auto p-2 bg-zinc-950/40 backdrop-blur-3xl border border-white/5 shadow-2xl flex flex-nowrap md:grid md:grid-cols-5 gap-2 items-center mx-auto w-max md:w-full max-w-5xl ring-1 ring-white/5 transition-all duration-700",
+                    "h-auto p-2 bg-zinc-950/40 backdrop-blur-3xl border border-white/5 shadow-2xl flex flex-nowrap md:grid md:grid-cols-4 gap-2 items-center mx-auto w-max md:w-full max-w-5xl ring-1 ring-white/5 transition-all duration-700",
                     "rounded-[2rem] md:rounded-[3rem] overflow-visible"
                 )}>
                   {tabs.map((tab) => (
@@ -977,6 +1104,9 @@ function ProfileContent({ user, userProfile }: { user: User, userProfile: UserPr
                     </TabsContent>
                     <TabsContent value="accountability" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <AccountabilityTracker showHeader={false} />
+                    </TabsContent>
+                    <TabsContent value="offline" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <OfflineSection />
                     </TabsContent>
                     <TabsContent value="playlists" className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <PlaylistsSection />

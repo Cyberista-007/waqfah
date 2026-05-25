@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Sparkles, ChevronRight, ChevronLeft, Loader2, Play, Pause, List, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LuminousParticles } from './luminous-particles';
 
 interface LuminousMushafProps {
   surahs: any[];
@@ -15,6 +16,13 @@ interface LuminousMushafProps {
   selectedReciter: any;
   reciters?: any[];
   onSelectReciter?: (reciter: any) => void;
+  selectedTranslation?: any;
+  translations?: any[];
+  onSelectTranslation?: (translation: any) => void;
+  audioRef?: React.RefObject<HTMLAudioElement | null>;
+  isComparisonMode?: boolean;
+  selectedSecondaryTafseer?: any;
+  selectedSecondaryTranslation?: any;
 }
 
 export function LuminousMushaf({
@@ -26,7 +34,14 @@ export function LuminousMushaf({
   selectedTafseer,
   selectedReciter,
   reciters = [],
-  onSelectReciter
+  onSelectReciter,
+  selectedTranslation,
+  translations = [],
+  onSelectTranslation,
+  audioRef,
+  isComparisonMode = false,
+  selectedSecondaryTafseer,
+  selectedSecondaryTranslation
 }: LuminousMushafProps) {
   const [activeSurahNumber, setActiveSurahNumber] = useState<number>(1);
   const [verses, setVerses] = useState<any[]>([]);
@@ -34,6 +49,7 @@ export function LuminousMushaf({
   const [activeVerseIndex, setActiveVerseIndex] = useState<number>(0);
   const [showSurahList, setShowSurahList] = useState<boolean>(false);
   const [showReciterList, setShowReciterList] = useState<boolean>(false);
+  const [showTranslationList, setShowTranslationList] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   const activeVerseRef = useRef<HTMLDivElement | null>(null);
@@ -54,10 +70,16 @@ export function LuminousMushaf({
     try {
       const scriptEdition = selectedScript?.edition || 'quran-uthmani';
       const tafseerEdition = selectedTafseer?.id || 'ar.muyassar';
+      const translationEdition = selectedTranslation?.id || 'en.sahih';
+      const secTafseerEdition = selectedSecondaryTafseer?.id || 'ar.muyassar';
+      const secTranslationEdition = selectedSecondaryTranslation?.id || 'en.sahih';
 
-      const [scriptData, tafseerData] = await Promise.all([
+      const [scriptData, tafseerData, translationData, secTafseerData, secTranslationData] = await Promise.all([
         fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/${scriptEdition}`).then(res => res.json()),
-        fetch(`https://api.alquran.cloud/v1/surah/${num}/${tafseerEdition}`).then(res => res.json())
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${tafseerEdition}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${translationEdition}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${secTafseerEdition}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${secTranslationEdition}`).then(res => res.json())
       ]);
 
       if (scriptData?.data?.[0] && tafseerData?.data) {
@@ -68,6 +90,9 @@ export function LuminousMushaf({
           ayahNumber: ayah.numberInSurah,
           arabic: ayah.text,
           tafseer: tafseerData.data.ayahs[i].text,
+          translation: translationData?.data?.ayahs?.[i]?.text || '',
+          secondaryTafseer: secTafseerData?.data?.ayahs?.[i]?.text || '',
+          secondaryTranslation: secTranslationData?.data?.ayahs?.[i]?.text || '',
           sajdah: ayah.sajdah,
           page_number: ayah.page || 1,
           juz_number: ayah.juz || 1
@@ -94,11 +119,11 @@ export function LuminousMushaf({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedScript, selectedTafseer, currentAudio]);
+  }, [selectedScript, selectedTafseer, selectedTranslation, selectedSecondaryTafseer, selectedSecondaryTranslation, currentAudio]);
 
   useEffect(() => {
     loadSurahVerses(activeSurahNumber);
-  }, [activeSurahNumber, loadSurahVerses]);
+  }, [activeSurahNumber, selectedScript, selectedTafseer, selectedTranslation, selectedSecondaryTafseer, selectedSecondaryTranslation, loadSurahVerses]);
 
   // Scroll active verse into view
   useEffect(() => {
@@ -141,6 +166,7 @@ export function LuminousMushaf({
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {audioRef && <LuminousParticles audioRef={audioRef} isPlaying={isPlaying} />}
         <motion.div 
           animate={{
             top: `${30 + (activeVerseIndex * 2)}%`,
@@ -159,6 +185,7 @@ export function LuminousMushaf({
             onClick={() => {
               setShowSurahList(!showSurahList);
               setShowReciterList(false);
+              setShowTranslationList(false);
             }}
             className="flex items-center gap-3 text-amber-100 hover:text-amber-400 font-bold transition-all text-xs md:text-sm"
           >
@@ -172,11 +199,27 @@ export function LuminousMushaf({
               onClick={() => {
                 setShowReciterList(!showReciterList);
                 setShowSurahList(false);
+                setShowTranslationList(false);
               }}
               className="flex items-center gap-2 text-amber-100 hover:text-amber-400 font-bold transition-all text-xs md:text-sm border-r border-white/10 pr-4 mr-auto"
             >
               <span className="text-sm">{selectedReciter?.icon || '🎙️'}</span>
               <span>{selectedReciter?.name || 'القارئ'}</span>
+            </button>
+          )}
+
+          {/* Translation Selector in Smart Page */}
+          {translations.length > 0 && onSelectTranslation && (
+            <button 
+              onClick={() => {
+                setShowTranslationList(!showTranslationList);
+                setShowSurahList(false);
+                setShowReciterList(false);
+              }}
+              className="flex items-center gap-2 text-amber-100 hover:text-amber-400 font-bold transition-all text-xs md:text-sm border-r border-white/10 pr-4 mr-2"
+            >
+              <span className="text-[10px]">🌐</span>
+              <span>{selectedTranslation?.name?.split(' ')[0] || 'الترجمة'}</span>
             </button>
           )}
           
@@ -263,6 +306,40 @@ export function LuminousMushaf({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Translation List Modal/Dropdown */}
+        <AnimatePresence>
+          {showTranslationList && translations.length > 0 && onSelectTranslation && (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: 15 }}
+              className="absolute top-16 left-0 right-0 bg-[#0c0c0c] border border-white/10 rounded-[2rem] p-6 shadow-3xl z-50"
+            >
+              <h3 className="text-xs font-black text-white/40 mb-4 text-right">اختر الترجمة</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {translations.map((t: any) => (
+                  <button 
+                    key={t.id}
+                    onClick={() => {
+                      onSelectTranslation(t);
+                      setShowTranslationList(false);
+                    }}
+                    className={cn(
+                      "p-4 rounded-xl text-right text-xs font-bold transition-all border flex items-center justify-between",
+                      t.id === selectedTranslation?.id 
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400" 
+                        : "bg-white/[0.01] border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <span>{t.name}</span>
+                    <span className="text-xs text-white/20">{t.lang.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Main Content Area */}
@@ -311,13 +388,60 @@ export function LuminousMushaf({
                     {activeVerse.tafseer && (
                       <motion.div 
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.7 }}
+                        animate={{ opacity: 0.85 }}
                         transition={{ delay: 0.2 }}
-                        className="max-w-2xl mx-auto p-6 rounded-3xl bg-white/[0.02] border border-white/5 shadow-inner"
+                        className="max-w-4xl mx-auto w-full"
                       >
-                        <p className="text-xs md:text-sm text-amber-200/90 leading-relaxed font-tajawal">
-                          {activeVerse.tafseer}
-                        </p>
+                        {!isComparisonMode ? (
+                          <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 shadow-inner text-right space-y-3">
+                            <p className="text-xs md:text-sm text-amber-200/90 leading-relaxed font-tajawal">
+                              {activeVerse.tafseer}
+                            </p>
+                            {activeVerse.translation && (
+                              <p className="text-xs text-white/50 leading-relaxed pt-3 border-t border-white/5 font-sans" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                                {activeVerse.translation}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                            {/* Primary interpretation column */}
+                            <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 shadow-inner space-y-3 flex flex-col justify-between">
+                              <div>
+                                <p className="text-[10px] font-black text-amber-500/80 mb-2 border-b border-white/5 pb-1">التفسير الأساسي ({selectedTafseer?.name})</p>
+                                <p className="text-xs md:text-sm text-white/80 leading-relaxed font-tajawal">
+                                  {activeVerse.tafseer}
+                                </p>
+                              </div>
+                              {activeVerse.translation && (
+                                <div className="border-t border-white/5 pt-3 mt-3">
+                                  <p className="text-[10px] font-black text-emerald-400/80 mb-2">الترجمة ({selectedTranslation?.name})</p>
+                                  <p className="text-xs text-white/50 leading-relaxed font-sans" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                                    {activeVerse.translation}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Secondary interpretation column */}
+                            <div className="p-5 rounded-3xl bg-amber-500/[0.01] border border-amber-500/10 shadow-inner space-y-3 flex flex-col justify-between">
+                              <div>
+                                <p className="text-[10px] font-black text-amber-400 mb-2 border-b border-white/5 pb-1">التفسير المقارن ({selectedSecondaryTafseer?.name || 'التفسير الثاني'})</p>
+                                <p className="text-xs md:text-sm text-white/80 leading-relaxed font-tajawal">
+                                  {activeVerse.secondaryTafseer || "لا يوجد تفسير مقارن متوفر"}
+                                </p>
+                              </div>
+                              {activeVerse.secondaryTranslation && (
+                                <div className="border-t border-white/5 pt-3 mt-3">
+                                  <p className="text-[10px] font-black text-amber-400 mb-2">الترجمة المقارنة ({selectedSecondaryTranslation?.name})</p>
+                                  <p className="text-xs text-white/50 leading-relaxed font-sans" dir={selectedSecondaryTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                                    {activeVerse.secondaryTranslation}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </motion.div>

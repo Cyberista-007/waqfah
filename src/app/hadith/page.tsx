@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Book, Search, Star, Heart, Share2, Library, Sparkles,
+  Book, Search, Mic, Star, Heart, Share2, Library, Sparkles,
   BookOpen, Quote, ShieldCheck, Layers,
   ArrowRight, Zap, RefreshCw, Copy
 } from 'lucide-react';
@@ -14,6 +14,16 @@ import Link from 'next/link';
 import { HADITH_SECTIONS_FALLBACK } from './hadith-data-hub';
 import { usePathname } from 'next/navigation';
 import HadithPageClient from './[bookId]/HadithPageClient';
+
+
+function normalizeArabic(text: string): string {
+  return text
+    .replace(/[\u064B-\u065F]/g, "") // remove tashkeel
+    .replace(/[أإآا]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .toLowerCase();
+}
 
 interface HadithStat {
   label: string;
@@ -140,6 +150,8 @@ export default function HadithHubPage() {
   const [activeTab, setActiveTab] = useState<'books' | 'about'>('books');
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const voiceRecognitionRef = useRef<any>(null);
   const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
 
@@ -224,10 +236,12 @@ export default function HadithHubPage() {
   const globalResults = useMemo(() => {
     if (!searchQuery || searchQuery.length < 2) return [];
     const results: any[] = [];
+    const normalizedQuery = normalizeArabic(searchQuery);
 
     Object.entries(HADITH_SECTIONS_FALLBACK).forEach(([bookId, sections]) => {
       Object.entries(sections).forEach(([sectionId, sectionName]) => {
-        if (sectionName.includes(searchQuery)) {
+        const normalizedSection = normalizeArabic(sectionName);
+        if (normalizedSection.includes(normalizedQuery)) {
           results.push({
             bookId,
             sectionId,
@@ -382,8 +396,40 @@ export default function HadithHubPage() {
                 setShowResults(e.target.value.length > 1);
               }}
               placeholder="ابحث في الموسوعة الشاملة (كلمة، موضوع، باب)..."
-              className="w-full h-14 pr-16 pl-6 rounded-2xl bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none transition-all font-bold"
+              className="w-full h-14 pr-16 pl-16 rounded-2xl bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none transition-all font-bold text-center"
             />
+            <button
+              onClick={() => {
+                if (isListening) {
+                  voiceRecognitionRef.current?.stop();
+                  setIsListening(false);
+                  return;
+                }
+                const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                if (!SpeechRecognitionAPI) {
+                  alert('متصفحك لا يدعم البحث الصوتي.');
+                  return;
+                }
+                const recognition = new SpeechRecognitionAPI();
+                voiceRecognitionRef.current = recognition;
+                recognition.lang = 'ar-SA';
+                recognition.onstart = () => setIsListening(true);
+                recognition.onresult = (e: any) => {
+                  const transcript = e.results[0][0].transcript;
+                  setSearchQuery(transcript);
+                  setShowResults(transcript.length > 1);
+                };
+                recognition.onerror = () => setIsListening(false);
+                recognition.onend = () => setIsListening(false);
+                recognition.start();
+              }}
+              className={cn(
+                "absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                isListening ? "bg-red-500 text-white animate-pulse" : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <Mic className="w-5 h-5" />
+            </button>
             <AnimatePresence>
               {showResults && globalResults.length > 0 && (
                 <motion.div
@@ -419,6 +465,17 @@ export default function HadithHubPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+            <div className="flex flex-wrap gap-2 justify-center mt-3">
+              {['النية', 'العلم', 'الصبر', 'التقوى', 'الصدق'].map(keyword => (
+                <button
+                  key={keyword}
+                  onClick={() => { setSearchQuery(keyword); setShowResults(true); }}
+                  className="px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-black text-white/30 hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/20 transition-all"
+                >
+                  # {keyword}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

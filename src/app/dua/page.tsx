@@ -4,11 +4,12 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HandHeart, Copy, Share2, Check, Search, X,
-  Sunrise, Sunset, Moon, Laptop, Coffee, Car, Heart, Utensils, Droplets, LayoutGrid
+  Sunrise, Sunset, Moon, Laptop, Coffee, Car, Heart, Utensils, Droplets, LayoutGrid, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
+import { ImanCardGenerator } from '@/components/iman-card-generator';
 
 // ━━━━━━━━━━━ TYPES ━━━━━━━━━━━
 
@@ -324,6 +325,22 @@ function DuaCard({
         {/* Source + Actions */}
         <div className={cn("flex items-center justify-between pt-3 border-t border-white/5 transition-all duration-500", isReadingMode && "opacity-0 h-0 overflow-hidden")}>
           <div className="flex items-center gap-2">
+            <ImanCardGenerator 
+              title={`دعاء مأثور - ${dua.title}`}
+              content={dua.arabic}
+              secondaryContent={dua.meaning}
+              source={`المأثورات - ${dua.source}`}
+              trigger={
+                <motion.button
+                  whileTap={{ scale: 0.82 }}
+                  className="h-9 w-9 rounded-xl flex items-center justify-center border bg-white/5 border-white/10 text-amber-400 hover:text-amber-300 hover:bg-white/10 transition-all cursor-pointer"
+                  title="تحميل كبطاقة دعوية"
+                >
+                  <Sparkles className="w-4 h-4" />
+                </motion.button>
+              }
+            />
+
             <motion.button
               whileTap={{ scale: 0.82 }}
               onClick={handleCopy}

@@ -77,11 +77,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/quran',
     '/muhlikat',
     '/aqeedah',
+    '/mirath',
+    '/sciences-tree',
+    '/memorize',
   ].map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as 'weekly',
-    priority: route === '/' ? 1.0 : ['/adhkar', '/hadith', '/dua', '/quran', '/muhlikat', '/aqeedah'].includes(route) ? 0.9 : 0.8,
+    priority: route === '/' ? 1.0 : ['/adhkar', '/hadith', '/dua', '/quran', '/muhlikat', '/aqeedah', '/mirath', '/sciences-tree', '/memorize'].includes(route) ? 0.9 : 0.8,
   }));
 
   return [

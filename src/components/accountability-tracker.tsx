@@ -790,30 +790,49 @@ const ImanHarvestReport = () => {
                                     توزيع العبادات
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="h-[350px] w-full pt-10">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie 
-                                            data={stats.categoryDistribution} 
-                                            dataKey="value" 
-                                            nameKey="name" 
-                                            cx="50%" 
-                                            cy="50%" 
-                                            innerRadius={80} 
-                                            outerRadius={110} 
-                                            paddingAngle={8}
-                                            animationBegin={500}
-                                            animationDuration={1500}
-                                        >
-                                            {stats.categoryDistribution.map((entry: any, index: number) => (
-                                                <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip 
-                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px', fontWeight: 'bold' }}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                            <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 p-8 h-auto sm:h-[350px] w-full pt-10">
+                                <div className="h-[240px] w-full sm:w-1/2">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie 
+                                                data={stats.categoryDistribution} 
+                                                dataKey="value" 
+                                                nameKey="name" 
+                                                cx="50%" 
+                                                cy="50%" 
+                                                innerRadius={65} 
+                                                outerRadius={95} 
+                                                paddingAngle={6}
+                                                animationBegin={500}
+                                                animationDuration={1500}
+                                            >
+                                                {stats.categoryDistribution.map((entry: any, index: number) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px', fontWeight: 'bold' }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex flex-col gap-2 w-full sm:w-1/2 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {stats.categoryDistribution.length > 0 ? (
+                                        stats.categoryDistribution.map((entry: any, index: number) => (
+                                            <div key={index} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-2xl text-sm transition-all duration-300 hover:bg-white/10" dir="rtl">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-3.5 h-3.5 rounded-full shadow-inner shrink-0" style={{ backgroundColor: entry.fill }} />
+                                                    <span className="font-bold text-zinc-300">{entry.name}</span>
+                                                </div>
+                                                <span className="font-mono text-zinc-400 font-bold shrink-0">{entry.value}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-zinc-500 py-8 font-bold text-sm">
+                                            لا توجد بيانات عبادات مسجلة بعد
+                                        </div>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
                     </div>

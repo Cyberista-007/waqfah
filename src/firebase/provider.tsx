@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useMemo } from 'react';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
-import { Firestore, getFirestore } from 'firebase/firestore';
+import { Firestore, getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getAuth } from 'firebase/auth';
 import { Functions, getFunctions } from 'firebase/functions';
 import { FirebaseStorage, getStorage } from 'firebase/storage';
@@ -52,7 +52,17 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
         try {
             const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
             const auth = getAuth(app);
-            const firestore = getFirestore(app);
+            
+            let firestore: Firestore;
+            try {
+                firestore = initializeFirestore(app, {
+                    localCache: persistentLocalCache({
+                        tabManager: persistentMultipleTabManager(),
+                    }),
+                });
+            } catch (err) {
+                firestore = getFirestore(app);
+            }
             const functions = getFunctions(app);
             const storage = getStorage(app);
 

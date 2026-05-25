@@ -7,7 +7,22 @@ import { Toaster } from '@/components/ui/toaster';
 import { PWARegistry } from '@/components/pwa-registry';
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from '@/components/app-providers';
-import { sourceCodePro, cairo, tajawal, amiri } from './fonts';
+import {
+  sourceCodePro,
+  cairo,
+  tajawal,
+  amiri,
+  almarai,
+  lalezar,
+  notoSansArabic,
+  ibmPlexSansArabic,
+  changa,
+  elMessiri,
+  reemKufi,
+  markaziText,
+  scheherazadeNew,
+  mada
+} from './fonts';
 import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
@@ -75,7 +90,17 @@ export default async function RootLayout({
         sourceCodePro.variable,
         cairo.variable,
         tajawal.variable,
-        amiri.variable
+        amiri.variable,
+        almarai.variable,
+        lalezar.variable,
+        notoSansArabic.variable,
+        ibmPlexSansArabic.variable,
+        changa.variable,
+        elMessiri.variable,
+        reemKufi.variable,
+        markaziText.variable,
+        scheherazadeNew.variable,
+        mada.variable
       )}>
         <AppProviders 
           appearanceSettings={appearanceSettings}

@@ -238,9 +238,16 @@ export function SeerahAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const toggle = () => {
-    if (isPlaying) audioRef.current?.pause();
-    else audioRef.current?.play();
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current?.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => {
+          console.warn("Seerah ambient audio playback failed:", err);
+        });
+    }
   };
 
   return (
@@ -262,6 +269,7 @@ export function SeerahAudioPlayer() {
           ref={audioRef} 
           src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" 
           loop 
+          preload="none"
         />
         
         {isPlaying && (

@@ -41,10 +41,12 @@ const RECITERS = [
 ];
 
 const TAFSEERS = [
-  { id: 'ar.jalalayn', name: 'تفسير الجلالين' },
   { id: 'ar.muyassar', name: 'التفسير الميسر' },
-  { id: 'ar.ibnkathir', name: 'تفسير ابن كثير' },
+  { id: 'ar.jalalayn', name: 'تفسير الجلالين' },
   { id: 'ar.qurtubi', name: 'تفسير القرطبي' },
+  { id: 'ar.waseet', name: 'التفسير الوسيط (طنطاوي)' },
+  { id: 'ar.baghawi', name: 'تفسير البغوي' },
+  { id: 'ar.miqbas', name: 'تفسير ابن عباس (تنوير المقباس)' },
 ];
 
 const SCRIPTS = [
@@ -66,6 +68,93 @@ const MEMO_PLANS = [
   { id: '2years', label: 'ختمة في سنتين', months: 24, pagesPerDay: 0.8 },
   { id: '6months', label: 'ختمة في 6 أشهر', months: 6, pagesPerDay: 3.3 },
   { id: 'custom', label: 'خطة مخصصة', months: 0, pagesPerDay: 0 },
+];
+
+const TRANSLATIONS = [
+  { id: 'en.sahih', name: 'English (Sahih Intl)', lang: 'en' },
+  { id: 'fr.hamidullah', name: 'Français (Hamidullah)', lang: 'fr' },
+  { id: 'ur.maududi', name: 'اردو (Maududi)', lang: 'ur' },
+  { id: 'tr.ates', name: 'Türkçe (Süleyman Ateş)', lang: 'tr' },
+];
+
+const SEMANTIC_TOPICS = [
+  {
+    keywords: ['والدين', 'والدان', 'بر الوالدين', 'أبي', 'أمي', 'أبوي', 'طاعة الوالدين', 'إحسان الوالدين'],
+    title: 'بر الوالدين والإحسان إليهما',
+    ayahs: [
+      { surah: 17, ayah: 23, text: 'وَقَضَىٰ رَبُّكَ أَلَّا تَعْبُدُوا إِلَّا إِيَّاهُ وَبِالْوَالِدَيْنِ إِحْسَانًا ۚ إِمَّا يَبْلُغَنَّ عِندَكَ الْكِبَرَ أَحَدُهُمَا أَوْ كِلَاهُمَا فَلَا تَقُل لَّهُمَا أُفٍّ وَلَا تَنْهَرْهُمَا وَقُل لَّهُمَا قَوْلًا كَرِيمًا' },
+      { surah: 31, ayah: 14, text: 'وَوَصَّيْنَا الْإِنسَانَ بِوَالِدَيْهِ حَمَلَتْهُ أُمُّهُ وَهْنًا عَلَىٰ وَهْنٍ وَفِصَالُهُ فِي عَامَيْنِ أَنِ اشْكُرْ لِي وَلِوَالِدَيْكَ إِلَيَّ الْمَصِيرُ' },
+      { surah: 46, ayah: 15, text: 'وَوَصَّيْنَا الْإِنسَانَ بِوَالِدَيْهِ إِحْسَانًا ۖ حَمَلَتْهُ أُمُّهُ كُرْهًا وَوَضَعَتْهُ كُرْهًا ۖ وَحَمْلُهُ وَفِصَالُهُ ثَلَاثُونَ شَهْرًا' }
+    ]
+  },
+  {
+    keywords: ['صلاة', 'صلوات', 'إقامة الصلاة', 'الصلوات', 'الفجر', 'العصر', 'أقم الصلاة'],
+    title: 'أهمية الصلاة وإقامتها في وقتها',
+    ayahs: [
+      { surah: 20, ayah: 14, text: 'إِنَّنِي أَنَا اللَّلهِ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي' },
+      { surah: 29, ayah: 45, text: 'اتْلُ مَا أُوحِيَ إِلَيْكَ مِنَ الْكِتَابِ وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ ۗ وَلَذِكْرُ اللَّهِ أَكْبَرُ' },
+      { surah: 2, ayah: 238, text: 'حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ' }
+    ]
+  },
+  {
+    keywords: ['صبر', 'الصبر', 'صابري', 'اصبر', 'صابروا', 'تصبير'],
+    title: 'فضيلة الصبر وبشرى الصابرين',
+    ayahs: [
+      { surah: 2, ayah: 153, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ إِنَّ اللَّهَ مَعَ الصَّابِرِينَ' },
+      { surah: 2, ayah: 155, text: 'وَلَنَبْلُوَنَّكُم بِشَيْءٍ مِّنَ الْخَوْفِ وَالْجُوعِ وَنَقْصٍ مِّنَ الْأَمْوَالِ وَالْأَنفُسِ وَالثَّمَرَاتِ ۗ وَبَشِّرِ الصَّابِرِينَ' },
+      { surah: 39, ayah: 10, text: 'إِنَّمَا يُوَفَّى الصَّابِرُونَ أَجْرَهُم بِغَيْرِ حِسَابٍ' }
+    ]
+  },
+  {
+    keywords: ['توبة', 'استغفار', 'مغفرة', 'تاب', 'يتوب', 'استغفر', 'يغفر', 'ذنوب', 'غفران'],
+    title: 'سعة رحمة الله وقبول التوبة والاستغفار',
+    ayahs: [
+      { surah: 39, ayah: 53, text: 'قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ' },
+      { surah: 66, ayah: 8, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا عَسَىٰ رَبُّكُمْ أَن يُكَفِّرَ عَنكُمْ سَيِّئَاتِكُمْ' },
+      { surah: 71, ayah: 10, text: 'فَقُلْتُ اسْتَغْفِرُوا رَبَّكُمْ إِنَّهُ كَانَ غَفَّارًا ۝ يُرْسِلِ السَّمَاءَ عَلَيْكُم مِّدْرَارًا ۝ وَيُمْدِدْكُم بِأَمْوَالٍ وَبَنِينَ وَيَجْعَل لَّكُمْ جَنَّاتٍ وَيَجْعَل لَّكُمْ أَنْهَارًا' }
+    ]
+  },
+  {
+    keywords: ['ربا', 'الربا', 'أكل الربا', 'ربا الفضل', 'ربا النسيئة'],
+    title: 'تحريم الربا والتحذير منه',
+    ayahs: [
+      { surah: 2, ayah: 275, text: 'الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ ۚ ذَٰلِكَ بِأَنَّهُمْ قَالُوا إِنَّمَا الْبَيْعُ مِثْلُ الرِّبَا ۗ وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا' },
+      { surah: 2, ayah: 278, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا إِن كُنتُم مُّؤْمِنِينَ' }
+    ]
+  },
+  {
+    keywords: ['عدل', 'قسط', 'العدل', 'القسط', 'ميزان', 'العدالة', 'اعدلوا'],
+    title: 'إقامة العدل والقسط بين الناس',
+    ayahs: [
+      { surah: 16, ayah: 90, text: 'إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ وَإِيتَاءِ ذِي الْقُرْبَىٰ وَيَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ وَالْبَغْيِ ۚ يَعِظُكُمْ لَعَلَّكُمْ تَذَكَّرُونَ' },
+      { surah: 5, ayah: 8, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا كُونُوا قَوَّامِينَ لِلَّهِ شُهَدَاءَ بِالْقُسْطِ ۖ وَلَا يَجْرِمَنَّكُمْ شَنَآنُ قَوْمٍ عَلَىٰ أَلَّا تَعْدِلُوا ۚ اعْدِلُوا هُوَ أَقْرَبُ لِلتَّقْوَىٰ' }
+    ]
+  },
+  {
+    keywords: ['حجاب', 'عفة', 'يغضوا', 'يغضضن', 'فروجهم', 'فروجهن', 'ستر', 'جلايب', 'زينتهن'],
+    title: 'الحجاب الشرعي والحث على العفة وغض البصر',
+    ayahs: [
+      { surah: 24, ayah: 30, text: 'قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ ۗ إِنَّ اللَّهَ خَبِيرٌ بِمَا يَصْنَعُونَ' },
+      { surah: 24, ayah: 31, text: 'وَقُل لِّلْمُؤْمِنَاتِ يَغْضُضْن مِنْ أَبْصَارِهِنَّ وَيَحْفَظْن فُرُوجَهُنَّ وَلَا يُبْدِينَ زِينَتَهُنَّ إِلَّا مَا ظَهَرَ مِنْهَا ۖ وَلْيَضْرِبْنَ بِخُمُرِهِنَّ عَلَىٰ جُيُوبِهِنَّ' },
+      { surah: 33, ayah: 59, text: 'يَا أَيُّهَا النَّبِيُّ قُل لِّأَزْوَاجِكَ وَبَنَاتِكَ وَنِسَاءِ الْمُؤْمِنِينَ يُدْنِينَ عَلَيْهِنَّ مِن جَلَابِيبِهِنَّ ۚ ذَٰلِكَ أَدْنَىٰ أَن يُعْرَفْنَ فَلَا يُؤْذَيْنَ' }
+    ]
+  },
+  {
+    keywords: ['علم', 'العلم', 'علماء', 'طلب العلم', 'تعلم', 'يعلمون', 'علّمه'],
+    title: 'فضل العلم والعلماء والحث على المعرفة',
+    ayahs: [
+      { surah: 20, ayah: 114, text: 'فَتَعَالَى اللَّهُ الْمَلِكُ الْحَقُّ ۗ وَلَا تَعْجَلْ بِالْقُرْآنِ مِن قَبْلِ أَن يُقْضَىٰ إِلَيْكَ وَحْيُهُ ۖ وَقُل رَّبِّ زِدْنِي عِلْمًا' },
+      { surah: 39, ayah: 9, text: 'قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ ۗ إِنَّمَا يَتَذَكَّرُ أُولُو الْأَلْبَابِ' }
+    ]
+  }
+];
+
+
+const AMBIENT_SOUNDS = [
+  { id: 'rain', name: '🌧️ مطر هادئ', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
+  { id: 'birds', name: '🌲 عصافير الغابة', url: 'https://actions.google.com/sounds/v1/animals/forest_birds.ogg' },
+  { id: 'river', name: '💧 خرير الماء', url: 'https://actions.google.com/sounds/v1/water/river_flowing.ogg' },
+  { id: 'night', name: '🌙 هدوء الليل', url: 'https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg' },
 ];
 
 const MEMORIZATION_STATUS = {
@@ -107,36 +196,36 @@ const CARD_FRAMES = [
 
 // ━━━━━━━━━━━ JUZ DATA ━━━━━━━━━━━
 const JUZ_DATA = [
-  { juz: 1,  surah: 'الفاتحة',  start: 'الحمد..', page: 1 },
-  { juz: 2,  surah: 'البقرة',   start: 'سيقول..', page: 22 },
-  { juz: 3,  surah: 'البقرة',   start: 'تلك الرسل..', page: 42 },
-  { juz: 4,  surah: 'آل عمران', start: 'كل الطعام..', page: 62 },
-  { juz: 5,  surah: 'النساء',   start: 'والمحصنات..', page: 82 },
-  { juz: 6,  surah: 'النساء',   start: 'لا يحب الله..', page: 102 },
-  { juz: 7,  surah: 'المائدة',  start: 'لتجدن..', page: 121 },
-  { juz: 8,  surah: 'الأنعام',  start: 'و لو أنا أنزلنا..', page: 142 },
-  { juz: 9,  surah: 'الأعراف',  start: 'قال الملأ..', page: 162 },
-  { juz: 10, surah: 'الأنفال',  start: 'واعلموا..', page: 182 },
-  { juz: 11, surah: 'التوبة',   start: 'يعتذرون..', page: 201 },
-  { juz: 12, surah: 'هود',      start: 'وما من دابة..', page: 222 },
-  { juz: 13, surah: 'يوسف',    start: 'وما أبرئ..', page: 242 },
-  { juz: 14, surah: 'الحجر',    start: 'ربما..', page: 262 },
-  { juz: 15, surah: 'الإسراء',  start: 'سبحان..', page: 282 },
-  { juz: 16, surah: 'الكهف',    start: 'قال ألم..', page: 302 },
+  { juz: 1, surah: 'الفاتحة', start: 'الحمد..', page: 1 },
+  { juz: 2, surah: 'البقرة', start: 'سيقول..', page: 22 },
+  { juz: 3, surah: 'البقرة', start: 'تلك الرسل..', page: 42 },
+  { juz: 4, surah: 'آل عمران', start: 'كل الطعام..', page: 62 },
+  { juz: 5, surah: 'النساء', start: 'والمحصنات..', page: 82 },
+  { juz: 6, surah: 'النساء', start: 'لا يحب الله..', page: 102 },
+  { juz: 7, surah: 'المائدة', start: 'لتجدن..', page: 121 },
+  { juz: 8, surah: 'الأنعام', start: 'و لو أنا أنزلنا..', page: 142 },
+  { juz: 9, surah: 'الأعراف', start: 'قال الملأ..', page: 162 },
+  { juz: 10, surah: 'الأنفال', start: 'واعلموا..', page: 182 },
+  { juz: 11, surah: 'التوبة', start: 'يعتذرون..', page: 201 },
+  { juz: 12, surah: 'هود', start: 'وما من دابة..', page: 222 },
+  { juz: 13, surah: 'يوسف', start: 'وما أبرئ..', page: 242 },
+  { juz: 14, surah: 'الحجر', start: 'ربما..', page: 262 },
+  { juz: 15, surah: 'الإسراء', start: 'سبحان..', page: 282 },
+  { juz: 16, surah: 'الكهف', start: 'قال ألم..', page: 302 },
   { juz: 17, surah: 'الأنبياء', start: 'اقترب..', page: 322 },
   { juz: 18, surah: 'المؤمنون', start: 'قد أفلح..', page: 342 },
-  { juz: 19, surah: 'الفرقان',  start: 'وقال الذين..', page: 362 },
-  { juz: 20, surah: 'النمل',    start: 'أمن خلق..', page: 382 },
+  { juz: 19, surah: 'الفرقان', start: 'وقال الذين..', page: 362 },
+  { juz: 20, surah: 'النمل', start: 'أمن خلق..', page: 382 },
   { juz: 21, surah: 'العنكبوت', start: 'اتل ما..', page: 402 },
   { juz: 22, surah: 'الأحزاب', start: 'ومن يقنت..', page: 422 },
-  { juz: 23, surah: 'يس',       start: 'وما لي..', page: 442 },
-  { juz: 24, surah: 'الزمر',    start: 'فمن أظلم..', page: 462 },
-  { juz: 25, surah: 'فصلت',     start: 'إليه يرد..', page: 482 },
-  { juz: 26, surah: 'الأحقاف',  start: 'حم..', page: 502 },
+  { juz: 23, surah: 'يس', start: 'وما لي..', page: 442 },
+  { juz: 24, surah: 'الزمر', start: 'فمن أظلم..', page: 462 },
+  { juz: 25, surah: 'فصلت', start: 'إليه يرد..', page: 482 },
+  { juz: 26, surah: 'الأحقاف', start: 'حم..', page: 502 },
   { juz: 27, surah: 'الذاريات', start: 'قال فما خطبكم..', page: 522 },
   { juz: 28, surah: 'المجادلة', start: 'قد سمع..', page: 542 },
-  { juz: 29, surah: 'الملك',    start: 'تبارك..', page: 562 },
-  { juz: 30, surah: 'عم',       start: 'عم يتساءلون..', page: 582 },
+  { juz: 29, surah: 'الملك', start: 'تبارك..', page: 562 },
+  { juz: 30, surah: 'عم', start: 'عم يتساءلون..', page: 582 },
 ];
 
 // ━━━━━━━━━━━ QURAN NAV DRAWER ━━━━━━━━━━━
@@ -915,15 +1004,26 @@ function WordAnalysisModal({ analysis, onClose }: { analysis: any; onClose: () =
   );
 }
 
-function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize, onPlay, onShare, onBookmark, onWordClick, isPlaying, isBookmarked, reciterName, id, fontClass, searchQuery, isHideRevealMode }: any) {
+function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize, onPlay, onShare, onBookmark, onWordClick, isPlaying, isBookmarked, reciterName, id, fontClass, searchQuery, isHideRevealMode, quranHideMode = 'hideAll', selectedTranslation, onChatClick, isComparisonMode, selectedSecondaryTafseerName, selectedSecondaryTranslation }: any) {
   const [copied, setCopied] = useState(false);
   const verseRef = useRef<HTMLDivElement>(null);
   const [revealedWords, setRevealedWords] = useState<Set<number>>(new Set());
+  const [isCinematicFocus, setIsCinematicFocus] = useState(false);
+  const [isLocalHideActive, setIsLocalHideActive] = useState<boolean>(false);
+  const [isLocalRevealedOverride, setIsLocalRevealedOverride] = useState<boolean>(false);
 
-  // Reset revealed words when hide/reveal mode changes or verse changes
+  // Reset local overrides when global hide reveal mode changes
+  useEffect(() => {
+    setIsLocalHideActive(false);
+    setIsLocalRevealedOverride(false);
+  }, [isHideRevealMode]);
+
+  const isVerseCurrentlyHidden = isHideRevealMode ? !isLocalRevealedOverride : isLocalHideActive;
+
+  // Reset revealed words when hide/reveal mode changes, quranHideMode changes or verse changes
   useEffect(() => {
     setRevealedWords(new Set());
-  }, [isHideRevealMode, verse?.id]);
+  }, [isHideRevealMode, quranHideMode, verse?.id]);
 
   const normalizeArabic = (text: string) => {
     if (!text) return '';
@@ -977,16 +1077,20 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       className={cn(
-        "group relative rounded-[2.5rem] border overflow-hidden p-6 md:p-10 transition-all duration-500",
-        isPlaying ? "bg-primary/20 border-primary/60 shadow-[0_0_50px_-10px_rgba(var(--primary),0.4)] scale-[1.02]" : "bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.05]",
-        border
+        "group relative border overflow-hidden p-6 md:p-10 transition-all duration-500",
+        isCinematicFocus ? "fixed inset-0 z-[500] rounded-none bg-black/95 backdrop-blur-3xl flex flex-col justify-center overflow-y-auto m-0 shadow-2xl" : "rounded-[2.5rem]",
+        !isCinematicFocus && isPlaying ? "bg-primary/20 border-primary/60 shadow-[0_0_50px_-10px_rgba(var(--primary),0.4)] scale-[1.02]" : "",
+        !isCinematicFocus && !isPlaying ? "bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.05]" : "",
+        !isCinematicFocus && border
       )}
     >
       {verse.sajdah && <div className="absolute top-0 left-0 bg-primary px-4 py-1 rounded-br-2xl text-[8px] font-black uppercase tracking-widest text-primary-foreground flex items-center gap-1.5 z-20 shadow-lg"><Star className="w-3 h-3 fill-current" /> سجدة تلاوة</div>}
-      {isHideRevealMode && (
+      {isVerseCurrentlyHidden && (
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/15 border border-violet-500/20">
           <EyeOff className="w-3 h-3 text-violet-400" />
-          <span className="text-[9px] font-black text-violet-300 uppercase tracking-widest">وضع الاختبار</span>
+          <span className="text-[9px] font-black text-violet-300 uppercase tracking-widest">
+            {isHideRevealMode ? "وضع الاختبار" : "إخفاء الآية"}
+          </span>
         </div>
       )}
       <div className="flex items-center justify-between mb-8">
@@ -1003,57 +1107,180 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
         dir="rtl"
         className={cn("text-white/95 text-right transition-all duration-500 select-none", isReadingMode ? "text-4xl md:text-6xl" : "text-2xl md:text-3xl", fontClass)}
         style={{
-          fontSize: isReadingMode && fontSize ? `${fontSize + 10}px` : undefined,
-          lineHeight: '2.3',
+          fontWeight: 'var(--quran-weight, 400)',
+          wordSpacing: 'var(--quran-word-spacing, 0px)',
+          letterSpacing: 'var(--quran-kashida, 0em)',
+          fontSize: isReadingMode && fontSize ? `${fontSize + 10}px` : 'var(--quran-font-size, 2rem)',
+          lineHeight: 'var(--quran-line-height, 2.3)',
           paddingTop: '0.25rem',
           paddingBottom: '0.25rem'
         }}
       >
         {verse.arabic.split(' ').map((word: string, i: number) => {
           const isRevealed = revealedWords.has(i);
-          const isHidden = isHideRevealMode && !isRevealed;
+          const totalWords = verse.arabic.split(' ').length;
+          const halfCount = Math.ceil(totalWords / 2);
+          const isHiddenByDefault = quranHideMode === 'hideAll' || (quranHideMode === 'hideFirst' && i < halfCount) || (quranHideMode === 'hideSecond' && i >= halfCount);
+          const isHidden = isVerseCurrentlyHidden && isHiddenByDefault && !isRevealed;
           return (
-            <span
+            <motion.span
               key={i}
+              whileHover={{ scale: 1.15, textShadow: "0px 0px 20px rgba(var(--primary-rgb), 0.6)", y: -3, transition: { type: "spring", stiffness: 300, damping: 15 } }}
               onClick={() => {
-                if (isHideRevealMode) {
+                if (isVerseCurrentlyHidden) {
                   toggleRevealWord(i);
                 } else {
                   onWordClick?.(verse, i);
                 }
               }}
-              onMouseEnter={(e) => {
-                if (isHideRevealMode && !isRevealed) {
-                  (e.currentTarget as HTMLElement).style.filter = 'blur(0px)';
-                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.95)';
+              onMouseEnter={(e: any) => {
+                if (isVerseCurrentlyHidden && !isRevealed) {
+                  e.currentTarget.style.filter = 'blur(0px)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.95)';
                 }
               }}
-              onMouseLeave={(e) => {
-                if (isHideRevealMode && !isRevealed) {
-                  (e.currentTarget as HTMLElement).style.filter = 'blur(6px)';
-                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.15)';
+              onMouseLeave={(e: any) => {
+                if (isVerseCurrentlyHidden && !isRevealed) {
+                  e.currentTarget.style.filter = 'blur(6px)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.15)';
                 }
               }}
               className={cn(
-                "rounded-lg px-1.5 py-0.5 cursor-pointer transition-all duration-300 inline-block",
+                "rounded-lg px-1.5 py-0.5 cursor-pointer transition-colors duration-300 inline-block",
                 isHidden
                   ? "text-white/15 bg-white/5 hover:bg-violet-500/10"
                   : "hover:text-primary hover:bg-primary/10"
               )}
               style={isHidden ? { filter: 'blur(6px)' } : {}}
-              title={isHideRevealMode ? "اضغط لكشف الكلمة" : "انقر لمعرفة التحليل اللغوي"}
+              title={isVerseCurrentlyHidden ? "اضغط لكشف الكلمة" : "انقر لمعرفة التحليل اللغوي"}
             >
               {searchQuery ? highlightMatch(word, searchQuery) : word}{' '}
-            </span>
+            </motion.span>
           );
         })}
       </p>
-      <div className="mt-8 pt-8 border-t border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-start gap-4 max-w-2xl text-right"><Info className="w-4 h-4 text-white/20 mt-1 shrink-0" /><p className={cn("text-white/50 text-sm leading-relaxed", isHideRevealMode && "blur-sm hover:blur-none transition-all duration-300")}>{verse.tafseer}</p></div>
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-          <button onClick={() => onShare?.(verse)} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-primary hover:bg-primary/10 transition-all flex items-center gap-2 text-xs font-bold"><ImageIcon className="w-4 h-4" /> مشاركة</button>
-          <button onClick={() => onBookmark?.(verse)} className={cn("p-3 rounded-xl transition-all", isBookmarked ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40 hover:text-white")}><BookmarkCheck className={cn("w-4 h-4", isBookmarked && "fill-current")} /></button>
-          <button onClick={handleCopy} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-white transition-colors">{copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}</button>
+      <div className="mt-8 pt-8 border-t border-white/5 flex flex-col gap-6">
+        {!isComparisonMode ? (
+          <div className="flex flex-col gap-3 max-w-2xl text-right">
+            <div className="flex items-start gap-4">
+              <Info className="w-4 h-4 text-white/20 mt-1 shrink-0" />
+              <p className={cn("text-white/50 text-sm leading-relaxed", isVerseCurrentlyHidden && "blur-sm hover:blur-none transition-all duration-300")}>{verse.tafseer}</p>
+            </div>
+            {verse.translation && (
+              <div className="flex items-start gap-4 border-t border-white/5 pt-2" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                <Languages className="w-4 h-4 text-emerald-400/40 mt-1 shrink-0" />
+                <p className="text-white/40 text-xs font-semibold leading-relaxed">{verse.translation}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-right w-full">
+            {/* Column 1: Primary Interpretation */}
+            <div className="flex flex-col gap-4 p-5 rounded-3xl bg-white/[0.02] border border-white/5">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">التفسير والترجمة الأساسية</span>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Info className="w-4 h-4 text-white/30 mt-1 shrink-0" />
+                <div>
+                  <p className="text-[10px] font-bold text-white/30 mb-1">تفسير الآية</p>
+                  <p className={cn("text-white/70 text-xs leading-relaxed font-tajawal", isVerseCurrentlyHidden && "blur-sm hover:blur-none transition-all duration-300")}>{verse.tafseer}</p>
+                </div>
+              </div>
+
+              {verse.translation && (
+                <div className="flex items-start gap-3 border-t border-white/5 pt-3" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                  <Languages className="w-4 h-4 text-emerald-400/30 mt-1 shrink-0" />
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-white/30 mb-1">الترجمة ({selectedTranslation?.name})</p>
+                    <p className="text-white/60 text-xs font-semibold leading-relaxed">{verse.translation}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Column 2: Secondary Interpretation (Comparison) */}
+            <div className="flex flex-col gap-4 p-5 rounded-3xl bg-amber-500/[0.02] border border-amber-500/10">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-[10px] font-black text-amber-400/50 uppercase tracking-widest">المقارنة الجانبية</span>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Info className="w-4 h-4 text-amber-400/30 mt-1 shrink-0" />
+                <div>
+                  <p className="text-[10px] font-bold text-amber-400/30 mb-1">التفسير المقارن ({selectedSecondaryTafseerName})</p>
+                  <p className={cn("text-white/70 text-xs leading-relaxed font-tajawal", isVerseCurrentlyHidden && "blur-sm hover:blur-none transition-all duration-300")}>{verse.secondaryTafseer || "لا يوجد تفسير مقارن متوفر"}</p>
+                </div>
+              </div>
+
+              {verse.secondaryTranslation && (
+                <div className="flex items-start gap-3 border-t border-white/5 pt-3" dir={selectedSecondaryTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
+                  <Languages className="w-4 h-4 text-emerald-400/30 mt-1 shrink-0" />
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-white/30 mb-1">الترجمة المقارنة ({selectedSecondaryTranslation?.name})</p>
+                    <p className="text-white/60 text-xs font-semibold leading-relaxed">{verse.secondaryTranslation}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Actions Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-2 pt-4 border-t border-white/5 w-full">
+          {/* Smart AI Tafseer Companion Trigger Button */}
+          <button
+            onClick={(e: any) => { e.stopPropagation(); onChatClick?.(verse); }}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600/30 to-indigo-600/30 text-violet-300 border border-violet-500/20 hover:from-violet-600/40 hover:to-indigo-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2.5 text-xs font-black"
+          >
+            <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
+            <span>🤖 رفيق التدبر والتفسير الذكي</span>
+          </button>
+
+          {/* Cinematic Focus Mode Button */}
+          <button
+            onClick={(e: any) => { e.stopPropagation(); setIsCinematicFocus(!isCinematicFocus); }}
+            className={cn(
+              "px-5 py-3 rounded-2xl transition-all flex items-center gap-2.5 text-xs font-black border",
+              isCinematicFocus 
+                ? "bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]" 
+                : "bg-white/5 text-white/40 border-transparent hover:bg-white/10 hover:text-white"
+            )}
+          >
+            <Eye className={cn("w-4 h-4", isCinematicFocus && "animate-pulse")} />
+            <span>{isCinematicFocus ? 'إغلاق وضع التركيز' : 'التركيز السينمائي'}</span>
+          </button>
+
+          {/* Local Hide/Reveal Mode Toggle Button */}
+          <button
+            onClick={(e: any) => {
+              e.stopPropagation();
+              if (isHideRevealMode) {
+                setIsLocalRevealedOverride(!isLocalRevealedOverride);
+              } else {
+                setIsLocalHideActive(!isLocalHideActive);
+              }
+            }}
+            className={cn(
+              "px-5 py-3 rounded-2xl transition-all flex items-center gap-2.5 text-xs font-black border",
+              isVerseCurrentlyHidden
+                ? "bg-violet-500/20 text-violet-400 border-violet-500/40 shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                : "bg-white/5 text-white/40 border-transparent hover:bg-violet-500/10 hover:text-violet-300"
+            )}
+            title={isHideRevealMode ? "كشف الآية كاملة للمطابقة" : "إخفاء هذه الآية لاختبار الحفظ"}
+          >
+            {isVerseCurrentlyHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            <span>{isVerseCurrentlyHidden ? "كشف الآية" : "إخفاء الآية"}</span>
+          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={(e: any) => { e.stopPropagation(); onShare?.(verse); }} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-primary hover:bg-primary/10 transition-all flex items-center gap-2 text-xs font-bold"><ImageIcon className="w-4 h-4" /> مشاركة</button>
+            <button onClick={(e: any) => { e.stopPropagation(); onBookmark?.(verse); }} className={cn("p-3 rounded-xl transition-all", isBookmarked ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40 hover:text-white")}><BookmarkCheck className={cn("w-4 h-4", isBookmarked && "fill-current")} /></button>
+            <button onClick={handleCopy} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-white transition-colors">{copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}</button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -1065,7 +1292,7 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
 export default function QuranPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const { state, updateState } = useSync();
-  const [view, setView] = useState<'collections' | 'full' | 'plan' | 'luminous' | 'heatmap'>('collections');
+  const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'heatmap'>('full');
   const [activeCollection, setActiveCollection] = useState(QURAN_DATA[0].id);
   const [activeTopic, setActiveTopic] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1097,7 +1324,7 @@ export default function QuranPage() {
   const [showPageReciterMenu, setShowPageReciterMenu] = useState<boolean>(false);
   const [navDrawerOpen, setNavDrawerOpen] = useState<boolean>(false);
   const [navDrawerTab, setNavDrawerTab] = useState<NavTab>('surahs');
-  
+
   // Audio repetition and looping states
   const [verseRepetition, setVerseRepetition] = useState<number>(1);
   const [verseRepetitionCount, setVerseRepetitionCount] = useState<number>(0);
@@ -1129,6 +1356,7 @@ export default function QuranPage() {
 
   // ── Phase 2: New Smart Features States ──
   const [isHideRevealMode, setIsHideRevealMode] = useState<boolean>(false);
+  const [quranHideMode, setQuranHideMode] = useState<'show' | 'hideFirst' | 'hideSecond' | 'hideAll'>('hideAll');
   const [isAutoScrollActive, setIsAutoScrollActive] = useState<boolean>(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState<number>(3);
   const [pauseSecondsBetweenAyahs, setPauseSecondsBetweenAyahs] = useState<number>(0);
@@ -1138,10 +1366,52 @@ export default function QuranPage() {
   const [searchFilter, setSearchFilter] = useState<'all' | 'surahs' | 'verses' | 'tafseer'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // ── Phase 3: Brand New Optimized & Developed Features States ──
+  const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
+  const [selectedTranslation, setSelectedTranslation] = useState(TRANSLATIONS[0]);
+  const [activeAmbient, setActiveAmbient] = useState<string | null>(null);
+  const [ambientVolume, setAmbientVolume] = useState<number>(0.3);
+  const [isCustomPlanModalOpen, setIsCustomPlanModalOpen] = useState<boolean>(false);
+  const [isTajweedGuideOpen, setIsTajweedGuideOpen] = useState<boolean>(false);
+  const [customPagesInput, setCustomPagesInput] = useState<number>(2);
+  const [customDurationInput, setCustomDurationInput] = useState<number>(6);
+  const [customPlanType, setCustomPlanType] = useState<'pages' | 'duration'>('pages');
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // ── Phase 4: Comparison & AI Chat Companion States ──
+  const [isComparisonMode, setIsComparisonMode] = useState<boolean>(false);
+  const [selectedSecondaryTafseer, setSelectedSecondaryTafseer] = useState(TAFSEERS[1]);
+  const [selectedSecondaryTranslation, setSelectedSecondaryTranslation] = useState(TRANSLATIONS[1]);
+  const [activeChatVerse, setActiveChatVerse] = useState<any | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState<string>('');
+  const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
+  const [chatConnectionMode, setChatConnectionMode] = useState<'online' | 'local'>('online');
+
+  // ── Phase 5: Dynamic Typography Engine States ──
+  const [isTypographyPanelOpen, setIsTypographyPanelOpen] = useState<boolean>(false);
+  const [typoFontWeight, setTypoFontWeight] = useState<number>(400);
+  const [typoLineHeight, setTypoLineHeight] = useState<number>(2.3);
+  const [typoWordSpacing, setTypoWordSpacing] = useState<number>(0);
+  const [typoLetterSpacing, setTypoLetterSpacing] = useState<number>(0);
+  const [typoFontSize, setTypoFontSize] = useState<number>(32);
+
+  // Sync typography to CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--quran-weight', String(typoFontWeight));
+    root.style.setProperty('--quran-line-height', String(typoLineHeight));
+    root.style.setProperty('--quran-word-spacing', `${typoWordSpacing}px`);
+    root.style.setProperty('--quran-kashida', `${typoLetterSpacing}em`);
+    root.style.setProperty('--quran-font-size', `${typoFontSize}px`);
+  }, [typoFontWeight, typoLineHeight, typoWordSpacing, typoLetterSpacing, typoFontSize]);
+
   // Persistence Effect
   useEffect(() => {
     const savedReciter = localStorage.getItem('quran_reciter');
     const savedTafseer = localStorage.getItem('quran_tafseer');
+    const savedTranslation = localStorage.getItem('quran_translation');
+    const savedMushafType = localStorage.getItem('quran_mushaf_type');
     const savedScript = localStorage.getItem('quran_script');
     const savedSpeed = localStorage.getItem('quran_speed');
     const savedHistory = localStorage.getItem('quran_search_history');
@@ -1149,6 +1419,8 @@ export default function QuranPage() {
 
     if (savedReciter) setSelectedReciter(JSON.parse(savedReciter));
     if (savedTafseer) setSelectedTafseer(JSON.parse(savedTafseer));
+    if (savedTranslation) setSelectedTranslation(JSON.parse(savedTranslation));
+    if (savedMushafType) setMushafType(savedMushafType as any);
     if (savedScript) setSelectedScript(JSON.parse(savedScript));
     if (savedSpeed) setPlaybackSpeed(parseFloat(savedSpeed));
     if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
@@ -1158,10 +1430,12 @@ export default function QuranPage() {
   useEffect(() => {
     localStorage.setItem('quran_reciter', JSON.stringify(selectedReciter));
     localStorage.setItem('quran_tafseer', JSON.stringify(selectedTafseer));
+    localStorage.setItem('quran_translation', JSON.stringify(selectedTranslation));
+    localStorage.setItem('quran_mushaf_type', mushafType);
     localStorage.setItem('quran_script', JSON.stringify(selectedScript));
     localStorage.setItem('quran_speed', playbackSpeed.toString());
     localStorage.setItem('quran_play_mode', playMode);
-  }, [selectedReciter, selectedTafseer, selectedScript, playbackSpeed, playMode]);
+  }, [selectedReciter, selectedTafseer, selectedTranslation, mushafType, selectedScript, playbackSpeed, playMode]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = playbackSpeed;
@@ -1207,6 +1481,42 @@ export default function QuranPage() {
     };
   }, []);
 
+  // ── Ambient Sound Control Effect ──
+  useEffect(() => {
+    if (!ambientAudioRef.current && typeof Audio !== 'undefined') {
+      ambientAudioRef.current = new Audio();
+      ambientAudioRef.current.loop = true;
+    }
+
+    if (activeAmbient) {
+      const sound = AMBIENT_SOUNDS.find(s => s.id === activeAmbient);
+      if (sound && ambientAudioRef.current) {
+        ambientAudioRef.current.src = sound.url;
+        ambientAudioRef.current.volume = ambientVolume;
+        ambientAudioRef.current.play().catch(e => console.warn("Failed to play ambient sound:", e));
+      }
+    } else {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+      }
+    }
+  }, [activeAmbient]);
+
+  useEffect(() => {
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.volume = ambientVolume;
+    }
+  }, [ambientVolume]);
+
+  useEffect(() => {
+    return () => {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+        ambientAudioRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     fetch('https://api.alquran.cloud/v1/surah').then(res => res.json()).then(data => setSurahs(data.data));
     const recents = JSON.parse(localStorage.getItem('quran_recents') || '[]');
@@ -1227,9 +1537,12 @@ export default function QuranPage() {
       return newRecents;
     });
     try {
-      const [scriptData, tafseer] = await Promise.all([
+      const [scriptData, tafseer, translationData, secTafseerData, secTranslationData] = await Promise.all([
         fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/${selectedScript.edition}`).then(res => res.json()),
-        fetch(`https://api.alquran.cloud/v1/surah/${num}/${selectedTafseer.id}`).then(res => res.json())
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${selectedTafseer.id}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${selectedTranslation.id}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${selectedSecondaryTafseer.id}`).then(res => res.json()),
+        fetch(`https://api.alquran.cloud/v1/surah/${num}/${selectedSecondaryTranslation.id}`).then(res => res.json())
       ]);
       const combined = scriptData.data[0].ayahs.map((ayah: any, i: number) => ({
         id: ayah.number,
@@ -1238,6 +1551,9 @@ export default function QuranPage() {
         ayahNumber: ayah.numberInSurah,
         arabic: ayah.text,
         tafseer: tafseer.data.ayahs[i].text,
+        translation: translationData?.data?.ayahs?.[i]?.text || '',
+        secondaryTafseer: secTafseerData?.data?.ayahs?.[i]?.text || '',
+        secondaryTranslation: secTranslationData?.data?.ayahs?.[i]?.text || '',
         sajdah: ayah.sajdah,
         page_number: ayah.page || 1,
         juz_number: ayah.juz || 1
@@ -1256,12 +1572,12 @@ export default function QuranPage() {
         setCurrentPage(combined[0].page_number);
       }
     } catch (e) { console.error(e); } finally { setIsLoading(false); }
-  }, [selectedTafseer, selectedScript]);
+  }, [selectedTafseer, selectedScript, selectedTranslation, selectedSecondaryTafseer, selectedSecondaryTranslation]);
 
-  // Effect to reload surah when tafseer or script changes
+  // Effect to reload surah when tafseer, translation or script changes
   useEffect(() => {
     if (selectedSurah) loadSurah(selectedSurah);
-  }, [selectedTafseer, selectedScript, loadSurah, selectedSurah]);
+  }, [selectedTafseer, selectedScript, selectedTranslation, selectedSecondaryTafseer, selectedSecondaryTranslation, loadSurah, selectedSurah]);
 
   const rightPage = useMemo(() => {
     return pageViewLayout === 'double' ? (currentPage % 2 === 0 ? currentPage - 1 : currentPage) : currentPage;
@@ -1322,7 +1638,7 @@ export default function QuranPage() {
   const normalizeArabic = (text: string) => {
     if (!text) return '';
     return text
-      .replace(/[\u064B-\u065F\u06D6-\u06ED]/g, "") 
+      .replace(/[\u064B-\u065F\u06D6-\u06ED]/g, "")
       .replace(/[أإآ]/g, "ا")
       .replace(/ة/g, "ه")
       .replace(/ى/g, "ي")
@@ -1333,7 +1649,7 @@ export default function QuranPage() {
     if (!query || !text) return text;
     const normalizedQuery = normalizeArabic(query.toLowerCase());
     const words = text.split(' ');
-    
+
     return words.map((word, i) => {
       const normalizedWord = normalizeArabic(word.toLowerCase());
       if (normalizedWord.includes(normalizedQuery)) {
@@ -1358,21 +1674,59 @@ export default function QuranPage() {
     );
   }, [surahs, searchQuery]);
 
+  const semanticResults = useMemo(() => {
+    const query = normalizeArabic(searchQuery.trim().toLowerCase());
+    if (!query || query.length < 2) return [];
+
+    const foundTopic = SEMANTIC_TOPICS.find(topic =>
+      topic.keywords.some(keyword => query.includes(normalizeArabic(keyword)) || normalizeArabic(keyword).includes(query))
+    );
+
+    if (!foundTopic) return [];
+
+    return foundTopic.ayahs.map((a, index) => {
+      const surahObj = surahs.find(s => s.number === a.surah);
+      const surahName = surahObj ? surahObj.name : 'سورة مجهولة';
+      return {
+        id: a.surah * 1000 + a.ayah,
+        surah: surahName,
+        surahNumber: a.surah,
+        ayahNumber: a.ayah.toString(),
+        arabic: a.text,
+        tafseer: `مطابقة دلالية لموضوع: ${foundTopic.title}`,
+        type: 'verse',
+        isSemantic: true,
+        semanticTitle: foundTopic.title
+      };
+    });
+  }, [searchQuery, surahs]);
+
   const searchResults = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim());
     if (!query || query.length < 2) return [];
 
     const results: any[] = [];
 
-    // 1. Search in global results first (most accurate for broad search)
-    globalResults.forEach(v => {
+    // 0. Prepend Semantic Results
+    semanticResults.forEach(v => {
       results.push({
         ...v,
-        type: 'verse',
-        accentColor: 'text-primary',
-        border: 'border-primary/20',
-        isGlobal: true
+        accentColor: 'text-emerald-400',
+        border: 'border-emerald-500/20'
       });
+    });
+
+    // 1. Search in global results first (most accurate for broad search)
+    globalResults.forEach(v => {
+      if (!results.some(r => r.surahNumber === v.surahNumber && r.ayahNumber.toString() === v.ayahNumber.toString())) {
+        results.push({
+          ...v,
+          type: 'verse',
+          accentColor: 'text-primary',
+          border: 'border-primary/20',
+          isGlobal: true
+        });
+      }
     });
 
     // 2. Search in selected collections
@@ -1380,7 +1734,7 @@ export default function QuranPage() {
       QURAN_DATA.forEach(col => {
         col.verses.forEach(v => {
           if (normalizeArabic(v.arabic).includes(query) || normalizeArabic(v.tafseer).includes(query)) {
-            if (!results.some(r => r.id === v.id)) {
+            if (!results.some(r => r.surahNumber === v.surahNumber && r.ayahNumber.toString() === v.ayahNumber.toString())) {
               results.push({ ...v, type: 'verse', accentColor: col.color, border: col.border });
             }
           }
@@ -1392,7 +1746,7 @@ export default function QuranPage() {
     if (surahContent.length > 0 && results.length < 15) {
       surahContent.forEach(v => {
         if (normalizeArabic(v.arabic).includes(query) || normalizeArabic(v.tafseer).includes(query)) {
-          if (!results.some(r => r.id === v.id)) {
+          if (!results.some(r => r.surahNumber === v.surahNumber && r.ayahNumber.toString() === v.ayahNumber.toString())) {
             results.push({ ...v, type: 'verse', accentColor: 'text-primary', border: 'border-primary/20' });
           }
         }
@@ -1400,7 +1754,7 @@ export default function QuranPage() {
     }
 
     return results.slice(0, 30);
-  }, [searchQuery, surahContent, globalResults]);
+  }, [searchQuery, surahContent, globalResults, semanticResults]);
 
   // Global Search Effect (Debounced)
   useEffect(() => {
@@ -1429,7 +1783,7 @@ export default function QuranPage() {
         ]);
 
         const [quranData, tafseerData] = await Promise.all([quranRes.json(), tafseerRes.json()]);
-        
+
         if (quranData.data && quranData.data.matches) {
           setGlobalResults(quranData.data.matches.map((m: any) => ({
             id: m.number,
@@ -1469,7 +1823,7 @@ export default function QuranPage() {
     setSelectedSurah(v.surahNumber);
     loadSurah(v.surahNumber);
     setSearchQuery('');
-    
+
     let attempts = 0;
     const scrollInterval = setInterval(() => {
       const el = document.getElementById(`verse-${v.id}`);
@@ -1594,15 +1948,15 @@ export default function QuranPage() {
   const compareRecitation = useCallback((spokenText: string, originalText: string) => {
     const origWords = originalText.split(/\s+/);
     const spokenWords = spokenText.split(/\s+/);
-    
+
     const results = [];
     let sp = 0;
     let correctCount = 0;
-    
+
     for (let i = 0; i < origWords.length; i++) {
       const origWord = origWords[i];
       const normOrig = cleanArabicText(origWord);
-      
+
       let matched = false;
       // lookahead window of 4 words in spoken text
       for (let offset = 0; offset < 4; offset++) {
@@ -1616,7 +1970,7 @@ export default function QuranPage() {
           }
         }
       }
-      
+
       if (matched) {
         results.push({ word: origWord, status: 'correct' });
         correctCount++;
@@ -1624,7 +1978,7 @@ export default function QuranPage() {
         results.push({ word: origWord, status: 'incorrect' });
       }
     }
-    
+
     const percentage = origWords.length > 0 ? Math.round((correctCount / origWords.length) * 100) : 0;
     return { results, percentage };
   }, [cleanArabicText]);
@@ -1661,54 +2015,37 @@ export default function QuranPage() {
       for (let i = 0; i < e.results.length; ++i) {
         currentTranscript += e.results[i][0].transcript + ' ';
       }
-      
+
       if (currentTranscript.trim()) {
         const { results, percentage } = compareRecitation(currentTranscript, verse.arabic);
         setTestWordsResult(results);
         setTestMatchPercentage(percentage);
-        
-        if (percentage === 100 && e.results[e.results.length - 1].isFinal) {
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 }
-          });
-        }
       }
     };
 
-    recognition.onerror = (e: any) => {
-      console.error('Speech recognition error:', e.error);
-      setIsListeningRecitation(false);
-    };
-
-    recognition.onend = () => {
-      setIsListeningRecitation(false);
-    };
-
+    recognition.onend = () => setIsListeningRecitation(false);
     recognition.start();
-  }, [isPlaying, compareRecitation]);
+  }, [compareRecitation, isPlaying]);
 
   const stopListeningRecitation = useCallback(() => {
     if (voiceRecognitionRef.current) {
       voiceRecognitionRef.current.stop();
+      voiceRecognitionRef.current = null;
     }
     setIsListeningRecitation(false);
   }, []);
 
   const handleAudioEnded = useCallback(() => {
-    // 1. Single Verse Repetition
-    if (verseRepetition > 1) {
-      if (verseRepetitionCount + 1 < verseRepetition) {
-        setVerseRepetitionCount(prev => prev + 1);
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play();
-        }
-        return;
-      } else {
-        setVerseRepetitionCount(0);
+    // 1. Verse Repetition
+    if (verseRepetition > 1 && verseRepetitionCount < verseRepetition - 1) {
+      setVerseRepetitionCount(prev => prev + 1);
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
       }
+      return;
+    } else {
+      setVerseRepetitionCount(0);
     }
 
     // 2. Loop Verse (Legacy loop toggle)
@@ -1819,6 +2156,10 @@ export default function QuranPage() {
 
 
   const activatePlan = (planId: string) => {
+    if (planId === 'custom') {
+      setIsCustomPlanModalOpen(true);
+      return;
+    }
     updateState({
       activeMemoPlan: {
         planId,
@@ -1836,16 +2177,134 @@ export default function QuranPage() {
     updateState({ points: (state.points || 0) + points });
   };
 
+  const handleSendChatMessage = async (customPrompt?: string) => {
+    const text = customPrompt || chatInput;
+    if (!text.trim() || !activeChatVerse) return;
+
+    // Add user message
+    const userMsg = { role: 'user', content: text };
+    const updatedMessages = [...chatMessages, userMsg];
+    setChatMessages(updatedMessages);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      // Filter out the initial greeting so that the Gemini API chat history starts with a user message
+      const apiMessages = updatedMessages.filter((m, idx) => !(idx === 0 && m.role === 'model'));
+
+      // 1. Try sending to the local Gemini endpoint /api/chat
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: `أنت عالم ومفسر إسلامي خبير ومتخصص في بلاغة القرآن الكريم، أسباب النزول، والدروس الدعوية والتربوية المستفادة.
+أنت تساعد المستخدم حالياً في تدبر وتأمل هذه الآية الكريمة:
+- السورة: سورة ${activeChatVerse.surah} (رقم السورة: ${activeChatVerse.surahNumber})
+- الآية: آية رقم ${activeChatVerse.ayahNumber}
+- نص الآية بالرسم العثماني: "${activeChatVerse.arabic}"
+- التفسير الميسر المعتمد للآية: "${activeChatVerse.tafseer}"
+- ترجمة الآية المعتمدة: "${activeChatVerse.translation || 'غير متوفرة حالياً'}"
+
+توجيهات مهمة للإجابة:
+1. التزم بالمنهج الإسلامي الوسطي المعتمد في التفسير والتدبر.
+2. أجب باللغة العربية الفصحى المبسطة بأسلوب حواري دافئ، محبب وميسر للقلوب.
+3. إذا سألك المستخدم عن البلاغة، فركّز على مواطن الجمال اللغوي، التقديم والتأخير، إعجاز الألفاظ، والطباق أو السجع القرآني الفريد.
+4. إذا سألك عن سبب النزول، اعتمد على الأحاديث والروايات الصحيحة المأثورة في أسباب النزول.
+5. إذا سألك عن الدروس، فاستنبط له فوائد عملية يمكنه تطبيقها في حياته اليومية وعلاقته بالله ومع الناس.
+6. لا تجب عن أي أسئلة خارج نطاق الدين الإسلامي، وتدبر الآية الكريمة المعطاة.`,
+          messages: apiMessages.map(m => ({
+            role: m.role,
+            parts: [{ text: m.content }]
+          }))
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.text) {
+        setChatMessages(prev => [...prev, { role: 'model', content: data.text }]);
+        setChatConnectionMode('online');
+      } else {
+        throw new Error(data.error || "ONLINE_API_FAILED");
+      }
+    } catch (err: any) {
+      console.warn("AI Chat API failed, using local scholar database:", err);
+      setChatConnectionMode('local');
+
+      let explanation = '';
+      const key = `${activeChatVerse.surahNumber}:${activeChatVerse.ayahNumber}`;
+      const lowerText = text.toLowerCase();
+
+      const localData = LOCAL_SCHOLAR_DB[key] || null;
+
+      if (lowerText.includes('بلاغة') || lowerText.includes('إعجاز') || lowerText.includes('جمال')) {
+        explanation = localData?.rhetoric || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'rhetoric');
+      } else if (lowerText.includes('نزول') || lowerText.includes('سبب')) {
+        explanation = localData?.revelation || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'revelation');
+      } else if (lowerText.includes('درس') || lowerText.includes('دروس') || lowerText.includes('عبر') || lowerText.includes('مستفاد')) {
+        explanation = localData?.lessons || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'lessons');
+      } else {
+        explanation = `أهلاً بك في رفيق التفسير والتدبر المحلي. إليك تفصيل لآية ${activeChatVerse.ayahNumber} من سورة ${activeChatVerse.surah}:\n\n` +
+          `**✨ بلاغة الآية:**\n${localData?.rhetoric || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'rhetoric')}\n\n` +
+          `**📜 سبب النزول:**\n${localData?.revelation || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'revelation')}\n\n` +
+          `**💡 الدروس والعبر:**\n${localData?.lessons || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'lessons')}`;
+      }
+
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { role: 'model', content: explanation }]);
+      }, 500);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  const startTafseerChat = (verse: any) => {
+    setActiveChatVerse(verse);
+    setChatMessages([
+      {
+        role: 'model',
+        content: `أهلاً بك في **مساعد التفسير والتدبر الذكي** 🤖 لآية **${verse.ayahNumber}** من **سورة ${verse.surah}**.\n\nيمكنني مساعدتك في استكشاف بلاغة الآية، سبب نزولها، واستنباط الدروس المستفادة. اختر أحد الأسئلة الجاهزة بالأسفل أو اكتب سؤالك الخاص!`
+      }
+    ]);
+    setChatInput('');
+    setIsChatLoading(false);
+    setChatConnectionMode('online');
+  };
+
+  const saveCustomPlan = () => {
+    let pagesPerDay = customPagesInput;
+    let months = 0;
+    if (customPlanType === 'duration') {
+      months = customDurationInput;
+      pagesPerDay = Math.round((604 / (months * 30)) * 10) / 10;
+    }
+    updateState({
+      activeMemoPlan: {
+        planId: 'custom',
+        startDate: new Date().toISOString(),
+        dailyReminderTime: '08:00',
+        customPagesPerDay: pagesPerDay,
+        customMonths: months
+      }
+    });
+    setIsCustomPlanModalOpen(false);
+  };
+
   const getDailyWord = useCallback(() => {
     if (!state.activeMemoPlan) return null;
     const plan = MEMO_PLANS.find(p => p.id === state.activeMemoPlan?.planId);
-    if (!plan || plan.id === 'custom') return { page: 1, surah: 'البقرة' };
+    if (!plan) return { page: 1, surah: 'البقرة' };
+
+    let pagesPerDay = plan.pagesPerDay;
+    if (plan.id === 'custom') {
+      pagesPerDay = state.activeMemoPlan.customPagesPerDay || 1.0;
+    }
 
     const start = new Date(state.activeMemoPlan.startDate);
     const today = new Date();
     const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 3600 * 24));
 
-    const targetPage = Math.min(604, Math.floor(diffDays * plan.pagesPerDay) + 1);
+    const targetPage = Math.min(604, Math.floor(diffDays * pagesPerDay) + 1);
 
     // Simple lookup for surah based on page (could be more precise with a full map)
     let surah = 'البقرة';
@@ -1903,6 +2362,48 @@ export default function QuranPage() {
       </div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+
+      {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
+      <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
+        <div className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8)] px-4 md:px-6">
+          <div className="flex items-center justify-between h-16 gap-3">
+            {/* Right: View Mode & Tajweed */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsTajweedGuideOpen(true)}
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1e1b4b]/40 text-purple-300 border border-purple-900/30 hover:bg-[#1e1b4b]/60 hover:text-white transition-all text-[9px] font-black"
+              >
+                📖 التجويد
+              </button>
+              <div className={cn("flex bg-white/5 border border-white/10 rounded-xl p-1", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+                <button onClick={() => setViewMode('ayah')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'ayah' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>آيات</button>
+                <button onClick={() => setViewMode('page')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'page' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>صفحة</button>
+              </div>
+            </div>
+
+            {/* Center: Main Tabs */}
+            <div className={cn("flex items-center gap-1.5 flex-1 justify-center overflow-x-auto no-scrollbar", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+              {['full', 'plan', 'luminous'].map((v: any) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v as any)}
+                  className={cn(
+                    "px-4 md:px-6 py-2 rounded-xl font-black text-[10px] md:text-xs transition-all border relative overflow-hidden whitespace-nowrap",
+                    view === v ? "bg-white text-black border-white shadow-glow-white" : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10"
+                  )}
+                >
+                  {v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : 'خطة الحفظ'}
+                </button>
+              ))}
+            </div>
+
+            {/* Left: Reading Mode */}
+            <div className="shrink-0">
+              <ReadingModeToggle />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Quran Nav Drawer ── */}
       <QuranNavDrawer
@@ -1976,11 +2477,190 @@ export default function QuranPage() {
         {isExamOpen && <ExamModal memorizedVerses={memorizedVerses} onClose={() => setIsExamOpen(false)} onComplete={handleExamComplete} />}
         {activeSurahInfo && <SurahInfoModal surah={activeSurahInfo} onClose={() => setActiveSurahInfo(null)} />}
         {activeWordAnalysis && <WordAnalysisModal analysis={activeWordAnalysis} onClose={() => setActiveWordAnalysis(null)} />}
+        {isCustomPlanModalOpen && (
+          <CustomPlanModal
+            onClose={() => setIsCustomPlanModalOpen(false)}
+            customPagesInput={customPagesInput}
+            setCustomPagesInput={setCustomPagesInput}
+            customDurationInput={customDurationInput}
+            setCustomDurationInput={setCustomDurationInput}
+            customPlanType={customPlanType}
+            setCustomPlanType={setCustomPlanType}
+            onSave={saveCustomPlan}
+          />
+        )}
+        {isTajweedGuideOpen && <TajweedGuideModal onClose={() => setIsTajweedGuideOpen(false)} />}
+        {activeChatVerse && (
+          <TafseerChatModal
+            verse={activeChatVerse}
+            messages={chatMessages}
+            isListLoading={isChatLoading}
+            connectionMode={chatConnectionMode}
+            onClose={() => setActiveChatVerse(null)}
+            onSendMessage={handleSendChatMessage}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+          />
+        )}
       </AnimatePresence>
 
-      <div className="container relative z-10 px-4 pt-12">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-16">
-          <div className="flex items-center gap-4 order-2 md:order-1">
+      {/* ════════════ TYPOGRAPHY PANEL BUTTON ════════════ */}
+      <button
+        onClick={() => setIsTypographyPanelOpen(p => !p)}
+        className={cn(
+          "fixed right-0 bottom-36 z-[390] group flex items-center gap-0 overflow-hidden rounded-l-2xl transition-all duration-300 hover:gap-2 border border-r-0 shadow-xl",
+          isTypographyPanelOpen
+            ? "bg-primary/20 border-primary/50 text-primary"
+            : "bg-[#0a120a] border-emerald-900/40 hover:bg-[#0f1f0f] text-emerald-400/80 hover:text-emerald-300"
+        )}
+        title="لوحة تحكم الخطوط"
+      >
+        <span className="text-[10px] font-black whitespace-nowrap max-w-0 group-hover:max-w-[80px] overflow-hidden transition-all duration-300 pl-3">
+          الخطوط
+        </span>
+        <div className="w-9 h-12 flex items-center justify-center shrink-0">
+          <span className="text-base font-black">Aa</span>
+        </div>
+      </button>
+
+      {/* ════════════ TYPOGRAPHY PANEL ════════════ */}
+      <AnimatePresence>
+        {isTypographyPanelOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 40, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className="fixed right-12 bottom-16 z-[389] w-80 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_30px_80px_-15px_rgba(0,0,0,0.9)] overflow-hidden"
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+              <h3 className="text-sm font-black text-white flex items-center gap-2.5">
+                <span className="text-xl">Aa</span>
+                <span>محرّك الخط القرآني</span>
+              </h3>
+              <button onClick={() => setIsTypographyPanelOpen(false)} className="p-1.5 rounded-xl bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Live Preview */}
+            <div className="mx-5 mt-5 p-4 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 text-right">
+              <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">معاينة مباشرة</p>
+              <span
+                dir="rtl"
+                style={{
+                  fontSize: `${typoFontSize}px`,
+                  fontWeight: typoFontWeight,
+                  lineHeight: typoLineHeight,
+                  letterSpacing: `${typoLetterSpacing}em`,
+                  wordSpacing: `${typoWordSpacing}px`
+                }}
+                className="text-white/90 leading-loose block"
+              >
+                بِسْمِ اللَّهِ
+              </span>
+            </div>
+
+            {/* Controls */}
+            <div className="p-5 flex flex-col gap-5">
+
+              {/* Font Size */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">حجم الخط</span>
+                  <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg">{typoFontSize}px</span>
+                </div>
+                <input
+                  type="range" min={20} max={72} step={2}
+                  value={typoFontSize}
+                  onChange={e => setTypoFontSize(Number(e.target.value))}
+                  className="w-full accent-primary h-1.5 rounded-full cursor-pointer bg-white/10"
+                />
+                <div className="flex justify-between text-[9px] text-white/20 font-black">
+                  <span>20px</span><span>72px</span>
+                </div>
+              </div>
+
+              {/* Font Weight */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">سماكة الخط</span>
+                  <span className="text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg">{typoFontWeight}</span>
+                </div>
+                <input
+                  type="range" min={100} max={900} step={100}
+                  value={typoFontWeight}
+                  onChange={e => setTypoFontWeight(Number(e.target.value))}
+                  className="w-full accent-amber-400 h-1.5 rounded-full cursor-pointer bg-white/10"
+                />
+                <div className="flex justify-between text-[9px] text-white/20 font-black">
+                  <span>رفيع</span><span>عادي</span><span>عريض</span>
+                </div>
+              </div>
+
+              {/* Line Height */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">تباعد الأسطر</span>
+                  <span className="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg">{typoLineHeight.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range" min={1.2} max={4.0} step={0.1}
+                  value={typoLineHeight}
+                  onChange={e => setTypoLineHeight(Number(e.target.value))}
+                  className="w-full accent-emerald-400 h-1.5 rounded-full cursor-pointer bg-white/10"
+                />
+                <div className="flex justify-between text-[9px] text-white/20 font-black">
+                  <span>مضغوط</span><span>متسع</span>
+                </div>
+              </div>
+
+              {/* Word Spacing */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">تباعد الكلمات</span>
+                  <span className="text-xs font-black text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-lg">{typoWordSpacing}px</span>
+                </div>
+                <input
+                  type="range" min={0} max={30} step={1}
+                  value={typoWordSpacing}
+                  onChange={e => setTypoWordSpacing(Number(e.target.value))}
+                  className="w-full accent-violet-400 h-1.5 rounded-full cursor-pointer bg-white/10"
+                />
+              </div>
+
+              {/* Letter Spacing (Kashida) */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">تمديد الحروف (كشيدة)</span>
+                  <span className="text-xs font-black text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg">{typoLetterSpacing.toFixed(2)}em</span>
+                </div>
+                <input
+                  type="range" min={0} max={0.3} step={0.01}
+                  value={typoLetterSpacing}
+                  onChange={e => setTypoLetterSpacing(Number(e.target.value))}
+                  className="w-full accent-rose-400 h-1.5 rounded-full cursor-pointer bg-white/10"
+                />
+              </div>
+
+              {/* Reset */}
+              <button
+                onClick={() => { setTypoFontWeight(400); setTypoLineHeight(2.3); setTypoWordSpacing(0); setTypoLetterSpacing(0); setTypoFontSize(32); }}
+                className="w-full py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs font-black mt-1"
+              >
+                ↺ إعادة الضبط الافتراضي
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="container relative z-10 px-4 pt-24">
+        {/* ═══ Contextual Toolbar ═══ */}
+        <div className={cn("mb-10 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none")}>
+          <div className="flex flex-wrap items-center gap-4 justify-center">
             {/* Tafseer Selector */}
             <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 pr-4 hover:bg-white/10 cursor-pointer">
@@ -1991,6 +2671,20 @@ export default function QuranPage() {
               <div className="absolute top-[90%] right-0 pt-3 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[80]">
                 <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 shadow-3xl backdrop-blur-3xl">
                   {TAFSEERS.map(t => (<button key={t.id} onClick={() => setSelectedTafseer(t)} className={cn("w-full text-right p-4 rounded-xl text-xs font-bold transition-all", selectedTafseer.id === t.id ? "bg-primary text-primary-foreground" : "text-white/40 hover:bg-white/5 hover:text-white")}>{t.name}</button>))}
+                </div>
+              </div>
+            </div>
+
+            {/* Translation Selector */}
+            <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+              <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 pr-4 hover:bg-white/10 cursor-pointer">
+                <div className="text-right"><p className="text-[8px] font-black text-white/30 uppercase tracking-widest">الترجمة الحالية</p><p className="text-xs font-bold text-white">{selectedTranslation.name}</p></div>
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Languages className="w-5 h-5" /></div>
+                <ChevronDown className="w-4 h-4 text-white/20 mr-2" />
+              </div>
+              <div className="absolute top-[90%] right-0 pt-3 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[80]">
+                <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 shadow-3xl backdrop-blur-3xl">
+                  {TRANSLATIONS.map(t => (<button key={t.id} onClick={() => setSelectedTranslation(t)} className={cn("w-full text-right p-4 rounded-xl text-xs font-bold transition-all", selectedTranslation.id === t.id ? "bg-primary text-primary-foreground" : "text-white/40 hover:bg-white/5 hover:text-white")}>{t.name}</button>))}
                 </div>
               </div>
             </div>
@@ -2008,15 +2702,112 @@ export default function QuranPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="order-1 md:order-2"><ReadingModeToggle /></div>
-
-          <div className="flex items-center gap-4 order-3">
-            <div className={cn("flex bg-white/5 border border-white/10 rounded-2xl p-1", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
-              <button onClick={() => setViewMode('ayah')} className={cn("px-4 py-2 rounded-xl text-[10px] font-black transition-all", viewMode === 'ayah' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>آيات</button>
-              <button onClick={() => setViewMode('page')} className={cn("px-4 py-2 rounded-xl text-[10px] font-black transition-all", viewMode === 'page' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>صفحة</button>
+            {/* Comparison Mode Toggle */}
+            <div className={cn("relative transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+              <button
+                onClick={() => setIsComparisonMode(!isComparisonMode)}
+                className={cn(
+                  "flex items-center gap-3 border rounded-2xl p-2 pr-4 transition-all hover:bg-white/10 cursor-pointer text-right",
+                  isComparisonMode
+                    ? "bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30"
+                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                )}
+                title="تفعيل مقارنة التراجم والتفاسير جنبًا إلى جنب"
+              >
+                <div className="text-right">
+                  <p className="text-[8px] font-black opacity-55 uppercase tracking-widest">شاشة المقارنة</p>
+                  <p className="text-xs font-bold">{isComparisonMode ? "مقارنة نشطة" : "مقارنة مغلقة"}</p>
+                </div>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", isComparisonMode ? "bg-amber-500/30 text-amber-300" : "bg-primary/20 text-primary")}>
+                  <LayoutGrid className="w-5 h-5" />
+                </div>
+              </button>
             </div>
+
+            {/* Memorization Test Mode Toggle */}
+            <div className={cn("relative transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+              <button
+                onClick={() => setIsHideRevealMode(!isHideRevealMode)}
+                className={cn(
+                  "flex items-center gap-3 border rounded-2xl p-2 pr-4 transition-all hover:bg-white/10 cursor-pointer text-right",
+                  isHideRevealMode
+                    ? "bg-violet-500/20 border-violet-500/30 text-violet-300 hover:bg-violet-500/30"
+                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                )}
+                title="تفعيل وضع اختبار الحفظ (إخفاء/إظهار الكلمات)"
+              >
+                <div className="text-right">
+                  <p className="text-[8px] font-black opacity-55 uppercase tracking-widest">اختبار الحفظ</p>
+                  <p className="text-xs font-bold">{isHideRevealMode ? "وضع الإخفاء نشط" : "وضع الإخفاء مغلق"}</p>
+                </div>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", isHideRevealMode ? "bg-violet-500/30 text-violet-300" : "bg-primary/20 text-primary")}>
+                  <EyeOff className="w-5 h-5" />
+                </div>
+              </button>
+            </div>
+
+            {isComparisonMode && (
+              <>
+                {/* Secondary Tafseer Selector */}
+                <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+                  <div className="flex items-center gap-3 bg-amber-500/5 border border-amber-500/20 rounded-2xl p-2 pr-4 hover:bg-amber-500/10 cursor-pointer">
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-amber-400/50 uppercase tracking-widest">التفسير المقارن</p>
+                      <p className="text-xs font-bold text-amber-300">{selectedSecondaryTafseer.name}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-300"><FileText className="w-5 h-5" /></div>
+                    <ChevronDown className="w-4 h-4 text-amber-300/40 mr-2" />
+                  </div>
+                  <div className="absolute top-[90%] right-0 pt-3 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[80]">
+                    <div className="bg-[#0a0a0a] border border-amber-500/25 rounded-2xl p-2 shadow-3xl backdrop-blur-3xl">
+                      {TAFSEERS.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => setSelectedSecondaryTafseer(t)}
+                          className={cn(
+                            "w-full text-right p-4 rounded-xl text-xs font-bold transition-all",
+                            selectedSecondaryTafseer.id === t.id ? "bg-amber-500 text-black font-black" : "text-white/40 hover:bg-white/5 hover:text-white"
+                          )}
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secondary Translation Selector */}
+                <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
+                  <div className="flex items-center gap-3 bg-amber-500/5 border border-amber-500/20 rounded-2xl p-2 pr-4 hover:bg-amber-500/10 cursor-pointer">
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-amber-400/50 uppercase tracking-widest">الترجمة المقارنة</p>
+                      <p className="text-xs font-bold text-amber-300">{selectedSecondaryTranslation.name}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-300"><Languages className="w-5 h-5" /></div>
+                    <ChevronDown className="w-4 h-4 text-amber-300/40 mr-2" />
+                  </div>
+                  <div className="absolute top-[90%] right-0 pt-3 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[80]">
+                    <div className="bg-[#0a0a0a] border border-amber-500/25 rounded-2xl p-2 shadow-3xl backdrop-blur-3xl">
+                      {TRANSLATIONS.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => setSelectedSecondaryTranslation(t)}
+                          className={cn(
+                            "w-full text-right p-4 rounded-xl text-xs font-bold transition-all",
+                            selectedSecondaryTranslation.id === t.id ? "bg-amber-500 text-black font-black" : "text-white/40 hover:bg-white/5 hover:text-white"
+                          )}
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+
             {/* Reciter Selector */}
             <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 pr-4 hover:bg-white/10 cursor-pointer">
@@ -2121,7 +2912,7 @@ export default function QuranPage() {
                 </div>
               </div>
 
-              <div className="bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-6 flex items-center justify-between group hover:bg-white/[0.03] hover:border-white/10 transition-all cursor-pointer shadow-xl" onClick={() => setView('collections')}>
+              <div className="bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-6 flex items-center justify-between group hover:bg-white/[0.03] hover:border-white/10 transition-all cursor-pointer shadow-xl" onClick={() => { setNavDrawerOpen(true); setNavDrawerTab('bookmarks'); }}>
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 rounded-[1rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors shadow-inner"><BookmarkCheck className="w-6 h-6 text-emerald-400" /></div>
                   <div>
@@ -2139,7 +2930,7 @@ export default function QuranPage() {
         )}
 
         {/* ── Daily Verse ── */}
-        {!isReadingMode && !selectedSurah && view === 'collections' && (
+        {!isReadingMode && !selectedSurah && view === 'full' && (
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-20 group">
             <div className="relative rounded-[3.5rem] p-1.5 bg-gradient-to-br from-primary/30 via-primary/5 to-transparent border border-primary/10">
               <div className="bg-[#050505]/80 backdrop-blur-3xl rounded-[3.4rem] p-10 md:p-14 overflow-hidden relative">
@@ -2174,23 +2965,8 @@ export default function QuranPage() {
           </motion.div>
         )}
 
-        {/* ── Tabs & Search ── */}
+        {/* ── Search ── */}
         <div className={cn("w-full mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
-          <div className="flex flex-wrap gap-4 justify-center">
-            {['collections', 'full', 'plan', 'luminous'].map((v: any) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={cn(
-                  "px-8 md:px-12 py-5 rounded-[2rem] font-black text-sm transition-all duration-500 border relative overflow-hidden group",
-                  view === v ? "bg-white text-black border-white shadow-glow-white" : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10"
-                )}
-              >
-                {v === 'collections' ? 'آيات مختارة' : v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : 'خطة الحفظ'}
-                {view === v && <motion.div layoutId="tab-glow" className="absolute inset-0 bg-primary/20 blur-xl" />}
-              </button>
-            ))}
-          </div>
           <div className="relative group">
             <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
             <input
@@ -2376,6 +3152,8 @@ export default function QuranPage() {
                       border={v.border}
                       index={i}
                       searchQuery={searchQuery}
+                      isHideRevealMode={isHideRevealMode}
+                    quranHideMode={quranHideMode}
                       onPlay={(e: any) => { e.stopPropagation(); handlePlayVerse(v); }}
                       onShare={(e: any) => { e.stopPropagation(); handleShare(v); }}
                       onBookmark={(e: any) => { e.stopPropagation(); toggleBookmark(v); }}
@@ -2384,6 +3162,11 @@ export default function QuranPage() {
                       isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
                       reciterName={selectedReciter.name}
                       fontClass={selectedScript.font}
+                      selectedTranslation={selectedTranslation}
+                      onChatClick={startTafseerChat}
+                      isComparisonMode={isComparisonMode}
+                      selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
+                      selectedSecondaryTranslation={selectedSecondaryTranslation}
                     />
                   </div>
                 ))}
@@ -2392,17 +3175,17 @@ export default function QuranPage() {
                 {(searchFilter === 'all' || searchFilter === 'tafseer') && tafseerResults.map((v, i) => (
                   <div key={`search-tafseer-${v.id}`} onClick={() => handleSearchResultClick(v)} className="cursor-pointer">
                     <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-all text-right group relative overflow-hidden">
-                       <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
-                       <div className="flex justify-between items-center mb-6 relative z-10">
-                          <span className="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">نتائج التفسير الميسر</span>
-                          <span className="text-xs font-black text-white/20">{v.surah} - آية {v.ayahNumber}</span>
-                       </div>
-                       <p className="text-xl md:text-2xl text-white/80 leading-relaxed font-medium relative z-10">
-                          {highlightMatch(v.arabic, searchQuery)}
-                       </p>
-                       <div className="mt-4 flex items-center gap-2 text-amber-400/40 text-[10px] font-bold relative z-10">
-                          <Sparkles className="w-3 h-3" /> اضغط للانتقال لموضع الآية في المصحف
-                       </div>
+                      <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
+                      <div className="flex justify-between items-center mb-6 relative z-10">
+                        <span className="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">نتائج التفسير الميسر</span>
+                        <span className="text-xs font-black text-white/20">{v.surah} - آية {v.ayahNumber}</span>
+                      </div>
+                      <p className="text-xl md:text-2xl text-white/80 leading-relaxed font-medium relative z-10">
+                        {highlightMatch(v.arabic, searchQuery)}
+                      </p>
+                      <div className="mt-4 flex items-center gap-2 text-amber-400/40 text-[10px] font-bold relative z-10">
+                        <Sparkles className="w-3 h-3" /> اضغط للانتقال لموضع الآية في المصحف
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2415,17 +3198,6 @@ export default function QuranPage() {
 
         {/* ── Content View ── */}
         <div className="w-full">
-          {view === 'collections' && !isReadingMode && (
-            <div className="space-y-12">
-              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar justify-center">{TOPICS.map(topic => (<button key={topic.id} onClick={() => setActiveTopic(topic.id)} className={cn("px-8 py-3 rounded-2xl whitespace-nowrap font-bold transition-all border text-sm", activeTopic === topic.id ? "bg-primary border-primary text-primary-foreground shadow-glow-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>{topic.label}</button>))}</div>
-              <div className="grid gap-10">{QURAN_DATA.map(col => {
-                if (activeTopic === 'memorized') return col.verses.filter(v => state.quranMemorization?.[v.surahNumber] === 'completed').map((v, i) => (<VerseCard key={v.id} verse={v} accentColor={col.color} border={col.border} index={i} onPlay={handlePlayVerse} onShare={handleShare} onBookmark={toggleBookmark} onWordClick={handleWordClick} isPlaying={currentAudio?.id === v.id && isPlaying} isBookmarked={state.favorites?.includes(`quran_${v.id}`)} reciterName={selectedReciter.name} fontClass={selectedScript.font} />));
-                if (activeTopic === 'bookmarks') return col.verses.filter(v => state.favorites?.includes(`quran_${v.id}`)).map((v, i) => (<VerseCard key={v.id} verse={v} accentColor={col.color} border={col.border} index={i} onPlay={handlePlayVerse} onShare={handleShare} onBookmark={toggleBookmark} onWordClick={handleWordClick} isPlaying={currentAudio?.id === v.id && isPlaying} isBookmarked={true} reciterName={selectedReciter.name} fontClass={selectedScript.font} />));
-                if (activeTopic !== 'all' && col.id !== activeTopic) return null;
-                return col.verses.map((v, i) => (<VerseCard key={v.id} verse={v} accentColor={col.color} border={col.border} index={i} onPlay={handlePlayVerse} onShare={handleShare} onBookmark={toggleBookmark} onWordClick={handleWordClick} isPlaying={currentAudio?.id === v.id && isPlaying} isBookmarked={state.favorites?.includes(`quran_${v.id}`)} reciterName={selectedReciter.name} fontClass={selectedScript.font} />));
-              })}</div>
-            </div>
-          )}
 
           {view === 'full' && (
             <div className="space-y-12">
@@ -2556,7 +3328,31 @@ export default function QuranPage() {
                             </div>
                           )}
                           {surahContent.map((v, i) => (
-                            <VerseCard key={v.id} id={v.id} verse={v} accentColor="text-primary" border="border-primary/20" index={i} isReadingMode={isReadingMode} fontSize={fontSize} onPlay={handlePlayVerse} onShare={handleShare} onBookmark={toggleBookmark} onWordClick={handleWordClick} isBookmarked={state.favorites?.includes(`quran_${v.id}`)} isPlaying={currentAudio?.id === v.id && isPlaying} reciterName={selectedReciter.name} fontClass={selectedScript.font} />
+                            <VerseCard
+                              key={v.id}
+                              id={v.id}
+                              verse={v}
+                              accentColor="text-primary"
+                              border="border-primary/20"
+                              index={i}
+                              isReadingMode={isReadingMode}
+                              fontSize={fontSize}
+                              isHideRevealMode={isHideRevealMode}
+                    quranHideMode={quranHideMode}
+                              onPlay={handlePlayVerse}
+                              onShare={handleShare}
+                              onBookmark={toggleBookmark}
+                              onWordClick={handleWordClick}
+                              isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
+                              isPlaying={currentAudio?.id === v.id && isPlaying}
+                              reciterName={selectedReciter.name}
+                              fontClass={selectedScript.font}
+                              selectedTranslation={selectedTranslation}
+                              onChatClick={startTafseerChat}
+                              isComparisonMode={isComparisonMode}
+                              selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
+                              selectedSecondaryTranslation={selectedSecondaryTranslation}
+                            />
                           ))}
                         </div>
                       ) : (
@@ -2564,14 +3360,21 @@ export default function QuranPage() {
                           {/* Layout Controls Bar */}
                           <div className="w-full max-w-5xl flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4" dir="rtl">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <button 
+                              <button
                                 onClick={() => setPageViewLayout(pageViewLayout === 'double' ? 'single' : 'double')}
                                 className={cn("px-4 py-2 rounded-xl text-[10px] font-black transition-all border", pageViewLayout === 'double' ? "bg-primary text-primary-foreground border-primary/20" : "bg-white/5 text-white/40 border-transparent hover:bg-white/10")}
                               >
                                 {pageViewLayout === 'double' ? "عرض صفحة واحدة" : "عرض صفحتين (3D)"}
                               </button>
-                              
-                              <button 
+
+                              <button
+                                onClick={() => setMushafType(mushafType === 'digital' ? 'image' : 'digital')}
+                                className={cn("px-4 py-2 rounded-xl text-[10px] font-black transition-all border", mushafType === 'digital' ? "bg-amber-500 text-black border-amber-400/20" : "bg-white/5 text-white/40 border-transparent hover:bg-white/10")}
+                              >
+                                {mushafType === 'digital' ? "عرض المصحف المصور 🖼️" : "عرض المصحف الرقمي التفاعلي ✍️"}
+                              </button>
+
+                              <button
                                 onClick={() => setShowSidePanel(!showSidePanel)}
                                 className={cn("px-4 py-2 rounded-xl text-[10px] font-black transition-all border", showSidePanel ? "bg-primary text-primary-foreground border-primary/20" : "bg-white/5 text-white/40 border-transparent hover:bg-white/10")}
                               >
@@ -2636,7 +3439,7 @@ export default function QuranPage() {
                                 </button>
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2 text-white/30 text-[10px] font-bold">
                               <span>سورة {surahContent[0]?.surah || '-'}</span>
                               <span className="opacity-30">|</span>
@@ -2660,9 +3463,9 @@ export default function QuranPage() {
                                   {pageViewLayout === 'double' ? (
                                     <>
                                       {/* Desktop Double-Page Flip Book Spread */}
-                                      <div 
-                                        onTouchStart={handleTouchStart} 
-                                        onTouchMove={handleTouchMove} 
+                                      <div
+                                        onTouchStart={handleTouchStart}
+                                        onTouchMove={handleTouchMove}
                                         onTouchEnd={handleTouchEnd}
                                         className="hidden lg:block relative bg-[#2a1b0e] p-8 rounded-[3rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-8 border-[#3d2715]"
                                       >
@@ -2678,17 +3481,17 @@ export default function QuranPage() {
                                               <span>الجزء {pages[rightPage]?.[0]?.juz_number || '-'}</span>
                                             </div>
 
-                                            {!rightImgError ? (
+                                            {!rightImgError && mushafType !== 'digital' ? (
                                               <div className="relative flex-1 flex items-center justify-center">
                                                 {isRightImageLoading && (
                                                   <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                                 )}
-                                                <img 
-                                                  src={rightImgSrc} 
-                                                  onLoad={() => setIsRightImageLoading(false)} 
-                                                  onError={handleRightImageError} 
+                                                <img
+                                                  src={rightImgSrc}
+                                                  onLoad={() => setIsRightImageLoading(false)}
+                                                  onError={handleRightImageError}
                                                   alt={`Page ${rightPage}`}
-                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")} 
+                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                                 />
                                               </div>
                                             ) : (
@@ -2713,17 +3516,17 @@ export default function QuranPage() {
                                               <span>صفحة {leftPage}</span>
                                             </div>
 
-                                            {!leftImgError ? (
+                                            {!leftImgError && mushafType !== 'digital' ? (
                                               <div className="relative flex-1 flex items-center justify-center">
                                                 {isLeftImageLoading && (
                                                   <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                                 )}
-                                                <img 
-                                                  src={leftImgSrc} 
-                                                  onLoad={() => setIsLeftImageLoading(false)} 
-                                                  onError={handleLeftImageError} 
+                                                <img
+                                                  src={leftImgSrc}
+                                                  onLoad={() => setIsLeftImageLoading(false)}
+                                                  onError={handleLeftImageError}
                                                   alt={`Page ${leftPage}`}
-                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isLeftImageLoading ? "opacity-0" : "opacity-95")} 
+                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isLeftImageLoading ? "opacity-0" : "opacity-95")}
                                                 />
                                               </div>
                                             ) : (
@@ -2744,9 +3547,9 @@ export default function QuranPage() {
                                       </div>
 
                                       {/* Mobile Single-Page Fallback */}
-                                      <div 
-                                        onTouchStart={handleTouchStart} 
-                                        onTouchMove={handleTouchMove} 
+                                      <div
+                                        onTouchStart={handleTouchStart}
+                                        onTouchMove={handleTouchMove}
                                         onTouchEnd={handleTouchEnd}
                                         className="lg:hidden relative bg-[#2a1b0e] p-5 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.8)] border-6 border-[#3d2715]"
                                       >
@@ -2756,17 +3559,17 @@ export default function QuranPage() {
                                             <span>الجزء {pages[currentPage]?.[0]?.juz_number || '-'}</span>
                                           </div>
 
-                                          {!mushafError ? (
+                                          {!mushafError && mushafType !== 'digital' ? (
                                             <div className="relative flex-1 flex items-center justify-center">
                                               {isRightImageLoading && (
                                                 <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                               )}
-                                              <img 
-                                                src={rightImgSrc} 
-                                                onLoad={() => setIsRightImageLoading(false)} 
-                                                onError={handleRightImageError} 
+                                              <img
+                                                src={rightImgSrc}
+                                                onLoad={() => setIsRightImageLoading(false)}
+                                                onError={handleRightImageError}
                                                 alt={`Page ${currentPage}`}
-                                                className={cn("max-h-[500px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")} 
+                                                className={cn("max-h-[500px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                               />
                                             </div>
                                           ) : (
@@ -2787,29 +3590,29 @@ export default function QuranPage() {
                                     </>
                                   ) : (
                                     /* Single-Page Layout (All Screens) */
-                                    <div 
-                                       onTouchStart={handleTouchStart} 
-                                       onTouchMove={handleTouchMove} 
-                                       onTouchEnd={handleTouchEnd}
-                                       className="relative bg-[#2a1b0e] p-8 rounded-[3rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-8 border-[#3d2715] max-w-xl mx-auto"
-                                     >
+                                    <div
+                                      onTouchStart={handleTouchStart}
+                                      onTouchMove={handleTouchMove}
+                                      onTouchEnd={handleTouchEnd}
+                                      className="relative bg-[#2a1b0e] p-8 rounded-[3rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-8 border-[#3d2715] max-w-xl mx-auto"
+                                    >
                                       <div className="relative bg-[#fbf9f1] rounded-2xl shadow-inner overflow-hidden p-8 min-h-[550px] flex flex-col justify-between">
                                         <div className="flex justify-between items-center text-[9px] font-black text-amber-950/40 pb-2 border-b border-amber-950/5 mb-4">
                                           <span>صفحة {currentPage}</span>
                                           <span>الجزء {pages[currentPage]?.[0]?.juz_number || '-'}</span>
                                         </div>
 
-                                        {!mushafError ? (
+                                        {!mushafError && mushafType !== 'digital' ? (
                                           <div className="relative flex-1 flex items-center justify-center">
                                             {isRightImageLoading && (
                                               <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                             )}
-                                            <img 
-                                              src={rightImgSrc} 
-                                              onLoad={() => setIsRightImageLoading(false)} 
-                                              onError={handleRightImageError} 
+                                            <img
+                                              src={rightImgSrc}
+                                              onLoad={() => setIsRightImageLoading(false)}
+                                              onError={handleRightImageError}
                                               alt={`Page ${currentPage}`}
-                                              className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")} 
+                                              className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                             />
                                           </div>
                                         ) : (
@@ -2854,18 +3657,18 @@ export default function QuranPage() {
                                 <div className="space-y-3">
                                   <h4 className="text-[9px] font-black text-white/30 uppercase tracking-widest">آيات الصفحة الحالية</h4>
                                   <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                                    {((pageViewLayout === 'double' 
-                                      ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])] 
+                                    {((pageViewLayout === 'double'
+                                      ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])]
                                       : (pages[currentPage] || [])) as any[]).map((verse: any) => {
                                         const isCurrentActive = currentAudio?.id === verse.id;
                                         return (
-                                          <div 
-                                            key={verse.id} 
+                                          <div
+                                            key={verse.id}
                                             onClick={() => handlePlayVerse(verse)}
                                             className={cn(
                                               "p-3.5 rounded-2xl border transition-all cursor-pointer text-right space-y-2",
-                                              isCurrentActive 
-                                                ? "bg-primary/10 border-primary/30" 
+                                              isCurrentActive
+                                                ? "bg-primary/10 border-primary/30"
                                                 : "bg-white/[0.02] border-white/5 hover:bg-white/5"
                                             )}
                                           >
@@ -2889,7 +3692,7 @@ export default function QuranPage() {
                                 {/* memorization repetition module */}
                                 <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-4">
                                   <h4 className="text-[9px] font-black text-white/30 uppercase tracking-widest pb-2 border-b border-white/5">أدوات الحفظ والمراجعة التكرارية</h4>
-                                  
+
                                   {/* Single Verse Repetition */}
                                   <div className="flex items-center justify-between text-xs">
                                     <span className="text-white/60">تكرار الآية الحالية:</span>
@@ -2904,7 +3707,7 @@ export default function QuranPage() {
                                   <div className="space-y-3 pt-3 border-t border-white/5">
                                     <div className="flex items-center justify-between text-xs">
                                       <span className="text-white/60">تكرار نطاق من الآيات (حلقة):</span>
-                                      <button 
+                                      <button
                                         onClick={() => setRangeLoopActive(!rangeLoopActive)}
                                         className={cn("px-3 py-1 rounded-lg text-[9px] font-black transition-all", rangeLoopActive ? "bg-primary text-primary-foreground shadow-glow-primary" : "bg-white/5 text-white/40")}
                                       >
@@ -2916,11 +3719,11 @@ export default function QuranPage() {
                                       <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-1">
                                           <label className="text-[8px] text-white/30 font-bold block">من آية:</label>
-                                          <select 
-                                            value={rangeStartVerse?.id || ''} 
+                                          <select
+                                            value={rangeStartVerse?.id || ''}
                                             onChange={(e) => {
-                                              const currentRangeVerses = pageViewLayout === 'double' 
-                                                ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])] 
+                                              const currentRangeVerses = pageViewLayout === 'double'
+                                                ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])]
                                                 : (pages[currentPage] || []);
                                               const v = currentRangeVerses.find((x: any) => x.id === Number(e.target.value));
                                               if (v) setRangeStartVerse(v);
@@ -2928,21 +3731,21 @@ export default function QuranPage() {
                                             className="w-full bg-[#121212] border border-white/10 rounded-lg p-2 text-[10px] text-white focus:outline-none"
                                           >
                                             <option value="">اختر...</option>
-                                            {((pageViewLayout === 'double' 
-                                              ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])] 
+                                            {((pageViewLayout === 'double'
+                                              ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])]
                                               : (pages[currentPage] || [])) as any[]).map((x: any) => (
                                                 <option key={x.id} value={x.id}>آية {x.ayahNumber}</option>
                                               ))}
                                           </select>
                                         </div>
-                                        
+
                                         <div className="space-y-1">
                                           <label className="text-[8px] text-white/30 font-bold block">إلى آية:</label>
-                                          <select 
-                                            value={rangeEndVerse?.id || ''} 
+                                          <select
+                                            value={rangeEndVerse?.id || ''}
                                             onChange={(e) => {
-                                              const currentRangeVerses = pageViewLayout === 'double' 
-                                                ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])] 
+                                              const currentRangeVerses = pageViewLayout === 'double'
+                                                ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])]
                                                 : (pages[currentPage] || []);
                                               const v = currentRangeVerses.find((x: any) => x.id === Number(e.target.value));
                                               if (v) setRangeEndVerse(v);
@@ -2950,8 +3753,8 @@ export default function QuranPage() {
                                             className="w-full bg-[#121212] border border-white/10 rounded-lg p-2 text-[10px] text-white focus:outline-none"
                                           >
                                             <option value="">اختر...</option>
-                                            {((pageViewLayout === 'double' 
-                                              ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])] 
+                                            {((pageViewLayout === 'double'
+                                              ? [...(pages[rightPage] || []), ...(pages[leftPage] || [])]
                                               : (pages[currentPage] || [])) as any[]).map((x: any) => (
                                                 <option key={x.id} value={x.id}>آية {x.ayahNumber}</option>
                                               ))}
@@ -2968,7 +3771,7 @@ export default function QuranPage() {
                                     <div className="flex justify-between items-center">
                                       <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">تسميع الآية بالذكاء الاصطناعي</h4>
                                       {isTestingRecitation && (
-                                        <button 
+                                        <button
                                           onClick={() => {
                                             stopListeningRecitation();
                                             setIsTestingRecitation(false);
@@ -2982,7 +3785,7 @@ export default function QuranPage() {
                                     </div>
 
                                     {!isTestingRecitation ? (
-                                      <button 
+                                      <button
                                         onClick={() => startListeningRecitation(currentAudio)}
                                         className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-glow-primary"
                                       >
@@ -2994,8 +3797,8 @@ export default function QuranPage() {
                                         <div className="p-3 bg-black/40 rounded-xl border border-white/5 min-h-[60px] flex items-center justify-center flex-wrap gap-1" dir="rtl">
                                           {testWordsResult ? (
                                             testWordsResult.map((w, idx) => (
-                                              <span 
-                                                key={idx} 
+                                              <span
+                                                key={idx}
                                                 className={cn(
                                                   "text-sm font-quran transition-colors",
                                                   w.status === 'correct' ? "text-emerald-400 font-bold" : "text-red-500 line-through opacity-60"
@@ -3014,17 +3817,17 @@ export default function QuranPage() {
                                             <span className={cn("w-2 h-2 rounded-full", isListeningRecitation ? "bg-emerald-500 animate-ping" : "bg-red-500")} />
                                             <span className="text-[10px] text-white/60">{isListeningRecitation ? "جاري الاستماع..." : "متوقف"}</span>
                                           </div>
-                                          
+
                                           <div className="flex items-center gap-2">
                                             {isListeningRecitation ? (
-                                              <button 
+                                              <button
                                                 onClick={stopListeningRecitation}
                                                 className="px-2.5 py-1 bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-[9px] font-black hover:bg-red-500/30 transition-all"
                                               >
                                                 إيقاف الاستماع
                                               </button>
                                             ) : (
-                                              <button 
+                                              <button
                                                 onClick={() => startListeningRecitation(currentAudio)}
                                                 className="px-2.5 py-1 bg-primary text-primary-foreground rounded-lg text-[9px] font-black hover:scale-105 transition-all"
                                               >
@@ -3052,6 +3855,61 @@ export default function QuranPage() {
                                     )}
                                   </div>
                                 )}
+
+
+                                {/* ── Ambient Focus Sounds ── */}
+                                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-4">
+                                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                                    <h4 className="text-[9px] font-black text-white/30 uppercase tracking-widest">أصوات التركيز المهدئة 🌧️</h4>
+                                    {activeAmbient && (
+                                      <button
+                                        onClick={() => setActiveAmbient(null)}
+                                        className="text-[9px] text-amber-500 font-bold hover:text-amber-400"
+                                      >
+                                        إيقاف الكل
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {AMBIENT_SOUNDS.map(s => {
+                                      const isActive = activeAmbient === s.id;
+                                      return (
+                                        <button
+                                          key={s.id}
+                                          onClick={() => setActiveAmbient(isActive ? null : s.id)}
+                                          className={cn(
+                                            "p-3 rounded-xl text-[10px] font-black text-right transition-all flex items-center justify-between border",
+                                            isActive
+                                              ? "bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold"
+                                              : "bg-white/5 border-transparent text-white/40 hover:bg-white/10 hover:text-white"
+                                          )}
+                                        >
+                                          <span>{s.name}</span>
+                                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+
+                                  {activeAmbient && (
+                                    <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                                      <div className="flex justify-between items-center text-[8px] font-black text-white/30">
+                                        <span>حجم صوت الخلفية</span>
+                                        <span>{Math.round(ambientVolume * 100)}%</span>
+                                      </div>
+                                      <input
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={ambientVolume}
+                                        onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                                        className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -3238,24 +4096,28 @@ export default function QuranPage() {
 
       {/* ── Luminous Mushaf View ── */}
       {view === 'luminous' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[200] bg-black overflow-y-auto">
-              <div className="sticky top-4 left-4 z-50 flex justify-end px-4">
-                  <button onClick={() => setView('collections')} className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full backdrop-blur-md">
-                      <X className="w-6 h-6" />
-                  </button>
-              </div>
-              <LuminousMushaf 
-                                surahs={surahs}
-                                currentAudio={currentAudio}
-                                isPlaying={isPlaying}
-                                onPlay={handlePlayVerse}
-                                selectedScript={selectedScript}
-                                selectedTafseer={selectedTafseer}
-                                selectedReciter={selectedReciter}
-                                reciters={RECITERS}
-                                onSelectReciter={setSelectedReciter}
-                              />
-          </motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[200] bg-black overflow-y-auto">
+          <div className="sticky top-4 left-4 z-50 flex justify-end px-4">
+            <button onClick={() => setView('full')} className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full backdrop-blur-md">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <LuminousMushaf
+            surahs={surahs}
+            currentAudio={currentAudio}
+            isPlaying={isPlaying}
+            onPlay={handlePlayVerse}
+            selectedScript={selectedScript}
+            selectedTafseer={selectedTafseer}
+            selectedReciter={selectedReciter}
+            reciters={RECITERS}
+            onSelectReciter={setSelectedReciter}
+            selectedTranslation={selectedTranslation}
+            translations={TRANSLATIONS}
+            onSelectTranslation={setSelectedTranslation}
+            audioRef={audioRef}
+          />
+        </motion.div>
       )}
 
       <AnimatePresence>
@@ -3312,3 +4174,280 @@ export default function QuranPage() {
     </div>
   );
 }
+
+// ━━━━━━━━━━━ ADDITIONAL MODALS ━━━━━━━━━━━
+
+function CustomPlanModal({ onClose, customPagesInput, setCustomPagesInput, customDurationInput, setCustomDurationInput, customPlanType, setCustomPlanType, onSave }: any) {
+  return (
+    <ModalPortal>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-3xl p-8" dir="rtl">
+          <div className="flex items-center justify-between pb-6 border-b border-white/5">
+            <h3 className="text-lg font-black text-white flex items-center gap-3"><Target className="w-5 h-5 text-primary" /> إنشاء خطة حفظ مخصصة</h3>
+            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-4.5 h-4.5 text-white/40" /></button>
+          </div>
+
+          <div className="py-6 space-y-6">
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+              <button onClick={() => setCustomPlanType('pages')} className={cn("flex-1 py-3 rounded-xl text-xs font-black transition-all", customPlanType === 'pages' ? "bg-primary text-primary-foreground" : "text-white/40 hover:text-white")}>حسب الورد اليومي (صفحات)</button>
+              <button onClick={() => setCustomPlanType('duration')} className={cn("flex-1 py-3 rounded-xl text-xs font-black transition-all", customPlanType === 'duration' ? "bg-primary text-primary-foreground" : "text-white/40 hover:text-white")}>حسب مدة الختم (أشهر)</button>
+            </div>
+
+            {customPlanType === 'pages' ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-white/60">عدد الصفحات يومياً:</span>
+                  <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-xl">{customPagesInput} صفحات</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  step="1"
+                  value={customPagesInput}
+                  onChange={(e) => setCustomPagesInput(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2 mt-4">
+                  <p className="text-[11px] font-tajawal text-white/50 leading-relaxed">
+                    بمعدل حفظ <strong className="text-primary font-black">{customPagesInput} صفحات</strong> يومياً، ستختم القرآن الكريم كاملاً في غضون:
+                  </p>
+                  <div className="flex items-center gap-2 text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>~ {Math.round(604 / (customPagesInput * 30)) || 1} أشهر تقريباً</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-white/60">المدة المطلوبة للختم:</span>
+                  <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-xl">{customDurationInput} أشهر</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="36"
+                  step="1"
+                  value={customDurationInput}
+                  onChange={(e) => setCustomDurationInput(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2 mt-4">
+                  <p className="text-[11px] font-tajawal text-white/50 leading-relaxed">
+                    لتتمكن من الختم في غضون <strong className="text-primary font-black">{customDurationInput} أشهر</strong>، سيتوجب عليك يومياً حفظ:
+                  </p>
+                  <div className="flex items-center gap-2 text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>~ {Math.round((604 / (customDurationInput * 30)) * 10) / 10} صفحة يومياً</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-6 border-t border-white/5">
+            <button onClick={onSave} className="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow-primary">تفعيل الخطة المخصصة</button>
+            <button onClick={onClose} className="px-6 py-4 bg-white/5 text-white/60 rounded-2xl font-black text-xs hover:bg-white/10 transition-all">إلغاء</button>
+          </div>
+        </motion.div>
+      </div>
+    </ModalPortal>
+  );
+}
+
+function TajweedGuideModal({ onClose }: any) {
+  const rules = [
+    {
+      title: 'أحكام النون الساكنة والتنوين', items: [
+        { name: 'الإظهار', desc: 'إخراج الحرف من مخرجه دون غنة. حروفه: (ء، هـ، ع، ح، غ، خ)', color: 'bg-blue-500/10 border-blue-500/20 text-blue-300' },
+        { name: 'الإدغام', desc: 'دمج النون في الحرف التالي بغنة أو بدونها. حروفه: (ي، ر، م، ل، و، ن)', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' },
+        { name: 'الإقلاب', desc: 'قلب النون الساكنة أو التنوين ميماً مخفاة بغنة عند حرف (الباء)', color: 'bg-amber-500/10 border-amber-500/20 text-amber-300' },
+        { name: 'الإخفاء', desc: 'نطق الحرف بحالة بين الإظهار والإدغام مع الغنة. بقية الحروف الـ 15', color: 'bg-violet-500/10 border-violet-500/20 text-violet-300' }
+      ]
+    },
+    {
+      title: 'المدود الأساسية', items: [
+        { name: 'المد الطبيعي', desc: 'مد بمقدار حركتين عند انعدام الهمز أو السكون بعد حرف المد', color: 'bg-rose-500/10 border-rose-500/20 text-rose-300' },
+        { name: 'المد المتصل', desc: 'أن يقع الهمز بعد حرف المد في كلمة واحدة، ويمد 4 أو 5 حركات واجبة', color: 'bg-purple-500/10 border-purple-500/20 text-purple-300' },
+        { name: 'المد المنفصل', desc: 'أن يقع حرف المد في كلمة والهمز في الكلمة التالية، ويمد 4 أو 5 حركات جائزة', color: 'bg-orange-500/10 border-orange-500/20 text-orange-300' }
+      ]
+    }
+  ];
+
+  return (
+    <ModalPortal>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-md" />
+        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-4xl max-h-[85vh] flex flex-col" dir="rtl">
+          <div className="p-8 border-b border-white/5 flex items-center justify-between shrink-0">
+            <h3 className="text-xl font-black text-white flex items-center gap-3"><Star className="w-5 h-5 text-primary" /> دليل أحكام التجويد المبسط</h3>
+            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-5 h-5 text-white/40" /></button>
+          </div>
+
+          <div className="p-8 overflow-y-auto space-y-8 flex-1 custom-scrollbar">
+            {rules.map((section, idx) => (
+              <div key={idx} className="space-y-4">
+                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-r-2 border-primary pr-3">{section.title}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {section.items.map((item, itemIdx) => (
+                    <div
+                      key={itemIdx}
+                      className={cn(
+                        "p-5 border rounded-2xl space-y-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-white/20 select-none",
+                        item.color
+                      )}
+                    >
+                      <h5 className="font-bold text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {item.name}
+                      </h5>
+                      <p className="text-white/70 text-[11px] leading-relaxed font-tajawal">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 border-t border-white/5 bg-black/50 flex justify-end shrink-0">
+            <button onClick={onClose} className="px-8 py-3 bg-white text-black rounded-xl font-black text-xs hover:scale-105 transition-all">فهمت</button>
+          </div>
+        </motion.div>
+      </div>
+    </ModalPortal>
+  );
+}
+
+// ━━━━━━━━━━━ SMART AI CHAT COMPANION SUPPORT ━━━━━━━━━━━
+
+function TafseerChatModal({ verse, messages, isListLoading, connectionMode, onClose, onSendMessage, chatInput, setChatInput }: any) {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  return (
+    <ModalPortal>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-4xl max-h-[85vh] flex flex-col" dir="rtl">
+
+          {/* Header */}
+          <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="text-right">
+                <h3 className="text-sm font-black text-white">رفيق التفسير والتدبر الذكي 🤖</h3>
+                <p className="text-[10px] text-white/40">سورة {verse.surah} • آية {verse.ayahNumber}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className={cn(
+                "px-2.5 py-1 rounded-full text-[9px] font-black border",
+                connectionMode === 'online'
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              )}>
+                {connectionMode === 'online' ? "متصل بالذكاء الاصطناعي 🟢" : "وضع التدبر المحلي 🟠"}
+              </span>
+              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
+                <X className="w-4.5 h-4.5 text-white/40" />
+              </button>
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-black/[0.15]">
+            {messages.map((msg: any, idx: number) => {
+              const isAssistant = msg.role === 'model' || msg.role === 'assistant';
+              return (
+                <div key={idx} className={cn("flex gap-3 max-w-[85%] animate-in fade-in slide-in-from-top-2 duration-300", isAssistant ? "mr-0 ml-auto" : "ml-0 mr-auto flex-row-reverse")}>
+                  <div className={cn("w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs", isAssistant ? "bg-primary/20 text-primary" : "bg-white/10 text-white/80")}>
+                    {isAssistant ? '🤖' : '👤'}
+                  </div>
+                  <div className={cn("p-4 rounded-3xl text-xs leading-relaxed", isAssistant ? "bg-white/[0.03] border border-white/5 text-white/80" : "bg-primary text-primary-foreground font-semibold")}>
+                    <p className="whitespace-pre-line font-tajawal">{msg.content}</p>
+                  </div>
+                </div>
+              );
+            })}
+
+            {isListLoading && (
+              <div className="flex gap-3 max-w-[85%] mr-0 ml-auto items-center animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-xs text-primary">🤖</div>
+                <div className="p-4 rounded-3xl bg-white/[0.03] border border-white/5 text-white/40 text-[11px] font-tajawal">جاري التدبر والتأمل في الآية...</div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Prompt Recommendations */}
+          {messages.length === 1 && (
+            <div className="p-4 bg-black/40 border-t border-white/5 space-y-2 shrink-0">
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest text-right mb-1">أسئلة مقترحة للتدبر:</p>
+              <div className="flex flex-wrap gap-2 justify-start">
+                <button onClick={() => onSendMessage('ما البلاغة والإعجاز اللغوي في هذه الآية الكريمة؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">✨ بلاغة الآية وإعجازها</button>
+                <button onClick={() => onSendMessage('ما هو سبب نزول هذه الآية الكريمة؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">📜 سبب النزول</button>
+                <button onClick={() => onSendMessage('ما هي الدروس والعبر المستفادة من هذه الآية للعمل بها في حياتي؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">💡 الدروس والعبر</button>
+              </div>
+            </div>
+          )}
+
+          {/* Input Area */}
+          <div className="p-4 border-t border-white/5 bg-black/50 shrink-0 flex gap-2 items-center">
+            <input
+              type="text"
+              placeholder="اكتب سؤالك الخاص حول تفسير الآية أو بلاغتها..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onSendMessage()}
+              disabled={isListLoading}
+              className="flex-1 bg-white/5 border border-white/5 rounded-2xl px-5 py-3.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary transition-all font-tajawal"
+            />
+            <button
+              onClick={() => onSendMessage()}
+              disabled={isListLoading || !chatInput.trim()}
+              className="p-3.5 bg-primary text-primary-foreground rounded-2xl hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 transition-all"
+            >
+              <ArrowLeft className="w-5 h-5 transform rotate-180" />
+            </button>
+          </div>
+
+        </motion.div>
+      </div>
+    </ModalPortal>
+  );
+}
+
+const LOCAL_SCHOLAR_DB: Record<string, { rhetoric: string; revelation: string; lessons: string }> = {
+  "2:255": {
+    rhetoric: "آية الكرسي هي أعظم آية في القرآن. فيها من البلاغة ما يبهر العقول: الفواصل الموسيقية الهادئة المتسقة، التكرار اللطيف لأسماء الله الحسنى، والتقابل البديع بين (السماوات والأرض)، وطباق السلب بين (لا تأخذه) و(ولا نوم)، والأسلوب الخبري المؤكد لحفظ الكون وعلو الخالق سبحانه وتعالى.",
+    revelation: "لم يرد سبب نزول خاص ثابت لآية الكرسي بخصوص مناسبة معينة، بل نزلت بياناً لعظمة الخالق وإثباتاً لتوحيد الألوهية والربوبية والأسماء والصفات، وهي تعد مستقلاً بذاته كأعظم آية تصف جلال الله سبحانه وتعالى.",
+    lessons: "1. إثبات انفراد الله بالملك والتدبير والقيومية.\n2. إثبات الشفاعة بإذن الله وحده.\n3. سعة علم الله المحيط بالماضي والحاضر والمستقبل.\n4. عظمة سلطان الله وحفظه للكون بلا مشقة أو تعب."
+  },
+  "1:1": {
+    rhetoric: "سورة الفاتحة تسمى الشافية والوافية. البلاغة فيها تتجلى في افتتاحها بـ (الحمد لله) بصيغة الاسم الدال على الثبوت والاستمرار، والالتفات البديع من الغيبة (الحمد لله رب العالمين) إلى الخطاب والدعاء المباشر (إياك نعبد وإياك نستعين) استشعاراً للقرب والعبودية.",
+    revelation: "نزلت سورة الفاتحة بمكة بمناسبة فرض الصلاة، وقيل نزلت مرتين تعظيماً لشأنها (مرة بمكة ومرة بالمدينة)، وهي ركيزة الصلاة ومفتاح القرآن الكريم.",
+    lessons: "1. وجوب إخلاص العبادة والاستعانة بالله وحده.\n2. إثبات الهداية إلى الصراط المستقيم كأعظم نعمة.\n3. التحذير من طريق المغضوب عليهم والضالين."
+  }
+};
+
+const getLocalFallbackExplanation = (surahName: string, ayahNumber: string, arabicText: string, type: 'rhetoric' | 'revelation' | 'lessons') => {
+  const shortText = arabicText.length > 40 ? `${arabicText.slice(0, 40)}...` : arabicText;
+  if (type === 'rhetoric') {
+    return `التأمل البلاغي والجمالي لآية ${ayahNumber} من سورة ${surahName} (${shortText}):\n\nتتجلى البلاغة الإعجازية في هذا الموضع من خلال انتقاء الحروف المتناغمة والفواصل الصوتية الدقيقة. تعزز الآية المعنى الموجه للقلب عبر الطباق أو المقابلة والتقديم والـتأخير بما يفيد الحصر والتعظيم لجلال الله وأحكام رسالته.`;
+  } else if (type === 'revelation') {
+    return `سبب النزول والسياق التاريخي لآية ${ayahNumber} من سورة ${surahName}:\n\nنزلت هذه الآية الكريمة في إطار توجيه المسلمين وتثبيتهم إبان العهد النبوي الشريف. تقرر الآية قاعدة إيمانية أو حكماً تشريعياً استجابةً لتساؤلات الصحابة أو تعقيباً على أحداث ووقائع تاريخية واكبت نزول الوحي.`;
+  } else {
+    return `أهم الدروس والعظات المستخلصة لآية ${ayahNumber} من سورة ${surahName}:\n\n` +
+      `1. استشعار الرقابة الإلهية الدائمة في السر والعلن واللجوء المستمر للخالق تضرعاً وطاعة.\n` +
+      `2. العمل بوجيه التوجيهات القرآنية والأحكام الشرعية المتضمنة بالآية وتطبيقها في السلوك اليومي.\n` +
+      `3. التدبر الدائم والتأمل الواعي في دلالات الوحي لزيادة منسوب اليقين وثبات القلوب.`;
+  }
+};

@@ -38,7 +38,9 @@ import {
   Medal,
   Flag,
   Sparkles,
-  Droplets
+  Droplets,
+  Scale,
+  Compass
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -107,6 +109,9 @@ const moreNavItems = [
   { href: "/shubuhat", label: "تفنيد الشبهات", icon: Shield },
   { href: "/essentials", label: "ما لا يسع المسلم جهله", icon: BookCheck },
   { href: "/aqeedah", label: "العقيدة", icon: Shield },
+  { href: "/mirath", label: "حاسبة المواريث", icon: Scale },
+  { href: "/sciences-tree", label: "شجرة العلوم الشرعية", icon: Compass },
+  { href: "/memorize", label: "حافظ المتون التفاعلي", icon: BookOpen },
   { href: "/curriculums", label: "المناهج التعليمية", icon: GraduationCap },
   { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
   { href: "/playlists", label: "قוائم التشغيل", icon: ListMusic },
@@ -145,6 +150,12 @@ export function SiteHeader() {
   const { language: activeLanguage } = useAppearance();
 
   const activeLanguageName = languages.find(l => l.value === activeLanguage)?.name.slice(0, 2) || 'عر';
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
+  const activeIndex = mainNavItems.findIndex(
+    (item) => (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href))
+  );
+  const backdropIndex = hoveredIndex !== null ? hoveredIndex : (activeIndex !== -1 ? activeIndex : null);
 
   const toggleHeader = () => setIsHeaderHidden(!isHeaderHidden);
 
@@ -272,11 +283,12 @@ export function SiteHeader() {
 
           <div className="hidden md:flex flex-grow overflow-hidden">
             <ScrollArea className="w-full whitespace-nowrap" dir="rtl">
-              <div className="flex justify-center items-center gap-2 px-4 py-1">
-                {mainNavItems.map((item) => {
-                  const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
+              <div className="flex justify-center items-center gap-2 px-4 py-1" onMouseLeave={() => setHoveredIndex(null)}>
+                {mainNavItems.map((item, index) => {
+                  const isActive = index === activeIndex;
+                  const hasBackdrop = index === backdropIndex;
                   return (
-                    <Button asChild key={item.label} variant="ghost" className={cn(
+                    <Button asChild key={item.label} variant="ghost" onMouseEnter={() => setHoveredIndex(index)} className={cn(
                       "relative text-foreground/70 hover:text-primary font-bold shrink-0 flex items-center gap-2 rounded-2xl transition-all hover:scale-105 active:scale-95 group px-4 py-6",
                       isActive && "text-primary"
                     )}>
@@ -289,11 +301,16 @@ export function SiteHeader() {
                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                            </span>
                         )}
-                        {isActive && (
+                        {hasBackdrop && (
                           <motion.div
-                            layoutId="activeNav"
-                            className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-[1.2rem] -z-10 shadow-[inset_0_0_20px_rgba(var(--primary-rgb),0.1)]"
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            layoutId="navBackdrop"
+                            className={cn(
+                              "absolute inset-0 rounded-[1.2rem] -z-10",
+                              hoveredIndex === index
+                                ? "bg-white/5 border border-white/10"
+                                : "bg-primary/10 border border-primary/20 shadow-[inset_0_0_20px_rgba(var(--primary-rgb),0.1)]"
+                            )}
+                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
                           />
                         )}
                         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-1 bg-primary rounded-full transition-all duration-500 group-hover:w-4 opacity-0 group-hover:opacity-100" />

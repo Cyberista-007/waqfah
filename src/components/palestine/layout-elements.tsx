@@ -13,9 +13,16 @@ export function CinematicAudioPlayer() {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const toggle = () => {
-    if (isPlaying) audioRef.current?.pause();
-    else audioRef.current?.play();
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current?.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => {
+          console.warn("Palestine ambient audio playback failed:", err);
+        });
+    }
   };
 
   return (
@@ -37,6 +44,7 @@ export function CinematicAudioPlayer() {
           ref={audioRef} 
           src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
           loop 
+          preload="none"
         />
         
         {isPlaying && (

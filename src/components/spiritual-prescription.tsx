@@ -1,4 +1,5 @@
 'use client';
+import Link from "next/link";
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -592,10 +593,10 @@ export function SpiritualPrescription() {
                           boxShadow: `0 10px 30px -5px ${selectedMoodData?.glowColor}`
                         }}
                       >
-                        <a href={prescription.actionLink} className="flex items-center gap-4">
+                        <Link href={prescription.actionLink} className="flex items-center gap-4">
                           <span>{prescription.actionLabel}</span>
                           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-2 transition-transform duration-300" />
-                        </a>
+                        </Link>
                       </Button>
                    </div>
                 </div>

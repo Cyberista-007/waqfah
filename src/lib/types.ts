@@ -486,6 +486,8 @@ export type UserState = Serializable<{
     planId: string;
     startDate: string;
     dailyReminderTime?: string;
+    customPagesPerDay?: number;
+    customMonths?: number;
   };
   points: number;
   completedChallenges: number[];

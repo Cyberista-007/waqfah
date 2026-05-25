@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, use } from 'react';
+import { useState, useEffect, useMemo, use, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Book, Search, ChevronLeft, Bookmark, Heart, Share2, 
+  Book, Search, Mic, ChevronLeft, Bookmark, Heart, Share2, 
   BookOpen, Star, Info, Clock, ArrowLeft, ArrowRight,
   Library, Sparkles, Quote, MapPin, Hash, Settings, CheckCircle, Type, ShieldCheck
 } from 'lucide-react';
@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HADITH_SECTIONS_FALLBACK } from '../hadith-data-hub';
 import { RIYADUSSALIHIN_FALLBACK_HADITHS } from '../riyadussalihin-data';
+import { ImanCardGenerator } from '@/components/iman-card-generator';
 
 const ALTERNATIVE_SOURCES: Record<string, string> = {
   'riyadussaliheen': 'https://raw.githubusercontent.com/AhmedBaset/hadith-json/main/db/by_book/other_books/riyad_assalihin.json',
@@ -24,6 +25,73 @@ const ALTERNATIVE_SOURCES: Record<string, string> = {
 
 const INCOMPLETE_BOOKS = ['ahmad'];
 const BOOK_CACHE: Record<string, any> = {};
+
+
+function normalizeArabic(text: string): string {
+  return text
+    .replace(/[\u064B-\u065F]/g, "") // remove tashkeel
+    .replace(/[أإآا]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .toLowerCase();
+}
+
+
+function highlightMatch(text: string, query: string): React.ReactNode {
+  if (!query) return text;
+  
+  // Clean tashkeel for matching indices but preserve them for output!
+  const normalizedText = normalizeArabic(text);
+  const normalizedQuery = normalizeArabic(query);
+  
+  const index = normalizedText.indexOf(normalizedQuery);
+  if (index === -1) return text;
+  
+  // We want to find the exact character range in the original text.
+  // Since removing tashkeel shortens the text, we map indices.
+  let originalStart = 0;
+  let normalizedIdx = 0;
+  
+  while (normalizedIdx < index && originalStart < text.length) {
+    const char = text[originalStart];
+    // Check if char is tashkeel
+    if (/[\u064B-\u065F]/.test(char)) {
+      originalStart++;
+    } else {
+      originalStart++;
+      normalizedIdx++;
+    }
+  }
+  
+  // Skip any leading diacritics
+  while (originalStart < text.length && /[\u064B-\u065F]/.test(text[originalStart])) {
+    originalStart++;
+  }
+  
+  let originalEnd = originalStart;
+  let queryMatchedLen = 0;
+  while (queryMatchedLen < normalizedQuery.length && originalEnd < text.length) {
+    const char = text[originalEnd];
+    if (/[\u064B-\u065F]/.test(char)) {
+      originalEnd++;
+    } else {
+      originalEnd++;
+      queryMatchedLen++;
+    }
+  }
+  
+  const before = text.substring(0, originalStart);
+  const match = text.substring(originalStart, originalEnd);
+  const after = text.substring(originalEnd);
+  
+  return (
+    <>
+      {before}
+      <span className="bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-black border border-amber-500/20">{match}</span>
+      {after}
+    </>
+  );
+}
 
 interface HadithGrade {
   grade: string;
@@ -70,6 +138,8 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [loading, setLoading] = useState(!initialSections);
   const [loadingHadiths, setLoadingHadiths] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const voiceRecognitionRef = useRef<any>(null);
   
   const [fontSize, setFontSize] = useState(40); 
   const [fontFamily, setFontFamily] = useState('font-headline');
@@ -247,12 +317,24 @@ export default function HadithPageClient({ params }: { params: any }) {
 
   const filteredSections = useMemo(() => {
     if (!sections) return [];
-    const entries = Object.entries(sections).filter(([id, name]) => 
-      name.toLowerCase().includes(searchQuery.toLowerCase()) || id.includes(searchQuery)
-    );
+    const normalizedQuery = normalizeArabic(searchQuery);
+    const entries = Object.entries(sections).filter(([id, name]) => {
+      const normalizedName = normalizeArabic(name);
+      return normalizedName.includes(normalizedQuery) || id.includes(normalizedQuery);
+    });
     if (entries.length > 0 && (entries[0][1] === "" || entries[0][1] === "introduction")) return entries.slice(1);
     return entries;
   }, [sections, searchQuery]);
+
+    const filteredHadiths = useMemo(() => {
+    if (!searchQuery || selectedSection === null) return hadiths;
+    const query = normalizeArabic(searchQuery.trim());
+    return hadiths.filter((h: any) => {
+      const text = normalizeArabic(h.text || h.arabic || "");
+      const number = String(h.hadithnumber || h.number || "");
+      return text.includes(query) || number.includes(query);
+    });
+  }, [hadiths, searchQuery, selectedSection]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20 font-sans">
@@ -323,7 +405,7 @@ export default function HadithPageClient({ params }: { params: any }) {
               </AnimatePresence>
               <div className="flex flex-col gap-8">
                 {loadingHadiths ? ( Array(3).fill(0).map((_, i) => <div key={i} className="h-64 rounded-[3rem] bg-white/5 animate-pulse" />) ) : (
-                  hadiths.map((h) => (
+                  filteredHadiths.map((h) => (
                     <motion.div key={h.hadithnumber} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-10 md:p-16 rounded-[4rem] bg-zinc-950 border border-white/10 relative overflow-hidden">
                       <div className="absolute top-10 left-10 opacity-5"><Quote className="w-48 h-48" /></div>
                       <div className="relative z-10 space-y-10">
@@ -331,12 +413,22 @@ export default function HadithPageClient({ params }: { params: any }) {
                            <div className="flex gap-4 items-center">
                               <span className={cn("px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-[0.2em]", config.color)}>حديث رقم: {h.hadithnumber}</span>
                            </div>
-                           <div className="flex gap-2">
+                            <div className="flex gap-2">
+                              <ImanCardGenerator 
+                                title={`حديث شريف - ${config.name}`}
+                                content={h.text}
+                                source={`${config.name} - حديث رقم: ${h.hadithnumber}`}
+                                trigger={
+                                  <Button variant="ghost" size="icon" className="rounded-xl border border-white/5 bg-white/5 text-white/40 hover:text-white" title="تحميل كبطاقة دعوية">
+                                    <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+                                  </Button>
+                                }
+                              />
                              <Button onClick={() => handleShare(h)} variant="ghost" size="icon" className="rounded-xl border border-white/5 bg-white/5"><Share2 className="w-4 h-4 opacity-40 hover:opacity-100" /></Button>
                              <Button onClick={() => toggleFavorite(h.hadithnumber)} variant="ghost" size="icon" className={cn("rounded-xl border border-white/5 bg-white/5", favourites.has(h.hadithnumber) ? "bg-rose-500/10 border-rose-500/20" : "")}><Heart className={cn("w-4 h-4", favourites.has(h.hadithnumber) ? "fill-current text-rose-400" : "opacity-40")} /></Button>
                            </div>
                         </div>
-                        <p style={{ fontSize: `${fontSize}px` }} className={cn("font-black leading-[1.8] text-white text-right", fontFamily)}>{h.text}</p>
+                        <p style={{ fontSize: `${fontSize}px` }} className={cn("font-black leading-[1.8] text-white text-right", fontFamily)}>{highlightMatch(h.text, searchQuery)}</p>
                       </div>
                     </motion.div>
                   ))

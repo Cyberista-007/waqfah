@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase';
 import type { Series, Lecture, Program, ListenHistoryItem } from '@/lib/types';
 import { getPlaceholderImage } from '@/lib/images';
-import { Play, Search, Share2, Clock, ListVideo } from 'lucide-react';
+import { Play, Search, Share2, Clock, ListVideo, Rss } from 'lucide-react';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,20 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
         router.push(`/lectures/${firstLecture.slug}`);
     } else {
         toast({ variant: 'destructive', title: 'لا توجد محاضرات في هذه السلسلة.' });
+    }
+  };
+
+  const handleSubscribePodcast = async () => {
+    const feedUrl = `${window.location.origin}/api/podcasts/${series.slug}`;
+    try {
+        await navigator.clipboard.writeText(feedUrl);
+        toast({ 
+            title: 'تم نسخ رابط البودكاست!', 
+            description: 'يمكنك الآن لصق هذا الرابط في تطبيق البودكاست المفضل لديك (مثل Apple Podcasts) للاشتراك ومتابعة السلسلة.'
+        });
+    } catch (error) {
+        console.error('Error copying RSS url:', error);
+        toast({ variant: 'destructive', title: 'فشل نسخ الرابط', description: feedUrl });
     }
   };
 
@@ -214,8 +228,18 @@ export function SeriesClientPage({ series, lecturesInSeries, seriesCreator }: Se
                             </span>
                             <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                          </Button>
-                         <Button onClick={handleShare} size="lg" variant="outline" className="h-16 w-16 rounded-2xl border-white/10 bg-white/5 hover:bg-white/20 text-primary transition-all hover:scale-110 active:scale-90">
+                         <Button onClick={handleShare} size="lg" variant="outline" className="h-16 w-16 rounded-2xl border-white/10 bg-white/5 hover:bg-white/20 text-primary transition-all hover:scale-110 active:scale-90" title="مشاركة السلسلة">
                             <Share2 className="w-6 h-6" />
+                         </Button>
+                         <Button 
+                             onClick={handleSubscribePodcast} 
+                             size="lg" 
+                             variant="outline" 
+                             className="h-16 px-6 rounded-2xl border-white/10 bg-white/5 hover:bg-white/20 text-primary transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-3"
+                             title="الاشتراك كبودكاست RSS"
+                         >
+                            <Rss className="w-5 h-5 text-orange-500" />
+                            <span className="font-bold text-sm hidden sm:inline">بودكاست RSS</span>
                          </Button>
                     </div>
                 </div>
