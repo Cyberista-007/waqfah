@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import LecturePageClient from './LecturePageClient';
+import { CinematicAppLoader } from '@/components/skeletons';
 
 export const dynamic = 'force-static';
 
@@ -7,5 +9,9 @@ export function generateStaticParams() {
 }
 
 export default function Page() {
-  return <LecturePageClient />;
+  return (
+    <Suspense fallback={<CinematicAppLoader />}>
+      <LecturePageClient />
+    </Suspense>
+  );
 }

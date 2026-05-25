@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import PlaylistPageClient from './PlaylistPageClient';
+import { CinematicAppLoader } from '@/components/skeletons';
 
 export const dynamic = 'force-static';
 
@@ -7,5 +9,9 @@ export function generateStaticParams() {
 }
 
 export default function Page() {
-  return <PlaylistPageClient />;
+  return (
+    <Suspense fallback={<CinematicAppLoader />}>
+      <PlaylistPageClient />
+    </Suspense>
+  );
 }
