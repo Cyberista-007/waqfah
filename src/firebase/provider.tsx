@@ -93,18 +93,18 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
                         }
                         setAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
                     } catch (e: any) {
-                        alert("FirebaseProvider onAuthStateChanged inner error: " + e.message);
+                        console.error("FirebaseProvider onAuthStateChanged inner error:", e.message);
                         setAuthState({ user: firebaseUser, isUserLoading: false, userError: e });
                     }
                 },
                 (error) => {
-                    alert("FirebaseProvider: onAuthStateChanged callback error: " + error.message);
+                    console.error("FirebaseProvider: onAuthStateChanged callback error:", error.message);
                     setAuthState({ user: null, isUserLoading: false, userError: error });
                 }
             );
             return () => unsubscribe();
         } catch (e: any) {
-            alert("FirebaseProvider outer error: " + e.message + "\n" + e.stack);
+            console.error("FirebaseProvider outer error:", e.message, e.stack);
         }
     }, []);
 

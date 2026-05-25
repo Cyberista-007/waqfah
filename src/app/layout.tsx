@@ -78,10 +78,10 @@ export default async function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           window.onerror = function(message, source, lineno, colno, error) {
-            alert("GLOBAL CRASH: " + message + "\\nSource: " + source + "\\nLine: " + lineno + ":" + colno + "\\nStack: " + (error ? error.stack : 'No stack'));
+            console.error("GLOBAL ERROR:", message, source, lineno, colno, error);
           };
           window.onunhandledrejection = function(event) {
-            alert("UNHANDLED REJECTION: " + (event.reason ? (event.reason.message || event.reason) : 'No reason') + "\\nStack: " + (event.reason ? event.reason.stack : 'No stack'));
+            console.error("UNHANDLED REJECTION:", event.reason);
           };
         `}} />
       </head>
