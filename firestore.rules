@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -53,11 +52,9 @@ service cloud.firestore {
     match /series/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // Palestine solidarity pledges — written ONLY by server-side Admin SDK.
-    // Client rules are restrictive because the API route uses firebase-admin
-    // which bypasses these rules. This is intentional security-in-depth.
     match /palestine_pledges/{fingerprintId} {
-      allow read: if false;   // Fingerprints are never exposed to clients
-      allow write: if false;  // Only server-side Admin SDK can write
+      allow read: if false;   
+      allow write: if false;  
     }
 
     match /programs/{programId} {
