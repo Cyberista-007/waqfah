@@ -18,14 +18,11 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      // In a production environment, we would throw the error to be caught
-      // by a global error boundary, which would show a generic "Something went wrong" page.
-      if (process.env.NODE_ENV === 'production') {
-        // This will be caught by Next.js's error boundary mechanism.
-        throw error;
-      }
+      console.error("Firestore Permission Error emitted:", error);
       // In development, we'll display a more informative inline error.
-      setError(error);
+      if (process.env.NODE_ENV !== 'production') {
+        setError(error);
+      }
     };
 
     errorEmitter.on('permission-error', handleError);
