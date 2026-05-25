@@ -5,7 +5,7 @@ const exportStatic = process.env.EXPORT_STATIC === 'true';
 const nextConfig = {
   output: exportStatic ? 'export' : undefined,
   trailingSlash: true,
-  assetPrefix: isProd ? './' : undefined,
+  assetPrefix: exportStatic ? './' : undefined,
   images: {
     remotePatterns: [
       {
