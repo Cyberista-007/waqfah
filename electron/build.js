@@ -16,8 +16,25 @@ function findRouteFiles(dir, fileList = []) {
     return fileList;
 }
 
+function findDynamicPageFiles(dir, fileList = []) {
+    if (!fs.existsSync(dir)) return fileList;
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+            findDynamicPageFiles(filePath, fileList);
+        } else if (file === 'page.tsx' || file === 'page.js') {
+            if (filePath.includes('[') && filePath.includes(']')) {
+                fileList.push(filePath);
+            }
+        }
+    }
+    return fileList;
+}
+
 const root = process.cwd();
 const apiDir = path.join(root, 'src/app/api');
+const appDir = path.join(root, 'src/app');
 const savedContents = new Map();
 
 try {
@@ -35,6 +52,28 @@ try {
         }
     }
     
+    if (fs.existsSync(appDir)) {
+        console.log('[Electron Build] Locating dynamic page routes...');
+        const pageFiles = findDynamicPageFiles(appDir);
+        
+        console.log(`[Electron Build] Temporarily forcing ${pageFiles.length} dynamic pages to static export...`);
+        for (const file of pageFiles) {
+            const content = fs.readFileSync(file, 'utf8');
+            savedContents.set(file, content);
+            
+            let modified = content;
+            if (content.includes("force-dynamic")) {
+                modified = content.replace(
+                    /export\s+const\s+dynamic\s*=\s*['\"]force-dynamic['\"];?/g,
+                    `export const dynamic = 'force-static';\nexport function generateStaticParams() { return [{ slug: 'default', id: 'default', bookId: 'default' }]; }`
+                );
+            } else {
+                modified = `export const dynamic = 'force-static';\nexport function generateStaticParams() { return [{ slug: 'default', id: 'default', bookId: 'default' }]; }\n` + content;
+            }
+            fs.writeFileSync(file, modified, 'utf8');
+        }
+    }
+    
     console.log('[Electron Build] Running Next.js build...');
     execSync('node --max-old-space-size=8192 node_modules/next/dist/bin/next build', { stdio: 'inherit', env: { ...process.env, EXPORT_STATIC: 'true' } });
     console.log('[Electron Build] Next.js build completed successfully.');
@@ -43,10 +82,10 @@ try {
     process.exit(1);
 } finally {
     if (savedContents.size > 0) {
-        console.log('[Electron Build] Restoring original API route contents...');
+        console.log(`[Electron Build] Restoring original route contents for ${savedContents.size} files...`);
         for (const [file, content] of savedContents.entries()) {
             fs.writeFileSync(file, content, 'utf8');
         }
-        console.log('[Electron Build] Original API routes restored.');
+        console.log('[Electron Build] Original routes restored.');
     }
 }
