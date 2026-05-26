@@ -14,7 +14,6 @@ function HomePageContent() {
   // For simplicity in client-side fallback, we fetch some basics
   // In a real app, we'd more precisely match the server component's complex logic
   const { data: homepageConfig, isLoading: l4 } = useDoc<HomepageDetailedConfig>('settings/homepage');
-  const { data: publicPlaylists, isLoading: l5 } = useCollection<Playlist>('playlists', { where: ['isPublic', '==', true], limit: 3 });
   
   const [forceFinish, setForceFinish] = React.useState(false);
   
@@ -30,7 +29,7 @@ function HomePageContent() {
         latestSeries={latestSeries || []}
         upcomingLesson={null} 
         latestQAPair={null} 
-        publicPlaylists={publicPlaylists || []}
+        publicPlaylists={[]}
         homepageConfig={homepageConfig || null}
         stripLectures={[]} 
       />
