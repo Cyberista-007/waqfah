@@ -47,7 +47,10 @@ try {
             const content = fs.readFileSync(file, 'utf8');
             savedContents.set(file, content);
             
-            const placeholder = `// Static placeholder for Electron build\nexport const dynamic = 'force-static';\nexport async function GET() { return new Response('static'); }\nexport async function POST() { return new Response('static'); }\n`;
+            let placeholder = `// Static placeholder for Electron build\nexport const dynamic = 'force-static';\nexport async function GET() { return new Response('static'); }\nexport async function POST() { return new Response('static'); }\n`;
+            if (file.includes('[') && file.includes(']')) {
+                placeholder += `export function generateStaticParams() { return [{ seriesSlug: 'default', slug: 'default', id: 'default' }]; }\n`;
+            }
             fs.writeFileSync(file, placeholder, 'utf8');
         }
     }
@@ -79,7 +82,7 @@ try {
     console.log('[Electron Build] Next.js build completed successfully.');
 } catch (error) {
     console.error('[Electron Build] Next.js build failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
 } finally {
     if (savedContents.size > 0) {
         console.log(`[Electron Build] Restoring original route contents for ${savedContents.size} files...`);
