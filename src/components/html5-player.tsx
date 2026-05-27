@@ -240,36 +240,6 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
           )}
         </div>
 
-
-
-        {/* Modern Integrated Top Buttons (Download & PiP) */}
-        <div className="absolute top-4 left-4 z-50 pointer-events-auto opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 flex gap-2">
-          <button
-            onClick={handlePiP}
-            className="flex items-center justify-center p-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-primary hover:scale-105 transition-all shadow-2xl cursor-pointer pointer-events-auto"
-            title="تفعيل المشغل العائم"
-          >
-            <PictureInPicture className="h-4 w-4" />
-          </button>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); fetchFormats(); }}
-            disabled={isFetchingFormats}
-            className="flex items-center gap-2 px-5 py-2.5 bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-primary/90 hover:scale-105 transition-all shadow-2xl font-bold text-xs"
-          >
-            {isFetchingFormats ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                جاري الطلب...
-              </span>
-            ) : (
-              <>
-                <Download className="h-4 w-4" /> تنزيل الفيديو
-              </>
-            )}
-          </button>
-        </div>
-
         <DownloaderModal
           isOpen={isDownloaderOpen}
           onOpenChange={setIsDownloaderOpen}

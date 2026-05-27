@@ -19,7 +19,7 @@ import { DownloaderModal } from './downloader-modal';
 import { getVideoIdFromUrl, formatDuration } from '@/lib/utils';
 import { Html5Player } from './html5-player';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ListVideo, SkipForward, SkipBack, FileText } from 'lucide-react';
+import { ListVideo, SkipForward, SkipBack, FileText, PictureInPicture } from 'lucide-react';
 import { LectureChapters } from '@/components/lecture-chapters';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -580,6 +580,15 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                             >
                                 <Layers className="w-6 h-6 md:me-3 transition-transform group-hover:rotate-12" />
                                 <span className="hidden md:inline">سينما</span>
+                            </Button>
+
+                            <Button 
+                                onClick={handleWatchVideo}
+                                className="h-16 w-16 md:w-auto md:px-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black transition-all shadow-xl group"
+                                title="تفعيل المشغل العائم"
+                            >
+                                <PictureInPicture className="w-6 h-6 md:me-3 transition-transform group-hover:scale-110" />
+                                <span className="hidden md:inline">مشغل عائم</span>
                             </Button>
 
                             {/* New Sidebar Toggle in Action Bar */}
