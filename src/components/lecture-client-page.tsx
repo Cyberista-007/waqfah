@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, notFound, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Download, Facebook, FileDown, Twitter, Youtube, Play, Notebook, Share2, Copy, ChevronsUpDown, X, Loader2, MessageCircle, Sparkles, Zap, Star, ShieldCheck, Headphones, Eye, Info, Layers, Shuffle, ListMusic, Repeat, Repeat1, Brain, Check, AlertCircle, Award, Wifi, WifiOff } from 'lucide-react';
