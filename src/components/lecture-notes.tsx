@@ -56,6 +56,39 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
   const [clipStartTime, setClipStartTime] = useState<number | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  const [quickNoteText, setQuickNoteText] = useState("");
+  const [currentTimeFormatted, setCurrentTimeFormatted] = useState("00:00");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const time = getCurrentTime();
+      if (time !== undefined) {
+        setCurrentTimeFormatted(formatDuration(time));
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAddQuickNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickNoteText.trim()) return;
+
+    const time = getCurrentTime();
+    const timeStr = time !== undefined ? formatDuration(time) : "00:00";
+    
+    const newLine = `${content ? '\n' : ''}[${timeStr}] ${quickNoteText.trim()}`;
+    const newContent = content + newLine;
+    
+    setContent(newContent);
+    setQuickNoteText("");
+    saveNote(newContent);
+    
+    toast({
+      title: "تمت إضافة الملاحظة المرتبطة زمنياً",
+      description: `تم ربط الملاحظة باللحظة ${timeStr} بنجاح.`,
+    });
+  };
+
   useEffect(() => {
     if (note) {
       setContent(note.content);
@@ -151,7 +184,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
         return currentTime;
     };
 
-  const handleSetStartTime = () => {
+    const handleSetStartTime = () => {
         const currentTime = getCurrentTime();
         if (currentTime === undefined) {
             toast({
@@ -251,7 +284,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
                         e.stopPropagation(); // Prevent edit mode from triggering
                         handleTimestampClick(startTimeInSeconds, endTimeInSeconds);
                     }}
-                    className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1"
+                    className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1 text-sm inline-flex items-center"
                 >
                     {fullMatch}
                 </button>
@@ -279,27 +312,49 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
 
   return (
     <div className="space-y-4">
-       <div className="flex items-center justify-end gap-2">
-         {isEditing && (
-            <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={clipStartTime === null ? handleSetStartTime : handleInsertClip} disabled={isNoteLoading}>
-                    {clipStartTime === null ? (
-                        <><PlayCircle className="w-4 h-4 me-2"/> تحديد بداية</>
-                    ) : (
-                        <><Stamp className="w-4 h-4 me-2"/> تحديد نهاية وإدراج</>
-                    )}
-                </Button>
-                {clipStartTime !== null && (
-                    <Button variant="ghost" size="sm" onClick={() => setClipStartTime(null)}>
-                        إلغاء ({formatDuration(clipStartTime)})
+       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <form onSubmit={handleAddQuickNote} className="flex-1 flex gap-2 bg-white/5 border border-white/10 rounded-2xl p-1.5 backdrop-blur-md">
+             <input
+                 type="text"
+                 value={quickNoteText}
+                 onChange={(e) => setQuickNoteText(e.target.value)}
+                 placeholder="اكتب ملاحظة سريعة في هذه اللحظة..."
+                 className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-white/35 px-2 focus:ring-0 focus:border-none focus:outline-none"
+                 dir="rtl"
+             />
+             <Button 
+                 type="submit" 
+                 disabled={!quickNoteText.trim() || isNoteLoading}
+                 size="sm"
+                 className="bg-primary hover:bg-primary/95 text-white font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1.5"
+             >
+                 <Stamp className="w-3.5 h-3.5" />
+                 <span>إضافة عند {currentTimeFormatted}</span>
+             </Button>
+          </form>
+
+          <div className="flex items-center justify-end gap-2 shrink-0">
+             {isEditing && (
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={clipStartTime === null ? handleSetStartTime : handleInsertClip} disabled={isNoteLoading}>
+                        {clipStartTime === null ? (
+                            <><PlayCircle className="w-4 h-4 me-1.5"/> تحديد بداية</>
+                        ) : (
+                            <><Stamp className="w-4 h-4 me-1.5"/> تحديد نهاية وإدراج</>
+                        )}
                     </Button>
-                )}
-            </div>
-         )}
-         <Button variant="outline" onClick={isEditing ? handleSaveClick : handleEditClick}>
-             {isEditing ? <><Eye className="w-4 h-4 me-2"/> عرض الملاحظات</> : <><Edit className="w-4 h-4 me-2"/> تعديل الملاحظات</>}
-         </Button>
-      </div>
+                    {clipStartTime !== null && (
+                        <Button variant="ghost" size="sm" onClick={() => setClipStartTime(null)}>
+                            إلغاء ({formatDuration(clipStartTime)})
+                        </Button>
+                    )}
+                </div>
+             )}
+             <Button variant="outline" size="sm" onClick={isEditing ? handleSaveClick : handleEditClick}>
+                 {isEditing ? <><Eye className="w-4 h-4 me-1.5"/> عرض الملاحظات</> : <><Edit className="w-4 h-4 me-1.5"/> تعديل الملاحظات</>}
+             </Button>
+          </div>
+       </div>
 
        {isEditing ? (
             <Textarea
