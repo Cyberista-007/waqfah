@@ -375,12 +375,12 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
          {/* 🎥 Right Area: Main Video Player & Info */}
           <div className={cn(
              "order-1 flex flex-col gap-8 transition-all duration-700 ease-in-out",
-             isSidebarOpen ? "lg:col-span-8" : "lg:col-span-12",
+             isSidebarOpen ? "lg:col-span-9" : "lg:col-span-12",
              isTheaterMode && "lg:col-span-12"
           )}>
             <div className={cn(
-                "relative bg-[#050505] rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.6)] group flex items-center justify-center min-h-[300px] lg:h-[calc(100vh-350px)] lg:max-h-[750px] transition-all duration-700 w-full",
-                isTheaterMode && "rounded-none h-screen max-h-none"
+                "relative bg-[#050505] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.6)] group flex items-center justify-center w-full aspect-video transition-all duration-700",
+                isTheaterMode && "rounded-none h-screen aspect-auto"
             )}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
                 
@@ -490,7 +490,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
             exit={{ opacity: 0, x: 50, width: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className={cn(
-                "lg:col-span-4 order-2 flex flex-col bg-[#0f0f0f] rounded-3xl border border-white/5 overflow-hidden shadow-2xl h-[450px] lg:h-[calc(100vh-250px)] lg:max-h-[700px] transition-all duration-500",
+                "lg:col-span-3 order-2 flex flex-col bg-[#0f0f0f] rounded-3xl border border-white/5 overflow-hidden shadow-2xl h-[450px] lg:h-full transition-all duration-500",
                 isTheaterMode && "hidden lg:flex lg:col-span-3 lg:rounded-none lg:border-l lg:h-screen lg:max-h-none"
             )}
           >

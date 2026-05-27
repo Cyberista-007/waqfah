@@ -121,8 +121,8 @@ export function ProgramClientPage({
             subtitle="ابدأ المشاهدة مباشرةً"
             index={0}
           />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-            <div className="lg:col-span-3">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div className="lg:col-span-9">
               <Html5Player
                 videoId={featuredVideoId}
                 title={featuredLecture.title}
@@ -130,7 +130,7 @@ export function ProgramClientPage({
               />
             </div>
 
-            <div className="lg:col-span-2 flex flex-col bg-card/40 backdrop-blur-2xl rounded-3xl border border-border/50 overflow-hidden shadow-inner h-[350px] lg:h-[calc(100vh-250px)] lg:max-h-[550px]">
+            <div className="lg:col-span-3 flex flex-col bg-card/40 backdrop-blur-2xl rounded-3xl border border-border/50 overflow-hidden shadow-inner h-[350px] lg:h-full">
               <div className="p-4 border-b border-border/20 bg-background/50 backdrop-blur-md z-10">
                 <p className="text-xs font-black uppercase tracking-widest text-primary px-1">
                   قائمة التشغيل ({regularLectures.slice(0, 8).length} محاضرة)
