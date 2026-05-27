@@ -4,7 +4,7 @@ import type { Program, Lecture, Series } from '@/lib/types';
 import { LectureCard } from '@/components/lecture-card';
 import { SeriesCard } from '@/components/series-card';
 import { ArrowLeft, Play, Sparkles, Clock, ChevronLeft, Loader2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ShortsCarousel } from '@/components/ShortsCarousel';
@@ -63,6 +63,29 @@ export function ProgramClientPage({
     lectures: Lecture[], 
     series: Series[] 
 }) {
+  const [noteText, setNoteText] = useState('');
+  const [selectedQuality, setSelectedQuality] = useState<'1080p' | '720p' | '480p' | '360p' | 'audio'>('720p');
+
+  useEffect(() => {
+    const savedNote = localStorage.getItem(`waqfah_program_note_${program.id}`);
+    if (savedNote) {
+      setNoteText(savedNote);
+    }
+  }, [program.id]);
+
+  const saveNote = (text: string) => {
+    setNoteText(text);
+    localStorage.setItem(`waqfah_program_note_${program.id}`, text);
+  };
+
+  const dataEstimates = {
+    '1080p': { min: 25, hour: 1500, label: 'FHD (1080p)' },
+    '720p': { min: 14, hour: 840, label: 'HD (720p)' },
+    '480p': { min: 7.5, hour: 450, label: 'SD (480p)' },
+    '360p': { min: 4.5, hour: 270, label: 'منخفضة (360p)' },
+    'audio': { min: 1.2, hour: 72, label: 'صوت فقط' }
+  };
+
   const { shorts, regularLectures } = useMemo(() => {
     const shortsArr: Lecture[] = [];
     const regularArr: Lecture[] = [];
@@ -189,6 +212,129 @@ export function ProgramClientPage({
                   </Link>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Channel Utility Widgets (Interactive Note and Data Usage Estimator) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            {/* Widget 1: Notebook */}
+            <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-5 text-right space-y-4 shadow-xl">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="p-1.5 bg-primary/10 rounded-lg text-primary">📝</span>
+                <span>دفتر التدوين وتلخيص الفوائد</span>
+              </h4>
+              <p className="text-[11px] text-zinc-400">
+                دوّن ملاحظاتك وفوائدك أثناء مشاهدة محاضرات برنامج &quot;{program.name}&quot;، يتم حفظها تلقائياً.
+              </p>
+              <textarea
+                value={noteText}
+                onChange={(e) => saveNote(e.target.value)}
+                placeholder="اكتب الفوائد واللآلئ المستخلصة هنا..."
+                className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary placeholder-zinc-500 resize-none"
+              />
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(noteText);
+                    alert("تم نسخ ملاحظاتك إلى الحافظة!");
+                  }}
+                  disabled={!noteText}
+                  className="text-[10px] bg-white/10 hover:bg-white/15 text-white px-2.5 py-1.5 rounded-lg font-bold disabled:opacity-50"
+                >
+                  نسخ الملاحظات 📋
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm("هل تريد مسح جميع الملاحظات المدونة؟")) {
+                      saveNote('');
+                    }
+                  }}
+                  disabled={!noteText}
+                  className="text-[10px] text-red-400 hover:text-red-300 font-bold disabled:opacity-50"
+                >
+                  مسح الكل 🗑️
+                </button>
+              </div>
+            </div>
+
+            {/* Widget 2: Data Usage Estimator */}
+            <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-5 text-right space-y-4 shadow-xl">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">📊</span>
+                <span>محاكي استهلاك باقة الإنترنت</span>
+              </h4>
+              <p className="text-[11px] text-zinc-400">
+                اختر جودة البث لتقدير حجم استهلاك باقة البيانات أثناء متابعة المحاضرة.
+              </p>
+              <div className="grid grid-cols-5 gap-1">
+                {(Object.keys(dataEstimates) as Array<keyof typeof dataEstimates>).map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setSelectedQuality(q)}
+                    className={cn(
+                      "py-1.5 rounded-lg border text-[9px] font-black transition-all",
+                      selectedQuality === q
+                        ? "bg-primary/20 border-primary text-primary"
+                        : "bg-white/5 border-transparent text-zinc-400 hover:bg-white/10"
+                    )}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+              <div className="bg-white/5 border border-white/5 p-3 rounded-xl space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400">الاستهلاك التقريبي بالدقيقة:</span>
+                  <span className="font-bold text-white">{dataEstimates[selectedQuality].min} ميجابايت</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400">الاستهلاك التقريبي بالساعة:</span>
+                  <span className="font-bold text-emerald-400">{dataEstimates[selectedQuality].hour} ميجابايت</span>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-500 leading-relaxed">
+                * يرجى خفض جودة البث عند استخدام شبكات الهاتف المحمول لتجنب استنفاد الباقة بسرعة.
+              </div>
+            </div>
+
+            {/* Widget 3: Release Schedule */}
+            <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-5 text-right space-y-4 shadow-xl">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">📅</span>
+                <span>جدول البث وتحديثات القناة</span>
+              </h4>
+              <p className="text-[11px] text-zinc-400">
+                مواعيد صدور المحاضرات والدروس الجديدة أسبوعياً لهذا البرنامج.
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs bg-white/5 p-2.5 rounded-xl border border-white/5">
+                  <span className="text-zinc-400">أيام البث الأساسية:</span>
+                  <span className="font-bold text-primary">الاثنين والخميس</span>
+                </div>
+                <div className="flex items-center justify-between text-xs bg-white/5 p-2.5 rounded-xl border border-white/5">
+                  <span className="text-zinc-400">توقيت النشر:</span>
+                  <span className="font-bold text-white">بعد صلاة المغرب</span>
+                </div>
+              </div>
+              <div className="flex justify-center gap-1.5 mt-2">
+                {['ج', 'خ', 'ع', 'ث', 'ن', 'أ', 'س'].map((day, idx) => {
+                  const isReleaseDay = day === 'ن' || day === 'خ';
+                  return (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "w-7 h-7 rounded-full flex items-center justify-center text-xs font-black",
+                        isReleaseDay
+                          ? "bg-primary/20 text-primary border border-primary/40"
+                          : "bg-white/5 text-zinc-600"
+                      )}
+                      title={isReleaseDay ? "يوم بث محاضرة جديدة" : ""}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </motion.section>

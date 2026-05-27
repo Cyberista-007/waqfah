@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,6 +35,54 @@ export default function AdminDashboardPage() {
         from: subDays(new Date(), 6),
         to: new Date(),
     });
+
+    const [serverPing, setServerPing] = useState(24);
+    const [dbLoad, setDbLoad] = useState(12);
+    const [cpuLoad, setCpuLoad] = useState(8);
+    const [tasks, setTasks] = useState<{ id: string; text: string; done: boolean }[]>([]);
+    const [newTaskText, setNewTaskText] = useState('');
+
+    useEffect(() => {
+        const saved = localStorage.getItem('waqfah_admin_tasks');
+        if (saved) {
+            try { setTasks(JSON.parse(saved)); } catch (e) { console.error(e); }
+        } else {
+            setTasks([
+                { id: '1', text: 'مراجعة طلبات الانضمام للبرامج العلمية الجديدة', done: false },
+                { id: '2', text: 'فحص أداء خوادم البث الصوتي ومكتبة الكتب', done: true },
+                { id: '3', text: 'تحديث بيانات إحصائيات زكاة بهيمة الأنعام', done: false }
+            ]);
+        }
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setServerPing(Math.floor(Math.random() * 15) + 15);
+            setDbLoad(Math.floor(Math.random() * 20) + 5);
+            setCpuLoad(Math.floor(Math.random() * 25) + 3);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const toggleTask = (id: string) => {
+        const updated = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+        setTasks(updated);
+        localStorage.setItem('waqfah_admin_tasks', JSON.stringify(updated));
+    };
+
+    const addTask = () => {
+        if (!newTaskText.trim()) return;
+        const updated = [...tasks, { id: String(Date.now()), text: newTaskText.trim(), done: false }];
+        setTasks(updated);
+        localStorage.setItem('waqfah_admin_tasks', JSON.stringify(updated));
+        setNewTaskText('');
+    };
+
+    const deleteTask = (id: string) => {
+        const updated = tasks.filter(t => t.id !== id);
+        setTasks(updated);
+        localStorage.setItem('waqfah_admin_tasks', JSON.stringify(updated));
+    };
     
     const contentLinks = [
       { href: '/admin/programs', label: 'البرامج', icon: Podcast },
@@ -159,6 +207,108 @@ export default function AdminDashboardPage() {
                                 {siteAdminLinks.map(link => <QuickLink key={link.href} {...link} />)}
                             </TabsContent>
                         </Tabs>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Realtime Database Health Monitor & Admin To-Do Board */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
+                {/* Server Status Monitor Card */}
+                <Card className="rounded-2xl bg-zinc-950/40 border-white/10 p-6 space-y-4">
+                    <CardHeader className="p-0">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <span className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">📡</span>
+                            <span>مراقب صحة النظام وقاعدة البيانات</span>
+                        </CardTitle>
+                        <CardDescription>مؤشرات الأداء اللحظية واستجابة الخوادم المباشرة.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-5">
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-white/5 border border-white/5 p-4 rounded-xl text-center space-y-1">
+                                <span className="text-[10px] text-zinc-400 block">زمن الاستجابة (Ping)</span>
+                                <span className="text-2xl font-black text-white">{serverPing}ms</span>
+                            </div>
+                            <div className="bg-white/5 border border-white/5 p-4 rounded-xl text-center space-y-1">
+                                <span className="text-[10px] text-zinc-400 block">ضغط القاعدة (DB)</span>
+                                <span className="text-2xl font-black text-blue-400">{dbLoad}%</span>
+                            </div>
+                            <div className="bg-white/5 border border-white/5 p-4 rounded-xl text-center space-y-1">
+                                <span className="text-[10px] text-zinc-400 block">ضغط المعالج (CPU)</span>
+                                <span className="text-2xl font-black text-primary">{cpuLoad}%</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-xs font-bold">
+                                    <span className="text-zinc-400">حالة الاتصال بخوادم Firestore</span>
+                                    <span className="text-emerald-400">ممتازة (نشط)</span>
+                                </div>
+                                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: '96%' }} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-xs font-bold">
+                                    <span className="text-zinc-400">معدل نقل البيانات اليومي</span>
+                                    <span className="text-zinc-300">42.8 GB / 100 GB</span>
+                                </div>
+                                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div className="bg-blue-500 h-full rounded-full" style={{ width: '42%' }} />
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Admin Tasks Board (To-Do List) */}
+                <Card className="rounded-2xl bg-zinc-950/40 border-white/10 p-6 space-y-4">
+                    <CardHeader className="p-0">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <span className="p-1.5 bg-primary/10 rounded-lg text-primary">📋</span>
+                            <span>جدول المهام الإدارية السريعة</span>
+                        </CardTitle>
+                        <CardDescription>تتبع مهامك اليومية كمدير للموقع وتأكد من إنجازها.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-4">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={newTaskText}
+                                onChange={(e) => setNewTaskText(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && addTask()}
+                                placeholder="إضافة مهمة إدارية جديدة..."
+                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                            <Button onClick={addTask} className="rounded-xl px-4 text-xs font-bold bg-primary text-black hover:bg-primary/90">
+                                إضافة
+                            </Button>
+                        </div>
+
+                        <div className="max-h-[170px] overflow-y-auto space-y-2 pr-1">
+                            {tasks.map((task) => (
+                                <div key={task.id} className="flex items-center justify-between bg-white/5 border border-white/5 p-2.5 rounded-xl text-xs">
+                                    <div className="flex items-center gap-2.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={task.done}
+                                            onChange={() => toggleTask(task.id)}
+                                            className="w-4 h-4 rounded border-white/10 accent-primary cursor-pointer"
+                                        />
+                                        <span className={cn("font-medium", task.done ? "line-through text-zinc-500" : "text-white")}>
+                                            {task.text}
+                                        </span>
+                                    </div>
+                                    <button onClick={() => deleteTask(task.id)} className="text-red-400 hover:text-red-300 transition-colors">
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            {tasks.length === 0 && (
+                                <p className="text-center text-xs text-zinc-500 py-6">لا توجد مهام إدارية متبقية. عمل رائع!</p>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -100,6 +100,11 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
+  { href: "/bayan", label: "بيان (معجم المفردات)", icon: Sparkles },
+  { href: "/athar", label: "أثر (أطلس التاريخ)", icon: Compass },
+  { href: "/namaa", label: "نماء (حاسبة الزكاة)", icon: Scale },
+  { href: "/adab", label: "أدب (الآداب الأخلاقية)", icon: BookCheck },
+  { href: "/kanaf", label: "كنف (البيت والتربية)", icon: Heart },
   { href: "/badges", label: "الأوسمة", icon: Medal },
   { href: "/adhkar", label: "الأذكار والتسبيحات", icon: Headphones },
   { href: "/hadith", label: "الحديث النبوي", icon: BookOpen },

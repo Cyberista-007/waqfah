@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, BrainCircuit, Atom, BookOpen, ScrollText, Search, ChevronDown, 
   Scale, Lightbulb, Sparkles, MessageSquareWarning, Fingerprint, 
   ShieldAlert, BookMarked, Share2, Library, Quote, CheckCircle2,
-  Users, Activity, ThumbsUp, ThumbsDown, MessageSquarePlus
+  Users, Activity, ThumbsUp, ThumbsDown, MessageSquarePlus, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,83 +14,71 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase';
 import type { Shubha } from '@/lib/types';
 
+// Map Arabic category names from JSON to internal IDs
+const CAT_MAP: Record<string, string> = {
+  'القرآن الكريم': 'quran',
+  'السنة النبوية': 'sunnah',
+  'العقيدة': 'aqeedah',
+  'العقيدة والفلسفة': 'aqeedah',
+  'الشريعة الإسلامية': 'sharia',
+  'النبوة والرسالة': 'prophethood',
+  'التاريخ الإسلامي': 'history',
+  'المرأة والأسرة': 'women',
+  'العلم والتجربة': 'science',
+  'العلم الحديث': 'science',
+  'الإلحاد': 'atheism',
+};
+
+function normalizeArabic(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/[\u064B-\u0652]/g, '') // Remove diacritics (harakat)
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function highlightText(text: string, highlight: string) {
+  if (!highlight || !highlight.trim()) return <span>{text}</span>;
+  
+  const escapedHighlight = highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const words = escapedHighlight.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return <span>{text}</span>;
+  
+  const regex = new RegExp(`(${words.join('|')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, i) => 
+        regex.test(part) ? (
+          <mark key={i} className="bg-indigo-500/30 text-indigo-200 px-0.5 rounded font-bold">{part}</mark>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+}
+
+
 const CATEGORIES = [
   { id: 'all', name: 'الكل', icon: Sparkles, color: 'text-white', bg: 'bg-white/5' },
   { id: 'quran', name: 'القرآن الكريم', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   { id: 'sunnah', name: 'السنة النبوية', icon: ScrollText, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-  { id: 'atheism', name: 'الإلحاد', icon: BrainCircuit, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+  { id: 'aqeedah', name: 'العقيدة', icon: ShieldCheck, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  { id: 'sharia', name: 'الشريعة', icon: Scale, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { id: 'prophethood', name: 'النبوة', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  { id: 'history', name: 'التاريخ', icon: Library, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+  { id: 'women', name: 'المرأة والأسرة', icon: Users, color: 'text-pink-400', bg: 'bg-pink-500/10' },
   { id: 'science', name: 'العلم الحديث', icon: Atom, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  { id: 'women', name: 'المرأة والأسرة', icon: Scale, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { id: 'atheism', name: 'الإلحاد', icon: BrainCircuit, color: 'text-red-400', bg: 'bg-red-500/10' },
 ];
 
-const SHUBUHAT_DB = [
-  {
-    id: 1,
-    categoryId: 'atheism',
-    question: 'إذا كان لكل شيء خالق، فمن خلق الله؟',
-    summary: 'الرد على أشهر شبهة إلحادية تتعلق بمبدأ السببية وتسلسل الخالقين.',
-    answer: 'هذا السؤال يناقض نفسه منطقياً، لأنه يفترض أن الخالق يخضع لقوانين المخلوقات (الزمان، المكان، السببية). الله سبحانه وتعالى هو الأول الذي ليس قبله شيء، وهو خالق قانون "السببية" نفسه، فلا يسري عليه.\n\nتماماً كما أن صانع الحاسوب لا يتكون من لوحة أم وأسلاك، بل هو من جنس آخر وقوانين أخرى. السؤال "من خلق الله" يفترض أن الله مخلوق، وهذا تناقض صريح لمفهوم الإله الحق الذي يجب أن يكون واجب الوجود ومستغنياً عن غيره، وإلا لتسلسل الخالقون إلى ما لا نهاية ولم يوجد الكون أصلاً.',
-    sources: ['كتاب كبرى اليقينيات الكونية - د. محمد سعيد رمضان البوطي', 'درء تعارض العقل والنقل - ابن تيمية', 'كتاب ميليشيا الإلحاد - عبدالله بن صالح العجيري'],
-    tags: ['السببية', 'المنطق', 'وجود الله'],
-    views: 1240,
-    isVerified: true
-  },
-  {
-    id: 2,
-    categoryId: 'science',
-    question: 'هل يتعارض التطور مع الإسلام وقصة آدم؟',
-    summary: 'تفصيل العلاقة بين النظريات العلمية المعاصرة والنصوص الشرعية.',
-    answer: 'الإسلام يحث على البحث العلمي والنظر في الكون. بالنسبة لنظرية التطور، الإسلام لا يمانع تطور الكائنات الحية وتكيفها مع بيئتها (التطور الميكروي).\n\nلكن نقطة الخلاف الوحيدة هي "الأصل المشترك للإنسان"، حيث يقرر الوحي بشكل قاطع أن آدم عليه السلام خلق خلقاً مستقلاً ومباشراً من طين. النظريات العلمية متغيرة بطبيعتها وتبنى على الاستقراء الناقص والافتراضات، بينما الوحي قطعي الثبوت. يمكن للمسلم أن يقبل بالآليات البيولوجية للتطور في بقية الكائنات مع استثناء الإنسان تكريماً له وامتثالاً للنص القاطع.',
-    sources: ['كتاب وهم الإلحاد العلمي - د. عمرو شريف', 'كتاب براهين وجود الله - د. سامي عامري'],
-    tags: ['التطور', 'البيولوجيا', 'خلق الإنسان'],
-    views: 856,
-    isVerified: true
-  },
-  {
-    id: 3,
-    categoryId: 'quran',
-    question: 'كيف نثبت أن القرآن لم يُحرف كما حُرفت الكتب السابقة؟',
-    summary: 'الأدلة التاريخية والمخطوطات التي تثبت حفظ القرآن الكريم وتواتره.',
-    answer: 'حفظ القرآن الكريم يتميز بآليتين متوازيتين لم تتوفر لأي كتاب آخر في تاريخ البشرية: الحفظ في الصدور (التواتر الشفهي) والحفظ في السطور (التدوين).\n\nلقد نُقل القرآن من جيل لجيل عبر آلاف الحفاظ في كل طبقة، بحيث يستحيل تواطؤهم على الكذب أو الخطأ. إضافة إلى ذلك، توجد مخطوطات قديمة جداً (كمخطوطة برمنغهام ومخطوطات صنعاء) تتطابق تماماً مع ما نقرأه اليوم. الكتب السابقة استُحفظ عليها أحبارها فضيعوها، بينما القرآن تكفل الله بحفظه فقال: {إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ}.',
-    sources: ['كتاب النبأ العظيم - د. محمد عبدالله دراز', 'تاريخ القرآن - د. عبد الصبور شاهين', 'مشروع المصاحف المخطوطة المبكرة (Corpus Coranicum)'],
-    tags: ['التحريف', 'المخطوطات', 'التواتر'],
-    views: 2100,
-    isVerified: true
-  },
-  {
-    id: 4,
-    categoryId: 'sunnah',
-    question: 'لماذا نعتمد على أحاديث كتبت بعد النبي بقرون؟',
-    summary: 'الرد على منكري السنة وبيان منهجية المحدثين الصارمة في تدوين السنة.',
-    answer: 'الادعاء بأن السنة كُتبت بعد قرون ادعاء غير دقيق؛ فقد بدأت كتابة الأحاديث في عهد النبي ﷺ (كالصحيفة الصادقة لعبد الله بن عمرو) وكُتبت رسائل النبي لملوك الأرض.\n\nوالأهم من ذلك أن النقل لم يكن يعتمد على الكتابة فقط، بل على الحفظ المتقن والإسناد. علماء الحديث ابتكروا منهجاً علمياً صارماً (علم الجرح والتعديل) لدراسة حياة كل راوٍ بدقة متناهية، وهو منهج لم تعرفه أي أمة في التاريخ. الإمام البخاري وغيره لم "يخترعوا" الأحاديث في القرن الثالث، بل قاموا بتنقيح وتوثيق ما كان متداولاً ومحفوظاً في مدونات ومجاميع سابقة بأسانيد متصلة كالشمس.',
-    sources: ['كتاب السنة النبوية ومكانتها في التشريع الإسلامي - د. مصطفى السباعي', 'كتاب تدريب الراوي - الإمام السيوطي'],
-    tags: ['تدوين السنة', 'صحيح البخاري', 'القرآنيون'],
-    views: 1890,
-    isVerified: true
-  },
-  {
-    id: 5,
-    categoryId: 'women',
-    question: 'لماذا ترث المرأة نصف الرجل في الإسلام؟',
-    summary: 'توضيح فلسفة الميراث في الإسلام وأنها لا تعتمد على الجنس مطلقاً.',
-    answer: 'الميراث في الإسلام لا يُبنى على التفرقة بين الذكر والأنثى، بل يعتمد على ثلاثة معايير: 1. درجة القرابة، 2. موقع الجيل الموروث (الأجيال الشابة ترث أكثر)، 3. العبء المالي.\n\nفي الحالات التي تتساوى فيها درجة القرابة والجيل ويكون الرجل هو المكلف بالإنفاق (مثل الأخ والأخت)، يرث الرجل الضعف لأنه ملزم شرعاً بدفع المهر وتجهيز الزوجة والإنفاق على الأسرة بأكملها، بينما مال المرأة خالص لها لا تلزم بإنفاق قرش منه. وهناك أكثر من 30 حالة ترث فيها المرأة مثل الرجل، أو أكثر منه، بل وحالات ترث هي ولا يرث الرجل أصلاً.',
-    sources: ['كتاب شبهات حول الإسلام - محمد قطب', 'كتاب فقه المواريث والوصايا - د. وهبة الزحيلي'],
-    tags: ['الميراث', 'حقوق المرأة', 'العدالة'],
-    views: 1540,
-    isVerified: true
-  },
-  {
-    id: 6,
-    categoryId: 'quran',
-    question: 'هل القرآن مقتبس من الأساطير السومرية والكتب السابقة؟',
-    summary: 'تفنيد دعوى الاستنساخ من الثقافات القديمة وبيان أصالة الوحي.',
-    answer: 'القرآن الكريم جاء مهيمناً ومصححاً للكتب السابقة، فمن الطبيعي أن يشترك معها في الأخبار العامة (مثل قصة الطوفان)، لأن المصدر واحد وهو الله سبحانه.\n\nلكن عند المقارنة الدقيقة، نجد أن التوراة أو الأساطير القديمة مليئة بالتجسيم والمبالغات الخرافية (مثل صراع الآلهة، أو تعب الخالق واستراحته)، بينما يعرض القرآن نفس القصص بصورة توحيدية خالصة ومقاصد أخلاقية راقية ومجردة عن الخرافات. النبي محمد ﷺ كان أمياً يعيش في بيئة معزولة عن مكتبات السريان واليونان، فمن أين له بهذا التحرير الدقيق والتنقيح التاريخي المعجز؟',
-    sources: ['كتاب مصدر القرآن - د. إبراهيم عوض', 'المستشرقون والقرآن - د. عمر رضوان'],
-    tags: ['أساطير الأولين', 'الاستشراق', 'الوحي'],
-    views: 930,
-    isVerified: true
-  }
-];
+// Fallback data (first few entries while loading)
+const SHUBUHAT_FALLBACK: any[] = [];
 
 export default function ShubuhatPage() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -98,12 +86,50 @@ export default function ShubuhatPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeTabMapping, setActiveTabMapping] = useState<Record<string, string>>({});
   const [helpfulState, setHelpfulState] = useState<Record<string, 'up' | 'down'>>({});
+  const [localShubuhat, setLocalShubuhat] = useState<any[]>([]);
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
   const { toast } = useToast();
 
-  const { data: firebaseShubuhat, isLoading } = useCollection<Shubha>('shubuhat', { orderBy: ['createdAt', 'desc'] });
+  const { data: firebaseShubuhat, isLoading: isFirebaseLoading } = useCollection<Shubha>('shubuhat', { orderBy: ['createdAt', 'desc'] });
+
+  // Fetch the 500 shubuhat from local public file (downloaded from GitHub)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const urls = ['/data/shubuhat.json', 'https://raw.githubusercontent.com/Cyberista-007/religious-misconceptions/main/data.json'];
+        let data: any[] | null = null;
+        for (const url of urls) {
+          try {
+            const res = await fetch(url);
+            if (res.ok) { data = await res.json(); break; }
+          } catch { continue; }
+        }
+        if (Array.isArray(data)) {
+          setLocalShubuhat(data.map((item: any, idx: number) => ({
+            id: String(item.id || idx + 1),
+            categoryId: CAT_MAP[item.category] || 'aqeedah',
+            question: item.question,
+            summary: item.summary,
+            answer: item.answer,
+            sources: typeof item.sources === 'string' ? item.sources.split('،').map((s: string) => s.trim()) : (item.sources || []),
+            tags: item.tags || [],
+            views: item.views || Math.floor(Math.random() * 2000 + 200),
+            isVerified: item.is_verified ?? true,
+          })));
+        }
+      } catch { /* silent */ } finally { setIsLocalLoading(false); }
+    };
+    load();
+  }, []);
+
+  const isLoading = isFirebaseLoading && isLocalLoading;
   
-  // Merge or fallback to default DB
-  const shubuhatData = firebaseShubuhat && firebaseShubuhat.length > 0 ? firebaseShubuhat : SHUBUHAT_DB as any[];
+  // Priority: Firebase > local JSON > fallback
+  const shubuhatData = (firebaseShubuhat && firebaseShubuhat.length > 0)
+    ? firebaseShubuhat
+    : localShubuhat.length > 0
+      ? localShubuhat
+      : SHUBUHAT_FALLBACK as any[];
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -121,16 +147,116 @@ export default function ShubuhatPage() {
     });
   };
 
-  const filteredShubuhat = useMemo(() => {
-    return shubuhatData.filter(item => {
-      const matchesCategory = activeCategory === 'all' || item.categoryId === activeCategory;
-      const questionStr = item.question || '';
-      const answerStr = item.answer || '';
-      const tagsList = item.tags || [];
-      const matchesSearch = questionStr.includes(searchQuery) || answerStr.includes(searchQuery) || tagsList.some((t: string) => t.includes(searchQuery));
-      return matchesCategory && matchesSearch;
+  const handleShare = async (item: any) => {
+    const shareText = `تفنيد شبهة: ${item.question}\n\n${item.summary}`;
+    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${item.id}` : '';
+    const fullText = `${shareText}\n\nاقرأ الرد كاملاً على منصة وقفة:\n${shareUrl}`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'منصة وقفة - تفنيد الشبهات',
+          text: shareText,
+          url: shareUrl,
+        });
+        toast({
+          title: "تم فتح المشاركة",
+          description: "تم استدعاء شاشة المشاركة بنجاح.",
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          navigator.clipboard.writeText(fullText);
+          toast({
+            title: "تم نسخ النص ورابط المشاركة",
+            description: "تم نسخ محتوى الشبهة ورابطها للحافظة لمشاركتها يدوياً.",
+          });
+        }
+      }
+    } else {
+      // Fallback for desktop browsers
+      navigator.clipboard.writeText(fullText);
+      toast({
+        title: "تم نسخ النص ورابط المشاركة",
+        description: "عذراً، متصفحك لا يدعم المشاركة المباشرة. تم نسخ الرابط وموجز الرد للحافظة لمشاركته في أي تطبيق.",
+      });
+      
+      // Let's redirect them to WhatsApp Web/App as a friendly fallback shortcut
+      const encodedText = encodeURIComponent(fullText);
+      window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+    }
+  };
+
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: shubuhatData.length };
+    shubuhatData.forEach(item => {
+      const cat = item.categoryId || 'aqeedah';
+      counts[cat] = (counts[cat] || 0) + 1;
     });
+    return counts;
+  }, [shubuhatData]);
+
+  const filteredShubuhat = useMemo(() => {
+    const normalizedQuery = normalizeArabic(searchQuery);
+    if (!normalizedQuery) {
+      return shubuhatData.filter(item => activeCategory === 'all' || item.categoryId === activeCategory);
+    }
+
+    const queryTokens = normalizedQuery.split(' ').filter(Boolean);
+
+    const scored = shubuhatData
+      .filter(item => activeCategory === 'all' || item.categoryId === activeCategory)
+      .map(item => {
+        const normQuestion = normalizeArabic(item.question || '');
+        const normAnswer = normalizeArabic(item.answer || '');
+        const normSummary = normalizeArabic(item.summary || '');
+        const normTags = (item.tags || []).map((t: string) => normalizeArabic(t));
+
+        let score = 0;
+        let matchedAllTokens = true;
+
+        for (const token of queryTokens) {
+          let tokenMatched = false;
+          if (normQuestion.includes(token)) {
+            score += 10;
+            if (normQuestion.startsWith(token) || normQuestion.includes(' ' + token)) {
+              score += 5;
+            }
+            tokenMatched = true;
+          }
+          if (normSummary.includes(token)) {
+            score += 5;
+            tokenMatched = true;
+          }
+          if (normAnswer.includes(token)) {
+            score += 2;
+            tokenMatched = true;
+          }
+          if (normTags.some((t: string) => t.includes(token))) {
+            score += 8;
+            tokenMatched = true;
+          }
+
+          if (!tokenMatched) {
+            matchedAllTokens = false;
+          }
+        }
+
+        return { item, score, matchedAllTokens };
+      })
+      .filter(res => res.matchedAllTokens || res.score > 5)
+      .sort((a, b) => b.score - a.score);
+
+    return scored.map(res => res.item);
   }, [activeCategory, searchQuery, shubuhatData]);
+
+
+  const PAGE_SIZE = 15;
+  const [page, setPage] = useState(1);
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [activeCategory, searchQuery]);
+  const pagedShubuhat = useMemo(() => filteredShubuhat.slice(0, page * PAGE_SIZE), [filteredShubuhat, page]);
+  const hasMore = pagedShubuhat.length < filteredShubuhat.length;
 
   const toggleAccordion = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -183,8 +309,8 @@ export default function ShubuhatPage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 w-full mx-auto"
           >
             {[
-              { label: 'شبهة مفندة', value: '+1,200', icon: ShieldCheck, color: 'text-indigo-400' },
-              { label: 'تصنيف علمي', value: '12', icon: Library, color: 'text-emerald-400' },
+              { label: 'شبهة مفندة', value: shubuhatData.length > 0 ? `${shubuhatData.length}+` : '+500', icon: ShieldCheck, color: 'text-indigo-400' },
+              { label: 'تصنيف علمي', value: '10', icon: Library, color: 'text-emerald-400' },
               { label: 'باحث ومختص', value: '45', icon: Users, color: 'text-amber-400' },
               { label: 'تحديثات مستمرة', value: 'يومياً', icon: Activity, color: 'text-rose-400' },
             ].map((stat, idx) => (
@@ -214,6 +340,35 @@ export default function ShubuhatPage() {
                 className="w-full h-16 pl-6 pr-16 bg-white/[0.03] border border-white/10 rounded-2xl text-lg font-medium text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.05] transition-all backdrop-blur-xl shadow-2xl"
               />
             </div>
+
+            {/* Quick search tags */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
+              <span className="text-white/40 font-bold">مواضيع شائعة:</span>
+              {[
+                'حفظ القرآن',
+                'النهي عن النفخ',
+                'خلق الكون',
+                'السحر والشعوذة',
+                'الزلازل والبراكين',
+                'عقود الاستصناع'
+              ].map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setSearchQuery(tag)}
+                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-white/60 hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/30 transition-all font-medium"
+                >
+                  {tag}
+                </button>
+              ))}
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all font-bold"
+                >
+                  إعادة تعيين ✕
+                </button>
+              )}
+            </div>
           </motion.div>
         </div>
       </section>
@@ -223,6 +378,7 @@ export default function ShubuhatPage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           {CATEGORIES.map((cat, i) => {
             const isActive = activeCategory === cat.id;
+            const count = categoryCounts[cat.id] || 0;
             return (
               <motion.button
                 key={cat.id}
@@ -231,14 +387,22 @@ export default function ShubuhatPage() {
                 transition={{ delay: 0.1 * i }}
                 onClick={() => setActiveCategory(cat.id)}
                 className={cn(
-                  "flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold transition-all border shadow-lg",
+                  "flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold transition-all border shadow-lg relative group overflow-hidden",
                   isActive
                     ? "bg-white text-black border-transparent shadow-white/20"
                     : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
                 )}
               >
                 <cat.icon className={cn("w-5 h-5", isActive ? "text-black" : cat.color)} />
-                {cat.name}
+                <span>{cat.name}</span>
+                <span className={cn(
+                  "text-xs px-2 py-0.5 rounded-full font-black",
+                  isActive 
+                    ? "bg-black/10 text-black" 
+                    : "bg-white/10 text-white/60 group-hover:bg-white/20 group-hover:text-white"
+                )}>
+                  {count}
+                </span>
               </motion.button>
             );
           })}
@@ -280,8 +444,9 @@ export default function ShubuhatPage() {
               <p className="text-white/30 mt-2">حاول استخدام كلمات مفتاحية مختلفة</p>
             </motion.div>
           ) : (
-            <div className="space-y-6">
-              {filteredShubuhat.map((item, index) => {
+            <>
+              <div className="space-y-6">
+                {pagedShubuhat.map((item, index) => {
                 const category = CATEGORIES.find(c => c.id === item.categoryId);
                 const isExpanded = expandedId === item.id;
                 const activeTab = activeTabMapping[item.id] || 'answer';
@@ -293,7 +458,7 @@ export default function ShubuhatPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: Math.min(index * 0.03, 0.4) }}
                     key={item.id}
                     className={cn(
                       "group rounded-[2.5rem] border transition-all duration-500 overflow-hidden relative",
@@ -331,11 +496,11 @@ export default function ShubuhatPage() {
                           ))}
                         </div>
                         <h2 className={cn("text-2xl md:text-4xl font-black leading-tight text-white transition-colors", isExpanded ? "text-indigo-300" : "group-hover:text-indigo-200")}>
-                          {item.question}
+                          {highlightText(item.question, searchQuery)}
                         </h2>
                         {!isExpanded && (
                           <p className="text-white/40 text-lg md:text-xl leading-relaxed mt-4 line-clamp-2 font-medium">
-                            {item.summary}
+                            {highlightText(item.summary, searchQuery)}
                           </p>
                         )}
                       </div>
@@ -391,7 +556,7 @@ export default function ShubuhatPage() {
                                         <div className="space-y-6">
                                           {item.answer.split('\n\n').map((paragraph: string, pIndex: number) => (
                                             <p key={pIndex} className="text-xl md:text-2xl leading-[2.2] text-white/80 font-medium font-tajawal selection:bg-indigo-500/40">
-                                              {paragraph}
+                                              {highlightText(paragraph, searchQuery)}
                                             </p>
                                           ))}
                                         </div>
@@ -461,8 +626,9 @@ export default function ShubuhatPage() {
                                     <MessageSquareWarning className="w-4 h-4 ml-2" /> إبلاغ عن شبهة
                                   </Button>
                                   <Button 
-                                    onClick={(e) => { e.stopPropagation(); handleCopy(`تفنيد شبهة: ${item.question}\n\n${item.summary}\n\nاقرأ الرد كاملاً على منصة وقفة.`); }}
+                                    onClick={(e) => { e.stopPropagation(); handleShare(item); }}
                                     variant="outline" className="border-white/10 hover:bg-white/10 text-white rounded-xl h-12 w-12 p-0"
+                                    title="مشاركة الشبهة"
                                   >
                                     <Share2 className="w-4 h-4" />
                                   </Button>
@@ -502,6 +668,25 @@ export default function ShubuhatPage() {
                 );
               })}
             </div>
+            {/* Load More Button */}
+            {hasMore && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-3 mt-12"
+              >
+                <p className="text-white/30 text-sm">
+                  عرض {pagedShubuhat.length} من {filteredShubuhat.length} شبهة
+                </p>
+                <Button
+                  onClick={() => setPage(p => p + 1)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-10 h-14 font-bold text-lg shadow-lg shadow-indigo-600/20 hover:scale-105 transition-all"
+                >
+                  تحميل المزيد
+                </Button>
+              </motion.div>
+            )}
+            </>
           )}
         </AnimatePresence>
       </section>
