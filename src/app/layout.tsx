@@ -29,7 +29,6 @@ import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
 import { OfflineIndicator } from '@/components/offline-indicator';
 import { GlobalBackButton } from '@/components/global-back-button';
-import { FloatingTasbih } from '@/components/floating-tasbih';
 import { ReadingProvider } from '@/components/reading-provider';
 import { ChatWidget } from '@/components/chat-widget';
 

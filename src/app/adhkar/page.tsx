@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { DewAdhkar } from '@/components/adhkar/dew-adhkar';
-import { GravityTasbih } from '@/components/adhkar/gravity-tasbih';
 
 // ━━━━━━━━━━━ DATA ━━━━━━━━━━━
 
@@ -441,10 +440,7 @@ export default function AdhkarPage() {
            <DewAdhkar />
         </div>
 
-        {/* 📿 Gravity Tasbih Section */}
-        <div className={cn("mb-24", isReadingMode && "hidden")}>
-           <GravityTasbih />
-        </div>
+
 
         {/* Category Tabs */}
         <div className={cn("flex items-center gap-3 overflow-x-auto pb-8 mb-12 no-scrollbar justify-center flex-nowrap px-4 hide-in-reading-mode")}>

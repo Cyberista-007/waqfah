@@ -11,7 +11,6 @@ import { ProgramCard } from '@/components/program-card';
 import { DownloaderModal } from './downloader-modal';
 import { SpiritualPrescription } from './spiritual-prescription';
 import { DailyChallenges } from './daily-challenges';
-import { TasbihCard } from './tasbih-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { Marquee } from './marquee';
@@ -991,7 +990,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       <SpiritualPrescription />
 
 
-      {/* 🎯 Challenges & Tasbih Section */}
+      {/* 🎯 Challenges Section */}
       <section className="container px-4 py-16">
         <div className="flex flex-col gap-12 max-w-4xl mx-auto">
           <motion.div
@@ -1000,14 +999,6 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             viewport={{ once: true }}
           >
             <DailyChallenges />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            <TasbihCard />
           </motion.div>
         </div>
       </section>
