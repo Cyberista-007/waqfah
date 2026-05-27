@@ -206,15 +206,20 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
 
   
     const handleTimestampClick = (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
-        if (isPlayerVisible && iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
-            const player = videoPlayerRef.current;
-            player.seekTo(startTimeInSeconds, true);
-            const playerState = player.getPlayerState();
-            if (playerState !== 1) { // if not playing
-                player.playVideo();
-            }
-            if (endTimeInSeconds) {
-                setVideoClipEndTime(endTimeInSeconds);
+        if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+            try {
+                const player = videoPlayerRef.current;
+                player.seekTo(startTimeInSeconds, true);
+                const playerState = player.getPlayerState();
+                if (playerState !== 1) { // if not playing
+                    player.playVideo();
+                }
+                if (endTimeInSeconds) {
+                    setVideoClipEndTime(endTimeInSeconds);
+                }
+            } catch (e) {
+                console.error("Error seeking video player:", e);
+                playTrack(lecture, startTimeInSeconds, endTimeInSeconds);
             }
         } else {
             playTrack(lecture, startTimeInSeconds, endTimeInSeconds);
