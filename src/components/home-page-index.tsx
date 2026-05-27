@@ -30,17 +30,15 @@ const sections = [
 export function PageIndex() {
   const [activeSection, setActiveSection] = useState("hero")
   const [isHovered, setIsHovered] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsVisible(window.scrollY > 100)
-      
       // Calculate scroll progress
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight
-      const progress = (window.scrollY / totalHeight) * 100
+      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0
       setScrollProgress(progress)
 
       const sectionOffsets = sections.map(section => {
@@ -62,6 +60,7 @@ export function PageIndex() {
       setActiveSection(current)
     }
 
+    handleScroll()
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
