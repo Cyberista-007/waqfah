@@ -29,6 +29,7 @@ interface Html5PlayerProps {
 }
 
 export function Html5Player({ videoId, title, thumbnailUrl, className, startTime = 0, onTimeUpdate, onEnded, transcript }: Html5PlayerProps) {
+  const { playIframe, videoPlayerRef } = useAudioPlayer();
 
   const [mounted, setMounted] = useState(false);
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
@@ -107,6 +108,9 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
         events: {
           onReady: (event: any) => {
             setDuration(event.target.getDuration());
+            if (videoPlayerRef) {
+              videoPlayerRef.current = event.target;
+            }
             
             // Start polling time for Karaoke sync
             timeUpdateInterval = setInterval(() => {
@@ -145,12 +149,14 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
       if (ytPlayerRef.current?.destroy) {
         ytPlayerRef.current.destroy();
       }
+      if (videoPlayerRef && videoPlayerRef.current === ytPlayerRef.current) {
+        videoPlayerRef.current = null;
+      }
     };
   }, [mounted, cleanVideoId]);
 
 
 
-  const { playIframe } = useAudioPlayer();
   const { toast } = useToast();
 
   const handlePiP = (e: React.MouseEvent) => {

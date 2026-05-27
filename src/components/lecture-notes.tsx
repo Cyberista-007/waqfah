@@ -119,12 +119,21 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     const getCurrentTime = (): number | undefined => {
         let currentTime: number | undefined;
 
-        if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-            const playerState = videoPlayerRef.current.getPlayerState();
-            if ([1, 2, 3].includes(playerState)) {
-                currentTime = videoPlayerRef.current.getCurrentTime();
+        // 1. Try to get time from YouTube player (either inline or floating)
+        if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+            try {
+                const playerState = videoPlayerRef.current.getPlayerState();
+                // -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (cued)
+                if ([1, 2, 3, 5].includes(playerState)) {
+                    currentTime = videoPlayerRef.current.getCurrentTime();
+                }
+            } catch (e) {
+                console.error("Error getting time from YouTube player:", e);
             }
-        } else if (iframeTrack?.type === 'soundcloud') {
+        } 
+        
+        // Handle soundcloud case if iframeTrack is active
+        if (currentTime === undefined && iframeTrack?.type === 'soundcloud') {
             toast({
                 variant: "default",
                 title: "الميزة غير مدعومة",
@@ -133,6 +142,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
             return undefined;
         }
 
+        // 2. Try to get time from standard audio player
         if (currentTime === undefined && audioRef.current) {
             if (isPlaying || audioRef.current.currentTime > 0) {
                 currentTime = audioRef.current.currentTime;

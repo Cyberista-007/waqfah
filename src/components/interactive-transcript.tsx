@@ -25,9 +25,16 @@ export function InteractiveTranscript({ transcript }: InteractiveTranscriptProps
             if (audioRef.current && !audioRef.current.paused) {
                 time = audioRef.current.currentTime;
             } 
-            // 2. Try video player (HTML5)
-            else if (videoPlayerRef.current?.plyr?.playing) {
-                time = videoPlayerRef.current.plyr.currentTime;
+            // 2. Try video player (YouTube/HTML5)
+            else if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+                try {
+                    const state = videoPlayerRef.current.getPlayerState();
+                    if ([1, 2, 3].includes(state)) {
+                        time = videoPlayerRef.current.getCurrentTime();
+                    }
+                } catch (e) {
+                    console.error("Error getting transcript sync time:", e);
+                }
             }
             if (time > 0) setCurrentTime(time);
         }, 500);
