@@ -10,7 +10,6 @@ import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
 import { DownloaderModal } from './downloader-modal';
 import { SpiritualPrescription } from './spiritual-prescription';
-import { DailyChallenges } from './daily-challenges';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { Marquee } from './marquee';
@@ -990,18 +989,6 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       <SpiritualPrescription />
 
 
-      {/* 🎯 Challenges Section */}
-      <section className="container px-4 py-16">
-        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <DailyChallenges />
-          </motion.div>
-        </div>
-      </section>
 
       {/* Learning Paths / Curriculum Highlights — MASTERCLASS ROADMAPS */}
       <section id="pathways" className="py-32 container px-4 relative">

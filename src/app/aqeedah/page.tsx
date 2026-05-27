@@ -7,6 +7,7 @@ import { Shield, ChevronLeft, Zap, BookOpen, LayoutGrid } from 'lucide-react';
 import { PILLARS, TERMINOLOGY } from './data';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { useReadingMode } from '@/components/reading-provider';
+import { DailyChallenges } from '@/components/daily-challenges';
 
 export default function AqeedahPage() {
   const { isReadingMode, fontSize } = useReadingMode();
@@ -185,6 +186,17 @@ export default function AqeedahPage() {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* 🎯 Daily Challenges Section */}
+      <div className={cn("w-full mx-auto mt-32 hide-in-reading-mode")}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <DailyChallenges />
+        </motion.div>
       </div>
     </div>
   );
