@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 import { 
     Home, 
     Grid, 
@@ -208,4 +209,10 @@ export function PageIndex() {
       )}
     </AnimatePresence>
   )
+}
+
+export function HomePageIndexWrapper() {
+  const pathname = usePathname();
+  if (pathname !== "/") return null;
+  return <PageIndex />;
 }

@@ -201,7 +201,6 @@ import { ShortsCarousel } from '@/components/ShortsCarousel';
 import { FeaturedStrips } from '@/components/featured-strips';
 import { useAppearance } from '@/components/appearance-provider';
 import { useUser, useCollection } from '@/firebase';
-import { PageIndex } from './home-page-index';
 import {
   Accordion,
   AccordionContent,
@@ -481,13 +480,12 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
 
 
   return (
-    <>
-      <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          className="space-y-16"
-      >
+    <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="space-y-16"
+    >
       <section id="hero" className="relative z-10 px-4 sm:px-0 pt-2 pb-12">
         <div className="relative w-full h-[70vh] min-h-[550px] max-h-[800px] overflow-hidden rounded-[2.5rem] sm:rounded-[4rem] border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5 group/hero">
             <AnimatePresence mode="wait">
@@ -1593,8 +1591,6 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </section>
 
       </motion.div>
-      <PageIndex />
-    </>
   );
 }
 

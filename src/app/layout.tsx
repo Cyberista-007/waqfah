@@ -63,6 +63,7 @@ export const metadata: Metadata = {
 };
 
 import { PageTransition } from '@/components/page-transition';
+import { HomePageIndexWrapper } from '@/components/home-page-index';
 
 export default async function RootLayout({
   children,
@@ -127,6 +128,7 @@ export default async function RootLayout({
                 <SiteFooter />
               </div>
             </div>
+            <HomePageIndexWrapper />
             <Toaster />
             <ChatWidget />
             <OfflineIndicator />
