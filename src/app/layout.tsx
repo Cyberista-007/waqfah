@@ -38,8 +38,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'منصة الدروس العلمية',
-    template: '%s | منصة الدروس العلمية',
+    default: 'وقفة',
+    template: '%s | وقفة',
   },
   description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث.',
   manifest: '/manifest.json',
@@ -53,15 +53,15 @@ export const metadata: Metadata = {
     title: 'وقفة',
   },
   openGraph: {
-    title: 'منصة الدروس العلمية',
+    title: 'وقفة',
     description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
     type: 'website',
     locale: 'ar_SA',
-    siteName: 'منصة الدروس العلمية',
+    siteName: 'وقفة',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'منصة الدروس العلمية',
+    title: 'وقفة',
     description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
   },
 };
