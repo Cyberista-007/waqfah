@@ -3534,6 +3534,22 @@ export default function QuranPage() {
                     </button>
                   </div>
 
+                  {/* Active Filter Indicators & Results Count */}
+                  <div className="flex items-center justify-between w-full px-2 text-[10px] font-bold text-white/40" dir="rtl">
+                    <div>
+                      <span>عدد السور المعروضة: </span>
+                      <span className="text-primary font-black bg-primary/10 px-2.5 py-1 rounded-lg">{(filteredSurahs || []).length}</span>
+                    </div>
+                    {((surahTypeFilter !== 'all' ? 1 : 0) + (surahJuzFilter !== 0 ? 1 : 0)) > 0 && (
+                      <button
+                        onClick={() => { setSurahTypeFilter('all'); setSurahJuzFilter(0); }}
+                        className="text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-lg"
+                      >
+                        <span>إلغاء التصفية ({ (surahTypeFilter !== 'all' ? 1 : 0) + (surahJuzFilter !== 0 ? 1 : 0) })</span>
+                      </button>
+                    )}
+                  </div>
+
                   {filteredSurahs.length === 0 ? (
                     <div className="text-center py-20 bg-white/[0.01] rounded-[2.5rem] border border-white/5">
                       <BookOpen className="w-10 h-10 text-white/10 mx-auto mb-4" />
@@ -3551,34 +3567,56 @@ export default function QuranPage() {
                         const status = (state.quranMemorization?.[s.number] || 'not-started') as keyof typeof MEMORIZATION_STATUS;
                         const config = MEMORIZATION_STATUS[status];
                         const StatusIcon = config.icon;
+                        const juzNum = SURAH_JUZ_MAPPING[s.number];
+                        const isMeccan = s.revelationType === 'Meccan';
 
                         return (
                           <motion.button
                             key={s.number}
                             whileHover={{ y: -5, scale: 1.02 }}
                             onClick={() => loadSurah(s.number)}
-                            className="group flex items-center justify-between p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-primary/20 transition-all text-right relative overflow-hidden"
+                            className="group flex flex-col p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-primary/20 transition-all text-right relative overflow-hidden"
                           >
                             {status !== 'not-started' && (
-                              <div className={cn("absolute top-0 right-0 w-2 h-full", config.color.replace('text-', 'bg-'))} />
+                              <div className={cn("absolute top-0 right-0 w-1.5 h-full", config.color.replace('text-', 'bg-'))} />
                             )}
-                            <div className="flex items-center gap-5 relative z-10">
+                            {/* Top row: badges */}
+                            <div className="flex items-center justify-between w-full mb-4 relative z-10">
+                              <div className="flex items-center gap-1.5">
+                                <span className={cn(
+                                  "px-2.5 py-1 rounded-lg text-[9px] font-black border",
+                                  isMeccan
+                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/15"
+                                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/15"
+                                )}>
+                                  {isMeccan ? '🕋 مكية' : '🕌 مدنية'}
+                                </span>
+                                {juzNum && (
+                                  <span className="px-2 py-1 rounded-lg bg-white/5 text-white/25 text-[9px] font-bold border border-white/5">
+                                    جزء {juzNum}
+                                  </span>
+                                )}
+                              </div>
+                              <ArrowLeft className="w-4 h-4 text-white/10 group-hover:text-primary transition-all" />
+                            </div>
+
+                            {/* Main content row */}
+                            <div className="flex items-center gap-4 relative z-10 w-full">
                               <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all shadow-xl",
+                                "w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all shadow-xl shrink-0",
                                 status !== 'not-started' ? `${config.bg} ${config.color}` : "bg-white/5 text-white/20"
                               )}>
                                 {status === 'not-started' ? s.number : <StatusIcon className="w-6 h-6" />}
                               </div>
-                              <div>
-                                <h3 className="text-2xl font-black text-white group-hover:text-primary transition-colors leading-relaxed font-tajawal">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-xl font-black text-white group-hover:text-primary transition-colors leading-relaxed font-tajawal truncate">
                                   {s.name}
                                 </h3>
-                                <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                                  {s.numberOfAyahs} آية • {config.label}
+                                <p className="text-[10px] text-white/30 font-bold tracking-widest mt-0.5">
+                                  {s.numberOfAyahs} آية • {s.englishName} • {config.label}
                                 </p>
                               </div>
                             </div>
-                            <ArrowLeft className="w-5 h-5 text-white/10 group-hover:text-primary transition-all" />
                           </motion.button>
                         );
                       })}
@@ -4559,6 +4597,36 @@ export default function QuranPage() {
                           className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                       </div>
+
+                      {/* Sleep Timer Controls */}
+                      <div className="flex flex-wrap items-center gap-2 w-full">
+                        <span className="text-[9px] font-black text-white/25 uppercase tracking-widest shrink-0">⏰ مؤقت النوم:</span>
+                        {sleepTimerMinutes ? (
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-[10px] font-black border border-primary/20 animate-pulse">
+                              ⏳ {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
+                            </span>
+                            <button
+                              onClick={cancelSleepTimer}
+                              className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 text-[10px] font-black border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+                            >
+                              إلغاء
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            {[15, 30, 45, 60].map(mins => (
+                              <button
+                                key={mins}
+                                onClick={() => startSleepTimer(mins)}
+                                className="px-3 py-1.5 rounded-xl bg-white/5 text-white/40 text-[10px] font-black border border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                              >
+                                {mins}د
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4740,6 +4808,51 @@ export default function QuranPage() {
                 </div>
                 <button onClick={() => setIsPlaying(!isPlaying)} className="w-16 h-16 rounded-[2rem] bg-white text-black flex items-center justify-center hover:scale-105 transition-all shadow-glow-white shrink-0">{isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}</button>
                 <button onClick={() => { setCurrentAudio(null); setIsPlaying(false); audioRef.current?.pause(); }} className="w-12 h-12 rounded-2xl bg-white/5 text-white/20 hover:text-white transition-all flex items-center justify-center shrink-0"><X className="w-5 h-5" /></button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Floating Radio Mini-Bar (shows when radio plays & not on radio tab) ── */}
+      <AnimatePresence>
+        {isPlayingRadio && currentRadioStation && view !== 'radio' && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[92%] max-w-md"
+          >
+            <div className="bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] px-5 py-3.5 shadow-[0_10px_60px_-15px_rgba(0,0,0,0.9)] flex items-center gap-4" dir="rtl">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-lg shrink-0 animate-pulse">
+                {currentRadioStation.icon}
+              </div>
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-xs font-black text-white truncate">{currentRadioStation.name}</p>
+                <p className="text-[9px] text-emerald-400 font-bold">🟢 بث مباشر{sleepTimerMinutes ? ` • ⏳ ${Math.floor(sleepTimerRemaining / 60)}:${String(sleepTimerRemaining % 60).padStart(2, '0')}` : ''}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => { setView('radio'); }}
+                  className="p-2 rounded-xl bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all"
+                  title="الذهاب للإذاعة"
+                >
+                  <Radio className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (radioAudioRef.current) {
+                      radioAudioRef.current.pause();
+                      radioAudioRef.current = null;
+                    }
+                    setIsPlayingRadio(false);
+                    setCurrentRadioStation(null);
+                  }}
+                  className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all"
+                  title="إيقاف البث"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </motion.div>
