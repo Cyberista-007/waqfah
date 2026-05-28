@@ -12,7 +12,8 @@ import {
   User, ChevronDown, Music, Quote, Download, Image as ImageIcon, ImagePlus,
   Palette, Edit3, Smartphone, Trophy, Target, CheckCircle2, Clock,
   Flame, BookmarkCheck, FileText, AlignRight, ChevronLeft, ChevronRight,
-  Loader2, Mic, Eye, EyeOff, ChevronsDown, Map, Minus, Plus, Menu
+  Loader2, Mic, Eye, EyeOff, ChevronsDown, Map, Minus, Plus, Menu,
+  Radio, VolumeX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useReadingMode } from '@/components/reading-provider';
@@ -155,6 +156,99 @@ const AMBIENT_SOUNDS = [
   { id: 'birds', name: '🌲 عصافير الغابة', url: 'https://actions.google.com/sounds/v1/animals/forest_birds.ogg' },
   { id: 'river', name: '💧 خرير الماء', url: 'https://actions.google.com/sounds/v1/water/river_flowing.ogg' },
   { id: 'night', name: '🌙 هدوء الليل', url: 'https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg' },
+];
+
+const RADIO_STATIONS = [
+  {
+    id: 'cairo',
+    name: 'إذاعة القرآن الكريم من القاهرة',
+    subtitle: 'بث مباشر من جمهورية مصر العربية',
+    url: 'https://stream.radiojar.com/8s5u5zpv870uv',
+    icon: '🇪🇬',
+    color: 'from-emerald-500/20 to-emerald-950/40',
+    borderColor: 'border-emerald-500/30',
+    textColor: 'text-emerald-400'
+  },
+  {
+    id: 'saudi',
+    name: 'إذاعة القرآن الكريم من المملكة العربية السعودية',
+    subtitle: 'بث مباشر من الرياض',
+    url: 'https://stream.radiojar.com/4wqbi268v30uv',
+    icon: '🇸🇦',
+    color: 'from-green-500/20 to-green-950/40',
+    borderColor: 'border-green-500/30',
+    textColor: 'text-green-400'
+  },
+  {
+    id: 'minshawi',
+    name: 'إذاعة القارئ محمد صديق المنشاوي',
+    subtitle: 'ترتيل خاشع ومجود برواية حفص عن عاصم',
+    url: 'https://live.mp3quran.net:9982/;stream.mp3',
+    icon: '🕌',
+    color: 'from-amber-500/20 to-amber-950/40',
+    borderColor: 'border-amber-500/30',
+    textColor: 'text-amber-400'
+  },
+  {
+    id: 'abdulbasit',
+    name: 'إذاعة القارئ عبد الباسط عبد الصمد',
+    subtitle: 'تلاوات نادرة ومجودة بنبرة فريدة',
+    url: 'https://live.mp3quran.net:9974/;stream.mp3',
+    icon: '🌟',
+    color: 'from-cyan-500/20 to-cyan-950/40',
+    borderColor: 'border-cyan-500/30',
+    textColor: 'text-cyan-400'
+  },
+  {
+    id: 'husary',
+    name: 'إذاعة القارئ محمود خليل الحصري',
+    subtitle: 'المعلم والمصحف المرتل بدقة التجويد',
+    url: 'https://live.mp3quran.net:9988/;stream.mp3',
+    icon: '📖',
+    color: 'from-blue-500/20 to-blue-950/40',
+    borderColor: 'border-blue-500/30',
+    textColor: 'text-blue-400'
+  },
+  {
+    id: 'alafasy',
+    name: 'إذاعة القارئ مشاري بن راشد العفاسي',
+    subtitle: 'تلاوات عطرة بأصوات وألحان متميزة',
+    url: 'https://live.mp3quran.net:9724/;stream.mp3',
+    icon: '🎙️',
+    color: 'from-rose-500/20 to-rose-950/40',
+    borderColor: 'border-rose-500/30',
+    textColor: 'text-rose-400'
+  },
+  {
+    id: 'tafseer',
+    name: 'إذاعة تفسير القرآن الكريم',
+    subtitle: 'شروحات وتفاسير مبسطة لآيات الذكر الحكيم',
+    url: 'https://live.mp3quran.net:9718/;stream.mp3',
+    icon: '💡',
+    color: 'from-violet-500/20 to-violet-950/40',
+    borderColor: 'border-violet-500/30',
+    textColor: 'text-violet-400'
+  },
+  {
+    id: 'ruqyah',
+    name: 'إذاعة الرقية الشرعية',
+    subtitle: 'آيات السكينة والتحصين والشفاء من القرآن',
+    url: 'https://live.mp3quran.net:9938/;stream.mp3',
+    icon: '🛡️',
+    color: 'from-purple-500/20 to-purple-950/40',
+    borderColor: 'border-purple-500/30',
+    textColor: 'text-purple-400'
+  },
+  {
+    id: 'takbeerat',
+    name: 'إذاعة تكبيرات العيد والذكر',
+    subtitle: 'أجواء روحانية مهيبة وتكبيرات مستمرة',
+    url: 'https://live.mp3quran.net:9702/;stream.mp3',
+    icon: '🌙',
+    color: 'from-orange-500/20 to-orange-950/40',
+    borderColor: 'border-orange-500/30',
+    textColor: 'text-orange-400'
+  }
 ];
 
 const MEMORIZATION_STATUS = {
@@ -1292,7 +1386,34 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
 export default function QuranPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const { state, updateState } = useSync();
-  const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'heatmap'>('full');
+  const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'radio'>('full');
+
+  // ── Quran Radio States ──
+  const [isPlayingRadio, setIsPlayingRadio] = useState<boolean>(false);
+  const [currentRadioStation, setCurrentRadioStation] = useState<any>(null);
+  const [isRadioBuffering, setIsRadioBuffering] = useState<boolean>(false);
+  const [radioVolume, setRadioVolume] = useState<number>(0.8);
+  const [radioSearchQuery, setRadioSearchQuery] = useState<string>('');
+  const [favoriteRadioIds, setFavoriteRadioIds] = useState<string[]>([]);
+  const radioAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedFavorites = localStorage.getItem('quran_favorite_radios');
+      if (savedFavorites) {
+        setFavoriteRadioIds(JSON.parse(savedFavorites));
+      }
+    }
+  }, []);
+
+  const toggleFavoriteRadio = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavoriteRadioIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('quran_favorite_radios', JSON.stringify(next));
+      return next;
+    });
+  }, []);
   const [activeCollection, setActiveCollection] = useState(QURAN_DATA[0].id);
   const [activeTopic, setActiveTopic] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1513,6 +1634,36 @@ export default function QuranPage() {
       if (ambientAudioRef.current) {
         ambientAudioRef.current.pause();
         ambientAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (radioAudioRef.current) {
+      radioAudioRef.current.volume = radioVolume;
+    }
+  }, [radioVolume]);
+
+  useEffect(() => {
+    return () => {
+      if (radioAudioRef.current) {
+        radioAudioRef.current.pause();
+        radioAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (radioAudioRef.current) {
+      radioAudioRef.current.volume = radioVolume;
+    }
+  }, [radioVolume]);
+
+  useEffect(() => {
+    return () => {
+      if (radioAudioRef.current) {
+        radioAudioRef.current.pause();
+        radioAudioRef.current = null;
       }
     };
   }, []);
@@ -1922,6 +2073,12 @@ export default function QuranPage() {
       return;
     }
 
+    // Stop radio if playing
+    if (isPlayingRadio) {
+      setIsPlayingRadio(false);
+      radioAudioRef.current?.pause();
+    }
+
     setCurrentAudio(verse);
     setIsPlaying(true);
     if (audioRef.current) {
@@ -1929,7 +2086,49 @@ export default function QuranPage() {
       audioRef.current.playbackRate = playbackSpeed;
       audioRef.current.play();
     }
-  }, [selectedReciter, isPlaying, currentAudio, playbackSpeed]);
+  }, [selectedReciter, isPlaying, currentAudio, playbackSpeed, isPlayingRadio]);
+
+  const handlePlayRadio = useCallback((station: any) => {
+    if (currentRadioStation?.id === station.id) {
+      if (isPlayingRadio) {
+        radioAudioRef.current?.pause();
+        setIsPlayingRadio(false);
+      } else {
+        setIsRadioBuffering(true);
+        radioAudioRef.current?.play().catch(err => {
+          console.error("Failed to play radio:", err);
+          setIsPlayingRadio(false);
+        });
+        setIsPlayingRadio(true);
+      }
+      return;
+    }
+
+    // Stop recitation play if active
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    }
+
+    // Stop ambient sound if active
+    if (activeAmbient) {
+      setActiveAmbient(null);
+    }
+
+    setCurrentRadioStation(station);
+    setIsPlayingRadio(true);
+    setIsRadioBuffering(true);
+
+    if (radioAudioRef.current) {
+      radioAudioRef.current.src = station.url;
+      radioAudioRef.current.volume = radioVolume;
+      radioAudioRef.current.play().catch(err => {
+        console.error("Failed to play radio stream:", err);
+        setIsPlayingRadio(false);
+        setIsRadioBuffering(false);
+      });
+    }
+  }, [currentRadioStation, isPlayingRadio, isPlaying, activeAmbient, radioVolume]);
 
   const cleanArabicText = useCallback((text: string) => {
     if (!text) return '';
@@ -2336,6 +2535,23 @@ export default function QuranPage() {
     return memorizationStats.completed > 0 ? (memorizationStats.completed % 7) + 1 : 0;
   }, [memorizationStats]);
 
+  const filteredStations = useMemo(() => {
+    let list = RADIO_STATIONS;
+    if (radioSearchQuery.trim()) {
+      const q = normalizeArabic(radioSearchQuery.toLowerCase());
+      list = list.filter(s =>
+        normalizeArabic(s.name).includes(q) ||
+        s.subtitle.toLowerCase().includes(q)
+      );
+    }
+    // Sort so that favorites are pinned at the top
+    return [...list].sort((a, b) => {
+      const aFav = favoriteRadioIds.includes(a.id) ? 1 : 0;
+      const bFav = favoriteRadioIds.includes(b.id) ? 1 : 0;
+      return bFav - aFav;
+    });
+  }, [radioSearchQuery, favoriteRadioIds]);
+
   const handleWordClick = async (verse: any, wordIndex: number) => {
     // verse.surahNumber must be available. If not, we might need a lookup, but it should be available.
     const sNum = verse.surahNumber || QURAN_DATA.find(c => c.verses.some(v => v.id === verse.id))?.verses.find(v => v.id === verse.id)?.surahNumber || 2;
@@ -2362,6 +2578,17 @@ export default function QuranPage() {
       </div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+      <audio
+        ref={radioAudioRef}
+        onPlay={() => {
+          setIsPlayingRadio(true);
+          setIsRadioBuffering(false);
+        }}
+        onPause={() => setIsPlayingRadio(false)}
+        onWaiting={() => setIsRadioBuffering(true)}
+        onPlaying={() => setIsRadioBuffering(false)}
+        onCanPlay={() => setIsRadioBuffering(false)}
+      />
 
       {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
       <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
@@ -2375,6 +2602,18 @@ export default function QuranPage() {
               >
                 📖 التجويد
               </button>
+              <button
+                onClick={() => setIsTypographyPanelOpen(p => !p)}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-2 rounded-xl transition-all text-[9px] font-black border",
+                  isTypographyPanelOpen
+                    ? "bg-primary/20 border-primary/45 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]"
+                    : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                )}
+                title="تغيير حجم الخط والتباعد"
+              >
+                <span>Aa حجم الخط</span>
+              </button>
               <div className={cn("flex bg-white/5 border border-white/10 rounded-xl p-1", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
                 <button onClick={() => setViewMode('ayah')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'ayah' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>آيات</button>
                 <button onClick={() => setViewMode('page')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'page' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>صفحة</button>
@@ -2383,7 +2622,7 @@ export default function QuranPage() {
 
             {/* Center: Main Tabs */}
             <div className={cn("flex items-center gap-1.5 flex-1 justify-center overflow-x-auto no-scrollbar", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
-              {['full', 'plan', 'luminous'].map((v: any) => (
+              {['full', 'plan', 'luminous', 'radio'].map((v: any) => (
                 <button
                   key={v}
                   onClick={() => setView(v as any)}
@@ -2392,7 +2631,7 @@ export default function QuranPage() {
                     view === v ? "bg-white text-black border-white shadow-glow-white" : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10"
                   )}
                 >
-                  {v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : 'خطة الحفظ'}
+                  {v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : v === 'plan' ? 'خطة الحفظ' : 'إذاعة القرآن'}
                 </button>
               ))}
             </div>
@@ -4089,6 +4328,220 @@ export default function QuranPage() {
                   </div>
                 </div>
               </motion.div>
+            </div>
+          )}
+
+          {view === 'radio' && (
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+                {/* Hero Player Card */}
+                <div className="lg:col-span-1 bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 flex flex-col justify-between relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                  {/* Glowing ambient background based on selected station */}
+                  <div
+                    className={cn(
+                      "absolute -top-32 -right-32 w-80 h-80 blur-[120px] rounded-full opacity-25 transition-all duration-1000 pointer-events-none bg-gradient-to-br",
+                      currentRadioStation ? currentRadioStation.color : "from-primary/30 to-transparent"
+                    )}
+                  />
+
+                  <div className="relative z-10 flex flex-col items-center text-center gap-6">
+                    <div className="px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.25em] flex items-center gap-2">
+                      <Radio className="w-3.5 h-3.5 animate-pulse" />
+                      <span>إذاعة القرآن الكريم</span>
+                    </div>
+
+                    {/* Rotating Vinyl design */}
+                    <div className="relative w-48 h-48 my-2 flex items-center justify-center">
+                      <div
+                        className={cn(
+                          "absolute inset-0 rounded-full border border-white/5 bg-black/50 transition-all duration-[4s] shadow-2xl flex items-center justify-center",
+                          isPlayingRadio && !isRadioBuffering ? "animate-spin" : ""
+                        )}
+                        style={{ animationDuration: '10s' }}
+                      >
+                        {/* Vinyl grooves */}
+                        <div className="absolute inset-2 rounded-full border border-dashed border-white/5" />
+                        <div className="absolute inset-4 rounded-full border border-white/5" />
+                        <div className="absolute inset-8 rounded-full border border-dashed border-white/5" />
+                        <div className="absolute inset-12 rounded-full border border-white/5" />
+                      </div>
+
+                      {/* Vinyl center sticker */}
+                      <div className={cn(
+                        "w-20 h-20 rounded-full bg-gradient-to-tr flex flex-col items-center justify-center border-[6px] border-black/90 shadow-2xl relative z-10 transition-all duration-700",
+                        currentRadioStation ? currentRadioStation.color : "from-zinc-800 to-zinc-900"
+                      )}>
+                        <span className="text-3xl">{currentRadioStation ? currentRadioStation.icon : '📻'}</span>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <div className="space-y-2 h-20 flex flex-col justify-center">
+                      {currentRadioStation ? (
+                        <>
+                          <h3 className="text-xl font-black text-white leading-tight px-2">{currentRadioStation.name}</h3>
+                          <p className="text-white/40 text-xs font-semibold">{currentRadioStation.subtitle}</p>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-xl font-black text-white/40">بانتظار اختيار محطة</h3>
+                          <p className="text-white/20 text-xs font-medium">استمتع بتلاوات وبث مباشر على مدار الساعة</p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Wave Visualizer */}
+                    <div className="flex gap-[4px] items-center h-10 my-1 justify-center w-full">
+                      {isPlayingRadio && !isRadioBuffering ? (
+                        [0.2, 0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4, 0.2].map((val, i) => (
+                          <motion.div
+                            key={i}
+                            className={cn("w-[4px] rounded-full", currentRadioStation ? currentRadioStation.textColor.replace('text-', 'bg-') : "bg-primary")}
+                            animate={{ height: [8, 32, 8] }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 0.7 + (i % 3) * 0.12,
+                              delay: i * 0.07,
+                              ease: 'easeInOut'
+                            }}
+                          />
+                        ))
+                      ) : isRadioBuffering ? (
+                        <div className="flex items-center gap-2 text-white/40 text-xs font-black animate-pulse">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <span>جاري تحميل البث المباشر...</span>
+                        </div>
+                      ) : (
+                        <div className="h-[2px] w-36 bg-white/10 rounded-full" />
+                      )}
+                    </div>
+
+                    {/* Player Controls */}
+                    <div className="w-full flex flex-col items-center gap-4 mt-2">
+                      {/* Play Button */}
+                      {currentRadioStation && (
+                        <button
+                          onClick={() => handlePlayRadio(currentRadioStation)}
+                          className={cn(
+                            "w-16 h-16 rounded-[2rem] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl",
+                            isPlayingRadio && !isRadioBuffering ? "bg-white text-black hover:bg-white/90" : "bg-primary text-primary-foreground shadow-glow-primary"
+                          )}
+                        >
+                          {isRadioBuffering ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          ) : isPlayingRadio ? (
+                            <Pause className="w-6 h-6 fill-current" />
+                          ) : (
+                            <Play className="w-6 h-6 fill-current" />
+                          )}
+                        </button>
+                      )}
+
+                      {/* Volume controls */}
+                      <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl w-full max-w-[220px]">
+                        <button onClick={() => setRadioVolume(prev => prev === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
+                          {radioVolume === 0 ? <VolumeX className="w-4.5 h-4.5 text-rose-500" /> : <Volume2 className="w-4.5 h-4.5 text-primary" />}
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={radioVolume}
+                          onChange={(e) => setRadioVolume(parseFloat(e.target.value))}
+                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stations List Grid Section */}
+                <div className="lg:col-span-2 space-y-6 flex flex-col">
+                  {/* Search bar inside Radio View */}
+                  <div className="relative group">
+                    <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="ابحث عن محطة بث أو اسم قارئ..."
+                      value={radioSearchQuery}
+                      onChange={(e) => setRadioSearchQuery(e.target.value)}
+                      className="w-full h-16 bg-[#0a0a0a]/80 border border-white/10 rounded-[1.5rem] ps-14 pe-6 text-sm text-white outline-none focus:border-primary/30 focus:bg-white/[0.04] transition-all"
+                    />
+                    {radioSearchQuery && (
+                      <button onClick={() => setRadioSearchQuery('')} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                        <X className="w-4.5 h-4.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Stations Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                    {filteredStations.map(station => {
+                      const isCurrent = currentRadioStation?.id === station.id;
+                      const isPlayingThis = isCurrent && isPlayingRadio;
+                      const isFav = favoriteRadioIds.includes(station.id);
+                      return (
+                        <div
+                          key={station.id}
+                          onClick={() => handlePlayRadio(station)}
+                          className={cn(
+                            "p-6 rounded-[2rem] border transition-all duration-300 cursor-pointer flex flex-col justify-between gap-4 relative overflow-hidden group hover:scale-[1.015]",
+                            isCurrent
+                              ? `${station.color} ${station.borderColor} shadow-[0_15px_35px_-5px_rgba(0,0,0,0.4)]`
+                              : "bg-white/[0.02] border-white/5 hover:bg-white/[0.06] hover:border-white/10"
+                          )}
+                        >
+                          {/* Favorite button */}
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-white/5 border border-white/5 shadow-inner shrink-0">
+                                {station.icon}
+                              </div>
+                              <div className="text-right">
+                                <h4 className={cn("font-black text-sm transition-colors", isCurrent ? "text-white" : "text-white/85 group-hover:text-white")}>{station.name}</h4>
+                                <p className="text-[10px] text-white/35 font-bold line-clamp-1 mt-0.5">{station.subtitle}</p>
+                              </div>
+                            </div>
+
+                            <button onClick={(e) => toggleFavoriteRadio(station.id, e)} className="p-2 hover:bg-white/10 rounded-xl transition-colors self-start z-20">
+                              <Heart className={cn("w-4 h-4 transition-colors", isFav ? "text-rose-500 fill-current" : "text-white/20 group-hover:text-white/40")} />
+                            </button>
+                          </div>
+
+                          <div className="flex justify-between items-center mt-2 border-t border-white/[0.03] pt-4">
+                            <span className={cn(
+                              "text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all",
+                              isPlayingThis
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 animate-pulse"
+                                : isCurrent && isRadioBuffering
+                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/25"
+                                  : "bg-white/5 text-white/35 border-transparent"
+                            )}>
+                              {isPlayingThis ? "البث المباشر نشط 🟢" : isCurrent && isRadioBuffering ? "جاري التوصيل..." : "بث مباشر"}
+                            </span>
+
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
+                              isCurrent ? "bg-white text-black" : "bg-white/5 text-white/40 group-hover:bg-primary/20 group-hover:text-primary"
+                            )}>
+                              {isPlayingThis ? <Pause className="w-4.5 h-4.5 fill-current" /> : <Play className="w-4.5 h-4.5 fill-current" />}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {filteredStations.length === 0 && (
+                      <div className="col-span-full py-20 text-center text-white/20">
+                        <Radio className="w-12 h-12 mx-auto opacity-15 mb-4 animate-pulse" />
+                        <p className="text-sm font-bold">لم نجد محطة بث تطابق بحثك</p>
+                        <p className="text-[10px] text-white/10 mt-1">تأكد من إدخال اسم القارئ بشكل صحيح</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
