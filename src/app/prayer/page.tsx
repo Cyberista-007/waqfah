@@ -24,7 +24,8 @@ import {
   FileText,
   Volume2,
   Activity,
-  MapPin
+  MapPin,
+  Copy
 } from "lucide-react";
 
 // ==========================================
@@ -166,6 +167,114 @@ const ADHKAR_LIST = [
 ];
 
 // ==========================================
+// PRAYER DUAS DATABASE (Mausoo'at Ad'eeyah)
+// ==========================================
+const DUAS_DATABASE = [
+  {
+    category: "الاستفتاح",
+    label: "أدعية الاستفتاح",
+    items: [
+      {
+        id: "d1",
+        title: "الصيغة الأولى (الاستفتاح بالتنزيه والحمد)",
+        text: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، وَتَبَارَكَ اسْمُكَ، وَتَعَالَى جَدُّكَ، وَلَا إِلَهَ غَيْرُكَ",
+        translation: "أنزهك يا الله تنزيهاً مطلقاً متلبساً بحمدك، وكثر خير اسمك وبركته، وعلا جلالك وعظمتك، ولا معبود بحق سواك.",
+        benefit: "سنة بعد تكبيرة الإحرام وقبل القراءة. يبعث في القلب التعظيم والتنزيه الكامل لله تبارك وتعالى، مما يهيئ العقل للتركيز والخشوع والتجرد من الشواغل الدنيوية.",
+        source: "رواه أبو داود والترمذي وصححه الألباني"
+      },
+      {
+        id: "d2",
+        title: "الصيغة الثانية (طلب التطهير والغسيل من الذنوب)",
+        text: "اللَّهُمَّ بَاعِدْ بَيْنِي وَبَيْنِ خَطَايَايَ كَمَا بَاعَدْتَ بَيْنَ الْمَشْرِقِ وَالْمَغْرِبِ، اللَّهُمَّ نَقِّنِي مِنْ خَطَايَايَ كَمَا يُنَقَّى الثَّوْبُ الْأَبْيَضُ مِنَ الدَّنَسِ، اللَّهُمَّ اغْسِلْنِي مِنْ خَطَايَايَ بِالثَّلْجِ وَالْمَاءِ وَالْبَرَدِ",
+        translation: "يا رب، اجعل مسافة هائلة بيني وبين ذنوبي كما باعدت بين المشرق والمغرب، ونظفني منها كما يُنظف الثوب الأبيض من الأوساخ، واغسل خطاياي ببرد مغفرتك المطفئ لحرارة المعاصي.",
+        benefit: "من أبلغ أدعية الاستفتاح في التوبة. استشعار وقوفك نقياً طاهراً يزيل عن كاهلك ثقل الذنوب، ويجعلك تقرأ القرآن بقلب سليم مطمئن وعين خاشعة.",
+        source: "رواه البخاري ومسلم"
+      }
+    ]
+  },
+  {
+    category: "الركوع",
+    label: "أدعية الركوع",
+    items: [
+      {
+        id: "d3",
+        title: "التسبيح والتعظيم المعتاد",
+        text: "سُبْحَانَ رَبِّيَ الْعَظِيمِ",
+        translation: "تنزيهاً وتقديساً لربي صاحب العظمة والكبرياء والجلال.",
+        benefit: "يُشرع تكرارها ثلاثاً أو أكثر. انحناء الجسد في الركوع يمثل الخضوع الظاهري، وتسبيح العظيم يمثل الخضوع القلبي الباطن، فتنحني الروح طاعة لله.",
+        source: "صحيح مسلم"
+      },
+      {
+        id: "d4",
+        title: "التسبيح والتقديس لرب الملائكة",
+        text: "سُبُّوحٌ قُدُّوسٌ، رَبُّ الْمَلَائِكَةِ وَالرُّوحِ",
+        translation: "المطهر والمنزه المنفرد بالكمال، رب جميع الملائكة الكرام وجبريل عليه السلام.",
+        benefit: "كان النبي ﷺ يكثر من قولها لربط عظمة الأرض بعظمة السماء وأكوان الغيب، فتستشعر طواف الملائكة حول العرش.",
+        source: "رواه مسلم"
+      },
+      {
+        id: "d5",
+        title: "تسبيح مقرون بطلب المغفرة",
+        text: "سُبْحَانَكَ اللَّهُمَّ رَبَّنَا وَبِحَمْدِكَ اللَّهُمَّ اغْفِرْ لِي",
+        translation: "تنزيهاً لك يا الله ربنا وحمداً لك، أسألك أن تمحو ذنوبي وتقيل عثرتي.",
+        benefit: "كان النبي ﷺ يداوم عليه متأولاً للقرآن الكريم (سورة النصر)، وهو يجمع بين التعظيم وطلب المغفرة في آن واحد.",
+        source: "رواه البخاري ومسلم"
+      }
+    ]
+  },
+  {
+    category: "السجود",
+    label: "أدعية السجود (أقرب ما تكون)",
+    items: [
+      {
+        id: "d6",
+        title: "التسبيح الأساسي للسجود",
+        text: "سُبْحَانَ رَبِّيَ الْأَعْلَى",
+        translation: "أقدس ربي الأعلى الذي له العلو المطلق فوق كل شيء، بينما أضع أشرف ما في جسدي (وجهي) على الأرض تذللاً وخضوعاً له.",
+        benefit: "السجود هو غاية التواضع، وتسبيح (الأعلى) يذكرك بعظمة من تسجد له، مما يملأ النفس طمأنينة وسكينة ويقين بالإجابة.",
+        source: "صحيح مسلم"
+      },
+      {
+        id: "d7",
+        title: "الدعاء الشامل لطلب المغفرة التامة",
+        text: "اللَّهُمَّ اغْفِرْ لِي ذَنْبِي كُلَّهُ دِقَّهُ وَجِلَّهُ، وَأَوَّلَهُ وَآخِرَهُ وَعَلَانِيَتَهُ وَسِرَّهُ",
+        translation: "اللهم اغفر لي ذنوبي جميعها: الصغير منها والكبير، القديم والحديث، ما جهرت به وما أسررته.",
+        benefit: "كان يدعو به النبي ﷺ في سجوده، مستغلاً فرصة القرب الإلهي لغسل الصحيفة كلياً والعودة بقلب نقي كأنه ولد من جديد.",
+        source: "رواه مسلم"
+      }
+    ]
+  },
+  {
+    category: "بين السجدتين",
+    label: "الدعاء بين السجدتين",
+    items: [
+      {
+        id: "d8",
+        title: "طلب الجبر والرحمة والرزق",
+        text: "رَبِّ اغْفِرْ لِي، رَبِّ اغْفِرْ لِي، اللَّهُمَّ اغْفِرْ لِي وَارْحَمْنِي وَاجْبُرْنِي وَاهْدِنِي وَارْزُقْنِي",
+        translation: "يا رب اغفر لي، وارحمني، واجبر كسري وضعفي، واهدني للحق، وارزقني من فضلك العظيم.",
+        benefit: "هذا الدعاء يجمع كل مقومات الحياة الطيبة في الدنيا والآخرة، ويساعد على الطمأنينة وإعطاء هذا الركن حقه الشرعي بلا عجلة.",
+        source: "رواه الترمذي وأبو داود"
+      }
+    ]
+  },
+  {
+    category: "التشهد الأخير",
+    label: "قبل السلام",
+    items: [
+      {
+        id: "d9",
+        title: "الاستعاذة من المهلكات الأربع",
+        text: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عَذَابِ جَهَنَّمَ، وَمِنْ عَذَابِ الْقَبْرِ، وَمِنْ فِتْنَةِ الْمَحْيَا وَالْمَمَاتِ، وَمِنْ شَرِّ فِتْنَةِ الْمَسِيحِ الدَّجَّالِ",
+        translation: "اللهم إني أستجير بك من عذاب النار وعذاب القبر، ومن فتن الدنيا عند الحياة وفتنة الموت عند الغرغرة، ومن شر فتنة المسيح الدجال الكبرى.",
+        benefit: "كان النبي ﷺ يأمر أصحابه بالاستعاذة بهذه الأربع قبل التسليم والانتهاء من الصلاة لعظم شأنها وأثرها في تثبيت العقيدة.",
+        source: "رواه البخاري ومسلم"
+      }
+    ]
+  }
+];
+
+// ==========================================
 // SUNAN & NAWAFIL DATA
 // ==========================================
 const SUNAN_ITEMS = [
@@ -174,7 +283,7 @@ const SUNAN_ITEMS = [
   { key: "dhuhrPostRawatib", label: "سنة الظهر البعدية", desc: "ركعتان بعد صلاة الظهر", rakaat: 2 },
   { key: "maghribRawatib", label: "سنة المغرب البعدية", desc: "ركعتان بعد صلاة المغرب", rakaat: 2 },
   { key: "ishaRawatib", label: "سنة العشاء البعدية", desc: "ركعتان بعد صلاة العشاء", rakaat: 2 },
-  { key: "duha", label: "صلاة الضحى", desc: "من ركعتين إلى ثمان ركعات (تعدل صدقة عن كل مفصل)", rakaat: "2-8" },
+  { key: "duha", label: "صلاة الضحى", desc: "من ركعتين إلى ثمان ركعات (تعدل صدقة عن كل مفصل في الجسم)", rakaat: "2-8" },
   { key: "qiyamWitr", label: "قيام الليل والوتر", desc: "تبدأ من ركعة إلى إحدى عشرة ركعة بعد صلاة العشاء", rakaat: "1-11" }
 ];
 
@@ -217,7 +326,7 @@ const DEFAULT_VIDEOS = [
     title: "أخطاء شائعة في الصلاة قد تبطلها أو تنقص أجرها",
     lecturer: "الشيخ د. عثمان الخميس",
     url: "https://www.youtube.com/embed/kYcsaE0KzYw",
-    category: "تنببهات وأخطاء",
+    category: "تنبيهات وأخطاء",
     description: "استعراض للأخطاء الحركية واللفظية التي يقع فيها بعض المصلين وكيفية تفاديها باتباع السُنّة النبوية.",
     duration: "15 دقيقة",
     isDefault: true
@@ -279,7 +388,7 @@ const getCountdown = (cityId: string) => {
   };
 };
 
-// Synth Audio Helper using Web Audio API
+// Synth Audio Click Helper
 const playSound = (freq = 800, type: OscillatorType = "sine", duration = 0.08) => {
   if (typeof window === "undefined") return;
   try {
@@ -302,6 +411,35 @@ const playSound = (freq = 800, type: OscillatorType = "sine", duration = 0.08) =
   } catch (e) {
     console.error("Audio feedback error:", e);
   }
+};
+
+// Synth Audio Chime for Qibla Alignment
+const playChime = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioContextClass();
+    
+    const playNote = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      
+      gain.gain.setValueAtTime(0.08, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration);
+    };
+    
+    playNote(523.25, 0, 0.4); // C5
+    playNote(659.25, 0.1, 0.4); // E5
+    playNote(783.99, 0.2, 0.5); // G5
+  } catch (e) {}
 };
 
 // Get last 7 days starting from 6 days ago up to today
@@ -353,7 +491,7 @@ export default function PrayerPage() {
   };
 
   const [activeTheme, setActiveTheme] = useState<string>("emerald");
-  const [activeTab, setActiveTab] = useState<"importance" | "khushu" | "adhkar" | "videos" | "tracker">("importance");
+  const [activeTab, setActiveTab] = useState<"importance" | "khushu" | "adhkar" | "duas" | "videos" | "tracker">("importance");
   
   // Interactive Countdown widget state
   const [selectedCity, setSelectedCity] = useState<string>("mecca");
@@ -364,6 +502,15 @@ export default function PrayerPage() {
     seconds: 0,
     totalSeconds: 0
   });
+
+  // Qibla Compass state
+  const [userAngle, setUserAngle] = useState<number>(0);
+  const [justAligned, setJustAligned] = useState<boolean>(false);
+
+  // Prayer Duas state
+  const [duaCategoryFilter, setDuaCategoryFilter] = useState<string>("الاستفتاح");
+  const [expandedDuas, setExpandedDuas] = useState<Record<string, boolean>>({});
+  const [copiedDuaId, setCopiedDuaId] = useState<string | null>(null);
 
   // Videos library state
   const [videos, setVideos] = useState<any[]>(DEFAULT_VIDEOS);
@@ -492,6 +639,30 @@ export default function PrayerPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [selectedCity]);
+
+  // Compass Qibla Alignment Detection Hook
+  const qiblaAngles: Record<string, number> = {
+    mecca: 0,
+    medina: 180,
+    riyadh: 254,
+    cairo: 135,
+    amman: 161,
+    jerusalem: 161
+  };
+  const qiblaAngle = qiblaAngles[selectedCity] || 0;
+  const angleDiff = Math.abs(userAngle - qiblaAngle);
+  const isAligned = selectedCity === 'mecca' ? true : (angleDiff < 5 || angleDiff > 355);
+
+  useEffect(() => {
+    if (selectedCity === 'mecca') return;
+    if (isAligned && !justAligned) {
+      playChime();
+      triggerToast("تم محاذاة القبلة بنجاح باتجاه الكعبة المشرفة 🕋");
+      setJustAligned(true);
+    } else if (!isAligned && justAligned) {
+      setJustAligned(false);
+    }
+  }, [isAligned, selectedCity]);
 
   // Show toast notification helper
   const triggerToast = (msg: string) => {
@@ -670,6 +841,23 @@ export default function PrayerPage() {
     syncToHistory(prayersLogged, updated);
   };
 
+  // Dua Actions
+  const handleCopyDua = (text: string, id: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedDuaId(id);
+      triggerToast("تم نسخ الدعاء للمحافظة عليه في صلاتك!");
+      setTimeout(() => setCopiedDuaId(null), 2000);
+    }
+  };
+
+  const toggleDuaExpand = (id: string) => {
+    setExpandedDuas(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   // Evaluation Calculations
   const donePrayersCount = Object.values(prayersLogged).filter(p => p.done).length;
   const averageFocus = donePrayersCount > 0 
@@ -736,8 +924,7 @@ export default function PrayerPage() {
 
   // Calculate SVG line path points for Focus score
   const focusPoints = daysData.map((d, i) => {
-    const x = 35 + i * 65 + 14;
-    // Map avgFocus (0-10) to Y value in range [110, 45]
+    const x = 30 + i * 65 + 15;
     const y = 110 - (d.avgFocus * 6.5);
     return { x, y, val: d.avgFocus };
   });
@@ -801,7 +988,7 @@ export default function PrayerPage() {
             </p>
           </div>
 
-          {/* Quick interactive widget: Next prayer counter & Countdown */}
+          {/* Quick interactive widget: Next prayer counter */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-4 w-full lg:w-fit shrink-0">
             {/* Daily Obligatory Meter */}
             <div className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-black/40 border border-white/10 backdrop-blur w-full sm:w-60`}>
@@ -835,74 +1022,160 @@ export default function PrayerPage() {
           </div>
         </div>
 
-        {/* ================= INTERACTIVE PRAYER TIMES & COUNTDOWN WIDGET ================= */}
-        <section className={`p-6 rounded-3xl bg-black/30 border border-white/5 flex flex-col gap-5 shadow-xl w-full`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
-            <div className="flex items-center gap-2.5">
-              <MapPin className={`w-4 h-4 ${theme.accentClass}`} />
-              <span className="text-xs font-bold text-slate-100">مواقيت الصلاة في:</span>
-              <select
-                value={selectedCity}
-                onChange={(e) => {
-                  setSelectedCity(e.target.value);
-                  triggerToast(`تم تحويل التوقيت إلى: ${CITIES[e.target.value].name}`);
-                }}
-                className={`px-3 py-1 rounded-xl text-xs outline-none bg-slate-900 border border-white/10 ${theme.accentClass} font-semibold cursor-pointer`}
-              >
-                {Object.entries(CITIES).map(([id, c]) => (
-                  <option key={id} value={id} className="bg-slate-900 text-white">
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex items-center gap-2 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/25">
-              <Clock className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: "12s" }} />
-              <span className="text-xs font-bold text-amber-400">
-                العد التنازلي لـ {countdown.nextPrayer.label}:
-              </span>
-              <span className="text-sm font-black text-amber-300 tracking-wider font-mono">
-                {String(countdown.hours).padStart(2, '0')}:
-                {String(countdown.minutes).padStart(2, '0')}:
-                {String(countdown.seconds).padStart(2, '0')}
-              </span>
-            </div>
+        {/* ================= DUAL WIDGETS: PRAYER TIMES & QIBLA COMPASS ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Column 1 & 2: Prayer Times & Countdown */}
+          <div className="lg:col-span-2 flex">
+            <section className={`p-6 rounded-3xl bg-black/30 border border-white/5 flex flex-col gap-5 shadow-xl w-full justify-between`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <MapPin className={`w-4 h-4 ${theme.accentClass}`} />
+                  <span className="text-xs font-bold text-slate-100">مواقيت الصلاة في:</span>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => {
+                      setSelectedCity(e.target.value);
+                      triggerToast(`تم تحويل التوقيت إلى: ${CITIES[e.target.value].name}`);
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs outline-none bg-slate-900 border border-white/10 ${theme.accentClass} font-semibold cursor-pointer`}
+                  >
+                    {Object.entries(CITIES).map(([id, c]) => (
+                      <option key={id} value={id} className="bg-slate-900 text-white">
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex items-center gap-2 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/25">
+                  <Clock className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: "12s" }} />
+                  <span className="text-xs font-bold text-amber-400">
+                    العد التنازلي لـ {countdown.nextPrayer.label}:
+                  </span>
+                  <span className="text-sm font-black text-amber-300 tracking-wider font-mono">
+                    {String(countdown.hours).padStart(2, '0')}:
+                    {String(countdown.minutes).padStart(2, '0')}:
+                    {String(countdown.seconds).padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Prayer grid */}
+              <div className="grid grid-cols-5 gap-2.5 text-center">
+                {[
+                  { id: "Fajr", label: "الفجر", icon: "🌅" },
+                  { id: "Dhuhr", label: "الظهر", icon: "☀️" },
+                  { id: "Asr", label: "العصر", icon: "⛅" },
+                  { id: "Maghrib", label: "المغرب", icon: "🌇" },
+                  { id: "Isha", label: "العشاء", icon: "🌃" }
+                ].map((p) => {
+                  const isNext = countdown.nextPrayer.id === p.id;
+                  const cityObj = CITIES[selectedCity] || CITIES.mecca;
+                  // @ts-ignore
+                  const time = cityObj[p.id.toLowerCase()];
+                  return (
+                    <div
+                      key={p.id}
+                      className={`p-2.5 rounded-2xl border transition-all duration-300 ${
+                        isNext
+                          ? `bg-amber-500/10 border-amber-500/40 shadow-lg ${theme.glowClass} scale-[1.03]`
+                          : "bg-black/25 border-white/5 hover:border-white/10"
+                      }`}
+                    >
+                      <span className="text-lg block">{p.icon}</span>
+                      <span className="text-[9px] opacity-60 block my-1 font-bold">{p.label}</span>
+                      <span className="text-xs font-extrabold block text-slate-100 font-mono">{time}</span>
+                      {isNext && (
+                        <span className="text-[7px] font-black text-amber-400 block animate-pulse mt-0.5">القادمة</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           </div>
 
-          {/* Prayer grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
-            {[
-              { id: "Fajr", label: "الفجر", icon: "🌅" },
-              { id: "Dhuhr", label: "الظهر", icon: "☀️" },
-              { id: "Asr", label: "العصر", icon: "⛅" },
-              { id: "Maghrib", label: "المغرب", icon: "🌇" },
-              { id: "Isha", label: "العشاء", icon: "🌃" }
-            ].map((p) => {
-              const isNext = countdown.nextPrayer.id === p.id;
-              const cityObj = CITIES[selectedCity] || CITIES.mecca;
-              // @ts-ignore
-              const time = cityObj[p.id.toLowerCase()];
-              return (
-                <div
-                  key={p.id}
-                  className={`p-3.5 rounded-2xl border transition-all duration-300 ${
-                    isNext
-                      ? `bg-amber-500/10 border-amber-500/40 shadow-lg ${theme.glowClass} scale-[1.03]`
-                      : "bg-black/25 border-white/5 hover:border-white/10"
-                  }`}
-                >
-                  <span className="text-xl block">{p.icon}</span>
-                  <span className="text-[10px] opacity-60 block my-1 font-bold">{p.label}</span>
-                  <span className="text-sm font-extrabold block text-slate-100 font-mono">{time}</span>
-                  {isNext && (
-                    <span className="text-[8px] font-black text-amber-400 block animate-pulse mt-1">الصلاة القادمة</span>
+          {/* Column 3: Qibla Compass */}
+          <div className="lg:col-span-1 flex">
+            <section className={`p-6 rounded-3xl bg-black/30 border ${isAligned ? 'border-emerald-500/30 bg-emerald-950/5' : 'border-white/5'} flex flex-col gap-4 shadow-xl w-full items-center justify-between transition-all duration-300`}>
+              <div className="w-full flex items-center justify-between border-b border-white/5 pb-2">
+                <span className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                  <Compass className={`w-4 h-4 ${theme.accentClass} ${isAligned ? 'animate-spin' : ''}`} />
+                  محاكي بوصلة القبلة
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isAligned ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-slate-400'}`}>
+                  {selectedCity === 'mecca' ? "أنت في مكة" : isAligned ? "القبلة صحيحة 🕋" : "دوّر البوصلة"}
+                </span>
+              </div>
+
+              {/* Compass Dial */}
+              <div className="relative flex items-center justify-center">
+                <svg viewBox="0 0 150 150" className="w-32 h-32 md:w-36 md:h-36">
+                  <circle cx="75" cy="75" r="68" fill="none" stroke={isAligned ? "#10b981" : "rgba(255,255,255,0.05)"} strokeWidth="2.5" className="transition-all duration-300" />
+                  
+                  {/* Rotating Dial Group */}
+                  <g transform={`rotate(${-userAngle}, 75, 75)`} className="transition-transform duration-100">
+                    <circle cx="75" cy="75" r="60" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+                    
+                    <line x1="75" y1="15" x2="75" y2="20" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                    <line x1="75" y1="130" x2="75" y2="135" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                    <line x1="15" y1="75" x2="20" y2="75" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                    <line x1="130" y1="75" x2="135" y2="75" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                    
+                    <text x="75" y="27" fill="#ef4444" fontSize="9" fontWeight="bold" textAnchor="middle">ش</text>
+                    <text x="75" y="129" fill="rgba(255,255,255,0.5)" fontSize="8" textAnchor="middle">ج</text>
+                    <text x="127" y="78" fill="rgba(255,255,255,0.5)" fontSize="8" textAnchor="middle">ق</text>
+                    <text x="23" y="78" fill="rgba(255,255,255,0.5)" fontSize="8" textAnchor="middle">غ</text>
+
+                    {/* Kaaba Target Marker */}
+                    {selectedCity !== 'mecca' && (
+                      <g transform={`rotate(${qiblaAngle}, 75, 75)`}>
+                        <line x1="75" y1="15" x2="75" y2="35" stroke="#d4af37" strokeWidth="2" strokeDasharray="2,2" />
+                        <circle cx="75" cy="28" r="5" fill="#d4af37" />
+                        <text x="75" y="42" fill="#d4af37" fontSize="7" fontWeight="bold" textAnchor="middle">🕋 القبلة</text>
+                      </g>
+                    )}
+                  </g>
+
+                  {/* Fixed front pointer */}
+                  <polygon points="75,10 71,20 79,20" fill={isAligned ? "#10b981" : "#ef4444"} className="transition-all duration-300" />
+                  
+                  {/* Needle pointing to Mecca */}
+                  {selectedCity !== 'mecca' ? (
+                    <g transform={`rotate(${qiblaAngle - userAngle}, 75, 75)`} className="transition-transform duration-100">
+                      <polygon points="75,32 71,75 79,75" fill="#d4af37" />
+                      <polygon points="75,118 71,75 79,75" fill="rgba(255,255,255,0.2)" />
+                      <circle cx="75" cy="75" r="4.5" fill="#000" stroke="#d4af37" strokeWidth="1.5" />
+                    </g>
+                  ) : (
+                    <circle cx="75" cy="75" r="8" fill="#10b981" className="animate-ping" />
                   )}
+                </svg>
+              </div>
+
+              {/* Slider for rotation simulation */}
+              <div className="flex flex-col items-center gap-1.5 w-full">
+                <span className="text-[9px] opacity-60 font-semibold">حاكي تدوير جهازك حتى تطابق سهم القبلة:</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  value={userAngle}
+                  onChange={(e) => setUserAngle(parseInt(e.target.value))}
+                  className="w-full accent-amber-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between w-full text-[9px] opacity-40 font-mono">
+                  <span>0° ش</span>
+                  <span>90° ق</span>
+                  <span>180° ج</span>
+                  <span>270° غ</span>
                 </div>
-              );
-            })}
+              </div>
+            </section>
           </div>
-        </section>
+          
+        </div>
 
         {/* ================= THEME PICKER SELECTION ================= */}
         <section className={`rounded-3xl p-5 bg-black/30 border border-white/5 flex flex-col gap-4 shadow-lg`}>
@@ -920,7 +1193,7 @@ export default function PrayerPage() {
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-semibold transition-all duration-300 cursor-pointer ${
                   activeTheme === t.id
                     ? `${t.primaryButton} scale-[1.05] border-transparent font-black shadow-lg`
-                    : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-300 hover:border-white/20"
+                    : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-350 hover:border-white/20"
                 }`}
               >
                 <div className={`w-3.5 h-3.5 rounded-full border border-black/10`} style={{ 
@@ -941,6 +1214,7 @@ export default function PrayerPage() {
             { id: "importance", label: "أهمية الصلاة ومكانتها", icon: <FileText className="w-4 h-4" /> },
             { id: "khushu", label: "دليل الخشوع والسكينة", icon: <Award className="w-4 h-4" /> },
             { id: "adhkar", label: "الأذكار والمسبحة", icon: <Volume2 className="w-4 h-4" /> },
+            { id: "duas", label: "أدعية الصلاة", icon: <BookOpen className="w-4 h-4" /> },
             { id: "videos", label: "مكتبة المرئيات والدروس", icon: <Tv className="w-4 h-4" /> },
             { id: "tracker", label: "مخطط الصلاة والطمأنينة", icon: <Compass className="w-4 h-4" /> }
           ].map((tab) => (
@@ -1136,7 +1410,7 @@ export default function PrayerPage() {
                   <h4 className="text-xs font-bold text-emerald-400 mb-2">💡 نصيحة نبوية للخشوع</h4>
                   <p className="text-xs opacity-80 leading-relaxed font-light">
                     عن أبي أيوب قال: جاء رجل إلى النبي ﷺ فقال: عظني وأوجز، فقال ﷺ: <span className="text-amber-400 font-semibold">«إذا قمتَ في صلاتِكَ فصَلِّ صلاةَ مُودِّعٍ»</span>.
-                    تخيل دائماً أن هذه الصلاة هي آخر عمل تقوم به في الدنيا قبل الرحيل، كيف ستصليها؟
+                    تخيل دائماً أن هذه الصلاة هي آخر عمل تقوم به في الدنيا قبل الرحيل، كيف ستصليها?
                   </p>
                 </div>
 
@@ -1348,7 +1622,97 @@ export default function PrayerPage() {
             </div>
           )}
 
-          {/* 4. VIDEOS LIBRARY TAB */}
+          {/* 4. PRAYER DUAS TAB */}
+          {activeTab === "duas" && (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              
+              {/* Category Pill Filters */}
+              <div className="lg:col-span-1 flex flex-col gap-2">
+                <span className="text-[10px] opacity-50 uppercase tracking-widest font-black block mb-1">تصنيف الأدعية:</span>
+                {DUAS_DATABASE.map((cat) => (
+                  <button
+                    key={cat.category}
+                    onClick={() => setDuaCategoryFilter(cat.category)}
+                    className={`px-4 py-3 rounded-2xl text-xs font-bold text-right transition-all border cursor-pointer ${
+                      duaCategoryFilter === cat.category
+                        ? `${theme.primaryButton} shadow-md scale-[1.02]`
+                        : "bg-black/30 border-white/5 text-slate-300 hover:bg-black/50 hover:border-white/10"
+                    }`}
+                  >
+                    {cat.category === "الاستفتاح" ? "🌅 دعاء الاستفتاح" :
+                     cat.category === "الركوع" ? "⛅ أدعية الركوع" :
+                     cat.category === "السجود" ? "🕋 أدعية السجود" :
+                     cat.category === "بين السجدتين" ? "🧎 بين السجدتين" : "🤲 قبل السلام"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Duas items list */}
+              <div className="lg:col-span-3 flex flex-col gap-4">
+                {DUAS_DATABASE.find(c => c.category === duaCategoryFilter)?.items.map((dua) => {
+                  const isExpanded = expandedDuas[dua.id] || false;
+                  const isCopied = copiedDuaId === dua.id;
+                  return (
+                    <div
+                      key={dua.id}
+                      className={`p-5 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col gap-4`}
+                    >
+                      {/* Title & Actions */}
+                      <div className="flex justify-between items-start gap-4 border-b border-white/5 pb-2">
+                        <h4 className="text-sm font-bold text-slate-100">{dua.title}</h4>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleCopyDua(dua.text, dua.id)}
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-350 hover:text-white transition cursor-pointer"
+                            title="نسخ النص"
+                          >
+                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => toggleDuaExpand(dua.id)}
+                            className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
+                              isExpanded 
+                                ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                            }`}
+                          >
+                            {isExpanded ? "إخفاء المعنى" : "فهم المعنى لتدبر الخشوع"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Large Arabic text */}
+                      <p className="text-lg md:text-xl font-bold leading-loose text-center text-slate-100 px-4 select-all font-serif py-2">
+                        {dua.text}
+                      </p>
+
+                      {/* Details */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] opacity-60">
+                        <span>المصدر: {dua.source}</span>
+                      </div>
+
+                      {/* Expanded insights */}
+                      {isExpanded && (
+                        <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl flex flex-col gap-2.5 animate-in fade-in duration-200">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-amber-400 font-bold">📖 المعنى اللفظي والترجمة:</span>
+                            <p className="text-xs opacity-90 leading-relaxed font-light">{dua.translation}</p>
+                          </div>
+                          <div className="flex flex-col gap-1 border-t border-white/5 pt-2">
+                            <span className="text-[10px] text-emerald-400 font-bold">✨ أثر الدعاء في تحقيق الخشوع:</span>
+                            <p className="text-xs opacity-90 leading-relaxed font-light">{dua.benefit}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+          )}
+
+          {/* 5. VIDEOS LIBRARY TAB */}
           {activeTab === "videos" && (
             <div className="flex flex-col gap-8">
               
@@ -1447,7 +1811,7 @@ export default function PrayerPage() {
             </div>
           )}
 
-          {/* 5. TRACKER & LOGGER TAB */}
+          {/* 6. TRACKER & LOGGER TAB */}
           {activeTab === "tracker" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
