@@ -608,6 +608,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
                             <Button 
                                 onClick={handleShare}
+                                aria-label="مشاركة المحاضرة"
                                 className="h-16 w-16 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all shadow-xl"
                             >
                                 <Share2 className="w-6 h-6" />
@@ -641,13 +642,14 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/60 h-8 w-8">
+                    <Button variant="ghost" size="icon" aria-label="تغيير الاتجاه" className="rounded-full hover:bg-white/5 text-white/60 h-8 w-8">
                         <ChevronsUpDown className="w-4 h-4 rotate-90" />
                     </Button>
                     <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setIsSidebarOpen(false)}
+                        aria-label="إغلاق القائمة"
                         className="rounded-full hover:bg-white/5 text-white/60 h-8 w-8"
                     >
                         <X className="w-4 h-4" />
@@ -665,6 +667,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                         isShuffle ? "bg-primary text-white shadow-lg" : "hover:bg-white/5 text-white/60"
                     )}
                     title={isShuffle ? "إيقاف الترتيب العشوائي" : "تشغيل الترتيب العشوائي"}
+                    aria-label={isShuffle ? "إيقاف الترتيب العشوائي" : "تشغيل الترتيب العشوائي"}
                   >
                       <Shuffle className="w-4 h-4" />
                   </Button>
@@ -681,6 +684,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                         repeatMode !== 'none' ? "bg-primary text-white shadow-lg" : "hover:bg-white/5 text-white/60"
                     )}
                     title={repeatMode === 'none' ? "تكرار الكل" : repeatMode === 'all' ? "تكرار هذه الحلقة" : "إيقاف التكرار"}
+                    aria-label={repeatMode === 'none' ? "تكرار الكل" : repeatMode === 'all' ? "تكرار هذه الحلقة" : "إيقاف التكرار"}
                   >
                       {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
                   </Button>

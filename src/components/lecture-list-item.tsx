@@ -208,7 +208,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                 <div className="relative z-10 flex items-center justify-center gap-2 bg-black/40 p-2 rounded-[1.5rem] border border-white/10 shrink-0 w-full md:w-auto mt-6 md:mt-0 shadow-inner backdrop-blur-md">
                     {videoId && (
                         <Button asChild variant="ghost" size="icon" className="hover:bg-red-500/10 rounded-xl transition-all h-10 w-10 p-2">
-                            <a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer">
+                            <a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer" aria-label="مشاهدة على يوتيوب">
                                 <svg viewBox="0 0 24 24" className="w-full h-full fill-[#FF0000] drop-shadow-sm" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="white" />
                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" />
@@ -217,11 +217,11 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                             </a>
                         </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={handleShare} className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
+                    <Button variant="ghost" size="icon" onClick={handleShare} aria-label="مشاركة المحاضرة" className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
                         <Share2 className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                     </Button>
                     <Button asChild variant="ghost" size="icon" className="hover:bg-white/10 rounded-xl transition-colors h-10 w-10">
-                        <a href={lecture.audioSrc} download>
+                        <a href={lecture.audioSrc} download aria-label="تحميل الملف الصوتي للمحاضرة">
                             <Download className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                         </a>
                     </Button>

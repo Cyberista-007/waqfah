@@ -313,6 +313,7 @@ const LectureCardComponent = ({
                             <TooltipTrigger asChild>
                                 <button
                                     onClick={handleShare}
+                                    aria-label="مشاركة المحاضرة"
                                     className="h-9 w-9 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-2xl hover:bg-primary transition-all duration-300 border border-white/10 group/share"
                                 >
                                     <Share2 className="w-4 h-4 text-white group-hover/share:scale-110" />
@@ -401,7 +402,10 @@ const LectureCardComponent = ({
                         <div className="flex items-center gap-1">
                             <DropdownMenu dir="rtl">
                                 <DropdownMenuTrigger asChild>
-                                    <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all">
+                                    <button 
+                                        aria-label="المزيد من خيارات المحاضرة"
+                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+                                    >
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
                                 </DropdownMenuTrigger>

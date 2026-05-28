@@ -1277,12 +1277,14 @@ export function ChatWidget() {
                       showSettings ? "text-primary bg-primary/10" : "text-white/20 hover:text-white hover:bg-white/5"
                     )}
                     title="إعدادات المساعد الذكي"
+                    aria-label="إعدادات المساعد الذكي"
                   >
                     <Settings className="w-4 h-4" />
                   </button>
                 <button 
                   onClick={() => setIsMinimized(!isMinimized)}
                   className="p-2 hover:bg-white/5 rounded-xl text-white/20 hover:text-white transition-all"
+                  aria-label={isMinimized ? "تكبير نافذة الدردشة" : "تصغير نافذة الدردشة"}
                 >
                   {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
                 </button>
@@ -1291,6 +1293,7 @@ export function ChatWidget() {
                     onClick={clearChat}
                     className="p-2 hover:bg-white/5 rounded-xl text-white/20 hover:text-white transition-all"
                     title="مسح المحادثة"
+                    aria-label="مسح المحادثة"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -1298,6 +1301,7 @@ export function ChatWidget() {
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/5 rounded-xl text-white/20 hover:text-red-500 transition-all"
+                  aria-label="إغلاق المساعد الذكي"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1508,6 +1512,7 @@ export function ChatWidget() {
                                   <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/5 justify-end">
                                     <button
                                       onClick={() => copyToClipboard(msg.content, msg.id)}
+                                      aria-label="نسخ النص"
                                       className="flex items-center gap-1 text-[10px] font-bold text-white/40 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg transition-all"
                                       title="نسخ النص"
                                     >
@@ -1520,6 +1525,7 @@ export function ChatWidget() {
 
                                     <button
                                       onClick={() => exportAsFile(msg.content)}
+                                      aria-label="تصدير كملف نصي"
                                       className="flex items-center gap-1 text-[10px] font-bold text-white/40 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg transition-all"
                                       title="تصدير كملف نصي"
                                     >
@@ -1633,6 +1639,7 @@ export function ChatWidget() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        aria-label={isOpen ? "إغلاق المساعد الذكي" : "فتح المساعد الذكي"}
         className={cn(
           "pointer-events-auto w-16 h-16 md:w-20 md:h-20 rounded-[2rem] shadow-2xl flex items-center justify-center transition-all duration-500 relative group",
           isOpen 

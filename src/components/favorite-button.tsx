@@ -67,6 +67,7 @@ export function FavoriteButton({ lectureId, showLabel = false, className }: Favo
           )}
           disabled={isUserLoading || favoritesLoading}
           successText={isFavorite ? "تمت الإزالة" : "تمت الإضافة"}
+          aria-label={isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}
       >
           <Heart className={cn("w-5 h-5 transition-colors", isFavorite && "fill-current")} />
           {showLabel && <span className="ms-2"> {isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}</span>}
