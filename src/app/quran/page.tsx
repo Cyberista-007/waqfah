@@ -207,6 +207,10 @@ const CARD_FRAMES = [
   { id: 'double', label: 'مضاعف', border: 'border-4 border-white/30 m-4 rounded-[2.5rem] before:content-[""] before:absolute before:inset-2 before:border-2 before:border-white/20 before:rounded-[2rem]' },
 ];
 
+const SURAH_JUZ_MAPPING: { [key: number]: number } = {
+  1: 1, 2: 1, 3: 3, 4: 4, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 11, 12: 12, 13: 13, 14: 13, 15: 14, 16: 14, 17: 15, 18: 15, 19: 16, 20: 16, 21: 17, 22: 17, 23: 18, 24: 18, 25: 19, 26: 19, 27: 19, 28: 20, 29: 20, 30: 21, 31: 21, 32: 21, 33: 21, 34: 22, 35: 22, 36: 22, 37: 23, 38: 23, 39: 23, 40: 24, 41: 24, 42: 25, 43: 25, 44: 25, 45: 25, 46: 26, 47: 26, 48: 26, 49: 26, 50: 26, 51: 26, 52: 27, 53: 27, 54: 27, 55: 27, 56: 27, 57: 27, 58: 28, 59: 28, 60: 28, 61: 28, 62: 28, 63: 28, 64: 28, 65: 28, 66: 28, 67: 29, 68: 29, 69: 29, 70: 29, 71: 29, 72: 29, 73: 29, 74: 29, 75: 29, 76: 29, 77: 29, 78: 30, 79: 30, 80: 30, 81: 30, 82: 30, 83: 30, 84: 30, 85: 30, 86: 30, 87: 30, 88: 30, 89: 30, 90: 30, 91: 30, 92: 30, 93: 30, 94: 30, 95: 30, 96: 30, 97: 30, 98: 30, 99: 30, 100: 30, 101: 30, 102: 30, 103: 30, 104: 30, 105: 30, 106: 30, 107: 30, 108: 30, 109: 30, 110: 30, 111: 30, 112: 30, 113: 30, 114: 30
+};
+
 // ━━━━━━━━━━━ JUZ DATA ━━━━━━━━━━━
 const JUZ_DATA = [
   { juz: 1, surah: 'الفاتحة', start: 'الحمد..', page: 1 },
@@ -1518,6 +1522,16 @@ export default function QuranPage() {
   const [typoLetterSpacing, setTypoLetterSpacing] = useState<number>(0);
   const [typoFontSize, setTypoFontSize] = useState<number>(32);
 
+  // ── Sleep Timer, Surah Filters & Quick Jump States ──
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
+  const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [surahTypeFilter, setSurahTypeFilter] = useState<'all' | 'Meccan' | 'Medinan'>('all');
+  const [surahJuzFilter, setSurahJuzFilter] = useState<number>(0);
+  const [quickJumpSurah, setQuickJumpSurah] = useState<number>(1);
+  const [quickJumpAyah, setQuickJumpAyah] = useState<string>('');
+  const [isQuickJumpOpen, setIsQuickJumpOpen] = useState<boolean>(false);
+
   // Sync typography to CSS variables
   useEffect(() => {
     const root = document.documentElement;
@@ -1659,6 +1673,38 @@ export default function QuranPage() {
       radioAudioRef.current.volume = radioVolume;
     }
   }, [radioVolume]);
+
+  // ── Sleep Timer Logic ──
+  const startSleepTimer = useCallback((minutes: number) => {
+    if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
+    setSleepTimerMinutes(minutes);
+    setSleepTimerRemaining(minutes * 60);
+    sleepTimerRef.current = setInterval(() => {
+      setSleepTimerRemaining(prev => {
+        if (prev <= 1) {
+          // Time's up - stop all audio
+          if (radioAudioRef.current) { radioAudioRef.current.pause(); setIsPlayingRadio(false); }
+          if (audioRef.current) { audioRef.current.pause(); setIsPlaying(false); }
+          clearInterval(sleepTimerRef.current!);
+          sleepTimerRef.current = null;
+          setSleepTimerMinutes(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const cancelSleepTimer = useCallback(() => {
+    if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
+    sleepTimerRef.current = null;
+    setSleepTimerMinutes(null);
+    setSleepTimerRemaining(0);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (sleepTimerRef.current) clearInterval(sleepTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -1816,15 +1862,26 @@ export default function QuranPage() {
   };
 
   const filteredSurahs = useMemo(() => {
+    let result = surahs;
     const query = normalizeArabic(searchQuery.toLowerCase());
-    if (!query) return surahs;
+    if (query) {
+      result = result.filter(s =>
+        normalizeArabic(s.name).includes(query) ||
+        s.englishName.toLowerCase().includes(query) ||
+        s.number.toString() === query
+      );
+    }
 
-    return surahs.filter(s =>
-      normalizeArabic(s.name).includes(query) ||
-      s.englishName.toLowerCase().includes(query) ||
-      s.number.toString() === query
-    );
-  }, [surahs, searchQuery]);
+    if (surahTypeFilter !== 'all') {
+      result = result.filter(s => s.revelationType === surahTypeFilter);
+    }
+
+    if (surahJuzFilter > 0) {
+      result = result.filter(s => SURAH_JUZ_MAPPING[s.number] === surahJuzFilter);
+    }
+
+    return result;
+  }, [surahs, searchQuery, surahTypeFilter, surahJuzFilter]);
 
   const semanticResults = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim().toLowerCase());
@@ -1987,6 +2044,44 @@ export default function QuranPage() {
       }
       if (attempts++ > 15) clearInterval(scrollInterval);
     }, 400);
+  };
+
+  const getGlobalVerseNumber = useCallback((surahNum: number, ayahNum: number) => {
+    let count = 0;
+    for (let i = 1; i < surahNum; i++) {
+      const s = surahs.find(item => item.number === i);
+      if (s) count += s.numberOfAyahs;
+    }
+    return count + ayahNum;
+  }, [surahs]);
+
+  const handleQuickJumpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickJumpSurah) return;
+
+    setIsQuickJumpOpen(false);
+    setSelectedSurah(quickJumpSurah);
+    loadSurah(quickJumpSurah);
+    setView('full');
+    setViewMode('ayah');
+
+    if (quickJumpAyah) {
+      const ayahNum = Number(quickJumpAyah);
+      if (!isNaN(ayahNum)) {
+        const targetGlobalId = getGlobalVerseNumber(quickJumpSurah, ayahNum);
+        let attempts = 0;
+        const scrollInterval = setInterval(() => {
+          const el = document.getElementById(`verse-${targetGlobalId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-4', 'ring-primary/40', 'ring-offset-8');
+            setTimeout(() => el.classList.remove('ring-4', 'ring-primary/40', 'ring-offset-8'), 3000);
+            clearInterval(scrollInterval);
+          }
+          if (attempts++ > 20) clearInterval(scrollInterval);
+        }, 300);
+      }
+    }
   };
 
   const toggleBookmark = (verse: any) => {
@@ -3389,42 +3484,106 @@ export default function QuranPage() {
           {view === 'full' && (
             <div className="space-y-12">
               {!selectedSurah ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredSurahs.map((s: SurahInfo, i: number) => {
-                    const status = (state.quranMemorization?.[s.number] || 'not-started') as keyof typeof MEMORIZATION_STATUS;
-                    const config = MEMORIZATION_STATUS[status];
-                    const StatusIcon = config.icon;
+                <div className="space-y-6">
+                  {/* Filters & Quick Jump Panel */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-md" dir="rtl">
+                    {/* Revelation Type Filter */}
+                    <div className="flex items-center gap-2 bg-white/5 rounded-xl p-1 border border-white/5">
+                      {[
+                        { id: 'all', label: 'الكل' },
+                        { id: 'Meccan', label: 'مكية 🕋' },
+                        { id: 'Medinan', label: 'مدنية 🕌' }
+                      ].map(type => (
+                        <button
+                          key={type.id}
+                          onClick={() => setSurahTypeFilter(type.id as any)}
+                          className={cn(
+                            "px-4 py-1.5 rounded-lg text-[10px] font-black transition-all",
+                            surahTypeFilter === type.id
+                              ? "bg-primary text-primary-foreground shadow-glow-primary"
+                              : "text-white/30 hover:text-white"
+                          )}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
 
-                    return (
-                      <motion.button
-                        key={s.number}
-                        whileHover={{ y: -5, scale: 1.02 }}
-                        onClick={() => loadSurah(s.number)}
-                        className="group flex items-center justify-between p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-primary/20 transition-all text-right relative overflow-hidden"
+                    {/* Juz Filter Selector */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-black text-white/30 tracking-wider">تصفية حسب الجزء:</span>
+                      <select
+                        value={surahJuzFilter}
+                        onChange={(e) => setSurahJuzFilter(Number(e.target.value))}
+                        className="bg-[#0c0c0c] border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-primary/40 focus:bg-white/10 transition-all cursor-pointer"
                       >
-                        {status !== 'not-started' && (
-                          <div className={cn("absolute top-0 right-0 w-2 h-full", config.color.replace('text-', 'bg-'))} />
-                        )}
-                        <div className="flex items-center gap-5 relative z-10">
-                          <div className={cn(
-                            "w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all shadow-xl",
-                            status !== 'not-started' ? `${config.bg} ${config.color}` : "bg-white/5 text-white/20"
-                          )}>
-                            {status === 'not-started' ? s.number : <StatusIcon className="w-6 h-6" />}
-                          </div>
-                          <div>
-                            <h3 className="text-2xl font-black text-white group-hover:text-primary transition-colors leading-relaxed font-tajawal">
-                              {s.name}
-                            </h3>
-                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                              {s.numberOfAyahs} آية • {config.label}
-                            </p>
-                          </div>
-                        </div>
-                        <ArrowLeft className="w-5 h-5 text-white/10 group-hover:text-primary transition-all" />
-                      </motion.button>
-                    );
-                  })}
+                        <option value={0} className="bg-[#0c0c0c] text-white">كل الأجزاء</option>
+                        {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => (
+                          <option key={juz} value={juz} className="bg-[#0c0c0c] text-white">الجزء {juz}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quick Jump Button */}
+                    <button
+                      onClick={() => setIsQuickJumpOpen(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all shadow-md active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>الانتقال السريع لآية ⚡</span>
+                    </button>
+                  </div>
+
+                  {filteredSurahs.length === 0 ? (
+                    <div className="text-center py-20 bg-white/[0.01] rounded-[2.5rem] border border-white/5">
+                      <BookOpen className="w-10 h-10 text-white/10 mx-auto mb-4" />
+                      <p className="text-white/40 text-sm font-bold">لم يتم العثور على أي سور تطابق التصفية الحالية.</p>
+                      <button
+                        onClick={() => { setSurahTypeFilter('all'); setSurahJuzFilter(0); setSearchQuery(''); }}
+                        className="mt-4 text-xs font-black text-primary hover:underline text-center w-full"
+                      >
+                        إعادة تعيين التصفية
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredSurahs.map((s: SurahInfo, i: number) => {
+                        const status = (state.quranMemorization?.[s.number] || 'not-started') as keyof typeof MEMORIZATION_STATUS;
+                        const config = MEMORIZATION_STATUS[status];
+                        const StatusIcon = config.icon;
+
+                        return (
+                          <motion.button
+                            key={s.number}
+                            whileHover={{ y: -5, scale: 1.02 }}
+                            onClick={() => loadSurah(s.number)}
+                            className="group flex items-center justify-between p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-primary/20 transition-all text-right relative overflow-hidden"
+                          >
+                            {status !== 'not-started' && (
+                              <div className={cn("absolute top-0 right-0 w-2 h-full", config.color.replace('text-', 'bg-'))} />
+                            )}
+                            <div className="flex items-center gap-5 relative z-10">
+                              <div className={cn(
+                                "w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-black transition-all shadow-xl",
+                                status !== 'not-started' ? `${config.bg} ${config.color}` : "bg-white/5 text-white/20"
+                              )}>
+                                {status === 'not-started' ? s.number : <StatusIcon className="w-6 h-6" />}
+                              </div>
+                              <div>
+                                <h3 className="text-2xl font-black text-white group-hover:text-primary transition-colors leading-relaxed font-tajawal">
+                                  {s.name}
+                                </h3>
+                                <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
+                                  {s.numberOfAyahs} آية • {config.label}
+                                </p>
+                              </div>
+                            </div>
+                            <ArrowLeft className="w-5 h-5 text-white/10 group-hover:text-primary transition-all" />
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-12">
@@ -4586,6 +4745,20 @@ export default function QuranPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isQuickJumpOpen && (
+          <QuickJumpModal
+            onClose={() => setIsQuickJumpOpen(false)}
+            surahs={surahs}
+            quickJumpSurah={quickJumpSurah}
+            setQuickJumpSurah={setQuickJumpSurah}
+            quickJumpAyah={quickJumpAyah}
+            setQuickJumpAyah={setQuickJumpAyah}
+            onSubmit={handleQuickJumpSubmit}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -4866,3 +5039,79 @@ const getLocalFallbackExplanation = (surahName: string, ayahNumber: string, arab
       `3. التدبر الدائم والتأمل الواعي في دلالات الوحي لزيادة منسوب اليقين وثبات القلوب.`;
   }
 };
+
+function QuickJumpModal({ onClose, surahs, quickJumpSurah, setQuickJumpSurah, quickJumpAyah, setQuickJumpAyah, onSubmit }: any) {
+  const selectedSurahInfo = surahs.find((s: any) => s.number === quickJumpSurah);
+  const maxAyahs = selectedSurahInfo ? selectedSurahInfo.numberOfAyahs : 286;
+
+  return (
+    <ModalPortal>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-4xl p-8" dir="rtl">
+          <div className="flex items-center justify-between pb-6 border-b border-white/5 mb-6">
+            <h3 className="text-lg font-black text-white flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-primary" /> الانتقال السريع لآية كريمة
+            </h3>
+            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-5 h-5 text-white/40" /></button>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-white/40 uppercase tracking-widest block">اختر السورة:</label>
+              <select
+                value={quickJumpSurah}
+                onChange={(e) => {
+                  setQuickJumpSurah(Number(e.target.value));
+                  setQuickJumpAyah('');
+                }}
+                className="w-full bg-[#0f0f0f] border border-white/10 rounded-2xl px-4 py-3.5 text-xs font-bold text-white outline-none focus:border-primary/40 transition-all cursor-pointer"
+              >
+                {surahs.map((s: any) => (
+                  <option key={s.number} value={s.number} className="bg-[#0c0c0c] text-white">
+                    {s.number}. {s.name} ({s.englishName})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest block">رقم الآية:</label>
+                {selectedSurahInfo && (
+                  <span className="text-[10px] font-bold text-white/30">السورة بها {maxAyahs} آية</span>
+                )}
+              </div>
+              <input
+                type="number"
+                min={1}
+                max={maxAyahs}
+                placeholder="اكتب رقم الآية... (مثال: 5)"
+                value={quickJumpAyah}
+                onChange={(e) => setQuickJumpAyah(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary transition-all text-right font-bold"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-white/5">
+              <button
+                type="submit"
+                className="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow-primary flex items-center justify-center gap-2"
+              >
+                <span>انتقل الآن ⚡</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-4 bg-white/5 text-white/60 rounded-2xl font-black text-xs hover:bg-white/10 transition-all"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </ModalPortal>
+  );
+}
