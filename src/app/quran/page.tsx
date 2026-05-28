@@ -158,98 +158,17 @@ const AMBIENT_SOUNDS = [
   { id: 'night', name: '🌙 هدوء الليل', url: 'https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg' },
 ];
 
-const RADIO_STATIONS = [
-  {
-    id: 'cairo',
-    name: 'إذاعة القرآن الكريم من القاهرة',
-    subtitle: 'بث مباشر من جمهورية مصر العربية',
-    url: 'https://stream.radiojar.com/8s5u5zpv870uv',
-    icon: '🇪🇬',
-    color: 'from-emerald-500/20 to-emerald-950/40',
-    borderColor: 'border-emerald-500/30',
-    textColor: 'text-emerald-400'
-  },
-  {
-    id: 'saudi',
-    name: 'إذاعة القرآن الكريم من المملكة العربية السعودية',
-    subtitle: 'بث مباشر من الرياض',
-    url: 'https://stream.radiojar.com/4wqbi268v30uv',
-    icon: '🇸🇦',
-    color: 'from-green-500/20 to-green-950/40',
-    borderColor: 'border-green-500/30',
-    textColor: 'text-green-400'
-  },
-  {
-    id: 'minshawi',
-    name: 'إذاعة القارئ محمد صديق المنشاوي',
-    subtitle: 'ترتيل خاشع ومجود برواية حفص عن عاصم',
-    url: 'https://live.mp3quran.net:9982/;stream.mp3',
-    icon: '🕌',
-    color: 'from-amber-500/20 to-amber-950/40',
-    borderColor: 'border-amber-500/30',
-    textColor: 'text-amber-400'
-  },
-  {
-    id: 'abdulbasit',
-    name: 'إذاعة القارئ عبد الباسط عبد الصمد',
-    subtitle: 'تلاوات نادرة ومجودة بنبرة فريدة',
-    url: 'https://live.mp3quran.net:9974/;stream.mp3',
-    icon: '🌟',
-    color: 'from-cyan-500/20 to-cyan-950/40',
-    borderColor: 'border-cyan-500/30',
-    textColor: 'text-cyan-400'
-  },
-  {
-    id: 'husary',
-    name: 'إذاعة القارئ محمود خليل الحصري',
-    subtitle: 'المعلم والمصحف المرتل بدقة التجويد',
-    url: 'https://live.mp3quran.net:9988/;stream.mp3',
-    icon: '📖',
-    color: 'from-blue-500/20 to-blue-950/40',
-    borderColor: 'border-blue-500/30',
-    textColor: 'text-blue-400'
-  },
-  {
-    id: 'alafasy',
-    name: 'إذاعة القارئ مشاري بن راشد العفاسي',
-    subtitle: 'تلاوات عطرة بأصوات وألحان متميزة',
-    url: 'https://live.mp3quran.net:9724/;stream.mp3',
-    icon: '🎙️',
-    color: 'from-rose-500/20 to-rose-950/40',
-    borderColor: 'border-rose-500/30',
-    textColor: 'text-rose-400'
-  },
-  {
-    id: 'tafseer',
-    name: 'إذاعة تفسير القرآن الكريم',
-    subtitle: 'شروحات وتفاسير مبسطة لآيات الذكر الحكيم',
-    url: 'https://live.mp3quran.net:9718/;stream.mp3',
-    icon: '💡',
-    color: 'from-violet-500/20 to-violet-950/40',
-    borderColor: 'border-violet-500/30',
-    textColor: 'text-violet-400'
-  },
-  {
-    id: 'ruqyah',
-    name: 'إذاعة الرقية الشرعية',
-    subtitle: 'آيات السكينة والتحصين والشفاء من القرآن',
-    url: 'https://live.mp3quran.net:9938/;stream.mp3',
-    icon: '🛡️',
-    color: 'from-purple-500/20 to-purple-950/40',
-    borderColor: 'border-purple-500/30',
-    textColor: 'text-purple-400'
-  },
-  {
-    id: 'takbeerat',
-    name: 'إذاعة تكبيرات العيد والذكر',
-    subtitle: 'أجواء روحانية مهيبة وتكبيرات مستمرة',
-    url: 'https://live.mp3quran.net:9702/;stream.mp3',
-    icon: '🌙',
-    color: 'from-orange-500/20 to-orange-950/40',
-    borderColor: 'border-orange-500/30',
-    textColor: 'text-orange-400'
-  }
-];
+// Radio station type (fetched from mp3quran API at runtime)
+type RadioStation = {
+  id: string;
+  name: string;
+  subtitle: string;
+  url: string;
+  icon: string;
+  color: string;
+  borderColor: string;
+  textColor: string;
+};
 
 const MEMORIZATION_STATUS = {
   'not-started': { label: 'لم تبدأ', color: 'text-white/20', icon: Clock, bg: 'bg-white/5' },
@@ -1390,20 +1309,55 @@ export default function QuranPage() {
 
   // ── Quran Radio States ──
   const [isPlayingRadio, setIsPlayingRadio] = useState<boolean>(false);
-  const [currentRadioStation, setCurrentRadioStation] = useState<any>(null);
+  const [currentRadioStation, setCurrentRadioStation] = useState<RadioStation | null>(null);
   const [isRadioBuffering, setIsRadioBuffering] = useState<boolean>(false);
   const [radioVolume, setRadioVolume] = useState<number>(0.8);
   const [radioSearchQuery, setRadioSearchQuery] = useState<string>('');
   const [favoriteRadioIds, setFavoriteRadioIds] = useState<string[]>([]);
+  const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
+  const [isLoadingRadios, setIsLoadingRadios] = useState<boolean>(false);
+  // Use a simple ref to hold the HTMLAudioElement for radio
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Load saved favorites
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedFavorites = localStorage.getItem('quran_favorite_radios');
-      if (savedFavorites) {
-        setFavoriteRadioIds(JSON.parse(savedFavorites));
-      }
+      if (savedFavorites) setFavoriteRadioIds(JSON.parse(savedFavorites));
     }
+  }, []);
+
+  // Fetch radio stations from mp3quran.net API (same source as the working HTML app)
+  useEffect(() => {
+    setIsLoadingRadios(true);
+    fetch('https://www.mp3quran.net/api/v3/radios?language=ar')
+      .then(res => res.json())
+      .then(data => {
+        // Icon palette to cycle through
+        const icons = ['📻', '🕌', '🌙', '📖', '🎙️', '🌟', '🛡️', '💡', '🇸🇦', '🇪🇬', '🕋', '☪️'];
+        const colors = [
+          { color: 'from-emerald-500/20 to-emerald-950/40', borderColor: 'border-emerald-500/30', textColor: 'text-emerald-400' },
+          { color: 'from-amber-500/20 to-amber-950/40',   borderColor: 'border-amber-500/30',   textColor: 'text-amber-400' },
+          { color: 'from-blue-500/20 to-blue-950/40',     borderColor: 'border-blue-500/30',     textColor: 'text-blue-400' },
+          { color: 'from-rose-500/20 to-rose-950/40',     borderColor: 'border-rose-500/30',     textColor: 'text-rose-400' },
+          { color: 'from-violet-500/20 to-violet-950/40', borderColor: 'border-violet-500/30', textColor: 'text-violet-400' },
+          { color: 'from-cyan-500/20 to-cyan-950/40',     borderColor: 'border-cyan-500/30',     textColor: 'text-cyan-400' },
+          { color: 'from-green-500/20 to-green-950/40',   borderColor: 'border-green-500/30',   textColor: 'text-green-400' },
+          { color: 'from-orange-500/20 to-orange-950/40', borderColor: 'border-orange-500/30', textColor: 'text-orange-400' },
+          { color: 'from-purple-500/20 to-purple-950/40', borderColor: 'border-purple-500/30', textColor: 'text-purple-400' },
+        ];
+        const stations: RadioStation[] = (data.radios || []).map((r: any, i: number) => ({
+          id: String(r.id),
+          name: r.name,
+          subtitle: r.name,
+          url: r.url,
+          icon: icons[i % icons.length],
+          ...colors[i % colors.length],
+        }));
+        setRadioStations(stations);
+      })
+      .catch(err => console.error('Radio fetch error:', err))
+      .finally(() => setIsLoadingRadios(false));
   }, []);
 
   const toggleFavoriteRadio = useCallback((id: string, e: React.MouseEvent) => {
@@ -1414,6 +1368,53 @@ export default function QuranPage() {
       return next;
     });
   }, []);
+
+  // ── handlePlayRadio: plays/pauses a station, stops verse audio ──
+  const handlePlayRadio = useCallback((station: RadioStation) => {
+    // If clicking the same station that is already playing → toggle pause/play
+    if (currentRadioStation?.id === station.id) {
+      const audio = radioAudioRef.current;
+      if (!audio) return;
+      if (isPlayingRadio) {
+        audio.pause();
+        setIsPlayingRadio(false);
+      } else {
+        audio.play().catch(e => console.error('Radio play error:', e));
+      }
+      return;
+    }
+
+    // Stop verse recitation if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+    // Stop ambient sounds
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.pause();
+      setActiveAmbient(null);
+    }
+
+    // Create a fresh Audio element for the new station
+    if (radioAudioRef.current) {
+      radioAudioRef.current.pause();
+    }
+    radioAudioRef.current = new Audio(station.url);
+    radioAudioRef.current.volume = radioVolume;
+
+    radioAudioRef.current.addEventListener('waiting',  () => setIsRadioBuffering(true));
+    radioAudioRef.current.addEventListener('playing',  () => { setIsPlayingRadio(true); setIsRadioBuffering(false); });
+    radioAudioRef.current.addEventListener('pause',    () => setIsPlayingRadio(false));
+    radioAudioRef.current.addEventListener('error',    () => { setIsRadioBuffering(false); setIsPlayingRadio(false); });
+    radioAudioRef.current.addEventListener('canplay',  () => setIsRadioBuffering(false));
+
+    setCurrentRadioStation(station);
+    setIsRadioBuffering(true);
+    radioAudioRef.current.play().catch(e => {
+      console.error('Radio play error:', e);
+      setIsRadioBuffering(false);
+    });
+  }, [currentRadioStation, isPlayingRadio, radioVolume]);
   const [activeCollection, setActiveCollection] = useState(QURAN_DATA[0].id);
   const [activeTopic, setActiveTopic] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -2088,47 +2089,8 @@ export default function QuranPage() {
     }
   }, [selectedReciter, isPlaying, currentAudio, playbackSpeed, isPlayingRadio]);
 
-  const handlePlayRadio = useCallback((station: any) => {
-    if (currentRadioStation?.id === station.id) {
-      if (isPlayingRadio) {
-        radioAudioRef.current?.pause();
-        setIsPlayingRadio(false);
-      } else {
-        setIsRadioBuffering(true);
-        radioAudioRef.current?.play().catch(err => {
-          console.error("Failed to play radio:", err);
-          setIsPlayingRadio(false);
-        });
-        setIsPlayingRadio(true);
-      }
-      return;
-    }
 
-    // Stop recitation play if active
-    if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-    }
 
-    // Stop ambient sound if active
-    if (activeAmbient) {
-      setActiveAmbient(null);
-    }
-
-    setCurrentRadioStation(station);
-    setIsPlayingRadio(true);
-    setIsRadioBuffering(true);
-
-    if (radioAudioRef.current) {
-      radioAudioRef.current.src = station.url;
-      radioAudioRef.current.volume = radioVolume;
-      radioAudioRef.current.play().catch(err => {
-        console.error("Failed to play radio stream:", err);
-        setIsPlayingRadio(false);
-        setIsRadioBuffering(false);
-      });
-    }
-  }, [currentRadioStation, isPlayingRadio, isPlaying, activeAmbient, radioVolume]);
 
   const cleanArabicText = useCallback((text: string) => {
     if (!text) return '';
@@ -2536,13 +2498,10 @@ export default function QuranPage() {
   }, [memorizationStats]);
 
   const filteredStations = useMemo(() => {
-    let list = RADIO_STATIONS;
+    let list = radioStations;
     if (radioSearchQuery.trim()) {
-      const q = normalizeArabic(radioSearchQuery.toLowerCase());
-      list = list.filter(s =>
-        normalizeArabic(s.name).includes(q) ||
-        s.subtitle.toLowerCase().includes(q)
-      );
+      const q = radioSearchQuery.toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[\u064B-\u065F]/g, '');
+      list = list.filter(s => s.name.toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[\u064B-\u065F]/g, '').includes(q));
     }
     // Sort so that favorites are pinned at the top
     return [...list].sort((a, b) => {
@@ -2550,7 +2509,7 @@ export default function QuranPage() {
       const bFav = favoriteRadioIds.includes(b.id) ? 1 : 0;
       return bFav - aFav;
     });
-  }, [radioSearchQuery, favoriteRadioIds]);
+  }, [radioSearchQuery, favoriteRadioIds, radioStations]);
 
   const handleWordClick = async (verse: any, wordIndex: number) => {
     // verse.surahNumber must be available. If not, we might need a lookup, but it should be available.
@@ -2578,17 +2537,6 @@ export default function QuranPage() {
       </div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-      <audio
-        ref={radioAudioRef}
-        onPlay={() => {
-          setIsPlayingRadio(true);
-          setIsRadioBuffering(false);
-        }}
-        onPause={() => setIsPlayingRadio(false)}
-        onWaiting={() => setIsRadioBuffering(true)}
-        onPlaying={() => setIsRadioBuffering(false)}
-        onCanPlay={() => setIsRadioBuffering(false)}
-      />
 
       {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
       <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
@@ -4532,7 +4480,15 @@ export default function QuranPage() {
                       );
                     })}
 
-                    {filteredStations.length === 0 && (
+                    {isLoadingRadios && (
+                      <div className="col-span-full py-20 text-center text-white/30">
+                        <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin text-primary" />
+                        <p className="text-sm font-bold">جاري تحميل محطات الإذاعة...</p>
+                        <p className="text-[10px] text-white/20 mt-1">يتصل بـ mp3quran.net</p>
+                      </div>
+                    )}
+
+                    {!isLoadingRadios && filteredStations.length === 0 && (
                       <div className="col-span-full py-20 text-center text-white/20">
                         <Radio className="w-12 h-12 mx-auto opacity-15 mb-4 animate-pulse" />
                         <p className="text-sm font-bold">لم نجد محطة بث تطابق بحثك</p>
