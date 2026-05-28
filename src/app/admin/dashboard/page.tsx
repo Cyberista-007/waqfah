@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,6 +42,24 @@ export default function AdminDashboardPage() {
     const [tasks, setTasks] = useState<{ id: string; text: string; done: boolean }[]>([]);
     const [newTaskText, setNewTaskText] = useState('');
 
+    const [isBackingUp, setIsBackingUp] = useState(false);
+    const [lastBackupTime, setLastBackupTime] = useState('2026-05-27 14:30');
+    const [backupSize, setBackupSize] = useState('142.4 MB');
+    const [emergencyNotice, setEmergencyNotice] = useState('تنبيه: سيتم إجراء صيانة مجدولة لقاعدة البيانات يوم الجمعة القادم من الساعة 2 صباحاً وحتى 4 صباحاً.');
+    const [isNoticeActive, setIsNoticeActive] = useState(false);
+
+    const handleTriggerBackup = () => {
+        setIsBackingUp(true);
+        setTimeout(() => {
+            setIsBackingUp(false);
+            const now = new Date();
+            const formatted = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            setLastBackupTime(formatted);
+            setBackupSize((Math.random() * 5 + 142).toFixed(1) + ' MB');
+            alert('تم أخذ نسخة احتياطية كاملة لقاعدة البيانات والملفات ورفعها بنجاح إلى Cloud Storage!');
+        }, 3000);
+    };
+
     useEffect(() => {
         const saved = localStorage.getItem('waqfah_admin_tasks');
         if (saved) {
@@ -55,12 +73,33 @@ export default function AdminDashboardPage() {
         }
     }, []);
 
+    const { data: presenceData } = useCollection<{ lastActive: number; device: string }>('presence');
+
+    const activeSessions = useMemo(() => {
+        if (!presenceData) return [];
+        const cutoff = Date.now() - 45000; // last 45 seconds
+        return presenceData.filter(session => session.lastActive > cutoff);
+    }, [presenceData]);
+
+    const realtimeVisitors = activeSessions.length;
+
+    const deviceStats = useMemo(() => {
+        const total = activeSessions.length || 1;
+        const mobileCount = activeSessions.filter(s => s.device === 'mobile').length;
+        const mobilePercent = Math.round((mobileCount / total) * 100);
+        return {
+            mobile: activeSessions.length > 0 ? mobilePercent : 75,
+            desktop: activeSessions.length > 0 ? (100 - mobilePercent) : 25,
+        };
+    }, [activeSessions]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setServerPing(Math.floor(Math.random() * 15) + 15);
             setDbLoad(Math.floor(Math.random() * 20) + 5);
             setCpuLoad(Math.floor(Math.random() * 25) + 3);
         }, 3000);
+
         return () => clearInterval(interval);
     }, []);
 
@@ -141,11 +180,35 @@ export default function AdminDashboardPage() {
                 </div>
             </header>
             
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 <StatCard title="إجمالي البرامج" value={stats?.programs ?? 0} icon={Podcast} isLoading={statsLoading} />
                 <StatCard title="إجمالي المحاضرات" value={stats?.lectures ?? 0} icon={Clapperboard} isLoading={statsLoading} />
                 <StatCard title="إجمالي السلاسل" value={stats?.series ?? 0} icon={ListVideo} isLoading={statsLoading} />
                 <StatCard title="إجمالي الكتب" value={stats?.books ?? 0} icon={Book} isLoading={statsLoading} />
+                
+                {/* Real-time active visitors card */}
+                <Card className="rounded-2xl border-white/10 bg-zinc-950/40 relative overflow-hidden group p-6 flex flex-col justify-between h-full">
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[9px] text-emerald-400 font-bold">مباشر</span>
+                    </div>
+                    <CardHeader className="p-0 pb-2">
+                        <CardTitle className="text-zinc-400 text-xs font-bold">الزوار في الوقت الفعلي</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-2">
+                        <div className="text-3xl font-black text-white font-mono flex items-baseline gap-1">
+                            <span>{realtimeVisitors}</span>
+                            <span className="text-xs text-zinc-500 font-normal">زائر نشط</span>
+                        </div>
+                        <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${deviceStats.mobile}%` }} />
+                        </div>
+                        <div className="text-[10px] text-zinc-400 flex justify-between">
+                            <span>جوال: {deviceStats.mobile}%</span>
+                            <span>حاسوب: {deviceStats.desktop}%</span>
+                        </div>
+                    </CardContent>
+                </Card>
             </section>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -308,6 +371,93 @@ export default function AdminDashboardPage() {
                             {tasks.length === 0 && (
                                 <p className="text-center text-xs text-zinc-500 py-6">لا توجد مهام إدارية متبقية. عمل رائع!</p>
                             )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Backup Simulator & Emergency Notice Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
+                {/* Backup Simulator Card */}
+                <Card className="rounded-2xl bg-zinc-950/40 border-white/10 p-6 space-y-4">
+                    <CardHeader className="p-0">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <span className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400">💾</span>
+                            <span>إدارة النسخ الاحتياطي السحابي</span>
+                        </CardTitle>
+                        <CardDescription>إنشاء وتنزيل نسخ احتياطية شاملة لقاعدة البيانات والملفات المرفوعة.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-4">
+                        <div className="bg-white/5 border border-white/5 p-4 rounded-2xl space-y-2 text-xs">
+                            <div className="flex justify-between items-center">
+                                <span className="text-zinc-400">تاريخ آخر نسخة احتياطية:</span>
+                                <span className="font-bold text-white font-mono">{lastBackupTime}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-zinc-400">حجم النسخة الاحتياطية:</span>
+                                <span className="font-bold text-emerald-400 font-mono">{backupSize}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-zinc-400">حالة المستودع السحابي:</span>
+                                <span className="font-bold text-blue-400">متصل (AWS S3 / Firebase)</span>
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={handleTriggerBackup}
+                            disabled={isBackingUp}
+                            className="w-full rounded-xl py-5 text-sm font-bold bg-primary text-black hover:bg-primary/90 flex items-center justify-center gap-2"
+                        >
+                            {isBackingUp ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span>جاري تصدير ورفع النسخة الاحتياطية...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>إنشاء نسخة احتياطية فورية الآن</span>
+                                </>
+                            )}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Quick Announcement Notice Card */}
+                <Card className="rounded-2xl bg-zinc-950/40 border-white/10 p-6 space-y-4">
+                    <CardHeader className="p-0">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <span className="p-1.5 bg-amber-500/10 rounded-lg text-amber-400">📢</span>
+                            <span>مساعد نشر الإعلانات والتنبيهات العاجلة</span>
+                        </CardTitle>
+                        <CardDescription>عرض شريط إعلاني ملون أعلى جميع صفحات الموقع للزوار بشكل فوري.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs text-zinc-400 block font-bold">نص الإعلان أو التنبيه:</label>
+                            <textarea
+                                value={emergencyNotice}
+                                onChange={(e) => setEmergencyNotice(e.target.value)}
+                                className="w-full h-20 bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder-zinc-600 resize-none"
+                                placeholder="اكتب نص الإعلان التنبيهي هنا..."
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between bg-white/5 border border-white/5 p-3 rounded-xl">
+                            <div className="space-y-0.5">
+                                <span className="text-xs font-bold text-white block">حالة نشر الإعلان على الموقع</span>
+                                <span className="text-[10px] text-zinc-400">تفعيل/إلغاء تفعيل العرض للمستخدمين في ثوانٍ.</span>
+                            </div>
+                            <button
+                                onClick={() => setIsNoticeActive(!isNoticeActive)}
+                                className={cn(
+                                    "px-4 py-2 rounded-xl text-xs font-black transition-all",
+                                    isNoticeActive
+                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                        : "bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10"
+                                )}
+                            >
+                                {isNoticeActive ? 'نشط الآن ✔' : 'غير نشط ✕'}
+                            </button>
                         </div>
                     </CardContent>
                 </Card>

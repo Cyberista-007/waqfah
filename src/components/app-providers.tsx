@@ -12,6 +12,7 @@ import { themes } from './theme-switcher';
 import { SearchProvider } from './search-provider';
 import { MoodProvider } from './mood-provider';
 import { ScrollProgressBar } from './scroll-progress';
+import { PresenceTracker } from './presence-tracker';
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player'),
@@ -76,6 +77,7 @@ export function AppProviders({
                             <MoodProvider>
                                 {/* ══ Cinematic Global Layer ══ */}
                                 <ScrollProgressBar />
+                                <PresenceTracker />
                                 {/* ══ Content ══ */}
                                 {children}
                                 <FloatingAudioPlayer />
