@@ -1525,6 +1525,7 @@ export default function QuranPage() {
   // ── Sleep Timer, Surah Filters & Quick Jump States ──
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
+  const [customTimerMinutes, setCustomTimerMinutes] = useState<string>('');
   const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [surahTypeFilter, setSurahTypeFilter] = useState<'all' | 'Meccan' | 'Medinan'>('all');
   const [surahJuzFilter, setSurahJuzFilter] = useState<number>(0);
@@ -4598,32 +4599,71 @@ export default function QuranPage() {
                         />
                       </div>
 
-                      {/* Sleep Timer Controls */}
-                      <div className="flex flex-wrap items-center gap-2 w-full">
-                        <span className="text-[9px] font-black text-white/25 uppercase tracking-widest shrink-0">⏰ مؤقت النوم:</span>
+                      {/* Redesigned Premium Sleep Timer Controls */}
+                      <div className="w-full mt-4 pt-4 border-t border-white/5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-white/45 uppercase tracking-widest flex items-center gap-1.5">
+                            <span>⏰ مؤقت النوم التلقائي</span>
+                          </span>
+                          {sleepTimerMinutes && (
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg animate-pulse">
+                              نشط 🟢
+                            </span>
+                          )}
+                        </div>
+
                         {sleepTimerMinutes ? (
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-[10px] font-black border border-primary/20 animate-pulse">
-                              ⏳ {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
+                          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-3 text-center">
+                            <p className="text-[10px] text-white/30 font-bold">سيتم إيقاف تشغيل البث تلقائياً بعد:</p>
+                            <span className="text-3xl font-black text-primary tracking-wider font-mono drop-shadow-glow-primary">
+                              {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
                             </span>
                             <button
                               onClick={cancelSleepTimer}
-                              className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 text-[10px] font-black border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+                              className="w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-black border border-rose-500/20 transition-all flex items-center justify-center gap-1.5 active:scale-95"
                             >
-                              إلغاء
+                              <span>إلغاء المؤقت التلقائي</span>
+                              <span>✖</span>
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
-                            {[15, 30, 45, 60].map(mins => (
+                          <div className="space-y-3">
+                            {/* Custom Minutes Input */}
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                placeholder="ادخل عدد الدقائق..."
+                                value={customTimerMinutes}
+                                onChange={(e) => setCustomTimerMinutes(e.target.value)}
+                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/20 outline-none focus:border-primary/40 focus:bg-black/60 transition-all"
+                                min="1"
+                              />
                               <button
-                                key={mins}
-                                onClick={() => startSleepTimer(mins)}
-                                className="px-3 py-1.5 rounded-xl bg-white/5 text-white/40 text-[10px] font-black border border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                                onClick={() => {
+                                  const mins = parseInt(customTimerMinutes);
+                                  if (mins > 0) {
+                                    startSleepTimer(mins);
+                                    setCustomTimerMinutes('');
+                                  }
+                                }}
+                                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary active:scale-95 whitespace-nowrap"
                               >
-                                {mins}د
+                                تفعيل ⚡
                               </button>
-                            ))}
+                            </div>
+
+                            {/* Presets Grid */}
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[15, 30, 45, 60].map(mins => (
+                                <button
+                                  key={mins}
+                                  onClick={() => startSleepTimer(mins)}
+                                  className="py-2 rounded-xl bg-white/5 text-white/50 text-[10px] font-black border border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all text-center"
+                                >
+                                  {mins}د
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -4691,24 +4731,34 @@ export default function QuranPage() {
                             </p>
                           </div>
 
-                          {/* Favorite */}
-                          <button
-                            onClick={(e) => toggleFavoriteRadio(station.id, e)}
-                            className="p-2 rounded-xl hover:bg-white/10 transition-colors z-10 shrink-0"
-                          >
-                            <Heart className={cn("w-4 h-4 transition-all", isFav ? "text-rose-500 fill-current" : "text-white/20 group-hover:text-white/50")} />
-                          </button>
+                           {/* Favorite */}
+                           <button
+                             onClick={(e) => toggleFavoriteRadio(station.id, e)}
+                             className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-white/5 transition-all z-10 shrink-0 group/fav"
+                             title="إضافة إلى المفضلة"
+                           >
+                             <Heart
+                               className={cn(
+                                 "w-6 h-6 transition-all duration-300 transform group-hover/fav:scale-110",
+                                 isFav
+                                   ? "text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                                   : "text-white/40 group-hover:text-white/80"
+                               )}
+                             />
+                           </button>
 
-                          {/* Play Button */}
-                          <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all",
-                            isCurrent ? "bg-primary text-white shadow-glow-primary" : "bg-white/10 text-white/50 group-hover:bg-primary/30 group-hover:text-primary"
-                          )}>
-                            {isPlayingThis
-                              ? <Pause className="w-4 h-4 fill-current" />
-                              : <Play className="w-4 h-4 fill-current translate-x-[1px]" />
-                            }
-                          </div>
+                           {/* Play Button */}
+                           <div className={cn(
+                             "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300",
+                             isCurrent
+                               ? "bg-primary text-white shadow-glow-primary scale-105"
+                               : "bg-white/5 text-white/60 group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-105"
+                           )}>
+                             {isPlayingThis
+                               ? <Pause className="w-5 h-5 fill-current" />
+                               : <Play className="w-5 h-5 fill-current translate-x-[1.5px]" />
+                             }
+                           </div>
                         </div>
                       );
                     })}
