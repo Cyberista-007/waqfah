@@ -647,6 +647,17 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 span: "col-span-1"
             },
             { 
+                name: "الصلاة والخشوع", 
+                desc: "مكتبة وسجل إيماني متكامل لصلاتك",
+                icon: Sparkles, 
+                color: "text-teal-400 group-hover:text-teal-300", 
+                bg: "from-teal-500/10 to-transparent", 
+                border: "border-teal-500/10 hover:border-teal-500/30",
+                glow: "rgba(20, 184, 166, 0.15)",
+                href: "/prayer",
+                span: "col-span-1"
+            },
+            { 
                 name: "القصص", 
                 desc: "قصص الأنبياء وعبر وتاريخ الأمم",
                 icon: Sparkles, 
@@ -955,6 +966,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 { href: "/books", label: "الكتب", icon: Library, color: "text-amber-500" },
                 { href: "/challenges", label: "التحديات", icon: Flame, color: "text-orange-500" },
                 { href: "/accountability", label: "المحاسبة", icon: BookCheck, color: "text-emerald-500" },
+                { href: "/prayer", label: "الصلاة والخشوع", icon: Sparkles, color: "text-teal-400" },
                 { href: "/qa", label: "سؤال وجواب", icon: HelpCircle, color: "text-indigo-500" },
             ].map((section, idx) => (
                 <motion.div
