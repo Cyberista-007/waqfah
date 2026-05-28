@@ -4424,7 +4424,7 @@ export default function QuranPage() {
                   </div>
 
                   {/* Stations Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                  <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
                     {filteredStations.map(station => {
                       const isCurrent = currentRadioStation?.id === station.id;
                       const isPlayingThis = isCurrent && isPlayingRadio;
@@ -4434,68 +4434,54 @@ export default function QuranPage() {
                           key={station.id}
                           onClick={() => handlePlayRadio(station)}
                           className={cn(
-                            "relative rounded-[1.5rem] border cursor-pointer transition-all duration-300 overflow-hidden group hover:scale-[1.02] active:scale-[0.98] flex flex-col",
+                            "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer transition-all duration-200 group",
                             isCurrent
-                              ? `bg-gradient-to-br ${station.color} ${station.borderColor} shadow-[0_12px_30px_-8px_rgba(0,0,0,0.5)]`
-                              : "bg-white/[0.03] border-white/8 hover:bg-white/[0.07] hover:border-white/15"
+                              ? "bg-primary/10 border-primary/30 shadow-md"
+                              : "bg-white/[0.03] border-white/10 hover:bg-white/[0.07] hover:border-white/20"
                           )}
                         >
-                          {/* Top: Icon + Favorite */}
-                          <div className="flex items-start justify-between p-4 pb-2">
-                            <div className={cn(
-                              "w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-all",
-                              isCurrent ? "bg-white/15 shadow-lg" : "bg-white/5 border border-white/8"
-                            )}>
-                              {station.icon}
-                            </div>
-                            <button
-                              onClick={(e) => toggleFavoriteRadio(station.id, e)}
-                              className="p-1.5 hover:bg-white/10 rounded-xl transition-colors z-20 mt-0.5"
-                            >
-                              <Heart className={cn("w-4 h-4 transition-all", isFav ? "text-rose-500 fill-current scale-110" : "text-white/20 group-hover:text-white/50")} />
-                            </button>
+                          {/* Icon */}
+                          <div className={cn(
+                            "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0",
+                            isCurrent ? "bg-primary/20" : "bg-white/5"
+                          )}>
+                            {station.icon}
                           </div>
 
-                          {/* Middle: Name */}
-                          <div className="px-4 py-2 flex-1">
-                            <h4 className={cn(
-                              "font-black text-sm leading-snug transition-colors",
-                              isCurrent ? "text-white" : "text-white/75 group-hover:text-white"
+                          {/* Name */}
+                          <div className="flex-1 text-right">
+                            <p className={cn(
+                              "font-bold text-sm leading-snug",
+                              isCurrent ? "text-primary" : "text-white/80 group-hover:text-white"
                             )}>
                               {station.name}
-                            </h4>
+                            </p>
+                            <p className={cn(
+                              "text-[10px] mt-0.5 font-semibold",
+                              isPlayingThis ? "text-emerald-400" : isCurrent && isRadioBuffering ? "text-amber-400" : "text-white/30"
+                            )}>
+                              {isPlayingThis ? "🟢 البث نشط" : isCurrent && isRadioBuffering ? "⏳ جاري التوصيل..." : "● بث مباشر"}
+                            </p>
                           </div>
 
-                          {/* Bottom: Status + Play button */}
-                          <div className="flex items-center justify-between px-4 pb-4 pt-2 border-t border-white/[0.05] mt-1">
-                            <span className={cn(
-                              "text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all",
-                              isPlayingThis
-                                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 animate-pulse"
-                                : isCurrent && isRadioBuffering
-                                  ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                                  : "bg-white/5 text-white/30 border-transparent"
-                            )}>
-                              {isPlayingThis ? "🟢 نشط" : isCurrent && isRadioBuffering ? "جاري..." : "مباشر"}
-                            </span>
+                          {/* Favorite */}
+                          <button
+                            onClick={(e) => toggleFavoriteRadio(station.id, e)}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors z-10 shrink-0"
+                          >
+                            <Heart className={cn("w-4 h-4 transition-all", isFav ? "text-rose-500 fill-current" : "text-white/20 group-hover:text-white/50")} />
+                          </button>
 
-                            <div className={cn(
-                              "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0",
-                              isCurrent
-                                ? "bg-white text-black shadow-lg"
-                                : "bg-white/8 text-white/40 group-hover:bg-primary/25 group-hover:text-primary"
-                            )}>
-                              {isPlayingThis
-                                ? <Pause className="w-4 h-4 fill-current" />
-                                : <Play className="w-4 h-4 fill-current translate-x-[1px]" />
-                              }
-                            </div>
+                          {/* Play Button */}
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all",
+                            isCurrent ? "bg-primary text-white shadow-glow-primary" : "bg-white/10 text-white/50 group-hover:bg-primary/30 group-hover:text-primary"
+                          )}>
+                            {isPlayingThis
+                              ? <Pause className="w-4 h-4 fill-current" />
+                              : <Play className="w-4 h-4 fill-current translate-x-[1px]" />
+                            }
                           </div>
-
-                          {/* Active glow overlay */}
-                          {isCurrent && (
-                            <div className="absolute inset-0 rounded-[1.5rem] ring-1 ring-inset ring-white/10 pointer-events-none" />
-                          )}
                         </div>
                       );
                     })}
