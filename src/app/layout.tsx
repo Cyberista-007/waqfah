@@ -43,6 +43,10 @@ export const metadata: Metadata = {
   },
   description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.jpg',
+    apple: '/icon.jpg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
