@@ -755,6 +755,10 @@ export default function PrayerPage() {
   const [journalTag, setJournalTag] = useState<string>("focus");
   const [journalLogs, setJournalLogs] = useState<Array<{ id: string; text: string; tag: string; date: string }>>([]);
 
+  // Gamification & Badges Tracking States
+  const [completedAdhkarCount, setCompletedAdhkarCount] = useState<number>(0);
+  const [watchedVideoCount, setWatchedVideoCount] = useState<number>(0);
+
   // Interactive Countdown widget state
   const [selectedCity, setSelectedCity] = useState<string>("mecca");
   const [countdown, setCountdown] = useState({
@@ -827,7 +831,7 @@ export default function PrayerPage() {
   }>>({});
 
   // Subtab inside tracker tab
-  const [trackerSubTab, setTrackerSubTab] = useState<"faraid" | "sunan">("faraid");
+  const [trackerSubTab, setTrackerSubTab] = useState<"faraid" | "sunan" | "badges">("faraid");
 
   // Adhkar Clicker states
   const [activeDhikrIdx, setActiveDhikrIdx] = useState<number>(0);
@@ -898,6 +902,12 @@ export default function PrayerPage() {
         setJournalLogs(JSON.parse(savedJournal));
       } catch (e) {}
     }
+
+    const savedAdhkarCount = localStorage.getItem("prayer_completed_adhkar_count");
+    if (savedAdhkarCount) setCompletedAdhkarCount(parseInt(savedAdhkarCount));
+
+    const savedVideoCount = localStorage.getItem("prayer_watched_video_count");
+    if (savedVideoCount) setWatchedVideoCount(parseInt(savedVideoCount));
   }, []);
 
   // Update Countdown Clock Hook
@@ -1152,6 +1162,14 @@ export default function PrayerPage() {
     triggerToast("تم حذف الخاطرة");
   };
 
+  // Handle Video click to track achievements
+  const handleVideoClick = (vid: any) => {
+    setSelectedVideo(vid);
+    const newVideoCount = watchedVideoCount + 1;
+    setWatchedVideoCount(newVideoCount);
+    localStorage.setItem("prayer_watched_video_count", String(newVideoCount));
+  };
+
   // Dua Actions
   const handleCopyDua = (text: string, id: string) => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -1243,6 +1261,66 @@ export default function PrayerPage() {
   const pathD = focusPoints.reduce((acc, p, i) => {
     return i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
   }, "");
+
+  // SPIRITUAL BADGES CONFIGURATION
+  const badges = [
+    {
+      id: "all_faraid",
+      title: "تاج الفريضة",
+      desc: "صلي جميع الفرائض الخمس اليوم",
+      icon: "👑",
+      unlocked: donePrayersCount === 5,
+      color: "from-amber-500 to-yellow-400"
+    },
+    {
+      id: "all_sunan",
+      title: "نجم السنن",
+      desc: "أدّ جميع السنن والنوافل السبع اليوم",
+      icon: "✨",
+      unlocked: doneSunanCount === 7,
+      color: "from-emerald-500 to-teal-400"
+    },
+    {
+      id: "khushu_complete",
+      title: "حارس الخشوع",
+      desc: "طوّع جميع عادات الخشوع الست اليوم",
+      icon: "🛡️",
+      unlocked: khushuHabits.every(h => h.checked),
+      color: "from-cyan-500 to-blue-450"
+    },
+    {
+      id: "adhkar_complete",
+      title: "قلب مطمئن",
+      desc: "أكمل مسبحة الأذكار التفاعلية مرة واحدة",
+      icon: "🕊️",
+      unlocked: completedAdhkarCount > 0,
+      color: "from-indigo-500 to-purple-400"
+    },
+    {
+      id: "journal_entry",
+      title: "كاتب الخواطر",
+      desc: "دوّن أول خاطرة في مفكرة الخشوع",
+      icon: "📝",
+      unlocked: journalLogs.length > 0,
+      color: "from-pink-500 to-rose-400"
+    },
+    {
+      id: "video_watched",
+      title: "مستمع المواعظ",
+      desc: "شاهد أحد الدروس المرئية في مكتبة الفيديوهات",
+      icon: "🎓",
+      unlocked: watchedVideoCount > 0,
+      color: "from-violet-500 to-fuchsia-400"
+    },
+    {
+      id: "streak_logs",
+      title: "مستمر الالتزام",
+      desc: "سجل صلواتك في التقويم لـ 3 أيام مختلفة",
+      icon: "📈",
+      unlocked: Object.keys(historyLogs).length >= 3,
+      color: "from-teal-500 to-green-400"
+    }
+  ];
 
   return (
     <div className={`flex flex-col min-h-screen ${theme.bgClass} ${theme.textClass} font-sans transition-all duration-500 pb-32`}>
@@ -1504,7 +1582,7 @@ export default function PrayerPage() {
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-semibold transition-all duration-300 cursor-pointer ${
                   activeTheme === t.id
                     ? `${t.primaryButton} scale-[1.05] border-transparent font-black shadow-lg`
-                    : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-350 hover:border-white/20"
+                    : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-355 hover:border-white/20"
                 }`}
               >
                 <div className={`w-3.5 h-3.5 rounded-full border border-black/10`} style={{ 
@@ -1615,7 +1693,7 @@ export default function PrayerPage() {
                   <div>
                     <h4 className={`text-base font-bold mb-3 ${theme.accentClass}`}>💡 وقفات إيمانية وتأملات</h4>
                     <p className="text-xs opacity-80 leading-relaxed font-light">
-                      تأمل كيف أن أركان الإسلام الأخرى لها شروط تسقط بها (الزكاة لمن لا يملك النصاب، الصيام للمريض والمسافر، الحج لغير المستطيع)، إلا الصلاة!
+                      تأمل كيف أن أركان الإسلام الأخرى لها شروط تسقط بها (الزكاة لمن لا يملك النصاب، الصيام للمريض والمسافر، الحج لغير المستطيع), إلا الصلاة!
                       إنها البصمة الفريدة التي تجعلك على صلة دائمة بالله.
                     </p>
                   </div>
@@ -1906,7 +1984,7 @@ export default function PrayerPage() {
                           } else if (totalScore <= 12) {
                             statusName = "مرتبة الخشوع المتوسط والسكينة 🕊️";
                             colorClass = "text-amber-400";
-                            recommendation = "أنت تبذل جهداً رائعاً وتستحضر قلبك في معظم الأوقات. نصيحتنا للارتقاء: احرص على ترديد الأذان مع المؤذن وصلاة السنن الرواتب لتهيئة عقلك وجسدك تماماً قبل تكبيرة الإحرام.";
+                            recommendation = "أنت تبذل جهداً رائعاً وتستحضر قلبك في معظم الأوقات. نصيحتنا للارتقاء: احرص على ترديد الأذن مع المؤذن وصلاة السنن الرواتب لتهيئة عقلك وجسدك تماماً قبل تكبيرة الإحرام.";
                           } else {
                             statusName = "مرتبة حضور القلب والإحسان 👑";
                             colorClass = "text-emerald-400";
@@ -2026,7 +2104,7 @@ export default function PrayerPage() {
                                         </span>
                                         <span className="text-[8px] opacity-45">{log.date}</span>
                                       </div>
-                                      <p className="text-xs leading-relaxed opacity-95 text-slate-100 whitespace-pre-line select-text font-light">
+                                      <p className="text-xs leading-relaxed opacity-95 text-slate-100 whitespace-pre-line select-text font-light font-sans">
                                         {log.text}
                                       </p>
                                     </div>
@@ -2136,7 +2214,12 @@ export default function PrayerPage() {
                             } else {
                               setDhikrCount(0);
                               setActiveDhikrIdx(ADHKAR_LIST.length); // mark complete
-                              triggerToast("تقبل الله طاعتكم! لقد أكملت الأذكار بنجاح.");
+                              
+                              const newAdhkarCount = completedAdhkarCount + 1;
+                              setCompletedAdhkarCount(newAdhkarCount);
+                              localStorage.setItem("prayer_completed_adhkar_count", String(newAdhkarCount));
+                              
+                              triggerToast("تقبل الله طاعتكم! لقد أكملت الأذكار بنجاح وتم تحصيل وسام الأذكار.");
                             }
                           } else {
                             if (soundEnabled) playSound(880, "sine", 0.05); // standard click
@@ -2174,7 +2257,7 @@ export default function PrayerPage() {
                         </svg>
                         
                         <div className="z-10 text-center">
-                          <span className="text-3xl font-black block tracking-tighter">
+                          <span className="text-3xl font-black block tracking-tighter font-sans">
                             {dhikrCount}
                           </span>
                           <span className="text-[10px] opacity-55 block mt-1 font-bold">
@@ -2228,7 +2311,7 @@ export default function PrayerPage() {
                       </div>
                       <div>
                         <h4 className="text-lg font-black text-slate-100 mb-1">تقبل الله طاعاتكم!</h4>
-                        <p className="text-xs opacity-75 max-w-sm">
+                        <p className="text-xs opacity-75 max-w-sm font-light">
                           لقد أكملت جميع أذكار ما بعد الصلاة بنجاح. نسأل الله أن يكتب لك الأجر ويملأ قلبك بالطمأنينة والهدوء.
                         </p>
                       </div>
@@ -2271,7 +2354,7 @@ export default function PrayerPage() {
                         }`}>
                           {idx < activeDhikrIdx ? "✓" : idx + 1}
                         </div>
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-0.5 font-sans">
                           <span className="text-xs leading-snug line-clamp-1">{d.text}</span>
                           <span className="text-[9px] opacity-60">الهدف: {d.count} مرات</span>
                         </div>
@@ -2289,7 +2372,7 @@ export default function PrayerPage() {
               
               {/* Category Pill Filters */}
               <div className="lg:col-span-1 flex flex-col gap-2">
-                <span className="text-[10px] opacity-50 uppercase tracking-widest font-black block mb-1">تصنيف الأدعية:</span>
+                <span className="text-[10px] opacity-50 uppercase tracking-widest font-black block mb-1 font-sans">تصنيف الأدعية:</span>
                 {DUAS_DATABASE.map((cat) => (
                   <button
                     key={cat.category}
@@ -2316,7 +2399,7 @@ export default function PrayerPage() {
                   return (
                     <div
                       key={dua.id}
-                      className={`p-5 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col gap-4`}
+                      className={`p-5 rounded-3xl ${theme.cardBgClass} border transition-all duration-305 flex flex-col gap-4`}
                     >
                       {/* Title & Actions */}
                       <div className="flex justify-between items-start gap-4 border-b border-white/5 pb-2">
@@ -2355,11 +2438,11 @@ export default function PrayerPage() {
                       {/* Expanded insights */}
                       {isExpanded && (
                         <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl flex flex-col gap-2.5 animate-in fade-in duration-200">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1 text-right">
                             <span className="text-[10px] text-amber-400 font-bold">📖 المعنى اللفظي والترجمة:</span>
                             <p className="text-xs opacity-90 leading-relaxed font-light">{dua.translation}</p>
                           </div>
-                          <div className="flex flex-col gap-1 border-t border-white/5 pt-2">
+                          <div className="flex flex-col gap-1 border-t border-white/5 pt-2 text-right">
                             <span className="text-[10px] text-emerald-400 font-bold">✨ أثر الدعاء في تحقيق الخشوع:</span>
                             <p className="text-xs opacity-90 leading-relaxed font-light">{dua.benefit}</p>
                           </div>
@@ -2409,10 +2492,10 @@ export default function PrayerPage() {
                 {filteredVideos.map((vid) => (
                   <div
                     key={vid.id}
-                    onClick={() => setSelectedVideo(vid)}
+                    onClick={() => handleVideoClick(vid)}
                     className={`rounded-3xl ${theme.cardBgClass} border p-5 flex flex-col justify-between gap-4 cursor-pointer group transition-all duration-300 hover:-translate-y-1 shadow-lg`}
                   >
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 text-right">
                       {/* Video Thumbnail Box Mock */}
                       <div className="relative aspect-video rounded-2xl bg-black/60 border border-white/5 overflow-hidden flex items-center justify-center group-hover:border-white/10 transition">
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent z-10" />
@@ -2457,7 +2540,10 @@ export default function PrayerPage() {
                       <span className="text-[10px] opacity-55">منصة وقفة التعليمية</span>
                       {!vid.isDefault && (
                         <button
-                          onClick={(e) => handleDeleteVideo(vid.id, e)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteVideo(vid.id, e);
+                          }}
                           className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/15 text-red-400 transition cursor-pointer"
                           title="حذف هذا الفيديو"
                         >
@@ -2481,8 +2567,8 @@ export default function PrayerPage() {
                 
                 <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300`}>
                   
-                  {/* Faraid / Sunan SubTabs Selector */}
-                  <div className="flex gap-2.5 border-b border-white/5 pb-4 mb-4">
+                  {/* Faraid / Sunan / Badges SubTabs Selector */}
+                  <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4 mb-4">
                     <button
                       onClick={() => setTrackerSubTab("faraid")}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -2502,6 +2588,16 @@ export default function PrayerPage() {
                       }`}
                     >
                       ✨ السنن والنوافل
+                    </button>
+                    <button
+                      onClick={() => setTrackerSubTab("badges")}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        trackerSubTab === "badges"
+                          ? `${theme.primaryButton} scale-[1.02] shadow-md`
+                          : "bg-black/30 border border-white/10 text-slate-300 hover:bg-black/50"
+                      }`}
+                    >
+                      🏆 الأوسمة الإيمانية
                     </button>
                   </div>
 
@@ -2584,7 +2680,7 @@ export default function PrayerPage() {
                             }`}
                           >
                             <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-start gap-3">
+                              <div className="flex items-start gap-3 text-right">
                                 <button
                                   onClick={() => handleToggleSunanLog(item.key)}
                                   className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition cursor-pointer mt-0.5 ${
@@ -2607,6 +2703,78 @@ export default function PrayerPage() {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {/* BADGES / ACHIEVEMENTS PANEL */}
+                  {trackerSubTab === "badges" && (
+                    <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+                      
+                      {/* Stats Header */}
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-black/40 border border-white/5 p-4 rounded-2xl text-right">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-bold text-slate-100">أوسمتك وشاراتك الروحية المفتوحة</span>
+                          <span className="text-[10px] opacity-60">تفاعل مع أقسام الصفحة المختلفة لفتح المزيد من الأوسمة</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-black ${theme.accentClass}`}>
+                            {badges.filter(b => b.unlocked).length} من {badges.length} أوسمة
+                          </span>
+                          <div className="w-24 bg-white/10 h-2 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500" 
+                              style={{ width: `${(badges.filter(b => b.unlocked).length / badges.length) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Badges Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {badges.map((b) => (
+                          <div
+                            key={b.id}
+                            className={`p-4 rounded-2xl border flex flex-col items-center text-center gap-3 transition-all duration-300 ${
+                              b.unlocked
+                                ? `bg-gradient-to-b from-black/20 to-black/45 border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.06)]`
+                                : "bg-black/10 border-white/5 opacity-40"
+                            }`}
+                          >
+                            {/* Icon circular frame */}
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl relative ${
+                              b.unlocked 
+                                ? `bg-gradient-to-tr ${b.color} text-slate-950 font-black shadow-md shadow-black/30` 
+                                : "bg-white/5 border border-white/10 text-slate-500"
+                            }`}>
+                              {b.unlocked ? b.icon : "🔒"}
+                              {b.unlocked && (
+                                <span className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 bg-emerald-500 border border-black/40 rounded-full flex items-center justify-center text-[7px] font-black text-slate-950">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-xs font-bold ${b.unlocked ? "text-slate-100" : "text-slate-400"}`}>
+                                {b.title}
+                              </span>
+                              <p className="text-[9px] opacity-75 leading-relaxed font-light px-1 line-clamp-2">
+                                {b.desc}
+                              </p>
+                            </div>
+
+                            {/* Status badge */}
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${
+                              b.unlocked 
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                                : "bg-white/5 text-slate-400 border-white/10"
+                            }`}>
+                              {b.unlocked ? "تم الفتح" : "مغلق"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
                     </div>
                   )}
 
@@ -2666,7 +2834,7 @@ export default function PrayerPage() {
                                 className="transition-all duration-500"
                               />
                             )}
-                            <text x={x + 15} y={128} fill="currentColor" opacity="0.6" fontSize="9" textAnchor="middle" className="font-semibold">
+                            <text x={x + 15} y={128} fill="currentColor" opacity="0.6" fontSize="9" textAnchor="middle" className="font-semibold font-sans">
                               {d.dayName}
                             </text>
                             <text x={x + 15} y={140} fill="currentColor" opacity="0.35" fontSize="8" textAnchor="middle" className="font-black font-mono">
@@ -2709,7 +2877,7 @@ export default function PrayerPage() {
                     </svg>
                   </div>
                   
-                  <div className="flex justify-between items-center text-[10px] opacity-60 px-2">
+                  <div className="flex justify-between items-center text-[10px] opacity-60 px-2 font-sans">
                     <span className="flex items-center gap-1">
                       <span className="w-2.5 h-2.5 rounded bg-amber-500 inline-block" />
                       الخط البرتقالي: مؤشر الخشوع (10★ ممتازة)
@@ -2723,12 +2891,12 @@ export default function PrayerPage() {
 
                 {/* DETAILED PAST-7-DAYS HISTORY LOG MANAGER */}
                 <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col gap-4 shadow-lg`}>
-                  <h3 className="text-sm font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+                  <h3 className="text-sm font-bold flex items-center gap-2 border-b border-white/5 pb-2 font-sans">
                     📋 سجل الأداء والتاريخ التفصيلي
                   </h3>
                   
                   {Object.keys(historyLogs).length === 0 ? (
-                    <div className="text-center py-8 opacity-60 text-xs">
+                    <div className="text-center py-8 opacity-60 text-xs font-sans">
                       لا توجد سجلات سابقة مسجلة بعد. سيظهر تاريخ أداؤك هنا فور قيامك بتسجيل الصلوات.
                     </div>
                   ) : (
@@ -2746,7 +2914,7 @@ export default function PrayerPage() {
 
                           return (
                             <div key={dateStr} className="p-3.5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between gap-4 text-right">
-                              <div className="flex flex-col gap-1">
+                              <div className="flex flex-col gap-1 font-sans">
                                 <span className="text-xs font-bold text-slate-100">{dayName}</span>
                                 <div className="flex items-center gap-2 font-mono">
                                   <span className="text-[10px] opacity-60">الفرائض: {donePrayers.length}/5</span>
@@ -2794,7 +2962,7 @@ export default function PrayerPage() {
               </div>
 
               {/* Evaluation Sidebar */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 font-sans">
                 
                 <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 shadow-xl`}>
                   <h4 className={`text-base font-bold border-b border-white/5 pb-3 mb-4 flex items-center gap-2 ${theme.accentClass}`}>
@@ -2841,7 +3009,7 @@ export default function PrayerPage() {
             className={`w-full max-w-xl rounded-3xl border ${theme.cardBorderClass} ${theme.cardBgClass} p-6 shadow-2xl animate-in zoom-in-95 duration-200`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4 text-right">
               <h4 className="font-extrabold text-base flex items-center gap-2">
                 <Tv className={`w-5 h-5 ${theme.accentClass}`} />
                 إضافة فيديو إيماني جديد للمكتبة
@@ -2854,7 +3022,7 @@ export default function PrayerPage() {
               </button>
             </div>
 
-            <form onSubmit={handleAddVideo} className="flex flex-col gap-4">
+            <form onSubmit={handleAddVideo} className="flex flex-col gap-4 text-right">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold">عنوان الفيديو *</label>
                 <input
@@ -2958,7 +3126,7 @@ export default function PrayerPage() {
               />
             </div>
 
-            <div className="p-6">
+            <div className="p-6 text-right">
               <div className="flex justify-between items-start gap-4 mb-2">
                 <div>
                   <h3 className="font-extrabold text-base md:text-lg text-slate-100 leading-snug">
@@ -2970,7 +3138,7 @@ export default function PrayerPage() {
                 </div>
                 <button
                   onClick={() => setSelectedVideo(null)}
-                  className="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition cursor-pointer"
+                  className="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition cursor-pointer text-slate-105"
                 >
                   إغلاق
                 </button>
@@ -2985,7 +3153,7 @@ export default function PrayerPage() {
 
       {/* ================= FLOATING TOAST NOTIFICATION ================= */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-amber-500/20 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-bottom duration-300 text-xs font-bold text-amber-400">
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-amber-500/20 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-bottom duration-300 text-xs font-bold text-amber-400 font-sans">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
