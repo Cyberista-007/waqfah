@@ -27,7 +27,10 @@ import {
   MapPin,
   Copy,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  HelpCircle,
+  Send,
+  Bookmark
 } from "lucide-react";
 
 // ==========================================
@@ -181,7 +184,7 @@ const DUAS_DATABASE = [
         title: "الصيغة الأولى (الاستفتاح بالتنزيه والحمد)",
         text: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، وَتَبَارَكَ اسْمُكَ، وَتَعَالَى جَدُّكَ، وَلَا إِلَهَ غَيْرُكَ",
         translation: "أنزهك يا الله تنزيهاً مطلقاً متلبساً بحمدك، وكثر خير اسمك وبركته، وعلا جلالك وعظمتك، ولا معبود بحق سواك.",
-        benefit: "سنة بعد تكبيرة الإحرام وقبل القراءة. يبعث في القلب التعظيم والتنزيه الكامل لله تبارك وتعالى، مما يهيئ العقل للتركيز والخشوع والتجرد من الشواغل الدنيوية.",
+        benefit: "سنة بعد تكبيرة الإحرام وقبل القراءة. يبعث في القلوب التعظيم والتنزيه الكامل لله تبارك وتعالى، مما يهيئ العقل للتركيز والخشوع والتجرد من الشواغل الدنيوية.",
         source: "رواه أبو داود والترمذي وصححه الألباني"
       },
       {
@@ -279,12 +282,20 @@ const DUAS_DATABASE = [
 // ==========================================
 // VISUAL PRAYER POSTURE STEPS
 // ==========================================
-const PRAYER_STEPS = [
+interface PrayerStep {
+  step: number;
+  title: string;
+  svg: React.ReactElement;
+  sunnah: string[];
+  errors: string[];
+}
+
+const PRAYER_STEPS: PrayerStep[] = [
   {
     step: 1,
     title: "تكبيرة الإحرام",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <circle cx="50" cy="20" r="8" fill="currentColor" opacity="0.8" />
         <path d="M45,30 L55,30 L53,70 L47,70 Z" fill="currentColor" opacity="0.6" />
         <path d="M40,32 L32,22 L32,12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -307,7 +318,7 @@ const PRAYER_STEPS = [
     step: 2,
     title: "القيام وقراءة الفاتحة",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <circle cx="50" cy="21" r="8" fill="currentColor" opacity="0.8" />
         <path d="M45,30 L55,30 L52,75 L48,75 Z" fill="currentColor" opacity="0.6" />
         <path d="M43,33 L57,33" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
@@ -332,7 +343,7 @@ const PRAYER_STEPS = [
     step: 3,
     title: "الركوع والتعظيم",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <path d="M30,45 L70,45 L70,53 L38,53 L38,80 L30,80 Z" fill="currentColor" opacity="0.6" />
         <circle cx="78" cy="48" r="7" fill="currentColor" opacity="0.8" />
         <line x1="65" y1="48" x2="60" y2="70" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
@@ -356,7 +367,7 @@ const PRAYER_STEPS = [
     step: 4,
     title: "الاعتدال والرفع",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <circle cx="50" cy="20" r="8" fill="currentColor" opacity="0.8" />
         <path d="M45,30 L55,30 L53,75 L47,75 Z" fill="currentColor" opacity="0.6" />
         <line x1="43" y1="32" x2="43" y2="60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
@@ -380,7 +391,7 @@ const PRAYER_STEPS = [
     step: 5,
     title: "السجود والتذلل",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <line x1="10" y1="85" x2="90" y2="85" stroke="currentColor" strokeWidth="2" opacity="0.5" />
         <circle cx="75" cy="79" r="6" fill="currentColor" opacity="0.8" />
         <path d="M35,60 L68,75 L65,83 L30,70 Z" fill="currentColor" opacity="0.6" />
@@ -405,7 +416,7 @@ const PRAYER_STEPS = [
     step: 6,
     title: "الجلوس بين السجدتين",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <line x1="10" y1="85" x2="90" y2="85" stroke="currentColor" strokeWidth="2" opacity="0.5" />
         <circle cx="58" cy="38" r="8" fill="currentColor" opacity="0.8" />
         <path d="M52,48 L64,48 L56,78 L44,78 Z" fill="currentColor" opacity="0.6" />
@@ -428,7 +439,7 @@ const PRAYER_STEPS = [
     step: 7,
     title: "التشهد والتسليم",
     svg: (
-      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32">
+      <svg viewBox="0 0 100 100" className="w-24 h-24 md:w-32 md:h-32 text-inherit">
         <line x1="10" y1="85" x2="90" y2="85" stroke="currentColor" strokeWidth="2" opacity="0.5" />
         <circle cx="58" cy="38" r="8" fill="currentColor" opacity="0.8" />
         <path d="M52,48 L64,48 L56,78 L44,78 Z" fill="currentColor" opacity="0.6" />
@@ -446,6 +457,68 @@ const PRAYER_STEPS = [
     errors: [
       "عدم تحريك أو الإشارة بالسبابة أو العبث بها يميناً ويساراً.",
       "التسليم قبل انتهاء الإمام من قوله (السلام عليكم)."
+    ]
+  }
+];
+
+// ==========================================
+// KHUSHU ASSESSMENT QUIZ DATA
+// ==========================================
+interface QuizOption {
+  text: string;
+  points: number;
+}
+
+interface QuizQuestion {
+  id: number;
+  question: string;
+  options: QuizOption[];
+}
+
+const QUIZ_QUESTIONS: QuizQuestion[] = [
+  {
+    id: 1,
+    question: "ما هو سلوكك المعتاد عند قراءة الفاتحة والسورة بعد تكبيرة الإحرام؟",
+    options: [
+      { text: "أقرأها بسرعة دون تدبر أو تفكير في الكلمات.", points: 1 },
+      { text: "أتدبر بعض الآيات وأسرح في معانٍ دنيوية في البعض الآخر.", points: 2 },
+      { text: "أقف عند رأس كل آية، وأستشعر مخاطبة الله لي بالحمد والثناء.", points: 3 }
+    ]
+  },
+  {
+    id: 2,
+    question: "كم مرة تشعر بالسرحان وتشتت الذهن في الركعة الواحدة؟",
+    options: [
+      { text: "أغلب الركعات، وقد يمر جزء من الصلاة ولا أدري أين أنا.", points: 1 },
+      { text: "بين الفينة والأخرى، لكني أسعى لمجاهدة الوسوسة والعودة للتركيز فوراً.", points: 2 },
+      { text: "نادراً جداً، وأشعر بحضور قلبي كامل ووعي تام بكل ركن.", points: 3 }
+    ]
+  },
+  {
+    id: 3,
+    question: "كيف تصف سرعة انتقالك واستقرارك في أركان الصلاة (الركوع، السجود، والرفع منهما)؟",
+    options: [
+      { text: "أتحرك بسرعة فائقة (كالنقر) رغبة في إنهاء الصلاة للعودة لأشغالي.", points: 1 },
+      { text: "معتدل السرعة، أقف لثانية أو ثانيتين ولا أطيل كثيراً.", points: 2 },
+      { text: "أتأنى جداً وأستقر في كل وضع حتى يرجع كل مفصل لمكانه (الطمأنينة الكاملة).", points: 3 }
+    ]
+  },
+  {
+    id: 4,
+    question: "ما هو حجم استعدادك وتهيئتك النفسية والروحية قبل التكبير للدخول في الصلاة؟",
+    options: [
+      { text: "أكبر فور سماع الإقامة أو دخول الوقت مباشرة دون أي تمهيد.", points: 1 },
+      { text: "أتوضأ بهدوء وأقترب من السجادة قبل الصلاة بدقيقة أو دقيقتين.", points: 2 },
+      { text: "أردد مع المؤذن، أصلي السنّة القبلية، وأستحضر عظمة الله ونية الصلاة بخشوع.", points: 3 }
+    ]
+  },
+  {
+    id: 5,
+    question: "ماذا تفعل عادةً بعد الانتهاء من الصلاة والتسليم؟",
+    options: [
+      { text: "أنصرف فوراً لأشغالي دون قراءة أي أذكار أو أدعية.", points: 1 },
+      { text: "أستغفر ثلاثاً على عجل ثم أتحرك.", points: 2 },
+      { text: "أجلس بطمأنينة وأكمل الأذكار كاملة مع آية الكرسي والمعوذات بتدبر.", points: 3 }
     ]
   }
 ];
@@ -670,8 +743,17 @@ export default function PrayerPage() {
   const [activeTab, setActiveTab] = useState<"importance" | "khushu" | "adhkar" | "duas" | "videos" | "tracker">("importance");
   
   // Sub-tabs inside "دليل الخشوع والسكينة"
-  const [khushuSubTab, setKhushuSubTab] = useState<"challenge" | "visualGuide">("challenge");
+  const [khushuSubTab, setKhushuSubTab] = useState<"challenge" | "visualGuide" | "assessment">("challenge");
   const [activeStep, setActiveStep] = useState<number>(0);
+
+  // Diagnostic Concentration Assessment Quiz states
+  const [quizStep, setQuizStep] = useState<number>(0); // 0 = intro, 1..5 = questions, 6 = results
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+
+  // Reflection Journal states
+  const [journalText, setJournalText] = useState<string>("");
+  const [journalTag, setJournalTag] = useState<string>("focus");
+  const [journalLogs, setJournalLogs] = useState<Array<{ id: string; text: string; tag: string; date: string }>>([]);
 
   // Interactive Countdown widget state
   const [selectedCity, setSelectedCity] = useState<string>("mecca");
@@ -807,6 +889,13 @@ export default function PrayerPage() {
     if (savedHistory) {
       try {
         setHistoryLogs(JSON.parse(savedHistory));
+      } catch (e) {}
+    }
+
+    const savedJournal = localStorage.getItem("prayer_journal_logs");
+    if (savedJournal) {
+      try {
+        setJournalLogs(JSON.parse(savedJournal));
       } catch (e) {}
     }
   }, []);
@@ -1028,6 +1117,39 @@ export default function PrayerPage() {
     setSunanLogged(updated);
     localStorage.setItem("prayer_sunan_today", JSON.stringify(updated));
     syncToHistory(prayersLogged, updated);
+  };
+
+  // Add Reflection Journal entry handler
+  const handleAddJournal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!journalText.trim()) return;
+
+    const newLog = {
+      id: `journal-${Date.now()}`,
+      text: journalText,
+      tag: journalTag,
+      date: new Date().toLocaleString('ar-EG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+      })
+    };
+
+    const updated = [newLog, ...journalLogs];
+    setJournalLogs(updated);
+    localStorage.setItem("prayer_journal_logs", JSON.stringify(updated));
+    setJournalText("");
+    triggerToast("تم تسجيل خاطرة الخشوع بنجاح 📝");
+  };
+
+  // Delete Reflection Journal entry
+  const handleDeleteJournal = (id: string) => {
+    const updated = journalLogs.filter(log => log.id !== id);
+    setJournalLogs(updated);
+    localStorage.setItem("prayer_journal_logs", JSON.stringify(updated));
+    triggerToast("تم حذف الخاطرة");
   };
 
   // Dua Actions
@@ -1524,10 +1646,10 @@ export default function PrayerPage() {
                 
                 <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300`}>
                   {/* Sub Tab Switcher */}
-                  <div className="flex gap-2.5 border-b border-white/5 pb-4 mb-4">
+                  <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4 mb-4">
                     <button
                       onClick={() => setKhushuSubTab("challenge")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         khushuSubTab === "challenge"
                           ? `${theme.primaryButton} scale-[1.02] shadow-md`
                           : "bg-black/30 border border-white/10 text-slate-300 hover:bg-black/50"
@@ -1537,13 +1659,23 @@ export default function PrayerPage() {
                     </button>
                     <button
                       onClick={() => setKhushuSubTab("visualGuide")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         khushuSubTab === "visualGuide"
                           ? `${theme.primaryButton} scale-[1.02] shadow-md`
                           : "bg-black/30 border border-white/10 text-slate-300 hover:bg-black/50"
                       }`}
                     >
                       📖 مرشد صفة الصلاة المصور
+                    </button>
+                    <button
+                      onClick={() => setKhushuSubTab("assessment")}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        khushuSubTab === "assessment"
+                          ? `${theme.primaryButton} scale-[1.02] shadow-md`
+                          : "bg-black/30 border border-white/10 text-slate-300 hover:bg-black/50"
+                      }`}
+                    >
+                      📝 مقياس الخشوع والخواطر
                     </button>
                   </div>
 
@@ -1554,7 +1686,7 @@ export default function PrayerPage() {
                         <p className="text-xs opacity-75">انقر لتفعيل العادات التي طبقتها في صلواتك اليوم:</p>
                         <button
                           onClick={handleResetHabits}
-                          className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 bg-red-400/10 px-2 py-1 rounded-lg border border-red-500/10 cursor-pointer animate-pulse"
+                          className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 bg-red-400/10 px-2 py-1 rounded-lg border border-red-500/10 cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           إعادة تعيين
@@ -1695,6 +1827,229 @@ export default function PrayerPage() {
                     </div>
                   )}
 
+                  {/* SUBTAB 3: ASSESSMENT & REFLECTION JOURNAL */}
+                  {khushuSubTab === "assessment" && (
+                    <div className="flex flex-col gap-8 animate-in fade-in duration-200">
+                      
+                      {/* QUIZ DIAGNOSTIC GAUGE */}
+                      <div className="bg-black/35 border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
+                        <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                          <HelpCircle className={`w-4 h-4 ${theme.accentClass}`} />
+                          <h4 className="text-sm font-bold text-slate-100">مقياس حضور القلب في الصلاة (تقييم تشخيصي)</h4>
+                        </div>
+
+                        {quizStep === 0 && (
+                          <div className="flex flex-col items-center text-center py-6 gap-4">
+                            <span className="text-3xl">📋</span>
+                            <div className="max-w-md">
+                              <h5 className="text-sm font-extrabold text-slate-200">قس مستوى خشوعك وتدبرك</h5>
+                              <p className="text-xs opacity-70 leading-relaxed font-light mt-1.5">
+                                أجب بصدق عن 5 أسئلة تشخيصية مبسطة حول عادات صلاتك اليومية للحصول على نتيجتك ونشاط إيماني مخصص لتحسين حضورك القلبي.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setQuizStep(1);
+                                setQuizAnswers({});
+                              }}
+                              className={`px-6 py-2.5 rounded-xl font-bold text-xs cursor-pointer transition ${theme.primaryButton}`}
+                            >
+                              البدء بالتقييم الآن
+                            </button>
+                          </div>
+                        )}
+
+                        {quizStep >= 1 && quizStep <= 5 && (
+                          <div className="flex flex-col gap-4 animate-in fade-in duration-150">
+                            <div className="flex justify-between items-center text-[10px] opacity-60">
+                              <span>السؤال {quizStep} من 5</span>
+                              <div className="w-24 bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-500 transition-all duration-300" style={{ width: `${(quizStep / 5) * 100}%` }} />
+                              </div>
+                            </div>
+                            
+                            <h5 className="text-sm font-bold text-slate-100 leading-snug">
+                              {QUIZ_QUESTIONS[quizStep - 1].question}
+                            </h5>
+
+                            <div className="flex flex-col gap-2.5 mt-2">
+                              {QUIZ_QUESTIONS[quizStep - 1].options.map((opt, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    setQuizAnswers(prev => ({
+                                      ...prev,
+                                      [quizStep]: opt.points
+                                    }));
+                                    if (soundEnabled) playSound(700, "sine", 0.05);
+                                    setQuizStep(quizStep + 1);
+                                  }}
+                                  className="w-full text-right p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 hover:border-amber-500/30 text-xs font-semibold text-slate-200 transition cursor-pointer"
+                                >
+                                  {opt.text}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {quizStep === 6 && (() => {
+                          const totalScore = Object.values(quizAnswers).reduce((a, b) => a + b, 0);
+                          let statusName = "";
+                          let recommendation = "";
+                          let colorClass = "";
+
+                          if (totalScore <= 8) {
+                            statusName = "مرتبة مجاهدة المشتتات 🛡️";
+                            colorClass = "text-rose-400";
+                            recommendation = "لديك رغبة طيبة، ولكن صلاتك تحتاج لمزيد من الطمأنينة. نصيحتنا لك: أطل السجود لمدة دقيقة إضافية وحاول عدم التسرع في الحركات، وحدد عينيك في موضع السجود البصري.";
+                          } else if (totalScore <= 12) {
+                            statusName = "مرتبة الخشوع المتوسط والسكينة 🕊️";
+                            colorClass = "text-amber-400";
+                            recommendation = "أنت تبذل جهداً رائعاً وتستحضر قلبك في معظم الأوقات. نصيحتنا للارتقاء: احرص على ترديد الأذان مع المؤذن وصلاة السنن الرواتب لتهيئة عقلك وجسدك تماماً قبل تكبيرة الإحرام.";
+                          } else {
+                            statusName = "مرتبة حضور القلب والإحسان 👑";
+                            colorClass = "text-emerald-400";
+                            recommendation = "ما شاء الله تبارك الله! صلاتك مفعمة بالطمأنينة والإقبال. نصيحتنا للاستمرار: حافظ على أذكار ما بعد الصلاة ببطء، وتذكر دائماً أن تدعو بالثبات والقبول الدائم.";
+                          }
+
+                          return (
+                            <div className="flex flex-col items-center text-center py-4 gap-4 animate-in zoom-in-95 duration-200">
+                              <div className="relative w-24 h-24 rounded-full border-4 border-amber-500/20 flex items-center justify-center bg-black/40">
+                                <div className="text-center">
+                                  <span className="text-3xl font-black block tracking-tighter">{totalScore}</span>
+                                  <span className="text-[9px] opacity-55 block font-bold">من 15 درجة</span>
+                                </div>
+                              </div>
+
+                              <div className="max-w-md">
+                                <span className={`text-sm font-black block ${colorClass}`}>{statusName}</span>
+                                <p className="text-xs opacity-85 leading-relaxed font-light mt-2 px-2">
+                                  {recommendation}
+                                </p>
+                              </div>
+
+                              <button
+                                onClick={() => setQuizStep(0)}
+                                className="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition cursor-pointer text-slate-100"
+                              >
+                                إعادة التقييم
+                              </button>
+                            </div>
+                          );
+                        })()}
+
+                      </div>
+
+                      {/* REFLECTION JOURNAL TIMELINE */}
+                      <div className="bg-black/35 border border-white/5 p-5 rounded-2xl flex flex-col gap-5">
+                        
+                        <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                          <Bookmark className={`w-4 h-4 ${theme.accentClass}`} />
+                          <h4 className="text-sm font-bold text-slate-100">خواطر وتأملات الخشوع الشخصية</h4>
+                        </div>
+
+                        {/* Journal Form */}
+                        <form onSubmit={handleAddJournal} className="flex flex-col gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] opacity-70 font-bold">دون تأملاتك بعد الصلاة (ما هي المعاني التي استشعرتها أو الصعوبات التي واجهتك؟):</label>
+                            <textarea
+                              required
+                              placeholder="مثال: في صلاة المغرب اليوم، تدبرت معنى قوله تعالى 'الحمد لله رب العالمين' وشعرت بامتنان عظيم وعبرة في عيني..."
+                              rows={3}
+                              value={journalText}
+                              onChange={(e) => setJournalText(e.target.value)}
+                              className={`px-3 py-2 rounded-xl text-xs outline-none transition-all resize-none ${theme.inputBg}`}
+                            />
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] opacity-60 font-bold">الوسم:</span>
+                              <div className="flex gap-1.5">
+                                {[
+                                  { id: "focus", label: "صلاة خاشعة" },
+                                  { id: "distraction", label: "تشتت ذهني" },
+                                  { id: "benefit", label: "فائدة وتدبر" },
+                                  { id: "dua", label: "دعاء قلبي" }
+                                ].map((t) => (
+                                  <button
+                                    key={t.id}
+                                    type="button"
+                                    onClick={() => setJournalTag(t.id)}
+                                    className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold transition cursor-pointer ${
+                                      journalTag === t.id
+                                        ? "bg-amber-500 text-black border-transparent font-black"
+                                        : `bg-black/20 text-slate-400 border-white/5 hover:border-white/15`
+                                    }`}
+                                  >
+                                    {t.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <button
+                              type="submit"
+                              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${theme.primaryButton}`}
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              حفظ الخاطرة
+                            </button>
+                          </div>
+                        </form>
+
+                        {/* Reflections List */}
+                        <div className="border-t border-white/5 pt-4 flex flex-col gap-4">
+                          <span className="text-[10px] opacity-60 font-bold block mb-1">الخواطر المسجلة سابقاً:</span>
+                          
+                          {journalLogs.length === 0 ? (
+                            <div className="text-center py-6 opacity-50 text-xs">
+                              لا توجد خواطر مسجلة بعد. ابدأ بكتابة أول خاطرة اليوم لتأسيس مفكرتك الروحية الخاصة.
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-3.5 max-h-[350px] overflow-y-auto pr-1">
+                              {journalLogs.map((log) => {
+                                const tagObj = [
+                                  { id: "focus", label: "صلاة خاشعة", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+                                  { id: "distraction", label: "تشتت ذهني", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" },
+                                  { id: "benefit", label: "فائدة وتدبر", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+                                  { id: "dua", label: "دعاء قلبي", color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" }
+                                ].find(t => t.id === log.tag) || { label: "منوع", color: "bg-white/5 text-slate-300 border-white/10" };
+
+                                return (
+                                  <div key={log.id} className="p-3.5 rounded-2xl bg-black/40 border border-white/5 flex items-start justify-between gap-3.5">
+                                    <div className="flex flex-col gap-2 text-right">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${tagObj.color}`}>
+                                          {tagObj.label}
+                                        </span>
+                                        <span className="text-[8px] opacity-45">{log.date}</span>
+                                      </div>
+                                      <p className="text-xs leading-relaxed opacity-95 text-slate-100 whitespace-pre-line select-text font-light">
+                                        {log.text}
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      onClick={() => handleDeleteJournal(log.id)}
+                                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/15 text-red-400 transition cursor-pointer self-start shrink-0"
+                                      title="حذف الخاطرة"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+
+                    </div>
+                  )}
+
                 </div>
 
               </div>
@@ -1759,7 +2114,7 @@ export default function PrayerPage() {
                         <span className="text-[10px] opacity-50 uppercase tracking-widest block font-bold">
                           الذكر {activeDhikrIdx + 1} من {ADHKAR_LIST.length}
                         </span>
-                        <h4 className="text-lg md:text-xl font-black text-slate-100 leading-relaxed px-4 min-h-[64px] flex items-center justify-center">
+                        <h4 className="text-lg md:text-xl font-black text-slate-100 leading-relaxed px-4 min-h-[64px] flex items-center justify-center font-serif">
                           {ADHKAR_LIST[activeDhikrIdx].text}
                         </h4>
                         <p className="text-xs opacity-75 leading-relaxed font-light min-h-[32px]">
@@ -2245,7 +2600,7 @@ export default function PrayerPage() {
                                   <span className="text-[11px] opacity-65 font-light">{item.desc}</span>
                                 </div>
                               </div>
-                              <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/15">
+                              <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/15 font-mono">
                                 {item.rakaat} ركعات
                               </span>
                             </div>
@@ -2314,7 +2669,7 @@ export default function PrayerPage() {
                             <text x={x + 15} y={128} fill="currentColor" opacity="0.6" fontSize="9" textAnchor="middle" className="font-semibold">
                               {d.dayName}
                             </text>
-                            <text x={x + 15} y={140} fill="currentColor" opacity="0.35" fontSize="8" textAnchor="middle" className="font-black">
+                            <text x={x + 15} y={140} fill="currentColor" opacity="0.35" fontSize="8" textAnchor="middle" className="font-black font-mono">
                               {d.doneCount}/5
                             </text>
                           </g>
@@ -2345,7 +2700,7 @@ export default function PrayerPage() {
                             className="cursor-pointer hover:scale-125 transition-transform"
                           />
                           {p.val > 0 && (
-                            <text x={p.x} y={p.y - 7} fill="#f59e0b" fontSize="8" fontWeight="bold" textAnchor="middle">
+                            <text x={p.x} y={p.y - 7} fill="#f59e0b" fontSize="8" fontWeight="bold" textAnchor="middle" className="font-mono">
                               {p.val}★
                             </text>
                           )}
@@ -2393,7 +2748,7 @@ export default function PrayerPage() {
                             <div key={dateStr} className="p-3.5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between gap-4 text-right">
                               <div className="flex flex-col gap-1">
                                 <span className="text-xs font-bold text-slate-100">{dayName}</span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 font-mono">
                                   <span className="text-[10px] opacity-60">الفرائض: {donePrayers.length}/5</span>
                                   <span className="text-[10px] opacity-60">•</span>
                                   <span className="text-[10px] text-emerald-400">السنن: {doneSunan}</span>
@@ -2411,7 +2766,7 @@ export default function PrayerPage() {
                                         title={`${name}: ${p.done ? `تم بـ ${p.focus}★` : "لم تؤدَ"}`}
                                         className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
                                           p.done 
-                                            ? "bg-emerald-500 text-slate-950 font-black" 
+                                            ? "bg-emerald-500 text-slate-950" 
                                             : "bg-white/10 text-transparent"
                                         }`}
                                       >
@@ -2448,7 +2803,7 @@ export default function PrayerPage() {
                   
                   <div className="flex flex-col items-center justify-center py-4">
                     <div className="relative h-28 w-28 rounded-full border-4 border-white/5 flex items-center justify-center bg-black/45 shadow-inner">
-                      <div className="text-center">
+                      <div className="text-center font-mono">
                         <span className={`text-4xl font-black block ${evalResult.color}`}>{averageFocus}</span>
                         <span className="text-[9px] opacity-55 block uppercase tracking-wider font-bold">معدل الخشوع</span>
                       </div>
