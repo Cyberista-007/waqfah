@@ -107,7 +107,7 @@ const THEMES: Record<string, Theme> = {
     name: "شروق الفجر",
     bgClass: "bg-[#0a0805] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#361e0b] via-[#0a0805] to-[#020100]",
     textClass: "text-amber-50",
-    accentClass: "text-amber-500",
+    accentClass: "text-amber-505",
     cardBgClass: "bg-[#16110a]/85 border-amber-500/10 hover:border-amber-500/30 shadow-amber-500/5",
     cardBorderClass: "border-amber-500/20 hover:border-amber-500/40",
     glowClass: "shadow-amber-500/10",
@@ -115,7 +115,7 @@ const THEMES: Record<string, Theme> = {
     badgeBg: "bg-amber-500/10 border-amber-500/20",
     badgeText: "text-amber-400",
     primaryButton: "bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:shadow-amber-500/20",
-    inputBg: "bg-[#16110a]/90 border-amber-500/20 text-amber-50 focus:border-amber-500",
+    inputBg: "bg-[#16110a]/90 border-amber-500/20 text-amber-50 focus:border-amber-505",
     divider: "border-amber-500/10",
   },
   classic: {
@@ -160,16 +160,76 @@ const CITIES: Record<string, City> = {
 // ==========================================
 // ADHKAR SYSTEM CONFIGURATION
 // ==========================================
-const ADHKAR_LIST = [
-  { id: "a1", text: "أستغفرُ الله", count: 3, description: "يُقال ثلاث مرات بعد السلام مباشرة" },
-  { id: "a2", text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكُ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1, description: "يُقال مرة واحدة بعد الاستغفار" },
-  { id: "a3", text: "سُبْحَانَ الله", count: 33, description: "تسبيح الله ثلاثاً وثلاثين" },
-  { id: "a4", text: "الْحَمْدُ لله", count: 33, description: "تحميد الله ثلاثاً وثلاثين" },
-  { id: "a5", text: "اللهُ أَكْبَر", count: 33, description: "تكبير الله ثلاثاً وثلاثين" },
-  { id: "a6", text: "لا إلَهَ إلَّا اللَّهُ وَحْدَهُ لا شَرِيكَ له، له المُلْكُ وَله الحَمْدُ، وَهو علَى كُلِّ شيءٍ قَدِيرٌ", count: 1, description: "تمام المئة - يغفر الخطايا وإن كانت مثل زبد البحر" },
-  { id: "a7", text: "قراءة آية الكرسي", count: 1, description: "عصمة وحفظ وحرز عظيم للمسلم دبر كل صلاة" },
-  { id: "a8", text: "قراءة سورة الإخلاص والمعوذتين", count: 1, description: "سورة الإخلاص، الفلق، والناس (دبر كل صلاة)" }
-];
+interface DhikrItem {
+  id: string;
+  text: string;
+  count: number;
+  description: string;
+}
+
+interface AdhkarCategoryConfig {
+  label: string;
+  icon: string;
+  list: DhikrItem[];
+}
+
+const ADHKAR_CATEGORIES: Record<string, AdhkarCategoryConfig> = {
+  post_prayer: {
+    label: "أذكار بعد الصلاة",
+    icon: "🕌",
+    list: [
+      { id: "p1", text: "أستغفرُ الله", count: 3, description: "يُقال ثلاث مرات بعد السلام مباشرة" },
+      { id: "p2", text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكُ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1, description: "يُقال مرة واحدة بعد الاستغفار" },
+      { id: "p3", text: "سُبْحَانَ الله", count: 33, description: "تسبيح الله ثلاثاً وثلاثين" },
+      { id: "p4", text: "الْحَمْدُ لله", count: 33, description: "تحميد الله ثلاثاً وثلاثين" },
+      { id: "p5", text: "اللهُ أَكْبَر", count: 33, description: "تكبير الله ثلاثاً وثلاثين" },
+      { id: "p6", text: "لا إلَهَ إلَّا اللَّهُ وَحْدَهُ لا شَرِيكَ له، له المُلْكُ وَله الحَمْدُ، وَهو علَى كُلِّ شيءٍ قَدِيرٌ", count: 1, description: "تمام المئة - يغفر الخطايا وإن كانت مثل زبد البحر" },
+      { id: "p7", text: "قراءة آية الكرسي", count: 1, description: "عصمة وحفظ وحرز عظيم للمسلم دبر كل صلاة" },
+      { id: "p8", text: "قراءة سورة الإخلاص والمعوذتين", count: 1, description: "سورة الإخلاص، الفلق، والناس (دبر كل صلاة)" }
+    ]
+  },
+  morning: {
+    label: "أذكار الصباح",
+    icon: "🌅",
+    list: [
+      { id: "m1", text: "قراءة آية الكرسي", count: 1, description: "من قالها حين يصبح أجير من الجن حتى يمسي" },
+      { id: "m2", text: "قراءة سورة الإخلاص والمعوذات", count: 3, description: "تكفيك من كل شيء (ثلاث مرات)" },
+      { id: "m3", text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1, description: "مرة واحدة في الصباح" },
+      { id: "m4", text: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ", count: 1, description: "سيد الاستغفار - من قالها موقناً بها ومات في يومه دخل الجنة" },
+      { id: "m5", text: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ", count: 3, description: "لم يضره شيء في يومه وليلته" },
+      { id: "m6", text: "رَضِيتُ بِاللَّهِ رَبَّاً، وَبِالْإِسْلَامِ دِيْنَّاً، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيَّاً", count: 3, description: "كان حقاً على الله أن يرضيه يوم القيامة" },
+      { id: "m7", text: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ", count: 1, description: "إصلاح شأن المؤمن كله" },
+      { id: "m8", text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", count: 100, description: "حُطت خطاياه وإن كانت مثل زبد البحر، ولم يأتِ أحد بأفضل مما جاء به" }
+    ]
+  },
+  evening: {
+    label: "أذكار المساء",
+    icon: "🌇",
+    list: [
+      { id: "e1", text: "قراءة آية الكرسي", count: 1, description: "من قالها حين يمسي أجير من الجن حتى يصبح" },
+      { id: "e2", text: "قراءة سورة الإخلاص والمعوذات", count: 3, description: "تكفيك من كل شيء (ثلاث مرات)" },
+      { id: "e3", text: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1, description: "مرة واحدة في المساء" },
+      { id: "e4", text: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ", count: 1, description: "سيد الاستغفار - من قالها موقناً بها ومات في ليلته دخل الجنة" },
+      { id: "e5", text: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ", count: 3, description: "لم يضره شيء في يومه وليلته" },
+      { id: "e6", text: "رَضِيتُ بِاللَّهِ رَبَّاً، وَبِالْإِسْلَامِ دِيْنَّاً، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيَّاً", count: 3, description: "كان حقاً على الله أن يرضيه يوم القيامة" },
+      { id: "e7", text: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ", count: 3, description: "لم تضره حُمة (لدغة أو سم) في تلك الليلة" },
+      { id: "e8", text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", count: 100, description: "حُطت خطاياه وإن كانت مثل زبد البحر" }
+    ]
+  },
+  sleep: {
+    label: "أذكار النوم",
+    icon: "🌌",
+    list: [
+      { id: "s1", text: "جمع الكفين وقراءة الإخلاص والمعوذتين والنفث فيهما ومسح الجسد", count: 3, description: "يبدأ بمسح رأسه ووجهه وما أقبل من جسده (ثلاث مرات)" },
+      { id: "s2", text: "قراءة آية الكرسي", count: 1, description: "لن يزال عليك من الله حافظ ولا يقربك شيطان حتى تصبح" },
+      { id: "s3", text: "قراءة الآيتين من آخر سورة البقرة", count: 1, description: "من قرأهما في ليلة كفتاه (عن قيام الليل أو الآفات)" },
+      { id: "s4", text: "بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي وَبِكَ أَرْفَعُهُ، فَإِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا، وَإِنْ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ", count: 1, description: "مرة واحدة قبل النوم" },
+      { id: "s5", text: "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ", count: 3, description: "ثلاث مرات عند وضع الكف اليمنى تحت الخد الأيمن" },
+      { id: "s6", text: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", count: 1, description: "مرة واحدة" },
+      { id: "s7", text: "سُبْحَانَ الله (33)، والْحَمْدُ لله (33)، واللهُ أَكْبَر (34)", count: 1, description: "خير لكما من خادم - وصية الرسول لعلي وفاطمة رضي الله عنهما" }
+    ]
+  }
+};
 
 // ==========================================
 // PRAYER DUAS DATABASE (Mausoo'at Ad'eeyah)
@@ -757,6 +817,9 @@ export default function PrayerPage() {
 
   // Gamification & Badges Tracking States
   const [completedAdhkarCount, setCompletedAdhkarCount] = useState<number>(0);
+  const [completedMorningAdhkar, setCompletedMorningAdhkar] = useState<number>(0);
+  const [completedEveningAdhkar, setCompletedEveningAdhkar] = useState<number>(0);
+  const [completedSleepAdhkar, setCompletedSleepAdhkar] = useState<number>(0);
   const [watchedVideoCount, setWatchedVideoCount] = useState<number>(0);
 
   // Interactive Countdown widget state
@@ -833,7 +896,8 @@ export default function PrayerPage() {
   // Subtab inside tracker tab
   const [trackerSubTab, setTrackerSubTab] = useState<"faraid" | "sunan" | "badges">("faraid");
 
-  // Adhkar Clicker states
+  // Adhkar System States
+  const [adhkarCategory, setAdhkarCategory] = useState<"post_prayer" | "morning" | "evening" | "sleep">("post_prayer");
   const [activeDhikrIdx, setActiveDhikrIdx] = useState<number>(0);
   const [dhikrCount, setDhikrCount] = useState<number>(0);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -905,6 +969,15 @@ export default function PrayerPage() {
 
     const savedAdhkarCount = localStorage.getItem("prayer_completed_adhkar_count");
     if (savedAdhkarCount) setCompletedAdhkarCount(parseInt(savedAdhkarCount));
+
+    const savedMorning = localStorage.getItem("prayer_morning_adhkar_count");
+    if (savedMorning) setCompletedMorningAdhkar(parseInt(savedMorning));
+
+    const savedEvening = localStorage.getItem("prayer_evening_adhkar_count");
+    if (savedEvening) setCompletedEveningAdhkar(parseInt(savedEvening));
+
+    const savedSleep = localStorage.getItem("prayer_sleep_adhkar_count");
+    if (savedSleep) setCompletedSleepAdhkar(parseInt(savedSleep));
 
     const savedVideoCount = localStorage.getItem("prayer_watched_video_count");
     if (savedVideoCount) setWatchedVideoCount(parseInt(savedVideoCount));
@@ -1291,10 +1364,34 @@ export default function PrayerPage() {
     {
       id: "adhkar_complete",
       title: "قلب مطمئن",
-      desc: "أكمل مسبحة الأذكار التفاعلية مرة واحدة",
+      desc: "أكمل مسبحة أذكار الصلاة التفاعلية",
       icon: "🕊️",
       unlocked: completedAdhkarCount > 0,
       color: "from-indigo-500 to-purple-400"
+    },
+    {
+      id: "morning_adhkar",
+      title: "نجم الصباح",
+      desc: "أكمل أذكار الصباح كاملة مرة واحدة",
+      icon: "🌅",
+      unlocked: completedMorningAdhkar > 0,
+      color: "from-amber-400 to-yellow-500"
+    },
+    {
+      id: "evening_adhkar",
+      title: "حارس المساء",
+      desc: "أكمل أذكار المساء كاملة مرة واحدة",
+      icon: "🌇",
+      unlocked: completedEveningAdhkar > 0,
+      color: "from-orange-500 to-amber-650"
+    },
+    {
+      id: "sleep_adhkar",
+      title: "نوم هنيء",
+      desc: "أكمل أذكار النوم كاملة مرة واحدة",
+      icon: "🌌",
+      unlocked: completedSleepAdhkar > 0,
+      color: "from-indigo-600 to-blue-500"
     },
     {
       id: "journal_entry",
@@ -1321,6 +1418,8 @@ export default function PrayerPage() {
       color: "from-teal-500 to-green-400"
     }
   ];
+
+  const activeAdhkarList = ADHKAR_CATEGORIES[adhkarCategory].list;
 
   return (
     <div className={`flex flex-col min-h-screen ${theme.bgClass} ${theme.textClass} font-sans transition-all duration-500 pb-32`}>
@@ -1415,7 +1514,7 @@ export default function PrayerPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Column 1 & 2: Prayer Times & Countdown */}
-          <div className="lg:col-span-2 flex">
+          <div className="lg:col-span-2 flex flex-col sm:flex-row">
             <section className={`p-6 rounded-3xl bg-black/30 border border-white/5 flex flex-col gap-5 shadow-xl w-full justify-between`}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
                 <div className="flex items-center gap-2.5">
@@ -1602,7 +1701,7 @@ export default function PrayerPage() {
           {[
             { id: "importance", label: "أهمية الصلاة ومكانتها", icon: <FileText className="w-4 h-4" /> },
             { id: "khushu", label: "دليل الخشوع والسكينة", icon: <Award className="w-4 h-4" /> },
-            { id: "adhkar", label: "الأذكار والمسبحة", icon: <Volume2 className="w-4 h-4" /> },
+            { id: "adhkar", label: "سلسلة الأذكار والمسبحة", icon: <Volume2 className="w-4 h-4" /> },
             { id: "duas", label: "أدعية الصلاة", icon: <BookOpen className="w-4 h-4" /> },
             { id: "videos", label: "مكتبة المرئيات والدروس", icon: <Tv className="w-4 h-4" /> },
             { id: "tracker", label: "مخطط الصلاة والطمأنينة", icon: <Compass className="w-4 h-4" /> }
@@ -1678,7 +1777,7 @@ export default function PrayerPage() {
                     <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full uppercase">الأثر الحياتي</span>
                     <h4 className="text-base font-bold text-slate-100 mt-3 mb-2">الوقاية والتحصين من الآثام</h4>
                     <p className="text-xs opacity-75 leading-relaxed font-light">
-                      للصلاة أثر عظيم يظهر في حياة العبد وسلوكه مع الناس، يقول الله عز وجل في القرآن الكريم: <span className="font-semibold text-amber-400">«...إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ»</span>. فهي حارس أخلاقي يصحح مسار العبد يومياً.
+                      للصلاة أثر عظيم يظهر في حياة العبد وسلوكه مع الناس، يقول الله عز وجل في القرآن الكريم: <span className="font-semibold text-amber-400">...إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ</span>. فهي حارس أخلاقي يصحح مسار العبد يومياً.
                     </p>
                   </div>
 
@@ -1845,7 +1944,7 @@ export default function PrayerPage() {
                         <div className="md:col-span-8 flex flex-col gap-4 text-right">
                           <div>
                             <h4 className="text-base font-extrabold text-slate-100 flex items-center gap-1.5">
-                              <span className="text-amber-500">الركن {PRAYER_STEPS[activeStep].step}:</span>
+                              <span className="text-amber-505">الركن {PRAYER_STEPS[activeStep].step}:</span>
                               {PRAYER_STEPS[activeStep].title}
                             </h4>
                           </div>
@@ -1962,7 +2061,7 @@ export default function PrayerPage() {
                                     if (soundEnabled) playSound(700, "sine", 0.05);
                                     setQuizStep(quizStep + 1);
                                   }}
-                                  className="w-full text-right p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 hover:border-amber-500/30 text-xs font-semibold text-slate-200 transition cursor-pointer"
+                                  className="w-full text-right p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 hover:border-amber-505/30 text-xs font-semibold text-slate-200 transition cursor-pointer"
                                 >
                                   {opt.text}
                                 </button>
@@ -1993,7 +2092,7 @@ export default function PrayerPage() {
 
                           return (
                             <div className="flex flex-col items-center text-center py-4 gap-4 animate-in zoom-in-95 duration-200">
-                              <div className="relative w-24 h-24 rounded-full border-4 border-amber-500/20 flex items-center justify-center bg-black/40">
+                              <div className="relative w-24 h-24 rounded-full border-4 border-amber-550/20 flex items-center justify-center bg-black/40">
                                 <div className="text-center">
                                   <span className="text-3xl font-black block tracking-tighter">{totalScore}</span>
                                   <span className="text-[9px] opacity-55 block font-bold">من 15 درجة</span>
@@ -2140,7 +2239,7 @@ export default function PrayerPage() {
                     <h4 className={`text-base font-bold mb-3 ${theme.accentClass}`}>❓ ما هو الخشوع في الصلاة؟</h4>
                     <p className="text-xs opacity-75 leading-relaxed font-light">
                       الخشوع هو حضور القلب وسكون الجوارح وتواضعها أمام هيبة الله وعظمته أثناء الصلاة. الخشوع روح الصلاة، والصلاة بلا خشوع كالميت بلا روح.
-                      هو الفلاح الحقيقي الذي أثنى الله على أهله فقال: <span className="text-amber-400 font-semibold">«قَدْ أَفْلَحَ الْمُؤْمِنُونَ * الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ»</span>.
+                      هو الفلاح الحقيقي الذي أثنى الله على أهله فقال: <span className="text-amber-500 font-semibold">«قَدْ أَفْلَحَ الْمُؤْمِنُونَ * الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ»</span>.
                     </p>
                   </div>
                 </div>
@@ -2148,7 +2247,7 @@ export default function PrayerPage() {
                 <div className={`p-6 rounded-3xl bg-black/50 border border-white/5 shadow-xl`}>
                   <h4 className="text-xs font-bold text-emerald-400 mb-2">💡 نصيحة نبوية للخشوع</h4>
                   <p className="text-xs opacity-80 leading-relaxed font-light">
-                    عن أبي أيوب قال: جاء رجل إلى النبي ﷺ فقال: عظني وأوجز، فقال ﷺ: <span className="text-amber-400 font-semibold">«إذا قمتَ في صلاتِكَ فصَلِّ صلاةَ مُودِّعٍ»</span>.
+                    عن أبي أيوب قال: جاء رجل إلى النبي ﷺ فقال: عظني وأوجز، فقال ﷺ: <span className="text-amber-500 font-semibold">«إذا قمتَ في صلاتِكَ فصَلِّ صلاةَ مُودِّعٍ»</span>.
                     تخيل دائماً أن هذه الصلاة هي آخر عمل تقوم به في الدنيا قبل الرحيل، كيف ستصليها?
                   </p>
                 </div>
@@ -2163,94 +2262,133 @@ export default function PrayerPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main clicker card */}
               <div className="lg:col-span-2 flex flex-col gap-6">
-                <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col items-center justify-between min-h-[450px]`}>
-                  {/* Card Header */}
-                  <div className="w-full flex items-center justify-between border-b border-white/5 pb-3">
-                    <h3 className="text-sm font-bold flex items-center gap-2">
-                      <Volume2 className="w-4 h-4 text-emerald-400" />
-                      <span>المسبحة التفاعلية للأذكار بعد الصلاة</span>
-                    </h3>
-                    <button
-                      onClick={() => {
-                        setSoundEnabled(!soundEnabled);
-                        triggerToast(soundEnabled ? "تم كتم الصوت" : "تم تفعيل الصوت");
-                      }}
-                      className={`p-1.5 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                        soundEnabled
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"
-                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
-                      }`}
-                    >
-                      {soundEnabled ? "🔊 الصوت مفعل" : "🔇 الصوت مكتوم"}
-                    </button>
+                <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col items-center justify-between min-h-[480px]`}>
+                  {/* Card Header & Category Selector */}
+                  <div className="w-full flex flex-col gap-4 border-b border-white/5 pb-4">
+                    <div className="flex items-center justify-between text-right">
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <Volume2 className="w-4 h-4 text-emerald-400" />
+                        <span>سلسلة الأذكار والمسبحة اليومية</span>
+                      </h3>
+                      <button
+                        onClick={() => {
+                          setSoundEnabled(!soundEnabled);
+                          triggerToast(soundEnabled ? "تم كتم الصوت" : "تم تفعيل الصوت");
+                        }}
+                        className={`p-1.5 rounded-lg border text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                          soundEnabled
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"
+                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                        }`}
+                      >
+                        {soundEnabled ? "🔊 الصوت مفعل" : "🔇 الصوت مكتوم"}
+                      </button>
+                    </div>
+
+                    {/* Sub-categories selector */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Object.entries(ADHKAR_CATEGORIES).map(([catId, cat]) => (
+                        <button
+                          key={catId}
+                          onClick={() => {
+                            setAdhkarCategory(catId as any);
+                            setActiveDhikrIdx(0);
+                            setDhikrCount(0);
+                            triggerToast(`تم اختيار: ${cat.label}`);
+                          }}
+                          className={`py-2 rounded-xl text-[10px] font-bold text-center transition cursor-pointer border ${
+                            adhkarCategory === catId
+                              ? `${theme.primaryButton} scale-[1.01] shadow border-transparent`
+                              : "bg-black/30 border-white/5 text-slate-300 hover:bg-black/50"
+                          }`}
+                        >
+                          <span className="block text-xs">{cat.icon}</span>
+                          <span className="block text-[8px] sm:text-[9px] mt-0.5">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Active Dhikr content */}
-                  {activeDhikrIdx < ADHKAR_LIST.length ? (
+                  {activeDhikrIdx < activeAdhkarList.length ? (
                     <div className="flex flex-col items-center justify-center text-center my-6 gap-6 w-full max-w-md">
                       <div className="flex flex-col gap-2">
-                        <span className="text-[10px] opacity-50 uppercase tracking-widest block font-bold">
-                          الذكر {activeDhikrIdx + 1} من {ADHKAR_LIST.length}
+                        <span className="text-[9px] opacity-50 uppercase tracking-widest block font-bold">
+                          الذكر {activeDhikrIdx + 1} من {activeAdhkarList.length}
                         </span>
-                        <h4 className="text-lg md:text-xl font-black text-slate-100 leading-relaxed px-4 min-h-[64px] flex items-center justify-center font-serif">
-                          {ADHKAR_LIST[activeDhikrIdx].text}
+                        <h4 className="text-base md:text-lg font-black text-slate-100 leading-relaxed px-4 min-h-[64px] flex items-center justify-center font-serif">
+                          {activeAdhkarList[activeDhikrIdx].text}
                         </h4>
                         <p className="text-xs opacity-75 leading-relaxed font-light min-h-[32px]">
-                          {ADHKAR_LIST[activeDhikrIdx].description}
+                          {activeAdhkarList[activeDhikrIdx].description}
                         </p>
                       </div>
 
                       {/* Circular clicker button */}
                       <button
                         onClick={() => {
-                          const target = ADHKAR_LIST[activeDhikrIdx].count;
+                          const target = activeAdhkarList[activeDhikrIdx].count;
                           const nextCount = dhikrCount + 1;
                           if (nextCount >= target) {
                             if (soundEnabled) playSound(523, "sine", 0.35); // warm bell success sound
-                            if (activeDhikrIdx + 1 < ADHKAR_LIST.length) {
+                            if (activeDhikrIdx + 1 < activeAdhkarList.length) {
                               setDhikrCount(0);
                               setActiveDhikrIdx(activeDhikrIdx + 1);
-                              triggerToast(`تم إكمال الذكر: ${ADHKAR_LIST[activeDhikrIdx].text}`);
+                              triggerToast(`تم إكمال الذكر: ${activeAdhkarList[activeDhikrIdx].text}`);
                             } else {
                               setDhikrCount(0);
-                              setActiveDhikrIdx(ADHKAR_LIST.length); // mark complete
+                              setActiveDhikrIdx(activeAdhkarList.length); // mark complete
                               
-                              const newAdhkarCount = completedAdhkarCount + 1;
-                              setCompletedAdhkarCount(newAdhkarCount);
-                              localStorage.setItem("prayer_completed_adhkar_count", String(newAdhkarCount));
+                              if (adhkarCategory === "post_prayer") {
+                                const newCount = completedAdhkarCount + 1;
+                                setCompletedAdhkarCount(newCount);
+                                localStorage.setItem("prayer_completed_adhkar_count", String(newCount));
+                              } else if (adhkarCategory === "morning") {
+                                const newCount = completedMorningAdhkar + 1;
+                                setCompletedMorningAdhkar(newCount);
+                                localStorage.setItem("prayer_morning_adhkar_count", String(newCount));
+                              } else if (adhkarCategory === "evening") {
+                                const newCount = completedEveningAdhkar + 1;
+                                setCompletedEveningAdhkar(newCount);
+                                localStorage.setItem("prayer_evening_adhkar_count", String(newCount));
+                              } else if (adhkarCategory === "sleep") {
+                                const newCount = completedSleepAdhkar + 1;
+                                setCompletedSleepAdhkar(newCount);
+                                localStorage.setItem("prayer_sleep_adhkar_count", String(newCount));
+                              }
                               
-                              triggerToast("تقبل الله طاعتكم! لقد أكملت الأذكار بنجاح وتم تحصيل وسام الأذكار.");
+                              triggerToast(`تقبل الله طاعتكم! لقد أكملت ${ADHKAR_CATEGORIES[adhkarCategory].label} بنجاح وتم تحصيل الوسام الخاص.`);
                             }
                           } else {
                             if (soundEnabled) playSound(880, "sine", 0.05); // standard click
                             setDhikrCount(nextCount);
                           }
                         }}
-                        className={`relative w-44 h-44 rounded-full border-4 ${theme.cardBorderClass} bg-black/40 hover:bg-black/60 flex items-center justify-center cursor-pointer transition-all duration-300 active:scale-95 group focus:outline-none`}
+                        className={`relative w-40 h-40 rounded-full border-4 ${theme.cardBorderClass} bg-black/40 hover:bg-black/60 flex items-center justify-center cursor-pointer transition-all duration-300 active:scale-95 group focus:outline-none`}
                         style={{ boxShadow: "0 0 20px rgba(0, 0, 0, 0.4)" }}
                       >
                         {/* Circular progress SVG */}
                         <svg className="absolute inset-0 w-full h-full transform -rotate-90">
                           <circle
-                            cx="88"
-                            cy="88"
-                            r="74"
+                            cx="80"
+                            cy="80"
+                            r="66"
                             stroke="rgba(255,255,255,0.03)"
                             strokeWidth="5"
                             fill="transparent"
                           />
                           <circle
-                            cx="88"
-                            cy="88"
-                            r="74"
+                            cx="80"
+                            cy="80"
+                            r="66"
                             stroke={activeTheme === 'emerald' ? '#c5a880' : 
                                     activeTheme === 'kaaba' ? '#d4af37' : 
                                     activeTheme === 'indigo' ? '#818cf8' : 
                                     activeTheme === 'sunrise' ? '#f59e0b' : '#2dd4bf'}
                             strokeWidth="6"
                             fill="transparent"
-                            strokeDasharray={2 * Math.PI * 74}
-                            strokeDashoffset={2 * Math.PI * 74 * (1 - dhikrCount / ADHKAR_LIST[activeDhikrIdx].count)}
+                            strokeDasharray={2 * Math.PI * 66}
+                            strokeDashoffset={2 * Math.PI * 66 * (1 - dhikrCount / activeAdhkarList[activeDhikrIdx].count)}
                             className="transition-all duration-150"
                             strokeLinecap="round"
                           />
@@ -2261,7 +2399,7 @@ export default function PrayerPage() {
                             {dhikrCount}
                           </span>
                           <span className="text-[10px] opacity-55 block mt-1 font-bold">
-                            الهدف: {ADHKAR_LIST[activeDhikrIdx].count}
+                            الهدف: {activeAdhkarList[activeDhikrIdx].count}
                           </span>
                         </div>
                       </button>
@@ -2291,11 +2429,11 @@ export default function PrayerPage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (activeDhikrIdx + 1 < ADHKAR_LIST.length) {
+                            if (activeDhikrIdx + 1 < activeAdhkarList.length) {
                               setActiveDhikrIdx(activeDhikrIdx + 1);
                               setDhikrCount(0);
                             } else {
-                              setActiveDhikrIdx(ADHKAR_LIST.length);
+                              setActiveDhikrIdx(activeAdhkarList.length);
                             }
                           }}
                           className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold hover:bg-white/10 transition cursor-pointer text-center text-slate-100"
@@ -2310,9 +2448,9 @@ export default function PrayerPage() {
                         ✨
                       </div>
                       <div>
-                        <h4 className="text-lg font-black text-slate-100 mb-1">تقبل الله طاعاتكم!</h4>
+                        <h4 className="text-base font-black text-slate-100 mb-1">تقبل الله طاعاتكم!</h4>
                         <p className="text-xs opacity-75 max-w-sm font-light">
-                          لقد أكملت جميع أذكار ما بعد الصلاة بنجاح. نسأل الله أن يكتب لك الأجر ويملأ قلبك بالطمأنينة والهدوء.
+                          لقد أكملت جميع {ADHKAR_CATEGORIES[adhkarCategory].label} بنجاح. نسأل الله أن يكتب لك الأجر ويملأ قلبك بالطمأنينة والهدوء.
                         </p>
                       </div>
                       <button
@@ -2332,9 +2470,9 @@ export default function PrayerPage() {
               {/* Sidebar Checklist */}
               <div className="flex flex-col gap-6">
                 <div className={`p-6 rounded-3xl ${theme.cardBgClass} border transition-all duration-300 flex flex-col gap-4 shadow-xl`}>
-                  <h4 className="text-sm font-bold border-b border-white/5 pb-2">سلسلة الأذكار الواردة</h4>
-                  <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1">
-                    {ADHKAR_LIST.map((d, idx) => (
+                  <h4 className="text-sm font-bold border-b border-white/5 pb-2">قائمة الأذكار الجارية</h4>
+                  <div className="flex flex-col gap-2 max-h-[380px] overflow-y-auto pr-1">
+                    {activeAdhkarList.map((d, idx) => (
                       <button
                         key={d.id}
                         onClick={() => {
@@ -2343,7 +2481,7 @@ export default function PrayerPage() {
                         }}
                         className={`flex items-start gap-2.5 text-right p-2.5 rounded-xl border transition-all ${
                           idx === activeDhikrIdx
-                            ? "bg-white/5 border-amber-500/30 text-slate-100 font-semibold"
+                            ? "bg-white/5 border-amber-505/30 text-slate-100 font-semibold"
                             : idx < activeDhikrIdx
                             ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-300 opacity-60"
                             : "bg-black/10 border-transparent text-slate-400 hover:bg-black/20"
@@ -2356,7 +2494,7 @@ export default function PrayerPage() {
                         </div>
                         <div className="flex flex-col gap-0.5 font-sans">
                           <span className="text-xs leading-snug line-clamp-1">{d.text}</span>
-                          <span className="text-[9px] opacity-60">الهدف: {d.count} مرات</span>
+                          <span className="text-[9px] opacity-60">الهدف: {d.count} {d.count > 10 ? 'مرة' : 'مرات'}</span>
                         </div>
                       </button>
                     ))}
@@ -2463,7 +2601,7 @@ export default function PrayerPage() {
               {/* Category Filter Toolbar & Add Video Button */}
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex gap-2 overflow-x-auto pb-1 max-w-full">
-                  {["الكل", "الخشوع والتلذذ", "علاج السرحان", "تعليم الصلاة", "تنبيهات وأخطاء"].map((cat) => (
+                  {["الكل", "الخشوع والتلذذ", "علاج السرحان", "تعليم الصلاة", "تنببهات وأخطاء"].map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setVideoCategoryFilter(cat)}
@@ -2651,7 +2789,7 @@ export default function PrayerPage() {
                                   />
                                   <span className={`text-sm font-extrabold w-6 text-center ${
                                     logged.focus < 4 ? "text-rose-400" :
-                                    logged.focus <= 7 ? "text-amber-400" : "text-emerald-400"
+                                    logged.focus <= 7 ? "text-amber-405" : "text-emerald-400"
                                   }`}>
                                     {logged.focus}
                                   </span>
