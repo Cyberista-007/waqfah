@@ -2592,7 +2592,7 @@ export default function QuranPage() {
 
       {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
       <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
-        <div className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8)] px-4 md:px-6">
+        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[2rem] shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8)] px-4 md:px-6">
           <div className="flex items-center justify-between h-16 gap-3">
             {/* Right: View Mode & Tajweed */}
             <div className="flex items-center gap-2 shrink-0">
