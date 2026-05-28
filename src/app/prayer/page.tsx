@@ -901,6 +901,19 @@ export default function PrayerPage() {
   const [activeDhikrIdx, setActiveDhikrIdx] = useState<number>(0);
   const [dhikrCount, setDhikrCount] = useState<number>(0);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [fontSize, setFontSize] = useState<"normal" | "large" | "xlarge">("normal");
+
+  const handleFontSizeChange = (size: "normal" | "large" | "xlarge") => {
+    setFontSize(size);
+    localStorage.setItem("prayer_font_size", size);
+    triggerToast(`تم ضبط حجم الخط إلى: ${size === 'normal' ? 'عادي' : size === 'large' ? 'كبير' : 'كبير جداً'}`);
+  };
+
+  const getFontScaleClass = () => {
+    if (fontSize === "large") return "font-scale-large";
+    if (fontSize === "xlarge") return "font-scale-xlarge";
+    return "";
+  };
 
   // Sync with global theme
   useEffect(() => {
@@ -981,6 +994,11 @@ export default function PrayerPage() {
 
     const savedVideoCount = localStorage.getItem("prayer_watched_video_count");
     if (savedVideoCount) setWatchedVideoCount(parseInt(savedVideoCount));
+
+    const savedFontSize = localStorage.getItem("prayer_font_size");
+    if (savedFontSize === "normal" || savedFontSize === "large" || savedFontSize === "xlarge") {
+      setFontSize(savedFontSize);
+    }
   }, []);
 
   // Update Countdown Clock Hook
@@ -1422,7 +1440,28 @@ export default function PrayerPage() {
   const activeAdhkarList = ADHKAR_CATEGORIES[adhkarCategory].list;
 
   return (
-    <div className={`flex flex-col min-h-screen ${theme.bgClass} ${theme.textClass} font-sans transition-all duration-500 pb-32`}>
+    <div className={`flex flex-col min-h-screen ${theme.bgClass} ${theme.textClass} font-sans transition-all duration-500 pb-32 ${getFontScaleClass()}`}>
+      
+      {/* Dynamic inline styles for Font Scaling */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .font-scale-large .text-\\[10px\\] { font-size: 12px !important; }
+        .font-scale-large .text-xs { font-size: 0.85rem !important; }
+        .font-scale-large .text-sm { font-size: 1.025rem !important; }
+        .font-scale-large .text-base { font-size: 1.18rem !important; }
+        .font-scale-large .text-lg { font-size: 1.325rem !important; }
+        .font-scale-large .text-xl { font-size: 1.55rem !important; }
+        .font-scale-large .text-2xl { font-size: 1.9rem !important; }
+        .font-scale-large .text-3xl { font-size: 2.35rem !important; }
+
+        .font-scale-xlarge .text-\\[10px\\] { font-size: 14px !important; }
+        .font-scale-xlarge .text-xs { font-size: 0.95rem !important; }
+        .font-scale-xlarge .text-sm { font-size: 1.15rem !important; }
+        .font-scale-xlarge .text-base { font-size: 1.32rem !important; }
+        .font-scale-xlarge .text-lg { font-size: 1.5rem !important; }
+        .font-scale-xlarge .text-xl { font-size: 1.8rem !important; }
+        .font-scale-xlarge .text-2xl { font-size: 2.25rem !important; }
+        .font-scale-xlarge .text-3xl { font-size: 2.75rem !important; }
+      ` }} />
       
       {/* ================= HEADER / BAR ================= */}
       <header className={`sticky top-0 z-40 backdrop-blur-md border-b ${theme.headerBg} px-4 md:px-8 py-4 transition-all duration-300`}>
@@ -1665,35 +1704,70 @@ export default function PrayerPage() {
           
         </div>
 
-        {/* ================= THEME PICKER SELECTION ================= */}
-        <section className={`rounded-3xl p-5 bg-black/30 border border-white/5 flex flex-col gap-4 shadow-lg`}>
-          <div className="flex items-center justify-between border-b border-white/5 pb-2">
-            <h3 className="text-sm font-bold flex items-center gap-1.5">
-              <span>تغيير المظهر والثيم الإيماني للصفحة:</span>
-            </h3>
-            <span className="text-[10px] opacity-55">اختر المظهر المناسب لك لزيادة الهدوء البصري</span>
+        {/* ================= SETTINGS PANEL: THEME & FONT SIZE ================= */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 rounded-3xl p-6 bg-black/30 border border-white/5 shadow-lg">
+          
+          {/* Column 1 & 2: Themes */}
+          <div className="lg:col-span-2 flex flex-col gap-4 border-b lg:border-b-0 lg:border-l border-white/5 pb-6 lg:pb-0 lg:pl-6">
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <h3 className="text-sm font-bold flex items-center gap-1.5">
+                <span>🎨 المظهر والثيم الإيماني:</span>
+              </h3>
+              <span className="text-[10px] opacity-55">تخصيص ألوان الصفحة للهدوء البصري</span>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {Object.values(THEMES).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => handleThemeChange(t.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl border text-xs font-semibold transition-all duration-300 cursor-pointer ${
+                    activeTheme === t.id
+                      ? `${t.primaryButton} scale-[1.03] border-transparent font-black shadow-lg`
+                      : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-300 hover:border-white/20"
+                  }`}
+                >
+                  <div className="w-3 h-3 rounded-full border border-black/10" style={{ 
+                    backgroundColor: t.id === 'emerald' ? '#c5a880' : 
+                                     t.id === 'kaaba' ? '#d4af37' : 
+                                     t.id === 'indigo' ? '#818cf8' : 
+                                     t.id === 'sunrise' ? '#f59e0b' : '#2dd4bf'
+                  }} />
+                  {t.name}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {Object.values(THEMES).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => handleThemeChange(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-semibold transition-all duration-300 cursor-pointer ${
-                  activeTheme === t.id
-                    ? `${t.primaryButton} scale-[1.05] border-transparent font-black shadow-lg`
-                    : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-355 hover:border-white/20"
-                }`}
-              >
-                <div className={`w-3.5 h-3.5 rounded-full border border-black/10`} style={{ 
-                  backgroundColor: t.id === 'emerald' ? '#c5a880' : 
-                                   t.id === 'kaaba' ? '#d4af37' : 
-                                   t.id === 'indigo' ? '#818cf8' : 
-                                   t.id === 'sunrise' ? '#f59e0b' : '#2dd4bf'
-                }} />
-                {t.name}
-              </button>
-            ))}
+
+          {/* Column 3: Font Size Controller */}
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <h3 className="text-sm font-bold flex items-center gap-1.5">
+                <span>🔍 حجم الخط للقراءة:</span>
+              </h3>
+              <span className="text-[10px] opacity-55">تحكم في مقاس وحجم نصوص الصفحة</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: "normal", label: "عادي (A)", desc: "100%" },
+                { id: "large", label: "كبير (A+)", desc: "115%" },
+                { id: "xlarge", label: "كبير جداً (A++)", desc: "130%" }
+              ].map((sizeObj) => (
+                <button
+                  key={sizeObj.id}
+                  onClick={() => handleFontSizeChange(sizeObj.id as any)}
+                  className={`flex flex-col items-center justify-center p-2 rounded-2xl border text-center transition-all duration-300 cursor-pointer ${
+                    fontSize === sizeObj.id
+                      ? `${theme.primaryButton} scale-[1.03] border-transparent font-black shadow-lg`
+                      : "bg-black/40 border-white/10 hover:bg-black/60 text-slate-300 hover:border-white/20"
+                  }`}
+                >
+                  <span className="text-xs font-bold">{sizeObj.label}</span>
+                  <span className="text-[9px] opacity-60 font-mono mt-0.5">{sizeObj.desc}</span>
+                </button>
+              ))}
+            </div>
           </div>
+
         </section>
 
         {/* ================= INTERACTIVE NAVIGATION TABS ================= */}
