@@ -704,13 +704,9 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 span: "col-span-2"
             }
           ].map((cat, i) => (
-            <motion.div
+            <div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                viewport={{ once: true }}
-                className={cn(cat.span)}
+                className={cn(cat.span, "transition-all duration-300")}
             >
                 <Link
                 href={cat.href}
@@ -783,7 +779,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     </div>
                 </div>
                 </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
