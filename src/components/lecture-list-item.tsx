@@ -85,17 +85,24 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
             text: `استمع إلى محاضرة "${lecture.title}" على موقع وقفة`,
             url: lectureUrl,
         };
-        try {
-            if (navigator.share) {
+        
+        if (navigator.share) {
+            try {
                 await navigator.share(shareData);
-            } else {
-                await navigator.clipboard.writeText(lectureUrl);
-                toast({ title: 'تم نسخ رابط المحاضرة!' });
+                return;
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                console.error('Error sharing lecture:', error);
             }
-        } catch (error) {
-            console.error('Error sharing lecture:', error);
+        }
+
+        try {
             await navigator.clipboard.writeText(lectureUrl);
             toast({ title: 'تم نسخ رابط المحاضرة!' });
+        } catch (err) {
+            toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
         }
     };
 

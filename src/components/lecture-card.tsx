@@ -103,6 +103,23 @@ const LectureCardComponent = ({
     e.preventDefault();
     e.stopPropagation();
     const lectureUrl = `${window.location.origin}/lectures/${lecture.slug}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: lecture.title,
+          text: lecture.description || lecture.title,
+          url: lectureUrl,
+        });
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          return;
+        }
+        console.error("Web Share API failed, falling back to clipboard:", err);
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(lectureUrl);
       toast({ title: 'تم نسخ رابط المحاضرة!' });
