@@ -266,9 +266,9 @@ const LectureCardComponent = ({
         <ThreeDTilt tiltMax={8} className="h-full">
             <div 
                 className={cn(
-                "group relative flex flex-col h-full rounded-[2rem] transition-all duration-500 transform-gpu",
-                "bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl",
-                "hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:bg-white/[0.08]"
+                "group relative flex flex-col h-full rounded-[2.25rem] transition-all duration-500 transform-gpu overflow-hidden",
+                "bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)]",
+                "hover:-translate-y-2 hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]"
                 )}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}

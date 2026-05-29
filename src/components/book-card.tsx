@@ -34,13 +34,10 @@ const BookCardComponent = ({ book, index = 0 }: BookCardProps) => {
     return (
         <div
             className={cn(
-                'group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer',
-                'bg-gradient-to-b from-white/[0.04] to-transparent',
-                'backdrop-blur-xl border',
-                colors.border,
-                'shadow-xl', colors.shadow,
+                'group relative flex flex-col rounded-[2.25rem] overflow-hidden cursor-pointer',
+                'bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)]',
                 'transition-all duration-500 ease-out',
-                'hover:-translate-y-2 hover:shadow-2xl hover:bg-white/[0.07]',
+                'hover:-translate-y-2 hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]',
             )}
             style={{ animationDelay: `${index * 80}ms` }}
         >

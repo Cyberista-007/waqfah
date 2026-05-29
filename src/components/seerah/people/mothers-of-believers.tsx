@@ -165,7 +165,7 @@ export function MothersOfBelievers() {
                             key={mother.id}
                             whileHover={{ y: -5 }}
                             onClick={() => setSelectedId(mother.id)}
-                            className="cursor-pointer group p-6 rounded-3xl bg-white/[0.01] border border-white/5 backdrop-blur-sm hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500"
+                            className="cursor-pointer group p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]"
                         >
                             <div className={cn("w-12 h-12 rounded-full mb-4 flex items-center justify-center transition-colors", mother.accent, mother.color)}>
                                 <Star className="w-6 h-6" />

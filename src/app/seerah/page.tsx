@@ -250,7 +250,7 @@ export default function SeerahPage() {
                     subtitle="حجة الوداع والكمال" 
                     icon={Quote} 
                 />
-                <div className="max-w-5xl mx-auto p-16 rounded-[4rem] bg-white/[0.01] border border-white/5 backdrop-blur-3xl shadow-2xl group hover:bg-white/[0.03] transition-all duration-700">
+                <div className="max-w-5xl mx-auto p-16 rounded-[4.5rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03] group">
                     <p className="text-3xl md:text-5xl font-black text-white italic leading-snug mb-12 font-headline">
                         "أيها الناس، إن دماءكم وأموالكم عليكم حرام كحرمة يومكم هذا في شهركم هذا في بلدكم هذا.."
                     </p>
@@ -321,7 +321,7 @@ export default function SeerahPage() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
     return (
-        <div className="p-12 rounded-[3.5rem] bg-white/[0.01] border border-white/5 backdrop-blur-3xl hover:bg-white/[0.03] transition-all group shadow-2xl">
+        <div className="p-12 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03] group shadow-2xl">
             <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center mb-10 group-hover:scale-110 transition-transform shadow-2xl">
                 {icon}
             </div>
@@ -359,7 +359,7 @@ function BattleCard({ title, year, desc, stats, image }: { title: string, year: 
     return (
         <motion.div
             whileHover={{ y: -10 }}
-            className="p-10 rounded-[3.5rem] bg-white/[0.01] border border-white/5 backdrop-blur-3xl group relative overflow-hidden transition-all duration-700 hover:bg-white/[0.03] shadow-2xl"
+            className="p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03] group relative overflow-hidden shadow-2xl"
         >
             {image && (
                 <div className="absolute inset-0 -z-10 opacity-10 group-hover:opacity-30 transition-opacity duration-1000">

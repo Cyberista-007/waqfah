@@ -314,7 +314,7 @@ export default function ShubuhatPage() {
               { label: 'باحث ومختص', value: '45', icon: Users, color: 'text-amber-400' },
               { label: 'تحديثات مستمرة', value: 'يومياً', icon: Activity, color: 'text-rose-400' },
             ].map((stat, idx) => (
-              <div key={idx} className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-md hover:bg-white/[0.05] transition-all group">
+              <div key={idx} className="p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03] group">
                 <stat.icon className={cn("w-6 h-6 mx-auto mb-4 opacity-50 group-hover:opacity-100 transition-opacity", stat.color)} />
                 <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform origin-center">{stat.value}</div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest">{stat.label}</div>
