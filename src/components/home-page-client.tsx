@@ -722,9 +722,9 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 <Link
                 href={cat.href}
                 className={cn(
-                    "relative flex flex-col items-start justify-between p-8 md:p-10 rounded-[2.5rem] border backdrop-blur-3xl transition-all duration-700 group overflow-hidden h-full",
-                    "bg-zinc-950/20 border-white/5 shadow-2xl",
-                    "hover:-translate-y-2 hover:bg-zinc-900/40 hover:border-white/10"
+                    "relative flex flex-col items-start justify-between p-8 md:p-10 rounded-[2.25rem] border backdrop-blur-2xl transition-all duration-700 ease-out group overflow-hidden h-full",
+                    "bg-white/[0.02] border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)]",
+                    "hover:-translate-y-2 hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]"
                 )}
                 style={{
                     boxShadow: `0 30px 100px -20px rgba(0,0,0,0.8)`
@@ -837,7 +837,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
           >
             <Link
               href="/quran"
-              className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[3rem] border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent backdrop-blur-xl overflow-hidden transition-all duration-500 hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/10"
+              className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.05)] hover:bg-white/[0.03]"
             >
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
@@ -923,8 +923,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               <Link
                 href={item.href}
                 className={cn(
-                  'group relative h-full flex flex-col gap-4 p-8 rounded-[2.5rem] border bg-gradient-to-br backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl',
-                  item.bg, item.border
+                  'group relative h-full flex flex-col gap-4 p-8 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] hover:bg-white/[0.04]'
                 )}
               >
                 <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6', item.iconBg, item.border)}>
@@ -980,7 +979,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 >
                     <Link
                         href={section.href}
-                        className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl hover:bg-white/[0.05] hover:border-white/10 transition-all group h-full"
+                        className="flex flex-col items-center justify-center p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.04)] hover:bg-white/[0.03] group h-full"
                     >
                         <div className={cn("p-4 rounded-2xl bg-white/5 mb-3 group-hover:scale-110 transition-transform", section.color)}>
                             <section.icon size={24} />
@@ -1049,8 +1048,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.2 }}
                 className={cn(
-                  "relative p-10 rounded-[3.5rem] border bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-3xl transition-all duration-700 hover:-translate-y-4 hover:bg-white/[0.05] group overflow-hidden",
-                  path.accent || "bg-primary/5 border-primary/10"
+                  "relative p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:-translate-y-4 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] hover:bg-white/[0.04] group overflow-hidden"
                 )}
               >
                 <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
@@ -1143,7 +1141,6 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                  color: "text-purple-400",
                  iconBg: "bg-purple-500/10",
                  border: "border-purple-500/20",
-                 glow: "group-hover:border-purple-500/40 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]",
                  className: "md:col-span-3 lg:col-span-5 lg:row-span-4"
                },
                {
@@ -1225,7 +1222,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       {/* App Showcase / Offline Mode — CINEMATIC UPGRADE */}
       <section id="app" className="py-32 relative overflow-hidden">
         <div className="container px-4">
-          <div className="bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 rounded-[4rem] p-8 md:p-20 overflow-hidden relative">
+            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden relative">
             {/* Background Glow */}
             <div className="absolute -bottom-1/2 -right-1/4 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full -z-10" />
             <div className="absolute -top-1/2 -left-1/4 w-[800px] h-[800px] bg-emerald-500/5 blur-[150px] rounded-full -z-10" />
@@ -1352,7 +1349,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1, type: "spring" }}
-                className="relative group p-12 rounded-[3.5rem] bg-white/[0.01] backdrop-blur-3xl border border-white/5 transition-all duration-700 hover:bg-white/[0.04] hover:-translate-y-4 hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden"
+                className="relative group p-12 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:bg-white/[0.04] hover:-translate-y-4 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] overflow-hidden"
               >
                 {/* Dynamic Background Circle */}
                 <div className={cn("absolute -bottom-10 -left-10 w-40 h-40 blur-3xl opacity-0 group-hover:opacity-20 transition-all duration-1000", stat.bg)} />

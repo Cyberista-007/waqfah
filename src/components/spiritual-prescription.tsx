@@ -232,9 +232,9 @@ export function SpiritualPrescription() {
                   <button
                     key={mood.id}
                     onClick={() => handleMoodSelect(mood.id)}
-                    className="relative flex items-center justify-between p-6 rounded-full border border-white/10 bg-white/[0.01] backdrop-blur-xl transition-all duration-500 group overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:shadow-2xl text-right"
+                    className="relative flex items-center justify-between p-6 rounded-full bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 group overflow-hidden text-right"
                     style={{
-                      borderColor: 'rgba(255, 255, 255, 0.08)',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = mood.hexColor;
@@ -300,7 +300,7 @@ export function SpiritualPrescription() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="bg-white/[0.01] backdrop-blur-3xl border border-white/5 rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden flex flex-col items-center justify-center min-h-[520px] shadow-2xl relative z-10"
+              className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-[2.25rem] p-12 md:p-20 relative overflow-hidden flex flex-col items-center justify-center min-h-[520px] shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] relative z-10"
             >
               {/* Dynamic Glow Orb */}
               <div 
@@ -436,7 +436,7 @@ export function SpiritualPrescription() {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -40 }}
-              className="bg-white/[0.01] backdrop-blur-3xl border border-white/5 rounded-[4rem] p-8 md:p-16 relative overflow-hidden shadow-2xl relative z-10"
+              className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-[2.25rem] p-8 md:p-16 relative overflow-hidden shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] relative z-10"
             >
               {/* Dynamic Theme Glow Orb in background */}
               <div 
@@ -498,7 +498,7 @@ export function SpiritualPrescription() {
 
                 <div className="space-y-12">
                    {/* Quranic Verse card - The Divine Healing */}
-                   <div className="text-center relative py-8 px-6 rounded-[2.5rem] bg-white/[0.01] border border-white/5 backdrop-blur-xl shadow-xl overflow-hidden group">
+                    <div className="text-center relative py-8 px-6 rounded-[2.25rem] bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden group">
                       {/* Inner ambient glow on hover */}
                       <div 
                         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
@@ -532,9 +532,9 @@ export function SpiritualPrescription() {
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {/* Ward card */}
                       <div 
-                        className="p-8 rounded-[2.5rem] bg-white/[0.01] border border-white/5 backdrop-blur-xl relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:border-white/10"
+                        className="p-8 rounded-[2.25rem] bg-white/[0.02] border border-white/10 backdrop-blur-2xl relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
                         style={{
-                          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)'
+                          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -1px 1px rgba(255,255,255,0.05), 0 15px 35px rgba(0,0,0,0.5)'
                         }}
                       >
                         {/* Glow corner */}
@@ -554,9 +554,9 @@ export function SpiritualPrescription() {
 
                       {/* Heart advice card */}
                       <div 
-                        className="p-8 rounded-[2.5rem] bg-white/[0.01] border border-white/5 backdrop-blur-xl relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:border-white/10"
+                        className="p-8 rounded-[2.25rem] bg-white/[0.02] border border-white/10 backdrop-blur-2xl relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
                         style={{
-                          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)'
+                          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -1px 1px rgba(255,255,255,0.05), 0 15px 35px rgba(0,0,0,0.5)'
                         }}
                       >
                         {/* Glow corner */}
