@@ -1045,7 +1045,7 @@ export function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-[100] pointer-events-none">
+    <div className="fixed bottom-32 left-6 md:bottom-8 md:left-8 z-[100] pointer-events-none">
       <AnimatePresence>
         {isOpen && (
           <motion.div

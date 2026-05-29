@@ -133,9 +133,7 @@ const mobileNavLinks = [
   { href: '/programs', icon: Podcast, label: 'البرامج' },
   { href: '/palestine', icon: Flag, label: 'فلسطين' },
   { href: '/search', icon: Search, label: 'بحث' },
-  { href: '/accountability', icon: BookCheck, label: 'محاسبة' },
-  { href: '/profile', icon: ListMusic, label: 'مكتبتي' },
-  { href: '/settings', icon: Settings, label: 'الإعدادات' }
+  { href: '/profile', icon: ListMusic, label: 'مكتبتي' }
 ];
 
 export function SiteHeader() {
@@ -226,7 +224,7 @@ export function SiteHeader() {
             : "top-0 bg-transparent border-transparent py-6"
         )}
       >
-        <nav className="w-full px-4 sm:px-12 py-3 flex justify-between items-center">
+        <nav className="relative w-full px-4 sm:px-12 py-3 flex justify-between items-center">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -277,7 +275,7 @@ export function SiteHeader() {
 
           <Link
             href="/"
-            className="flex items-center space-x-2 space-x-reverse cursor-pointer group"
+            className="absolute md:relative left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 flex items-center space-x-2 space-x-reverse cursor-pointer group"
           >
             <div className="relative">
                 <div className="text-3xl font-black font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 transition-all duration-500 group-hover:tracking-normal">
@@ -382,7 +380,7 @@ export function SiteHeader() {
 
             <button 
               onClick={openSearch}
-              className="lg:hidden p-2 rounded-full text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
+              className="hidden md:flex lg:hidden p-2 rounded-full text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <Search className="h-5 w-5" />
               <span className="sr-only">بحث</span>
@@ -398,11 +396,13 @@ export function SiteHeader() {
               <ChevronDown className="h-5 w-5 rotate-180" />
             </button>
 
-            <ThemeToggle onClick={() => setIsThemeSwitcherOpen(true)} />
+            <div className="hidden md:block">
+              <ThemeToggle onClick={() => setIsThemeSwitcherOpen(true)} />
+            </div>
 
             <button
                 onClick={() => setIsLanguageSwitcherOpen(true)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
+                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
             >
                 <span className="text-[10px] font-black group-hover:scale-110 transition-transform z-10">{activeLanguageName}</span>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

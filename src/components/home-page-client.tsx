@@ -523,10 +523,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                             <motion.h1 
                                 className="text-5xl md:text-7xl lg:text-9xl font-black mb-6 font-headline tracking-tighter leading-[0.9] italic text-white drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                             >
-                                <span className="block mb-2 translate-x-4 md:translate-x-8 opacity-90">
+                                <span className="block mb-2 md:translate-x-8 opacity-90">
                                     {banners[activeBannerIndex].title?.split(' ')[0]}
                                 </span>
-                                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary/90 to-primary/40 -translate-x-4 md:-translate-x-8">
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary/90 to-primary/40 md:-translate-x-8">
                                     {banners[activeBannerIndex].title?.split(' ').slice(1).join(' ')}
                                 </span>
                             </motion.h1>

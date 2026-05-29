@@ -163,7 +163,7 @@ export function PageIndex() {
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="fixed bottom-28 right-6 z-[60] lg:hidden"
+            className="fixed bottom-32 right-6 z-[60] lg:hidden"
           >
             <motion.button
               whileTap={{ scale: 0.9 }}
