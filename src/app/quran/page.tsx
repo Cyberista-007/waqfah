@@ -1323,6 +1323,11 @@ export default function QuranPage() {
   // Use a simple ref to hold the HTMLAudioElement for radio
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // ── Web Audio API Refs for Recording & Real Visualizer ──
+  const audioContextRef = useRef<any>(null);
+  const analyserNodeRef = useRef<any>(null);
+  const radioSourceNodeRef = useRef<any>(null);
+
   // ── Smart Quran Radio Developed Features States ──
   const [customRadioStations, setCustomRadioStations] = useState<RadioStation[]>([]);
   const [isAddCustomRadioOpen, setIsAddCustomRadioOpen] = useState<boolean>(false);
@@ -1435,6 +1440,44 @@ export default function QuranPage() {
     });
   }, []);
 
+  // ── Initialize Web Audio API Graph ──
+  const initAudioGraph = useCallback(() => {
+    if (!radioAudioRef.current) return;
+    
+    // If the audio element doesn't have crossOrigin, we cannot connect it to AudioContext
+    // without it being silenced or throwing errors. So we skip AudioContext.
+    if (radioAudioRef.current.crossOrigin !== 'anonymous') {
+      return;
+    }
+    
+    try {
+      if (!audioContextRef.current) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
+      }
+      
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      
+      if (!analyserNodeRef.current) {
+        analyserNodeRef.current = ctx.createAnalyser();
+        analyserNodeRef.current.fftSize = 128; // small fft for fast visualizer
+      }
+      
+      if (!radioSourceNodeRef.current) {
+        radioSourceNodeRef.current = ctx.createMediaElementSource(radioAudioRef.current);
+        
+        // Connect: source -> analyser -> destination
+        radioSourceNodeRef.current.connect(analyserNodeRef.current);
+        analyserNodeRef.current.connect(ctx.destination);
+      }
+    } catch (err) {
+      console.warn("Failed to initialize Web Audio graph:", err);
+    }
+  }, []);
+
   // ── handlePlayRadio: plays/pauses a station, stops verse audio ──
   const handlePlayRadio = useCallback((station: RadioStation) => {
     // If clicking the same station that is already playing → toggle pause/play
@@ -1465,14 +1508,59 @@ export default function QuranPage() {
     if (radioAudioRef.current) {
       radioAudioRef.current.pause();
     }
-    radioAudioRef.current = new Audio(station.url);
-    radioAudioRef.current.volume = radioVolume;
+    
+    // Disconnect old source node if it exists
+    if (radioSourceNodeRef.current) {
+      try {
+        radioSourceNodeRef.current.disconnect();
+      } catch (e) {}
+      radioSourceNodeRef.current = null;
+    }
+    
+    // Setup new audio element with CORS enabled to allow recording
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.src = station.url;
+    audio.volume = radioVolume;
+    radioAudioRef.current = audio;
 
-    radioAudioRef.current.addEventListener('waiting',  () => setIsRadioBuffering(true));
-    radioAudioRef.current.addEventListener('playing',  () => { setIsPlayingRadio(true); setIsRadioBuffering(false); });
-    radioAudioRef.current.addEventListener('pause',    () => setIsPlayingRadio(false));
-    radioAudioRef.current.addEventListener('error',    () => { setIsRadioBuffering(false); setIsPlayingRadio(false); });
-    radioAudioRef.current.addEventListener('canplay',  () => setIsRadioBuffering(false));
+    let fallbackTriggered = false;
+    audio.addEventListener('waiting',  () => setIsRadioBuffering(true));
+    audio.addEventListener('playing',  () => { 
+      setIsPlayingRadio(true); 
+      setIsRadioBuffering(false); 
+      // Initialize or resume the Web Audio graph once playing starts (user gesture context)
+      try {
+        initAudioGraph();
+      } catch (err) {
+        console.warn("Failed to initialize audio graph on play:", err);
+      }
+    });
+    audio.addEventListener('pause',    () => setIsPlayingRadio(false));
+    audio.addEventListener('canplay',  () => setIsRadioBuffering(false));
+    
+    audio.addEventListener('error',    () => { 
+      // If we failed with CORS (crossOrigin anonymous), retry without CORS
+      if (audio.crossOrigin === 'anonymous' && !fallbackTriggered) {
+        fallbackTriggered = true;
+        console.warn("CORS stream blocked. Falling back to non-CORS mode.");
+        audio.pause();
+        audio.removeAttribute('crossOrigin');
+        // Reset source node ref as we cannot use AudioContext on non-CORS media
+        radioSourceNodeRef.current = null;
+        audio.src = station.url;
+        audio.load();
+        setIsRadioBuffering(true);
+        audio.play().catch(e => {
+          console.error("Playback failed in fallback mode:", e);
+          setIsRadioBuffering(false);
+          setIsPlayingRadio(false);
+        });
+      } else {
+        setIsRadioBuffering(false);
+        setIsPlayingRadio(false);
+      }
+    });
 
     setCurrentRadioStation(station);
     setIsRadioBuffering(true);
@@ -1488,7 +1576,7 @@ export default function QuranPage() {
       console.error('Radio play error:', e);
       setIsRadioBuffering(false);
     });
-  }, [currentRadioStation, isPlayingRadio, radioVolume]);
+  }, [currentRadioStation, isPlayingRadio, radioVolume, initAudioGraph]);
 
   // Auto-play from shared URL parameter
   useEffect(() => {
@@ -1566,6 +1654,17 @@ export default function QuranPage() {
     window.addEventListener('resize', handleResize);
     
     let phase = 0;
+    
+    // Set up real analyser references
+    let dataArray: Uint8Array | null = null;
+    let bufferLength = 0;
+    const analyser = analyserNodeRef.current;
+    
+    if (analyser && radioAudioRef.current?.crossOrigin === 'anonymous') {
+      bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+    }
+
     const render = () => {
       ctx.clearRect(0, 0, width, height);
       
@@ -1580,6 +1679,10 @@ export default function QuranPage() {
         return;
       }
       
+      if (analyser && dataArray && radioAudioRef.current?.crossOrigin === 'anonymous') {
+        analyser.getByteFrequencyData(dataArray);
+      }
+      
       const barCount = 35;
       const barWidth = width / barCount;
       phase += 0.08;
@@ -1592,10 +1695,24 @@ export default function QuranPage() {
       ctx.fillStyle = grad;
       
       for (let i = 0; i < barCount; i++) {
-        const multiplier = Math.sin(i * 0.18 + phase) * Math.cos(i * 0.08 - phase * 0.4);
-        const rand = Math.sin(phase * (i % 2 === 0 ? 1.5 : 1)) * 4;
-        let barHeight = Math.abs(multiplier) * (height * 0.75) + rand;
-        barHeight = Math.max(6, Math.min(barHeight, height - 8));
+        let barHeight = 0;
+        
+        if (dataArray && bufferLength > 0) {
+          // Map bar index to frequency array index (focusing on the voice frequency spectrum)
+          const percentIdx = i / barCount;
+          const dataIdx = Math.floor(percentIdx * bufferLength * 0.65);
+          const value = dataArray[dataIdx] || 0;
+          
+          // Scale it to visualizer height
+          barHeight = (value / 255) * (height * 0.85);
+          barHeight = Math.max(6, Math.min(barHeight, height - 8));
+        } else {
+          // Fallback to simulated sine wave
+          const multiplier = Math.sin(i * 0.18 + phase) * Math.cos(i * 0.08 - phase * 0.4);
+          const rand = Math.sin(phase * (i % 2 === 0 ? 1.5 : 1)) * 4;
+          barHeight = Math.abs(multiplier) * (height * 0.75) + rand;
+          barHeight = Math.max(6, Math.min(barHeight, height - 8));
+        }
         
         const x = i * barWidth;
         const y = height - barHeight;
@@ -1617,51 +1734,89 @@ export default function QuranPage() {
   }, [isPlayingRadio, currentRadioStation]);
 
   // ── Recording Control Methods ──
-  const startRecording = useCallback(() => {
+  const startRecording = useCallback(async () => {
     if (!radioAudioRef.current || !currentRadioStation) return;
+    
+    // Ensure the audio graph is initialized if possible
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioContext();
-      const dest = ctx.createMediaStreamDestination();
-      
-      const source = ctx.createMediaElementSource(radioAudioRef.current);
-      source.connect(dest);
-      source.connect(ctx.destination);
-      
-      const mediaRecorder = new MediaRecorder(dest.stream);
-      mediaRecorderRef.current = mediaRecorder;
-      recordedChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          recordedChunksRef.current.push(e.data);
+      initAudioGraph();
+    } catch (e) {}
+    
+    const ctx = audioContextRef.current;
+    const analyser = analyserNodeRef.current;
+    
+    // Check if we can record using Web Audio API (requires AudioContext, Analyser, and CORS-enabled audio)
+    if (ctx && analyser && radioAudioRef.current.crossOrigin === 'anonymous') {
+      try {
+        if (ctx.state === 'suspended') {
+          await ctx.resume();
         }
-      };
-      
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${currentRadioStation.name}_تسجيل.webm`;
-        a.click();
-      };
-      
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingDuration(0);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
-    } catch (err) {
-      console.warn("Direct stream recording CORS fallback active.");
-      setIsRecording(true);
-      setRecordingDuration(0);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
+        
+        const dest = ctx.createMediaStreamDestination();
+        
+        // Connect the analyser output to our recording destination as well
+        analyser.connect(dest);
+        
+        // Save the destination so we can disconnect it later
+        (mediaRecorderRef as any).currentDestination = dest;
+        
+        let mimeType = 'audio/webm';
+        if (typeof MediaRecorder.isTypeSupported === 'function') {
+          if (MediaRecorder.isTypeSupported('audio/webm')) {
+            mimeType = 'audio/webm';
+          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            mimeType = 'audio/mp4';
+          } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+            mimeType = 'audio/ogg';
+          }
+        }
+        
+        const mediaRecorder = new MediaRecorder(dest.stream, { mimeType });
+        mediaRecorderRef.current = mediaRecorder;
+        recordedChunksRef.current = [];
+        
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+        
+        mediaRecorder.onstop = () => {
+          const ext = mimeType.split('/')[1].split(';')[0] || 'webm';
+          const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${currentRadioStation.name}_تسجيل.${ext}`;
+          a.click();
+          
+          // Clean up connection
+          try {
+            analyser.disconnect(dest);
+          } catch (e) {}
+        };
+        
+        mediaRecorder.start();
+        setIsRecording(true);
+        setRecordingDuration(0);
+        recordingIntervalRef.current = setInterval(() => {
+          setRecordingDuration(prev => prev + 1);
+        }, 1000);
+        return; // Success!
+      } catch (err) {
+        console.error("Direct stream recording failed, falling back to simulated recording:", err);
+      }
     }
-  }, [currentRadioStation]);
+    
+    // Fallback: simulated recording
+    console.warn("Direct stream recording not available. Simulated recording active.");
+    mediaRecorderRef.current = null;
+    setIsRecording(true);
+    setRecordingDuration(0);
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingDuration(prev => prev + 1);
+    }, 1000);
+  }, [currentRadioStation, initAudioGraph]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -1971,6 +2126,12 @@ export default function QuranPage() {
       if (radioAudioRef.current) {
         radioAudioRef.current.pause();
         radioAudioRef.current = null;
+      }
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
       }
     };
   }, []);
