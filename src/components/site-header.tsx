@@ -111,6 +111,7 @@ const moreNavItems = [
   { href: "/dua", label: "الأدعية المأثورة", icon: HandHeart },
   { href: "/quran", label: "آيات قرآنية", icon: Layers },
   { href: "/muhlikat", label: "المهلكات", icon: TriangleAlert },
+  { href: "/chastity", label: "درع العفة (التعافي من الإباحية)", icon: Shield },
   { href: "/shubuhat", label: "تفنيد الشبهات", icon: Shield },
   { href: "/essentials", label: "ما لا يسع المسلم جهله", icon: BookCheck },
   { href: "/aqeedah", label: "العقيدة", icon: Shield },
