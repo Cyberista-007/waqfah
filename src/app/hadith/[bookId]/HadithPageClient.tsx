@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Book, Search, Mic, ChevronLeft, Bookmark, Heart, Share2, 
   BookOpen, Star, Info, Clock, ArrowLeft, ArrowRight,
-  Library, Sparkles, Quote, MapPin, Hash, Settings, CheckCircle, Type, ShieldCheck
+  Library, Sparkles, Quote, MapPin, Hash, Settings, CheckCircle, Type, ShieldCheck,
+  Volume2, VolumeX
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -146,6 +147,8 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [showSettings, setShowSettings] = useState(false);
   
   const [favourites, setFavourites] = useState<Set<number>>(new Set());
+  const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
+  const [playingHadithId, setPlayingHadithId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,7 +158,25 @@ export default function HadithPageClient({ params }: { params: any }) {
     if (savedSize) setFontSize(parseInt(savedSize));
     const savedFont = localStorage.getItem('hadith_font_family');
     if (savedFont) setFontFamily(savedFont);
+    
+    // Load read chapters
+    try {
+      const read = localStorage.getItem(`waqfah_read_chapters_${bookId}`);
+      if (read) setReadChapters(new Set(JSON.parse(read)));
+      else setReadChapters(new Set());
+    } catch (e) {
+      setReadChapters(new Set());
+    }
   }, [bookId]);
+
+  // Clean up audio on unmount or navigation
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [selectedSection, bookId]);
 
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
@@ -164,13 +185,88 @@ export default function HadithPageClient({ params }: { params: any }) {
     if (sectionParam) setSelectedSection(sectionParam);
   }, [sectionParam]);
 
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = (h: Hadith) => {
+    const id = h.hadithnumber;
     const next = new Set(favourites);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    let isAdded = false;
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+      isAdded = true;
+    }
     setFavourites(next);
     localStorage.setItem(`fav_hadiths_${bookId}`, JSON.stringify(Array.from(next)));
-    toast({ title: next.has(id) ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة', duration: 1000 });
+    
+    // Sync with global favorites list
+    try {
+      let globalFavs: any[] = [];
+      const stored = localStorage.getItem('waqfah_hadith_favorites');
+      if (stored) globalFavs = JSON.parse(stored);
+      
+      const idx = globalFavs.findIndex((f: any) => f.bookId === bookId && f.hadithnumber === id);
+      if (idx > -1 && !isAdded) {
+        globalFavs.splice(idx, 1);
+      } else if (idx === -1 && isAdded) {
+        globalFavs.push({
+          bookId,
+          bookName: config.name,
+          hadithnumber: id,
+          text: h.text,
+          grade: h.grades?.[0]?.grade || 'صحيح',
+          savedAt: Date.now()
+        });
+      }
+      localStorage.setItem('waqfah_hadith_favorites', JSON.stringify(globalFavs));
+    } catch (e) {}
+
+    toast({ title: isAdded ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة', duration: 1000 });
+  };
+
+  const toggleChapterRead = (sectionId: string) => {
+    const next = new Set(readChapters);
+    let isRead = false;
+    if (next.has(sectionId)) {
+      next.delete(sectionId);
+    } else {
+      next.add(sectionId);
+      isRead = true;
+    }
+    setReadChapters(next);
+    localStorage.setItem(`waqfah_read_chapters_${bookId}`, JSON.stringify(Array.from(next)));
+    toast({ 
+      title: isRead ? 'تم تحديد الباب كمقروء' : 'تم إلغاء تحديد الباب كمقروء',
+      description: isRead ? 'تم تحديث مستوى إنجازك في هذا الكتاب' : undefined,
+      duration: 2000 
+    });
+  };
+
+  const togglePlayHadith = (h: Hadith) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      toast({ title: 'البث الصوتي غير مدعوم في متصفحك' });
+      return;
+    }
+    
+    if (playingHadithId === h.hadithnumber) {
+      window.speechSynthesis.cancel();
+      setPlayingHadithId(null);
+    } else {
+      window.speechSynthesis.cancel();
+      setPlayingHadithId(h.hadithnumber);
+      
+      const cleanText = h.text.replace(/«|»/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'ar-SA';
+      
+      const voices = window.speechSynthesis.getVoices();
+      const arVoice = voices.find(v => v.lang.startsWith('ar'));
+      if (arVoice) utterance.voice = arVoice;
+      
+      utterance.onend = () => setPlayingHadithId(null);
+      utterance.onerror = () => setPlayingHadithId(null);
+      
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   const handleShare = async (h: Hadith) => {
@@ -336,6 +432,10 @@ export default function HadithPageClient({ params }: { params: any }) {
     });
   }, [hadiths, searchQuery, selectedSection]);
 
+  const totalChapters = sections ? Object.keys(sections).length : 0;
+  const completedChaptersCount = readChapters.size;
+  const progressPercent = totalChapters > 0 ? Math.round((completedChaptersCount / totalChapters) * 100) : 0;
+
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20 font-sans">
       <section className="relative px-4 pt-10 pb-20 overflow-hidden container">
@@ -349,6 +449,37 @@ export default function HadithPageClient({ params }: { params: any }) {
              {config.name.split(' ')[0]} <span className={cn("italic font-normal block md:inline", config.color)}>{config.name.split(' ').slice(1).join(' ')}</span>
            </motion.h1>
            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-xl md:text-2xl text-white/40 italic font-serif">"{config.subtitle}"</motion.p>
+           
+           {totalChapters > 0 && (
+             <motion.div 
+               initial={{ opacity: 0, y: 10 }} 
+               animate={{ opacity: 1, y: 0 }} 
+               transition={{ delay: 0.3 }}
+               className="max-w-md mx-auto mt-6 bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4"
+             >
+               <div className="flex-1 text-right">
+                 <div className="text-sm font-black text-white/80">تقدم القراءة في هذا الكتاب</div>
+                 <div className="text-xs text-white/40 mt-1">أكملت قراءة {completedChaptersCount} من أصل {totalChapters} باباً ({progressPercent}%)</div>
+               </div>
+               <div className="relative w-12 h-12 flex items-center justify-center">
+                 <svg className="w-12 h-12 transform -rotate-90">
+                   <circle cx="24" cy="24" r="20" className="stroke-white/5" strokeWidth="4" fill="transparent" />
+                   <circle 
+                     cx="24" 
+                     cy="24" 
+                     r="20" 
+                     className={cn("transition-all duration-500", config.color?.replace('text-', 'stroke-') || 'stroke-primary')} 
+                     strokeWidth="4" 
+                     fill="transparent" 
+                     strokeDasharray={2 * Math.PI * 20}
+                     strokeDashoffset={2 * Math.PI * 20 * (1 - progressPercent / 100)}
+                   />
+                 </svg>
+                 <span className="absolute text-[10px] font-black">{progressPercent}%</span>
+               </div>
+             </motion.div>
+           )}
+
            {INCOMPLETE_BOOKS.includes(bookId) && (
              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/60 text-xs font-bold">
                <Info className="w-4 h-4 text-amber-500" /> تنبيه: هذه النسخة الرقمية قد تكون غير مكتملة حالياً.
@@ -378,7 +509,14 @@ export default function HadithPageClient({ params }: { params: any }) {
                     <motion.button key={id} whileHover={{ scale: 1.02, y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => { setSelectedSection(id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="group relative p-8 rounded-[2.5rem] bg-card/20 border border-white/5 hover:border-primary/30 hover:bg-white/[0.02] text-right transition-all flex flex-col justify-between min-h-[160px]">
                       <div className="flex justify-between items-start mb-4">
                          <span className={cn("w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-xs border border-white/5", config.color)}>{id}</span>
-                         <BookOpen className="w-5 h-5 text-white/10 group-hover:text-primary/30" />
+                         <div className="flex items-center gap-2">
+                           {readChapters.has(id) && (
+                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+                               <CheckCircle className="w-3 h-3" /> تم
+                             </span>
+                           )}
+                           <BookOpen className="w-5 h-5 text-white/10 group-hover:text-primary/30" />
+                         </div>
                       </div>
                       <h3 className="text-xl font-black text-white leading-relaxed">{name || "بدون عنوان"}</h3>
                       <div className="absolute bottom-4 left-8 opacity-0 group-hover:opacity-100 transition-all"><ArrowLeft className={cn("w-4 h-4", config.color)} /></div>
@@ -389,16 +527,38 @@ export default function HadithPageClient({ params }: { params: any }) {
             </div>
           ) : (
             <motion.div key="hadiths" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
-              <div className="flex justify-between items-center bg-white/5 p-4 rounded-3xl border border-white/5">
+              <div className="flex justify-between items-center bg-white/5 p-4 rounded-3xl border border-white/5 flex-wrap gap-4">
                  <button onClick={() => setSelectedSection(null)} className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 font-black text-sm"><ArrowRight className="w-5 h-5" /> الفهرس</button>
-                 <button onClick={() => setShowSettings(!showSettings)} className={cn("p-4 rounded-2xl", showSettings ? "bg-white text-black" : "bg-white/5 text-white/40")}><Settings className="w-5 h-5" /></button>
+                 <div className="flex gap-2">
+                   <button 
+                     onClick={() => toggleChapterRead(selectedSection)} 
+                     className={cn(
+                       "flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm border transition-all",
+                       readChapters.has(selectedSection) 
+                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                         : "bg-white/5 border-white/10 text-white/60 hover:text-white"
+                     )}
+                   >
+                     <CheckCircle className="w-4 h-4" />
+                     {readChapters.has(selectedSection) ? 'مكتمل' : 'تحديد كمقروء'}
+                   </button>
+                   <button onClick={() => setShowSettings(!showSettings)} className={cn("p-4 rounded-2xl border transition-all", showSettings ? "bg-white text-black border-white" : "bg-white/5 text-white/40 border-white/10")}><Settings className="w-5 h-5" /></button>
+                 </div>
               </div>
               <AnimatePresence>
                 {showSettings && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 rounded-[2.5rem] bg-zinc-900 border border-white/10 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div><label>حجم الخط: {fontSize}px</label><input type="range" min="20" max="80" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} className="w-full h-2 bg-white/5 rounded-lg accent-amber-500" /></div>
-                       <div className="flex gap-2"> {['font-headline', 'font-sans', 'font-serif'].map(f => <button key={f} onClick={() => setFontFamily(f)} className={cn("px-4 py-2 rounded-xl text-[10px] font-black border", fontFamily === f ? "bg-white text-black" : "bg-white/5")}>{f === 'font-headline' ? 'نسخ' : 'ديواني'}</button>)}</div>
+                       <div className="flex gap-2"> {['font-headline', 'font-sans', 'font-serif'].map(f => (
+                         <button 
+                           key={f} 
+                           onClick={() => setFontFamily(f)} 
+                           className={cn("px-4 py-2 rounded-xl text-[10px] font-black border", fontFamily === f ? "bg-white text-black border-white" : "bg-white/5 border-white/10 text-white/60")}
+                         >
+                           {f === 'font-headline' ? 'خط العناوين' : f === 'font-sans' ? 'خط بسيط' : 'خط كلاسيكي'}
+                         </button>
+                       ))}</div>
                     </div>
                   </motion.div>
                 )}
@@ -424,8 +584,28 @@ export default function HadithPageClient({ params }: { params: any }) {
                                   </Button>
                                 }
                               />
+                             <Button 
+                               onClick={() => togglePlayHadith(h)} 
+                               variant="ghost" 
+                               size="icon" 
+                               className={cn(
+                                 "rounded-xl border border-white/5 bg-white/5 transition-all",
+                                 playingHadithId === h.hadithnumber ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "text-white/40 hover:text-white"
+                               )}
+                               title={playingHadithId === h.hadithnumber ? "إيقاف القراءة الصوتية" : "استماع للحديث"}
+                             >
+                               {playingHadithId === h.hadithnumber ? (
+                                 <div className="flex gap-[2px] items-center justify-center h-4 w-4">
+                                   <span className="w-[3px] h-3 bg-amber-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                                   <span className="w-[3px] h-4 bg-amber-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                                   <span className="w-[3px] h-2 bg-amber-400 rounded-full animate-bounce [animation-delay:0.3s]" />
+                                 </div>
+                               ) : (
+                                 <Volume2 className="w-4 h-4" />
+                               )}
+                             </Button>
                              <Button onClick={() => handleShare(h)} variant="ghost" size="icon" className="rounded-xl border border-white/5 bg-white/5"><Share2 className="w-4 h-4 opacity-40 hover:opacity-100" /></Button>
-                             <Button onClick={() => toggleFavorite(h.hadithnumber)} variant="ghost" size="icon" className={cn("rounded-xl border border-white/5 bg-white/5", favourites.has(h.hadithnumber) ? "bg-rose-500/10 border-rose-500/20" : "")}><Heart className={cn("w-4 h-4", favourites.has(h.hadithnumber) ? "fill-current text-rose-400" : "opacity-40")} /></Button>
+                             <Button onClick={() => toggleFavorite(h)} variant="ghost" size="icon" className={cn("rounded-xl border border-white/5 bg-white/5", favourites.has(h.hadithnumber) ? "bg-rose-500/10 border-rose-500/20" : "")}><Heart className={cn("w-4 h-4", favourites.has(h.hadithnumber) ? "fill-current text-rose-400" : "opacity-40")} /></Button>
                            </div>
                         </div>
                         <p style={{ fontSize: `${fontSize}px` }} className={cn("font-black leading-[1.8] text-white text-right", fontFamily)}>{highlightMatch(h.text, searchQuery)}</p>
@@ -441,7 +621,7 @@ export default function HadithPageClient({ params }: { params: any }) {
 
       <AnimatePresence>
         {selectedSection && !loadingHadiths && sections && (
-           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex gap-4 px-6 py-4 rounded-3xl bg-zinc-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl">
+           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 rounded-3xl bg-zinc-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl max-w-[95vw] md:max-w-none">
               {(() => {
                 const sectionIds = Object.keys(sections);
                 const currentIndex = sectionIds.indexOf(selectedSection);
@@ -449,9 +629,22 @@ export default function HadithPageClient({ params }: { params: any }) {
                 const nextId = sectionIds[currentIndex + 1];
                 return (
                   <>
-                    <button onClick={() => { if (prevId) { setSelectedSection(prevId); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} disabled={!prevId} className="h-12 px-6 rounded-xl bg-white/5 disabled:opacity-20 flex items-center gap-3 font-bold"><ArrowRight className="w-5 h-5" /> السابق</button>
+                    <button onClick={() => { if (prevId) { setSelectedSection(prevId); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} disabled={!prevId} className="h-12 px-4 md:px-6 rounded-xl bg-white/5 disabled:opacity-20 flex items-center gap-2 font-bold text-xs md:text-sm"><ArrowRight className="w-4 h-4" /> السابق</button>
                     <div className="w-[1px] bg-white/10 h-12" />
-                    <button onClick={() => { if (nextId) { setSelectedSection(nextId); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} disabled={!nextId} className={cn("h-12 px-6 rounded-xl text-white font-black flex items-center gap-3 disabled:opacity-20", config.color?.replace('text-', 'bg-')?.replace('400', '600') || 'bg-primary')}>التالي <ArrowLeft className="w-5 h-5" /></button>
+                    <button 
+                      onClick={() => toggleChapterRead(selectedSection)} 
+                      className={cn(
+                        "h-12 w-12 rounded-xl flex items-center justify-center border transition-all",
+                        readChapters.has(selectedSection) 
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                          : "bg-white/5 border-white/10 text-white/40 hover:text-white"
+                      )}
+                      title={readChapters.has(selectedSection) ? 'مكتمل' : 'تحديد كمقروء'}
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
+                    <div className="w-[1px] bg-white/10 h-12" />
+                    <button onClick={() => { if (nextId) { setSelectedSection(nextId); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} disabled={!nextId} className={cn("h-12 px-4 md:px-6 rounded-xl text-white font-black flex items-center gap-2 disabled:opacity-20 text-xs md:text-sm", config.color?.replace('text-', 'bg-')?.replace('400', '600') || 'bg-primary')}>التالي <ArrowLeft className="w-4 h-4" /></button>
                   </>
                 );
               })()}

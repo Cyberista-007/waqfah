@@ -27,10 +27,11 @@ import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
-import { OfflineIndicator } from '@/components/offline-indicator';
 import { GlobalBackButton } from '@/components/global-back-button';
 import { ReadingProvider } from '@/components/reading-provider';
-import { ChatWidget } from '@/components/chat-widget';
+import { LayoutClientWidgets } from '@/components/layout-client-widgets';
+
+
 
 export const viewport: Viewport = {
   themeColor: '#09090b',
@@ -67,7 +68,7 @@ export const metadata: Metadata = {
 };
 
 import { PageTransition } from '@/components/page-transition';
-import { HomePageIndexWrapper } from '@/components/home-page-index';
+
 
 export default async function RootLayout({
   children,
@@ -132,10 +133,8 @@ export default async function RootLayout({
                 <SiteFooter />
               </div>
             </div>
-            <HomePageIndexWrapper />
             <Toaster />
-            <ChatWidget />
-            <OfflineIndicator />
+            <LayoutClientWidgets />
             <PWARegistry />
           </ReadingProvider>
         </AppProviders>

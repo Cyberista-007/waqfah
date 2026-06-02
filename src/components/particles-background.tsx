@@ -141,7 +141,8 @@ export const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({ classN
 
     function init() {
       particlesArray.length = 0;
-      const numberOfParticles = particleSettings.count;
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const numberOfParticles = isMobile ? Math.min(25, particleSettings.count) : particleSettings.count;
       for (let i = 0; i < numberOfParticles; i++) {
         const size = (Math.random() * 2) + 1;
         const x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);

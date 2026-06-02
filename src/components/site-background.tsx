@@ -75,7 +75,7 @@ export function SiteBackground() {
 
       {/* Static Overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-tr from-background via-transparent to-background opacity-80" />
-      <div className="absolute inset-0 backdrop-blur-[40px] md:backdrop-blur-[100px]" />
+      <div className="absolute inset-0 backdrop-blur-[8px] md:backdrop-blur-[100px]" />
     </div>
   );
 }

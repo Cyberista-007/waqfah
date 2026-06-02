@@ -484,12 +484,13 @@ export function ChatWidget() {
 
 
   // Load local collections for client-side RAG context
-  const { data: allPrograms } = useCollection<Program>('programs', { limit: 50 });
-  const { data: allSeries } = useCollection<Series>('series', { limit: 50 });
-  const { data: allBooks } = useCollection<Book>('books', { limit: 50 });
-  const { data: allLectures } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 50 });
-  const { data: allShubuhat } = useCollection<Shubha>('shubuhat', { limit: 50 });
-  const { data: allDestructiveSins } = useCollection<DestructiveSin>('destructive_sins', { limit: 50 });
+  const { data: allPrograms } = useCollection<Program>(isOpen ? 'programs' : null, { limit: 50 });
+  const { data: allSeries } = useCollection<Series>(isOpen ? 'series' : null, { limit: 50 });
+  const { data: allBooks } = useCollection<Book>(isOpen ? 'books' : null, { limit: 50 });
+  const { data: allLectures } = useCollection<Lecture>(isOpen ? 'lectures' : null, { orderBy: ['createdAt', 'desc'], limit: 50 });
+  const { data: allShubuhat } = useCollection<Shubha>(isOpen ? 'shubuhat' : null, { limit: 50 });
+  const { data: allDestructiveSins } = useCollection<DestructiveSin>(isOpen ? 'destructive_sins' : null, { limit: 50 });
+
 
   // Auto-scroll to bottom
   useEffect(() => {
