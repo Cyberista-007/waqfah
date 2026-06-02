@@ -16,7 +16,7 @@ import { useMemo, useState, Suspense } from "react";
 import { Search, Sparkles, Play, Clock, Users, Headphones, Zap, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Fuse from 'fuse.js';
-import { normalizeArabic } from "@/lib/utils";
+import { normalizeArabic, cn } from "@/lib/utils";
 import { Pagination } from "@/components/pagination";
 import { motion, AnimatePresence } from "framer-motion";
 import LecturePageClient from "./[slug]/LecturePageClient";
@@ -236,19 +236,35 @@ function LecturesListPageClient() {
                         </Select>
                     </div>
 
-                    <div className="relative w-full sm:w-64">
-                         <Zap className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 z-10 pointer-events-none" />
-                        <Select onValueChange={(value) => handleFilterChange("sort", value)} defaultValue={sortOrder}>
-                        <SelectTrigger className="h-14 pr-10 bg-white/5 border-white/5 rounded-xl font-bold">
-                            <SelectValue placeholder="فرز حسب" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
-                            <SelectItem value="newest">الأحدث أولاً</SelectItem>
-                            <SelectItem value="oldest">الأقدم أولاً</SelectItem>
-                            <SelectItem value="most_popular">الأكثر استماعاً</SelectItem>
-                            <SelectItem value="alphabetical">أبجدي (أ-ي)</SelectItem>
-                        </SelectContent>
-                        </Select>
+                    <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl w-full sm:w-auto overflow-x-auto scrollbar-none">
+                      {[
+                        { value: 'newest', label: 'الأحدث' },
+                        { value: 'most_popular', label: 'الرائجة' },
+                        { value: 'oldest', label: 'الأقدم' },
+                      ].map((option) => {
+                        const isActive = sortOrder === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => handleFilterChange("sort", option.value)}
+                            className={cn(
+                              "relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap flex-1 sm:flex-none text-center",
+                              isActive
+                                ? "text-zinc-950 font-black"
+                                : "text-zinc-400 hover:text-white"
+                            )}
+                          >
+                            {isActive && (
+                              <motion.div
+                                layoutId="activeSortTab"
+                                className="absolute inset-0 bg-white rounded-xl shadow-md"
+                                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                              />
+                            )}
+                            <span className="relative z-10">{option.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                 </div>
             </div>
