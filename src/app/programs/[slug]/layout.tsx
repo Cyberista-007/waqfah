@@ -314,8 +314,15 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
 
     // Sort by date descending
     const sortedLectures = [...allLectures].sort((a, b) => {
-      const toMs = (ts: any) => ts?.toDate ? ts.toDate().getTime() : new Date(ts || 0).getTime();
-      return toMs(b.createdAt) - toMs(a.createdAt);
+      const toMs = (ts: any) => {
+        if (!ts) return 0;
+        if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+        if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+        if (typeof ts._seconds === 'number') return ts._seconds * 1000;
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+      };
+      return toMs(b.publishedAt || b.createdAt) - toMs(a.publishedAt || a.createdAt);
     });
 
     sortedLectures.forEach((l) => {

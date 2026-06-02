@@ -136,14 +136,21 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
 
 
     const formattedDate = useMemo(() => {
-        if (!lecture.createdAt) return null;
+        const targetDate = lecture.publishedAt || lecture.createdAt;
+        if (!targetDate) return null;
         try {
-            const dateObj = typeof (lecture.createdAt as any).toDate === 'function' ? (lecture.createdAt as any).toDate() : new Date(lecture.createdAt as string);
+            const dateObj = typeof (targetDate as any).toDate === 'function' 
+                ? (targetDate as any).toDate() 
+                : (typeof (targetDate as any).seconds === 'number' 
+                    ? new Date((targetDate as any).seconds * 1000)
+                    : (typeof (targetDate as any)._seconds === 'number'
+                        ? new Date((targetDate as any)._seconds * 1000)
+                        : new Date(targetDate as string)));
             return new Intl.DateTimeFormat('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }).format(dateObj);
         } catch {
             return null;
         }
-    }, [lecture.createdAt]);
+    }, [lecture.publishedAt, lecture.createdAt]);
 
     return (
         <>

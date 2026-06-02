@@ -95,14 +95,17 @@ function LecturesListPageClient() {
     }
     
     lectures.sort((a, b) => {
-      const toDate = (ts: any) => ts && typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
-      const dateA = toDate(a.createdAt);
-      const dateB = toDate(b.createdAt);
+      const parseDate = (ts: any): Date => {
+        if (!ts) return new Date(0);
+        if (typeof ts.toDate === 'function') return ts.toDate();
+        if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000);
+        if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000);
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? new Date(0) : d;
+      };
+      const dateA = parseDate(a.publishedAt || a.createdAt);
+      const dateB = parseDate(b.publishedAt || b.createdAt);
       
-      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-        return 0;
-      }
-
       switch (sortOrder) {
           case 'oldest':
               return dateA.getTime() - dateB.getTime();

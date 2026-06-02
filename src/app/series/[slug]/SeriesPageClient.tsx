@@ -33,8 +33,15 @@ export default function SeriesPageClient() {
   const sortedLectures = useMemo(() => {
     if (!lecturesInSeries) return [];
     return [...lecturesInSeries].sort((a, b) => {
-        const toDate = (ts: any): Date => ts?.toDate ? ts.toDate() : new Date(ts || 0);
-        return toDate(a.createdAt).getTime() - toDate(b.createdAt).getTime();
+        const parseDate = (ts: any): Date => {
+          if (!ts) return new Date(0);
+          if (typeof ts.toDate === 'function') return ts.toDate();
+          if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000);
+          if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000);
+          const d = new Date(ts);
+          return isNaN(d.getTime()) ? new Date(0) : d;
+        };
+        return parseDate(a.publishedAt || a.createdAt).getTime() - parseDate(b.publishedAt || b.createdAt).getTime();
     });
   }, [lecturesInSeries]);
 

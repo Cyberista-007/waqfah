@@ -243,6 +243,12 @@ const LectureCardComponent = ({
     if (timestamp.toDate && typeof timestamp.toDate === 'function') {
       return timestamp.toDate();
     }
+    if (typeof timestamp.seconds === 'number') {
+      return new Date(timestamp.seconds * 1000);
+    }
+    if (typeof timestamp._seconds === 'number') {
+      return new Date(timestamp._seconds * 1000);
+    }
     const d = new Date(timestamp);
     return isNaN(d.getTime()) ? null : d;
   };
