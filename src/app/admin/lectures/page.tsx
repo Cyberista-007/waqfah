@@ -57,6 +57,7 @@ export default function AdminLecturesPage() {
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [isBatchConfirmOpen, setIsBatchConfirmOpen] = useState(false);
     const [isUpdatingAll, setIsUpdatingAll] = useState(false);
+    const [isUpdatingSelected, setIsUpdatingSelected] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("lectures");
     const [openCollapsibles, setOpenCollapsibles] = useState<string[]>([]);
@@ -411,6 +412,90 @@ export default function AdminLecturesPage() {
         setIsUpdatingAll(false);
     };
 
+    const handleUpdateSelectedMetadata = async () => {
+        if (!firestore || !allLectures || selectedItems.length === 0) return;
+
+        const lecturesToUpdate = allLectures.filter(l => selectedItems.includes(l.id) && l.youtubeUrl);
+        if (lecturesToUpdate.length === 0) {
+            toast({ title: "لا يوجد محاضرات يوتيوب محددة", description: "العناصر المحددة لا تحتوي على روابط يوتيوب." });
+            return;
+        }
+
+        setIsUpdatingSelected(true);
+        toast({ title: "بدء تحديث البيانات للمحدد...", description: `جاري تحديث ${lecturesToUpdate.length} محاضرة من يوتيوب.` });
+
+        const CHUNK_SIZE = 10;
+        const allUpdateData = new Map<string, Partial<Lecture>>();
+        let updatedCount = 0;
+
+        try {
+            for (let i = 0; i < lecturesToUpdate.length; i += CHUNK_SIZE) {
+                const chunk = lecturesToUpdate.slice(i, i + CHUNK_SIZE);
+                const promises = chunk.map(async (lecture) => {
+                    if (!lecture.youtubeUrl) return null;
+                    try {
+                        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: lecture.youtubeUrl, fetchVideoInfo: true }),
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.videoInfo) {
+                            const updateData: Partial<Lecture> = {
+                                youtubeViewCount: data.videoInfo.viewCount || lecture.youtubeViewCount || 0,
+                                title: data.videoInfo.title || lecture.title,
+                                description: data.videoInfo.description || lecture.description,
+                                duration: data.videoInfo.durationInSeconds || lecture.duration,
+                            };
+                            if (data.videoInfo.publishedAt) {
+                                updateData.publishedAt = Timestamp.fromDate(new Date(data.videoInfo.publishedAt));
+                            }
+                            return { id: lecture.id, data: updateData };
+                        } else {
+                            console.warn(`Could not update metadata for ${lecture.title}: ${data.message}`);
+                            return null;
+                        }
+                    } catch (error) {
+                        console.error(`Failed to fetch metadata for ${lecture.title}:`, error);
+                        return null;
+                    }
+                });
+
+                const results = await Promise.all(promises);
+                results.forEach(result => {
+                    if (result) {
+                        allUpdateData.set(result.id, result.data);
+                    }
+                });
+            }
+
+            if (allUpdateData.size > 0) {
+                updatedCount = allUpdateData.size;
+                const batch = writeBatch(firestore);
+                allUpdateData.forEach((data, id) => {
+                    const lectureRef = doc(firestore, 'lectures', id);
+                    batch.update(lectureRef, data);
+                });
+                await batch.commit();
+            }
+
+            toast({
+                title: "اكتمل التحديث!",
+                description: `تم تحديث ${updatedCount} محاضرة بنجاح.`,
+            });
+            setSelectedItems([]);
+        } catch (e) {
+            console.error("Error updating selected metadata:", e);
+            toast({
+                variant: "destructive",
+                title: "فشل حفظ التحديثات",
+                description: "حدث خطأ أثناء حفظ البيانات المحدثة.",
+            });
+        }
+
+        setIsUpdatingSelected(false);
+    };
+
     const toggleCollapsible = (seriesName: string) => {
         setOpenCollapsibles(prev => 
             prev.includes(seriesName) 
@@ -549,6 +634,10 @@ export default function AdminLecturesPage() {
                             <Button variant="destructive" onClick={() => setIsBatchConfirmOpen(true)}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 حذف المحدد ({selectedItems.length})
+                            </Button>
+                            <Button variant="outline" onClick={handleUpdateSelectedMetadata} disabled={isUpdatingSelected}>
+                                {isUpdatingSelected ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                تحديث يوتيوب للمحدد ({selectedItems.length})
                             </Button>
                              <Dialog open={isBatchEditOpen} onOpenChange={setIsBatchEditOpen}>
                                 <DialogTrigger asChild>

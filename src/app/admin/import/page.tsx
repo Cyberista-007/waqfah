@@ -24,6 +24,7 @@ interface FetchedVideo {
     description: string;
     durationInSeconds: number;
     publishedAt: string;
+    viewCount?: number;
 }
 
 interface FetchedPlaylist {
@@ -177,7 +178,7 @@ function ImportPageComponent() {
                     programSlug: programToUse!.slug, audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`, duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, rating: 0, ratingCount: 0,
-                    viewCount: 0, youtubeViewCount: 0, transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
+                    viewCount: 0, youtubeViewCount: video.viewCount || 0, transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
                     language: 'ar',
                 });
                 newLecturesCount++;
@@ -221,7 +222,7 @@ function ImportPageComponent() {
                         youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
                         duration: video.durationInSeconds,
                         imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, 
-                        rating: 0, ratingCount: 0, viewCount: 0, youtubeViewCount: 0,
+                        rating: 0, ratingCount: 0, viewCount: 0, youtubeViewCount: video.viewCount || 0,
                         transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
                         language: 'ar',
                     });

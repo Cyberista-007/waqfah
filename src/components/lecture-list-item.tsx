@@ -4,14 +4,14 @@
 import type { Lecture, ListenHistoryItem } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2, Maximize2, Clock, Calendar } from "lucide-react";
+import { Download, Play, Share2, Maximize2, Clock, Calendar, Eye } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { getPlaceholderImage } from "@/lib/images";
-import { cn, formatDuration, getVideoIdFromUrl } from "@/lib/utils";
+import { cn, formatDuration, formatViews, getVideoIdFromUrl } from "@/lib/utils";
 import { useState, memo, useMemo } from "react";
 import { LectureCard } from "./lecture-card";
 
@@ -201,6 +201,12 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                             <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 text-white/80">
                                 <Calendar className="w-4 h-4 text-primary" />
                                 <span>{formattedDate}</span>
+                            </div>
+                        )}
+                        {(lecture.youtubeViewCount ?? 0) > 0 && (
+                            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 text-white/80">
+                                <Eye className="w-4 h-4 text-primary" />
+                                <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
                             </div>
                         )}
                         {lecture.seriesTitle && (
