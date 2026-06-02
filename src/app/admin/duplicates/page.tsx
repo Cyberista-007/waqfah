@@ -251,29 +251,38 @@ export default function DuplicatesManagerPage() {
             }
           });
 
-          // Decrement lectureCount for affected series
+          // 1. PERFORM ALL READS FIRST
+          const seriesDocMap = new Map<string, any>();
           for (const seriesId in seriesUpdateCounts) {
             const seriesRef = doc(firestore, 'series', seriesId);
             const seriesDoc = await transaction.get(seriesRef);
             if (seriesDoc.exists()) {
-              const currentCount = seriesDoc.data().lectureCount || 0;
-              transaction.update(seriesRef, { 
-                lectureCount: Math.max(0, currentCount + seriesUpdateCounts[seriesId]) 
-              });
+              seriesDocMap.set(seriesId, seriesDoc.data());
             }
           }
 
-          // Decrement global stats
           const statsRef = doc(firestore, 'stats', 'global');
           const statsDoc = await transaction.get(statsRef);
+          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
+
+          // 2. PERFORM ALL WRITES SECOND
+          // Update affected series lecture counts
+          seriesDocMap.forEach((data, seriesId) => {
+            const seriesRef = doc(firestore, 'series', seriesId);
+            const currentCount = data.lectureCount || 0;
+            transaction.update(seriesRef, { 
+              lectureCount: Math.max(0, currentCount + seriesUpdateCounts[seriesId]) 
+            });
+          });
+
+          // Update global stats
           if (statsDoc.exists()) {
-            const currentStats = statsDoc.data() || {};
             transaction.update(statsRef, {
               lectures: Math.max(0, (currentStats.lectures || 0) - lecturesToDelete.length)
             });
           }
 
-          // Delete documents
+          // Delete lecture documents
           lecturesToDelete.forEach(lecture => {
             const lRef = doc(firestore, 'lectures', lecture.id);
             transaction.delete(lRef);
@@ -286,37 +295,43 @@ export default function DuplicatesManagerPage() {
         });
 
       } else if (activeTab === "series") {
-        // Deleting series will also delete all their lectures
+        const seriesToDelete = allSeries!.filter(s => selectedIds.includes(s.id));
+        
+        // 1. Fetch all lectures belonging to the selected series outside of transaction
+        const lecturesToDeleteRefs: any[] = [];
+        for (const series of seriesToDelete) {
+          const q = query(collection(firestore, 'lectures'), where("seriesId", "==", series.id));
+          const lecturesSnapshot = await getDocs(q);
+          lecturesSnapshot.docs.forEach((docSnap: any) => {
+            lecturesToDeleteRefs.push(docSnap.ref);
+          });
+        }
+
+        // 2. Run transaction for writes
         await runTransaction(firestore, async (transaction) => {
-          const seriesToDelete = allSeries!.filter(s => selectedIds.includes(s.id));
-          
-          let totalLecturesDeleted = 0;
-
-          for (const series of seriesToDelete) {
-            // Find lectures belonging to this series
-            const lecturesSnapshot = await getDocs(
-              query(collection(firestore, 'lectures'), where("seriesId", "==", series.id))
-            );
-            
-            lecturesSnapshot.docs.forEach((docSnap: any) => {
-              transaction.delete(docSnap.ref);
-              totalLecturesDeleted++;
-            });
-
-            const sRef = doc(firestore, 'series', series.id);
-            transaction.delete(sRef);
-          }
-
-          // Update stats
+          // Read stats first
           const statsRef = doc(firestore, 'stats', 'global');
           const statsDoc = await transaction.get(statsRef);
+          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
+
+          // Update stats
           if (statsDoc.exists()) {
-            const currentStats = statsDoc.data() || {};
             transaction.update(statsRef, {
               series: Math.max(0, (currentStats.series || 0) - seriesToDelete.length),
-              lectures: Math.max(0, (currentStats.lectures || 0) - totalLecturesDeleted)
+              lectures: Math.max(0, (currentStats.lectures || 0) - lecturesToDeleteRefs.length)
             });
           }
+
+          // Delete lectures
+          lecturesToDeleteRefs.forEach(ref => {
+            transaction.delete(ref);
+          });
+
+          // Delete series
+          seriesToDelete.forEach(series => {
+            const sRef = doc(firestore, 'series', series.id);
+            transaction.delete(sRef);
+          });
         });
 
         toast({
@@ -329,20 +344,22 @@ export default function DuplicatesManagerPage() {
         await runTransaction(firestore, async (transaction) => {
           const programsToDelete = allPrograms!.filter(p => selectedIds.includes(p.id));
 
-          programsToDelete.forEach(program => {
-            const pRef = doc(firestore, 'programs', program.id);
-            transaction.delete(pRef);
-          });
-
-          // Update stats
+          // 1. Read stats first
           const statsRef = doc(firestore, 'stats', 'global');
           const statsDoc = await transaction.get(statsRef);
+          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
+
+          // 2. Perform all writes
           if (statsDoc.exists()) {
-            const currentStats = statsDoc.data() || {};
             transaction.update(statsRef, {
               programs: Math.max(0, (currentStats.programs || 0) - programsToDelete.length)
             });
           }
+
+          programsToDelete.forEach(program => {
+            const pRef = doc(firestore, 'programs', program.id);
+            transaction.delete(pRef);
+          });
         });
 
         toast({
