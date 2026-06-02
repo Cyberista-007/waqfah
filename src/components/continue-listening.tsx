@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import type { Lecture, ListenHistoryItem } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
@@ -25,19 +25,29 @@ export function ContinueWatching({ isProfilePage = false }: ContinueWatchingProp
       { orderBy: ['lastListened', 'desc'], limit: 12 }
   );
   
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  const lectureIds = useMemo(() => {
+    if (!listenHistory || listenHistory.length === 0) return [];
+    return listenHistory.map(item => item.lectureId).filter(Boolean).slice(0, 10);
+  }, [listenHistory]);
+
+  const { data: matchedLectures, isLoading: lecturesLoading } = useCollection<Lecture>(
+    lectureIds.length > 0 ? 'lectures' : null,
+    useMemo(() => ({
+      where: ['__name__', 'in', lectureIds]
+    }), [lectureIds])
+  );
 
   useEffect(() => {
-    if (historyLoading || lecturesLoading || !listenHistory || !allLectures) {
-      if (!historyLoading && !lecturesLoading) {
-        setIsLoading(false);
-      }
+    if (historyLoading || lecturesLoading) return;
+    if (!listenHistory) {
+      setIsLoading(false);
       return;
     }
     
+    const lecturesList = matchedLectures || [];
     const inProgressLectures = listenHistory
       .map(item => {
-        const lecture = allLectures.find(l => l.id === item.lectureId);
+        const lecture = lecturesList.find(l => l.id === item.lectureId);
         // Check if lecture exists and is not completed
         if (lecture && item.duration > 0 && (item.duration - item.position) > 10) {
           return lecture;
@@ -46,10 +56,10 @@ export function ContinueWatching({ isProfilePage = false }: ContinueWatchingProp
       })
       .filter((l): l is Lecture => !!l);
       
-    setInProgress(inProgressLectures.slice(0, isProfilePage ? 12 : 3)); // Show more on profile page
+    setInProgress(inProgressLectures.slice(0, isProfilePage ? 10 : 3));
     setIsLoading(false);
 
-  }, [listenHistory, allLectures, historyLoading, lecturesLoading, isProfilePage]);
+  }, [listenHistory, matchedLectures, historyLoading, lecturesLoading, isProfilePage, lectureIds.length]);
 
   if (isLoading) {
     return (

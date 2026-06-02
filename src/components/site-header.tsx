@@ -148,6 +148,7 @@ export function SiteHeader() {
   const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isBackgroundShown, toggleBackground } = useAppearance();
   const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
   const { openSearch } = useSearch();
@@ -225,51 +226,53 @@ export function SiteHeader() {
         )}
       >
         <nav className="relative w-full px-4 sm:px-12 py-3 flex justify-between items-center">
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
-              <div className="flex flex-col h-full bg-background">
-                <div className="p-6 border-b">
-                  <h2 className="text-2xl font-black font-headline text-primary italic">وقـــفــــة</h2>
-                  <p className="text-xs text-muted-foreground mt-1">القائمة الرئيسية للمنصة</p>
-                </div>
-                <ScrollArea className="flex-1 p-4">
-                  <div className="space-y-6">
-                    <div className="space-y-1">
-                      <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">التنقل السريع</p>
-                      {mainNavItems.map(item => (
-                        <SheetClose asChild key={item.href}>
-                          <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-colors font-bold group">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                            {item.label}
-                          </Link>
-                        </SheetClose>
-                      ))}
+              {isMobileMenuOpen && (
+                <div className="flex flex-col h-full bg-background">
+                  <div className="p-6 border-b">
+                    <h2 className="text-2xl font-black font-headline text-primary italic">وقـــفــــة</h2>
+                    <p className="text-xs text-muted-foreground mt-1">القائمة الرئيسية للمنصة</p>
+                  </div>
+                  <ScrollArea className="flex-1 p-4">
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">التنقل السريع</p>
+                        {mainNavItems.map(item => (
+                          <SheetClose asChild key={item.href}>
+                            <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-colors font-bold group">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                              {item.label}
+                            </Link>
+                          </SheetClose>
+                        ))}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">الأقسام الإضافية</p>
+                        {dynamicMoreNavItems.map(item => (
+                          <SheetClose asChild key={item.href}>
+                            <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-muted transition-colors text-sm font-medium">
+                              {item.icon && <item.icon className="h-5 w-5 text-muted-foreground" />}
+                              {item.label}
+                            </Link>
+                          </SheetClose>
+                        ))}
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">الأقسام الإضافية</p>
-                      {dynamicMoreNavItems.map(item => (
-                        <SheetClose asChild key={item.href}>
-                          <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-muted transition-colors text-sm font-medium">
-                            {item.icon && <item.icon className="h-5 w-5 text-muted-foreground" />}
-                            {item.label}
-                          </Link>
-                        </SheetClose>
-                      ))}
+                  </ScrollArea>
+                  <div className="p-4 border-t bg-muted/30">
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsThemeSwitcherOpen(true)}>ثيمات</Button>
+                      <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsFontSwitcherOpen(true)}>الخطوط</Button>
                     </div>
                   </div>
-                </ScrollArea>
-                <div className="p-4 border-t bg-muted/30">
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsThemeSwitcherOpen(true)}>ثيمات</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsFontSwitcherOpen(true)}>الخطوط</Button>
-                  </div>
                 </div>
-              </div>
+              )}
             </SheetContent>
           </Sheet>
 
@@ -495,10 +498,10 @@ export function SiteHeader() {
           })}
       </motion.div>
 
-      <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
-      <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
-      <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />
-      <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
+      {isThemeSwitcherOpen && <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />}
+      {isFontSwitcherOpen && <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />}
+      {isSolidColorSwitcherOpen && <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />}
+      {isLanguageSwitcherOpen && <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />}
     </>
   )
 }

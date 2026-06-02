@@ -19,7 +19,8 @@ interface SeriesCardProps {
 }
 
 const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardProps) => {
-    const { data: lectures } = useCollection<Lecture>('lectures', {
+    const shouldFetch = !series.imageId;
+    const { data: lectures } = useCollection<Lecture>(shouldFetch ? 'lectures' : null, {
         where: ['seriesId', '==', series.id],
         limit: 1
     });

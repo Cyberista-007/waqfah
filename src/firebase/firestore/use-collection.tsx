@@ -31,7 +31,7 @@ export interface UseCollectionResult<T> {
 export interface CollectionOptions {
     orderBy?: [string, 'asc' | 'desc'];
     limit?: number;
-    where?: [string, '==' | '!=' | '<' | '<=' | '>' | '>=', any];
+    where?: [string, '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'not-in' | 'array-contains' | 'array-contains-any', any];
 }
 
 /**
