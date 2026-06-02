@@ -119,7 +119,7 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
                 setCurrentTime(time);
                 if (onTimeUpdate) onTimeUpdate(time);
               }
-            }, 250);
+            }, 1000);
           },
           onStateChange: (event: any) => {
             // 0 = ended, 1 = playing, 2 = paused
@@ -194,7 +194,7 @@ export function Html5Player({ videoId, title, thumbnailUrl, className, startTime
     >
       {/* 🔮 High-End Cinematic AmbiLight Aura (Refined) */}
       {auraImageUrl && mounted && (
-        <div className="absolute inset-[-15%] z-0 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-700">
+        <div className="absolute inset-[-15%] z-0 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-700 hidden md:block">
           {/* Layer 1: Intense Core Glow */}
           <motion.img
             src={auraImageUrl}

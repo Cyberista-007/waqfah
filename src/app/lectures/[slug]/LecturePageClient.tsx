@@ -86,12 +86,16 @@ export default function LecturePageClient() {
     fetchPlaylistContext();
   }, [playlistId, firestore]);
 
-  const { data: relatedLectures, isLoading: relatedLoading } = useCollection<Lecture>('lectures', {
-    where: ['seriesId', '==', (!playlistId && lecture?.seriesId) ? lecture.seriesId : 'none'],
-    limit: 10
-  });
+  const shouldFetchRelated = !playlistId && !!lecture?.seriesId;
+  const { data: relatedLectures, isLoading: relatedLoading } = useCollection<Lecture>(
+    shouldFetchRelated ? 'lectures' : null,
+    useMemo(() => ({
+      where: ['seriesId', '==', lecture?.seriesId || ''],
+      limit: 10
+    }), [lecture?.seriesId])
+  );
 
-  const isLoading = lectureLoading || isPlaylistLoading || (!!lecture && !playlistId && relatedLoading);
+  const isLoading = lectureLoading || isPlaylistLoading || (shouldFetchRelated && relatedLoading);
 
   useEffect(() => {
     if (lecture) {

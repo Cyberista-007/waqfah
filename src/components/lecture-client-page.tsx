@@ -75,7 +75,6 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
-  const playerSeekRef = useRef<((t: number) => void) | null>(null);
 
   const [videoDuration, setVideoDuration] = useState(0);
 
@@ -260,7 +259,6 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
         }
         
         let path = window.location.href.split('?')[0];
-        // If there's a timestamp, set it
         if (t > 0) path += `?t=${t}`;
         setShareUrl(path);
     }
@@ -309,37 +307,48 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const shareText = `استمع إلى محاضرة "${lecture.title}"`;
 
   const handleCopyLink = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const path = window.location.href.split('?')[0];
+    const time = videoPlayerRef.current?.getCurrentTime 
+      ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
+      : playerCurrentTime;
+    const currentShareUrl = time > 0 ? `${path}?t=${time}` : path;
+
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(currentShareUrl);
       toast({ title: 'تم نسخ الرابط!' });
     } catch (err) {
       toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
     }
-  }, [shareUrl, toast]);
+  }, [playerCurrentTime, videoPlayerRef, toast]);
 
-    // Update share URL whenever time changes if it's playing
-    useEffect(() => {
-        if (playerCurrentTime > 0 && typeof window !== 'undefined') {
-             const path = window.location.href.split('?')[0];
-             setShareUrl(`${path}?t=${Math.floor(playerCurrentTime)}`);
-        }
-    }, [playerCurrentTime]);
+  const handleShare = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const path = window.location.href.split('?')[0];
+    const time = videoPlayerRef.current?.getCurrentTime 
+      ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
+      : playerCurrentTime;
+    const currentShareUrl = time > 0 ? `${path}?t=${time}` : path;
 
-    const handleShare = useCallback(async () => {
-        if (typeof navigator !== 'undefined' && navigator.share) {
-          try {
-            await navigator.share({
-              title: shareText,
-              text: shareText,
-              url: shareUrl,
-            });
-          } catch (error) {
-            console.log('Share was cancelled or failed.', error);
-          }
-        } else {
-          handleCopyLink();
-        }
-    }, [shareText, shareUrl, handleCopyLink]);
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareText,
+          text: shareText,
+          url: currentShareUrl,
+        });
+      } catch (error) {
+        console.log('Share was cancelled or failed.', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(currentShareUrl);
+        toast({ title: 'تم نسخ الرابط!' });
+      } catch (err) {
+        toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
+      }
+    }
+  }, [shareText, playerCurrentTime, videoPlayerRef, toast]);
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -418,7 +427,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   return (
     <>
     {/* 🎭 Cinematic Backdrop Glow */}
-    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden hidden md:block">
         <div 
             className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[160px] opacity-40 animate-pulse-subtle"
             style={{ animationDuration: '8s' }}
@@ -829,7 +838,19 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
             <LectureChapters
               chapters={lecture.chapters}
               currentTime={playerCurrentTime}
-              onSeek={(t) => playerSeekRef.current?.(t)}
+              onSeek={(t) => {
+                if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+                  try {
+                    videoPlayerRef.current.seekTo(t, true);
+                    const playerState = videoPlayerRef.current.getPlayerState();
+                    if (playerState !== 1) {
+                      videoPlayerRef.current.playVideo();
+                    }
+                  } catch (e) {
+                    console.error("Error seeking via chapter click:", e);
+                  }
+                }
+              }}
             />
           </div>
         )}
