@@ -1,12 +1,10 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRadio, RadioStation } from '@/components/radio-provider';
-import { useCollection } from '@/firebase';
-import type { Lecture } from '@/lib/types';
 
 const getYoutubeId = (url: string): string | null => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|live\/)([^#&?]{11}).*/;
   const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  return match ? match[2] : null;
 };
 
 export function useQuranRadio() {
@@ -28,24 +26,24 @@ export function useQuranRadio() {
   const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
   const [isLoadingRadios, setIsLoadingRadios] = useState<boolean>(false);
 
-  // Fetch imported lectures from firestore
-  const { data: allLectures } = useCollection<Lecture>('lectures');
+  // Fetch imported YouTube lectures via lightweight API (avoids loading all lectures from Firestore)
+  const [importedRadioStations, setImportedRadioStations] = useState<RadioStation[]>([]);
+  const [isLoadingImported, setIsLoadingImported] = useState(false);
 
-  const importedRadioStations = useMemo(() => {
-    if (!allLectures) return [];
-    return allLectures
-      .filter((l) => l.youtubeUrl && getYoutubeId(l.youtubeUrl))
-      .map((l) => ({
-        id: `imported_${l.id}`,
-        name: l.title,
-        subtitle: l.programName || 'محاضرة مستوردة',
-        url: l.youtubeUrl!,
-        icon: '🎥',
-        color: 'from-rose-500/20 to-rose-950/40',
-        borderColor: 'border-rose-500/30',
-        textColor: 'text-rose-400'
-      }));
-  }, [allLectures]);
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingImported(true);
+    fetch('/api/radio-stations')
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled && data.stations) {
+          setImportedRadioStations(data.stations as RadioStation[]);
+        }
+      })
+      .catch(err => console.warn('[radio-stations fetch]', err))
+      .finally(() => { if (!cancelled) setIsLoadingImported(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Web Audio API Refs for Recording & Real Visualizer ──
   const audioContextRef = useRef<AudioContext | null>(null);
