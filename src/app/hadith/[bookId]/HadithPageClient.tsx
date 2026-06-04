@@ -143,16 +143,31 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [isListening, setIsListening] = useState(false);
   const voiceRecognitionRef = useRef<any>(null);
   
-  // Pre-fetch/cache voices on mount and listen to voiceschanged
+  // Load Arabic voices and settings
   useEffect(() => {
+    try {
+      const savedVoice = localStorage.getItem('hadith_speech_voice');
+      if (savedVoice) setSelectedVoiceName(savedVoice);
+      const savedStrip = localStorage.getItem('hadith_strip_tashkeel');
+      if (savedStrip) setStripTashkeel(savedStrip === 'true');
+    } catch (e) {}
+
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-      const handleVoicesChanged = () => {
-        window.speechSynthesis.getVoices();
+      const updateVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const ar = voices.filter(v => v.lang.toLowerCase().startsWith('ar'));
+        setAvailableVoices(ar);
+        
+        const savedVoice = localStorage.getItem('hadith_speech_voice');
+        if (!savedVoice && ar.length > 0) {
+          setSelectedVoiceName(ar[0].name);
+        }
       };
-      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      
+      updateVoices();
+      window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
       return () => {
-        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+        window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
       };
     }
   }, []);
@@ -165,6 +180,9 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
   const [playingHadithId, setPlayingHadithId] = useState<number | null>(null);
   
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [stripTashkeel, setStripTashkeel] = useState<boolean>(false);
   const [hadithNotes, setHadithNotes] = useState<Record<string, { note: string; hadithText: string; bookName: string; sectionId: string }>>({});
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [noteInputValue, setNoteInputValue] = useState('');
@@ -282,7 +300,7 @@ export default function HadithPageClient({ params }: { params: any }) {
 
   const togglePlayHadith = (h: Hadith) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
-      toast({ title: 'البث الصوتي غير مدعوم في متصفحك' });
+      toast({ title: 'نظام القراءة الصوتية غير مدعوم في متصفحك حالياً.' });
       return;
     }
     
@@ -293,25 +311,23 @@ export default function HadithPageClient({ params }: { params: any }) {
       window.speechSynthesis.cancel();
       setPlayingHadithId(h.hadithnumber);
       
-      const cleanText = h.text
-          .replace(/ﷺ/g, 'صلى الله عليه وسلم')
-          .replace(/ؓ/g, 'رضي الله عنه')
-          .replace(/[\u064B-\u0652\u0670]/g, '') // remove tashkeel (diacritics) for smooth speech flow
-          .replace(/[()[\]{}«»﴿﴾]/g, ' ') // remove special bracket symbols that cause stuttering
-          .replace(/\s+/g, ' ')
-          .trim();
+      let cleanText = h.text
+        .replace(/ﷺ/g, 'صلى الله عليه وسلم')
+        .replace(/ؓ/g, 'رضي الله عنه')
+        .replace(/[()[\]{}«»''""]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+        
+      if (stripTashkeel) {
+        cleanText = cleanText.replace(/[\u064B-\u0652\u0670]/g, '');
+      }
+
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ar-SA';
       
       const voices = window.speechSynthesis.getVoices();
-        const arVoices = voices.filter(v => v.lang.toLowerCase().startsWith('ar'));
-        let bestVoice = arVoices.find(v => v.name.toLowerCase().includes('natural'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('google'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('shakir') || v.name.toLowerCase().includes('salma'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('maged') || v.name.toLowerCase().includes('laila') || v.name.toLowerCase().includes('tarif'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('online'));
-        if (!bestVoice) bestVoice = arVoices[0];
-        if (bestVoice) utterance.voice = bestVoice;
+      const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
+      if (chosenVoice) utterance.voice = chosenVoice;
       
       utterance.onend = () => setPlayingHadithId(null);
       utterance.onerror = () => setPlayingHadithId(null);
@@ -617,23 +633,81 @@ export default function HadithPageClient({ params }: { params: any }) {
                  </div>
               </div>
               <AnimatePresence>
-                {showSettings && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 rounded-[2.5rem] bg-zinc-900 border border-white/10 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div><label>حجم الخط: {fontSize}px</label><input type="range" min="20" max="80" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} className="w-full h-2 bg-white/5 rounded-lg accent-amber-500" /></div>
-                       <div className="flex gap-2"> {['font-headline', 'font-sans', 'font-serif'].map(f => (
-                         <button 
-                           key={f} 
-                           onClick={() => setFontFamily(f)} 
-                           className={cn("px-4 py-2 rounded-xl text-[10px] font-black border", fontFamily === f ? "bg-white text-black border-white" : "bg-white/5 border-white/10 text-white/60")}
-                         >
-                           {f === 'font-headline' ? 'خط العناوين' : f === 'font-sans' ? 'خط بسيط' : 'خط كلاسيكي'}
-                         </button>
-                       ))}</div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  {showSettings && (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-8 rounded-[2.5rem] bg-zinc-900 border border-white/10 space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div className="space-y-2">
+                           <label className="text-xs font-black text-white/60 block text-right">حجم خط الحديث: {fontSize}px</label>
+                           <input type="range" min="20" max="80" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} className="w-full h-2 bg-white/5 rounded-lg accent-amber-500" />
+                         </div>
+                         <div className="space-y-2">
+                           <label className="text-xs font-black text-white/60 block text-right">نوع الخط العربي:</label>
+                           <div className="flex gap-2 justify-end"> {['font-headline', 'font-sans', 'font-serif'].map(f => (
+                             <button 
+                               key={f} 
+                               onClick={() => setFontFamily(f)} 
+                               className={cn("px-4 py-2 rounded-xl text-[10px] font-black border transition-all", fontFamily === f ? "bg-white text-black border-white" : "bg-white/5 border-white/10 text-white/60")}
+                             >
+                               {f === 'font-headline' ? 'خط العناوين' : f === 'font-sans' ? 'خط بسيط' : 'خط كلاسيكي'}
+                             </button>
+                           ))}</div>
+                         </div>
+                      </div>
+
+                      <div className="w-full h-[1px] bg-white/5" />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8" dir="rtl">
+                         <div className="space-y-2 text-right">
+                           <label className="text-xs font-black text-white/60 block mb-2">القارئ الصوتي للحديث:</label>
+                           <select
+                             value={selectedVoiceName}
+                             onChange={(e) => {
+                               setSelectedVoiceName(e.target.value);
+                               localStorage.setItem('hadith_speech_voice', e.target.value);
+                             }}
+                             className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 text-xs text-white outline-none focus:border-amber-500/50 transition-all font-bold font-sans"
+                           >
+                             {availableVoices.length === 0 ? (
+                               <option value="">الصوت الافتراضي للنظام</option>
+                             ) : (
+                               availableVoices.map(v => (
+                                 <option key={v.name} value={v.name}>
+                                   {v.name.toLowerCase().includes('natural') ? '🎙️ ' : '🤖 '}
+                                   {v.name.replace('Microsoft', '').replace('Google', '').replace('Speech', '').trim()} 
+                                   {v.localService ? ' (محلي - بدون تقطيع)' : ' (سحابي)'}
+                                 </option>
+                               ))
+                             )}
+                           </select>
+                         </div>
+                         <div className="space-y-4 text-right flex flex-col justify-center">
+                           <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5">
+                             <span className="text-xs font-black text-white/80">نطق الحديث بالتشكيل الكامل</span>
+                             <button
+                               onClick={() => {
+                                 const next = !stripTashkeel;
+                                 setStripTashkeel(next);
+                                 localStorage.setItem('hadith_strip_tashkeel', String(next));
+                               }}
+                               className={cn(
+                                 "w-12 h-6 rounded-full transition-all relative flex items-center px-1 border border-white/10",
+                                 !stripTashkeel ? "bg-amber-500" : "bg-white/5"
+                               )}
+                             >
+                               <span className={cn(
+                                 "w-4 h-4 rounded-full bg-white transition-all absolute",
+                                 !stripTashkeel ? "right-1" : "left-1"
+                               )} />
+                             </button>
+                           </div>
+                           <p className="text-[10px] text-white/30 leading-relaxed">
+                             * ملحوظة: الأصوات السحابية (التي تحتوي على علامة الميكروفون) تكون ممتازة ونبرتها طبيعية ولكنها قد تتقطع في النطق إذا كان الاتصال بالإنترنت ضعيفاً. في هذه الحالة يرجى اختيار صوت محلي (الذي يحتوي على علامة الروبوت) لتفادي التقطيع تماماً.
+                           </p>
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               <div className="flex flex-col gap-8">
                 {loadingHadiths ? ( Array(3).fill(0).map((_, i) => <div key={i} className="h-64 rounded-[3rem] bg-white/5 animate-pulse" />) ) : (
                   filteredHadiths.map((h) => (

@@ -169,7 +169,7 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
   // --- Audio Looping Handler ---
   const startSpeech = () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
-      toast({ title: 'ميزة استماع الصوت غير مدعومة في متصفحك الحالي.' });
+      toast({ title: 'نظام القراءة الصوتية غير مدعوم في متصفحك حالياً.' });
       return;
     }
 
@@ -178,12 +178,12 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
     setCurrentLoop(1);
 
     const cleanText = text
-        .replace(/ﷺ/g, 'صلى الله عليه وسلم')
-        .replace(/ؓ/g, 'رضي الله عنه')
-        .replace(/[\u064B-\u0652\u0670]/g, '') // remove tashkeel (diacritics) for smooth speech flow
-        .replace(/[()[\]{}«»﴿﴾]/g, ' ') // remove special bracket symbols that cause stuttering
-        .replace(/\s+/g, ' ')
-        .trim();
+      .replace(/ﷺ/g, 'صلى الله عليه وسلم')
+      .replace(/ؓ/g, 'رضي الله عنه')
+      .replace(/[()[\]{}«»''""]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     runSpeechLoop(cleanText, loopCount);
   };
 
@@ -192,27 +192,25 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
 
     let loopIndex = 1;
     const speak = () => {
-      if (!isPlaying && loopIndex > 1) return;
+      const savedStrip = localStorage.getItem('hadith_strip_tashkeel') === 'true';
+      let cleanText = speechText;
+      if (savedStrip) {
+        cleanText = speechText.replace(/[\u064B-\u0652\u0670]/g, '');
+      }
       
-      const utterance = new SpeechSynthesisUtterance(speechText);
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ar-SA';
       utterance.rate = speechRate;
       
       const voices = window.speechSynthesis.getVoices();
-        const arVoices = voices.filter(v => v.lang.toLowerCase().startsWith('ar'));
-        let bestVoice = arVoices.find(v => v.name.toLowerCase().includes('natural'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('google'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('shakir') || v.name.toLowerCase().includes('salma'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('maged') || v.name.toLowerCase().includes('laila') || v.name.toLowerCase().includes('tarif'));
-        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('online'));
-        if (!bestVoice) bestVoice = arVoices[0];
-        if (bestVoice) utterance.voice = bestVoice;
+      const savedVoice = localStorage.getItem('hadith_speech_voice');
+      const chosenVoice = voices.find(v => v.name === savedVoice) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
+      if (chosenVoice) utterance.voice = chosenVoice;
 
       utterance.onend = () => {
         if (loopIndex < totalLoops && isPlaying) {
           loopIndex++;
           setCurrentLoop(loopIndex);
-          // Insert a small pause between loops for mental retention
           setTimeout(speak, 1500);
         } else {
           setIsPlaying(false);
