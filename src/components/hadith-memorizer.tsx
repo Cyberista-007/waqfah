@@ -80,7 +80,93 @@ interface MaskedWord {
   isRevealed: boolean;
 }
 
+class GoogleTTSPlayer {
+  private audioChunks: string[] = [];
+  private currentChunkIndex = 0;
+  private audio: HTMLAudioElement | null = null;
+  private isPlaying = false;
+  private speed = 1.0;
+  private onEndCallback: () => void = () => {};
+  private onErrorCallback: () => void = () => {};
+
+  constructor(text: string, speed: number, onEnd: () => void, onError: () => void) {
+    this.speed = speed;
+    this.onEndCallback = onEnd;
+    this.onErrorCallback = onError;
+    this.audioChunks = this.splitTextIntoChunks(text, 150);
+  }
+
+  private splitTextIntoChunks(text: string, maxLength: number): string[] {
+    const words = text.split(' ');
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    for (const word of words) {
+      if ((currentChunk + ' ' + word).trim().length > maxLength) {
+        if (currentChunk) chunks.push(currentChunk.trim());
+        currentChunk = word;
+      } else {
+        currentChunk = (currentChunk + ' ' + word).trim();
+      }
+    }
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  }
+
+  public play() {
+    this.isPlaying = true;
+    this.currentChunkIndex = 0;
+    this.playNextChunk();
+  }
+
+  private playNextChunk() {
+    if (!this.isPlaying) return;
+
+    if (this.currentChunkIndex >= this.audioChunks.length) {
+      this.isPlaying = false;
+      this.onEndCallback();
+      return;
+    }
+
+    const chunk = this.audioChunks[this.currentChunkIndex];
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+    
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+    }
+
+    this.audio = new Audio(url);
+    this.audio.defaultPlaybackRate = this.speed;
+    this.audio.playbackRate = this.speed;
+    
+    this.audio.onended = () => {
+      this.currentChunkIndex++;
+      this.playNextChunk();
+    };
+
+    this.audio.onerror = () => {
+      this.isPlaying = false;
+      this.onErrorCallback();
+    };
+
+    this.audio.play().catch(() => {
+      this.isPlaying = false;
+      this.onErrorCallback();
+    });
+  }
+
+  public stop() {
+    this.isPlaying = false;
+    if (this.audio) {
+      this.audio.pause();
+      this.audio = null;
+    }
+  }
+}
+
 export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerProps) {
+    const googleTTSRef = useRef<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'masking' | 'looping' | 'test'>('masking');
   const { toast } = useToast();
@@ -191,43 +277,73 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
     if (typeof window === 'undefined') return;
 
     let loopIndex = 1;
-    const speak = () => {
-      const savedStrip = localStorage.getItem('hadith_strip_tashkeel') === 'true';
-      let cleanText = speechText;
-      if (savedStrip) {
-        cleanText = speechText.replace(/[\u064B-\u0652\u0670]/g, '');
-      }
-      
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'ar-SA';
-      utterance.rate = speechRate;
-      
-      const voices = window.speechSynthesis.getVoices();
-      const savedVoice = localStorage.getItem('hadith_speech_voice');
-      const chosenVoice = voices.find(v => v.name === savedVoice) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
-      if (chosenVoice) utterance.voice = chosenVoice;
+    const savedVoice = localStorage.getItem('hadith_speech_voice') || 'google-cloud-tts';
 
-      utterance.onend = () => {
-        if (loopIndex < totalLoops && isPlaying) {
-          loopIndex++;
-          setCurrentLoop(loopIndex);
-          setTimeout(speak, 1500);
-        } else {
+    if (savedVoice === 'google-cloud-tts') {
+      const playNextLoop = () => {
+        const savedStrip = localStorage.getItem('hadith_strip_tashkeel') === 'true';
+        let cleanText = speechText;
+        if (savedStrip) {
+          cleanText = speechText.replace(/[\u064B-\u0652\u0670]/g, '');
+        }
+
+        const player = new GoogleTTSPlayer(cleanText, speechRate, () => {
+          if (loopIndex < totalLoops && isPlaying) {
+            loopIndex++;
+            setCurrentLoop(loopIndex);
+            setTimeout(playNextLoop, 1500);
+          } else {
+            setIsPlaying(false);
+            setCurrentLoop(1);
+          }
+        }, () => {
           setIsPlaying(false);
           setCurrentLoop(1);
+        });
+
+        googleTTSRef.current = player;
+        player.play();
+      };
+      
+      playNextLoop();
+    } else {
+      const speak = () => {
+        const savedStrip = localStorage.getItem('hadith_strip_tashkeel') === 'true';
+        let cleanText = speechText;
+        if (savedStrip) {
+          cleanText = speechText.replace(/[\u064B-\u0652\u0670]/g, '');
         }
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ar-SA';
+        utterance.rate = speechRate;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const chosenVoice = voices.find(v => v.name === savedVoice) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
+        if (chosenVoice) utterance.voice = chosenVoice;
+
+        utterance.onend = () => {
+          if (loopIndex < totalLoops && isPlaying) {
+            loopIndex++;
+            setCurrentLoop(loopIndex);
+            setTimeout(speak, 1500);
+          } else {
+            setIsPlaying(false);
+            setCurrentLoop(1);
+          }
+        };
+
+        utterance.onerror = () => {
+          setIsPlaying(false);
+          setCurrentLoop(1);
+        };
+
+        speechUtteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
       };
 
-      utterance.onerror = () => {
-        setIsPlaying(false);
-        setCurrentLoop(1);
-      };
-
-      speechUtteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
-    };
-
-    speak();
+      speak();
+    }
   };
 
   const stopSpeech = () => {

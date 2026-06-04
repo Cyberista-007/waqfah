@@ -127,6 +127,91 @@ const GLOBAL_BOOKS_CONFIG: any = {
   'riyadussaliheen': { name: 'رياض الصالحين', subtitle: 'من كلام سيد المرسلين', color: 'text-cyan-400', bg: 'from-cyan-600/20' }
 };
 
+class GoogleTTSPlayer {
+  private audioChunks: string[] = [];
+  private currentChunkIndex = 0;
+  private audio: HTMLAudioElement | null = null;
+  private isPlaying = false;
+  private speed = 1.0;
+  private onEndCallback: () => void = () => {};
+  private onErrorCallback: () => void = () => {};
+
+  constructor(text: string, speed: number, onEnd: () => void, onError: () => void) {
+    this.speed = speed;
+    this.onEndCallback = onEnd;
+    this.onErrorCallback = onError;
+    this.audioChunks = this.splitTextIntoChunks(text, 150);
+  }
+
+  private splitTextIntoChunks(text: string, maxLength: number): string[] {
+    const words = text.split(' ');
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    for (const word of words) {
+      if ((currentChunk + ' ' + word).trim().length > maxLength) {
+        if (currentChunk) chunks.push(currentChunk.trim());
+        currentChunk = word;
+      } else {
+        currentChunk = (currentChunk + ' ' + word).trim();
+      }
+    }
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  }
+
+  public play() {
+    this.isPlaying = true;
+    this.currentChunkIndex = 0;
+    this.playNextChunk();
+  }
+
+  private playNextChunk() {
+    if (!this.isPlaying) return;
+
+    if (this.currentChunkIndex >= this.audioChunks.length) {
+      this.isPlaying = false;
+      this.onEndCallback();
+      return;
+    }
+
+    const chunk = this.audioChunks[this.currentChunkIndex];
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+    
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+    }
+
+    this.audio = new Audio(url);
+    this.audio.defaultPlaybackRate = this.speed;
+    this.audio.playbackRate = this.speed;
+    
+    this.audio.onended = () => {
+      this.currentChunkIndex++;
+      this.playNextChunk();
+    };
+
+    this.audio.onerror = () => {
+      this.isPlaying = false;
+      this.onErrorCallback();
+    };
+
+    this.audio.play().catch(() => {
+      this.isPlaying = false;
+      this.onErrorCallback();
+    });
+  }
+
+  public stop() {
+    this.isPlaying = false;
+    if (this.audio) {
+      this.audio.pause();
+      this.audio = null;
+    }
+  }
+}
+
 export default function HadithPageClient({ params }: { params: any }) {
   const unwrappedParams = use(params) as any;
   const rawBookId = unwrappedParams.bookId || 'bukhari';
@@ -147,7 +232,11 @@ export default function HadithPageClient({ params }: { params: any }) {
   useEffect(() => {
     try {
       const savedVoice = localStorage.getItem('hadith_speech_voice');
-      if (savedVoice) setSelectedVoiceName(savedVoice);
+      if (savedVoice) {
+        setSelectedVoiceName(savedVoice);
+      } else {
+        setSelectedVoiceName('google-cloud-tts');
+      }
       const savedStrip = localStorage.getItem('hadith_strip_tashkeel');
       if (savedStrip) setStripTashkeel(savedStrip === 'true');
     } catch (e) {}
@@ -180,9 +269,19 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
   const [playingHadithId, setPlayingHadithId] = useState<number | null>(null);
   
+  const googleTTSRef = useRef<any>(null);
   const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [stripTashkeel, setStripTashkeel] = useState<boolean>(false);
+
+  // Cleanup Google Cloud TTS player on unmount
+  useEffect(() => {
+    return () => {
+      if (googleTTSRef.current) {
+        googleTTSRef.current.stop();
+      }
+    };
+  }, []);
   const [hadithNotes, setHadithNotes] = useState<Record<string, { note: string; hadithText: string; bookName: string; sectionId: string }>>({});
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [noteInputValue, setNoteInputValue] = useState('');
@@ -299,11 +398,13 @@ export default function HadithPageClient({ params }: { params: any }) {
   };
 
   const togglePlayHadith = (h: Hadith) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      toast({ title: 'نظام القراءة الصوتية غير مدعوم في متصفحك حالياً.' });
-      return;
+    if (typeof window === 'undefined') return;
+
+    if (googleTTSRef.current) {
+      googleTTSRef.current.stop();
+      googleTTSRef.current = null;
     }
-    
+
     if (playingHadithId === h.hadithnumber) {
       window.speechSynthesis.cancel();
       setPlayingHadithId(null);
@@ -322,17 +423,32 @@ export default function HadithPageClient({ params }: { params: any }) {
         cleanText = cleanText.replace(/[\u064B-\u0652\u0670]/g, '');
       }
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'ar-SA';
-      
-      const voices = window.speechSynthesis.getVoices();
-      const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
-      if (chosenVoice) utterance.voice = chosenVoice;
-      
-      utterance.onend = () => setPlayingHadithId(null);
-      utterance.onerror = () => setPlayingHadithId(null);
-      
-      window.speechSynthesis.speak(utterance);
+      if (selectedVoiceName === 'google-cloud-tts') {
+        const player = new GoogleTTSPlayer(cleanText, 1.0, () => {
+          setPlayingHadithId(null);
+        }, () => {
+          setPlayingHadithId(null);
+        });
+        googleTTSRef.current = player;
+        player.play();
+      } else {
+        if (!window.speechSynthesis) {
+          toast({ title: 'نظام القراءة الصوتية غير مدعوم في متصفحك حالياً.' });
+          setPlayingHadithId(null);
+          return;
+        }
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ar-SA';
+        
+        const voices = window.speechSynthesis.getVoices();
+        const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('ar')) || voices[0];
+        if (chosenVoice) utterance.voice = chosenVoice;
+        
+        utterance.onend = () => setPlayingHadithId(null);
+        utterance.onerror = () => setPlayingHadithId(null);
+        
+        window.speechSynthesis.speak(utterance);
+      }
     }
   };
 
@@ -667,17 +783,14 @@ export default function HadithPageClient({ params }: { params: any }) {
                              }}
                              className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 text-xs text-white outline-none focus:border-amber-500/50 transition-all font-bold font-sans"
                            >
-                             {availableVoices.length === 0 ? (
-                               <option value="">الصوت الافتراضي للنظام</option>
-                             ) : (
-                               availableVoices.map(v => (
-                                 <option key={v.name} value={v.name}>
-                                   {v.name.toLowerCase().includes('natural') ? '🎙️ ' : '🤖 '}
-                                   {v.name.replace('Microsoft', '').replace('Google', '').replace('Speech', '').trim()} 
-                                   {v.localService ? ' (محلي - بدون تقطيع)' : ' (سحابي)'}
-                                 </option>
-                               ))
-                             )}
+                             <option value="google-cloud-tts">🎙️ قارئ جوجل السحابي (صوت احترافي)</option>
+                             {availableVoices.map(v => (
+                               <option key={v.name} value={v.name}>
+                                 {v.name.toLowerCase().includes('natural') ? '🎙️ ' : '🤖 '}
+                                 {v.name.replace('Microsoft', '').replace('Google', '').replace('Speech', '').trim()} 
+                                 {v.localService ? ' (محلي - بدون تقطيع)' : ' (سحابي)'}
+                               </option>
+                             ))}
                            </select>
                          </div>
                          <div className="space-y-4 text-right flex flex-col justify-center">
