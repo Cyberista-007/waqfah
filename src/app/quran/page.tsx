@@ -130,10 +130,6 @@ export default function QuranPage() {
     stopRecording,
     handleAddCustomRadio
   } = useQuranRadio();
-  const setCurrentRadioStation = (_: any) => {};
-  const setIsPlayingRadio = (_: any) => {};
-  const setIsRadioBuffering = (_: any) => {};
-  const setActiveYoutubeId = (_: any) => {};
 
   const [activeCollection, setActiveCollection] = useState(QURAN_DATA[0].id);
   const [activeTopic, setActiveTopic] = useState('all');
@@ -208,6 +204,16 @@ export default function QuranPage() {
   const voiceRecognitionRef = useRef<any>(null);
   const [searchFilter, setSearchFilter] = useState<'all' | 'surahs' | 'verses' | 'tafseer'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Synchronize Radio & Quran Recitation: pause verse player when radio plays
+  useEffect(() => {
+    if (isPlayingRadio) {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  }, [isPlayingRadio]);
 
   // ── Phase 3: Brand New Optimized & Developed Features States ──
   const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
@@ -291,6 +297,17 @@ export default function QuranPage() {
     if (savedSpeed) setPlaybackSpeed(parseFloat(savedSpeed));
     if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
     if (savedPlayMode) setPlayMode(savedPlayMode as any);
+  }, []);
+
+  // Handle tab routing from URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'radio') {
+        setView('radio');
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -396,15 +413,11 @@ export default function QuranPage() {
       setSleepTimerRemaining(prev => {
         if (prev <= 1) {
           // Time's up - stop all audio
-          if (radioAudioRef.current) { radioAudioRef.current.pause(); }
-          if (audioRef.current) { audioRef.current.pause(); setIsPlaying(false); }
-          
-          // Stop YouTube too
-          const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+          stopRadio();
+          if (audioRef.current) {
+            audioRef.current.pause();
+            setIsPlaying(false);
           }
-          setIsPlayingRadio(false);
 
           clearInterval(sleepTimerRef.current!);
           sleepTimerRef.current = null;
@@ -414,7 +427,7 @@ export default function QuranPage() {
         return prev - 1;
       });
     }, 1000);
-  }, [activeYoutubeId]);
+  }, [stopRadio, setIsPlaying]);
 
   const cancelSleepTimer = useCallback(() => {
     if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
@@ -885,8 +898,7 @@ export default function QuranPage() {
 
     // Stop radio if playing
     if (isPlayingRadio) {
-      setIsPlayingRadio(false);
-      radioAudioRef.current?.pause();
+      stopRadio();
     }
 
     setCurrentAudio(verse);
@@ -896,7 +908,7 @@ export default function QuranPage() {
       audioRef.current.playbackRate = playbackSpeed;
       audioRef.current.play();
     }
-  }, [selectedReciter, isPlaying, currentAudio, playbackSpeed, isPlayingRadio]);
+  }, [selectedReciter, isPlaying, currentAudio, playbackSpeed, isPlayingRadio, stopRadio]);
 
 
 
@@ -1588,7 +1600,7 @@ export default function QuranPage() {
 
       <div className="container relative z-10 px-4 pt-24">
         {/* ═══ Contextual Toolbar ═══ */}
-        <div className={cn("mb-10 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none")}>
+        <div className={cn("mb-10 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all", (isReadingMode || view === 'radio') && "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none")}>
           <div className="flex flex-wrap items-center gap-4 justify-center">
             {/* Tafseer Selector */}
             <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
@@ -1754,7 +1766,7 @@ export default function QuranPage() {
         </div>
 
         {/* ── Recent Surahs ── */}
-        {!isReadingMode && !selectedSurah && recentSurahs.length > 0 && (
+        {!isReadingMode && !selectedSurah && view !== 'radio' && recentSurahs.length > 0 && (
           <div className="w-full mb-10 overflow-hidden">
             <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-4 flex items-center gap-2 px-4"><History className="w-3.5 h-3.5" /> استكمل قراءتك</p>
             <div className="flex gap-3 overflow-x-auto no-scrollbar px-4">
@@ -1895,7 +1907,7 @@ export default function QuranPage() {
         )}
 
         {/* ── Search ── */}
-        <div className={cn("w-full mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
+        <div className={cn("w-full mb-16 space-y-8", (isReadingMode || view === 'radio') && "opacity-0 h-0 overflow-hidden mb-0 transition-all pointer-events-none")}>
           <div className="relative group">
             <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
             <input
@@ -3628,18 +3640,7 @@ export default function QuranPage() {
                                      return next;
                                    });
                                    if (currentRadioStation?.id === station.id) {
-                                     const ytId = getYoutubeId(station.url);
-                                     if (ytId) {
-                                       const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
-                                       if (iframe && iframe.contentWindow) {
-                                         iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                                       }
-                                       setActiveYoutubeId(null);
-                                     } else {
-                                       radioAudioRef.current?.pause();
-                                     }
-                                     setIsPlayingRadio(false);
-                                     setCurrentRadioStation(null);
+                                     stopRadio();
                                    }
                                  }
                                }}

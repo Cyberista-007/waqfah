@@ -57,6 +57,56 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentStationRef = useRef<RadioStation | null>(null);
+  const fallbackTriggeredRef = useRef<boolean>(false);
+
+  // Lazy initialize single audio instance and register persistent listeners
+  const getAudioInstance = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+    if (!audioRef.current) {
+      const audio = new Audio();
+      audio.volume = volume;
+      
+      audio.addEventListener('waiting', () => setIsBuffering(true));
+      audio.addEventListener('playing', () => {
+        setIsPlaying(true);
+        setIsBuffering(false);
+      });
+      audio.addEventListener('pause', () => setIsPlaying(false));
+      audio.addEventListener('canplay', () => setIsBuffering(false));
+      
+      audio.addEventListener('error', () => {
+        const station = currentStationRef.current;
+        if (!station) return;
+        
+        // When src is cleared or set to empty string, it triggers an error.
+        // We bypass reloading in this case.
+        if (!audio.src || audio.src === '' || audio.src === window.location.href) {
+          setIsBuffering(false);
+          setIsPlaying(false);
+          return;
+        }
+
+        if (audio.crossOrigin === 'anonymous' && !fallbackTriggeredRef.current) {
+          fallbackTriggeredRef.current = true;
+          audio.removeAttribute('crossOrigin');
+          audio.src = station.url;
+          audio.load();
+          setIsBuffering(true);
+          audio.play().catch(() => {
+            setIsBuffering(false);
+            setIsPlaying(false);
+          });
+        } else {
+          setIsBuffering(false);
+          setIsPlaying(false);
+        }
+      });
+
+      audioRef.current = audio;
+    }
+    return audioRef.current;
+  }, [volume]);
 
   // Sync volume to audio element
   const setVolume = useCallback((v: number) => {
@@ -69,9 +119,14 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       audioRef.current.pause();
       audioRef.current.src = '';
     }
+    const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    }
     setIsPlaying(false);
     setIsBuffering(false);
     setCurrentStation(null);
+    currentStationRef.current = null;
     setActiveYoutubeId(null);
   }, []);
 
@@ -127,6 +182,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       if (ytId) {
         setActiveYoutubeId(ytId);
         setCurrentStation(station);
+        currentStationRef.current = station;
         setIsPlaying(true);
         setIsBuffering(false);
         // Save history
@@ -140,45 +196,23 @@ export function RadioProvider({ children }: { children: ReactNode }) {
 
       // Standard HTML5 audio
       setActiveYoutubeId(null);
-      const audio = new Audio();
-      audio.crossOrigin = 'anonymous';
-      audio.src = station.url;
-      audio.volume = volume;
-      audioRef.current = audio;
+      
+      const audio = getAudioInstance();
+      if (audio) {
+        fallbackTriggeredRef.current = false;
+        currentStationRef.current = station;
+        setCurrentStation(station);
 
-      let fallbackTriggered = false;
+        audio.crossOrigin = 'anonymous';
+        audio.src = station.url;
+        audio.volume = volume;
+        setIsBuffering(true);
 
-      audio.addEventListener('waiting', () => setIsBuffering(true));
-      audio.addEventListener('playing', () => {
-        setIsPlaying(true);
-        setIsBuffering(false);
-      });
-      audio.addEventListener('pause', () => setIsPlaying(false));
-      audio.addEventListener('canplay', () => setIsBuffering(false));
-      audio.addEventListener('error', () => {
-        if (audio.crossOrigin === 'anonymous' && !fallbackTriggered) {
-          fallbackTriggered = true;
-          audio.removeAttribute('crossOrigin');
-          audio.src = station.url;
-          audio.load();
-          setIsBuffering(true);
-          audio.play().catch(() => {
-            setIsBuffering(false);
-            setIsPlaying(false);
-          });
-        } else {
+        audio.play().catch((e) => {
+          console.error('Radio play error:', e);
           setIsBuffering(false);
-          setIsPlaying(false);
-        }
-      });
-
-      setCurrentStation(station);
-      setIsBuffering(true);
-
-      audio.play().catch((e) => {
-        console.error('Radio play error:', e);
-        setIsBuffering(false);
-      });
+        });
+      }
 
       // Save history
       try {
@@ -187,7 +221,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('quran_radio_history', JSON.stringify(next));
       } catch {}
     },
-    [currentStation, activeYoutubeId, togglePlay, volume]
+    [currentStation, activeYoutubeId, togglePlay, volume, getAudioInstance]
   );
 
   // Restore last playing station on mount
@@ -198,6 +232,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         // Don't auto-play on mount — just restore state visually
         const station: RadioStation = JSON.parse(saved);
         setCurrentStation(station);
+        currentStationRef.current = station;
       }
     } catch {}
   }, []);

@@ -190,6 +190,13 @@ export function useQuranRadio() {
     return () => clearInterval(interval);
   }, [isPlayingRadio]);
 
+  // ── Auto-initialize Web Audio API Graph when playing ──
+  useEffect(() => {
+    if (isPlayingRadio && currentStation && radioAudioRef.current) {
+      initAudioGraph();
+    }
+  }, [isPlayingRadio, currentStation, radioAudioRef, initAudioGraph]);
+
   // ── Alarm Scheduler Check ──
   useEffect(() => {
     if (!isAlarmEnabled || !alarmTime) return;
@@ -258,8 +265,15 @@ export function useQuranRadio() {
         return;
       }
       
+      let hasRealData = false;
       if (analyser && dataArray && radioAudioRef.current?.crossOrigin === 'anonymous') {
         analyser.getByteFrequencyData(dataArray as any);
+        for (let j = 0; j < dataArray.length; j++) {
+          if (dataArray[j] > 0) {
+            hasRealData = true;
+            break;
+          }
+        }
       }
       
       phase += 0.08;
@@ -272,7 +286,7 @@ export function useQuranRadio() {
         
         for (let i = 0; i <= barCount; i++) {
           let val = 0;
-          if (dataArray && bufferLength > 0) {
+          if (hasRealData && dataArray && bufferLength > 0) {
             const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
             val = dataArray[dataIdx] || 0;
           } else {
@@ -296,7 +310,7 @@ export function useQuranRadio() {
         ctx.beginPath();
         for (let i = 0; i <= barCount; i++) {
           let val = 0;
-          if (dataArray && bufferLength > 0) {
+          if (hasRealData && dataArray && bufferLength > 0) {
             const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
             val = dataArray[dataIdx] || 0;
           } else {
@@ -312,7 +326,7 @@ export function useQuranRadio() {
         ctx.stroke();
       } else if (visualizerStyle === 'particles') {
         let average = 0;
-        if (dataArray && bufferLength > 0) {
+        if (hasRealData && dataArray && bufferLength > 0) {
           let sum = 0;
           for (let j = 0; j < dataArray.length; j++) sum += dataArray[j];
           average = sum / dataArray.length;
@@ -365,7 +379,7 @@ export function useQuranRadio() {
         for (let i = 0; i < barCount; i++) {
           let barHeight = 0;
           
-          if (dataArray && bufferLength > 0) {
+          if (hasRealData && dataArray && bufferLength > 0) {
             const percentIdx = i / barCount;
             const dataIdx = Math.floor(percentIdx * bufferLength * 0.65);
             const value = dataArray[dataIdx] || 0;
