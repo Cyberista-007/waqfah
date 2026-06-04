@@ -9,6 +9,14 @@ import {
   Clock, Trophy, Check, X, HelpCircle, Award, ChevronLeft, Loader2
 } from 'lucide-react';
 import { ImanCardGenerator } from '@/components/iman-card-generator';
+import { HadithMemorizer } from '@/components/hadith-memorizer';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,6 +24,15 @@ import Link from 'next/link';
 import { HADITH_SECTIONS_FALLBACK } from './hadith-data-hub';
 import { usePathname } from 'next/navigation';
 import HadithPageClient from './[bookId]/HadithPageClient';
+
+const BADGES = [
+  { id: 'novice', name: 'مبتدئ السنة', req: 10, desc: 'أجب بشكل صحيح عن سؤال واحد في التحدي (10 نقاط).', icon: Award, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  { id: 'seeker', name: 'طالب علم', req: 30, desc: 'أجب بشكل صحيح عن 3 أسئلة (30 نقطة).', icon: BookOpen, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  { id: 'narrator', name: 'راوية الحديث', req: 50, desc: 'أجب بشكل صحيح عن 5 أسئلة (50 نقطة).', icon: Users, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  { id: 'guardian', name: 'حافظ السنن', req: 80, desc: 'اجمع 80 نقطة معرفية في تحدي السنة.', icon: ShieldCheck, color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
+  { id: 'scholar', name: 'محدّث الديار', req: 100, desc: 'اجمع 100 نقطة معرفية في تحدي السنة.', icon: Trophy, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
+];
+
 
 
 function normalizeArabic(text: string): string {
@@ -323,7 +340,23 @@ const NARRATORS: Narrator[] = [
 
 export default function HadithHubPage() {
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<'books' | 'favorites' | 'narrators' | 'about'>('books');
+  const [activeTab, setActiveTab] = useState<'books' | 'favorites' | 'narrators' | 'notes' | 'about'>('books');
+    const [hadithNotes, setHadithNotes] = useState<Record<string, { note: string; hadithText: string; bookName: string; sectionId: string }>>({});
+
+    useEffect(() => {
+      try {
+        const storedNotes = localStorage.getItem('waqfah_hadith_notes');
+        if (storedNotes) setHadithNotes(JSON.parse(storedNotes));
+      } catch (e) {}
+    }, [activeTab]);
+
+    const deleteNote = (key: string) => {
+      const nextNotes = { ...hadithNotes };
+      delete nextNotes[key];
+      setHadithNotes(nextNotes);
+      localStorage.setItem('waqfah_hadith_notes', JSON.stringify(nextNotes));
+      toast({ title: 'تم حذف الملاحظة بنجاح' });
+    };
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -841,6 +874,10 @@ export default function HadithHubPage() {
                           <Volume2 className="w-4 h-4" />
                         )}
                       </Button>
+                      <HadithMemorizer 
+                        text={dailyHadith.text}
+                        reference={`${dailyHadith.book} - حديث رقم: ${dailyHadith.number}`}
+                      />
                       <ImanCardGenerator 
                         title={`حديث اليوم - ${dailyHadith.book}`}
                         content={dailyHadith.text}
@@ -907,10 +944,56 @@ export default function HadithHubPage() {
                   </div>
 
                   <div className="flex justify-between items-center relative z-10 mb-6">
-                    <div className="flex items-center gap-2 text-amber-400">
-                      <Trophy className="w-4 h-4 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">النقاط المعرفية: {triviaScore}</span>
-                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors bg-white/5 border border-white/5 hover:border-amber-500/30 px-3 py-1.5 rounded-xl">
+                          <Trophy className="w-4 h-4 animate-pulse animate-duration-1000" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">النقاط: {triviaScore} • الأوسمة 🎖️</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md bg-zinc-950/95 border border-white/10 text-white rounded-[2.5rem] p-8 text-right">
+                        <DialogHeader className="pb-4 border-b border-white/5">
+                          <DialogTitle className="text-2xl font-black flex items-center gap-2 justify-end">
+                            <span>خزانة <span className="text-amber-500">أوسمتك المعرفية</span></span>
+                            <Award className="w-6 h-6 text-amber-500 animate-bounce" />
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4 max-h-[50vh] overflow-y-auto no-scrollbar" dir="rtl">
+                          {BADGES.map((badge) => {
+                            const isUnlocked = triviaScore >= badge.req;
+                            const BadgeIcon = badge.icon;
+                            return (
+                              <div 
+                                key={badge.id}
+                                className={cn(
+                                  "p-4 rounded-2xl border flex items-center gap-4 transition-all justify-between",
+                                  isUnlocked 
+                                    ? "bg-white/5 border-white/10 shadow-lg" 
+                                    : "bg-black/40 border-white/5 opacity-40"
+                                )}
+                              >
+                                <div className="flex items-center gap-3 text-right">
+                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border", badge.color)}>
+                                    <BadgeIcon className="w-5 h-5" />
+                                  </div>
+                                  <div className="text-right">
+                                    <h4 className="text-sm font-black text-white">{badge.name}</h4>
+                                    <p className="text-[10px] text-white/40 mt-0.5">{badge.desc}</p>
+                                  </div>
+                                </div>
+                                <div className="text-left shrink-0">
+                                  {isUnlocked ? (
+                                    <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[9px] font-black">مفتوح 🔓</span>
+                                  ) : (
+                                    <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/5 text-white/30 text-[9px] font-black">مغلق 🔒 ({badge.req}ن)</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     <span className="px-4 py-1.5 rounded-xl bg-gradient-to-l from-emerald-600 to-emerald-400 text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">تحدي السنة</span>
                   </div>
 
@@ -1004,6 +1087,13 @@ export default function HadithHubPage() {
             >
               رواة الحديث
             </button>
+            
+            <button
+              onClick={() => setActiveTab('notes')}
+              className={cn("px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2", activeTab === 'notes' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white")}
+            >
+              تأملاتي وملاحظاتي 📝
+            </button>
             <button
               onClick={() => setActiveTab('about')}
               className={cn("px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'about' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white")}
@@ -1022,14 +1112,16 @@ export default function HadithHubPage() {
                 setShowResults(e.target.value.length > 1);
               }}
               placeholder={
-                activeTab === 'books'
-                  ? "ابحث في الموسوعة الشاملة (كلمة، موضوع، باب)..."
-                  : activeTab === 'favorites'
-                  ? "ابحث في أحاديثك المحفوظة..."
-                  : activeTab === 'narrators'
-                  ? "ابحث باسم الراوي أو لقبه..."
-                  : "ابحث..."
-              }
+                  activeTab === 'books'
+                    ? "بحث في موسوعة الحديث الشريف (كتب، أبواب، أحاديث)..."
+                    : activeTab === 'favorites'
+                    ? "بحث في أحاديثك المحفوظة..."
+                    : activeTab === 'narrators'
+                    ? "البحث عن الراوي بالاسم أو اللقب..."
+                    : activeTab === 'notes'
+                    ? "البحث في ملاحظاتك وتأملاتك..."
+                    : "بحث..."
+                }
               className="w-full h-14 pr-16 pl-16 rounded-2xl bg-black/40 border border-white/10 focus:border-amber-500/50 outline-none transition-all font-bold text-center"
             />
             <button
@@ -1200,7 +1292,74 @@ export default function HadithHubPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {activeTab === 'favorites' ? (
+            {activeTab === 'notes' ? (
+              <motion.div
+                key="notes-grid"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                className="space-y-8"
+              >
+                {Object.keys(hadithNotes).length === 0 ? (
+                  <div className="text-center py-20 bg-white/[0.02] border border-dashed border-white/10 rounded-[3rem] space-y-6">
+                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto text-white/20">
+                      <BookOpen className="w-10 h-10 animate-bounce" />
+                    </div>
+                    <div className="space-y-2 text-center">
+                      <h3 className="text-2xl font-black">لا توجد تأملات أو ملاحظات محفوظة</h3>
+                      <p className="text-sm text-white/40 max-w-md mx-auto leading-relaxed">
+                        عند قراءة الأحاديث في الموسوعة، يمكنك النقر على زر الملاحظة لتدوين تأملاتك وملاحظاتك العلمية حولها لتظهر في هذا القسم الخاص بك.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6" dir="rtl">
+                    {Object.entries(hadithNotes)
+                      .filter(([_, item]) => {
+                        if (!searchQuery) return true;
+                        return item.note.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                               item.hadithText.toLowerCase().includes(searchQuery.toLowerCase());
+                      })
+                      .map(([key, item]) => {
+                        const [bookId, hadithId] = key.split('_');
+                        return (
+                          <div key={key} className="p-8 rounded-[2.5rem] bg-zinc-900/50 border border-white/10 backdrop-blur-3xl flex flex-col justify-between overflow-hidden relative group text-right">
+                            <div className="space-y-6">
+                              <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                                <span className="text-xs font-black text-amber-500">{item.bookName} - حديث رقم {hadithId}</span>
+                                <Link 
+                                  href={`/hadith/${bookId}?hadith=${hadithId}`}
+                                  className="text-[10px] font-black text-white/40 hover:text-white transition-colors bg-white/5 px-3 py-1 rounded-xl flex items-center gap-1"
+                                >
+                                  عرض الحديث 🔗
+                                </Link>
+                              </div>
+                              <p className="text-xs text-white/60 italic leading-relaxed bg-black/25 p-4 rounded-xl border border-white/5 max-h-24 overflow-y-auto no-scrollbar">
+                                « {item.hadithText} »
+                              </p>
+                              <div className="space-y-2">
+                                <div className="text-[10px] font-black text-amber-500/80">تأملاتي وملاحظاتي:</div>
+                                <p className="text-sm font-bold text-white leading-relaxed whitespace-pre-line">
+                                  {item.note}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex justify-end pt-6 mt-6 border-t border-white/5">
+                              <Button
+                                onClick={() => deleteNote(key)}
+                                variant="ghost"
+                                className="px-4 py-2 rounded-xl text-xs font-black text-red-400 hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                حذف الملاحظة
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </motion.div>
+            ) : activeTab === 'favorites' ? (
             <motion.div
               key="favorites-grid"
               initial={{ opacity: 0, y: 30 }}

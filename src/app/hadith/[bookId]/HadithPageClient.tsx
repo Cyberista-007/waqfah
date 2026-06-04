@@ -6,7 +6,7 @@ import {
   Book, Search, Mic, ChevronLeft, Bookmark, Heart, Share2, 
   BookOpen, Star, Info, Clock, ArrowLeft, ArrowRight,
   Library, Sparkles, Quote, MapPin, Hash, Settings, CheckCircle, Type, ShieldCheck,
-  Volume2, VolumeX
+  Volume2, VolumeX, FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import { HADITH_SECTIONS_FALLBACK } from '../hadith-data-hub';
 import { RIYADUSSALIHIN_FALLBACK_HADITHS } from '../riyadussalihin-data';
 import { ImanCardGenerator } from '@/components/iman-card-generator';
+import { HadithMemorizer } from '@/components/hadith-memorizer';
 
 const ALTERNATIVE_SOURCES: Record<string, string> = {
   'riyadussaliheen': 'https://raw.githubusercontent.com/AhmedBaset/hadith-json/main/db/by_book/other_books/riyad_assalihin.json',
@@ -149,6 +150,11 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [favourites, setFavourites] = useState<Set<number>>(new Set());
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
   const [playingHadithId, setPlayingHadithId] = useState<number | null>(null);
+  
+  const [hadithNotes, setHadithNotes] = useState<Record<string, { note: string; hadithText: string; bookName: string; sectionId: string }>>({});
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [noteInputValue, setNoteInputValue] = useState('');
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -167,6 +173,12 @@ export default function HadithPageClient({ params }: { params: any }) {
     } catch (e) {
       setReadChapters(new Set());
     }
+
+    // Load global notes
+    try {
+      const storedNotes = localStorage.getItem('waqfah_hadith_notes');
+      if (storedNotes) setHadithNotes(JSON.parse(storedNotes));
+    } catch (e) {}
   }, [bookId]);
 
   // Clean up audio on unmount or navigation
@@ -288,6 +300,26 @@ export default function HadithPageClient({ params }: { params: any }) {
       if (navigator.share) await navigator.share({ title: config.name, text: textToShare });
       else { await navigator.clipboard.writeText(textToShare); toast({ title: 'تم نسخ نص الحديث مع التخريج' }); }
     } catch (err) {}
+  };
+
+  const saveNote = (hadithId: number, hadithText: string) => {
+    const key = `${bookId}_${hadithId}`;
+    const nextNotes = {
+      ...hadithNotes,
+      [key]: {
+        note: noteInputValue,
+        hadithText,
+        bookName: config.name,
+        sectionId: selectedSection || '1'
+      }
+    };
+    if (!noteInputValue.trim()) {
+      delete nextNotes[key];
+    }
+    setHadithNotes(nextNotes);
+    localStorage.setItem('waqfah_hadith_notes', JSON.stringify(nextNotes));
+    setEditingNoteId(null);
+    toast({ title: noteInputValue.trim() ? 'تم حفظ تأملاتك حول الحديث الشريف' : 'تم حذف الملاحظة' });
   };
 
   useEffect(() => {
@@ -599,6 +631,10 @@ export default function HadithPageClient({ params }: { params: any }) {
                               <span className={cn("px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-[0.2em]", config.color)}>حديث رقم: {h.hadithnumber}</span>
                            </div>
                             <div className="flex gap-2">
+                              <HadithMemorizer 
+                                text={h.text}
+                                reference={`${config.name} - حديث رقم: ${h.hadithnumber}`}
+                              />
                               <ImanCardGenerator 
                                 title={`حديث شريف - ${config.name}`}
                                 content={h.text}
@@ -631,9 +667,65 @@ export default function HadithPageClient({ params }: { params: any }) {
                              </Button>
                              <Button onClick={() => handleShare(h)} variant="ghost" size="icon" className="rounded-xl border border-white/5 bg-white/5"><Share2 className="w-4 h-4 opacity-40 hover:opacity-100" /></Button>
                              <Button onClick={() => toggleFavorite(h)} variant="ghost" size="icon" className={cn("rounded-xl border border-white/5 bg-white/5", favourites.has(h.hadithnumber) ? "bg-rose-500/10 border-rose-500/20" : "")}><Heart className={cn("w-4 h-4", favourites.has(h.hadithnumber) ? "fill-current text-rose-400" : "opacity-40")} /></Button>
+                              <Button 
+                                onClick={() => {
+                                  const key = `${bookId}_${h.hadithnumber}`;
+                                  const existingNote = hadithNotes[key]?.note || '';
+                                  setNoteInputValue(existingNote);
+                                  setEditingNoteId(editingNoteId === h.hadithnumber ? null : h.hadithnumber);
+                                }} 
+                                variant="ghost" 
+                                size="icon" 
+                                className={cn(
+                                  "rounded-xl border border-white/5 bg-white/5 transition-all relative",
+                                  hadithNotes[`${bookId}_${h.hadithnumber}`] ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "text-white/40 hover:text-white"
+                                )}
+                                title="تدوين ملاحظة وتأملات فقهية"
+                              >
+                                <FileText className="w-4 h-4" />
+                                {hadithNotes[`${bookId}_${h.hadithnumber}`] && (
+                                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                )}
+                              </Button>
                            </div>
                         </div>
                         <p style={{ fontSize: `${fontSize}px` }} className={cn("font-black leading-[1.8] text-white text-right", fontFamily)}>{highlightMatch(h.text, searchQuery)}</p>
+                         
+                         <AnimatePresence>
+                           {editingNoteId === h.hadithnumber && (
+                             <motion.div
+                               initial={{ opacity: 0, height: 0 }}
+                               animate={{ opacity: 1, height: 'auto' }}
+                               exit={{ opacity: 0, height: 0 }}
+                               className="mt-6 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 space-y-4 text-right overflow-hidden"
+                             >
+                               <div className="text-xs font-black text-amber-500">كتابة ملاحظة وتأملات حول الحديث الشريف:</div>
+                               <textarea
+                                 value={noteInputValue}
+                                 onChange={(e) => setNoteInputValue(e.target.value)}
+                                 placeholder="اكتب تأملاتك أو ملاحظاتك العلمية حول هذا الحديث الشريف..."
+                                 rows={3}
+                                 dir="rtl"
+                                 className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 focus:border-amber-500/40 outline-none text-sm text-white font-medium placeholder-white/20 focus:bg-black/60 transition-all text-right"
+                               />
+                               <div className="flex justify-end gap-2">
+                                 <Button
+                                   onClick={() => setEditingNoteId(null)}
+                                   variant="ghost"
+                                   className="px-4 py-2 rounded-xl text-xs font-bold text-white/40 hover:bg-white/5"
+                                 >
+                                   إلغاء
+                                 </Button>
+                                 <Button
+                                   onClick={() => saveNote(h.hadithnumber, h.text)}
+                                   className="px-5 py-2 rounded-xl text-xs font-black bg-amber-500 text-black hover:bg-amber-600"
+                                 >
+                                   حفظ الملاحظة
+                                 </Button>
+                               </div>
+                             </motion.div>
+                           )}
+                         </AnimatePresence>
                       </div>
                     </motion.div>
                   ))
