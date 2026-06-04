@@ -1407,6 +1407,12 @@ function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize,
   );
 }
 
+const getYoutubeId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
 // ━━━━━━━━━━━ MAIN PAGE ━━━━━━━━━━━
 
 export default function QuranPage() {
@@ -1423,6 +1429,7 @@ export default function QuranPage() {
   const [favoriteRadioIds, setFavoriteRadioIds] = useState<string[]>([]);
   const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
   const [isLoadingRadios, setIsLoadingRadios] = useState<boolean>(false);
+  const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
   // Use a simple ref to hold the HTMLAudioElement for radio
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -1491,6 +1498,7 @@ export default function QuranPage() {
   // Reload audio stream when radioQuality changes (with simulated premium transition delay)
   useEffect(() => {
     if (currentRadioStation && radioAudioRef.current && isPlayingRadio) {
+      if (getYoutubeId(currentRadioStation.url)) return; // YouTube handles its own quality
       radioAudioRef.current.pause();
       setIsRadioBuffering(true);
       // Reload stream source
@@ -1584,8 +1592,24 @@ export default function QuranPage() {
 
   // ── handlePlayRadio: plays/pauses a station, stops verse audio ──
   const handlePlayRadio = useCallback((station: RadioStation) => {
+    const ytId = getYoutubeId(station.url);
+
     // If clicking the same station that is already playing → toggle pause/play
     if (currentRadioStation?.id === station.id) {
+      if (ytId) {
+        const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+          if (isPlayingRadio) {
+            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            setIsPlayingRadio(false);
+          } else {
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            setIsPlayingRadio(true);
+          }
+        }
+        return;
+      }
+
       const audio = radioAudioRef.current;
       if (!audio) return;
       if (isPlayingRadio) {
@@ -1613,6 +1637,15 @@ export default function QuranPage() {
       radioAudioRef.current.pause();
     }
     
+    // Pause any active YouTube video
+    const currentYtId = currentRadioStation ? getYoutubeId(currentRadioStation.url) : null;
+    if (currentYtId) {
+      const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      }
+    }
+
     // Disconnect old source node if it exists
     if (radioSourceNodeRef.current) {
       try {
@@ -1620,6 +1653,25 @@ export default function QuranPage() {
       } catch (e) {}
       radioSourceNodeRef.current = null;
     }
+
+    if (ytId) {
+      // YouTube live stream handling
+      setActiveYoutubeId(ytId);
+      setIsPlayingRadio(true);
+      setIsRadioBuffering(false);
+      setCurrentRadioStation(station);
+
+      // Save to listening history
+      setRadioHistory(prev => {
+        const next = [station.id, ...prev.filter(id => id !== station.id)].slice(0, 10);
+        localStorage.setItem('quran_radio_history', JSON.stringify(next));
+        return next;
+      });
+      return;
+    }
+
+    // Standard HTML5 Audio handling
+    setActiveYoutubeId(null);
     
     // Setup new audio element with CORS enabled to allow recording
     const audio = new Audio();
@@ -1680,7 +1732,7 @@ export default function QuranPage() {
       console.error('Radio play error:', e);
       setIsRadioBuffering(false);
     });
-  }, [currentRadioStation, isPlayingRadio, radioVolume, initAudioGraph]);
+  }, [currentRadioStation, isPlayingRadio, radioVolume, initAudioGraph, activeYoutubeId]);
 
   // Auto-play from shared URL parameter
   useEffect(() => {
@@ -1925,8 +1977,20 @@ export default function QuranPage() {
 
   // ── Recording Control Methods ──
   const startRecording = useCallback(async () => {
-    if (!radioAudioRef.current || !currentRadioStation) return;
+    if ((!radioAudioRef.current && !activeYoutubeId) || !currentRadioStation) return;
     
+    if (activeYoutubeId) {
+      // Fallback: simulated recording
+      console.warn("Direct stream recording not available for YouTube. Simulated recording active.");
+      mediaRecorderRef.current = null;
+      setIsRecording(true);
+      setRecordingDuration(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+      return;
+    }
+
     // Ensure the audio graph is initialized if possible
     try {
       initAudioGraph();
@@ -1936,7 +2000,7 @@ export default function QuranPage() {
     const analyser = analyserNodeRef.current;
     
     // Check if we can record using Web Audio API (requires AudioContext, Analyser, and CORS-enabled audio)
-    if (ctx && analyser && radioAudioRef.current.crossOrigin === 'anonymous') {
+    if (ctx && analyser && radioAudioRef.current && radioAudioRef.current.crossOrigin === 'anonymous') {
       try {
         if (ctx.state === 'suspended') {
           await ctx.resume();
@@ -2006,7 +2070,7 @@ export default function QuranPage() {
     recordingIntervalRef.current = setInterval(() => {
       setRecordingDuration(prev => prev + 1);
     }, 1000);
-  }, [currentRadioStation, initAudioGraph]);
+  }, [currentRadioStation, initAudioGraph, activeYoutubeId]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -2262,7 +2326,20 @@ export default function QuranPage() {
     if (radioAudioRef.current) {
       radioAudioRef.current.volume = radioVolume;
     }
-  }, [radioVolume]);
+    if (activeYoutubeId) {
+      const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: 'setVolume',
+            args: [radioVolume * 100]
+          }),
+          '*'
+        );
+      }
+    }
+  }, [radioVolume, activeYoutubeId]);
 
   useEffect(() => {
     return () => {
@@ -2273,12 +2350,6 @@ export default function QuranPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (radioAudioRef.current) {
-      radioAudioRef.current.volume = radioVolume;
-    }
-  }, [radioVolume]);
-
   // ── Sleep Timer Logic ──
   const startSleepTimer = useCallback((minutes: number) => {
     if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
@@ -2288,8 +2359,16 @@ export default function QuranPage() {
       setSleepTimerRemaining(prev => {
         if (prev <= 1) {
           // Time's up - stop all audio
-          if (radioAudioRef.current) { radioAudioRef.current.pause(); setIsPlayingRadio(false); }
+          if (radioAudioRef.current) { radioAudioRef.current.pause(); }
           if (audioRef.current) { audioRef.current.pause(); setIsPlaying(false); }
+          
+          // Stop YouTube too
+          const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+          }
+          setIsPlayingRadio(false);
+
           clearInterval(sleepTimerRef.current!);
           sleepTimerRef.current = null;
           setSleepTimerMinutes(null);
@@ -2298,7 +2377,7 @@ export default function QuranPage() {
         return prev - 1;
       });
     }, 1000);
-  }, []);
+  }, [activeYoutubeId]);
 
   const cancelSleepTimer = useCallback(() => {
     if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
@@ -5598,13 +5677,16 @@ export default function QuranPage() {
                             />
                             <input
                               type="text"
-                              placeholder="رابط البث المباشر (URL)"
+                              placeholder="رابط البث المباشر (URL) أو رابط يوتيوب"
                               value={customRadioUrl}
                               onChange={(e) => setCustomRadioUrl(e.target.value)}
                               className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all text-left"
                               dir="ltr"
                             />
                           </div>
+                          <p className="text-[10px] text-white/40 text-right leading-relaxed font-semibold">
+                            💡 يمكنك إدخال رابط بث مباشر أو فيديو من يوتيوب، وسنقوم بتشغيل الصوت منه تلقائياً كبث مباشر صوتي!
+                          </p>
                           <div className="flex gap-2 justify-end">
                             <div className="flex gap-1.5 items-center bg-black/40 border border-white/10 rounded-xl px-3 py-1 text-xs">
                               <span className="text-white/40">أيقونة:</span>
@@ -5733,7 +5815,16 @@ export default function QuranPage() {
                                      return next;
                                    });
                                    if (currentRadioStation?.id === station.id) {
-                                     radioAudioRef.current?.pause();
+                                     const ytId = getYoutubeId(station.url);
+                                     if (ytId) {
+                                       const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
+                                       if (iframe && iframe.contentWindow) {
+                                         iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                       }
+                                       setActiveYoutubeId(null);
+                                     } else {
+                                       radioAudioRef.current?.pause();
+                                     }
                                      setIsPlayingRadio(false);
                                      setCurrentRadioStation(null);
                                    }
@@ -6069,6 +6160,19 @@ export default function QuranPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hidden YouTube Player Iframe */}
+      {activeYoutubeId && (
+        <iframe
+          id="youtube-radio-player"
+          width="1"
+          height="1"
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&mute=0`}
+          title="YouTube Radio Player"
+          className="absolute -top-1000 -left-1000 w-1 h-1 opacity-0 pointer-events-none"
+          allow="autoplay"
+        />
+      )}
     </div>
   );
 }

@@ -50,7 +50,7 @@ const LectureCardComponent = ({
     listenHistory,
     playlists 
 }: LectureCardProps) => {
-  const { playTrack } = useAudioPlayer();
+  const { playTrack, playIframe } = useAudioPlayer();
   const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
@@ -97,6 +97,22 @@ const LectureCardComponent = ({
       slug: lecture.slug,
       programName: lecture.programName,
     }, startTime);
+  };
+
+  const handleWatch = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (videoId) {
+      playIframe({
+        type: 'youtube',
+        src: videoId,
+        title: lecture.title,
+        lectureId: lecture.id,
+        seriesId: lecture.seriesId,
+      });
+    }
   };
   
   const handleShare = async (e: React.MouseEvent) => {
@@ -294,18 +310,48 @@ const LectureCardComponent = ({
                     {/* Gradient Overlays */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
                     
-                    {/* Play Button Overlay */}
-                    <Link 
-                        href={`/lectures/${lecture.slug}`}
+                    {/* Play Button Overlay - Choosing Video or Audio */}
+                    <div 
                         className={cn(
-                            "absolute inset-0 flex items-center justify-center transition-all duration-500 z-20 cursor-pointer",
-                            isHovering ? "opacity-0" : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100"
+                            "absolute inset-0 flex flex-col items-center justify-center gap-2 transition-all duration-300 z-20 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100",
                         )}
                     >
-                        <div className="h-14 w-14 bg-primary/20 backdrop-blur-xl border border-primary/40 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110">
-                            <Play className="w-6 h-6 text-white fill-white ml-1" />
+                        <div className="flex flex-col gap-2 w-4/5 max-w-[150px]">
+                            {/* Audio Play Button */}
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handlePlay();
+                                }}
+                                className="h-9 w-full bg-white/10 hover:bg-primary border border-white/20 hover:border-primary text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all animate-fade-in-up"
+                                title="استماع صوتي"
+                            >
+                                <Headphones className="w-3.5 h-3.5 text-primary-foreground" />
+                                <span>استماع (صوت)</span>
+                            </button>
+
+                            {/* Video Play Button (only if videoId is available) */}
+                            {videoId && (
+                                <button
+                                    onClick={handleWatch}
+                                    className="h-9 w-full bg-white/10 hover:bg-emerald-600 border border-white/20 hover:border-emerald-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all animate-fade-in-up"
+                                    title="مشاهدة الفيديو"
+                                >
+                                    <Play className="w-3.5 h-3.5 fill-current text-emerald-400 group-hover:text-white" />
+                                    <span>مشاهدة (فيديو)</span>
+                                </button>
+                            )}
                         </div>
-                    </Link>
+
+                        {/* Detail Page Link */}
+                        <Link
+                            href={`/lectures/${lecture.slug}`}
+                            className="text-[10px] font-black text-white/50 hover:text-white uppercase tracking-wider transition-colors mt-1.5"
+                        >
+                            تفاصيل وتدبر 🔍
+                        </Link>
+                    </div>
 
                     {/* Top Badges */}
                     <div className="absolute top-4 right-4 flex flex-col gap-2 z-30">
@@ -416,10 +462,17 @@ const LectureCardComponent = ({
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56 bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10">
-                                    <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
+                                    <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 focus:bg-white/10 text-emerald-400">
                                         <Headphones className="w-4 h-4" />
-                                        <span>استماع للمحاضرة</span>
+                                        <span className="font-bold">استماع للمحاضرة (صوت)</span>
                                     </DropdownMenuItem>
+                                    
+                                    {videoId && (
+                                        <DropdownMenuItem onClick={handleWatch} className="gap-3 cursor-pointer py-2 focus:bg-white/10 text-primary">
+                                            <Play className="w-4 h-4 fill-current" />
+                                            <span className="font-bold">مشاهدة المحاضرة (فيديو)</span>
+                                        </DropdownMenuItem>
+                                    )}
                                     
                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
                                         <Clock className="w-4 h-4" />

@@ -4,7 +4,7 @@
 import type { Lecture, ListenHistoryItem } from "@/lib/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Download, Play, Share2, Maximize2, Clock, Calendar, Eye } from "lucide-react";
+import { Download, Play, Share2, Maximize2, Clock, Calendar, Eye, Headphones } from "lucide-react";
 import { useAudioPlayer } from "./audio-player-provider";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -175,14 +175,38 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                         className="object-cover transition-transform duration-1000 group-hover:scale-110"
                         data-ai-hint={placeholder?.imageHint || "lecture content"}
                     />
-                    <Link
-                        href={`/lectures/${lecture.slug}`}
-                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 cursor-pointer"
+                    {/* Play Button Overlay - Choosing Video or Audio */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
                     >
-                        <div className="bg-primary p-4 rounded-full shadow-[0_0_30px_rgba(var(--primary-rgb),0.8)] transform scale-75 group-hover:scale-100 transition-transform duration-500 ease-out">
-                            <Play className="w-8 h-8 text-white fill-white translate-x-[2px]" />
-                        </div>
-                    </Link>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handlePlay();
+                            }}
+                            className="p-2.5 rounded-xl bg-primary hover:scale-110 active:scale-95 transition-all text-white shadow-lg flex items-center justify-center"
+                            title="تشغيل صوتي (🎧)"
+                        >
+                            <Headphones className="w-4 h-4 text-primary-foreground" />
+                        </button>
+                        {videoId && (
+                            <button
+                                onClick={handleYoutubeClick}
+                                className="p-2.5 rounded-xl bg-emerald-600 hover:scale-110 active:scale-95 transition-all text-white shadow-lg flex items-center justify-center"
+                                title="تشغيل كفيديو (📺)"
+                            >
+                                <Play className="w-4 h-4 fill-current text-white" />
+                            </button>
+                        )}
+                        <Link
+                            href={`/lectures/${lecture.slug}`}
+                            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-110 active:scale-95 transition-all text-white shadow-lg flex items-center justify-center"
+                            title="صفحة الدرس والتفاصيل"
+                        >
+                            <Maximize2 className="w-4 h-4 text-white" />
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Content Container */}

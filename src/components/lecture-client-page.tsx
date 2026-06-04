@@ -19,7 +19,7 @@ import { DownloaderModal } from './downloader-modal';
 import { getVideoIdFromUrl, formatDuration } from '@/lib/utils';
 import { Html5Player } from './html5-player';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ListVideo, SkipForward, SkipBack, FileText, PictureInPicture } from 'lucide-react';
+import { ListVideo, SkipForward, SkipBack, FileText, PictureInPicture, Pause, Volume2, RotateCcw, RotateCw } from 'lucide-react';
 import { LectureChapters } from '@/components/lecture-chapters';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -75,12 +75,27 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
+  const [initialTime, setInitialTime] = useState(0);
 
   const [videoDuration, setVideoDuration] = useState(0);
 
+  const videoId = useMemo(() => getVideoIdFromUrl(lecture?.youtubeUrl), [lecture?.youtubeUrl]);
+  const isVideoAvailable = !!videoId;
+  const [playMode, setPlayMode] = useState<'video' | 'audio'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('waqfah_lecture_play_mode') as 'video' | 'audio') || 'video';
+    }
+    return 'video';
+  });
+  const currentPlayMode = isVideoAvailable ? playMode : 'audio';
+  const [isInlineAudioPlaying, setIsInlineAudioPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [audioVolume, setAudioVolume] = useState(0.8);
+  const inlineAudioRef = useRef<HTMLAudioElement | null>(null);
+
   // Poll video duration periodically
   useEffect(() => {
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.getDuration === 'function') {
+    if (currentPlayMode === 'video' && videoPlayerRef.current && typeof videoPlayerRef.current.getDuration === 'function') {
       try {
         const d = videoPlayerRef.current.getDuration();
         if (d > 0 && d !== videoDuration) {
@@ -88,7 +103,25 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
         }
       } catch (e) {}
     }
-  }, [playerCurrentTime, videoPlayerRef, videoDuration]);
+  }, [playerCurrentTime, videoPlayerRef, videoDuration, currentPlayMode]);
+
+  useEffect(() => {
+    if (inlineAudioRef.current) {
+      inlineAudioRef.current.volume = audioVolume;
+    }
+  }, [audioVolume]);
+
+  useEffect(() => {
+    if (inlineAudioRef.current) {
+      inlineAudioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
+
+  useEffect(() => {
+    if (initialTime > 0 && inlineAudioRef.current) {
+      inlineAudioRef.current.currentTime = initialTime;
+    }
+  }, [initialTime]);
 
   // Generate deterministic heatmap path based on lectureId
   const heatmapPath = useMemo(() => {
@@ -132,7 +165,12 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     let totalDuration = videoDuration || lecture.duration || 3600;
     const targetTime = percentage * totalDuration;
     
-    if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+    if (currentPlayMode === 'audio' && inlineAudioRef.current) {
+        inlineAudioRef.current.currentTime = targetTime;
+        if (inlineAudioRef.current.paused) {
+            inlineAudioRef.current.play().catch(console.error);
+        }
+    } else if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
         try {
             videoPlayerRef.current.seekTo(targetTime, true);
             const playerState = videoPlayerRef.current.getPlayerState();
@@ -156,8 +194,6 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
   const playlistsPath = user ? `users/${user.uid}/playlists` : null;
   const { data: playlists } = useCollection<Playlist>(playlistsPath);
-
-  const [initialTime, setInitialTime] = useState(0);
 
   const [aiData, setAiData] = useState<{
     summary: string;
@@ -265,8 +301,6 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   }, []);
   
   if (!lecture) notFound();
-  
-  const videoId = getVideoIdFromUrl(lecture?.youtubeUrl);
 
   const handlePlay = () => {
     hidePlayer();
@@ -309,9 +343,11 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const handleCopyLink = useCallback(async () => {
     if (typeof window === 'undefined') return;
     const path = window.location.href.split('?')[0];
-    const time = videoPlayerRef.current?.getCurrentTime 
-      ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
-      : playerCurrentTime;
+    const time = currentPlayMode === 'audio' && inlineAudioRef.current
+      ? Math.floor(inlineAudioRef.current.currentTime)
+      : videoPlayerRef.current?.getCurrentTime 
+        ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
+        : playerCurrentTime;
     const currentShareUrl = time > 0 ? `${path}?t=${time}` : path;
 
     try {
@@ -320,14 +356,16 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     } catch (err) {
       toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
     }
-  }, [playerCurrentTime, videoPlayerRef, toast]);
+  }, [playerCurrentTime, videoPlayerRef, toast, currentPlayMode]);
 
   const handleShare = useCallback(async () => {
     if (typeof window === 'undefined') return;
     const path = window.location.href.split('?')[0];
-    const time = videoPlayerRef.current?.getCurrentTime 
-      ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
-      : playerCurrentTime;
+    const time = currentPlayMode === 'audio' && inlineAudioRef.current
+      ? Math.floor(inlineAudioRef.current.currentTime)
+      : videoPlayerRef.current?.getCurrentTime 
+        ? Math.floor(videoPlayerRef.current.getCurrentTime()) 
+        : playerCurrentTime;
     const currentShareUrl = time > 0 ? `${path}?t=${time}` : path;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -348,7 +386,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
         toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
       }
     }
-  }, [shareText, playerCurrentTime, videoPlayerRef, toast]);
+  }, [shareText, playerCurrentTime, videoPlayerRef, toast, currentPlayMode]);
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -462,7 +500,52 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
             )}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
                 
-                {videoId ? (
+                {/* Mode Switcher Float (Audio / Video) */}
+                {isVideoAvailable && (
+                  <div className="absolute top-4 left-4 z-20 flex bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/10 gap-1 opacity-80 hover:opacity-100 transition-opacity">
+                      <button
+                          onClick={() => {
+                              setPlayMode('video');
+                              localStorage.setItem('waqfah_lecture_play_mode', 'video');
+                              if (inlineAudioRef.current) {
+                                  inlineAudioRef.current.pause();
+                              }
+                          }}
+                          className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5",
+                              currentPlayMode === 'video' 
+                                  ? "bg-primary text-white" 
+                                  : "text-white/60 hover:text-white"
+                          )}
+                      >
+                          <ListVideo className="w-3.5 h-3.5" />
+                          فيديو
+                      </button>
+                      <button
+                          onClick={() => {
+                              setPlayMode('audio');
+                              localStorage.setItem('waqfah_lecture_play_mode', 'audio');
+                              // Pause YouTube player if active
+                              if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                                  try {
+                                      videoPlayerRef.current.pauseVideo();
+                                  } catch (e) {}
+                              }
+                          }}
+                          className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5",
+                              currentPlayMode === 'audio' 
+                                  ? "bg-primary text-white" 
+                                  : "text-white/60 hover:text-white"
+                          )}
+                      >
+                          <Headphones className="w-3.5 h-3.5" />
+                          صوت
+                      </button>
+                  </div>
+                )}
+
+                {currentPlayMode === 'video' && videoId ? (
                 <Html5Player 
                     videoId={videoId} 
                     title={lecture.title} 
@@ -474,24 +557,180 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                     transcript={lecture.transcript}
                 />
                 ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
-                    <Image src={getLectureImageUrl(lecture)} fill className="object-cover opacity-20 blur-md grayscale" alt="audio-bg" />
-                    <div className="relative z-10 flex flex-col items-center text-center px-6">
-                        <motion.div 
-                            animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                            transition={{ repeat: Infinity, duration: 4 }}
-                            className="mb-10 p-10 rounded-full bg-primary/20 border-2 border-primary/30 backdrop-blur-3xl shadow-[0_0_50px_rgba(var(--primary-rgb),0.3)]"
-                        >
-                            <Headphones className="w-16 h-16 text-primary" />
-                        </motion.div>
-                        <h3 className="text-3xl font-black mb-8 text-white font-headline tracking-tighter">تجربة استماع نقية</h3>
-                        <Magnetic>
-                        <Button onClick={handlePlay} size="lg" className="h-20 px-14 text-2xl font-black rounded-3xl btn-magnetic shadow-[0_0_50px_rgba(var(--primary-rgb),0.5)] bg-primary text-white transition-all duration-300">
-                            <Play className="w-8 h-8 me-4 fill-current" /> ابدأ الآن
-                        </Button>
-                        </Magnetic>
-                    </div>
-                </div>
+                  // Inline Audio Player UI!
+                  <div className="w-full h-full flex flex-col md:flex-row items-center justify-between p-6 md:p-10 relative overflow-hidden bg-gradient-to-br from-[#0c0d12] to-[#040406]">
+                      {/* Aura Ambient Background */}
+                      <Image 
+                        src={getLectureImageUrl(lecture)} 
+                        fill 
+                        className="object-cover opacity-20 blur-[80px] scale-125 select-none pointer-events-none" 
+                        alt="audio-bg-glow" 
+                      />
+
+                      <audio
+                        ref={inlineAudioRef}
+                        src={lecture.audioSrc}
+                        onTimeUpdate={(e) => {
+                          const time = e.currentTarget.currentTime;
+                          setPlayerCurrentTime(time);
+                        }}
+                        onDurationChange={(e) => {
+                          setVideoDuration(e.currentTarget.duration);
+                        }}
+                        onPlay={() => setIsInlineAudioPlaying(true)}
+                        onPause={() => setIsInlineAudioPlaying(false)}
+                        onEnded={handleVideoEnded}
+                      />
+
+                      {/* Left/Center side: Cover Art & Equalizer */}
+                      <div className="flex flex-col items-center md:items-start gap-4 md:gap-6 z-10 md:w-1/2">
+                          <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
+                              <Image
+                                  src={getLectureImageUrl(lecture)}
+                                  fill
+                                  className={cn("object-cover transition-transform duration-700", isInlineAudioPlaying && "scale-105")}
+                                  alt="Cover Art"
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Headphones className="w-10 h-10 text-white" />
+                              </div>
+                          </div>
+
+                          <div className="text-center md:text-right">
+                              <h3 className="text-lg md:text-xl font-black text-white line-clamp-1 leading-snug">{lecture.title}</h3>
+                              <p className="text-xs text-primary font-black mt-1">{lecture.seriesTitle}</p>
+                          </div>
+                      </div>
+
+                      {/* Right side: Player Controls */}
+                      <div className="flex flex-col justify-center items-center w-full md:w-1/2 gap-4 z-10 px-4 mt-4 md:mt-0">
+                          {/* Visualizer animation: clean CSS wave bars */}
+                          <div className="flex items-end justify-center gap-1 h-8 w-full mb-1">
+                              {Array.from({ length: 18 }).map((_, i) => (
+                                  <motion.div
+                                      key={i}
+                                      animate={{
+                                          height: isInlineAudioPlaying 
+                                              ? [8, Math.random() * 24 + 6, 8] 
+                                              : 3
+                                      }}
+                                      transition={{
+                                          repeat: Infinity,
+                                          duration: 1 + Math.random() * 0.8,
+                                          ease: "easeInOut"
+                                      }}
+                                      className="w-1.5 rounded-full bg-primary/80"
+                                  />
+                              ))}
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="w-full space-y-0.5">
+                              <input
+                                  type="range"
+                                  min="0"
+                                  max={videoDuration || 1}
+                                  step="1"
+                                  value={playerCurrentTime}
+                                  onChange={(e) => {
+                                      const val = parseFloat(e.target.value);
+                                      if (inlineAudioRef.current) {
+                                          inlineAudioRef.current.currentTime = val;
+                                      }
+                                      setPlayerCurrentTime(val);
+                                  }}
+                                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                              />
+                              <div className="flex justify-between text-[9px] text-white/40 font-black">
+                                  <span>{formatDuration(playerCurrentTime)}</span>
+                                  <span>{formatDuration(videoDuration || lecture.duration || 0)}</span>
+                              </div>
+                          </div>
+
+                          {/* Control Buttons */}
+                          <div className="flex items-center gap-4">
+                              {/* 10s back */}
+                              <button
+                                  onClick={() => {
+                                      if (inlineAudioRef.current) {
+                                          inlineAudioRef.current.currentTime = Math.max(0, inlineAudioRef.current.currentTime - 10);
+                                      }
+                                  }}
+                                  className="p-2 rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-all active:scale-95"
+                                  title="تراجع 10 ثوانٍ"
+                              >
+                                  <RotateCcw className="w-4 h-4" />
+                              </button>
+
+                              {/* Play / Pause */}
+                              <button
+                                  onClick={() => {
+                                      if (inlineAudioRef.current) {
+                                          if (isInlineAudioPlaying) {
+                                              inlineAudioRef.current.pause();
+                                          } else {
+                                              inlineAudioRef.current.play().catch(console.error);
+                                          }
+                                      }
+                                  }}
+                                  className="p-4 rounded-full bg-primary text-white hover:scale-105 transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] active:scale-95"
+                              >
+                                  {isInlineAudioPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                              </button>
+
+                              {/* 10s forward */}
+                              <button
+                                  onClick={() => {
+                                      if (inlineAudioRef.current) {
+                                          inlineAudioRef.current.currentTime = Math.min(videoDuration, inlineAudioRef.current.currentTime + 10);
+                                      }
+                                  }}
+                                  className="p-2 rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-all active:scale-95"
+                                  title="تقدم 10 ثوانٍ"
+                              >
+                                  <RotateCw className="w-4 h-4" />
+                              </button>
+                          </div>
+
+                          {/* Bottom controls row (Speed, Volume) */}
+                          <div className="flex items-center justify-between w-full border-t border-white/5 pt-2">
+                              {/* Speed selector */}
+                              <div className="flex items-center gap-1">
+                                  {['1x', '1.25x', '1.5x', '2x'].map((speedStr) => {
+                                      const val = parseFloat(speedStr);
+                                      return (
+                                          <button
+                                              key={speedStr}
+                                              onClick={() => setPlaybackRate(val)}
+                                              className={cn(
+                                                  "px-2 py-0.5 rounded text-[9px] font-black transition-all border",
+                                                  playbackRate === val 
+                                                      ? "bg-primary text-white border-primary" 
+                                                      : "bg-white/5 text-white/50 border-white/5 hover:bg-white/10 hover:text-white"
+                                              )}
+                                          >
+                                              {speedStr}
+                                          </button>
+                                      );
+                                  })}
+                              </div>
+
+                              {/* Volume selector */}
+                              <div className="flex items-center gap-2">
+                                  <Volume2 className="w-3.5 h-3.5 text-white/40" />
+                                  <input
+                                      type="range"
+                                      min="0"
+                                      max="1"
+                                      step="0.05"
+                                      value={audioVolume}
+                                      onChange={(e) => setAudioVolume(parseFloat(e.target.value))}
+                                      className="w-12 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                                  />
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                 )}
             </div>
 
@@ -572,7 +811,51 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            {/* Mode Switcher inside Page Action Bar */}
+                            {isVideoAvailable && (
+                              <div className="flex bg-white/5 border border-white/10 p-1.5 rounded-[2rem] gap-1.5 h-16 items-center">
+                                  <button
+                                      onClick={() => {
+                                          setPlayMode('video');
+                                          localStorage.setItem('waqfah_lecture_play_mode', 'video');
+                                          if (inlineAudioRef.current) {
+                                              inlineAudioRef.current.pause();
+                                          }
+                                      }}
+                                      className={cn(
+                                          "px-5 h-full rounded-2xl text-xs font-black transition-all flex items-center gap-2",
+                                          currentPlayMode === 'video' 
+                                              ? "bg-primary text-primary-foreground shadow-lg" 
+                                              : "text-white/60 hover:text-white hover:bg-white/5"
+                                      )}
+                                  >
+                                      <ListVideo className="w-4 h-4" />
+                                      <span>مشاهدة فيديو</span>
+                                  </button>
+                                  <button
+                                      onClick={() => {
+                                          setPlayMode('audio');
+                                          localStorage.setItem('waqfah_lecture_play_mode', 'audio');
+                                          if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                                              try {
+                                                  videoPlayerRef.current.pauseVideo();
+                                              } catch (e) {}
+                                          }
+                                      }}
+                                      className={cn(
+                                          "px-5 h-full rounded-2xl text-xs font-black transition-all flex items-center gap-2",
+                                          currentPlayMode === 'audio' 
+                                              ? "bg-primary text-primary-foreground shadow-lg" 
+                                              : "text-white/60 hover:text-white hover:bg-white/5"
+                                      )}
+                                  >
+                                      <Headphones className="w-4 h-4" />
+                                      <span>استماع صوتي</span>
+                                  </button>
+                              </div>
+                            )}
+
                             <Button 
                                 onClick={handleDownload} 
                                 disabled={isFetchingFormats}
@@ -839,7 +1122,12 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
               chapters={lecture.chapters}
               currentTime={playerCurrentTime}
               onSeek={(t) => {
-                if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+                if (currentPlayMode === 'audio' && inlineAudioRef.current) {
+                  inlineAudioRef.current.currentTime = t;
+                  if (inlineAudioRef.current.paused) {
+                    inlineAudioRef.current.play().catch(console.error);
+                  }
+                } else if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
                   try {
                     videoPlayerRef.current.seekTo(t, true);
                     const playerState = videoPlayerRef.current.getPlayerState();
