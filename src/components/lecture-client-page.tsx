@@ -93,6 +93,18 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const [audioVolume, setAudioVolume] = useState(0.8);
   const inlineAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  const playableAudioSrc = useMemo(() => {
+    if (!lecture?.audioSrc) return '';
+    const isYt = lecture.audioSrc.includes('youtube.com') || lecture.audioSrc.includes('youtu.be') || isVideoAvailable;
+    if (isYt) {
+      const vId = videoId || getVideoIdFromUrl(lecture.audioSrc);
+      if (vId) {
+        return `/api/download?videoId=${vId}&itag=140&title=${encodeURIComponent(lecture.title)}&container=m4a`;
+      }
+    }
+    return lecture.audioSrc;
+  }, [lecture?.audioSrc, lecture?.title, videoId, isVideoAvailable]);
+
   // Poll video duration periodically
   useEffect(() => {
     if (currentPlayMode === 'video' && videoPlayerRef.current && typeof videoPlayerRef.current.getDuration === 'function') {
@@ -215,18 +227,22 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
   useEffect(() => {
     const checkCache = async () => {
-      const isCached = await checkIsAudioOffline(lecture.audioSrc);
+      const isCached = await checkIsAudioOffline(playableAudioSrc);
       setIsOfflineCached(isCached);
     };
     checkCache();
-  }, [lecture.audioSrc]);
+  }, [playableAudioSrc]);
 
   const handleOfflineToggle = async () => {
     if (isOfflineCached) return;
     setIsOfflineDownloading(true);
     setOfflineDownloadProgress(0);
     try {
-      await downloadAudioForOffline(lecture, (progress) => {
+      const lectureToDownload = {
+        ...lecture,
+        audioSrc: playableAudioSrc
+      };
+      await downloadAudioForOffline(lectureToDownload, (progress) => {
         setOfflineDownloadProgress(progress);
       });
       setIsOfflineCached(true);
@@ -248,7 +264,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
   const handleDeleteOffline = async () => {
     try {
-      await deleteAudioFromOffline(lecture.id, lecture.audioSrc);
+      await deleteAudioFromOffline(lecture.id, playableAudioSrc);
       setIsOfflineCached(false);
       toast({
         title: 'تم إزالة المحاضرة من الذاكرة المؤقتة',
@@ -315,7 +331,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     playTrack({
       id: lecture.id,
       title: lecture.title,
-      audioSrc: lecture.audioSrc,
+      audioSrc: playableAudioSrc,
       imageId: lecture.imageId,
       seriesId: lecture.seriesId,
       seriesSlug: lecture.seriesSlug,
@@ -569,7 +585,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
                       <audio
                         ref={inlineAudioRef}
-                        src={lecture.audioSrc}
+                        src={playableAudioSrc}
                         onTimeUpdate={(e) => {
                           const time = e.currentTarget.currentTime;
                           setPlayerCurrentTime(time);

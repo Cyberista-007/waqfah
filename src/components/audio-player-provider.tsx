@@ -7,6 +7,7 @@ import type { Lecture } from "@/lib/types";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, getDoc, setDoc, Timestamp, runTransaction, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { getVideoIdFromUrl } from "@/lib/utils";
 
 export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
 export type IframeTrack = {
@@ -86,10 +87,23 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
     setVideoClipEndTime(null);
 
+    let audioUrl = newTrack.audioSrc;
+    if (audioUrl && (audioUrl.includes('youtube.com') || audioUrl.includes('youtu.be'))) {
+      const vId = getVideoIdFromUrl(audioUrl);
+      if (vId) {
+        audioUrl = `/api/download?videoId=${vId}&itag=140&title=${encodeURIComponent(newTrack.title)}&container=m4a`;
+      }
+    }
+
+    const trackWithPlayableSrc = {
+      ...newTrack,
+      audioSrc: audioUrl
+    };
+
     if (track?.id !== newTrack.id) {
-      setTrack(newTrack);
+      setTrack(trackWithPlayableSrc);
       if (audioRef.current) {
-        audioRef.current.src = newTrack.audioSrc;
+        audioRef.current.src = audioUrl;
         audioRef.current.load();
       }
     }
