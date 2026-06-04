@@ -181,6 +181,109 @@ export default function FloatingVideoPlayer() {
         };
     }, [isPlayerVisible, iframeTrack, createPlayer, videoPlayerRef]);
 
+    const startDirectVideoPiP = async () => {
+        if (!iframeTrack) return;
+        
+        let fallbackTimer: any = null;
+        const video = document.createElement('video');
+        
+        // Use the proxy download URL with itag 18 (360p mp4)
+        video.src = `/api/download?videoId=${iframeTrack.src}&itag=18`;
+        video.currentTime = currentTime;
+        video.playsInline = true;
+        video.width = 640;
+        video.height = 360;
+        video.muted = false; // We want audio since it's the actual video
+
+        video.style.position = 'fixed';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '1px';
+        video.style.height = '1px';
+        video.style.opacity = '0';
+        video.style.pointerEvents = 'none';
+        
+        document.body.appendChild(video);
+
+        const executeFallback = () => {
+            if (fallbackTimer) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+            video.pause();
+            try {
+                video.remove();
+            } catch (e) {}
+            startCanvasPiP();
+        };
+
+        // Fallback if loading is slow or errors out
+        fallbackTimer = setTimeout(() => {
+            console.warn("Direct stream load timed out, falling back to Canvas visualizer PiP.");
+            executeFallback();
+        }, 3500);
+
+        video.onerror = () => {
+            console.warn("Direct stream play failed, falling back to Canvas visualizer PiP.");
+            executeFallback();
+        };
+
+        video.oncanplay = async () => {
+            if (!fallbackTimer) return; // Already fallback triggered
+            clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+
+            try {
+                // Pause YouTube player on main page to avoid dual audio
+                if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                    videoPlayerRef.current.pauseVideo();
+                }
+                setIsPlaying(false);
+
+                // Play the video stream and trigger native PiP
+                await video.play();
+                await video.requestPictureInPicture();
+
+                canvasVideoRef.current = video;
+                setIsNativePiP(true);
+
+                video.addEventListener('leavepictureinpicture', () => {
+                    setIsNativePiP(false);
+                    
+                    const endSeconds = video.currentTime;
+                    if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+                        videoPlayerRef.current.seekTo(endSeconds, true);
+                        if (!video.paused) {
+                            videoPlayerRef.current.playVideo();
+                            setIsPlaying(true);
+                        }
+                    }
+                    canvasVideoRef.current = null;
+                    try {
+                        video.remove();
+                    } catch (e) {}
+                });
+
+                // Link play/pause in PiP back to components
+                video.onplay = () => {
+                    setIsPlaying(true);
+                };
+                video.onpause = () => {
+                    setIsPlaying(false);
+                };
+
+                toast({
+                    title: "تم تفعيل النافذة العائمة",
+                    description: "المحاضرة تعمل الآن بالفيديو في نافذة عائمة خارج المتصفح.",
+                });
+
+            } catch (err) {
+                console.error("Failed to request PiP for direct stream:", err);
+                executeFallback();
+            }
+        };
+    };
+
     const startCanvasPiP = async () => {
         try {
             // Clean up any existing Canvas PiP
@@ -369,8 +472,8 @@ export default function FloatingVideoPlayer() {
                 return;
             }
 
-            // Execute canvas-based Picture-in-Picture fallback
-            await startCanvasPiP();
+            // Execute actual video streaming PiP
+            await startDirectVideoPiP();
             return;
         }
 

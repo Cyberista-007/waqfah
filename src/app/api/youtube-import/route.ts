@@ -145,7 +145,8 @@ export async function POST(req: NextRequest) {
                         container: f.mimeType?.includes('webm') ? 'webm' : 'mp4',
                         contentLength: f.contentLength,
                         type: 'video',
-                        hasAudio: !!(f.audioChannels && f.audioChannels > 0)
+                        hasAudio: !!(f.audioChannels && f.audioChannels > 0),
+                        url: f.url
                     }));
 
                 // Get all audio formats
@@ -157,7 +158,8 @@ export async function POST(req: NextRequest) {
                         container: f.mimeType?.includes('webm') ? 'weba' : 'm4a',
                         contentLength: f.contentLength,
                         type: 'audio',
-                        hasAudio: true
+                        hasAudio: true,
+                        url: f.url
                     }));
                 
                 // Sort videos by quality, prioritizing muxed (with audio)
