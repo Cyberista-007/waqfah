@@ -137,6 +137,13 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     }
   }, [initialTime]);
 
+  // Close sidebar by default on mobile/tablet screens
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
+
   // Initialize hidden YT.Player for audio-only mode
   useEffect(() => {
     if (!videoId || currentPlayMode !== 'audio') return;
@@ -681,7 +688,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
         />
     </div>
 
-    <div className={cn("container mx-auto px-4 sm:px-6 py-8 space-y-12 transition-all duration-700", isTheaterMode && "max-w-none px-0 py-0")}>
+    <div className={cn("container mx-auto px-3 sm:px-6 py-4 md:py-8 space-y-6 md:space-y-12 transition-all duration-700", isTheaterMode && "max-w-none px-0 py-0")}>
       
       {/* 🎬 Cinematic Player & Playlist Layout */}
       <motion.div 
@@ -689,25 +696,28 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
         animate="visible"
         variants={revealVariant}
         className={cn(
-            "grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 bg-card/20 p-2 md:p-4 rounded-[3rem] border border-white/5 shadow-2xl relative z-10 frosted-glass w-full backdrop-blur-3xl",
+            "grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 bg-card/20 p-1.5 md:p-4 rounded-3xl md:rounded-[3rem] border border-white/5 shadow-2xl relative z-10 frosted-glass w-full backdrop-blur-3xl",
             isTheaterMode && "rounded-none border-none p-0 lg:gap-0 lg:h-screen"
         )}
       >
          {/* 🎥 Right Area: Main Video Player & Info */}
           <div className={cn(
-             "order-1 flex flex-col gap-8 transition-all duration-700 ease-in-out",
+             "order-1 flex flex-col gap-6 md:gap-8 transition-all duration-700 ease-in-out",
              isSidebarOpen ? "lg:col-span-9" : "lg:col-span-12",
              isTheaterMode && "lg:col-span-12"
           )}>
             <div className={cn(
-                "relative bg-[#050505] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.6)] group flex items-center justify-center w-full aspect-video transition-all duration-700",
+                "relative bg-[#050505] rounded-3xl md:rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.6)] group flex items-center justify-center w-full transition-all duration-700",
+                currentPlayMode === 'audio' 
+                    ? "aspect-auto min-h-[480px] md:aspect-video md:min-h-0" 
+                    : "aspect-video",
                 isTheaterMode && "rounded-none h-screen aspect-auto"
             )}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
                 
-                {/* Mode Switcher Float (Audio / Video) */}
+                {/* Mode Switcher Float (Audio / Video) - desktop only, mobile uses bottom switcher */}
                 {isVideoAvailable && (
-                  <div className="absolute top-4 left-4 z-20 flex bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/10 gap-1 opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="absolute top-4 left-4 z-20 hidden md:flex bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/10 gap-1 opacity-80 hover:opacity-100 transition-opacity">
                       <button
                           onClick={() => {
                               setPlayMode('video');
@@ -949,25 +959,28 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
             {/* 📈 Visual Progress Heatmap (Most Rewatched) */}
             {videoId && !isTheaterMode && (
-                <div className="bg-white/5 border border-white/10 rounded-3xl p-5 -mt-4 shadow-xl backdrop-blur-xl relative overflow-hidden group/heatmap" dir="rtl">
+                <div className="bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-5 -mt-2 md:-mt-4 shadow-xl backdrop-blur-xl relative overflow-hidden group/heatmap" dir="rtl">
                     {/* Background glow overlay */}
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
                     
                     <div className="flex justify-between items-center mb-3 relative z-10">
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                            <span className="text-sm font-bold text-white/80 font-headline">خريطة المشاهدة والتكرار (Heatmap & Most Rewatched)</span>
+                            <span className="text-xs md:text-sm font-bold text-white/80 font-headline">
+                                <span className="md:hidden">خريطة المشاهدة والتكرار</span>
+                                <span className="hidden md:inline">خريطة المشاهدة والتكرار (Heatmap & Most Rewatched)</span>
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                            <span className="text-[10px] text-emerald-400 font-black">نشط الآن</span>
+                            <span className="text-[9px] sm:text-[10px] text-emerald-400 font-black">نشط الآن</span>
                         </div>
                     </div>
 
                     {/* Interactive Heatmap Progress Container */}
                     <div 
                         onClick={handleHeatmapClick}
-                        className="relative h-14 w-full cursor-pointer overflow-hidden rounded-2xl bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04] hover:border-white/10"
+                        className="relative h-12 sm:h-14 w-full cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04] hover:border-white/10"
                     >
                         <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
                             <defs>
@@ -997,9 +1010,10 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                         />
                     </div>
                     
-                    <div className="flex justify-between items-center mt-2.5 text-[11px] text-white/40 font-black">
+                    <div className="flex justify-between items-center mt-2 text-[9px] md:text-[11px] text-white/40 font-black">
                         <span>البداية</span>
-                        <span className="text-white/60 font-bold bg-white/5 px-2 py-0.5 rounded">انقر على المنحنى للانتقال المباشر للمشهد</span>
+                        <span className="text-white/60 font-bold bg-white/5 px-2 py-0.5 rounded hidden sm:inline">انقر على المنحنى للانتقال المباشر للمشهد</span>
+                        <span className="text-white/60 font-bold bg-white/5 px-2 py-0.5 rounded sm:hidden">انقر للانتقال للمشهد</span>
                         <span>النهاية</span>
                     </div>
                 </div>
