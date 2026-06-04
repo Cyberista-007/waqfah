@@ -22,7 +22,7 @@ import {
   ArrowLeft, ShieldCheck, Smartphone, Search, Zap, Headphones, Users, Music, 
   Globe, Quote, HeartHandshake, Mail, Send, MessageCircle, Layers,
   Library, BookOpenCheck, BookOpen, Sparkles, Heart, Loader2, Star, Play, HandHeart, TriangleAlert, Shield,
-  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap
+  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap, Compass, Scale
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -967,6 +967,16 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 { href: "/accountability", label: "المحاسبة", icon: BookCheck, color: "text-emerald-500" },
                 { href: "/prayer", label: "الصلاة والخشوع", icon: Sparkles, color: "text-teal-400" },
                 { href: "/qa", label: "سؤال وجواب", icon: HelpCircle, color: "text-indigo-500" },
+                { href: "/bayan", label: "بيان", icon: Sparkles, color: "text-violet-400" },
+                { href: "/athar", label: "أثر", icon: Compass, color: "text-amber-500" },
+                { href: "/namaa", label: "نماء", icon: Scale, color: "text-emerald-500" },
+                { href: "/adab", label: "أدب", icon: BookCheck, color: "text-sky-400" },
+                { href: "/kanaf", label: "كنف", icon: Heart, color: "text-rose-500" },
+                { href: "/chastity", label: "درع العفة", icon: Shield, color: "text-slate-400" },
+                { href: "/mirath", label: "المواريث", icon: Scale, color: "text-yellow-500" },
+                { href: "/sciences-tree", label: "شجرة العلوم", icon: Compass, color: "text-teal-400" },
+                { href: "/memorize", label: "حفظ المتون", icon: BookOpen, color: "text-indigo-400" },
+                { href: "/contact", label: "اتصل بنا", icon: Mail, color: "text-cyan-500" },
             ].map((section, idx) => (
                 <motion.div
                     key={idx}
