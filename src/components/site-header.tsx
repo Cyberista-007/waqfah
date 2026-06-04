@@ -231,9 +231,10 @@ export function SiteHeader() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="hover:bg-white/10 rounded-full h-10 w-10 text-white transition-all hover:scale-105 active:scale-95 flex items-center justify-center me-3 shrink-0"
+                className="group relative bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 text-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center me-3 shrink-0 shadow-inner"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90" />
+                <span className="absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 -z-10" />
               </Button>
             </SheetTrigger>
             <SheetContent 
