@@ -410,7 +410,7 @@ export function useQuranRadio() {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isPlayingRadio, currentStation, visualizerStyle, radioAudioRef]);
+  }, [isPlayingRadio, currentStation, visualizerStyle, radioAudioRef, isAmbientScreenSaver]);
 
   // ── Recording Control Methods ──
   const startRecording = useCallback(async () => {

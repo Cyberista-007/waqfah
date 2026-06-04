@@ -3235,7 +3235,7 @@ export default function QuranPage() {
                   {/* Center Column: Real-time Visualizer & Shortcuts */}
                   <div className="flex flex-col justify-center gap-3 lg:w-1/3 w-full">
                     <div className="w-full h-12 relative overflow-hidden rounded-2xl border border-white/5 bg-black/40 group/viz">
-                      <canvas ref={canvasRef} className="w-full h-full" />
+                      <canvas ref={isAmbientScreenSaver ? null : canvasRef} className="w-full h-full" />
                       
                       <div className="absolute top-1.5 left-2 z-20 flex gap-1 bg-black/70 p-0.5 rounded-lg border border-white/10 opacity-0 group-hover/viz:opacity-100 transition-opacity">
                         {([
@@ -4000,23 +4000,39 @@ export default function QuranPage() {
               </div>
 
               {/* Active countdown or visual wave */}
-              <div className="flex gap-1.5 items-end h-16 justify-center w-full">
-                {isPlayingRadio ? (
-                  [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 0.9, 0.7, 0.5, 0.3, 0.1].map((val, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1.5 rounded-full bg-primary"
-                      animate={{ height: [12, 60, 12] }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 0.8 + (i % 4) * 0.15,
-                        delay: i * 0.05,
-                        ease: 'easeInOut'
-                      }}
-                    />
-                  ))
-                ) : (
-                  <div className="text-white/20 text-xs font-bold animate-pulse">البث متوقف مؤقتاً</div>
+              <div className="w-full max-w-md h-16 relative overflow-hidden rounded-xl border border-white/5 bg-black/40 group/viz mx-auto">
+                <canvas ref={isAmbientScreenSaver ? canvasRef : null} className="w-full h-full" />
+                
+                <div className="absolute top-1.5 left-2 z-20 flex gap-1 bg-black/70 p-0.5 rounded-lg border border-white/10 opacity-0 group-hover/viz:opacity-100 transition-opacity">
+                  {([
+                    { id: 'columns', name: 'أعمدة' },
+                    { id: 'waves', name: 'موجات' },
+                    { id: 'particles', name: 'نبضات' }
+                  ] as const).map(style => (
+                    <button
+                      key={style.id}
+                      onClick={() => setVisualizerStyle(style.id)}
+                      className={cn(
+                        "px-2 py-0.5 rounded text-[8px] font-black transition-all whitespace-nowrap",
+                        visualizerStyle === style.id ? "bg-primary text-black font-black" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      {style.name}
+                    </button>
+                  ))}
+                </div>
+
+                {isRadioBuffering && (
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 text-white/60 text-[10px] font-black backdrop-blur-[1px]">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                    <span>جاري الاتصال بالبث المباشر...</span>
+                  </div>
+                )}
+
+                {!isPlayingRadio && !isRadioBuffering && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white/40 text-[10px] font-black backdrop-blur-[1px]">
+                    <span>البث متوقف مؤقتاً</span>
+                  </div>
                 )}
               </div>
             </div>
