@@ -228,48 +228,66 @@ export function SiteHeader() {
         <nav className="relative w-full px-4 sm:px-12 py-3 flex justify-between items-center">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:bg-white/10 rounded-full h-10 w-10 text-white transition-all hover:scale-105 active:scale-95 flex items-center justify-center me-3 shrink-0"
+              >
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+            <SheetContent 
+              side="right" 
+              className="w-[300px] sm:w-[350px] p-0 border-l border-white/10 bg-zinc-950/95 backdrop-blur-2xl text-white shadow-2xl flex flex-col h-full"
+              dir="rtl"
+            >
               {isMobileMenuOpen && (
-                <div className="flex flex-col h-full bg-background">
-                  <div className="p-6 border-b">
+                <div className="flex flex-col h-full">
+                  <div className="p-6 border-b border-white/10 bg-white/[0.02]">
                     <h2 className="text-2xl font-black font-headline text-primary italic">وقـــفــــة</h2>
-                    <p className="text-xs text-muted-foreground mt-1">القائمة الرئيسية للمنصة</p>
+                    <p className="text-xs text-zinc-400 mt-1">القائمة الرئيسية للمنصة</p>
                   </div>
-                  <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-6">
-                      <div className="space-y-1">
-                        <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">التنقل السريع</p>
+                  <ScrollArea className="flex-1 p-6">
+                    <div className="space-y-8">
+                      <div className="space-y-3">
+                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">التنقل السريع</p>
                         {mainNavItems.map(item => (
                           <SheetClose asChild key={item.href}>
-                            <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-colors font-bold group">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                              {item.label}
+                            <Link 
+                              href={item.href} 
+                              className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-300 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all font-black text-sm group"
+                            >
+                              <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />
+                              <span>{item.label}</span>
+                              {item.isLive && (
+                                <span className="relative flex h-2 w-2 mr-auto">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                              )}
                             </Link>
                           </SheetClose>
                         ))}
                       </div>
-                      <div className="space-y-1">
-                        <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">الأقسام الإضافية</p>
+                      <div className="space-y-3">
+                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">الأقسام الإضافية</p>
                         {dynamicMoreNavItems.map(item => (
                           <SheetClose asChild key={item.href}>
-                            <Link href={item.href} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-muted transition-colors text-sm font-medium">
-                              {item.icon && <item.icon className="h-5 w-5 text-muted-foreground" />}
-                              {item.label}
+                            <Link 
+                              href={item.href} 
+                              className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-400 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all text-xs font-bold group"
+                            >
+                              {item.icon && <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />}
+                              <span>{item.label}</span>
                             </Link>
                           </SheetClose>
                         ))}
                       </div>
                     </div>
                   </ScrollArea>
-                  <div className="p-4 border-t bg-muted/30">
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsThemeSwitcherOpen(true)}>ثيمات</Button>
-                      <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsFontSwitcherOpen(true)}>الخطوط</Button>
-                    </div>
+                  <div className="p-6 border-t border-white/10 bg-white/[0.01] flex gap-3">
+                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsThemeSwitcherOpen(true)}>ثيمات</Button>
+                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsFontSwitcherOpen(true)}>الخطوط</Button>
                   </div>
                 </div>
               )}
