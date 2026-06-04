@@ -1,7 +1,7 @@
 'use client';
 
 import { useAudioPlayer } from './audio-player-provider';
-import { X, Maximize2, GripHorizontal, CheckCircle2, Bookmark, Play, Pause, RotateCcw, RotateCw, Captions } from 'lucide-react';
+import { X, Maximize2, GripHorizontal, CheckCircle2, Bookmark, Play, Pause, RotateCcw, RotateCw, Captions, PictureInPicture } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
@@ -16,6 +16,11 @@ export default function FloatingVideoPlayer() {
     const [size, setSize] = useState({ width: 480, height: 270 }); // 16:9 ratio
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isInitialized, setIsInitialized] = useState(false);
+
+    // Native PiP State
+    const [isNativePiP, setIsNativePiP] = useState(false);
+    const pipWindowRef = useRef<any>(null);
+    const playerContainerRef = useRef<HTMLDivElement>(null);
 
     // Playback State
     const [currentTime, setCurrentTime] = useState(0);
@@ -102,6 +107,30 @@ export default function FloatingVideoPlayer() {
         }
     }, [isPlayerVisible, isInitialized]);
 
+    const createPlayer = useCallback(() => {
+        if (!isPlayerVisible || !iframeTrack || iframeTrack.type !== 'youtube') return;
+        if (!playerContainerRef.current) return;
+
+        if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
+            videoPlayerRef.current.destroy();
+        }
+
+        new (window as any).YT.Player(playerContainerRef.current, {
+            videoId: iframeTrack.src,
+            playerVars: {
+                autoplay: 1,
+                controls: 1,
+                rel: 0,
+                modestbranding: 1,
+                enablejsapi: 1,
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+            },
+        });
+    }, [isPlayerVisible, iframeTrack, onPlayerReady, onPlayerStateChange, videoPlayerRef]);
+
     useEffect(() => {
         if (!isPlayerVisible || !iframeTrack || iframeTrack.type !== 'youtube') {
             if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
@@ -111,26 +140,6 @@ export default function FloatingVideoPlayer() {
             setIsInitialized(false);
             return;
         }
-
-        const createPlayer = () => {
-            if (videoPlayerRef.current && typeof videoPlayerRef.current.destroy === 'function') {
-                videoPlayerRef.current.destroy();
-            }
-            new (window as any).YT.Player('youtube-player-container', {
-                videoId: iframeTrack.src,
-                playerVars: {
-                    autoplay: 1,
-                    controls: 1,
-                    rel: 0,
-                    modestbranding: 1,
-                    enablejsapi: 1,
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                },
-            });
-        };
 
         if (!(window as any).YT || !(window as any).YT.Player) {
             // Check if script already exists but YT is not yet ready
@@ -157,7 +166,154 @@ export default function FloatingVideoPlayer() {
         return () => {
             if ((window as any).onYouTubeIframeAPIReady) (window as any).onYouTubeIframeAPIReady = null;
         };
-    }, [isPlayerVisible, iframeTrack, onPlayerReady, onPlayerStateChange, videoPlayerRef]);
+    }, [isPlayerVisible, iframeTrack, createPlayer, videoPlayerRef]);
+
+    // Handle PiP Window Native Support
+    const toggleNativePiP = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (isNativePiP && pipWindowRef.current) {
+            pipWindowRef.current.close();
+            return;
+        }
+
+        if (typeof window === 'undefined') return;
+
+        if (!('documentPictureInPicture' in window)) {
+            toast({
+                title: "المشغل العائم غير مدعوم",
+                description: "متصفحك لا يدعم هذه الميزة (أو تحتاج لاستخدام Chrome/Edge على الكمبيوتر).",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            const pipWindow = await (window as any).documentPictureInPicture.requestWindow({
+                width: size.width,
+                height: size.height,
+            });
+
+            pipWindowRef.current = pipWindow;
+            setIsNativePiP(true);
+
+            // Copy stylesheets so layout renders beautifully
+            [...document.styleSheets].forEach((styleSheet) => {
+                try {
+                    const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                    const style = document.createElement('style');
+                    style.textContent = cssRules;
+                    pipWindow.document.head.appendChild(style);
+                } catch (e) {
+                    if (styleSheet.href) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = styleSheet.href;
+                        pipWindow.document.head.appendChild(link);
+                    }
+                }
+            });
+
+            const playerContainer = playerContainerRef.current;
+            if (playerContainer) {
+                // If it is an iframe, update src with start time to avoid resetting playback
+                if (playerContainer.tagName === 'IFRAME') {
+                    const currentSrc = playerContainer.getAttribute('src') || '';
+                    const baseUrl = currentSrc.split('?')[0];
+                    const urlParams = new URLSearchParams(currentSrc.split('?')[1] || '');
+                    urlParams.set('start', Math.floor(currentTime).toString());
+                    urlParams.set('autoplay', '1');
+                    playerContainer.setAttribute('src', `${baseUrl}?${urlParams.toString()}`);
+                }
+
+                // Remove pointer-events-none from parent so user can interact with the player
+                playerContainer.parentElement?.classList.remove('pointer-events-none');
+                
+                // Append player to PiP document body
+                pipWindow.document.body.appendChild(playerContainer);
+
+                // Inline styles for absolute fit
+                pipWindow.document.body.style.margin = '0';
+                pipWindow.document.body.style.backgroundColor = 'black';
+                pipWindow.document.body.style.overflow = 'hidden';
+                playerContainer.style.width = '100vw';
+                playerContainer.style.height = '100vh';
+
+                // Re-bind YT.Player in PiP window once loaded
+                playerContainer.onload = () => {
+                    new (window as any).YT.Player(playerContainer, {
+                        events: {
+                            'onReady': (event: any) => {
+                                videoPlayerRef.current = event.target;
+                                setIsPlaying(true);
+                            },
+                            'onStateChange': (event: any) => {
+                                if (event.data === 1) setIsPlaying(true);
+                                else if (event.data === 2) setIsPlaying(false);
+                                onPlayerStateChange(event);
+                            }
+                        }
+                    });
+                };
+            }
+
+            pipWindow.addEventListener('pagehide', () => {
+                setIsNativePiP(false);
+                pipWindowRef.current = null;
+
+                const originalWrapper = document.getElementById('player-video-wrapper');
+                const playerContainer = playerContainerRef.current;
+                if (originalWrapper && playerContainer) {
+                    originalWrapper.appendChild(playerContainer);
+                    originalWrapper.classList.add('pointer-events-none');
+                    playerContainer.style.width = '100%';
+                    playerContainer.style.height = '100%';
+
+                    if (playerContainer.tagName === 'IFRAME') {
+                        const currentSrc = playerContainer.getAttribute('src') || '';
+                        const baseUrl = currentSrc.split('?')[0];
+                        const urlParams = new URLSearchParams(currentSrc.split('?')[1] || '');
+                        urlParams.set('start', Math.floor(currentTime).toString());
+                        urlParams.set('autoplay', isPlaying ? '1' : '0');
+                        playerContainer.setAttribute('src', `${baseUrl}?${urlParams.toString()}`);
+                    }
+
+                    // Re-bind on main window
+                    playerContainer.onload = () => {
+                        createPlayer();
+                    };
+                }
+            });
+
+            toast({
+                title: "تم تفعيل النافذة العائمة الخارجية",
+                description: "الفيديو سيبقى عائماً خارج المتصفح وفوق جميع التطبيقات.",
+            });
+
+        } catch (err) {
+            console.error("Failed to open Picture-in-Picture window:", err);
+            toast({
+                title: "فشل تفعيل النافذة العائمة",
+                description: "حدث خطأ غير متوقع.",
+                variant: "destructive"
+            });
+        }
+    };
+
+    // Close PiP on cleanup
+    useEffect(() => {
+        return () => {
+            if (pipWindowRef.current) {
+                pipWindowRef.current.close();
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isPlayerVisible && pipWindowRef.current) {
+            pipWindowRef.current.close();
+        }
+    }, [isPlayerVisible]);
 
     // Resize Logic
     const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, handle: string) => {
@@ -310,14 +466,23 @@ export default function FloatingVideoPlayer() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/60 pointer-events-none z-10" />
 
                 {/* Video Container */}
-                <div className="w-full h-full relative z-0 pointer-events-none">
-                    <div id="youtube-player-container" className="w-full h-full scale-[1.01]" />
+                <div id="player-video-wrapper" className="w-full h-full relative z-0 pointer-events-none">
+                    <div ref={playerContainerRef} id="youtube-player-container" className="w-full h-full scale-[1.01]" />
                 </div>
+
+                {/* Native PiP Overlay Indicator */}
+                {isNativePiP && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-[45] text-center p-4">
+                        <PictureInPicture className="w-12 h-12 text-blue-500 animate-pulse mb-3" />
+                        <p className="text-sm font-black text-white">الفيديو نشط في النافذة العائمة الخارجية</p>
+                        <p className="text-xs text-white/50 mt-1">تصفح الموقع بحرية، أو أغلق النافذة الخارجية للعودة.</p>
+                    </div>
+                )}
 
                 {/* Center Playback Controls */}
                 <div className={cn(
                     "absolute inset-0 z-30 flex items-center justify-center gap-6 transition-all duration-500",
-                    isHovered ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                    (isHovered && !isNativePiP) ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}>
                     <button 
                         onClick={() => skip(-10)} 
@@ -357,7 +522,7 @@ export default function FloatingVideoPlayer() {
                     onMouseDown={(e) => e.stopPropagation()}
                     className={cn(
                         "absolute bottom-0 left-0 right-0 p-6 z-30 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500",
-                        isHovered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
+                        (isHovered && !isNativePiP) ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
                     )}
                 >
                     {/* Time Display */}
@@ -431,6 +596,21 @@ export default function FloatingVideoPlayer() {
                             variant="ghost"
                             size="icon"
                             onMouseDown={(e) => e.stopPropagation()}
+                            className={cn(
+                                "w-10 h-10 rounded-xl border pointer-events-auto backdrop-blur-md transition-all",
+                                isNativePiP 
+                                    ? "bg-blue-500 text-white border-blue-400 hover:bg-blue-600" 
+                                    : "bg-white/5 text-white border-white/10 hover:bg-white/10"
+                            )}
+                            onClick={toggleNativePiP}
+                            title="نافذة عائمة خارج المتصفح (Picture-in-Picture)"
+                        >
+                            <PictureInPicture className="h-5 w-5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onMouseDown={(e) => e.stopPropagation()}
                             className="w-10 h-10 rounded-xl bg-white/5 hover:bg-blue-500/80 text-white border border-white/10 pointer-events-auto backdrop-blur-md"
                             onClick={() => toast({ title: "تمت الإضافة للمشاهدة لاحقاً" })}
                         >
@@ -442,7 +622,7 @@ export default function FloatingVideoPlayer() {
                 {/* Glass Tag (Only visible when not hovered) */}
                 <div className={cn(
                     "absolute bottom-4 left-4 z-20 flex items-center gap-2 transition-opacity duration-300",
-                    isHovered ? "opacity-0" : "opacity-60"
+                    (isHovered || isNativePiP) ? "opacity-0" : "opacity-60"
                 )}>
                     <div className="bg-blue-500/20 backdrop-blur-md border border-blue-500/30 px-2 py-0.5 rounded-lg">
                         <span className="text-[10px] font-black text-blue-400 tracking-tighter uppercase">Waqfah Cinematic</span>
