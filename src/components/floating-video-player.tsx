@@ -28,6 +28,19 @@ export default function FloatingVideoPlayer() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
+    const canvasVideoRef = useRef<HTMLVideoElement | null>(null);
+    const canvasDrawIntervalRef = useRef<number | null>(null);
+    const isPlayingRef = useRef(false);
+    const iframeTrackRef = useRef<any>(null);
+
+    useEffect(() => {
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
+    useEffect(() => {
+        iframeTrackRef.current = iframeTrack;
+    }, [iframeTrack]);
+
     // Resize state
     const [activeHandle, setActiveHandle] = useState<string | null>(null);
     const startPos = useRef({ x: 0, y: 0, w: 0, h: 0, posX: 0, posY: 0 });
@@ -168,23 +181,196 @@ export default function FloatingVideoPlayer() {
         };
     }, [isPlayerVisible, iframeTrack, createPlayer, videoPlayerRef]);
 
+    const startCanvasPiP = async () => {
+        try {
+            // Clean up any existing Canvas PiP
+            if (canvasDrawIntervalRef.current) {
+                window.clearInterval(canvasDrawIntervalRef.current);
+                canvasDrawIntervalRef.current = null;
+            }
+            if (canvasVideoRef.current) {
+                try {
+                    await document.exitPictureInPicture();
+                } catch (e) {}
+                canvasVideoRef.current = null;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 360;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            // Draw initial frame
+            const drawFrame = () => {
+                ctx.fillStyle = '#0f172a'; // slate-900 slate background
+                ctx.fillRect(0, 0, 640, 360);
+
+                // Add radial glow in center
+                const grad = ctx.createRadialGradient(320, 180, 50, 320, 180, 300);
+                grad.addColorStop(0, '#1e3a8a'); // dark blue glow
+                grad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 640, 360);
+
+                // Draw logo icon or simple circle
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(320, 100, 30, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw a play/pause symbol inside the circle
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                if (isPlayingRef.current) {
+                    // Two lines for pause
+                    ctx.fillRect(312, 88, 6, 24);
+                    ctx.fillRect(322, 88, 6, 24);
+                } else {
+                    // Play triangle
+                    ctx.moveTo(312, 88);
+                    ctx.lineTo(334, 100);
+                    ctx.lineTo(312, 112);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Draw title
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                const titleText = iframeTrackRef.current?.title || 'وقفات';
+                // Clean the title from HTML entities or limit length
+                const cleanTitle = titleText.substring(0, 45) + (titleText.length > 45 ? '...' : '');
+                ctx.fillText(cleanTitle, 320, 180);
+
+                // Draw Subtitle / Status
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px system-ui, -apple-system, sans-serif';
+                ctx.fillText(isPlayingRef.current ? 'جاري التشغيل في الخلفية' : 'موقوف مؤقتاً', 320, 210);
+
+                // Draw animated sound waves (visualizer mock)
+                if (isPlayingRef.current) {
+                    ctx.fillStyle = '#3b82f6';
+                    const time = Date.now() * 0.006;
+                    for (let i = 0; i < 15; i++) {
+                        const waveHeight = 10 + Math.abs(Math.sin(time + i * 0.4)) * 30;
+                        const x = 320 - (15 * 14) / 2 + i * 14;
+                        ctx.fillRect(x, 270 - waveHeight / 2, 8, waveHeight);
+                    }
+                } else {
+                    // Draw flat lines when paused
+                    ctx.fillStyle = '#475569';
+                    for (let i = 0; i < 15; i++) {
+                        const x = 320 - (15 * 14) / 2 + i * 14;
+                        ctx.fillRect(x, 270 - 4, 8, 8);
+                    }
+                }
+            };
+
+            drawFrame();
+
+            // Capture stream
+            const stream = (canvas as any).captureStream ? (canvas as any).captureStream(30) : (canvas as any).mozCaptureStream(30);
+            const video = document.createElement('video');
+            video.muted = true;
+            video.srcObject = stream;
+            video.playsInline = true;
+            video.width = 640;
+            video.height = 360;
+
+            video.style.position = 'fixed';
+            video.style.top = '0';
+            video.style.left = '0';
+            video.style.width = '1px';
+            video.style.height = '1px';
+            video.style.opacity = '0';
+            video.style.pointerEvents = 'none';
+            document.body.appendChild(video);
+
+            // Important: We must play the video first on user click to get PiP permission
+            await video.play();
+
+            // Request PiP
+            await video.requestPictureInPicture();
+            
+            canvasVideoRef.current = video;
+            setIsNativePiP(true);
+
+            // Periodically draw to keep canvas updated
+            canvasDrawIntervalRef.current = window.setInterval(drawFrame, 33); // ~30 FPS
+
+            video.addEventListener('leavepictureinpicture', () => {
+                setIsNativePiP(false);
+                if (canvasDrawIntervalRef.current) {
+                    window.clearInterval(canvasDrawIntervalRef.current);
+                    canvasDrawIntervalRef.current = null;
+                }
+                canvasVideoRef.current = null;
+                video.remove();
+            });
+
+            // Listen to play/pause in the PiP window controls
+            video.onplay = () => {
+                if (videoPlayerRef.current && typeof videoPlayerRef.current.playVideo === 'function') {
+                    videoPlayerRef.current.playVideo();
+                }
+                setIsPlaying(true);
+            };
+
+            video.onpause = () => {
+                if (videoPlayerRef.current && typeof videoPlayerRef.current.pauseVideo === 'function') {
+                    videoPlayerRef.current.pauseVideo();
+                }
+                setIsPlaying(false);
+            };
+
+            toast({
+                title: "تم تفعيل النافذة العائمة",
+                description: "يمكنك الآن إغلاق المتصفح أو تصفح تطبيقات أخرى والاستماع للمحاضرة.",
+            });
+
+        } catch (error) {
+            console.error("Failed to start Canvas PiP fallback:", error);
+            toast({
+                title: "فشل تفعيل النافذة العائمة",
+                description: "لم نتمكن من تشغيل الفيديو العائم على هذا الجهاز.",
+                variant: "destructive"
+            });
+        }
+    };
+
     // Handle PiP Window Native Support
     const toggleNativePiP = async (e: React.MouseEvent) => {
         e.stopPropagation();
 
-        if (isNativePiP && pipWindowRef.current) {
-            pipWindowRef.current.close();
+        if (isNativePiP) {
+            if (pipWindowRef.current) {
+                pipWindowRef.current.close();
+            } else if (document.pictureInPictureElement) {
+                document.exitPictureInPicture().catch(() => {});
+            }
             return;
         }
 
         if (typeof window === 'undefined') return;
 
         if (!('documentPictureInPicture' in window)) {
-            toast({
-                title: "المشغل العائم غير مدعوم",
-                description: "متصفحك لا يدعم هذه الميزة (أو تحتاج لاستخدام Chrome/Edge على الكمبيوتر).",
-                variant: "destructive"
-            });
+            // Check if standard HTML5 video PiP is supported
+            const videoEl = document.createElement('video');
+            const hasStandardPiP = ('requestPictureInPicture' in videoEl);
+            
+            if (!hasStandardPiP) {
+                toast({
+                    title: "المشغل العائم غير مدعوم",
+                    description: "متصفحك لا يدعم هذه الميزة (أو تحتاج لاستخدام Chrome/Edge على الكمبيوتر).",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            // Execute canvas-based Picture-in-Picture fallback
+            await startCanvasPiP();
             return;
         }
 
@@ -306,12 +492,28 @@ export default function FloatingVideoPlayer() {
             if (pipWindowRef.current) {
                 pipWindowRef.current.close();
             }
+            if (canvasDrawIntervalRef.current) {
+                window.clearInterval(canvasDrawIntervalRef.current);
+            }
+            if (document.pictureInPictureElement && document.pictureInPictureElement === canvasVideoRef.current) {
+                document.exitPictureInPicture().catch(() => {});
+            }
         };
     }, []);
 
     useEffect(() => {
-        if (!isPlayerVisible && pipWindowRef.current) {
-            pipWindowRef.current.close();
+        if (!isPlayerVisible) {
+            if (pipWindowRef.current) {
+                pipWindowRef.current.close();
+            }
+            if (canvasDrawIntervalRef.current) {
+                window.clearInterval(canvasDrawIntervalRef.current);
+                canvasDrawIntervalRef.current = null;
+            }
+            if (document.pictureInPictureElement && document.pictureInPictureElement === canvasVideoRef.current) {
+                document.exitPictureInPicture().catch(() => {});
+            }
+            canvasVideoRef.current = null;
         }
     }, [isPlayerVisible]);
 
