@@ -158,6 +158,109 @@ const AMBIENT_SOUNDS = [
   { id: 'night', name: '🌙 هدوء الليل', url: 'https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg' },
 ];
 
+export const PREMIUM_RECITERS_STATIONS: RadioStation[] = [
+  {
+    id: 'premium_maher',
+    name: 'القارئ ماهر المعيقلي 🎙️',
+    subtitle: 'بث مباشر على مدار الساعة',
+    url: 'https://backup.qurango.net/radio/maher',
+    icon: '🎙️',
+    color: 'from-amber-500/20 to-amber-950/40',
+    borderColor: 'border-amber-500/30',
+    textColor: 'text-amber-400'
+  },
+  {
+    id: 'premium_basit',
+    name: 'القارئ عبد الباسط عبد الصمد 🌙',
+    subtitle: 'نوادر التلاوات والمحافل الخارجية',
+    url: 'https://backup.qurango.net/radio/basit',
+    icon: '🌙',
+    color: 'from-emerald-500/20 to-emerald-950/40',
+    borderColor: 'border-emerald-500/30',
+    textColor: 'text-emerald-400'
+  },
+  {
+    id: 'premium_alafasy',
+    name: 'القارئ مشاري بن راشد العفاسي ✨',
+    subtitle: 'المصحف المرتل العذب',
+    url: 'https://backup.qurango.net/radio/alafasy',
+    icon: '✨',
+    color: 'from-blue-500/20 to-blue-950/40',
+    borderColor: 'border-blue-500/30',
+    textColor: 'text-blue-400'
+  },
+  {
+    id: 'premium_minshawi',
+    name: 'القارئ محمد صديق المنشاوي 📖',
+    subtitle: 'مدرسة الترتيل والخشوع والخضوع',
+    url: 'https://backup.qurango.net/radio/minshawi',
+    icon: '📖',
+    color: 'from-rose-500/20 to-rose-950/40',
+    borderColor: 'border-rose-500/30',
+    textColor: 'text-rose-400'
+  },
+  {
+    id: 'premium_yasser',
+    name: 'القارئ ياسر الدوسري 🌟',
+    subtitle: 'تلاوات خاشعة من الحرمين الشريفين',
+    url: 'https://backup.qurango.net/radio/yasser',
+    icon: '🌟',
+    color: 'from-cyan-500/20 to-cyan-950/40',
+    borderColor: 'border-cyan-500/30',
+    textColor: 'text-cyan-400'
+  },
+  {
+    id: 'premium_ajm',
+    name: 'القارئ أحمد بن علي العجمي ⚡',
+    subtitle: 'تلاوة مرتلة برواية حفص عن عاصم',
+    url: 'https://backup.qurango.net/radio/ajm',
+    icon: '⚡',
+    color: 'from-yellow-500/20 to-yellow-950/40',
+    borderColor: 'border-yellow-500/30',
+    textColor: 'text-yellow-400'
+  },
+  {
+    id: 'premium_sds',
+    name: 'القارئ عبد الرحمن السديس 🏛️',
+    subtitle: 'رئيس الشؤون الدينية للمسجد الحرام',
+    url: 'https://backup.qurango.net/radio/sds',
+    icon: '🏛️',
+    color: 'from-purple-500/20 to-purple-950/40',
+    borderColor: 'border-purple-500/30',
+    textColor: 'text-purple-400'
+  },
+  {
+    id: 'premium_shur',
+    name: 'القارئ سعود الشريم 🕋',
+    subtitle: 'تلاوات الحرم المكي الشريف التاريخية',
+    url: 'https://backup.qurango.net/radio/shur',
+    icon: '🕋',
+    color: 'from-indigo-500/20 to-indigo-950/40',
+    borderColor: 'border-indigo-500/30',
+    textColor: 'text-indigo-400'
+  },
+  {
+    id: 'premium_gmd',
+    name: 'القارئ سعد الغامدي 🍃',
+    subtitle: 'المصحف المرتل برواية حفص',
+    url: 'https://backup.qurango.net/radio/s_gmd',
+    icon: '🍃',
+    color: 'from-teal-500/20 to-teal-950/40',
+    borderColor: 'border-teal-500/30',
+    textColor: 'text-teal-400'
+  },
+  {
+    id: 'premium_frs',
+    name: 'القارئ فارس عباد 🕊️',
+    subtitle: 'بث مباشر عذب وخاشع',
+    url: 'https://backup.qurango.net/radio/frs_a',
+    icon: '🕊️',
+    color: 'from-violet-500/20 to-violet-950/40',
+    borderColor: 'border-violet-500/30',
+    textColor: 'text-violet-400'
+  }
+];
+
 // Radio station type (fetched from mp3quran API at runtime)
 type RadioStation = {
   id: string;
@@ -1338,7 +1441,8 @@ export default function QuranPage() {
   const [radioQuality, setRadioQuality] = useState<'high' | 'low'>('high');
   const [radioHistory, setRadioHistory] = useState<string[]>([]);
   const [isShareCopied, setIsShareCopied] = useState<boolean>(false);
-  const [radioCategory, setRadioCategory] = useState<'all' | 'favorites' | 'history' | 'custom' | 'adhkar'>('all');
+  const [radioCategory, setRadioCategory] = useState<'all' | 'favorites' | 'history' | 'custom' | 'adhkar' | 'premium_reciters'>('all');
+  const [visualizerStyle, setVisualizerStyle] = useState<'columns' | 'waves' | 'particles'>('columns');
 
   // ── Alarm / Alarm Scheduler States ──
   const [alarmTime, setAlarmTime] = useState<string>('05:00');
@@ -1683,43 +1787,129 @@ export default function QuranPage() {
         analyser.getByteFrequencyData(dataArray);
       }
       
-      const barCount = 35;
-      const barWidth = width / barCount;
       phase += 0.08;
       
-      const grad = ctx.createLinearGradient(0, height, 0, 0);
-      grad.addColorStop(0, 'rgba(16, 185, 129, 0.1)'); // emerald
-      grad.addColorStop(0.5, 'rgba(16, 185, 129, 0.6)');
-      grad.addColorStop(1, '#ffffff');
-      
-      ctx.fillStyle = grad;
-      
-      for (let i = 0; i < barCount; i++) {
-        let barHeight = 0;
+      if (visualizerStyle === 'waves') {
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        const barCount = 40;
+        const sliceWidth = width / barCount;
         
-        if (dataArray && bufferLength > 0) {
-          // Map bar index to frequency array index (focusing on the voice frequency spectrum)
-          const percentIdx = i / barCount;
-          const dataIdx = Math.floor(percentIdx * bufferLength * 0.65);
-          const value = dataArray[dataIdx] || 0;
-          
-          // Scale it to visualizer height
-          barHeight = (value / 255) * (height * 0.85);
-          barHeight = Math.max(6, Math.min(barHeight, height - 8));
-        } else {
-          // Fallback to simulated sine wave
-          const multiplier = Math.sin(i * 0.18 + phase) * Math.cos(i * 0.08 - phase * 0.4);
-          const rand = Math.sin(phase * (i % 2 === 0 ? 1.5 : 1)) * 4;
-          barHeight = Math.abs(multiplier) * (height * 0.75) + rand;
-          barHeight = Math.max(6, Math.min(barHeight, height - 8));
+        for (let i = 0; i <= barCount; i++) {
+          let val = 0;
+          if (dataArray && bufferLength > 0) {
+            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
+            val = dataArray[dataIdx] || 0;
+          } else {
+            val = (Math.sin(i * 0.2 + phase) * Math.cos(i * 0.1 - phase * 0.5) + 1) * 60;
+          }
+          const yVal = height - (val / 255) * (height * 0.75) - 6;
+          const xVal = i * sliceWidth;
+          ctx.lineTo(xVal, yVal);
         }
         
-        const x = i * barWidth;
-        const y = height - barHeight;
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        
+        const grad = ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, 'rgba(16, 185, 129, 0.05)');
+        grad.addColorStop(0.5, 'rgba(16, 185, 129, 0.3)');
+        grad.addColorStop(1, 'rgba(52, 211, 153, 0.6)');
+        ctx.fillStyle = grad;
+        ctx.fill();
         
         ctx.beginPath();
-        ctx.roundRect(x + 1.5, y, barWidth - 3, barHeight, 3);
+        for (let i = 0; i <= barCount; i++) {
+          let val = 0;
+          if (dataArray && bufferLength > 0) {
+            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
+            val = dataArray[dataIdx] || 0;
+          } else {
+            val = (Math.sin(i * 0.2 + phase) * Math.cos(i * 0.1 - phase * 0.5) + 1) * 60;
+          }
+          const yVal = height - (val / 255) * (height * 0.75) - 6;
+          const xVal = i * sliceWidth;
+          if (i === 0) ctx.moveTo(xVal, yVal);
+          else ctx.lineTo(xVal, yVal);
+        }
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      } else if (visualizerStyle === 'particles') {
+        let average = 0;
+        if (dataArray && bufferLength > 0) {
+          let sum = 0;
+          for (let j = 0; j < dataArray.length; j++) sum += dataArray[j];
+          average = sum / dataArray.length;
+        } else {
+          average = (Math.sin(phase) + 1) * 60 + 40;
+        }
+        
+        const cX = width / 2;
+        const cY = height / 2;
+        const baseRadius = Math.min(width, height) * 0.18;
+        const maxRadius = baseRadius + (average / 255) * (height * 0.3);
+        
+        const radialGrad = ctx.createRadialGradient(cX, cY, baseRadius * 0.5, cX, cY, maxRadius);
+        radialGrad.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+        radialGrad.addColorStop(0.5, 'rgba(52, 211, 153, 0.2)');
+        radialGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+        
+        ctx.fillStyle = radialGrad;
+        ctx.beginPath();
+        ctx.arc(cX, cY, maxRadius, 0, Math.PI * 2);
         ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cX, cY, maxRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        const dotCount = 8;
+        for (let i = 0; i < dotCount; i++) {
+          const angle = (i / dotCount) * Math.PI * 2 + (phase * 0.15);
+          const dist = maxRadius + Math.sin(phase + i) * 6;
+          const pX = cX + Math.cos(angle) * dist;
+          const pY = cY + Math.sin(angle) * dist;
+          ctx.beginPath();
+          ctx.arc(pX, pY, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        const barCount = 35;
+        const barWidth = width / barCount;
+        
+        const grad = ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
+        grad.addColorStop(0.5, 'rgba(16, 185, 129, 0.6)');
+        grad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = grad;
+        
+        for (let i = 0; i < barCount; i++) {
+          let barHeight = 0;
+          
+          if (dataArray && bufferLength > 0) {
+            const percentIdx = i / barCount;
+            const dataIdx = Math.floor(percentIdx * bufferLength * 0.65);
+            const value = dataArray[dataIdx] || 0;
+            barHeight = (value / 255) * (height * 0.85);
+            barHeight = Math.max(6, Math.min(barHeight, height - 8));
+          } else {
+            const multiplier = Math.sin(i * 0.18 + phase) * Math.cos(i * 0.08 - phase * 0.4);
+            const rand = Math.sin(phase * (i % 2 === 0 ? 1.5 : 1)) * 4;
+            barHeight = Math.abs(multiplier) * (height * 0.75) + rand;
+            barHeight = Math.max(6, Math.min(barHeight, height - 8));
+          }
+          
+          const x = i * barWidth;
+          const y = height - barHeight;
+          
+          ctx.beginPath();
+          ctx.roundRect(x + 1.5, y, barWidth - 3, barHeight, 3);
+          ctx.fill();
+        }
       }
       
       animationId = requestAnimationFrame(render);
@@ -1731,7 +1921,7 @@ export default function QuranPage() {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isPlayingRadio, currentRadioStation]);
+  }, [isPlayingRadio, currentRadioStation, visualizerStyle]);
 
   // ── Recording Control Methods ──
   const startRecording = useCallback(async () => {
@@ -3018,19 +3208,21 @@ export default function QuranPage() {
 
     if (radioCategory === 'custom') {
       list = customRadioStations;
+    } else if (radioCategory === 'premium_reciters') {
+      list = PREMIUM_RECITERS_STATIONS;
     } else if (radioCategory === 'favorites') {
-      list = [...customRadioStations, ...radioStations].filter(s => favoriteRadioIds.includes(s.id));
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS].filter(s => favoriteRadioIds.includes(s.id));
     } else if (radioCategory === 'history') {
-      const all = [...customRadioStations, ...radioStations];
+      const all = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS];
       list = radioHistory
         .map(histId => all.find(s => s.id === histId))
         .filter((s): s is RadioStation => !!s);
     } else if (radioCategory === 'adhkar') {
-      list = [...customRadioStations, ...radioStations].filter(s =>
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS].filter(s =>
         s.name.includes('أذكار') || s.name.includes('رقية') || s.name.includes('دعاء') || s.name.includes('حصن')
       );
     } else {
-      list = [...customRadioStations, ...radioStations];
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS];
     }
 
     if (radioSearchQuery.trim()) {
@@ -4980,8 +5172,29 @@ export default function QuranPage() {
                     </div>
 
                     {/* Real-time Wave Visualizer */}
-                    <div className="w-full h-14 relative my-2 overflow-hidden rounded-xl border border-white/5 bg-black/40">
+                    <div className="w-full h-14 relative my-2 overflow-hidden rounded-xl border border-white/5 bg-black/40 group/viz">
                       <canvas ref={canvasRef} className="w-full h-full" />
+                      
+                      {/* Visualizer Style Overlay Switcher */}
+                      <div className="absolute top-1.5 left-2 z-20 flex gap-1 bg-black/70 p-0.5 rounded-lg border border-white/10 opacity-0 group-hover/viz:opacity-100 transition-opacity">
+                        {([
+                          { id: 'columns', name: 'أعمدة' },
+                          { id: 'waves', name: 'موجات' },
+                          { id: 'particles', name: 'نبضات' }
+                        ] as const).map(style => (
+                          <button
+                            key={style.id}
+                            onClick={() => setVisualizerStyle(style.id)}
+                            className={cn(
+                              "px-2 py-0.5 rounded text-[8px] font-black transition-all whitespace-nowrap",
+                              visualizerStyle === style.id ? "bg-primary text-black font-black" : "text-white/40 hover:text-white"
+                            )}
+                          >
+                            {style.name}
+                          </button>
+                        ))}
+                      </div>
+
                       {isRadioBuffering && (
                         <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 text-white/60 text-[10px] font-black backdrop-blur-[1px]">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
@@ -5255,6 +5468,65 @@ export default function QuranPage() {
                     </div>
                   </div>
 
+                  {/* Ambient Focus Sound Mixer Card */}
+                  <div className="bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 space-y-6 shadow-xl text-right" dir="rtl">
+                    <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                      <h4 className="text-sm font-black text-white flex items-center gap-2">
+                        <span>🌧️ دمج الأصوات الإيمانية المهدئة</span>
+                      </h4>
+                      {activeAmbient && (
+                        <button
+                          onClick={() => setActiveAmbient(null)}
+                          className="text-[10px] text-rose-400 font-bold hover:text-rose-300"
+                        >
+                          إيقاف دمج الصوت
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-relaxed">
+                      اختر مؤثراً صوتياً طبيعياً لدمجه وتشغيله بهدوء في الخلفية أثناء استماعك للقرآن الكريم:
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {AMBIENT_SOUNDS.map(s => {
+                        const isActive = activeAmbient === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => setActiveAmbient(isActive ? null : s.id)}
+                            className={cn(
+                              "p-4 rounded-2xl text-xs font-black text-right transition-all flex items-center justify-between border active:scale-95",
+                              isActive
+                                ? "bg-primary/10 border-primary/30 text-primary font-bold shadow-sm"
+                                : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                            )}
+                          >
+                            <span>{s.name}</span>
+                            {isActive && <span className="w-2 h-2 rounded-full bg-primary animate-ping" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {activeAmbient && (
+                      <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex justify-between items-center text-[10px] font-black text-white/30">
+                          <span>حجم صوت الطبيعة المدمج</span>
+                          <span>{Math.round(ambientVolume * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={ambientVolume}
+                          onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                 </div>
 
                 {/* Stations List Grid Section */}
@@ -5280,6 +5552,7 @@ export default function QuranPage() {
                   <div className="flex flex-wrap gap-2 pb-2 overflow-x-auto no-scrollbar" dir="rtl">
                     {[
                       { id: 'all', label: 'الكل 📻' },
+                      { id: 'premium_reciters', label: 'كبار القرّاء 🎙️' },
                       { id: 'favorites', label: 'المفضلة ❤️' },
                       { id: 'history', label: 'استمعت مؤخراً ⏳' },
                       { id: 'custom', label: 'إذاعاتي الخاصة ➕' },
