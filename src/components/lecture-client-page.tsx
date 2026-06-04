@@ -197,7 +197,78 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, currentPlayMode]);
 
-  // Canvas audio visualizer loop — slow & organic
+  // ── Media Session API — lock screen & background audio ──
+  useEffect(() => {
+    if (currentPlayMode !== 'audio' || !videoId) return;
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
+    const artwork = getLectureImageUrl(lecture);
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: lecture.title,
+      artist: lecture.programName || lecture.seriesTitle || 'وقفة',
+      album: lecture.seriesTitle || '',
+      artwork: [
+        { src: artwork, sizes: '512x512', type: 'image/jpeg' },
+      ],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      audioYtPlayerRef.current?.playVideo();
+      setIsInlineAudioPlaying(true);
+      navigator.mediaSession.playbackState = 'playing';
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audioYtPlayerRef.current?.pauseVideo();
+      setIsInlineAudioPlaying(false);
+      navigator.mediaSession.playbackState = 'paused';
+    });
+
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      const skip = details.seekOffset ?? 10;
+      const cur = audioYtPlayerRef.current?.getCurrentTime?.() ?? 0;
+      audioYtPlayerRef.current?.seekTo(Math.max(0, cur - skip), true);
+    });
+
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      const skip = details.seekOffset ?? 10;
+      const cur = audioYtPlayerRef.current?.getCurrentTime?.() ?? 0;
+      const dur = audioYtPlayerRef.current?.getDuration?.() ?? videoDuration;
+      audioYtPlayerRef.current?.seekTo(Math.min(dur, cur + skip), true);
+    });
+
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime !== undefined) {
+        audioYtPlayerRef.current?.seekTo(details.seekTime, true);
+        setPlayerCurrentTime(details.seekTime);
+      }
+    });
+
+    return () => {
+      // Clear handlers on unmount
+      ['play', 'pause', 'seekbackward', 'seekforward', 'seekto'].forEach((action) => {
+        try { navigator.mediaSession.setActionHandler(action as MediaSessionAction, null); } catch {}
+      });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPlayMode, videoId, lecture.title, videoDuration]);
+
+  // Update Media Session playback state & position whenever time changes
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    if (currentPlayMode !== 'audio' || !videoId || videoDuration <= 0) return;
+    try {
+      navigator.mediaSession.playbackState = isInlineAudioPlaying ? 'playing' : 'paused';
+      navigator.mediaSession.setPositionState({
+        duration: videoDuration,
+        playbackRate: playbackRate,
+        position: Math.min(playerCurrentTime, videoDuration),
+      });
+    } catch {}
+  }, [isInlineAudioPlaying, playerCurrentTime, videoDuration, playbackRate, currentPlayMode, videoId]);
+
+
   useEffect(() => {
     const canvas = visualizerCanvasRef.current;
     if (!canvas) return;
