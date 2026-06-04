@@ -113,7 +113,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
         ...authState,
     }), [services, authState]);
 
-    if (!services || authState.isUserLoading) {
+    if (!services) {
         return <CinematicAppLoader />;
     }
 
