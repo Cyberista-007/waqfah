@@ -31,6 +31,7 @@ type RadioContextType = {
   togglePlay: () => void;
   stopRadio: () => void;
   activeYoutubeId: string | null;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
 };
 
 const RadioContext = createContext<RadioContextType | null>(null);
@@ -220,6 +221,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         togglePlay,
         stopRadio,
         activeYoutubeId,
+        audioRef,
       }}
     >
       {children}
