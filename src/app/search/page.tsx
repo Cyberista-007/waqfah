@@ -65,7 +65,12 @@ function SearchPageComponent() {
             threshold: 0.4, 
             ignoreLocation: true, 
             getFn: (obj: any, path: any) => {
-                const value = (Fuse as any).defaultGetFn(obj, path);
+                const keys = Array.isArray(path) ? path : path.split('.');
+                let value = obj;
+                for (const key of keys) {
+                    if (value == null) break;
+                    value = value[key];
+                }
                 if (typeof value === 'string') return normalizeArabic(value);
                 return value;
             }
