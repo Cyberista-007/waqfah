@@ -119,6 +119,7 @@ export default function QuranPage() {
     setIsShareCopied,
     radioCategory,
     setRadioCategory,
+    importedRadioStations,
     visualizerStyle,
     setVisualizerStyle,
     alarmTime,
@@ -1291,19 +1292,21 @@ export default function QuranPage() {
       list = customRadioStations;
     } else if (radioCategory === 'premium_reciters') {
       list = PREMIUM_RECITERS_STATIONS;
+    } else if (radioCategory === 'imported') {
+      list = importedRadioStations;
     } else if (radioCategory === 'favorites') {
-      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS].filter(s => favoriteRadioIds.includes(s.id));
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS, ...importedRadioStations].filter(s => favoriteRadioIds.includes(s.id));
     } else if (radioCategory === 'history') {
-      const all = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS];
+      const all = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS, ...importedRadioStations];
       list = radioHistory
         .map(histId => all.find(s => s.id === histId))
         .filter((s): s is RadioStation => !!s);
     } else if (radioCategory === 'adhkar') {
-      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS].filter(s =>
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS, ...importedRadioStations].filter(s =>
         s.name.includes('أذكار') || s.name.includes('رقية') || s.name.includes('دعاء') || s.name.includes('حصن')
       );
     } else {
-      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS];
+      list = [...customRadioStations, ...radioStations, ...PREMIUM_RECITERS_STATIONS, ...importedRadioStations];
     }
 
     if (radioSearchQuery.trim()) {
@@ -1321,7 +1324,7 @@ export default function QuranPage() {
     }
 
     return list;
-  }, [radioSearchQuery, favoriteRadioIds, radioStations, customRadioStations, radioHistory, radioCategory]);
+  }, [radioSearchQuery, favoriteRadioIds, radioStations, customRadioStations, radioHistory, radioCategory, importedRadioStations]);
 
   const handleWordClick = async (verse: any, wordIndex: number) => {
     // verse.surahNumber must be available. If not, we might need a lookup, but it should be available.
@@ -3552,6 +3555,7 @@ export default function QuranPage() {
                       { id: 'history', label: 'استمعت مؤخراً ⏳' },
                       { id: 'custom', label: 'إذاعاتي الخاصة ➕' },
                       { id: 'adhkar', label: 'إذاعات الأذكار 📿' },
+                      { id: 'imported', label: 'محاضرات يوتيوب المستوردة 🎥' },
                     ].map(cat => (
                       <button
                         key={cat.id}

@@ -112,6 +112,19 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const setVolume = useCallback((v: number) => {
     setVolumeState(v);
     if (audioRef.current) audioRef.current.volume = v;
+
+    // Send volume change command to YouTube iframe if present
+    const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'setVolume',
+          args: [v * 100],
+        }),
+        '*'
+      );
+    }
   }, []);
 
   const stopRadio = useCallback(() => {
@@ -189,8 +202,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         setActiveYoutubeId(ytId);
         setCurrentStation(station);
         currentStationRef.current = station;
-        setIsPlaying(true);
-        setIsBuffering(false);
+        setIsPlaying(false);
+        setIsBuffering(true);
         // Save history
         try {
           const hist = JSON.parse(localStorage.getItem('quran_radio_history') || '[]') as string[];
@@ -241,6 +254,38 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         currentStationRef.current = station;
       }
     } catch {}
+  }, []);
+
+  // Listen to messages from the YouTube player iframe to sync play states
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data !== 'string') return;
+      if (!event.origin.includes('youtube.com')) return;
+
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'onStateChange') {
+          const state = data.info;
+          if (state === 1) { // playing
+            setIsPlaying(true);
+            setIsBuffering(false);
+          } else if (state === 2) { // paused
+            setIsPlaying(false);
+            setIsBuffering(false);
+          } else if (state === 3) { // buffering
+            setIsBuffering(true);
+          } else if (state === 0) { // ended
+            setIsPlaying(false);
+            setIsBuffering(false);
+          }
+        }
+      } catch (e) {
+        // Not a JSON message or not from YouTube API
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   // Persist current station

@@ -1,5 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useRadio, RadioStation } from '@/components/radio-provider';
+import { useCollection } from '@/firebase';
+import type { Lecture } from '@/lib/types';
 
 const getYoutubeId = (url: string): string | null => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
@@ -26,6 +28,25 @@ export function useQuranRadio() {
   const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
   const [isLoadingRadios, setIsLoadingRadios] = useState<boolean>(false);
 
+  // Fetch imported lectures from firestore
+  const { data: allLectures } = useCollection<Lecture>('lectures');
+
+  const importedRadioStations = useMemo(() => {
+    if (!allLectures) return [];
+    return allLectures
+      .filter((l) => l.youtubeUrl && getYoutubeId(l.youtubeUrl))
+      .map((l) => ({
+        id: `imported_${l.id}`,
+        name: l.title,
+        subtitle: l.programName || 'محاضرة مستوردة',
+        url: l.youtubeUrl!,
+        icon: '🎥',
+        color: 'from-rose-500/20 to-rose-950/40',
+        borderColor: 'border-rose-500/30',
+        textColor: 'text-rose-400'
+      }));
+  }, [allLectures]);
+
   // ── Web Audio API Refs for Recording & Real Visualizer ──
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserNodeRef = useRef<AnalyserNode | null>(null);
@@ -41,7 +62,7 @@ export function useQuranRadio() {
   const [radioQuality, setRadioQuality] = useState<'high' | 'low'>('high');
   const [radioHistory, setRadioHistory] = useState<string[]>([]);
   const [isShareCopied, setIsShareCopied] = useState<boolean>(false);
-  const [radioCategory, setRadioCategory] = useState<'all' | 'favorites' | 'history' | 'custom' | 'adhkar' | 'premium_reciters'>('all');
+  const [radioCategory, setRadioCategory] = useState<'all' | 'favorites' | 'history' | 'custom' | 'adhkar' | 'premium_reciters' | 'imported'>('all');
   const [visualizerStyle, setVisualizerStyle] = useState<'columns' | 'waves' | 'particles'>('columns');
 
   // ── Alarm / Alarm Scheduler States ──
@@ -580,6 +601,7 @@ export function useQuranRadio() {
     setIsShareCopied,
     radioCategory,
     setRadioCategory,
+    importedRadioStations,
     visualizerStyle,
     setVisualizerStyle,
     alarmTime,

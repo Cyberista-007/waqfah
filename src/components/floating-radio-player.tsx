@@ -13,6 +13,13 @@ export function FloatingRadioPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const prevVolume = useRef(volume);
 
+  const [origin, setOrigin] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
   // Don't show if no station selected
   if (!currentStation) return null;
 
@@ -30,13 +37,26 @@ export function FloatingRadioPlayer() {
   return (
     <>
       {/* Hidden YouTube iframe for global radio */}
-      {activeYoutubeId && (
+      {activeYoutubeId && origin && (
         <iframe
           id="global-youtube-radio"
-          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1`}
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&origin=${encodeURIComponent(origin)}`}
           className="hidden"
           allow="autoplay"
           title="radio-audio"
+          onLoad={() => {
+            const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setVolume',
+                  args: [volume * 100],
+                }),
+                '*'
+              );
+            }
+          }}
         />
       )}
 
