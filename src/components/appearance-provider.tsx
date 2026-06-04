@@ -108,6 +108,8 @@ type AppearanceContextType = {
   setAiApiKey: (key: string | null) => void;
   aiModel: string;
   setAiModel: (model: string) => void;
+  showChatbot: boolean;
+  setShowChatbot: (show: boolean) => void;
   quranIconUrl?: string | null;
   hadithIconUrl?: string | null;
   heroImageUrl?: string | null;
@@ -154,6 +156,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [particleColor, setParticleColor] = useState('#FFFFFF');
   const [aiApiKey, setAiApiKeyState] = useState<string | null>(null);
   const [aiModel, setAiModelState] = useState<string>('gemini-2.5-flash');
+  const [showChatbot, setShowChatbotState] = useState<boolean>(true);
   
   const [particleSettings, setParticleSettingsState] = useState<ParticleSettings>({
     interaction: true,
@@ -354,6 +357,11 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     localStorage.setItem("site-ai-model", model);
     setAiModelState(model);
   }, []);
+
+  const setShowChatbot = useCallback((show: boolean) => {
+    localStorage.setItem("site-show-chatbot", show ? "true" : "false");
+    setShowChatbotState(show);
+  }, []);
   
   const handleSetBackground = useCallback((newBg: BackgroundState | null) => {
       if (newBg?.image) {
@@ -414,6 +422,13 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     const storedModel = localStorage.getItem("site-ai-model");
     if (storedModel) {
       setAiModelState(storedModel);
+    }
+
+    const storedShowChatbot = localStorage.getItem("site-show-chatbot");
+    if (storedShowChatbot !== null) {
+      setShowChatbotState(storedShowChatbot === "true");
+    } else {
+      setShowChatbotState(true);
     }
 
     const storedIsShown = localStorage.getItem("site-background-shown");
@@ -555,6 +570,8 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     setAiApiKey,
     aiModel,
     setAiModel,
+    showChatbot,
+    setShowChatbot,
     quranIconUrl,
     hadithIconUrl,
     heroImageUrl,

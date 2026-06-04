@@ -23,6 +23,7 @@ import {
   Grid,
   XCircle,
   Bot,
+  MessageSquare,
 
   DownloadCloud,
   Wifi,
@@ -449,6 +450,8 @@ export default function SettingsPage() {
         setAiApiKey,
         aiModel,
         setAiModel,
+        showChatbot,
+        setShowChatbot,
         gradientPreset: activePreset, 
         setGradientPreset,
         customColors,
@@ -1040,6 +1043,21 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-white/30 leading-normal font-medium">
                     إذا كان النموذج المختار غير معتمد لمفتاحك، سيتحول النظام تلقائياً للنموذج المستقر التالي لضمان عدم توقف الخدمة.
                 </p>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <MessageSquare className="w-6 h-6 text-primary" />
+                    <div className="flex flex-col gap-0.5 text-right">
+                        <Label htmlFor="show-chatbot-switch" className="text-lg cursor-pointer font-bold">إظهار أيقونة المساعد الذكي</Label>
+                        <span className="text-[11px] text-white/40 leading-normal">إظهار أو إخفاء أيقونة الشات بوت العائمة أسفل الشاشة</span>
+                    </div>
+                </div>
+                <Switch 
+                    id="show-chatbot-switch" 
+                    checked={showChatbot}
+                    onCheckedChange={setShowChatbot}
+                />
             </div>
         </div>
 

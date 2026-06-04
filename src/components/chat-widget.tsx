@@ -284,7 +284,7 @@ const AVAILABLE_MODELS = [
 ];
 
 export function ChatWidget() {
-  const { aiApiKey, setAiApiKey, aiModel, setAiModel } = useAppearance();
+  const { aiApiKey, setAiApiKey, aiModel, setAiModel, showChatbot } = useAppearance();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -498,6 +498,8 @@ export function ChatWidget() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, showSettings]);
+
+  if (!showChatbot) return null;
 
   const getPageFriendlyName = (path: string) => {
     if (path === '/') return 'الصفحة الرئيسية';
