@@ -129,7 +129,7 @@ class GoogleTTSPlayer {
     }
 
     const chunk = this.audioChunks[this.currentChunkIndex];
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+    const url = `/api/tts?text=${encodeURIComponent(chunk)}`;
     
     if (this.audio) {
       this.audio.pause();
