@@ -159,8 +159,15 @@ export function RadioProvider({ children }: { children: ReactNode }) {
 
   const playStation = useCallback(
     (station: RadioStation) => {
-      // Same station → toggle
-      if (currentStation?.id === station.id) {
+      const ytId = getYoutubeId(station.url);
+      const audio = audioRef.current;
+
+      // Same station AND already loaded/initialized → toggle
+      const isAlreadyLoaded = ytId 
+        ? (activeYoutubeId === ytId) 
+        : (audio && (audio.src === station.url || audio.src === encodeURI(station.url)));
+
+      if (currentStation?.id === station.id && isAlreadyLoaded) {
         togglePlay();
         return;
       }
@@ -178,7 +185,6 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const ytId = getYoutubeId(station.url);
       if (ytId) {
         setActiveYoutubeId(ytId);
         setCurrentStation(station);
@@ -197,18 +203,18 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       // Standard HTML5 audio
       setActiveYoutubeId(null);
       
-      const audio = getAudioInstance();
-      if (audio) {
+      const audioInstance = getAudioInstance();
+      if (audioInstance) {
         fallbackTriggeredRef.current = false;
         currentStationRef.current = station;
         setCurrentStation(station);
 
-        audio.crossOrigin = 'anonymous';
-        audio.src = station.url;
-        audio.volume = volume;
+        audioInstance.crossOrigin = 'anonymous';
+        audioInstance.src = station.url;
+        audioInstance.volume = volume;
         setIsBuffering(true);
 
-        audio.play().catch((e) => {
+        audioInstance.play().catch((e) => {
           console.error('Radio play error:', e);
           setIsBuffering(false);
         });
