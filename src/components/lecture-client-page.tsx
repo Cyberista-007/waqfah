@@ -96,14 +96,11 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const playableAudioSrc = useMemo(() => {
     if (!lecture?.audioSrc) return '';
     const isYt = lecture.audioSrc.includes('youtube.com') || lecture.audioSrc.includes('youtu.be') || isVideoAvailable;
-    if (isYt) {
-      const vId = videoId || getVideoIdFromUrl(lecture.audioSrc);
-      if (vId) {
-        return `/api/download?videoId=${vId}&itag=140&title=${encodeURIComponent(lecture.title)}&container=m4a`;
-      }
-    }
+    // For YouTube-based lectures in audio mode, we use the hidden iframe approach (see below)
+    // so we return empty string to avoid triggering a broken /api/download request
+    if (isYt) return '';
     return lecture.audioSrc;
-  }, [lecture?.audioSrc, lecture?.title, videoId, isVideoAvailable]);
+  }, [lecture?.audioSrc, isVideoAvailable]);
 
   // Poll video duration periodically
   useEffect(() => {
@@ -134,6 +131,23 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
       inlineAudioRef.current.currentTime = initialTime;
     }
   }, [initialTime]);
+
+  // Sync play state from YouTube iframe in audio mode
+  useEffect(() => {
+    if (!videoId || currentPlayMode !== 'audio') return;
+    const handler = (event: MessageEvent) => {
+      if (typeof event.data !== 'string') return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'onStateChange') {
+          if (data.info === 1) setIsInlineAudioPlaying(true);   // playing
+          else if (data.info === 2 || data.info === 0) setIsInlineAudioPlaying(false); // paused / ended
+        }
+      } catch {}
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [videoId, currentPlayMode]);
 
   // Generate deterministic heatmap path based on lectureId
   const heatmapPath = useMemo(() => {
@@ -583,21 +597,40 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                         alt="audio-bg-glow" 
                       />
 
-                      <audio
-                        ref={inlineAudioRef}
-                        src={playableAudioSrc}
-                        preload="none"
-                        onTimeUpdate={(e) => {
-                          const time = e.currentTarget.currentTime;
-                          setPlayerCurrentTime(time);
-                        }}
-                        onDurationChange={(e) => {
-                          setVideoDuration(e.currentTarget.duration);
-                        }}
-                        onPlay={() => setIsInlineAudioPlaying(true)}
-                        onPause={() => setIsInlineAudioPlaying(false)}
-                        onEnded={handleVideoEnded}
-                      />
+                      {/* Hidden YouTube iframe for audio-only mode */}
+                      {videoId ? (
+                        <iframe
+                          id={`lecture-audio-${lecture.id}`}
+                          src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+                          className="hidden"
+                          allow="autoplay"
+                          title="lecture-audio"
+                          onLoad={(e) => {
+                            const iframe = e.currentTarget;
+                            // Set volume once loaded
+                            iframe.contentWindow?.postMessage(
+                              JSON.stringify({ event: 'command', func: 'setVolume', args: [audioVolume * 100] }),
+                              '*'
+                            );
+                          }}
+                        />
+                      ) : (
+                        <audio
+                          ref={inlineAudioRef}
+                          src={playableAudioSrc}
+                          preload="none"
+                          onTimeUpdate={(e) => {
+                            const time = e.currentTarget.currentTime;
+                            setPlayerCurrentTime(time);
+                          }}
+                          onDurationChange={(e) => {
+                            setVideoDuration(e.currentTarget.duration);
+                          }}
+                          onPlay={() => setIsInlineAudioPlaying(true)}
+                          onPause={() => setIsInlineAudioPlaying(false)}
+                          onEnded={handleVideoEnded}
+                        />
+                      )}
 
                       {/* Left/Center side: Cover Art & Equalizer */}
                       <div className="flex flex-col items-center md:items-start gap-4 md:gap-6 z-10 md:w-1/2">
@@ -682,7 +715,18 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                               {/* Play / Pause */}
                               <button
                                   onClick={() => {
-                                      if (inlineAudioRef.current) {
+                                      if (videoId) {
+                                          const iframe = document.getElementById(`lecture-audio-${lecture.id}`) as HTMLIFrameElement;
+                                          if (iframe?.contentWindow) {
+                                              if (isInlineAudioPlaying) {
+                                                  iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                                                  setIsInlineAudioPlaying(false);
+                                              } else {
+                                                  iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                                                  setIsInlineAudioPlaying(true);
+                                              }
+                                          }
+                                      } else if (inlineAudioRef.current) {
                                           if (isInlineAudioPlaying) {
                                               inlineAudioRef.current.pause();
                                           } else {
