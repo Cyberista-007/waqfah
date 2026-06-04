@@ -3139,7 +3139,7 @@ export default function QuranPage() {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
               
               {/* Top Banner Player (Now Playing) */}
-              <div className="bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-6 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-6 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-white/10">
                 {/* Glowing ambient background based on selected station */}
                 <div
                   className={cn(
@@ -3328,7 +3328,7 @@ export default function QuranPage() {
                   {/* Right Column: Sleep Timer & Scheduled Alarm */}
                   <div className="flex flex-col sm:flex-row items-stretch gap-3 lg:w-1/3 w-full">
                     {/* Sleep Timer */}
-                    <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right">
+                    <div className="flex-1 bg-white/[0.01] backdrop-blur-md border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right transition-all duration-300 hover:border-white/10">
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] font-black text-white/45 uppercase tracking-widest">⏰ مؤقت النوم</span>
                         {sleepTimerMinutes && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">نشط</span>}
@@ -3386,7 +3386,7 @@ export default function QuranPage() {
                     </div>
 
                     {/* Scheduled Alarm */}
-                    <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right">
+                    <div className="flex-1 bg-white/[0.01] backdrop-blur-md border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right transition-all duration-300 hover:border-white/10">
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] font-black text-white/45 uppercase tracking-widest">⏰ تشغيل تلقائي</span>
                         {isAlarmEnabled && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">مفعل</span>}
@@ -3443,7 +3443,7 @@ export default function QuranPage() {
                       placeholder="ابحث عن محطة بث أو اسم قارئ..."
                       value={radioSearchQuery}
                       onChange={(e) => setRadioSearchQuery(e.target.value)}
-                      className="w-full h-16 bg-[#0a0a0a]/80 border border-white/10 rounded-[1.5rem] ps-14 pe-6 text-sm text-white outline-none focus:border-primary/30 focus:bg-white/[0.04] transition-all"
+                      className="w-full h-16 bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-[1.5rem] ps-14 pe-6 text-sm text-white outline-none focus:border-primary/20 focus:bg-white/[0.04] transition-all"
                     />
                     {radioSearchQuery && (
                       <button onClick={() => setRadioSearchQuery('')} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
@@ -3466,10 +3466,10 @@ export default function QuranPage() {
                         key={cat.id}
                         onClick={() => setRadioCategory(cat.id as any)}
                         className={cn(
-                          "px-4 py-2 rounded-xl text-xs font-black transition-all border whitespace-nowrap active:scale-95",
+                          "px-4 py-2 rounded-xl text-xs font-black transition-all border whitespace-nowrap active:scale-95 backdrop-blur-md",
                           radioCategory === cat.id
                             ? "bg-primary text-primary-foreground border-primary shadow-glow-primary"
-                            : "bg-white/5 text-white/50 border-white/5 hover:bg-white/10 hover:text-white"
+                            : "bg-white/[0.01] text-white/50 border-white/5 hover:bg-white/5 hover:text-white"
                         )}
                       >
                         {cat.label}
@@ -3582,10 +3582,10 @@ export default function QuranPage() {
                           key={station.id}
                           onClick={() => handlePlayRadio(station)}
                           className={cn(
-                            "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer transition-all duration-200 group",
+                            "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group shadow-lg",
                             isCurrent
-                              ? "bg-primary/10 border-primary/30 shadow-md"
-                              : "bg-white/[0.03] border-white/10 hover:bg-white/[0.07] hover:border-white/20"
+                              ? "bg-primary/10 border-primary/25 shadow-glow-primary/5"
+                              : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
                           )}
                         >
                           {/* Icon */}
@@ -3688,7 +3688,7 @@ export default function QuranPage() {
                 {/* Sidebar (lg:col-span-1): Analytics & Ambient focus mixer */}
                 <div className="lg:col-span-1 space-y-6 flex flex-col">
                   {/* Listening Analytics Dashboard Card */}
-                  <div className="bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 space-y-6 shadow-xl text-right" dir="rtl">
+                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-8 space-y-6 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
                     <div className="flex items-center justify-between pb-4 border-b border-white/5">
                       <h4 className="text-sm font-black text-white flex items-center gap-2">
                         <span>📊 إحصائيات الاستماع الشخصية</span>
@@ -3727,7 +3727,7 @@ export default function QuranPage() {
                   </div>
 
                   {/* Ambient Focus Sound Mixer Card */}
-                  <div className="bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 space-y-6 shadow-xl text-right" dir="rtl">
+                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-8 space-y-6 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
                     <div className="flex items-center justify-between pb-4 border-b border-white/5">
                       <h4 className="text-sm font-black text-white flex items-center gap-2">
                         <span>🌧️ دمج الأصوات الإيمانية المهدئة</span>
@@ -3753,10 +3753,10 @@ export default function QuranPage() {
                             key={s.id}
                             onClick={() => setActiveAmbient(isActive ? null : s.id)}
                             className={cn(
-                              "p-4 rounded-2xl text-xs font-black text-right transition-all flex items-center justify-between border active:scale-95",
+                              "p-4 rounded-2xl text-xs font-black text-right transition-all flex items-center justify-between border active:scale-95 backdrop-blur-md",
                               isActive
-                                ? "bg-primary/10 border-primary/30 text-primary font-bold shadow-sm"
-                                : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                                ? "bg-primary/10 border-primary/25 text-primary font-bold shadow-sm"
+                                : "bg-white/[0.01] border-white/5 text-white/50 hover:bg-white/5 hover:text-white"
                             )}
                           >
                             <span>{s.name}</span>
