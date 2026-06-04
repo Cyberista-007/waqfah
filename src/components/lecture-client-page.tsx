@@ -94,6 +94,9 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const inlineAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioYtPlayerRef = useRef<any>(null);
   const audioYtContainerRef = useRef<HTMLDivElement | null>(null);
+  const visualizerCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const visualizerFrameRef = useRef<number>(0);
+  const visualizerStartRef = useRef<number>(Date.now());
 
   const playableAudioSrc = useMemo(() => {
     if (!lecture?.audioSrc) return '';
@@ -193,6 +196,59 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, currentPlayMode]);
+
+  // Canvas audio visualizer loop
+  useEffect(() => {
+    const canvas = visualizerCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const BAR_COUNT = 40;
+    const seeds = Array.from({ length: BAR_COUNT }, (_, i) => (i * 7.3 + 1.5));
+
+    const draw = () => {
+      const now = (Date.now() - visualizerStartRef.current) / 1000;
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const barW = (W / BAR_COUNT) * 0.7;
+      const gap = (W / BAR_COUNT) * 0.3;
+
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const s = seeds[i];
+        // Multi-frequency sine wave for natural look
+        let amp = isInlineAudioPlaying
+          ? Math.abs(
+              Math.sin(now * s * 0.4 + i * 0.5) * 0.5 +
+              Math.sin(now * s * 0.7 + i * 0.3) * 0.3 +
+              Math.sin(now * 2.1 + i * 0.8) * 0.2
+            )
+          : 0.04;
+
+        const barH = Math.max(3, amp * H * 0.9);
+        const x = i * (barW + gap) + gap / 2;
+        const y = H - barH;
+
+        // Gradient per bar
+        const grad = ctx.createLinearGradient(0, y, 0, H);
+        const alpha = isInlineAudioPlaying ? 0.9 : 0.35;
+        grad.addColorStop(0, `rgba(220, 38, 38, ${alpha})`);
+        grad.addColorStop(1, `rgba(239, 68, 68, ${alpha * 0.4})`);
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, barH, barW / 2);
+        ctx.fill();
+      }
+
+      visualizerFrameRef.current = requestAnimationFrame(draw);
+    };
+
+    visualizerFrameRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(visualizerFrameRef.current);
+  }, [isInlineAudioPlaying]);
 
   // Generate deterministic heatmap path based on lectureId
   const heatmapPath = useMemo(() => {
@@ -685,25 +741,13 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
                       {/* Right side: Player Controls */}
                       <div className="flex flex-col justify-center items-center w-full md:w-1/2 gap-4 z-10 px-4 mt-4 md:mt-0">
-                          {/* Visualizer animation: clean CSS wave bars */}
-                          <div className="flex items-end justify-center gap-1 h-8 w-full mb-1">
-                              {Array.from({ length: 18 }).map((_, i) => (
-                                  <motion.div
-                                      key={i}
-                                      animate={{
-                                          height: isInlineAudioPlaying 
-                                              ? [8, Math.random() * 24 + 6, 8] 
-                                              : 3
-                                      }}
-                                      transition={{
-                                          repeat: Infinity,
-                                          duration: 1 + Math.random() * 0.8,
-                                          ease: "easeInOut"
-                                      }}
-                                      className="w-1.5 rounded-full bg-primary/80"
-                                  />
-                              ))}
-                          </div>
+                          {/* Canvas Audio Visualizer */}
+                          <canvas
+                              ref={visualizerCanvasRef}
+                              width={320}
+                              height={48}
+                              className="w-full h-12 rounded-xl"
+                          />
 
                           {/* Progress bar */}
                           <div className="w-full space-y-0.5">
