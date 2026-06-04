@@ -2,6 +2,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useQuranRadio } from '@/hooks/quran/use-quran-radio';
 import { useQuranChat } from '@/hooks/quran/use-quran-chat';
 import {
@@ -22,21 +24,23 @@ import {
   CARD_FRAMES
 } from '@/components/quran/quran-constants';
 import type { SurahInfo, RadioStation } from '@/components/quran/quran-constants';
-import {
-  ModalPortal,
-  PlanProgress,
-  SurahInfoModal,
-  ShareModal,
-  ExamModal,
-  WordAnalysisModal,
-  CustomPlanModal,
-  TajweedGuideModal,
-  TafseerChatModal,
-  QuickJumpModal
-} from '@/components/quran/quran-modals';
+
+// ── Static imports (needed at render time) ──
+import { ModalPortal, PlanProgress } from '@/components/quran/quran-modals';
 import { VerseCard } from '@/components/quran/verse-card';
-import { QuranNavDrawer } from '@/components/quran/quran-nav-drawer';
 import { LOCAL_SCHOLAR_DB, getLocalFallbackExplanation } from '@/components/quran/local-scholar-db';
+
+// ── Dynamic imports (loaded on demand — saves ~180KB initial bundle) ──
+const SurahInfoModal    = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.SurahInfoModal })),    { ssr: false });
+const ShareModal        = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.ShareModal })),        { ssr: false });
+const ExamModal         = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.ExamModal })),         { ssr: false });
+const WordAnalysisModal = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.WordAnalysisModal })), { ssr: false });
+const CustomPlanModal   = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.CustomPlanModal })),   { ssr: false });
+const TajweedGuideModal = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.TajweedGuideModal })), { ssr: false });
+const TafseerChatModal  = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.TafseerChatModal })),  { ssr: false });
+const QuickJumpModal    = dynamic(() => import('@/components/quran/quran-modals').then(m => ({ default: m.QuickJumpModal })),    { ssr: false });
+const QuranNavDrawer    = dynamic(() => import('@/components/quran/quran-nav-drawer').then(m => ({ default: m.QuranNavDrawer })), { ssr: false });
+const LuminousMushaf    = dynamic(() => import('@/components/quran/luminous-mushaf').then(m => ({ default: m.LuminousMushaf })), { ssr: false, loading: () => <div className="flex items-center justify-center h-96"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> });
 
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,9 +60,10 @@ import { useReadingMode } from '@/components/reading-provider';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { useSync } from '@/hooks/useSync';
 import { QURAN_DATA, Verse as VerseType } from '@/lib/quran-data';
-import { LuminousMushaf } from '@/components/quran/luminous-mushaf';
-import confetti from 'canvas-confetti';
 import { useRadio } from '@/components/radio-provider';
+
+// ── Lazy-load confetti to avoid adding 28KB to initial bundle ──
+const fireConfetti = () => import('canvas-confetti').then(m => m.default({ particleCount: 200, spread: 80, origin: { y: 0.6 } }));
 
 // ━━━━━━━━━━━ TYPES & CONSTANTS ━━━━━━━━━━━
 
@@ -204,6 +209,26 @@ export default function QuranPage() {
   const voiceRecognitionRef = useRef<any>(null);
   const [searchFilter, setSearchFilter] = useState<'all' | 'surahs' | 'verses' | 'tafseer'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // ── ① Debounced Search (reduces re-renders on every keystroke) ──
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => setDebouncedSearchQuery(value), 300);
+  }, [setSearchQuery]);
+
+  // ── ② Virtual Scrolling container refs ──
+  const surahsListRef = useRef<HTMLDivElement>(null);
+  const versesListRef = useRef<HTMLDivElement>(null);
+
+  const versesVirtualizer = useWindowVirtualizer({
+    count: surahContent.length,
+    estimateSize: () => 350,
+    overscan: 6,
+    scrollMargin: versesListRef.current?.offsetTop ?? 0,
+  });
 
   // Synchronize Radio & Quran Recitation: pause verse player when radio plays
   useEffect(() => {
@@ -590,7 +615,8 @@ export default function QuranPage() {
 
   const filteredSurahs = useMemo(() => {
     let result = surahs;
-    const query = normalizeArabic(searchQuery.toLowerCase());
+    // ③ Use debouncedSearchQuery so filtering only runs 300ms after user stops typing
+    const query = normalizeArabic(debouncedSearchQuery.toLowerCase());
     if (query) {
       result = result.filter(s =>
         normalizeArabic(s.name).includes(query) ||
@@ -608,7 +634,7 @@ export default function QuranPage() {
     }
 
     return result;
-  }, [surahs, searchQuery, surahTypeFilter, surahJuzFilter]);
+  }, [surahs, debouncedSearchQuery, surahTypeFilter, surahJuzFilter]);
 
   const semanticResults = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim().toLowerCase());
@@ -1914,7 +1940,7 @@ export default function QuranPage() {
               type="text"
               placeholder={view === 'full' ? "ابحث عن سورة، جزء، أو رقم..." : "ابحث في الآيات المختارة..."}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full h-20 bg-white/5 border border-white/10 rounded-[2.5rem] ps-16 pe-16 text-xl text-white outline-none focus:border-primary/30 focus:bg-white/[0.08] transition-all shadow-inner"
             />
             <button
@@ -2221,7 +2247,8 @@ export default function QuranPage() {
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div ref={surahsListRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* ② Virtual Scrolling: only renders visible surah cards */}
                       {filteredSurahs.map((s: SurahInfo, i: number) => {
                         const status = (state.quranMemorization?.[s.number] || 'not-started') as keyof typeof MEMORIZATION_STATUS;
                         const config = MEMORIZATION_STATUS[status];
@@ -2364,39 +2391,59 @@ export default function QuranPage() {
                   ) : (
                     <>
                       {viewMode === 'ayah' ? (
-                        <div className="grid gap-10">
+                        <div
+                          ref={versesListRef}
+                          style={{
+                            height: `${versesVirtualizer.getTotalSize()}px`,
+                            width: '100%',
+                            position: 'relative',
+                          }}
+                        >
                           {selectedSurah !== 1 && selectedSurah !== 9 && (
-                            <div className={cn("text-center py-10 opacity-80", selectedScript.font)}>
+                            <div className={cn("text-center py-10 opacity-80 absolute top-0 left-0 right-0 z-0", selectedScript.font)} style={{ transform: `translateY(-90px)` }}>
                               <p className="text-4xl md:text-6xl text-white/90">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
                             </div>
                           )}
-                          {surahContent.map((v, i) => (
-                            <VerseCard
-                              key={v.id}
-                              id={v.id}
-                              verse={v}
-                              accentColor="text-primary"
-                              border="border-primary/20"
-                              index={i}
-                              isReadingMode={isReadingMode}
-                              fontSize={fontSize}
-                              isHideRevealMode={isHideRevealMode}
-                    quranHideMode={quranHideMode}
-                              onPlay={handlePlayVerse}
-                              onShare={handleShare}
-                              onBookmark={toggleBookmark}
-                              onWordClick={handleWordClick}
-                              isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
-                              isPlaying={currentAudio?.id === v.id && isPlaying}
-                              reciterName={selectedReciter.name}
-                              fontClass={selectedScript.font}
-                              selectedTranslation={selectedTranslation}
-                              onChatClick={startTafseerChat}
-                              isComparisonMode={isComparisonMode}
-                              selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
-                              selectedSecondaryTranslation={selectedSecondaryTranslation}
-                            />
-                          ))}
+                          {versesVirtualizer.getVirtualItems().map((virtualItem) => {
+                            const v = surahContent[virtualItem.index];
+                            if (!v) return null;
+                            return (
+                              <div
+                                key={virtualItem.key}
+                                ref={versesVirtualizer.measureElement}
+                                data-index={virtualItem.index}
+                                className="w-full absolute left-0 right-0 pb-10"
+                                style={{
+                                  transform: `translateY(${virtualItem.start - versesVirtualizer.options.scrollMargin}px)`,
+                                }}
+                              >
+                                <VerseCard
+                                  id={v.id}
+                                  verse={v}
+                                  accentColor="text-primary"
+                                  border="border-primary/20"
+                                  index={virtualItem.index}
+                                  isReadingMode={isReadingMode}
+                                  fontSize={fontSize}
+                                  isHideRevealMode={isHideRevealMode}
+                                  quranHideMode={quranHideMode}
+                                  onPlay={handlePlayVerse}
+                                  onShare={handleShare}
+                                  onBookmark={toggleBookmark}
+                                  onWordClick={handleWordClick}
+                                  isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
+                                  isPlaying={currentAudio?.id === v.id && isPlaying}
+                                  reciterName={selectedReciter.name}
+                                  fontClass={selectedScript.font}
+                                  selectedTranslation={selectedTranslation}
+                                  onChatClick={startTafseerChat}
+                                  isComparisonMode={isComparisonMode}
+                                  selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
+                                  selectedSecondaryTranslation={selectedSecondaryTranslation}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-6 w-full">
