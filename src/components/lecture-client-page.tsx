@@ -92,6 +92,8 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   const [playbackRate, setPlaybackRate] = useState(1);
   const [audioVolume, setAudioVolume] = useState(0.8);
   const inlineAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioYtPlayerRef = useRef<any>(null);
+  const audioYtContainerRef = useRef<HTMLDivElement | null>(null);
 
   const playableAudioSrc = useMemo(() => {
     if (!lecture?.audioSrc) return '';
@@ -132,21 +134,64 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     }
   }, [initialTime]);
 
-  // Sync play state from YouTube iframe in audio mode
+  // Initialize hidden YT.Player for audio-only mode
   useEffect(() => {
     if (!videoId || currentPlayMode !== 'audio') return;
-    const handler = (event: MessageEvent) => {
-      if (typeof event.data !== 'string') return;
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === 'onStateChange') {
-          if (data.info === 1) setIsInlineAudioPlaying(true);   // playing
-          else if (data.info === 2 || data.info === 0) setIsInlineAudioPlaying(false); // paused / ended
-        }
-      } catch {}
+    if (!audioYtContainerRef.current) return;
+
+    let pollInterval: NodeJS.Timeout;
+
+    const initAudioPlayer = () => {
+      if (audioYtPlayerRef.current?.destroy) {
+        audioYtPlayerRef.current.destroy();
+      }
+      audioYtPlayerRef.current = new (window as any).YT.Player(audioYtContainerRef.current, {
+        videoId,
+        width: '0',
+        height: '0',
+        playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1 },
+        events: {
+          onReady: (e: any) => {
+            const dur = e.target.getDuration();
+            if (dur > 0) setVideoDuration(dur);
+            e.target.setVolume(audioVolume * 100);
+            e.target.playVideo();
+            setIsInlineAudioPlaying(true);
+            // Poll current time every second
+            pollInterval = setInterval(() => {
+              if (!audioYtPlayerRef.current?.getCurrentTime) return;
+              const t = audioYtPlayerRef.current.getCurrentTime();
+              const d = audioYtPlayerRef.current.getDuration();
+              setPlayerCurrentTime(t);
+              if (d > 0) setVideoDuration(d);
+            }, 500);
+          },
+          onStateChange: (e: any) => {
+            if (e.data === 1) setIsInlineAudioPlaying(true);
+            else if (e.data === 2 || e.data === 0) setIsInlineAudioPlaying(false);
+            if (e.data === 0) handleVideoEnded();
+          },
+        },
+      });
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+
+    if (!(window as any).YT || !(window as any).YT.Player) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+      (window as any).onYouTubeIframeAPIReady = initAudioPlayer;
+    } else {
+      initAudioPlayer();
+    }
+
+    return () => {
+      clearInterval(pollInterval);
+      if (audioYtPlayerRef.current?.destroy) {
+        audioYtPlayerRef.current.destroy();
+        audioYtPlayerRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, currentPlayMode]);
 
   // Generate deterministic heatmap path based on lectureId
@@ -597,23 +642,9 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                         alt="audio-bg-glow" 
                       />
 
-                      {/* Hidden YouTube iframe for audio-only mode */}
+                      {/* Hidden YT.Player container for audio-only mode */}
                       {videoId ? (
-                        <iframe
-                          id={`lecture-audio-${lecture.id}`}
-                          src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
-                          className="hidden"
-                          allow="autoplay"
-                          title="lecture-audio"
-                          onLoad={(e) => {
-                            const iframe = e.currentTarget;
-                            // Set volume once loaded
-                            iframe.contentWindow?.postMessage(
-                              JSON.stringify({ event: 'command', func: 'setVolume', args: [audioVolume * 100] }),
-                              '*'
-                            );
-                          }}
-                        />
+                        <div ref={audioYtContainerRef} className="absolute w-0 h-0 overflow-hidden pointer-events-none" aria-hidden />
                       ) : (
                         <audio
                           ref={inlineAudioRef}
@@ -684,10 +715,12 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                                   value={playerCurrentTime}
                                   onChange={(e) => {
                                       const val = parseFloat(e.target.value);
-                                      if (inlineAudioRef.current) {
+                                      setPlayerCurrentTime(val);
+                                      if (videoId && audioYtPlayerRef.current?.seekTo) {
+                                          audioYtPlayerRef.current.seekTo(val, true);
+                                      } else if (inlineAudioRef.current) {
                                           inlineAudioRef.current.currentTime = val;
                                       }
-                                      setPlayerCurrentTime(val);
                                   }}
                                   className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                               />
@@ -702,7 +735,10 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                               {/* 10s back */}
                               <button
                                   onClick={() => {
-                                      if (inlineAudioRef.current) {
+                                      if (videoId && audioYtPlayerRef.current?.seekTo) {
+                                          const cur = audioYtPlayerRef.current.getCurrentTime();
+                                          audioYtPlayerRef.current.seekTo(Math.max(0, cur - 10), true);
+                                      } else if (inlineAudioRef.current) {
                                           inlineAudioRef.current.currentTime = Math.max(0, inlineAudioRef.current.currentTime - 10);
                                       }
                                   }}
@@ -715,16 +751,11 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                               {/* Play / Pause */}
                               <button
                                   onClick={() => {
-                                      if (videoId) {
-                                          const iframe = document.getElementById(`lecture-audio-${lecture.id}`) as HTMLIFrameElement;
-                                          if (iframe?.contentWindow) {
-                                              if (isInlineAudioPlaying) {
-                                                  iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                                                  setIsInlineAudioPlaying(false);
-                                              } else {
-                                                  iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                                                  setIsInlineAudioPlaying(true);
-                                              }
+                                      if (videoId && audioYtPlayerRef.current) {
+                                          if (isInlineAudioPlaying) {
+                                              audioYtPlayerRef.current.pauseVideo();
+                                          } else {
+                                              audioYtPlayerRef.current.playVideo();
                                           }
                                       } else if (inlineAudioRef.current) {
                                           if (isInlineAudioPlaying) {
@@ -742,7 +773,10 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                               {/* 10s forward */}
                               <button
                                   onClick={() => {
-                                      if (inlineAudioRef.current) {
+                                      if (videoId && audioYtPlayerRef.current?.seekTo) {
+                                          const cur = audioYtPlayerRef.current.getCurrentTime();
+                                          audioYtPlayerRef.current.seekTo(Math.min(videoDuration, cur + 10), true);
+                                      } else if (inlineAudioRef.current) {
                                           inlineAudioRef.current.currentTime = Math.min(videoDuration, inlineAudioRef.current.currentTime + 10);
                                       }
                                   }}
