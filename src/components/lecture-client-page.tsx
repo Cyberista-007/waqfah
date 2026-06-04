@@ -586,6 +586,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                       <audio
                         ref={inlineAudioRef}
                         src={playableAudioSrc}
+                        preload="none"
                         onTimeUpdate={(e) => {
                           const time = e.currentTarget.currentTime;
                           setPlayerCurrentTime(time);

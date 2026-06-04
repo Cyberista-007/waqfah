@@ -412,6 +412,16 @@ export function useQuranRadio() {
     };
   }, [isPlayingRadio, currentStation, visualizerStyle, radioAudioRef, isAmbientScreenSaver]);
 
+  // Clean up AudioContext on unmount to prevent audio device resource leaks
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(err => console.warn("Error closing AudioContext:", err));
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
+
   // ── Recording Control Methods ──
   const startRecording = useCallback(async () => {
     if ((!radioAudioRef.current && !activeYoutubeId) || !currentStation) return;

@@ -21,7 +21,7 @@ export function SiteFooter() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Brand Column */}
           <div className="lg:col-span-5 space-y-8">
-            <Link href="/" className="inline-block group">
+            <Link href="/" prefetch={false} className="inline-block group">
               <motion.span 
                 className="text-5xl font-black font-headline tracking-tighter text-white block mb-2 group-hover:text-primary transition-colors"
               >
@@ -35,7 +35,7 @@ export function SiteFooter() {
             <p className="max-w-md text-lg text-white/40 leading-relaxed font-medium">
               صرحٌ تعليميٌّ متكاملٌ يهدفُ إلى تقريبِ العلمِ النافعِ، وربطِ المسلمِ بالكتابِ والسنةِ على فهمِ سلفِ الأمةِ، عبرَ تجربةٍ تقنيةٍ عالمية.
             </p>
-
+ 
             <div className="flex gap-4">
               {[
                 { icon: Youtube, color: "hover:bg-red-500/20 hover:text-red-500" },
@@ -55,7 +55,7 @@ export function SiteFooter() {
               ))}
             </div>
           </div>
-
+ 
           {/* Links Columns */}
           <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-12">
             <div>
@@ -73,7 +73,7 @@ export function SiteFooter() {
                   { label: "المصحف الشامل", href: "/quran" }
                 ].map((link, i) => (
                   <li key={i}>
-                    <Link href={link.href} className="text-white/40 hover:text-white transition-colors text-base font-bold flex items-center group">
+                    <Link href={link.href} prefetch={false} className="text-white/40 hover:text-white transition-colors text-base font-bold flex items-center group">
                       {link.label}
                       <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-1 transition-all" />
                     </Link>
@@ -81,7 +81,7 @@ export function SiteFooter() {
                 ))}
               </ul>
             </div>
-
+ 
             <div>
               <h3 className="text-white font-black text-sm uppercase tracking-widest mb-8 flex items-center gap-2">
                 <div className="w-1 h-4 bg-emerald-500 rounded-full" />
@@ -96,14 +96,14 @@ export function SiteFooter() {
                   { label: "تفسير وآيات", href: "/search?category=تفسير" }
                 ].map((link, i) => (
                   <li key={i}>
-                    <Link href={link.href} className="text-white/40 hover:text-white transition-colors text-base font-bold flex items-center group">
+                    <Link href={link.href} prefetch={false} className="text-white/40 hover:text-white transition-colors text-base font-bold flex items-center group">
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
-
+ 
             <div className="col-span-2 md:col-span-1">
               <h3 className="text-white font-black text-sm uppercase tracking-widest mb-8 flex items-center gap-2">
                 <div className="w-1 h-4 bg-amber-500 rounded-full" />
@@ -111,13 +111,13 @@ export function SiteFooter() {
               </h3>
               <ul className="space-y-4">
                 <li>
-                  <Link href="/contact" className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/10 transition-all group">
+                  <Link href="/contact" prefetch={false} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/10 transition-all group">
                     <span className="text-white font-black text-sm">تواصل معنا</span>
                     <span className="text-white/30 text-xs">نحن هنا للإجابة على استفساراتك</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/donations" className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col gap-1 hover:bg-primary/20 transition-all group">
+                  <Link href="/donations" prefetch={false} className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col gap-1 hover:bg-primary/20 transition-all group">
                     <span className="text-primary font-black text-sm flex items-center gap-2">
                       <Heart className="w-3 h-3 fill-current" /> ادعم المنصة
                     </span>
@@ -128,14 +128,14 @@ export function SiteFooter() {
             </div>
           </div>
         </div>
-
+ 
         {/* Bottom Bar */}
         <div className="mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-8 text-xs font-black uppercase tracking-widest text-white/20">
              <p>© {new Date().getFullYear()} وقـــفــــة</p>
              <div className="hidden md:flex gap-6">
-                <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-                <Link href="#" className="hover:text-white transition-colors">شروط الاستخدام</Link>
+                <Link href="#" prefetch={false} className="hover:text-white transition-colors">سياسة الخصوصية</Link>
+                <Link href="#" prefetch={false} className="hover:text-white transition-colors">شروط الاستخدام</Link>
              </div>
           </div>
           

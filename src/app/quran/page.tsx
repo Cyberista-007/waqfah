@@ -470,7 +470,20 @@ export default function QuranPage() {
   
 
   useEffect(() => {
-    fetch('https://api.alquran.cloud/v1/surah').then(res => res.json()).then(data => setSurahs(data.data));
+    const cachedSurahs = typeof window !== 'undefined' ? sessionStorage.getItem('quran_surahs_list') : null;
+    if (cachedSurahs) {
+      setSurahs(JSON.parse(cachedSurahs));
+    } else {
+      fetch('https://api.alquran.cloud/v1/surah')
+        .then(res => res.json())
+        .then(data => {
+          setSurahs(data.data);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('quran_surahs_list', JSON.stringify(data.data));
+          }
+        })
+        .catch(console.error);
+    }
     const recents = JSON.parse(localStorage.getItem('quran_recents') || '[]');
     setRecentSurahs(recents);
     const randomAyah = Math.floor(Math.random() * 6236) + 1;
@@ -488,6 +501,18 @@ export default function QuranPage() {
       localStorage.setItem('quran_recents', JSON.stringify(newRecents));
       return newRecents;
     });
+
+    const cacheKey = `surah_${num}_${selectedScript.edition}_${selectedTafseer.id}_${selectedTranslation.id}_${selectedSecondaryTafseer.id}_${selectedSecondaryTranslation.id}`;
+    if (typeof window !== 'undefined' && (window as any).__surahCache && (window as any).__surahCache[cacheKey]) {
+      const cached = (window as any).__surahCache[cacheKey];
+      setSurahContent(cached);
+      if (cached.length > 0) {
+        setCurrentPage(cached[0].page_number);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const [scriptData, tafseer, translationData, secTafseerData, secTranslationData] = await Promise.all([
         fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/${selectedScript.edition}`).then(res => res.json()),
@@ -516,6 +541,11 @@ export default function QuranPage() {
         // Very aggressive regex to handle almost all Bismillah variations across different APIs/Scripts
         const bismillahPattern = /^بِسْمِ[\s\S]*?الرَّحِيْمِ\s*|^بِسْمِ[\s\S]*?الرَّحِيمِ\s*/;
         combined[0].arabic = combined[0].arabic.replace(bismillahPattern, "").trim();
+      }
+
+      if (typeof window !== 'undefined') {
+        if (!(window as any).__surahCache) (window as any).__surahCache = {};
+        (window as any).__surahCache[cacheKey] = combined;
       }
 
       setSurahContent(combined);
@@ -1318,7 +1348,7 @@ export default function QuranPage() {
         <motion.div className="h-full bg-primary shadow-glow-primary" style={{ width: `${scrollProgress}%` }} />
       </div>
 
-      <audio ref={audioRef} onEnded={handleAudioEnded} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+      <audio ref={audioRef} preload="none" onEnded={handleAudioEnded} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
 
       {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
       <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
