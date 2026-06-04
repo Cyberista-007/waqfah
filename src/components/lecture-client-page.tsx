@@ -197,7 +197,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, currentPlayMode]);
 
-  // Canvas audio visualizer loop
+  // Canvas audio visualizer loop — slow & organic
   useEffect(() => {
     const canvas = visualizerCanvasRef.current;
     if (!canvas) return;
@@ -205,37 +205,40 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
     if (!ctx) return;
 
     const BAR_COUNT = 40;
-    const seeds = Array.from({ length: BAR_COUNT }, (_, i) => (i * 7.3 + 1.5));
+    // Pre-compute per-bar phase offsets & speed factors (deterministic, not random)
+    const phases  = Array.from({ length: BAR_COUNT }, (_, i) => i * 0.42);
+    const speeds  = Array.from({ length: BAR_COUNT }, (_, i) => 0.28 + (i % 7) * 0.04);
+    const heights = new Float32Array(BAR_COUNT).fill(0.04); // current interpolated height
 
-    const draw = () => {
-      const now = (Date.now() - visualizerStartRef.current) / 1000;
+    const draw = (ts: number) => {
+      const now = ts / 1000; // seconds
       const W = canvas.width;
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const barW = (W / BAR_COUNT) * 0.7;
-      const gap = (W / BAR_COUNT) * 0.3;
+      const barW = (W / BAR_COUNT) * 0.68;
+      const gap  = (W / BAR_COUNT) * 0.32;
 
       for (let i = 0; i < BAR_COUNT; i++) {
-        const s = seeds[i];
-        // Multi-frequency sine wave for natural look
-        let amp = isInlineAudioPlaying
+        // Target amplitude: two slow sine waves combined, range 0-1
+        const target = isInlineAudioPlaying
           ? Math.abs(
-              Math.sin(now * s * 0.4 + i * 0.5) * 0.5 +
-              Math.sin(now * s * 0.7 + i * 0.3) * 0.3 +
-              Math.sin(now * 2.1 + i * 0.8) * 0.2
+              Math.sin(now * speeds[i]       + phases[i]) * 0.55 +
+              Math.sin(now * speeds[i] * 0.5 + phases[i] * 1.7) * 0.45
             )
           : 0.04;
 
-        const barH = Math.max(3, amp * H * 0.9);
+        // Lerp toward target — 8% per frame ≈ very smooth glide
+        heights[i] += (target - heights[i]) * 0.08;
+
+        const barH = Math.max(2, heights[i] * H * 0.88);
         const x = i * (barW + gap) + gap / 2;
         const y = H - barH;
 
-        // Gradient per bar
         const grad = ctx.createLinearGradient(0, y, 0, H);
-        const alpha = isInlineAudioPlaying ? 0.9 : 0.35;
+        const alpha = isInlineAudioPlaying ? 0.92 : 0.28;
         grad.addColorStop(0, `rgba(220, 38, 38, ${alpha})`);
-        grad.addColorStop(1, `rgba(239, 68, 68, ${alpha * 0.4})`);
+        grad.addColorStop(1, `rgba(239, 68, 68, ${alpha * 0.3})`);
 
         ctx.fillStyle = grad;
         ctx.beginPath();
