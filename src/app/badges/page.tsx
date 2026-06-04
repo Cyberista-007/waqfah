@@ -4,7 +4,7 @@ import { useCollection, useUser, useDoc } from '@/firebase';
 import type { UserProfile, GamificationBadge, UserBadge } from '@/lib/types';
 import { useBadgeManager } from '@/hooks/useBadgeManager';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trophy, Award, Lock, CheckCircle2, Headphones, BookOpen, Film, Gem, Star, Loader2, ArrowRight, Search, Share2, Copy, X, ArrowUpRight } from 'lucide-react';
+import { Sparkles, Trophy, Award, Lock, CheckCircle2, Headphones, BookOpen, Film, Gem, Star, Loader2, ArrowRight, Search, Share2, Copy, X, ArrowUpRight, Compass, Heart, Home, Calendar, Clock } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { iconMap } from '@/lib/icon-map';
 import { cn } from '@/lib/utils';
@@ -50,17 +50,69 @@ export default function BadgesPage() {
         return { title: "فارس وقفة الذهبي", color: "text-amber-400 animate-pulse", bg: "bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]" };
     }, [stats.percentage]);
 
-    // Trigger celebration confetti on mount if user has any earned badges
+    // Time-sensitive customized Arabic greeting
+    const timeGreeting = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) {
+            return {
+                text: "صباح الخير والبركة والنشاط العلمي",
+                subtext: "يوم جديد مشرق، نسأل الله أن يرزقك علماً نافعاً وعملاً متقبلاً ☀️"
+            };
+        } else if (hour >= 12 && hour < 17) {
+            return {
+                text: "طاب يومك بالخير والمسرات والبركات",
+                subtext: "سعداء بمتابعتك المستمرة، هل خصصت وقتاً لمجلس علم اليوم؟ ⛅️"
+            };
+        } else {
+            return {
+                text: "مساء السكينة والوقار والهدوء الإيماني",
+                subtext: "بعد عناء يومك، خذ نفساً عميقاً في بيتك المعرفي وتزود من العلم النافع 🌙"
+            };
+        }
+    }, []);
+
+    // Daily Islamic spiritual reminders
+    const dailySpiritualReminder = useMemo(() => {
+        const reminders = [
+            { text: "«مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ»", source: "حديث شريف" },
+            { text: "«يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ»", source: "سورة المجادلة: ١١" },
+            { text: "«وَقُل رَّبِّ زِدْنِي عِلْمًا»", source: "سورة طه: ١١٤" },
+            { text: "«إِنَّمَا يَخْشَى اللَّهَ مِنْ عِبَادِهِ الْعُلَمَاءُ»", source: "سورة فاطر: ٢٨" },
+            { text: "«أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ»", source: "حديث شريف" }
+        ];
+        const day = new Date().getDate();
+        return reminders[day % reminders.length];
+    }, []);
+
+    // Calculate days since user registered
+    const daysWithWaqfah = useMemo(() => {
+        if (!userProfile?.createdAt) return 1;
+        const createdAt = userProfile.createdAt as any;
+        const regDate = createdAt && typeof createdAt.toDate === 'function' ? createdAt.toDate() : new Date(createdAt);
+        const diffTime = Math.abs(Date.now() - regDate.getTime());
+        return Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+    }, [userProfile?.createdAt]);
+
+    // Format metrics values
+    const formatMinutesValue = (mins: number) => {
+        if (!mins) return "0 دقيقة";
+        if (mins < 60) return `${mins} دقيقة`;
+        const hrs = Math.floor(mins / 60);
+        const rem = mins % 60;
+        return rem > 0 ? `${hrs} ساعة و ${rem} دقيقة` : `${hrs} ساعة`;
+    };
+
+    // Confetti celebration on mount if badges earned
     useEffect(() => {
         if (!isLoading && stats.earned > 0) {
             const timer = setTimeout(() => {
                 confetti({
-                    particleCount: 50,
-                    spread: 80,
+                    particleCount: 55,
+                    spread: 75,
                     origin: { y: 0.6 },
                     colors: ['#f59e0b', '#10b981', '#6366f1']
                 });
-            }, 500);
+            }, 600);
             return () => clearTimeout(timer);
         }
     }, [isLoading, stats.earned]);
@@ -133,81 +185,158 @@ export default function BadgesPage() {
     }
 
     return (
-        <div className="min-h-screen pb-32 overflow-hidden bg-transparent text-right" dir="rtl">
+        <div className="min-h-screen pb-32 overflow-hidden bg-transparent text-right font-sans" dir="rtl">
             <div className="container relative z-10 px-4 max-w-6xl mx-auto">
-                {/* 🏛️ Header Section */}
-                <header className="pt-20 pb-12 flex flex-col md:flex-row justify-between items-center gap-8 border-b border-white/5">
-                    <div className="space-y-4 text-center md:text-right">
-                        <Link 
-                            href="/" 
-                            className="inline-flex items-center gap-2 text-xs font-black text-white/40 hover:text-primary transition-colors mb-2 group"
-                        >
-                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /> العودة للرئيسية
-                        </Link>
-                        <h1 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white">
-                            أوسمة <span className="text-primary italic">وقفة</span>
-                        </h1>
-                        <p className="text-lg text-white/40 font-medium max-w-xl">
-                            سجل شرف مخصص لرحلتك المعرفية والدعوية. تدرّج في طلب العلم وحصّل الإنجازات لتزيين ملفك.
-                        </p>
-                    </div>
-
-                    {/* 👤 User Progress Summary */}
-                    {user ? (
+                
+                {/* 🏡 Warm Welcome Home Section (بيت وقفة المعرفي) */}
+                <section className="pt-16 pb-8">
+                    {user && userProfile ? (
                         <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full md:w-80 p-6 rounded-[2.5rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl space-y-4"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="relative overflow-hidden rounded-[3rem] p-8 md:p-10 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.4)]"
                         >
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl border border-white/10 p-0.5 overflow-hidden">
-                                    <Avatar className="w-full h-full rounded-xl">
-                                        <AvatarImage src={userProfile?.photoURL || ''} alt={userProfile?.name} />
-                                        <AvatarFallback className="bg-zinc-800 text-white/40 font-bold text-lg">
-                                            {getInitials(userProfile?.name || '')}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </div>
-                                <div className="space-y-0.5 flex-1">
-                                    <h3 className="font-black text-white text-lg line-clamp-1">{userProfile?.name}</h3>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-[10px] font-black uppercase text-primary tracking-widest">{userProfile?.points || 0} نقطة</span>
-                                        <span className={cn("text-[9px] font-black px-2 py-0.5 rounded-full border", collectorRank.color, collectorRank.bg)}>
-                                            {collectorRank.title}
+                            {/* Ambient Light */}
+                            <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
+                            <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
+
+                            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                {/* Profile & Custom Time Greeting */}
+                                <div className="lg:col-span-5 space-y-5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative group">
+                                            <div className="absolute inset-0 bg-primary/25 rounded-3xl blur-md group-hover:blur-lg transition-all" />
+                                            <div className="relative w-18 h-18 rounded-3xl border-2 border-white/20 p-1 bg-zinc-950 overflow-hidden">
+                                                <Avatar className="w-full h-full rounded-2xl">
+                                                    <AvatarImage src={userProfile.photoURL || ''} alt={userProfile.name} />
+                                                    <AvatarFallback className="bg-zinc-800 text-white/50 font-bold text-xl">
+                                                        {getInitials(userProfile.name)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-2">
+                                                <Home className="w-4 h-4 text-primary" />
+                                                <span className="text-xs font-black text-primary uppercase tracking-widest">بيتك المعرفي</span>
+                                            </div>
+                                            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
+                                                مرحباً بك، {userProfile.name}
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-base text-zinc-300 font-bold">{timeGreeting.text} 🌾</p>
+                                        <p className="text-xs text-zinc-400 leading-relaxed font-medium">{timeGreeting.subtext}</p>
+                                    </div>
+
+                                    {/* Member Badge & Counter */}
+                                    <div className="flex items-center gap-3 flex-wrap pt-2">
+                                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/5 border border-white/5 text-zinc-300 text-xs font-bold shadow-md">
+                                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                                            فرد من وقفة منذ <strong className="text-white font-black">{daysWithWaqfah} يوماً</strong>
+                                        </span>
+                                        <span className={cn("inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl border text-xs font-black shadow-md", collectorRank.color, collectorRank.bg)}>
+                                            <Trophy className="w-3.5 h-3.5" />
+                                            رتبة: {collectorRank.title}
                                         </span>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div className="space-y-2 pt-2 border-t border-white/5">
-                                <div className="flex justify-between text-xs font-black text-white/40">
-                                    <span>الأوسمة المكتسبة</span>
-                                    <span>{stats.earned} من {stats.total}</span>
+
+                                {/* Cozy Progress Shelf */}
+                                <div className="lg:col-span-4 grid grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner space-y-2 hover:bg-white/[0.04] transition-colors group">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-zinc-400">زمن الاستماع</span>
+                                            <Headphones className="w-4 h-4 text-emerald-500" />
+                                        </div>
+                                        <p className="text-sm font-black text-white line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                                            {formatMinutesValue(userProfile.minutesListened || 0)}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner space-y-2 hover:bg-white/[0.04] transition-colors group">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-zinc-400">محاضرات مكتملة</span>
+                                            <BookOpen className="w-4 h-4 text-amber-500" />
+                                        </div>
+                                        <p className="text-lg font-black text-white group-hover:text-amber-400 transition-colors">
+                                            {userProfile.lecturesCompleted || 0} محاضرة
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner space-y-2 hover:bg-white/[0.04] transition-colors group">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-zinc-400">السلاسل المنجزة</span>
+                                            <Film className="w-4 h-4 text-violet-500" />
+                                        </div>
+                                        <p className="text-lg font-black text-white group-hover:text-violet-400 transition-colors">
+                                            {userProfile.seriesCompleted || 0} سلسلة
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner space-y-2 hover:bg-white/[0.04] transition-colors group">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-zinc-400">النقاط والتقدير</span>
+                                            <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" />
+                                        </div>
+                                        <p className="text-lg font-black text-amber-400">
+                                            {userProfile.points || 0} نقطة
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <motion.div 
-                                        className="h-full bg-primary" 
-                                        initial={{ width: 0 }} 
-                                        animate={{ width: `${stats.percentage}%` }}
-                                        transition={{ duration: 1, ease: 'easeOut' }}
-                                    />
+
+                                {/* Spiritual Reminder Box */}
+                                <div className="lg:col-span-3 p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-3 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 translate-x-[-15%] translate-y-[-15%] opacity-5 text-white">
+                                        <BookOpen className="w-24 h-24" />
+                                    </div>
+                                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-1.5">
+                                        <Heart className="w-3 h-3 fill-current" /> تذكرة مجالس العلم
+                                    </h4>
+                                    <p className="text-xs text-zinc-300 font-bold leading-relaxed italic">
+                                        {dailySpiritualReminder.text}
+                                    </p>
+                                    <p className="text-[9px] text-zinc-500 font-bold text-left">— {dailySpiritualReminder.source}</p>
                                 </div>
-                                <p className="text-[10px] text-zinc-500 font-bold text-center">أكملت {stats.percentage}% من إنجازات المنصة</p>
                             </div>
                         </motion.div>
                     ) : (
-                        <div className="w-full md:w-80 p-8 rounded-[2.5rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 text-center space-y-4 shadow-2xl">
-                            <Award className="w-12 h-12 text-zinc-700 mx-auto animate-pulse" />
-                            <h3 className="text-lg font-black text-white">سجّل دخولك لمتابعة إنجازاتك</h3>
-                            <Link href="/auth/login" className="block w-full h-12 rounded-xl bg-primary text-white font-black text-sm flex items-center justify-center hover:scale-[1.02] active:scale-95 transition-all">
-                                تسجيل الدخول
+                        <div className="p-10 rounded-[3rem] bg-white/[0.02] border border-white/5 text-center max-w-xl mx-auto space-y-6">
+                            <Home className="w-16 h-16 text-zinc-700 mx-auto" />
+                            <h2 className="text-2xl font-black text-white">سجّل دخولك لفتح بيتك المعرفي</h2>
+                            <p className="text-zinc-400 text-sm">بمجرد تسجيل حسابك، ستتمكن من قياس وتتبع ساعات الاستماع وإكمال المناهج وحصد الأوسمة العلمية وتطوير رتبتك.</p>
+                            <Link href="/auth/login" className="inline-flex h-12 px-10 rounded-xl bg-primary text-white font-black text-sm items-center justify-center hover:scale-[1.02] active:scale-95 transition-all">
+                                تسجيل الدخول الآن
                             </Link>
                         </div>
                     )}
-                </header>
+                </section>
+
+                {/* 🏛️ Title Header */}
+                <div className="pt-10 pb-8 flex justify-between items-center">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl md:text-3xl font-black text-white font-headline">
+                            أوسمة وإنجازات المنصة
+                        </h1>
+                        <p className="text-zinc-500 text-xs font-bold">
+                            تصفح الأوسمة المتاحة في قاعدة البيانات وتعرف على شروط تحصيلها
+                        </p>
+                    </div>
+                    {user && (
+                        <div className="text-xs font-bold text-zinc-400 flex items-center gap-2">
+                            <span>الإنجاز الإجمالي:</span>
+                            <strong className="text-white font-black bg-white/5 border border-white/5 px-3 py-1 rounded-xl">
+                                {stats.earned} وسام مكتمل ({stats.percentage}%)
+                            </strong>
+                        </div>
+                    )}
+                </div>
 
                 {/* 🎛️ Search & Filter Controls */}
-                <div className="mt-12 flex flex-col md:flex-row gap-6 justify-between items-center">
+                <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
                     <div className="relative w-full md:w-96 group">
                         <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-primary transition-colors" />
                         <input
