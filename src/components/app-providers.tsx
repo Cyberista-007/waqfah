@@ -3,6 +3,7 @@
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
+import { RadioProvider } from '@/components/radio-provider';
 import { AppearanceProvider } from '@/components/appearance-provider';
 import dynamic from 'next/dynamic';
 import { MaintenanceHandler } from '@/components/maintenance-handler';
@@ -21,6 +22,11 @@ const FloatingVideoPlayer = dynamic(
 
 const FloatingAudioPlayer = dynamic(
   () => import('@/components/floating-audio-player').then(mod => mod.FloatingAudioPlayer),
+  { ssr: false }
+);
+
+const FloatingRadioPlayer = dynamic(
+  () => import('@/components/floating-radio-player').then(mod => mod.FloatingRadioPlayer),
   { ssr: false }
 );
 
@@ -72,6 +78,7 @@ export function AppProviders({
           >
             <FirebaseClientProvider>
                 <MaintenanceHandler maintenanceMode={maintenanceMode}>
+                    <RadioProvider>
                     <AudioPlayerProvider>
                         <SearchProvider>
                             <MoodProvider>
@@ -82,9 +89,11 @@ export function AppProviders({
                                 {children}
                                 <FloatingAudioPlayer />
                                 <FloatingVideoPlayer />
+                                <FloatingRadioPlayer />
                             </MoodProvider>
                         </SearchProvider>
                     </AudioPlayerProvider>
+                    </RadioProvider>
               </MaintenanceHandler>
             </FirebaseClientProvider>
           </AppearanceProvider>

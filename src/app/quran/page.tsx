@@ -22,6 +22,7 @@ import { useSync } from '@/hooks/useSync';
 import { QURAN_DATA, Verse as VerseType } from '@/lib/quran-data';
 import { LuminousMushaf } from '@/components/quran/luminous-mushaf';
 import confetti from 'canvas-confetti';
+import { useRadio } from '@/components/radio-provider';
 
 // ━━━━━━━━━━━ TYPES & CONSTANTS ━━━━━━━━━━━
 
@@ -1420,17 +1421,28 @@ export default function QuranPage() {
   const { state, updateState } = useSync();
   const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'radio'>('full');
 
-  // ── Quran Radio States ──
-  const [isPlayingRadio, setIsPlayingRadio] = useState<boolean>(false);
-  const [currentRadioStation, setCurrentRadioStation] = useState<RadioStation | null>(null);
-  const [isRadioBuffering, setIsRadioBuffering] = useState<boolean>(false);
-  const [radioVolume, setRadioVolume] = useState<number>(0.8);
+  // ── Quran Radio States (now from global RadioProvider for persistence across navigation) ──
+  const {
+    currentStation: currentRadioStation,
+    isPlaying: isPlayingRadio,
+    isBuffering: isRadioBuffering,
+    volume: radioVolume,
+    setVolume: setRadioVolume,
+    playStation: handlePlayRadio,
+    togglePlay: handleToggleRadio,
+    stopRadio,
+    activeYoutubeId,
+  } = useRadio();
+  const setCurrentRadioStation = (_: any) => {}; // alias for legacy references
+  const setIsPlayingRadio = (_: any) => {};       // alias for legacy references
+  const setIsRadioBuffering = (_: any) => {};     // alias for legacy references
+  const setActiveYoutubeId = (_: any) => {};      // alias for legacy references
+
   const [radioSearchQuery, setRadioSearchQuery] = useState<string>('');
   const [favoriteRadioIds, setFavoriteRadioIds] = useState<string[]>([]);
   const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
   const [isLoadingRadios, setIsLoadingRadios] = useState<boolean>(false);
-  const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
-  // Use a simple ref to hold the HTMLAudioElement for radio
+  // radioAudioRef is managed by the RadioProvider - keep a local ref for compat
   const radioAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // ── Web Audio API Refs for Recording & Real Visualizer ──
@@ -1589,150 +1601,6 @@ export default function QuranPage() {
       console.warn("Failed to initialize Web Audio graph:", err);
     }
   }, []);
-
-  // ── handlePlayRadio: plays/pauses a station, stops verse audio ──
-  const handlePlayRadio = useCallback((station: RadioStation) => {
-    const ytId = getYoutubeId(station.url);
-
-    // If clicking the same station that is already playing → toggle pause/play
-    if (currentRadioStation?.id === station.id) {
-      if (ytId) {
-        const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
-        if (iframe && iframe.contentWindow) {
-          if (isPlayingRadio) {
-            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-            setIsPlayingRadio(false);
-          } else {
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            setIsPlayingRadio(true);
-          }
-        }
-        return;
-      }
-
-      const audio = radioAudioRef.current;
-      if (!audio) return;
-      if (isPlayingRadio) {
-        audio.pause();
-        setIsPlayingRadio(false);
-      } else {
-        audio.play().catch(e => console.error('Radio play error:', e));
-      }
-      return;
-    }
-
-    // Stop verse recitation if playing
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-    // Stop ambient sounds
-    if (ambientAudioRef.current) {
-      ambientAudioRef.current.pause();
-      setActiveAmbient(null);
-    }
-
-    // Create a fresh Audio element for the new station
-    if (radioAudioRef.current) {
-      radioAudioRef.current.pause();
-    }
-    
-    // Pause any active YouTube video
-    const currentYtId = currentRadioStation ? getYoutubeId(currentRadioStation.url) : null;
-    if (currentYtId) {
-      const iframe = document.getElementById('youtube-radio-player') as HTMLIFrameElement;
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-      }
-    }
-
-    // Disconnect old source node if it exists
-    if (radioSourceNodeRef.current) {
-      try {
-        radioSourceNodeRef.current.disconnect();
-      } catch (e) {}
-      radioSourceNodeRef.current = null;
-    }
-
-    if (ytId) {
-      // YouTube live stream handling
-      setActiveYoutubeId(ytId);
-      setIsPlayingRadio(true);
-      setIsRadioBuffering(false);
-      setCurrentRadioStation(station);
-
-      // Save to listening history
-      setRadioHistory(prev => {
-        const next = [station.id, ...prev.filter(id => id !== station.id)].slice(0, 10);
-        localStorage.setItem('quran_radio_history', JSON.stringify(next));
-        return next;
-      });
-      return;
-    }
-
-    // Standard HTML5 Audio handling
-    setActiveYoutubeId(null);
-    
-    // Setup new audio element with CORS enabled to allow recording
-    const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.src = station.url;
-    audio.volume = radioVolume;
-    radioAudioRef.current = audio;
-
-    let fallbackTriggered = false;
-    audio.addEventListener('waiting',  () => setIsRadioBuffering(true));
-    audio.addEventListener('playing',  () => { 
-      setIsPlayingRadio(true); 
-      setIsRadioBuffering(false); 
-      // Initialize or resume the Web Audio graph once playing starts (user gesture context)
-      try {
-        initAudioGraph();
-      } catch (err) {
-        console.warn("Failed to initialize audio graph on play:", err);
-      }
-    });
-    audio.addEventListener('pause',    () => setIsPlayingRadio(false));
-    audio.addEventListener('canplay',  () => setIsRadioBuffering(false));
-    
-    audio.addEventListener('error',    () => { 
-      // If we failed with CORS (crossOrigin anonymous), retry without CORS
-      if (audio.crossOrigin === 'anonymous' && !fallbackTriggered) {
-        fallbackTriggered = true;
-        console.warn("CORS stream blocked. Falling back to non-CORS mode.");
-        audio.pause();
-        audio.removeAttribute('crossOrigin');
-        // Reset source node ref as we cannot use AudioContext on non-CORS media
-        radioSourceNodeRef.current = null;
-        audio.src = station.url;
-        audio.load();
-        setIsRadioBuffering(true);
-        audio.play().catch(e => {
-          console.error("Playback failed in fallback mode:", e);
-          setIsRadioBuffering(false);
-          setIsPlayingRadio(false);
-        });
-      } else {
-        setIsRadioBuffering(false);
-        setIsPlayingRadio(false);
-      }
-    });
-
-    setCurrentRadioStation(station);
-    setIsRadioBuffering(true);
-
-    // Save to listening history
-    setRadioHistory(prev => {
-      const next = [station.id, ...prev.filter(id => id !== station.id)].slice(0, 10);
-      localStorage.setItem('quran_radio_history', JSON.stringify(next));
-      return next;
-    });
-
-    radioAudioRef.current.play().catch(e => {
-      console.error('Radio play error:', e);
-      setIsRadioBuffering(false);
-    });
-  }, [currentRadioStation, isPlayingRadio, radioVolume, initAudioGraph, activeYoutubeId]);
 
   // Auto-play from shared URL parameter
   useEffect(() => {
@@ -5305,7 +5173,7 @@ export default function QuranPage() {
 
                       {/* Volume controls */}
                       <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl w-full max-w-[220px]">
-                        <button onClick={() => setRadioVolume(prev => prev === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
+                        <button onClick={() => setRadioVolume(radioVolume === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
                           {radioVolume === 0 ? <VolumeX className="w-4.5 h-4.5 text-rose-500" /> : <Volume2 className="w-4.5 h-4.5 text-primary" />}
                         </button>
                         <input
@@ -6116,7 +5984,7 @@ export default function QuranPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 w-full relative z-10 border-t border-white/5 pt-6">
               {/* Left: Volume control */}
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl w-full sm:w-auto max-w-[200px]">
-                <button onClick={() => setRadioVolume(prev => prev === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
+                <button onClick={() => setRadioVolume(radioVolume === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
                   {radioVolume === 0 ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-primary" />}
                 </button>
                 <input
