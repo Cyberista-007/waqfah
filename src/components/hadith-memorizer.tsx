@@ -92,6 +92,20 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
   // --- Audio Looping Tab States ---
   const [isPlaying, setIsPlaying] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
+  // Pre-fetch/cache voices on mount and listen to voiceschanged
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      };
+    }
+  }, []);
+
   const [loopCount, setLoopCount] = useState(1);
   const [currentLoop, setCurrentLoop] = useState(1);
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -163,7 +177,13 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
     setIsPlaying(true);
     setCurrentLoop(1);
 
-    const cleanText = text.replace(/«|»/g, '');
+    const cleanText = text
+        .replace(/ﷺ/g, 'صلى الله عليه وسلم')
+        .replace(/ؓ/g, 'رضي الله عنه')
+        .replace(/[\u064B-\u0652\u0670]/g, '') // remove tashkeel (diacritics) for smooth speech flow
+        .replace(/[()[\]{}«»﴿﴾]/g, ' ') // remove special bracket symbols that cause stuttering
+        .replace(/\s+/g, ' ')
+        .trim();
     runSpeechLoop(cleanText, loopCount);
   };
 

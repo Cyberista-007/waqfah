@@ -143,6 +143,20 @@ export default function HadithPageClient({ params }: { params: any }) {
   const [isListening, setIsListening] = useState(false);
   const voiceRecognitionRef = useRef<any>(null);
   
+  // Pre-fetch/cache voices on mount and listen to voiceschanged
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      };
+    }
+  }, []);
+
   const [fontSize, setFontSize] = useState(40); 
   const [fontFamily, setFontFamily] = useState('font-headline');
   const [showSettings, setShowSettings] = useState(false);
@@ -279,7 +293,13 @@ export default function HadithPageClient({ params }: { params: any }) {
       window.speechSynthesis.cancel();
       setPlayingHadithId(h.hadithnumber);
       
-      const cleanText = h.text.replace(/«|»/g, '');
+      const cleanText = h.text
+          .replace(/ﷺ/g, 'صلى الله عليه وسلم')
+          .replace(/ؓ/g, 'رضي الله عنه')
+          .replace(/[\u064B-\u0652\u0670]/g, '') // remove tashkeel (diacritics) for smooth speech flow
+          .replace(/[()[\]{}«»﴿﴾]/g, ' ') // remove special bracket symbols that cause stuttering
+          .replace(/\s+/g, ' ')
+          .trim();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ar-SA';
       
