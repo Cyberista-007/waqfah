@@ -1780,7 +1780,7 @@ export default function QuranPage() {
         )}
 
         {/* ── Dashboard Bento Grid ── */}
-        {!isReadingMode && !selectedSurah && view === 'full' && (
+        {!isReadingMode && !selectedSurah && view === 'plan' && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-16 grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Memorization Progress (Large, spans 2 columns) */}
