@@ -179,8 +179,14 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
       utterance.rate = speechRate;
       
       const voices = window.speechSynthesis.getVoices();
-      const arVoice = voices.find(v => v.lang.startsWith('ar'));
-      if (arVoice) utterance.voice = arVoice;
+        const arVoices = voices.filter(v => v.lang.toLowerCase().startsWith('ar'));
+        let bestVoice = arVoices.find(v => v.name.toLowerCase().includes('natural'));
+        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('google'));
+        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('shakir') || v.name.toLowerCase().includes('salma'));
+        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('maged') || v.name.toLowerCase().includes('laila') || v.name.toLowerCase().includes('tarif'));
+        if (!bestVoice) bestVoice = arVoices.find(v => v.name.toLowerCase().includes('online'));
+        if (!bestVoice) bestVoice = arVoices[0];
+        if (bestVoice) utterance.voice = bestVoice;
 
       utterance.onend = () => {
         if (loopIndex < totalLoops && isPlaying) {
