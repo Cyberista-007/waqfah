@@ -1660,21 +1660,21 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
 
             <TabsContent value="notes" className="mt-0 outline-none">
             {user ? (
-                <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-[4rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
+                <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-3xl md:rounded-[4rem] p-5 md:p-16 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
-                    <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 border-b border-white/5 pb-10">
-                        <div className="flex items-center gap-5">
-                            <div className="p-5 bg-primary/20 rounded-[2rem] shadow-inner">
-                                <Notebook className="h-10 w-10 text-primary" />
+                    <div className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 relative z-10 border-b border-white/5 pb-6 md:pb-10">
+                        <div className="flex items-center gap-3 md:gap-5">
+                            <div className="p-3 md:p-5 bg-primary/20 rounded-xl md:rounded-[2rem] shadow-inner shrink-0">
+                                <Notebook className="h-6 w-6 md:h-10 md:w-10 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-4xl font-black font-headline text-white tracking-tighter">مختبر الملاحظات</h2>
-                                <p className="text-muted-foreground text-lg font-bold mt-1 opacity-70 italic">سجل فوائدك الربانية هنا.. فهي ذخرك الحقيقي.</p>
+                                <h2 className="text-xl md:text-4xl font-black font-headline text-white tracking-tighter">مختبر الملاحظات</h2>
+                                <p className="text-muted-foreground text-xs md:text-lg font-bold mt-1 opacity-70 italic">سجل فوائدك الربانية هنا.. فهي ذخرك الحقيقي.</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                                <ShieldCheck className="w-3 h-3" /> مشفرة بالكامل
+                            <div className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] md:text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                                <ShieldCheck className="w-3.5 h-3.5" /> مشفرة بالكامل
                             </div>
                         </div>
                     </div>
@@ -1683,11 +1683,11 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                     </div>
                 </div>
             ) : (
-                <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[4rem] p-24 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center text-center">
-                <Notebook className="h-24 w-24 text-muted-foreground/20 mb-8" />
-                <h3 className="text-3xl font-black font-headline mb-4 text-white">تحتاج لمفتاح لدخول هذا المختبر</h3>
-                <p className="text-xl text-muted-foreground max-w-md mb-10 font-bold opacity-60 italic leading-relaxed">الرجاء تسجيل الدخول لتتمكن من كتابة وحفظ ومراجعة ملاحظاتك الخاصة على هذه المحاضرة في مساحتك السرية.</p>
-                <Button asChild className="rounded-2xl px-12 h-16 text-xl font-black shadow-2xl shadow-primary/30" size="lg">
+                <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl md:rounded-[4rem] p-8 md:p-24 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center text-center">
+                <Notebook className="h-16 w-16 md:h-24 md:w-24 text-muted-foreground/20 mb-6 md:mb-8" />
+                <h3 className="text-xl md:text-3xl font-black font-headline mb-3 md:mb-4 text-white">تحتاج لمفتاح لدخول هذا المختبر</h3>
+                <p className="text-sm md:text-xl text-muted-foreground max-w-md mb-6 md:mb-10 font-bold opacity-60 italic leading-relaxed">الرجاء تسجيل الدخول لتتمكن من كتابة وحفظ ومراجعة ملاحظاتك الخاصة على هذه المحاضرة في مساحتك السرية.</p>
+                <Button asChild className="rounded-xl md:rounded-2xl px-8 md:px-12 h-12 md:h-16 text-sm md:text-xl font-black shadow-2xl shadow-primary/30" size="lg">
                     <Link href={`/auth/login?redirect_to=/lectures/${lecture.slug}`}>تسجيل الدخول الآن</Link>
                 </Button>
                 </div>
@@ -1695,7 +1695,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
             </TabsContent>
 
             <TabsContent value="comments" className="mt-0 outline-none">
-            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-[4rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
+            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-3xl md:rounded-[4rem] p-5 md:p-16 shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-700" />
                 <div className="relative z-10">
                     <CommentsSection lectureId={lecture.id} />
