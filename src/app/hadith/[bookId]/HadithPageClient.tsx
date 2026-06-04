@@ -180,10 +180,23 @@ export default function HadithPageClient({ params }: { params: any }) {
 
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
+  const hadithParam = searchParams.get('hadith');
 
   useEffect(() => {
     if (sectionParam) setSelectedSection(sectionParam);
   }, [sectionParam]);
+
+  useEffect(() => {
+    if (hadithParam && !loadingHadiths && hadiths.length > 0) {
+      const scrollTimer = setTimeout(() => {
+        const element = document.getElementById(`hadith-${hadithParam}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 600);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [hadithParam, loadingHadiths, hadiths]);
 
   const toggleFavorite = (h: Hadith) => {
     const id = h.hadithnumber;
@@ -566,7 +579,19 @@ export default function HadithPageClient({ params }: { params: any }) {
               <div className="flex flex-col gap-8">
                 {loadingHadiths ? ( Array(3).fill(0).map((_, i) => <div key={i} className="h-64 rounded-[3rem] bg-white/5 animate-pulse" />) ) : (
                   filteredHadiths.map((h) => (
-                    <motion.div key={h.hadithnumber} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-10 md:p-16 rounded-[4rem] bg-zinc-950 border border-white/10 relative overflow-hidden">
+                    <motion.div 
+                      key={h.hadithnumber} 
+                      id={`hadith-${h.hadithnumber}`} 
+                      initial={{ opacity: 0, y: 30 }} 
+                      whileInView={{ opacity: 1, y: 0 }} 
+                      viewport={{ once: true }} 
+                      className={cn(
+                        "p-10 md:p-16 rounded-[4rem] bg-zinc-950 border relative overflow-hidden transition-all duration-700",
+                        hadithParam === String(h.hadithnumber)
+                          ? "border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.15)] ring-2 ring-amber-500/20"
+                          : "border-white/10"
+                      )}
+                    >
                       <div className="absolute top-10 left-10 opacity-5"><Quote className="w-48 h-48" /></div>
                       <div className="relative z-10 space-y-10">
                         <div className="flex justify-between items-center bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-8">

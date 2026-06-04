@@ -6,7 +6,7 @@ import {
   Book, Search, Mic, Star, Heart, Share2, Library, Sparkles,
   BookOpen, Quote, ShieldCheck, Layers,
   ArrowRight, Zap, RefreshCw, Copy, Trash2, Users, Volume2, ArrowLeft,
-  Clock, Trophy, Check, X, HelpCircle, Award, ChevronLeft
+  Clock, Trophy, Check, X, HelpCircle, Award, ChevronLeft, Loader2
 } from 'lucide-react';
 import { ImanCardGenerator } from '@/components/iman-card-generator';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,60 @@ function normalizeArabic(text: string): string {
     .replace(/ة/g, "ه")
     .replace(/ى/g, "ي")
     .toLowerCase();
+}
+
+function getHadithSnippet(text: string, query: string, maxLength: number = 100): string {
+  const normalizedText = normalizeArabic(text);
+  const normalizedQuery = normalizeArabic(query);
+  const matchIdx = normalizedText.indexOf(normalizedQuery);
+  if (matchIdx === -1) return text.substring(0, maxLength) + '...';
+  
+  const start = Math.max(0, matchIdx - 40);
+  const end = Math.min(text.length, matchIdx + normalizedQuery.length + 60);
+  let snippet = text.substring(start, end);
+  if (start > 0) snippet = '...' + snippet;
+  if (end < text.length) snippet = snippet + '...';
+  return snippet;
+}
+
+function highlightSnippet(text: string, query: string) {
+  if (!query) return text;
+  const normalizedText = normalizeArabic(text);
+  const normalizedQuery = normalizeArabic(query);
+  const index = normalizedText.indexOf(normalizedQuery);
+  if (index === -1) return text;
+
+  let originalStart = 0;
+  let normalizedIdx = 0;
+  while (normalizedIdx < index && originalStart < text.length) {
+    if (/[\u064B-\u065F]/.test(text[originalStart])) {
+      originalStart++;
+    } else {
+      originalStart++;
+      normalizedIdx++;
+    }
+  }
+  let originalEnd = originalStart;
+  let queryMatchedLen = 0;
+  while (queryMatchedLen < normalizedQuery.length && originalEnd < text.length) {
+    if (/[\u064B-\u065F]/.test(text[originalEnd])) {
+      originalEnd++;
+    } else {
+      originalEnd++;
+      queryMatchedLen++;
+    }
+  }
+
+  const before = text.substring(0, originalStart);
+  const match = text.substring(originalStart, originalEnd);
+  const after = text.substring(originalEnd);
+  return (
+    <>
+      {before}
+      <span className="bg-amber-500/20 text-amber-300 font-bold px-1 rounded">{match}</span>
+      {after}
+    </>
+  );
 }
 
 interface HadithStat {
@@ -280,6 +334,79 @@ export default function HadithHubPage() {
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [selectedNarrator, setSelectedNarrator] = useState<Narrator | null>(null);
   const { toast } = useToast();
+
+  const [searchMode, setSearchMode] = useState<'chapters' | 'hadiths'>('chapters');
+  const [globalHadiths, setGlobalHadiths] = useState<any[]>([]);
+  const [loadingGlobalHadiths, setLoadingGlobalHadiths] = useState(false);
+
+  const fetchGlobalHadithsForSearch = async () => {
+    if (globalHadiths.length > 0 || loadingGlobalHadiths) return;
+    setLoadingGlobalHadiths(true);
+    try {
+      const bukhariRes = await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-bukhari.json`, { cache: 'force-cache' });
+      const bukhariData = bukhariRes.ok ? await bukhariRes.json() : null;
+
+      const muslimRes = await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-muslim.json`, { cache: 'force-cache' });
+      const muslimData = muslimRes.ok ? await muslimRes.json() : null;
+
+      const riyadRes = await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-riyadussaliheen.json`, { cache: 'force-cache' });
+      const riyadData = riyadRes.ok ? await riyadRes.json() : null;
+
+      const list: any[] = [];
+      if (bukhariData?.hadiths) {
+        bukhariData.hadiths.forEach((h: any) => {
+          list.push({
+            ...h,
+            bookId: 'bukhari',
+            bookName: 'صحيح البخاري',
+            color: 'text-amber-400'
+          });
+        });
+      }
+      if (muslimData?.hadiths) {
+        muslimData.hadiths.forEach((h: any) => {
+          list.push({
+            ...h,
+            bookId: 'muslim',
+            bookName: 'صحيح مسلم',
+            color: 'text-emerald-400'
+          });
+        });
+      }
+      if (riyadData?.hadiths) {
+        riyadData.hadiths.forEach((h: any) => {
+          list.push({
+            ...h,
+            bookId: 'riyadussaliheen',
+            bookName: 'رياض الصالحين',
+            color: 'text-cyan-400'
+          });
+        });
+      }
+
+      setGlobalHadiths(list);
+    } catch (e) {
+      console.error("Failed to load global hadiths for search", e);
+    } finally {
+      setLoadingGlobalHadiths(false);
+    }
+  };
+
+  const matchingGlobalHadiths = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) return [];
+    const q = normalizeArabic(searchQuery.trim());
+    return globalHadiths.filter((h: any) => {
+      const text = normalizeArabic(h.text || h.arabic || "");
+      const num = String(h.hadithnumber || h.number || "");
+      return text.includes(q) || num.includes(q);
+    }).slice(0, 30);
+  }, [globalHadiths, searchQuery]);
+
+  useEffect(() => {
+    if (searchMode === 'hadiths') {
+      fetchGlobalHadithsForSearch();
+    }
+  }, [searchMode]);
 
   // 🏆 Trivia States
   const TRIVIA_QUESTIONS = useMemo(() => [
@@ -937,38 +1064,124 @@ export default function HadithHubPage() {
             >
               <Mic className="w-5 h-5" />
             </button>
+            {activeTab === 'books' && (
+              <div className="flex justify-center gap-2 mt-4 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('chapters')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-[10px] font-black transition-all border",
+                    searchMode === 'chapters'
+                      ? "bg-amber-500 text-black border-amber-500 shadow-glow-primary"
+                      : "bg-white/5 text-white/50 border-white/5 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  📖 بحث في الأبواب
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('hadiths')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-[10px] font-black transition-all border flex items-center gap-1.5",
+                    searchMode === 'hadiths'
+                      ? "bg-amber-500 text-black border-amber-500 shadow-glow-primary"
+                      : "bg-white/5 text-white/50 border-white/5 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  📜 بحث في الأحاديث
+                  {loadingGlobalHadiths && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                </button>
+              </div>
+            )}
             <AnimatePresence>
-              {showResults && activeTab === 'books' && globalResults.length > 0 && (
+              {showResults && activeTab === 'books' && (
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute top-full left-0 right-0 mt-4 p-4 rounded-[2rem] bg-zinc-900 border border-white/10 shadow-2xl z-[100] backdrop-blur-xl"
+                  className="absolute top-full left-0 right-0 mt-4 p-6 rounded-[2rem] bg-zinc-900/95 border border-white/10 shadow-2xl z-[100] backdrop-blur-2xl max-h-[480px] overflow-y-auto no-scrollbar"
                 >
-                  <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-4 px-4">نتائج البحث في الأبواب ({globalResults.length})</div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {globalResults.map((res: any, i: number) => (
-                      <Link key={`${res.bookId}-${res.sectionId}`} href={`/hadith/${res.bookId}?section=${res.sectionId}`}>
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all group"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={cn("w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-xs", res.bookMeta?.color)}>
-                              {res.sectionId}
-                            </div>
-                            <div>
-                              <div className="text-sm font-bold text-white group-hover:text-amber-500 transition-colors">{res.sectionName}</div>
-                              <div className="text-[10px] text-white/40">{res.bookMeta?.name}</div>
-                            </div>
+                  {searchMode === 'chapters' ? (
+                    <>
+                      {globalResults.length === 0 ? (
+                        <div className="text-center py-10 text-white/30 text-xs font-bold">
+                          لم نجد أبواباً تطابق بحثك.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-4 px-4">نتائج البحث في الأبواب ({globalResults.length})</div>
+                          <div className="grid grid-cols-1 gap-2">
+                            {globalResults.map((res: any, i: number) => (
+                              <Link key={`${res.bookId}-${res.sectionId}`} href={`/hadith/${res.bookId}?section=${res.sectionId}`}>
+                                <motion.div
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: i * 0.03 }}
+                                  className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all group"
+                                >
+                                  <div className="flex items-center gap-4">
+                                    <div className={cn("w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-xs", res.bookMeta?.color)}>
+                                      {res.sectionId}
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-sm font-bold text-white group-hover:text-amber-500 transition-colors">{res.sectionName}</div>
+                                      <div className="text-[10px] text-white/40">{res.bookMeta?.name}</div>
+                                    </div>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-amber-500 transition-all -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0" />
+                                </motion.div>
+                              </Link>
+                            ))}
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-amber-500 transition-all -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0" />
-                        </motion.div>
-                      </Link>
-                    ))}
-                  </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {loadingGlobalHadiths ? (
+                        <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                          <div className="text-xs font-black text-white/50 animate-pulse">جاري تحميل وتدقيق قاعدة بيانات الأحاديث الشريفة...</div>
+                        </div>
+                      ) : matchingGlobalHadiths.length === 0 ? (
+                        <div className="text-center py-12 text-white/30 text-xs font-bold">
+                          لم نجد أحاديث تطابق بحثك.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-4 px-4">نتائج البحث في نصوص الأحاديث ({matchingGlobalHadiths.length})</div>
+                          <div className="grid grid-cols-1 gap-3">
+                            {matchingGlobalHadiths.map((res: any, i: number) => {
+                              const snippet = getHadithSnippet(res.text || res.arabic || "", searchQuery);
+                              return (
+                                <Link 
+                                  key={`${res.bookId}-${res.hadithnumber}`} 
+                                  href={`/hadith/${res.bookId}?section=${res.reference?.book || 1}&hadith=${res.hadithnumber}`}
+                                >
+                                  <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.03 }}
+                                    className="p-5 rounded-2xl hover:bg-white/5 border border-white/5 hover:border-amber-500/20 transition-all group text-right space-y-3"
+                                  >
+                                    <div className="flex justify-between items-center">
+                                      <span className={cn("px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black", res.color)}>
+                                        {res.bookName} • حديث رقم {res.hadithnumber}
+                                      </span>
+                                      <ArrowLeft className="w-4 h-4 text-white/20 group-hover:text-amber-500 transition-all translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0" />
+                                    </div>
+                                    <p className="text-xs font-semibold text-white/70 leading-relaxed font-sans line-clamp-2 group-hover:text-white transition-colors" dir="rtl">
+                                      {highlightSnippet(snippet, searchQuery)}
+                                    </p>
+                                  </motion.div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
