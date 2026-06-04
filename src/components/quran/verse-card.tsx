@@ -8,7 +8,33 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function VerseCard({
+interface VerseCardProps {
+  verse: any;
+  accentColor?: string;
+  border?: string;
+  index: number;
+  isReadingMode?: boolean;
+  fontSize?: number;
+  onPlay?: (verse: any) => void;
+  onShare?: () => void;
+  onBookmark?: () => void;
+  onWordClick?: (verse: any, index: number) => void;
+  isPlaying?: boolean;
+  isBookmarked?: boolean;
+  reciterName?: string;
+  id: string;
+  fontClass?: string;
+  searchQuery?: string;
+  isHideRevealMode?: boolean;
+  quranHideMode?: 'hideAll' | 'hideFirst' | 'hideSecond';
+  selectedTranslation?: string;
+  onChatClick?: () => void;
+  isComparisonMode?: boolean;
+  selectedSecondaryTafseerName?: string;
+  selectedSecondaryTranslation?: string;
+}
+
+export const VerseCard = React.memo(function VerseCard({
   verse,
   accentColor,
   border,
@@ -111,6 +137,10 @@ export function VerseCard({
         !isCinematicFocus && !isPlaying ? "bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.05]" : "",
         !isCinematicFocus && border
       )}
+      style={{
+        contentVisibility: isCinematicFocus ? 'visible' : 'auto' as any,
+        containIntrinsicSize: isCinematicFocus ? 'none' : '350px',
+      }}
     >
       {verse.sajdah && (
         <div className="absolute top-0 left-0 bg-primary px-4 py-1 rounded-br-2xl text-[8px] font-black uppercase tracking-widest text-primary-foreground flex items-center gap-1.5 z-20 shadow-lg">
@@ -329,4 +359,4 @@ export function VerseCard({
       </div>
     </motion.div>
   );
-}
+});

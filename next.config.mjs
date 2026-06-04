@@ -1,13 +1,46 @@
 import withPWAInit from 'next-pwa';
+import runtimeCaching from 'next-pwa/cache.js';
 
-const isProd = process.env.NODE_ENV === 'production';
 const exportStatic = process.env.EXPORT_STATIC === 'true';
+
+const customRuntimeCaching = [
+  {
+    urlPattern: /^https:\/\/cdn\.islamic\.network\/quran\/audio\/.*$/,
+    handler: 'CacheFirst',
+    options: {
+      cacheName: 'quran-audio-cache',
+      expiration: {
+        maxEntries: 150,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      },
+      cacheableResponse: {
+        statuses: [0, 200],
+      },
+    },
+  },
+  {
+    urlPattern: /^https:\/\/archive\.org\/download\/.*$/,
+    handler: 'CacheFirst',
+    options: {
+      cacheName: 'archive-audio-cache',
+      expiration: {
+        maxEntries: 20,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      },
+      cacheableResponse: {
+        statuses: [0, 200],
+      },
+    },
+  },
+  ...runtimeCaching
+];
 
 const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
+  runtimeCaching: customRuntimeCaching,
 });
 
 /** @type {import('next').NextConfig} */
