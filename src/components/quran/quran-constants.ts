@@ -18,6 +18,8 @@ export type RadioStation = {
   color: string;
   borderColor: string;
   textColor: string;
+  channelId?: string;
+  publishedAt?: string;
 };
 
 export const RECITERS = [

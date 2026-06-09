@@ -49,7 +49,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Copy, Share2, Check, Search, X,
   Layers, Heart, Star, Bookmark, LayoutGrid, Sparkles,
-  Play, Pause, Volume2, Settings2, ArrowLeft, ArrowRight,
+  Play, Pause, Volume2, Settings2, ArrowLeft, ArrowRight, ArrowUpDown,
   Maximize2, Minimize2, Languages, History, Info,
   User, ChevronDown, Music, Quote, Download, Image as ImageIcon, ImagePlus,
   Palette, Edit3, Smartphone, Trophy, Target, CheckCircle2, Clock,
@@ -74,6 +74,32 @@ const getYoutubeId = (url: string): string | null => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
   const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
+};
+
+const formatArabicDate = (dateStr: string) => {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
+const formatArabicDate = (dateStr: string) => {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (e) {
+    return dateStr;
+  }
 };
 
 // ━━━━━━━━━━━ MAIN PAGE ━━━━━━━━━━━
@@ -247,6 +273,63 @@ export default function QuranPage() {
   const [customImportMode, setCustomImportMode] = useState<'single' | 'youtube_channel'>('single');
   const [channelImportUrl, setChannelImportUrl] = useState('');
   const [isImportingChannel, setIsImportingChannel] = useState(false);
+  const [importedChannels, setImportedChannels] = useState<{ id: string; name: string; description: string; imageUrl: string; videoCount: number }[]>([]);
+  const [selectedImportedChannelId, setSelectedImportedChannelId] = useState<string | null>(null);
+  const [episodeSearchQuery, setEpisodeSearchQuery] = useState('');
+  const [episodeSortOrder, setEpisodeSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [listenedEpisodeIds, setListenedEpisodeIds] = useState<string[]>([]);
+  const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<string[]>([]);
+
+  // Load imported channels & listened episode statuses
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('quran_imported_channels');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setImportedChannels(parsed);
+          if (parsed.length > 0) {
+            setSelectedImportedChannelId(parsed[0].id);
+          }
+        } catch (e) {}
+      }
+      const savedListened = localStorage.getItem('quran_listened_episodes');
+      if (savedListened) {
+        try {
+          setListenedEpisodeIds(JSON.parse(savedListened));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  // Clear selections when switching channel
+  useEffect(() => {
+    setSelectedEpisodeIds([]);
+  }, [selectedImportedChannelId]);
+
+  // Memoized episodes per selected channel
+  const channelEpisodes = useMemo(() => {
+    if (!selectedImportedChannelId) return [];
+    if (selectedImportedChannelId === 'independent_custom') {
+      return customRadioStations.filter(s => !s.channelId);
+    }
+    return customRadioStations.filter(s => s.channelId === selectedImportedChannelId);
+  }, [customRadioStations, selectedImportedChannelId]);
+
+  // Filtered & Sorted episodes list
+  const filteredChannelEpisodes = useMemo(() => {
+    let result = [...channelEpisodes];
+    if (episodeSearchQuery.trim()) {
+      const query = episodeSearchQuery.toLowerCase();
+      result = result.filter(station => station.name.toLowerCase().includes(query));
+    }
+    result.sort((a, b) => {
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return episodeSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+    return result;
+  }, [channelEpisodes, episodeSearchQuery, episodeSortOrder]);
 
   // ── Phase 3: Brand New Optimized & Developed Features States ──
   const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
@@ -3737,6 +3820,7 @@ export default function QuranPage() {
                                         return;
                                       }
 
+                                      const channelId = channelInfo.id || `yt_channel_${Date.now()}`;
                                       const newStations: RadioStation[] = allFetched.map((video) => ({
                                         id: `custom_yt_${video.videoId}`,
                                         name: video.title,
@@ -3745,7 +3829,9 @@ export default function QuranPage() {
                                         icon: channelInfo.imageUrl || '📻',
                                         color: 'from-emerald-500/20 to-emerald-950/40',
                                         borderColor: 'border-emerald-500/30',
-                                        textColor: 'text-emerald-400'
+                                        textColor: 'text-emerald-400',
+                                        channelId: channelId,
+                                        publishedAt: video.publishedAt
                                       }));
 
                                       setCustomRadioStations(prev => {
@@ -3753,6 +3839,21 @@ export default function QuranPage() {
                                         const filteredNew = newStations.filter(s => !existingIds.has(s.id));
                                         const next = [...filteredNew, ...prev];
                                         localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                        return next;
+                                      });
+
+                                      const newChannel = {
+                                        id: channelId,
+                                        name: channelInfo.name,
+                                        description: channelInfo.description || '',
+                                        imageUrl: channelInfo.imageUrl || '📻',
+                                        videoCount: allFetched.length
+                                      };
+
+                                      setImportedChannels(prev => {
+                                        const next = [newChannel, ...prev.filter(c => c.id !== channelId)];
+                                        localStorage.setItem('quran_imported_channels', JSON.stringify(next));
+                                        setSelectedImportedChannelId(channelId);
                                         return next;
                                       });
 
@@ -3785,104 +3886,528 @@ export default function QuranPage() {
                   )}
 
                   {/* Stations Grid */}
-                  <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
-                    {filteredStations.map(station => {
-                      const isCurrent = currentRadioStation?.id === station.id;
-                      const isPlayingThis = isCurrent && isPlayingRadio;
-                      const isFav = favoriteRadioIds.includes(station.id);
-                      return (
-                        <div
-                          key={station.id}
-                          onClick={() => handlePlayRadio(station)}
-                          className={cn(
-                            "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group shadow-lg",
-                            isCurrent
-                              ? "bg-primary/10 border-primary/25 shadow-glow-primary/5"
-                              : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
-                          )}
-                        >
-                          {/* Icon */}
-                          <div className={cn(
-                            "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden",
-                            isCurrent ? "bg-primary/20" : "bg-white/5"
-                          )}>
-                            {station.icon && (station.icon.startsWith('http://') || station.icon.startsWith('https://')) ? (
-                              <img src={station.icon} alt={station.name} className="w-full h-full object-cover rounded-xl" />
+                  {radioCategory === 'custom' ? (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                      {/* Channels list grid */}
+                      {importedChannels.length > 0 || customRadioStations.some(s => !s.channelId) ? (
+                        <div className="space-y-3 mb-4 text-right" dir="rtl">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <h3 className="text-xs font-black text-white/90">قنوات البودكاست والإذاعات الخاصة بك</h3>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-2" dir="rtl">
+                            {/* Manual custom stations virtual card */}
+                            {customRadioStations.some(s => !s.channelId) && (() => {
+                              const manualStations = customRadioStations.filter(s => !s.channelId);
+                              const totalCount = manualStations.length;
+                              const completedCount = manualStations.filter(s => listenedEpisodeIds.includes(s.id)).length;
+                              const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                              const isActive = selectedImportedChannelId === 'independent_custom';
+                              return (
+                                <div
+                                  onClick={() => setSelectedImportedChannelId('independent_custom')}
+                                  className={cn(
+                                    "relative flex flex-col justify-between p-5 rounded-3xl border cursor-pointer transition-all duration-300 group shadow-lg min-h-[140px] overflow-hidden backdrop-blur-md",
+                                    isActive
+                                      ? "bg-primary/10 border-primary shadow-glow-primary/10 scale-[1.02]"
+                                      : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
+                                  )}
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-20 pointer-events-none" />
+                                  <div className="flex gap-4 items-start relative z-10">
+                                    <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
+                                      📻
+                                    </div>
+                                    <div className="flex-1 text-right min-w-0">
+                                      <h4 className="font-bold text-sm text-white/90 group-hover:text-white leading-snug truncate">إذاعات وقنوات أخرى</h4>
+                                      <p className="text-[10px] text-white/40 mt-1 font-medium line-clamp-2 leading-relaxed">
+                                        الإذاعات والبث المباشر التي قمت بإضافتها بشكل يدوي منفرد.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-4 relative z-10 pt-3 border-t border-white/5">
+                                    <span className="text-[10px] text-white/30 font-bold">مضافة يدوياً</span>
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-emerald-400 font-bold">
+                                        {completedCount}/{totalCount} مكتمل
+                                      </p>
+                                      {totalCount > 0 && (
+                                        <div className="w-20 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                                          <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Imported Channels Cards */}
+                            {importedChannels.map(channel => {
+                              const isActive = selectedImportedChannelId === channel.id;
+                              const channelEpisodesList = customRadioStations.filter(s => s.channelId === channel.id);
+                              const totalCount = channelEpisodesList.length;
+                              const completedCount = channelEpisodesList.filter(s => listenedEpisodeIds.includes(s.id)).length;
+                              const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                              return (
+                                <div
+                                  key={channel.id}
+                                  onClick={() => setSelectedImportedChannelId(channel.id)}
+                                  title={channel.description}
+                                  className={cn(
+                                    "relative flex flex-col justify-between p-5 rounded-3xl border cursor-pointer transition-all duration-300 group shadow-lg min-h-[140px] overflow-hidden backdrop-blur-md",
+                                    isActive
+                                      ? "bg-primary/10 border-primary shadow-glow-primary/10 scale-[1.02]"
+                                      : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
+                                  )}
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-20 pointer-events-none" />
+                                  <div className="flex gap-4 items-start relative z-10">
+                                    <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-white/10 shadow-inner">
+                                      <img src={channel.imageUrl} alt={channel.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
+                                    </div>
+                                    <div className="flex-1 text-right min-w-0">
+                                      <h4 className="font-bold text-sm text-white/90 group-hover:text-white leading-snug truncate">{channel.name}</h4>
+                                      <p className="text-[10px] text-white/40 mt-1 font-medium line-clamp-2 leading-relaxed">
+                                        {channel.description || "لا يوجد وصف متوفر لهذه القناة"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-4 relative z-10 pt-3 border-t border-white/5">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm(`هل أنت متأكد من حذف القناة "${channel.name}" وكل حلقاتها؟`)) {
+                                          setImportedChannels(prev => {
+                                            const next = prev.filter(c => c.id !== channel.id);
+                                            localStorage.setItem('quran_imported_channels', JSON.stringify(next));
+                                            if (selectedImportedChannelId === channel.id) {
+                                              setSelectedImportedChannelId(next.length > 0 ? next[0].id : null);
+                                            }
+                                            return next;
+                                          });
+                                          setCustomRadioStations(prev => {
+                                            const next = prev.filter(s => s.channelId !== channel.id);
+                                            localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                            return next;
+                                          });
+                                        }
+                                      }}
+                                      className="text-[10px] font-bold text-rose-400/60 hover:text-rose-400 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 px-2.5 py-1 rounded-lg transition-all"
+                                      title="حذف القناة"
+                                    >
+                                      حذف القناة 🗑
+                                    </button>
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-emerald-400 font-bold">
+                                        {completedCount}/{totalCount} مكتمل
+                                      </p>
+                                      {totalCount > 0 && (
+                                        <div className="w-20 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                                          <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Episode list for selected channel */}
+                      {selectedImportedChannelId ? (
+                        <div className="space-y-4 text-right animate-in fade-in duration-300" dir="rtl">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/5">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-primary" />
+                              <h4 className="text-xs font-black text-white/90">
+                                حلقات البودكاست لـ: <span className="text-primary">{
+                                  selectedImportedChannelId === 'independent_custom' 
+                                    ? 'إذاعات أخرى' 
+                                    : (importedChannels.find(c => c.id === selectedImportedChannelId)?.name || '')
+                                }</span>
+                              </h4>
+                              <span className="text-[9px] font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-white/40">
+                                {filteredChannelEpisodes.length} حلقة
+                              </span>
+                            </div>
+
+                            {/* Control Bar: Search & Sort */}
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30" />
+                                <input
+                                  type="text"
+                                  placeholder="بحث في الحلقات..."
+                                  value={episodeSearchQuery}
+                                  onChange={(e) => setEpisodeSearchQuery(e.target.value)}
+                                  className="bg-black/40 border border-white/10 rounded-xl pr-8 pl-3 py-1.5 text-[11px] text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all w-40 sm:w-48 text-right"
+                                  dir="rtl"
+                                />
+                                {episodeSearchQuery && (
+                                  <button
+                                    onClick={() => setEpisodeSearchQuery('')}
+                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+
+                              <button
+                                onClick={() => setEpisodeSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                                className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-white/60 hover:text-white transition-all flex items-center gap-1.5"
+                                title={episodeSortOrder === 'desc' ? "الترتيب: الأحدث أولاً" : "الترتيب: الأقدم أولاً"}
+                              >
+                                <ArrowUpDown className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-bold hidden sm:inline">
+                                  {episodeSortOrder === 'desc' ? "الأحدث" : "الأقدم"}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Bulk Actions Bar */}
+                          <div className="flex items-center justify-between pb-3 border-b border-white/5 bg-white/[0.01] p-3 rounded-2xl border border-white/5">
+                            {selectedEpisodeIds.length > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`هل أنت متأكد من حذف ${selectedEpisodeIds.length} حلقة محددة؟`)) {
+                                      setCustomRadioStations(prev => {
+                                        const next = prev.filter(s => !selectedEpisodeIds.includes(s.id));
+                                        localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                        return next;
+                                      });
+                                      setSelectedEpisodeIds([]);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  حذف المحدد ({selectedEpisodeIds.length})
+                                </button>
+                                <button
+                                  onClick={() => setSelectedEpisodeIds([])}
+                                  className="text-xs text-white/40 hover:text-white transition-colors"
+                                >
+                                  إلغاء التحديد
+                                </button>
+                              </div>
                             ) : (
-                              station.icon
+                              <button
+                                onClick={() => {
+                                  if (confirm('هل أنت متأكد من حذف جميع حلقات هذه القناة؟')) {
+                                    setCustomRadioStations(prev => {
+                                      const next = prev.filter(s => s.channelId !== selectedImportedChannelId);
+                                      localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                      return next;
+                                    });
+                                    setSelectedEpisodeIds([]);
+                                  }
+                                }}
+                                className="text-xs font-bold text-rose-400/60 hover:text-rose-400 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 px-2 py-1.5 rounded-xl transition-all"
+                              >
+                                حذف جميع الحلقات 🗑
+                              </button>
+                            )}
+
+                            {/* Select All Checkbox */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-white/50">تحديد الكل</span>
+                              <input
+                                type="checkbox"
+                                checked={filteredChannelEpisodes.length > 0 && selectedEpisodeIds.length === filteredChannelEpisodes.length}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedEpisodeIds(filteredChannelEpisodes.map(s => s.id));
+                                  } else {
+                                    setSelectedEpisodeIds([]);
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-white/10 bg-black/40 text-primary focus:ring-0 cursor-pointer"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto pr-1 no-scrollbar">
+                            {filteredChannelEpisodes.map(station => {
+                              const isCurrent = currentRadioStation?.id === station.id;
+                              const isPlayingThis = isCurrent && isPlayingRadio;
+                              const isFav = favoriteRadioIds.includes(station.id);
+                              const isListened = listenedEpisodeIds.includes(station.id);
+                              const ytId = getYoutubeId(station.url);
+                              return (
+                                <div
+                                  key={station.id}
+                                  onClick={() => handlePlayRadio(station)}
+                                  className={cn(
+                                    "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group shadow-lg",
+                                    isCurrent
+                                      ? "bg-primary/10 border-primary/25 shadow-glow-primary/5 scale-[1.01]"
+                                      : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20",
+                                    isListened && !isCurrent && "opacity-70 hover:opacity-100"
+                                  )}
+                                >
+                                  {/* Selection Checkbox */}
+                                  <div className="mr-1" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedEpisodeIds.includes(station.id)}
+                                      onChange={(e) => {
+                                        setSelectedEpisodeIds(prev => 
+                                          e.target.checked 
+                                            ? [...prev, station.id] 
+                                            : prev.filter(id => id !== station.id)
+                                        );
+                                      }}
+                                      className="w-4 h-4 rounded border-white/10 bg-black/40 text-primary focus:ring-0 cursor-pointer"
+                                    />
+                                  </div>
+
+                                  {/* Play Button */}
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                                    isCurrent
+                                      ? "bg-primary text-white shadow-glow-primary scale-105"
+                                      : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-105"
+                                  )}>
+                                    {isPlayingThis
+                                      ? <Pause className="w-4 h-4 fill-current" />
+                                      : <Play className="w-4 h-4 fill-current translate-x-[1px]" />
+                                    }
+                                  </div>
+
+                                  {/* Title & Date */}
+                                  <div className="flex-1 text-right min-w-0 pr-2">
+                                    <div className="flex items-center gap-1.5 justify-end">
+                                      {isListened && (
+                                        <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-1.5 py-0.5 rounded shrink-0">
+                                          مكتمل ✔
+                                        </span>
+                                      )}
+                                      <p className={cn(
+                                        "font-bold text-xs leading-snug truncate",
+                                        isCurrent ? "text-primary" : "text-white/80 group-hover:text-white"
+                                      )}>
+                                        {station.name}
+                                      </p>
+                                    </div>
+                                    <p className="text-[9px] text-white/30 font-semibold mt-1">
+                                      {station.publishedAt ? formatArabicDate(station.publishedAt) : "بث مخصص"}
+                                    </p>
+                                  </div>
+
+                                  {/* Thumbnail/Logo */}
+                                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/5 relative bg-white/5">
+                                    {(() => {
+                                      const thumbnail = ytId 
+                                        ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` 
+                                        : (station.icon && (station.icon.startsWith('http://') || station.icon.startsWith('https://')) ? station.icon : null);
+                                      if (thumbnail) {
+                                        return <img src={thumbnail} alt={station.name} className="w-full h-full object-cover" />;
+                                      }
+                                      return (
+                                        <div className="w-full h-full flex items-center justify-center text-xl">
+                                          {station.icon || '📻'}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Actions panel */}
+                                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                    {/* Mark as Listened Button */}
+                                    <button
+                                      onClick={() => {
+                                        setListenedEpisodeIds(prev => {
+                                          const next = prev.includes(station.id) 
+                                            ? prev.filter(id => id !== station.id) 
+                                            : [...prev, station.id];
+                                          localStorage.setItem('quran_listened_episodes', JSON.stringify(next));
+                                          return next;
+                                        });
+                                      }}
+                                      className={cn(
+                                        "w-8 h-8 rounded-lg flex items-center justify-center transition-all z-10 shrink-0",
+                                        isListened
+                                          ? "bg-emerald-500/20 text-emerald-400"
+                                          : "hover:bg-white/5 text-white/30 hover:text-white/60"
+                                      )}
+                                      title={isListened ? "إلغاء الحفظ كمكتمل" : "حفظ كمكتمل"}
+                                    >
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    </button>
+
+                                    {/* Download button (Only for youtube videos) */}
+                                    {ytId && (
+                                      <a
+                                        href={`/api/download?videoId=${ytId}&itag=140`}
+                                        download
+                                        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/20 text-white/40 hover:text-primary transition-all z-10 shrink-0"
+                                        title="تحميل الملف الصوتي (MP3)"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </a>
+                                    )}
+
+                                    {/* Favorite */}
+                                    <button
+                                      onClick={(e) => toggleFavoriteRadio(station.id, e)}
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all z-10 shrink-0 group/fav"
+                                      title="إضافة إلى المفضلة"
+                                    >
+                                      <Heart
+                                        className={cn(
+                                          "w-4 h-4 transition-all duration-300 transform group-hover/fav:scale-110",
+                                          isFav
+                                            ? "text-rose-500 fill-rose-500"
+                                            : "text-white/40 group-hover:text-white/80"
+                                        )}
+                                      />
+                                    </button>
+
+                                    {/* Delete Button */}
+                                    <button
+                                      onClick={() => {
+                                        if (confirm('هل أنت متأكد من حذف هذه الحلقة؟')) {
+                                          setCustomRadioStations(prev => {
+                                            const next = prev.filter(s => s.id !== station.id);
+                                            localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                            return next;
+                                          });
+                                          if (currentRadioStation?.id === station.id) {
+                                            stopRadio();
+                                          }
+                                        }
+                                      }}
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-rose-500/10 text-rose-400/60 hover:text-rose-400 transition-all z-10 shrink-0 group/del"
+                                      title="حذف الحلقة"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {filteredChannelEpisodes.length === 0 && (
+                              <div className="py-20 text-center text-white/20">
+                                <Search className="w-10 h-10 mx-auto opacity-10 mb-3" />
+                                <p className="text-xs font-bold">لم نجد أي حلقات تطابق بحثك</p>
+                              </div>
                             )}
                           </div>
-
-                          {/* Name */}
-                          <div className="flex-1 text-right">
-                            <p className={cn(
-                              "font-bold text-sm leading-snug",
-                              isCurrent ? "text-primary" : "text-white/80 group-hover:text-white"
-                            )}>
-                              {station.name}
-                            </p>
-                            <p className={cn(
-                              "text-[10px] mt-0.5 font-semibold",
-                              isPlayingThis ? "text-emerald-400" : isCurrent && isRadioBuffering ? "text-amber-400" : "text-white/30"
-                            )}>
-                              {isPlayingThis ? "🟢 البث نشط" : isCurrent && isRadioBuffering ? "⏳ جاري التوصيل..." : "● بث مباشر"}
-                            </p>
-                          </div>
-
-                           {/* Favorite */}
-                           <button
-                             onClick={(e) => toggleFavoriteRadio(station.id, e)}
-                             className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-white/5 transition-all z-10 shrink-0 group/fav"
-                             title="إضافة إلى المفضلة"
-                           >
-                             <Heart
-                               className={cn(
-                                 "w-6 h-6 transition-all duration-300 transform group-hover/fav:scale-110",
-                                 isFav
-                                   ? "text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]"
-                                   : "text-white/40 group-hover:text-white/80"
-                               )}
-                             />
-                           </button>
-
-                           {/* Custom Delete Button */}
-                           {station.id.startsWith('custom_') && (
-                             <button
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 if (confirm('هل أنت متأكد من حذف هذه الإذاعة المخصصة؟')) {
-                                   setCustomRadioStations(prev => {
-                                     const next = prev.filter(s => s.id !== station.id);
-                                     localStorage.setItem('quran_custom_radios', JSON.stringify(next));
-                                     return next;
-                                   });
-                                   if (currentRadioStation?.id === station.id) {
-                                     stopRadio();
-                                   }
-                                 }
-                               }}
-                               className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-rose-500/10 text-rose-400/60 hover:text-rose-400 transition-all z-10 shrink-0 group/del"
-                               title="حذف الإذاعة"
-                             >
-                               <Trash2 className="w-5 h-5 transition-transform group-hover/del:scale-110" />
-                             </button>
-                           )}
-
-                           {/* Play Button */}
-                           <div className={cn(
-                             "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300",
-                             isCurrent
-                               ? "bg-primary text-white shadow-glow-primary scale-105"
-                               : "bg-white/5 text-white/60 group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-105"
-                           )}>
-                             {isPlayingThis
-                               ? <Pause className="w-5 h-5 fill-current" />
-                               : <Play className="w-5 h-5 fill-current translate-x-[1.5px]" />
-                             }
-                           </div>
                         </div>
-                      );
-                    })}
+                      ) : (
+                        <div className="py-20 text-center text-white/20">
+                          <Radio className="w-10 h-10 mx-auto opacity-10 mb-3" />
+                          <p className="text-xs font-bold">الرجاء تحديد قناة لعرض الحلقات</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                      {filteredStations.map(station => {
+                        const isCurrent = currentRadioStation?.id === station.id;
+                        const isPlayingThis = isCurrent && isPlayingRadio;
+                        const isFav = favoriteRadioIds.includes(station.id);
+                        return (
+                          <div
+                            key={station.id}
+                            onClick={() => handlePlayRadio(station)}
+                            className={cn(
+                              "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group shadow-lg",
+                              isCurrent
+                                ? "bg-primary/10 border-primary/25 shadow-glow-primary/5"
+                                : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
+                            )}
+                          >
+                            {/* Icon */}
+                            <div className={cn(
+                              "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden",
+                              isCurrent ? "bg-primary/20" : "bg-white/5"
+                            )}>
+                              {station.icon && (station.icon.startsWith('http://') || station.icon.startsWith('https://')) ? (
+                                <img src={station.icon} alt={station.name} className="w-full h-full object-cover rounded-xl" />
+                              ) : (
+                                station.icon
+                              )}
+                            </div>
+
+                            {/* Name */}
+                            <div className="flex-1 text-right">
+                              <p className={cn(
+                                "font-bold text-sm leading-snug",
+                                isCurrent ? "text-primary" : "text-white/80 group-hover:text-white"
+                              )}>
+                                {station.name}
+                              </p>
+                              <p className={cn(
+                                "text-[10px] mt-0.5 font-semibold",
+                                isPlayingThis ? "text-emerald-400" : isCurrent && isRadioBuffering ? "text-amber-400" : "text-white/30"
+                              )}>
+                                {isPlayingThis ? "🟢 البث نشط" : isCurrent && isRadioBuffering ? "⏳ جاري التوصيل..." : "● بث مباشر"}
+                              </p>
+                            </div>
+
+                            {/* Favorite */}
+                            <button
+                              onClick={(e) => toggleFavoriteRadio(station.id, e)}
+                              className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-white/5 transition-all z-10 shrink-0 group/fav"
+                              title="إضافة إلى المفضلة"
+                            >
+                              <Heart
+                                className={cn(
+                                  "w-6 h-6 transition-all duration-300 transform group-hover/fav:scale-110",
+                                  isFav
+                                    ? "text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                                    : "text-white/40 group-hover:text-white/80"
+                                )}
+                              />
+                            </button>
+
+                            {/* Custom Delete Button */}
+                            {station.id.startsWith('custom_') && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('هل أنت متأكد من حذف هذه الإذاعة المخصصة؟')) {
+                                    setCustomRadioStations(prev => {
+                                      const next = prev.filter(s => s.id !== station.id);
+                                      localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                      return next;
+                                    });
+                                    if (currentRadioStation?.id === station.id) {
+                                      stopRadio();
+                                    }
+                                  }
+                                }}
+                                className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-rose-500/10 text-rose-400/60 hover:text-rose-400 transition-all z-10 shrink-0 group/del"
+                                title="حذف الإذاعة"
+                              >
+                                <Trash2 className="w-5 h-5 transition-transform group-hover/del:scale-110" />
+                              </button>
+                            )}
+
+                            {/* Play Button */}
+                            <div className={cn(
+                              "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300",
+                              isCurrent
+                                ? "bg-primary text-white shadow-glow-primary scale-105"
+                                : "bg-white/5 text-white/60 group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-105"
+                            )}>
+                              {isPlayingThis
+                                ? <Pause className="w-5 h-5 fill-current" />
+                                : <Play className="w-5 h-5 fill-current translate-x-[1.5px]" />
+                              }
+                            </div>
+                          </div>
+                        );
+                      })}
 
                     {isLoadingRadios && (
                       <div className="col-span-full py-20 text-center text-white/30">
