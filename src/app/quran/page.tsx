@@ -319,6 +319,40 @@ export default function QuranPage() {
     return result;
   }, [channelEpisodes, episodeSearchQuery, episodeSortOrder]);
 
+  // Most listened channel/podcast calculation
+  const mostListenedChannel = useMemo(() => {
+    if (listenedEpisodeIds.length === 0) return 'لا يوجد بيانات بعد';
+    
+    const counts: Record<string, number> = {};
+    const channelNames: Record<string, string> = {
+      'independent_custom': 'إذاعات أخرى'
+    };
+    
+    importedChannels.forEach(c => {
+      channelNames[c.id] = c.name;
+    });
+
+    listenedEpisodeIds.forEach(id => {
+      const station = customRadioStations.find(s => s.id === id);
+      if (station) {
+        const cId = station.channelId || 'independent_custom';
+        counts[cId] = (counts[cId] || 0) + 1;
+      }
+    });
+
+    let maxCount = 0;
+    let maxChannelId = '';
+    Object.entries(counts).forEach(([cId, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        maxChannelId = cId;
+      }
+    });
+
+    if (maxCount === 0) return 'لا يوجد بيانات بعد';
+    return channelNames[maxChannelId] || 'قناة مخصصة';
+  }, [listenedEpisodeIds, customRadioStations, importedChannels]);
+
   // ── Phase 3: Brand New Optimized & Developed Features States ──
   const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
   const [selectedTranslation, setSelectedTranslation] = useState(TRANSLATIONS[0]);
@@ -3308,6 +3342,39 @@ export default function QuranPage() {
           {view === 'radio' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
               
+              {/* Listening Analytics Header Dashboard */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" dir="rtl">
+                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04]">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-xl shrink-0 text-primary">
+                    ⏳
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-white/40 block font-bold">إجمالي دقائق الاستماع</span>
+                    <span className="text-lg font-black text-white">{listeningMinutes} دقيقة</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04]">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-xl shrink-0 text-emerald-400">
+                    ✔️
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-white/40 block font-bold">الحلقات المكتملة إجمالياً</span>
+                    <span className="text-lg font-black text-white">{listenedEpisodeIds.length} حلقة</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04] min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-xl shrink-0 text-amber-400">
+                    🔥
+                  </div>
+                  <div className="text-right min-w-0 flex-1">
+                    <span className="text-[10px] text-white/40 block font-bold">القناة الأكثر استماعاً</span>
+                    <span className="text-xs font-black text-white truncate block">{mostListenedChannel}</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Top Banner Player (Now Playing) */}
               <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-6 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-white/10">
                 {/* Glowing ambient background based on selected station */}
