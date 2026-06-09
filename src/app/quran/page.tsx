@@ -89,18 +89,6 @@ const formatArabicDate = (dateStr: string) => {
   }
 };
 
-const formatArabicDate = (dateStr: string) => {
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  } catch (e) {
-    return dateStr;
-  }
-};
 
 // ━━━━━━━━━━━ MAIN PAGE ━━━━━━━━━━━
 
@@ -4073,7 +4061,7 @@ export default function QuranPage() {
                           {/* Bulk Actions Bar */}
                           <div className="flex items-center justify-between pb-3 border-b border-white/5 bg-white/[0.01] p-3 rounded-2xl border border-white/5">
                             {selectedEpisodeIds.length > 0 ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <button
                                   onClick={() => {
                                     if (confirm(`هل أنت متأكد من حذف ${selectedEpisodeIds.length} حلقة محددة؟`)) {
@@ -4090,9 +4078,38 @@ export default function QuranPage() {
                                   <Trash2 className="w-3.5 h-3.5" />
                                   حذف المحدد ({selectedEpisodeIds.length})
                                 </button>
+
+                                <button
+                                  onClick={() => {
+                                    setListenedEpisodeIds(prev => {
+                                      const next = [...new Set([...prev, ...selectedEpisodeIds])];
+                                      localStorage.setItem('quran_listened_episodes', JSON.stringify(next));
+                                      return next;
+                                    });
+                                    setSelectedEpisodeIds([]);
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1"
+                                >
+                                  حفظ كمكتمل ✔
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setListenedEpisodeIds(prev => {
+                                      const next = prev.filter(id => !selectedEpisodeIds.includes(id));
+                                      localStorage.setItem('quran_listened_episodes', JSON.stringify(next));
+                                      return next;
+                                    });
+                                    setSelectedEpisodeIds([]);
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all text-xs font-bold flex items-center gap-1"
+                                >
+                                  إلغاء كمكتمل ✖
+                                </button>
+
                                 <button
                                   onClick={() => setSelectedEpisodeIds([])}
-                                  className="text-xs text-white/40 hover:text-white transition-colors"
+                                  className="text-xs text-white/40 hover:text-white transition-colors px-2 py-1.5"
                                 >
                                   إلغاء التحديد
                                 </button>
@@ -4425,7 +4442,8 @@ export default function QuranPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                )}
+              </div>
 
                 {/* Sidebar (lg:col-span-1): Analytics & Ambient focus mixer */}
                 <div className="lg:col-span-1 space-y-6 flex flex-col">

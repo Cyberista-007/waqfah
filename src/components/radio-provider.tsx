@@ -34,6 +34,8 @@ type RadioContextType = {
   stopRadio: () => void;
   activeYoutubeId: string | null;
   audioRef: React.RefObject<HTMLAudioElement | null>;
+  playbackRate: number;
+  setPlaybackRate: (rate: number) => void;
 };
 
 const RadioContext = createContext<RadioContextType | null>(null);
@@ -57,10 +59,28 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const [isBuffering, setIsBuffering] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
   const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
+  const [playbackRate, setPlaybackRateState] = useState(1.0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentStationRef = useRef<RadioStation | null>(null);
   const fallbackTriggeredRef = useRef<boolean>(false);
+  const pendingStartTimeRef = useRef<number>(0);
+
+  // Load persistent playback rate on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedRate = localStorage.getItem('radio_playback_rate');
+      if (savedRate) {
+        try {
+          const rate = parseFloat(savedRate);
+          setPlaybackRateState(rate);
+          if (audioRef.current) {
+            audioRef.current.playbackRate = rate;
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   // Lazy initialize single audio instance and register persistent listeners
   const getAudioInstance = useCallback(() => {
@@ -68,6 +88,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     if (!audioRef.current) {
       const audio = new Audio();
       audio.volume = volume;
+      audio.playbackRate = playbackRate;
       
       audio.addEventListener('waiting', () => setIsBuffering(true));
       audio.addEventListener('playing', () => {
@@ -77,6 +98,27 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       audio.addEventListener('pause', () => setIsPlaying(false));
       audio.addEventListener('canplay', () => setIsBuffering(false));
       
+      audio.addEventListener('loadedmetadata', () => {
+        if (pendingStartTimeRef.current > 0) {
+          audio.currentTime = pendingStartTimeRef.current;
+          pendingStartTimeRef.current = 0;
+        }
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        if (audio.currentTime > 0 && currentStationRef.current) {
+          localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(audio.currentTime).toString());
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setIsBuffering(false);
+        if (currentStationRef.current) {
+          localStorage.removeItem(`radio_progress_${currentStationRef.current.id}`);
+        }
+      });
+
       audio.addEventListener('error', () => {
         const station = currentStationRef.current;
         if (!station) return;
@@ -123,6 +165,32 @@ export function RadioProvider({ children }: { children: ReactNode }) {
           event: 'command',
           func: 'setVolume',
           args: [v * 100],
+        }),
+        '*'
+      );
+    }
+  }, []);
+
+  const playbackRateRef = useRef(1.0);
+  useEffect(() => {
+    playbackRateRef.current = playbackRate;
+  }, [playbackRate]);
+
+  const setPlaybackRate = useCallback((rate: number) => {
+    setPlaybackRateState(rate);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('radio_playback_rate', rate.toString());
+    }
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+    const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'setPlaybackRate',
+          args: [rate],
         }),
         '*'
       );
@@ -224,9 +292,14 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         currentStationRef.current = station;
         setCurrentStation(station);
 
+        const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
+        const startSecond = savedProgress ? parseInt(savedProgress, 10) : 0;
+        pendingStartTimeRef.current = startSecond;
+
         audioInstance.crossOrigin = 'anonymous';
         audioInstance.src = station.url;
         audioInstance.volume = volume;
+        audioInstance.playbackRate = playbackRate;
         setIsBuffering(true);
 
         audioInstance.play().catch((e) => {
@@ -242,7 +315,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('quran_radio_history', JSON.stringify(next));
       } catch {}
     },
-    [currentStation, activeYoutubeId, togglePlay, volume, getAudioInstance]
+    [currentStation, activeYoutubeId, togglePlay, volume, getAudioInstance, playbackRate]
   );
 
   // Restore last playing station on mount
@@ -271,6 +344,19 @@ export function RadioProvider({ children }: { children: ReactNode }) {
           if (state === 1) { // playing
             setIsPlaying(true);
             setIsBuffering(false);
+            
+            // Sync current speed and volume to YouTube
+            const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setPlaybackRate',
+                  args: [playbackRateRef.current],
+                }),
+                '*'
+              );
+            }
           } else if (state === 2) { // paused
             setIsPlaying(false);
             setIsBuffering(false);
@@ -279,6 +365,14 @@ export function RadioProvider({ children }: { children: ReactNode }) {
           } else if (state === 0) { // ended
             setIsPlaying(false);
             setIsBuffering(false);
+            if (currentStationRef.current) {
+              localStorage.removeItem(`radio_progress_${currentStationRef.current.id}`);
+            }
+          }
+        } else if (data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
+          const time = data.info.currentTime;
+          if (time > 0 && currentStationRef.current) {
+            localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(time).toString());
           }
         }
       } catch (e) {
@@ -310,6 +404,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         stopRadio,
         activeYoutubeId,
         audioRef,
+        playbackRate,
+        setPlaybackRate,
       }}
     >
       {children}
