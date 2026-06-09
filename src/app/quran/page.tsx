@@ -243,6 +243,11 @@ export default function QuranPage() {
     }
   }, [isPlayingRadio]);
 
+  // YouTube Channel Import States
+  const [customImportMode, setCustomImportMode] = useState<'single' | 'youtube_channel'>('single');
+  const [channelImportUrl, setChannelImportUrl] = useState('');
+  const [isImportingChannel, setIsImportingChannel] = useState(false);
+
   // ── Phase 3: Brand New Optimized & Developed Features States ──
   const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
   const [selectedTranslation, setSelectedTranslation] = useState(TRANSLATIONS[0]);
@@ -3586,81 +3591,194 @@ export default function QuranPage() {
                       </div>
 
                       {isAddCustomRadioOpen && (
-                        <div className="space-y-3 pt-2 border-t border-white/5">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              placeholder="اسم الإذاعة (مثال: إذاعة القارئ فلان)"
-                              value={customRadioName}
-                              onChange={(e) => setCustomRadioName(e.target.value)}
-                              className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all"
-                            />
-                            <input
-                              type="text"
-                              placeholder="رابط البث المباشر (URL) أو رابط يوتيوب"
-                              value={customRadioUrl}
-                              onChange={(e) => setCustomRadioUrl(e.target.value)}
-                              className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all text-left"
-                              dir="ltr"
-                            />
-                          </div>
-                          <p className="text-[10px] text-white/40 text-right leading-relaxed font-semibold">
-                            💡 يمكنك إدخال رابط بث مباشر أو فيديو من يوتيوب، وسنقوم بتشغيل الصوت منه تلقائياً كبث مباشر صوتي!
-                          </p>
-                          <div className="flex gap-2 justify-end">
-                            <div className="flex gap-1.5 items-center bg-black/40 border border-white/10 rounded-xl px-3 py-1 text-xs">
-                              <span className="text-white/40">أيقونة:</span>
-                              {['📻', '🕌', '🌙', '📖', '🎙️', '🌟', '🛡️'].map(emoji => (
-                                <button
-                                  key={emoji}
-                                  type="button"
-                                  onClick={() => setCustomRadioIcon(emoji)}
-                                  className={cn(
-                                    "p-1 rounded-lg text-sm transition-all hover:bg-white/10",
-                                    customRadioIcon === emoji ? "bg-primary/20 scale-110" : ""
-                                  )}
-                                >
-                                  {emoji}
-                                </button>
-                              ))}
-                            </div>
+                        <div className="space-y-4 pt-3 border-t border-white/5">
+                          {/* Toggle Mode */}
+                          <div className="flex border-b border-white/5 pb-2 mb-1 gap-4">
                             <button
-                              onClick={() => {
-                                if (!customRadioName.trim() || !customRadioUrl.trim()) {
-                                  alert('الرجاء تعبئة جميع الحقول');
-                                  return;
-                                }
-                                if (!customRadioUrl.startsWith('http://') && !customRadioUrl.startsWith('https://')) {
-                                  alert('رابط البث يجب أن يبدأ بـ http:// أو https://');
-                                  return;
-                                }
-                                
-                                const newStation: RadioStation = {
-                                  id: `custom_${Date.now()}`,
-                                  name: customRadioName.trim(),
-                                  subtitle: 'إذاعة مخصصة بواسطة المستخدم',
-                                  url: customRadioUrl.trim(),
-                                  icon: customRadioIcon,
-                                  color: 'from-violet-500/20 to-violet-950/40',
-                                  borderColor: 'border-violet-500/30',
-                                  textColor: 'text-violet-400'
-                                };
-                                
-                                setCustomRadioStations(prev => {
-                                  const next = [newStation, ...prev];
-                                  localStorage.setItem('quran_custom_radios', JSON.stringify(next));
-                                  return next;
-                                });
-                                
-                                setCustomRadioName('');
-                                setCustomRadioUrl('');
-                                setIsAddCustomRadioOpen(false);
-                              }}
-                              className="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary active:scale-95"
+                              type="button"
+                              onClick={() => setCustomImportMode('single')}
+                              className={cn(
+                                "text-xs font-black pb-1 border-b-2 transition-all",
+                                customImportMode === 'single' ? "text-primary border-primary" : "text-white/40 border-transparent hover:text-white/60"
+                              )}
                             >
-                              حفظ الإذاعة 💾
+                              إضافة إذاعة منفردة 📻
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCustomImportMode('youtube_channel')}
+                              className={cn(
+                                "text-xs font-black pb-1 border-b-2 transition-all",
+                                customImportMode === 'youtube_channel' ? "text-primary border-primary" : "text-white/40 border-transparent hover:text-white/60"
+                              )}
+                            >
+                              استيراد قناة يوتيوب كاملة كأصوات 🎥
                             </button>
                           </div>
+
+                          {customImportMode === 'single' ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="اسم الإذاعة (مثال: إذاعة القارئ فلان)"
+                                  value={customRadioName}
+                                  onChange={(e) => setCustomRadioName(e.target.value)}
+                                  className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="رابط البث المباشر (URL) أو رابط يوتيوب"
+                                  value={customRadioUrl}
+                                  onChange={(e) => setCustomRadioUrl(e.target.value)}
+                                  className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all text-left"
+                                  dir="ltr"
+                                />
+                              </div>
+                              <p className="text-[10px] text-white/40 text-right leading-relaxed font-semibold">
+                                💡 يمكنك إدخال رابط بث مباشر أو فيديو من يوتيوب، وسنقوم بتشغيل الصوت منه تلقائياً كبث مباشر صوتي!
+                              </p>
+                              <div className="flex gap-2 justify-end">
+                                <div className="flex gap-1.5 items-center bg-black/40 border border-white/10 rounded-xl px-3 py-1 text-xs">
+                                  <span className="text-white/40">أيقونة:</span>
+                                  {['📻', '🕌', '🌙', '📖', '🎙️', '🌟', '🛡️'].map(emoji => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      onClick={() => setCustomRadioIcon(emoji)}
+                                      className={cn(
+                                        "p-1 rounded-lg text-sm transition-all hover:bg-white/10",
+                                        customRadioIcon === emoji ? "bg-primary/20 scale-110" : ""
+                                      )}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    if (!customRadioName.trim() || !customRadioUrl.trim()) {
+                                      alert('الرجاء تعبئة جميع الحقول');
+                                      return;
+                                    }
+                                    if (!customRadioUrl.startsWith('http://') && !customRadioUrl.startsWith('https://')) {
+                                      alert('رابط البث يجب أن يبدأ بـ http:// أو https://');
+                                      return;
+                                    }
+                                    
+                                    const newStation: RadioStation = {
+                                      id: `custom_${Date.now()}`,
+                                      name: customRadioName.trim(),
+                                      subtitle: 'إذاعة مخصصة بواسطة المستخدم',
+                                      url: customRadioUrl.trim(),
+                                      icon: customRadioIcon,
+                                      color: 'from-violet-500/20 to-violet-950/40',
+                                      borderColor: 'border-violet-500/30',
+                                      textColor: 'text-violet-400'
+                                    };
+                                    
+                                    setCustomRadioStations(prev => {
+                                      const next = [newStation, ...prev];
+                                      localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                      return next;
+                                    });
+                                    
+                                    setCustomRadioName('');
+                                    setCustomRadioUrl('');
+                                    setIsAddCustomRadioOpen(false);
+                                  }}
+                                  className="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary active:scale-95"
+                                >
+                                  حفظ الإذاعة 💾
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex flex-col gap-1.5">
+                                <input
+                                  type="text"
+                                  placeholder="رابط القناة (مثل: https://www.youtube.com/@ChannelName)"
+                                  value={channelImportUrl}
+                                  onChange={(e) => setChannelImportUrl(e.target.value)}
+                                  className="bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white placeholder-white/25 outline-none focus:border-primary/40 focus:bg-black/60 transition-all text-left"
+                                  dir="ltr"
+                                />
+                              </div>
+                              <p className="text-[10px] text-white/40 text-right leading-relaxed font-semibold">
+                                💡 الصق رابط قناة يوتيوب، وسيقوم النظام بجلب كافة فيديوهاتها واستيرادها كقنوات صوتية مخصصة مع معلومات القناة وشعارها (Logo).
+                              </p>
+                              <div className="flex gap-2 justify-end">
+                                <button
+                                  disabled={isImportingChannel}
+                                  onClick={async () => {
+                                    if (!channelImportUrl.trim()) {
+                                      alert('الرجاء إدخال رابط القناة');
+                                      return;
+                                    }
+                                    setIsImportingChannel(true);
+                                    try {
+                                      const response = await fetch('/api/youtube-import', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ url: channelImportUrl.trim() }),
+                                      });
+
+                                      const data = await response.json();
+                                      if (!response.ok) throw new Error(data.message || 'فشل في جلب القناة');
+
+                                      const channelInfo = data.channelInfo;
+                                      const videos = data.videos || [];
+                                      const shorts = data.shorts || [];
+                                      const allFetched = [...videos, ...shorts];
+
+                                      if (allFetched.length === 0) {
+                                        alert('لم يتم العثور على أي فيديوهات في هذه القناة');
+                                        return;
+                                      }
+
+                                      const newStations: RadioStation[] = allFetched.map((video) => ({
+                                        id: `custom_yt_${video.videoId}`,
+                                        name: video.title,
+                                        subtitle: channelInfo.name,
+                                        url: `https://www.youtube.com/watch?v=${video.videoId}`,
+                                        icon: channelInfo.imageUrl || '📻',
+                                        color: 'from-emerald-500/20 to-emerald-950/40',
+                                        borderColor: 'border-emerald-500/30',
+                                        textColor: 'text-emerald-400'
+                                      }));
+
+                                      setCustomRadioStations(prev => {
+                                        const existingIds = new Set(prev.map(s => s.id));
+                                        const filteredNew = newStations.filter(s => !existingIds.has(s.id));
+                                        const next = [...filteredNew, ...prev];
+                                        localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                        return next;
+                                      });
+
+                                      alert(`تم استيراد ${newStations.length} فيديو كصوت بنجاح من قناة "${channelInfo.name}"!`);
+                                      setChannelImportUrl('');
+                                      setIsAddCustomRadioOpen(false);
+                                    } catch (err: any) {
+                                      alert(err.message || 'حدث خطأ أثناء استيراد القناة');
+                                    } finally {
+                                      setIsImportingChannel(false);
+                                    }
+                                  }}
+                                  className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary active:scale-95 flex items-center gap-1.5"
+                                >
+                                  {isImportingChannel ? (
+                                    <>
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      جاري استيراد القناة...
+                                    </>
+                                  ) : (
+                                    'بدء الاستيراد كأصوات 📥'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -3685,10 +3803,14 @@ export default function QuranPage() {
                         >
                           {/* Icon */}
                           <div className={cn(
-                            "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0",
+                            "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden",
                             isCurrent ? "bg-primary/20" : "bg-white/5"
                           )}>
-                            {station.icon}
+                            {station.icon && (station.icon.startsWith('http://') || station.icon.startsWith('https://')) ? (
+                              <img src={station.icon} alt={station.name} className="w-full h-full object-cover rounded-xl" />
+                            ) : (
+                              station.icon
+                            )}
                           </div>
 
                           {/* Name */}

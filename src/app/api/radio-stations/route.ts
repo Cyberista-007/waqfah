@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { initializeAdminApp } from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,18 +36,43 @@ export async function GET() {
       { color: 'from-emerald-500/20 to-emerald-950/40', borderColor: 'border-emerald-500/30', textColor: 'text-emerald-400' },
     ];
 
+    const programIds = Array.from(
+      new Set(
+        snapshot.docs
+          .map((doc) => doc.data().programId)
+          .filter(Boolean)
+      )
+    );
+
+    const programsMap: Record<string, any> = {};
+    if (programIds.length > 0) {
+      // Fetch programs in chunks of 30 due to Firestore "in" query limit
+      for (let i = 0; i < programIds.length; i += 30) {
+        const chunk = programIds.slice(i, i + 30);
+        const programsSnapshot = await firestore
+          .collection('programs')
+          .where(admin.firestore.FieldPath.documentId(), 'in', chunk)
+          .get();
+        programsSnapshot.docs.forEach((doc) => {
+          programsMap[doc.id] = doc.data();
+        });
+      }
+    }
+
     const stations = snapshot.docs
       .map((doc, i) => {
         const data = doc.data();
         const ytId = getYoutubeId(data.youtubeUrl);
         if (!ytId) return null;
         const c = colors[i % colors.length];
+        const program = data.programId ? programsMap[data.programId] : null;
+        const imageUrl = program?.imageUrl || '';
         return {
           id: `imported_${doc.id}`,
           name: data.title || 'محاضرة',
           subtitle: data.programName || 'محاضرة مستوردة',
           url: data.youtubeUrl,
-          icon: '🎥',
+          icon: imageUrl || '🎥',
           ...c,
         };
       })

@@ -89,7 +89,7 @@ export function FloatingRadioPlayer() {
               {/* Station icon */}
               <div
                 className={cn(
-                  'w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 bg-gradient-to-br',
+                  'w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 bg-gradient-to-br overflow-hidden',
                   currentStation.color,
                   'border border-white/10'
                 )}
@@ -97,7 +97,11 @@ export function FloatingRadioPlayer() {
                 {isBuffering ? (
                   <Loader2 className="w-4 h-4 text-white animate-spin" />
                 ) : (
-                  <span>{currentStation.icon}</span>
+                  currentStation.icon && (currentStation.icon.startsWith('http://') || currentStation.icon.startsWith('https://')) ? (
+                    <img src={currentStation.icon} alt={currentStation.name} className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    <span>{currentStation.icon}</span>
+                  )
                 )}
               </div>
 
