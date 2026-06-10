@@ -89,6 +89,18 @@ const formatArabicDate = (dateStr: string) => {
   }
 };
 
+const formatTime = (secs: number) => {
+  if (isNaN(secs) || !isFinite(secs)) return '0:00';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.floor(secs % 60);
+  const sStr = s < 10 ? `0${s}` : s;
+  if (h > 0) {
+    const mStr = m < 10 ? `0${m}` : m;
+    return `${h}:${mStr}:${sStr}`;
+  }
+  return `${m}:${sStr}`;
+};
 
 // ━━━━━━━━━━━ MAIN PAGE ━━━━━━━━━━━
 
@@ -168,6 +180,9 @@ export default function QuranPage() {
     listeningMinutes,
     canvasRef,
     radioAudioRef,
+    currentTime,
+    duration,
+    seekTo,
     toggleFavoriteRadio,
     startRecording,
     stopRecording,
@@ -3740,6 +3755,26 @@ export default function QuranPage() {
                   </div>
 
                 </div>
+
+                {currentRadioStation && duration > 0 && duration !== Infinity && (
+                  <div className="relative z-10 mt-6 pt-4 border-t border-white/5 space-y-2 w-full" dir="rtl">
+                    <div className="flex items-center justify-between text-[10px] text-white/45 font-bold">
+                      <span className="font-mono">{formatTime(currentTime)}</span>
+                      <span className="font-mono">{formatTime(duration)}</span>
+                    </div>
+                    <div className="relative group/progress h-5 flex items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration}
+                        step="1"
+                        value={currentTime}
+                        onChange={(e) => seekTo(parseInt(e.target.value, 10))}
+                        className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary group-hover/progress:h-1.5 transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Bottom Sections Grid */}

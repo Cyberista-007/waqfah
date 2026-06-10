@@ -19,6 +19,9 @@ export function useQuranRadio() {
     stopRadio,
     activeYoutubeId,
     audioRef: radioAudioRef,
+    currentTime,
+    duration,
+    seekTo,
   } = useRadio();
 
   const [radioSearchQuery, setRadioSearchQuery] = useState<string>('');
@@ -613,6 +616,9 @@ export function useQuranRadio() {
     listeningMinutes,
     canvasRef,
     radioAudioRef,
+    currentTime,
+    duration,
+    seekTo,
 
     // Methods
     toggleFavoriteRadio,

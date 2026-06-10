@@ -36,6 +36,9 @@ type RadioContextType = {
   audioRef: React.RefObject<HTMLAudioElement | null>;
   playbackRate: number;
   setPlaybackRate: (rate: number) => void;
+  currentTime: number;
+  duration: number;
+  seekTo: (seconds: number) => void;
 };
 
 const RadioContext = createContext<RadioContextType | null>(null);
@@ -60,6 +63,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const [volume, setVolumeState] = useState(0.8);
   const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
   const [playbackRate, setPlaybackRateState] = useState(1.0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentStationRef = useRef<RadioStation | null>(null);
@@ -99,13 +104,23 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       audio.addEventListener('canplay', () => setIsBuffering(false));
       
       audio.addEventListener('loadedmetadata', () => {
+        if (audio.duration) {
+          setDuration(audio.duration);
+        }
         if (pendingStartTimeRef.current > 0) {
           audio.currentTime = pendingStartTimeRef.current;
           pendingStartTimeRef.current = 0;
         }
       });
 
+      audio.addEventListener('durationchange', () => {
+        if (audio.duration) {
+          setDuration(audio.duration);
+        }
+      });
+
       audio.addEventListener('timeupdate', () => {
+        setCurrentTime(audio.currentTime);
         if (audio.currentTime > 0 && currentStationRef.current) {
           localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(audio.currentTime).toString());
         }
@@ -211,6 +226,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     setCurrentStation(null);
     currentStationRef.current = null;
     setActiveYoutubeId(null);
+    setCurrentTime(0);
+    setDuration(0);
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -274,6 +291,10 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         currentStationRef.current = station;
         setIsPlaying(false);
         setIsBuffering(true);
+        const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
+        const startSecond = savedProgress ? parseInt(savedProgress, 10) : 0;
+        setCurrentTime(startSecond);
+        setDuration(0);
         // Save history
         try {
           const hist = JSON.parse(localStorage.getItem('quran_radio_history') || '[]') as string[];
@@ -295,6 +316,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
         const startSecond = savedProgress ? parseInt(savedProgress, 10) : 0;
         pendingStartTimeRef.current = startSecond;
+        setCurrentTime(startSecond);
+        setDuration(0);
 
         audioInstance.crossOrigin = 'anonymous';
         audioInstance.src = station.url;
@@ -327,6 +350,10 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         const station: RadioStation = JSON.parse(saved);
         setCurrentStation(station);
         currentStationRef.current = station;
+        const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
+        if (savedProgress) {
+          setCurrentTime(parseInt(savedProgress, 10));
+        }
       }
     } catch {}
   }, []);
@@ -369,10 +396,16 @@ export function RadioProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem(`radio_progress_${currentStationRef.current.id}`);
             }
           }
-        } else if (data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
-          const time = data.info.currentTime;
-          if (time > 0 && currentStationRef.current) {
-            localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(time).toString());
+        } else if (data.event === 'infoDelivery' && data.info) {
+          if (typeof data.info.currentTime === 'number') {
+            const time = data.info.currentTime;
+            setCurrentTime(time);
+            if (time > 0 && currentStationRef.current) {
+              localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(time).toString());
+            }
+          }
+          if (typeof data.info.duration === 'number') {
+            setDuration(data.info.duration);
           }
         }
       } catch (e) {
@@ -391,6 +424,26 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     }
   }, [currentStation]);
 
+  const seekTo = useCallback((seconds: number) => {
+    if (audioRef.current && !activeYoutubeId) {
+      audioRef.current.currentTime = seconds;
+      setCurrentTime(seconds);
+    } else if (activeYoutubeId) {
+      const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: 'seekTo',
+            args: [seconds, true],
+          }),
+          '*'
+        );
+        setCurrentTime(seconds);
+      }
+    }
+  }, [activeYoutubeId]);
+
   return (
     <RadioContext.Provider
       value={{
@@ -406,6 +459,9 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         audioRef,
         playbackRate,
         setPlaybackRate,
+        currentTime,
+        duration,
+        seekTo,
       }}
     >
       {children}
