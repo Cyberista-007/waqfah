@@ -311,6 +311,59 @@ export default function QuranPage() {
     }
   }, []);
 
+  // Migrate old imported stations without channelId
+  useEffect(() => {
+    if (customRadioStations.length === 0) return;
+
+    let modified = false;
+    const migratedStations = customRadioStations.map(station => {
+      if (station.id.startsWith('custom_yt_') && !station.channelId && station.subtitle) {
+        const generatedChannelId = `migrated_${encodeURIComponent(station.subtitle).replace(/%/g, '_')}`;
+        modified = true;
+        return {
+          ...station,
+          channelId: generatedChannelId
+        };
+      }
+      return station;
+    });
+
+    if (modified) {
+      const channelsMap: Record<string, { id: string; name: string; description: string; imageUrl: string; videoCount: number }> = {};
+      
+      importedChannels.forEach(c => {
+        channelsMap[c.id] = c;
+      });
+
+      migratedStations.forEach(station => {
+        if (station.id.startsWith('custom_yt_') && station.channelId) {
+          if (!channelsMap[station.channelId]) {
+            channelsMap[station.channelId] = {
+              id: station.channelId,
+              name: station.subtitle || 'قناة مستوردة',
+              description: 'قناة تم استيرادها تلقائياً',
+              imageUrl: typeof station.icon === 'string' && station.icon.startsWith('http') ? station.icon : '📻',
+              videoCount: 0
+            };
+          }
+          channelsMap[station.channelId].videoCount += 1;
+        }
+      });
+
+      const nextChannels = Object.values(channelsMap);
+      
+      setCustomRadioStations(migratedStations);
+      localStorage.setItem('quran_custom_radios', JSON.stringify(migratedStations));
+
+      setImportedChannels(nextChannels);
+      localStorage.setItem('quran_imported_channels', JSON.stringify(nextChannels));
+      
+      if (nextChannels.length > 0 && !selectedImportedChannelId) {
+        setSelectedImportedChannelId(nextChannels[0].id);
+      }
+    }
+  }, [customRadioStations, importedChannels, selectedImportedChannelId, setCustomRadioStations]);
+
   // Clear selections when switching channel
   useEffect(() => {
     setSelectedEpisodeIds([]);
