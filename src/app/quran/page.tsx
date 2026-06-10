@@ -3492,10 +3492,22 @@ export default function QuranPage() {
                         <div className="absolute inset-6 rounded-full border border-white/5" />
                       </div>
                       <div className={cn(
-                        "w-12 h-12 rounded-full bg-gradient-to-tr flex flex-col items-center justify-center border-[4px] border-black/90 shadow-2xl relative z-10 transition-all duration-700",
+                        "w-12 h-12 rounded-full bg-gradient-to-tr flex flex-col items-center justify-center border-[4px] border-black/90 shadow-2xl relative z-10 transition-all duration-700 overflow-hidden",
                         currentRadioStation ? currentRadioStation.color : "from-zinc-800 to-zinc-900"
                       )}>
-                        <span className="text-xl">{currentRadioStation ? currentRadioStation.icon : '📻'}</span>
+                        {currentRadioStation && currentRadioStation.icon ? (
+                          currentRadioStation.icon.startsWith('http') ? (
+                            <img
+                              src={currentRadioStation.icon}
+                              alt={currentRadioStation.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xl">{currentRadioStation.icon}</span>
+                          )
+                        ) : (
+                          <span className="text-xl">📻</span>
+                        )}
                       </div>
                     </div>
 
@@ -4816,8 +4828,12 @@ export default function QuranPage() {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[92%] max-w-md"
           >
             <div className="bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] px-5 py-3.5 shadow-[0_10px_60px_-15px_rgba(0,0,0,0.9)] flex items-center gap-4" dir="rtl">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-lg shrink-0 animate-pulse">
-                {currentRadioStation.icon}
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-lg shrink-0 animate-pulse overflow-hidden">
+                {currentRadioStation.icon && (currentRadioStation.icon.startsWith('http://') || currentRadioStation.icon.startsWith('https://')) ? (
+                  <img src={currentRadioStation.icon} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  currentRadioStation.icon
+                )}
               </div>
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-xs font-black text-white truncate">{currentRadioStation.name}</p>
