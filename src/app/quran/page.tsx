@@ -3476,7 +3476,7 @@ export default function QuranPage() {
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6" dir="rtl">
                   {/* Left Column: Metadata & Vinyl & Play Button */}
-                  <div className="flex flex-col sm:flex-row items-center gap-6 lg:w-1/3 w-full">
+                  <div className="flex flex-col sm:flex-row items-center gap-6 lg:w-[55%] w-full">
                     {/* Rotating Vinyl design (smaller for horizontal layout) */}
                     <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
                       <div
@@ -3571,7 +3571,7 @@ export default function QuranPage() {
                   </div>
 
                   {/* Center Column: Real-time Visualizer & Shortcuts */}
-                  <div className="flex flex-col justify-center gap-3 lg:w-1/3 w-full">
+                  <div className="flex flex-col justify-center gap-3 lg:w-[45%] w-full">
                     <div className="w-full h-12 relative overflow-hidden rounded-2xl border border-white/5 bg-black/40 group/viz">
                       <canvas ref={isAmbientScreenSaver ? null : canvasRef} className="w-full h-full" />
                       
@@ -3661,109 +3661,6 @@ export default function QuranPage() {
                         </button>
                       </div>
                     )}
-                  </div>
-
-                  {/* Right Column: Sleep Timer & Scheduled Alarm */}
-                  <div className="flex flex-col sm:flex-row items-stretch gap-3 lg:w-1/3 w-full">
-                    {/* Sleep Timer */}
-                    <div className="flex-1 bg-white/[0.01] backdrop-blur-md border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right transition-all duration-300 hover:border-white/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black text-white/45 uppercase tracking-widest">⏰ مؤقت النوم</span>
-                        {sleepTimerMinutes && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">نشط</span>}
-                      </div>
-
-                      {sleepTimerMinutes ? (
-                        <div className="flex flex-col items-center justify-center py-0.5">
-                          <span className="text-xl font-black text-primary tracking-wider font-mono">
-                            {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
-                          </span>
-                          <button
-                            onClick={cancelSleepTimer}
-                            className="mt-1 text-[8px] font-bold text-rose-400 hover:text-rose-300 transition-colors"
-                          >
-                            إلغاء المؤقت ✖
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1">
-                            <input
-                              type="number"
-                              placeholder="دقائق"
-                              value={customTimerMinutes}
-                              onChange={(e) => setCustomTimerMinutes(e.target.value)}
-                              className="w-12 bg-black/40 border border-white/10 rounded-lg px-1.5 py-0.5 text-[9px] text-white outline-none focus:border-primary/45"
-                              min="1"
-                            />
-                            <button
-                              onClick={() => {
-                                const mins = parseInt(customTimerMinutes);
-                                if (mins > 0) {
-                                  startSleepTimer(mins);
-                                  setCustomTimerMinutes('');
-                                }
-                              }}
-                              className="flex-1 py-0.5 rounded-lg bg-primary text-primary-foreground font-black text-[9px] hover:bg-primary/95 transition-all shadow-glow-primary"
-                            >
-                              تفعيل ⚡
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-4 gap-0.5">
-                            {[15, 30, 45, 60].map(mins => (
-                              <button
-                                key={mins}
-                                onClick={() => startSleepTimer(mins)}
-                                className="py-0.5 rounded bg-white/5 text-white/50 text-[8px] font-black hover:text-primary transition-all border border-white/5"
-                              >
-                                {mins}د
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Scheduled Alarm */}
-                    <div className="flex-1 bg-white/[0.01] backdrop-blur-md border border-white/5 rounded-2xl p-3 flex flex-col justify-between gap-1.5 text-right transition-all duration-300 hover:border-white/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black text-white/45 uppercase tracking-widest">⏰ تشغيل تلقائي</span>
-                        {isAlarmEnabled && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">مفعل</span>}
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex gap-1">
-                          <input
-                            type="time"
-                            value={alarmTime}
-                            onChange={(e) => {
-                              setAlarmTime(e.target.value);
-                              localStorage.setItem('quran_radio_alarm_time', e.target.value);
-                            }}
-                            className="w-16 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-[9px] text-white outline-none focus:border-primary/45 text-center font-mono"
-                          />
-                          <button
-                            onClick={() => {
-                              const nextVal = !isAlarmEnabled;
-                              setIsAlarmEnabled(nextVal);
-                              localStorage.setItem('quran_radio_alarm_enabled', String(nextVal));
-                              if (nextVal && currentRadioStation) {
-                                setAlarmStationId(currentRadioStation.id);
-                                localStorage.setItem('quran_radio_alarm_station', currentRadioStation.id);
-                              }
-                            }}
-                            className={cn(
-                              "flex-1 py-0.5 rounded-lg font-black text-[9px] transition-all",
-                              isAlarmEnabled ? "bg-rose-500/20 text-rose-400" : "bg-primary text-primary-foreground hover:bg-primary/95"
-                            )}
-                          >
-                            {isAlarmEnabled ? "إلغاء ✖" : "جدولة ⚡"}
-                          </button>
-                        </div>
-                        <p className="text-[8px] text-white/30 text-center leading-tight">
-                          {isAlarmEnabled ? `يعمل تلقائياً الساعة ${alarmTime}` : "جدول موعد لتشغيل الإذاعة"}
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
                 </div>
@@ -4635,6 +4532,117 @@ export default function QuranPage() {
 
                 {/* Sidebar (lg:col-span-1): Analytics & Ambient focus mixer */}
                 <div className="lg:col-span-1 space-y-6 flex flex-col">
+                  {/* Playback Tools Card (Sleep Timer & Alarm) */}
+                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-6 space-y-5 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <h4 className="text-xs font-black text-white flex items-center gap-2">
+                        <span>⏰ مؤقت النوم والتشغيل التلقائي</span>
+                      </h4>
+                      <span className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg">الأدوات</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Sleep Timer */}
+                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-white/45 uppercase tracking-widest">⏳ مؤقت النوم</span>
+                          {sleepTimerMinutes && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">نشط</span>}
+                        </div>
+
+                        {sleepTimerMinutes ? (
+                          <div className="flex flex-col items-center justify-center py-2">
+                            <span className="text-2xl font-black text-primary tracking-wider font-mono">
+                              {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
+                            </span>
+                            <button
+                              onClick={cancelSleepTimer}
+                              className="mt-2 text-[9px] font-bold text-rose-400 hover:text-rose-300 transition-colors"
+                            >
+                              إلغاء المؤقت ✖
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                placeholder="دقائق"
+                                value={customTimerMinutes}
+                                onChange={(e) => setCustomTimerMinutes(e.target.value)}
+                                className="w-16 bg-black/40 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-primary/45 text-center"
+                                min="1"
+                              />
+                              <button
+                                onClick={() => {
+                                  const mins = parseInt(customTimerMinutes);
+                                  if (mins > 0) {
+                                    startSleepTimer(mins);
+                                    setCustomTimerMinutes('');
+                                  }
+                                }}
+                                className="flex-1 py-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary"
+                              >
+                                تفعيل ⚡
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1">
+                              {[15, 30, 45, 60].map(mins => (
+                                <button
+                                  key={mins}
+                                  onClick={() => startSleepTimer(mins)}
+                                  className="py-1 rounded-lg bg-white/5 text-white/50 text-[10px] font-black hover:text-primary transition-all border border-white/5"
+                                >
+                                  {mins}د
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Scheduled Alarm */}
+                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-white/45 uppercase tracking-widest">🔔 تشغيل تلقائي</span>
+                          {isAlarmEnabled && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">مفعل</span>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="time"
+                              value={alarmTime}
+                              onChange={(e) => {
+                                setAlarmTime(e.target.value);
+                                localStorage.setItem('quran_radio_alarm_time', e.target.value);
+                              }}
+                              className="w-20 bg-black/40 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white outline-none focus:border-primary/45 text-center font-mono"
+                            />
+                            <button
+                              onClick={() => {
+                                const nextVal = !isAlarmEnabled;
+                                setIsAlarmEnabled(nextVal);
+                                localStorage.setItem('quran_radio_alarm_enabled', String(nextVal));
+                                if (nextVal && currentRadioStation) {
+                                  setAlarmStationId(currentRadioStation.id);
+                                  localStorage.setItem('quran_radio_alarm_station', currentRadioStation.id);
+                                }
+                              }}
+                              className={cn(
+                                "flex-1 py-1.5 rounded-xl font-black text-xs transition-all",
+                                isAlarmEnabled ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "bg-primary text-primary-foreground hover:bg-primary/95"
+                              )}
+                            >
+                              {isAlarmEnabled ? "إلغاء" : "جدولة"}
+                            </button>
+                          </div>
+                          <p className="text-[9px] text-white/30 text-center leading-tight">
+                            {isAlarmEnabled ? `يعمل تلقائياً الساعة ${alarmTime}` : "جدول موعد لتشغيل الإذاعة تلقائياً"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   {/* Listening Analytics Dashboard Card */}
                   <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-8 space-y-6 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
                     <div className="flex items-center justify-between pb-4 border-b border-white/5">
