@@ -96,11 +96,27 @@ export default function QuranPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const { state, updateState } = useSync();
   const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'radio'>(() => {
-    if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-      return 'radio';
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryView = params.get('view');
+      if (queryView === 'radio') return 'radio';
+      if (queryView === 'plan') return 'plan';
+      if (queryView === 'luminous') return 'luminous';
+      if (queryView === 'full') return 'full';
     }
     return 'full';
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryView = params.get('view');
+      if (queryView === 'radio') setView('radio');
+      else if (queryView === 'plan') setView('plan');
+      else if (queryView === 'luminous') setView('luminous');
+      else if (queryView === 'full') setView('full');
+    }
+  }, []);
 
   // ── Quran Radio Hook Integration ──
   const {

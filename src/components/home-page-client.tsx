@@ -592,6 +592,17 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto" dir="rtl">
           {[
             { 
+                name: "إذاعة القرآن والبودكاست", 
+                desc: "البث المباشر لإذاعة القرآن والدروس وسجل استماعك الخاص",
+                icon: Headphones, 
+                color: "text-emerald-400 group-hover:text-emerald-300", 
+                bg: "from-emerald-500/10 to-transparent", 
+                border: "border-emerald-500/10 hover:border-emerald-500/30",
+                glow: "rgba(16, 185, 129, 0.15)",
+                href: "/quran?view=radio",
+                span: "col-span-1"
+            },
+            { 
                 name: "العقيدة", 
                 desc: "أصول الدين والتوحيد وثوابت الإيمان",
                 icon: ShieldCheck, 
