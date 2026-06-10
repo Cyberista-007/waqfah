@@ -95,7 +95,12 @@ const formatArabicDate = (dateStr: string) => {
 export default function QuranPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const { state, updateState } = useSync();
-  const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'radio'>('full');
+  const [view, setView] = useState<'full' | 'plan' | 'luminous' | 'radio'>(() => {
+    if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+      return 'radio';
+    }
+    return 'full';
+  });
 
   // ── Quran Radio Hook Integration ──
   const {

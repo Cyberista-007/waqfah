@@ -25,10 +25,6 @@ const FloatingAudioPlayer = dynamic(
   { ssr: false }
 );
 
-const FloatingRadioPlayer = dynamic(
-  () => import('@/components/floating-radio-player').then(mod => mod.FloatingRadioPlayer),
-  { ssr: false }
-);
 
 
 
@@ -89,7 +85,6 @@ export function AppProviders({
                                 {children}
                                 <FloatingAudioPlayer />
                                 <FloatingVideoPlayer />
-                                <FloatingRadioPlayer />
                             </MoodProvider>
                         </SearchProvider>
                     </AudioPlayerProvider>
