@@ -8,10 +8,11 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export function FloatingRadioPlayer() {
-  const { currentStation, isPlaying, isBuffering, volume, setVolume, togglePlay, stopRadio, activeYoutubeId } = useRadio();
+  const { currentStation, isPlaying, isBuffering, volume, setVolume, togglePlay, stopRadio, activeYoutubeId, playbackRate, setPlaybackRate } = useRadio();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const prevVolume = useRef(volume);
+  const [startSecond, setStartSecond] = useState(0);
 
   const [origin, setOrigin] = useState('');
   useEffect(() => {
@@ -19,6 +20,14 @@ export function FloatingRadioPlayer() {
       setOrigin(window.location.origin);
     }
   }, []);
+
+  // Update startSecond when currentStation changes
+  useEffect(() => {
+    if (currentStation) {
+      const saved = localStorage.getItem(`radio_progress_${currentStation.id}`);
+      setStartSecond(saved ? parseInt(saved, 10) : 0);
+    }
+  }, [currentStation?.id]);
 
   // Don't show if no station selected
   if (!currentStation) return null;
@@ -40,7 +49,7 @@ export function FloatingRadioPlayer() {
       {activeYoutubeId && origin && (
         <iframe
           id="global-youtube-radio"
-          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&origin=${encodeURIComponent(origin)}`}
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${startSecond}&origin=${encodeURIComponent(origin)}`}
           className="hidden"
           allow="autoplay"
           title="radio-audio"
@@ -195,6 +204,27 @@ export function FloatingRadioPlayer() {
                         }}
                         className="w-full h-1 accent-emerald-400 cursor-pointer"
                       />
+                    </div>
+
+                    {/* Speed Control */}
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2" dir="rtl">
+                      <span className="text-[10px] text-white/40 font-bold">سرعة التشغيل</span>
+                      <div className="flex items-center gap-1">
+                        {[1.0, 1.25, 1.5, 2.0].map((rate) => (
+                          <button
+                            key={rate}
+                            onClick={() => setPlaybackRate(rate)}
+                            className={cn(
+                              "px-2 py-0.5 rounded text-[9px] font-black transition-all border",
+                              playbackRate === rate
+                                ? "bg-primary border-primary text-primary-foreground shadow-glow-primary/5"
+                                : "bg-white/[0.02] border-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                            )}
+                          >
+                            {rate === 1.0 ? 'طبيعي' : `${rate}x`}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Live indicator */}
