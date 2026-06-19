@@ -559,6 +559,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     <button
                         key={idx}
                         onClick={() => setActiveBannerIndex(idx)}
+                        aria-label={`الذهاب إلى الشريحة ${idx + 1}`}
                         className={cn(
                             "h-1 rounded-full transition-all duration-700",
                             idx === activeBannerIndex ? "w-10 bg-primary" : "w-2.5 bg-white/20 hover:bg-white/40"

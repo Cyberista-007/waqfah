@@ -50,6 +50,7 @@ service cloud.firestore {
     match /destructive_sins/{id} { allow read: if true; allow write: if isAdmin(); }
     match /gamification_badges/{id} { allow read: if true; allow write: if isAdmin(); }
     match /series/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /presence/{sessionId} { allow read, write: if true; }
 
     // Palestine solidarity pledges — written ONLY by server-side Admin SDK.
     match /palestine_pledges/{fingerprintId} {
