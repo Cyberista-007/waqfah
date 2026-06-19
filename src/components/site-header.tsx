@@ -258,6 +258,7 @@ export function SiteHeader() {
                           <SheetClose asChild key={item.href}>
                             <Link 
                               href={item.href} 
+                              prefetch={false}
                               className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-300 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all font-black text-sm group"
                             >
                               <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />
@@ -278,6 +279,7 @@ export function SiteHeader() {
                           <SheetClose asChild key={item.href}>
                             <Link 
                               href={item.href} 
+                              prefetch={false}
                               className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-400 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all text-xs font-bold group"
                             >
                               {item.icon && <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />}
@@ -320,7 +322,7 @@ export function SiteHeader() {
                       "relative text-foreground/70 hover:text-primary font-bold shrink-0 flex items-center gap-2 rounded-2xl transition-all hover:scale-105 active:scale-95 group px-4 py-6",
                       isActive && "text-primary"
                     )}>
-                      <Link href={item.href}>
+                      <Link href={item.href} prefetch={false}>
                         <item.icon className={cn("h-4 w-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6", isActive ? "opacity-100 text-primary scale-110" : "opacity-40 group-hover:opacity-100")} />
                         <span className="relative z-10">{item.label}</span>
                         {(item as any).isLive && (
@@ -362,6 +364,7 @@ export function SiteHeader() {
                           <Link
                             key={item.label}
                             href={item.href}
+                            prefetch={false}
                             className="flex justify-between w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group"
                           >
                             <div className="flex items-center gap-3">
@@ -436,7 +439,7 @@ export function SiteHeader() {
 
             <Magnetic strength={0.1}>
               <Button asChild variant="outline" className="hidden md:flex border-primary/40 text-primary hover:bg-primary/10 btn-magnetic rounded-full relative overflow-hidden group/donate shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
-                <Link href="/donations">
+                <Link href="/donations" prefetch={false}>
                   <Heart className="me-2 h-4 w-4 fill-primary/20 group-hover/donate:fill-primary transition-all group-hover/donate:scale-110" />
                   <span className="relative z-10 font-black">ادعمنا</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 translate-x-[-100%] group-hover/donate:translate-x-[100%] transition-transform duration-1000" />
@@ -460,14 +463,14 @@ export function SiteHeader() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background border-border">
                       <DropdownMenuItem asChild>
-                        <Link href="/profile"><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
+                        <Link href="/profile" prefetch={false}><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/settings"><Settings className="me-2 h-4 w-4" />الإعدادات</Link>
+                        <Link href="/settings" prefetch={false}><Settings className="me-2 h-4 w-4" />الإعدادات</Link>
                       </DropdownMenuItem>
                       {isAdmin && (
                         <DropdownMenuItem asChild>
-                          <Link href="/admin/dashboard"><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                          <Link href="/admin/dashboard" prefetch={false}><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
@@ -479,7 +482,7 @@ export function SiteHeader() {
                   </DropdownMenu>
                 ) : (
                   <Button asChild className="btn-magnetic animate-pulse-subtle bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
-                    <Link href="/auth/login">
+                    <Link href="/auth/login" prefetch={false}>
                       <span className="relative z-10 font-bold">تسجيل الدخول</span>
                     </Link>
                   </Button>
@@ -502,7 +505,7 @@ export function SiteHeader() {
             const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
             const href = ((item.href === '/profile' || item.href === '/settings') && !user) ? `/auth/login?redirect_to=${item.href}` : item.href;
             return (
-              <Link key={item.label} href={href} className="relative flex flex-col items-center justify-center w-full h-full group touch-none">
+              <Link key={item.label} href={href} prefetch={false} className="relative flex flex-col items-center justify-center w-full h-full group touch-none">
                 <div className={cn(
                     "flex flex-col items-center transition-all duration-300",
                     isActive ? "scale-110 -translate-y-1" : "scale-100 opacity-60"

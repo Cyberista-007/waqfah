@@ -732,6 +732,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
           >
             <Link
               href="/quran"
+              prefetch={false}
               className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.05)] hover:bg-white/[0.03]"
             >
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
@@ -1484,13 +1485,13 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               </div>
               <div className="flex flex-col sm:flex-row gap-5 shrink-0 mx-auto lg:mx-0 min-w-max">
                 <Button asChild size="lg" className="h-16 px-10 rounded-2xl text-lg font-black shadow-2xl btn-magnetic animate-pulse-subtle bg-primary text-primary-foreground hover:bg-primary cursor-pointer w-full sm:w-auto">
-                  <Link href="/donations" className="flex items-center gap-3">
+                  <Link href="/donations" prefetch={false} className="flex items-center gap-3">
                     <Heart className="w-6 h-6 fill-current" />
                     ادعم المشروع الآن
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-16 px-10 rounded-2xl text-lg font-bold border-primary/40 text-foreground hover:bg-primary/10 hover:border-primary/60 btn-magnetic cursor-pointer w-full sm:w-auto backdrop-blur-sm">
-                  <Link href="/contact" className="flex items-center gap-2">
+                  <Link href="/contact" prefetch={false} className="flex items-center gap-2">
                     <ShieldCheck className="w-6 h-6 text-primary" />
                     تطوع معنا
                   </Link>
