@@ -180,6 +180,7 @@ export default function QuranPage() {
     listeningMinutes,
     canvasRef,
     radioAudioRef,
+    analyserNodeRef,
     currentTime,
     duration,
     seekTo,
@@ -4887,6 +4888,7 @@ export default function QuranPage() {
         isAmbientScreenSaver={isAmbientScreenSaver}
         setIsAmbientScreenSaver={setIsAmbientScreenSaver}
         canvasRef={canvasRef}
+        analyserNodeRef={analyserNodeRef}
         isPlayingRadio={isPlayingRadio}
         currentRadioStation={currentRadioStation}
         visualizerStyle={visualizerStyle}

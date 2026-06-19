@@ -616,6 +616,7 @@ export function useQuranRadio() {
     listeningMinutes,
     canvasRef,
     radioAudioRef,
+    analyserNodeRef,
     currentTime,
     duration,
     seekTo,

@@ -196,11 +196,15 @@ const renderFeatureMockup = (id: string) => {
 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { PinnedItems } from '@/app/pinned-items';
-import { ShortsCarousel } from '@/components/ShortsCarousel';
-import { FeaturedStrips } from '@/components/featured-strips';
+import dynamic from 'next/dynamic';
 import { useAppearance } from '@/components/appearance-provider';
 import { useUser, useCollection } from '@/firebase';
+
+// Dynamically imported — not needed for initial render
+const PinnedItems = dynamic(() => import('@/app/pinned-items').then(m => m.PinnedItems), { ssr: false, loading: () => null });
+const ShortsCarousel = dynamic(() => import('@/components/ShortsCarousel').then(m => m.ShortsCarousel), { ssr: false, loading: () => null });
+const FeaturedStrips = dynamic(() => import('@/components/featured-strips').then(m => m.FeaturedStrips), { ssr: false, loading: () => null });
+
 import {
   Accordion,
   AccordionContent,
@@ -589,219 +593,99 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
 
       {/* Premium Quick Access Categories */}
       <section id="categories" className="container px-4 mt-20 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto" dir="rtl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 lg:gap-6 max-w-6xl mx-auto" dir="rtl">
           {[
-            { 
-                name: "إذاعة القرآن والبودكاست", 
-                desc: "البث المباشر لإذاعة القرآن والدروس وسجل استماعك الخاص",
-                icon: Headphones, 
-                color: "text-emerald-400 group-hover:text-emerald-300", 
-                bg: "from-emerald-500/10 to-transparent", 
-                border: "border-emerald-500/10 hover:border-emerald-500/30",
-                glow: "rgba(16, 185, 129, 0.15)",
-                href: "/quran?view=radio",
-                span: "col-span-1"
-            },
-            { 
-                name: "العقيدة", 
-                desc: "أصول الدين والتوحيد وثوابت الإيمان",
-                icon: ShieldCheck, 
-                color: "text-blue-400 group-hover:text-blue-300", 
-                bg: "from-blue-500/10 to-transparent", 
-                border: "border-blue-500/10 hover:border-blue-500/30",
-                glow: "rgba(59, 130, 246, 0.15)",
-                href: "/aqeedah",
-                span: "col-span-1"
-            },
-            { 
-                name: "الفقه", 
-                desc: "الأحكام والعبادات والعمليات الفقهية",
-                icon: Layers, 
-                color: "text-emerald-400 group-hover:text-emerald-300", 
-                bg: "from-emerald-500/10 to-transparent", 
-                border: "border-emerald-500/10 hover:border-emerald-500/30",
-                glow: "rgba(16, 185, 129, 0.15)",
-                href: "/search?category=الفقه",
-                span: "col-span-1"
-            },
-            { 
-                name: "الحديث", 
-                desc: "دراسات ومصنفات السنة النبوية",
-                icon: BookOpen, 
-                color: "text-amber-400 group-hover:text-amber-300", 
-                bg: "from-amber-500/10 to-transparent", 
-                border: "border-amber-500/10 hover:border-amber-500/30",
-                glow: "rgba(245, 158, 11, 0.15)",
-                href: "/hadith",
-                span: "col-span-1"
-            },
-            { 
-                name: "التفسير", 
-                desc: "تدبر الآيات ومعاني القرآن الكريم",
-                icon: Sparkles, 
-                color: "text-purple-400 group-hover:text-purple-300", 
-                bg: "from-purple-500/10 to-transparent", 
-                border: "border-purple-500/10 hover:border-purple-500/30",
-                glow: "rgba(168, 85, 247, 0.15)",
-                href: "/search?category=التفسير",
-                span: "col-span-1"
-            },
-            { 
-                name: "السيرة", 
-                desc: "حياة الحبيب المصطفى ﷺ العطرة",
-                icon: BookOpen, 
-                color: "text-rose-400 group-hover:text-rose-300", 
-                bg: "from-rose-500/10 to-transparent", 
-                border: "border-rose-500/10 hover:border-rose-500/30",
-                glow: "rgba(244, 63, 94, 0.15)",
-                href: "/seerah",
-                span: "col-span-1"
-            },
-            { 
-                name: "الصلاة والخشوع", 
-                desc: "مكتبة وسجل إيماني متكامل لصلاتك",
-                icon: Sparkles, 
-                color: "text-teal-400 group-hover:text-teal-300", 
-                bg: "from-teal-500/10 to-transparent", 
-                border: "border-teal-500/10 hover:border-teal-500/30",
-                glow: "rgba(20, 184, 166, 0.15)",
-                href: "/prayer",
-                span: "col-span-1"
-            },
-            { 
-                name: "القصص", 
-                desc: "قصص الأنبياء وعبر وتاريخ الأمم",
-                icon: Sparkles, 
-                color: "text-indigo-400 group-hover:text-indigo-300", 
-                bg: "from-indigo-500/10 to-transparent", 
-                border: "border-indigo-500/10 hover:border-indigo-500/30",
-                glow: "rgba(99, 102, 241, 0.15)",
-                href: "/stories",
-                span: "col-span-1"
-            },
-            { 
-                name: "الأذكار", 
-                desc: "ورد اليوم والليلة وحصن المسلم المسموع",
-                icon: Headphones, 
-                color: "text-cyan-400 group-hover:text-cyan-300", 
-                bg: "from-cyan-500/10 to-transparent", 
-                border: "border-cyan-500/10 hover:border-cyan-500/30",
-                glow: "rgba(6, 182, 212, 0.15)",
-                href: "/adhkar",
-                span: "col-span-1"
-            },
-            { 
-                name: "الشبهات", 
-                desc: "الردود المنهجية وتحصين العقل المسلم",
-                icon: Shield, 
-                color: "text-indigo-500 group-hover:text-indigo-400", 
-                bg: "from-indigo-600/10 to-transparent", 
-                border: "border-indigo-600/10 hover:border-indigo-600/30",
-                glow: "rgba(79, 70, 229, 0.15)",
-                href: "/shubuhat",
-                span: "col-span-1"
-            },
-            { 
-                name: "الكتب والمؤلفات", 
-                desc: "المكتبة العلمية الرقمية للمتون والمؤلفات المشروحة",
-                icon: Library, 
-                color: "text-amber-500", 
-                bg: "from-amber-600/10 to-transparent", 
-                border: "border-amber-600/10 hover:border-amber-600/30",
-                glow: "rgba(217, 119, 6, 0.2)",
-                href: "/books",
-                image: "/images/book_card_cover.png",
-                span: "col-span-2"
-            },
-            { 
-                name: "ما لا يسع المسلم جهله", 
-                desc: "العلوم والأساسيات العينية المفروضة والتأصيل الشرعي للمبتدئين",
-                icon: BookOpenCheck, 
-                color: "text-emerald-500", 
-                bg: "from-emerald-600/10 to-transparent", 
-                border: "border-emerald-600/10 hover:border-emerald-600/30",
-                glow: "rgba(5, 150, 105, 0.2)",
-                href: "/essential-knowledge",
-                image: "/images/essential_knowledge_cover.png",
-                span: "col-span-2"
-            }
+            { name: "إذاعة القرآن والبودكاست", desc: "البث المباشر لإذاعة القرآن والدروس وسجل استماعك الخاص", icon: Headphones, accent: "#10b981", href: "/quran?view=radio", span: "col-span-1" },
+            { name: "العقيدة", desc: "أصول الدين والتوحيد وثوابت الإيمان", icon: ShieldCheck, accent: "#3b82f6", href: "/aqeedah", span: "col-span-1" },
+            { name: "الفقه", desc: "الأحكام والعبادات والعمليات الفقهية", icon: Layers, accent: "#14b8a6", href: "/search?category=الفقه", span: "col-span-1" },
+            { name: "الحديث", desc: "دراسات ومصنفات السنة النبوية", icon: BookOpen, accent: "#f59e0b", href: "/hadith", span: "col-span-1" },
+            { name: "التفسير", desc: "تدبر الآيات ومعاني القرآن الكريم", icon: Sparkles, accent: "#a855f7", href: "/search?category=التفسير", span: "col-span-1" },
+            { name: "السيرة", desc: "حياة الحبيب المصطفى ﷺ العطرة", icon: BookOpen, accent: "#f43f5e", href: "/seerah", span: "col-span-1" },
+            { name: "الصلاة والخشوع", desc: "مكتبة وسجل إيماني متكامل لصلاتك", icon: Sparkles, accent: "#06b6d4", href: "/prayer", span: "col-span-1" },
+            { name: "القصص", desc: "قصص الأنبياء وعبر وتاريخ الأمم", icon: Sparkles, accent: "#6366f1", href: "/stories", span: "col-span-1" },
+            { name: "الأذكار", desc: "ورد اليوم والليلة وحصن المسلم المسموع", icon: Headphones, accent: "#22d3ee", href: "/adhkar", span: "col-span-1" },
+            { name: "الشبهات", desc: "الردود المنهجية وتحصين العقل المسلم", icon: Shield, accent: "#818cf8", href: "/shubuhat", span: "col-span-1" },
+            { name: "الكتب والمؤلفات", desc: "المكتبة العلمية الرقمية للمتون والمؤلفات المشروحة", icon: Library, accent: "#f59e0b", href: "/books", image: "/images/book_card_cover.png", span: "col-span-2" },
+            { name: "ما لا يسع المسلم جهله", desc: "العلوم والأساسيات العينية المفروضة والتأصيل الشرعي للمبتدئين", icon: BookOpenCheck, accent: "#10b981", href: "/essential-knowledge", image: "/images/essential_knowledge_cover.png", span: "col-span-2" }
           ].map((cat, i) => (
-            <div
+            <motion.div
                 key={i}
-                className={cn(cat.span, "transition-all duration-300")}
+                className={cn(cat.span, "h-full")}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: (i % 4) * 0.07 }}
             >
-                <Link
-                href={cat.href}
-                className={cn(
-                    "relative flex flex-col items-start justify-between p-8 md:p-10 rounded-[2.25rem] border backdrop-blur-2xl transition-all duration-700 ease-out group overflow-hidden h-full",
-                    "bg-white/[0.02] border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)]",
-                    "hover:-translate-y-2 hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]"
-                )}
-                style={{
-                    boxShadow: `0 30px 100px -20px rgba(0,0,0,0.8)`
-                }}
-                >
-                {/* Glowing Aura Effect */}
-                <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-radial-gradient pointer-events-none z-0"
-                    style={{
-                        background: `radial-gradient(circle 180px at 50% 20%, ${cat.glow}, transparent)`
-                    }}
-                />
-
-                {/* Card Background Cover Image for special cards */}
-                {cat.image && (
-                    <div className="absolute inset-0 z-0 opacity-15 group-hover:opacity-30 transition-opacity duration-1000 scale-105 group-hover:scale-100 transition-transform">
-                        <Image 
-                            src={cat.image} 
-                            alt={cat.name} 
-                            fill 
-                            className="object-cover"
+                <Link href={cat.href} className="block h-full group">
+                    <div
+                        className="relative flex flex-col items-start justify-between p-7 md:p-8 rounded-[1.75rem] border transition-all duration-300 overflow-hidden h-full hover:-translate-y-1.5"
+                        style={{
+                            background: 'rgba(18, 18, 28, 0.75)',
+                            borderColor: 'rgba(255,255,255,0.07)',
+                            boxShadow: '0 2px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                            backdropFilter: 'blur(24px)',
+                        }}
+                    >
+                        {/* Corner glow bloom on hover */}
+                        <div
+                            className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-[50px] opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
+                            style={{ backgroundColor: cat.accent }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
-                    </div>
-                )}
-
-                <div className="relative z-10 w-full flex flex-col justify-between h-full space-y-6">
-                    {/* Top Section: Icon or Image Thumbnail */}
-                    <div className="flex items-center justify-between w-full">
-                        <div className={cn(
-                            "p-5 rounded-2xl bg-white/5 border border-white/10 transition-all duration-700 group-hover:scale-110 group-hover:rotate-3 shadow-inner relative flex items-center justify-center",
-                            cat.color,
-                            cat.image && "aspect-square w-16 p-0 overflow-hidden bg-black/60 border-white/25 shadow-2xl rounded-2xl"
-                        )}>
-                            {cat.image ? (
-                                <div className="relative w-full h-full">
-                                    <Image 
-                                        src={cat.image} 
-                                        alt={cat.name} 
-                                        fill 
-                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
+                        {/* Bottom accent line on hover */}
+                        <div
+                            className="absolute bottom-0 inset-x-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                            style={{ background: `linear-gradient(90deg, transparent, ${cat.accent}55, transparent)` }}
+                        />
+                        {/* Cover image for special cards */}
+                        {cat.image && (
+                            <div className="absolute inset-0 z-0 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-500">
+                                <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
+                            </div>
+                        )}
+                        <div className="relative z-10 flex flex-col justify-between h-full w-full gap-5">
+                            {/* Icon + arrow */}
+                            <div className="flex items-center justify-between">
+                                <div
+                                    className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0"
+                                    style={{
+                                        backgroundColor: `${cat.accent}18`,
+                                        border: `1px solid ${cat.accent}28`,
+                                    }}
+                                >
+                                    {cat.image ? (
+                                        <div className="relative w-full h-full rounded-xl overflow-hidden">
+                                            <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                                        </div>
+                                    ) : (
+                                        <cat.icon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />
+                                    )}
                                 </div>
-                            ) : (
-                                <cat.icon size={26} strokeWidth={1.5} />
-                            )}
+                                <div
+                                    className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-300"
+                                    style={{ backgroundColor: `${cat.accent}15`, border: `1px solid ${cat.accent}25` }}
+                                >
+                                    <ArrowLeft size={12} style={{ color: cat.accent }} />
+                                </div>
+                            </div>
+                            {/* Text */}
+                            <div className="space-y-1.5">
+                                <h3 className="font-bold text-lg md:text-xl text-white leading-snug">
+                                    {cat.name}
+                                </h3>
+                                <p className="text-xs md:text-[13px] text-white/35 leading-relaxed group-hover:text-white/55 transition-colors duration-300">
+                                    {cat.desc}
+                                </p>
+                            </div>
                         </div>
-
-                        {/* Subtle interactive golden tag/chevron */}
-                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
-                            <ArrowLeft size={14} className="text-white/60 group-hover:text-white" />
-                        </div>
+                        {/* Hover inset border */}
+                        <div
+                            className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                            style={{ boxShadow: `inset 0 0 0 1px ${cat.accent}35` }}
+                        />
                     </div>
-
-                    {/* Bottom Section: Title and Subtitle */}
-                    <div className="space-y-2 relative z-10">
-                        <h3 className="font-black text-xl md:text-2xl text-white tracking-wide transition-colors group-hover:text-white leading-tight">
-                            {cat.name}
-                        </h3>
-                        <p className="text-xs md:text-sm text-zinc-400 font-medium leading-relaxed max-w-[280px] md:max-w-[320px] transition-colors group-hover:text-zinc-300">
-                            {cat.desc}
-                        </p>
-                    </div>
-                </div>
                 </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

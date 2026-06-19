@@ -203,6 +203,7 @@ export function SiteHeader() {
               onClick={() => setIsHeaderHidden(false)}
               className="h-6 w-16 bg-background/40 backdrop-blur-3xl border border-white/10 rounded-b-full hover:bg-primary/20 hover:h-8 transition-all group shadow-2xl"
               title="إظهار الشريط العلوي"
+              aria-label="إظهار الشريط العلوي"
             >
               <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary animate-bounce-subtle" />
             </Button>
@@ -232,6 +233,7 @@ export function SiteHeader() {
                 variant="ghost" 
                 size="icon" 
                 className="group relative bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 text-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center me-3 shrink-0 shadow-inner"
+                aria-label="فتح القائمة الجانبية للتنقل"
               >
                 <Menu className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90" />
                 <span className="absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 -z-10" />
@@ -414,6 +416,7 @@ export function SiteHeader() {
               onClick={() => setIsHeaderHidden(true)}
               className="hidden md:flex p-2 rounded-full text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
               title="إخفاء الشريط العلوي"
+              aria-label="إخفاء الشريط العلوي"
             >
               <ChevronDown className="h-5 w-5 rotate-180" />
             </button>
@@ -425,6 +428,7 @@ export function SiteHeader() {
             <button
                 onClick={() => setIsLanguageSwitcherOpen(true)}
                 className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
+                aria-label="تغيير لغة الموقع"
             >
                 <span className="text-[10px] font-black group-hover:scale-110 transition-transform z-10">{activeLanguageName}</span>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

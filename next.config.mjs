@@ -48,6 +48,8 @@ const nextConfig = {
   output: exportStatic ? 'export' : undefined,
   trailingSlash: true,
   assetPrefix: exportStatic ? './' : undefined,
+  compress: true,
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -83,13 +85,15 @@ const nextConfig = {
         hostname: 'quran.islam-db.com',
       }
     ],
+    formats: exportStatic ? undefined : ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     unoptimized: exportStatic,
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons'],
   },
   typescript: {
     ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
   },
 };
 
