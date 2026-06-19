@@ -1454,10 +1454,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               </form>
               <div className="mt-8 flex flex-wrap gap-4 items-center justify-center md:justify-start">
                 <p className="text-sm text-muted-foreground font-bold">أو عبر المنصات الاجتماعية:</p>
-                <Link href="#" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                <Link href="#" aria-label="رابط قناة الواتساب" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(14,165,233,0.3)]">
                   <MessageCircle className="w-5 h-5 text-sky-500 group-hover/icon:scale-110 transition-transform" />
                 </Link>
-                <Link href="#" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-blue-600/10 hover:border-blue-600/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                <Link href="#" aria-label="رابط قناة التليجرام" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-blue-600/10 hover:border-blue-600/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">
                   <Send className="w-5 h-5 text-blue-600 group-hover/icon:scale-110 transition-transform" />
                 </Link>
               </div>

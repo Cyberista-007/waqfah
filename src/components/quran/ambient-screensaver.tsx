@@ -114,7 +114,7 @@ export function AmbientScreenSaver({
         const analyser = analyserNodeRef.current;
         bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteFrequencyData(dataArray as any);
 
         let sum = 0;
         let count = 0;

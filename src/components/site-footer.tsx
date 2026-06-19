@@ -38,15 +38,16 @@ export function SiteFooter() {
  
             <div className="flex gap-4">
               {[
-                { icon: Youtube, color: "hover:bg-red-500/20 hover:text-red-500" },
-                { icon: Twitter, color: "hover:bg-blue-500/20 hover:text-blue-500" },
-                { icon: Facebook, color: "hover:bg-indigo-500/20 hover:text-indigo-500" },
-                { icon: MessageCircle, color: "hover:bg-green-500/20 hover:text-green-500" },
-                { icon: Send, color: "hover:bg-sky-500/20 hover:text-sky-500" }
+                { icon: Youtube, label: "قناة اليوتيوب", color: "hover:bg-red-500/20 hover:text-red-500" },
+                { icon: Twitter, label: "حساب تويتر", color: "hover:bg-blue-500/20 hover:text-blue-500" },
+                { icon: Facebook, label: "صفحة الفيسبوك", color: "hover:bg-indigo-500/20 hover:text-indigo-500" },
+                { icon: MessageCircle, label: "رابط الواتساب", color: "hover:bg-green-500/20 hover:text-green-500" },
+                { icon: Send, label: "قناة التليجرام", color: "hover:bg-sky-500/20 hover:text-sky-500" }
               ].map((social, i) => (
                 <motion.a
                   key={i}
                   href="#"
+                  aria-label={social.label}
                   whileHover={{ y: -5, scale: 1.1 }}
                   className={`w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 ${social.color}`}
                 >
