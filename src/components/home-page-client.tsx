@@ -831,7 +831,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 </div>
                 <div>
                   <h3 className={cn('font-black text-xl mb-2', item.color)}>{item.label}</h3>
-                  <p className="text-white/40 text-sm leading-relaxed font-medium">{item.sub}</p>
+                  <p className="text-white/60 text-sm leading-relaxed font-medium">{item.sub}</p>
                 </div>
                 <ArrowLeft className={cn('w-5 h-5 absolute bottom-8 left-8 opacity-20 group-hover:opacity-100 transition-all group-hover:-translate-x-2', item.color)} />
               </Link>
@@ -844,7 +844,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       <section className="container px-4 py-16">
         <div className="mb-10 flex items-center gap-4">
             <div className="h-px flex-1 bg-white/5" />
-            <h2 className="text-xl font-black uppercase tracking-[0.4em] text-white/20 whitespace-nowrap">أقسام إضافية</h2>
+            <h2 className="text-xl font-black uppercase tracking-[0.4em] text-white/60 whitespace-nowrap">أقسام إضافية</h2>
             <div className="h-px flex-1 bg-white/5" />
         </div>
         
@@ -895,7 +895,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                         <div className={cn("p-4 rounded-2xl bg-white/5 mb-3 group-hover:scale-110 transition-transform", section.color)}>
                             <section.icon size={24} />
                         </div>
-                        <span className="text-xs font-black text-white/50 group-hover:text-white transition-colors text-center">{section.label}</span>
+                        <span className="text-xs font-black text-white/70 group-hover:text-white transition-colors text-center">{section.label}</span>
                     </Link>
                 </motion.div>
             ))}
@@ -912,13 +912,13 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -z-10" />
         
         <div className="text-center mb-24 space-y-6">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-[0.4em]">
             <Sparkles className="w-3.5 h-3.5" /> مسارات متكاملة
           </div>
           <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white drop-shadow-2xl">
             خارطة طريقٍ <span className="text-primary">ممنهجة</span>
           </h2>
-          <p className="text-xl text-white/30 max-w-2xl mx-auto font-medium leading-relaxed italic text-center">
+          <p className="text-xl text-white/60 max-w-2xl mx-auto font-medium leading-relaxed italic text-center">
             "من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً"
           </p>
         </div>
@@ -1150,7 +1150,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter leading-[0.95] text-white">
                   عِلمٌ راسخٌ.. <br /> <span className="text-primary italic">مَعك أينما كنت!</span>
                 </h2>
-                <p className="text-xl text-white/40 leading-relaxed max-w-xl font-medium">
+                <p className="text-xl text-white/70 leading-relaxed max-w-xl font-medium">
                   حوّل "وقفة" إلى تطبيق متكامل على هاتفك بضغطة زر واحدة. استمتع بمميزات الاستماع دون اتصال والتحميل المباشر لتواكب رحلتك العلمية في كل الظروف.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
@@ -1166,7 +1166,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                       </div>
                       <div>
                         <h4 className="font-black text-white text-base mb-1">{item.t}</h4>
-                        <p className="text-white/30 text-xs leading-relaxed">{item.d}</p>
+                        <p className="text-white/60 text-xs leading-relaxed">{item.d}</p>
                       </div>
                     </div>
                   ))}

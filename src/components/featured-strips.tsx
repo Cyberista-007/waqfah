@@ -130,7 +130,7 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
           {lecture.title}
         </h4>
         {lecture.programName && (
-          <p className="text-[11px] text-muted-foreground font-medium opacity-70 flex items-center gap-1">
+          <p className="text-[11px] text-white/70 font-medium flex items-center gap-1">
             <Headphones className="w-3 h-3" />
             {lecture.programName}
           </p>
@@ -180,7 +180,7 @@ function SingleStrip({ strip }: { strip: FeaturedStrip }) {
                 {strip.title}
               </h3>
               {strip.subtitle && (
-                <p className="text-xs text-muted-foreground font-medium opacity-70 mt-0.5">
+                <p className="text-xs text-white/60 font-medium mt-0.5">
                   {strip.subtitle}
                 </p>
               )}
@@ -210,7 +210,7 @@ function SingleStrip({ strip }: { strip: FeaturedStrip }) {
               asChild
               variant="ghost"
               size="sm"
-              className="text-xs font-bold text-muted-foreground hover:text-primary rounded-xl gap-1.5"
+              className="text-xs font-bold text-white/60 hover:text-primary rounded-xl gap-1.5"
             >
               <Link href={strip.viewAllHref}>
                 <span>عرض الكل</span>

@@ -212,7 +212,7 @@ export function SpiritualPrescription() {
           <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">
             كيف تجد <span className="text-rose-400">قلبك</span> اليوم؟
           </h2>
-          <p className="text-white/40 text-base md:text-lg font-medium max-w-2xl mx-auto">
+          <p className="text-white/70 text-base md:text-lg font-medium max-w-2xl mx-auto">
             اختر حالتك النفسية وسيقوم المعمل الإيماني بتركيب وصفة علاجية مخصصة لروحك من آيات الذكر الحكيم وأوراد النبوة.
           </p>
         </div>
@@ -269,10 +269,10 @@ export function SpiritualPrescription() {
                       
                       {/* Center: Mood Labels */}
                       <div className="flex flex-col text-right flex-grow">
-                        <span className="text-white/90 group-hover:text-white transition-colors font-bold text-base md:text-lg leading-tight">
+                        <span className="text-white/95 group-hover:text-white transition-colors font-bold text-base md:text-lg leading-tight">
                           {mood.label}
                         </span>
-                        <span className="text-white/30 text-xs mt-1 font-medium transition-colors group-hover:text-white/60">
+                        <span className="text-white/60 text-xs mt-1 font-medium transition-colors group-hover:text-white/90">
                           {mood.desc}
                         </span>
                       </div>
@@ -419,7 +419,7 @@ export function SpiritualPrescription() {
                           <StepIcon className={cn("w-5 h-5 shrink-0", isActive ? "animate-pulse" : "")} style={{ color: isActive ? selectedMoodData?.hexColor : 'inherit' }} />
                           <span className={cn(
                             "font-bold text-sm md:text-base transition-colors",
-                            isActive ? "text-white" : isCompleted ? "text-white/60" : "text-white/20"
+                            isActive ? "text-white" : isCompleted ? "text-white/70" : "text-white/40"
                           )}>
                             {step.label}
                           </span>
@@ -477,7 +477,7 @@ export function SpiritualPrescription() {
                 <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
                    <button 
                     onClick={() => setSelectedMood(null)}
-                    className="flex items-center gap-2 text-white/40 hover:text-white transition-colors font-bold text-sm group"
+                    className="flex items-center gap-2 text-white/70 hover:text-white transition-colors font-bold text-sm group"
                    >
                      <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> 
                      <span>العودة للاختيار</span>
@@ -507,7 +507,7 @@ export function SpiritualPrescription() {
                         }}
                       />
 
-                      <p className="text-white/20 text-[11px] font-black uppercase tracking-[0.4em] mb-6">الدستور الرباني الشافي</p>
+                      <p className="text-white/60 text-[11px] font-black uppercase tracking-[0.4em] mb-6">الدستور الرباني الشافي</p>
                       
                       <h3 
                         className="font-amiri text-4xl md:text-5xl lg:text-6xl text-white leading-loose transition-all duration-700 text-glow-custom"
