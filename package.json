@@ -9,7 +9,7 @@
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "node --max-old-space-size=512 --optimize-for-size node_modules/eslint/bin/eslint.js src",
     "typecheck": "tsc --noEmit",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "electron:build": "node electron/build.js && electron-builder",

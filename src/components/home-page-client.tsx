@@ -617,7 +617,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: (i % 4) * 0.07 }}
             >
-                <Link href={cat.href} className="block h-full group">
+                <Link href={cat.href} aria-label={cat.name} className="block h-full group">
                     <div
                         className="relative flex flex-col items-start justify-between p-7 md:p-8 rounded-[1.75rem] border transition-all duration-300 overflow-hidden h-full hover:-translate-y-1.5"
                         style={{
@@ -671,9 +671,9 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                             </div>
                             {/* Text */}
                             <div className="space-y-1.5">
-                                <h3 className="font-bold text-lg md:text-xl text-white leading-snug">
+                                <h2 className="font-bold text-lg md:text-xl text-white leading-snug">
                                     {cat.name}
-                                </h3>
+                                </h2>
                                 <p className="text-xs md:text-[13px] text-white/35 leading-relaxed group-hover:text-white/55 transition-colors duration-300">
                                     {cat.desc}
                                 </p>
@@ -734,6 +734,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             <Link
               href="/quran"
               prefetch={false}
+              aria-label="تصفح المصحف الشامل وآيات التدبر"
               className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.05)] hover:bg-white/[0.03]"
             >
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
@@ -819,6 +820,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             >
               <Link
                 href={item.href}
+                aria-label={item.label}
                 className={cn(
                   'group relative h-full flex flex-col gap-4 p-8 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] hover:bg-white/[0.04]'
                 )}
@@ -827,7 +829,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                   <item.icon className={cn('w-7 h-7', item.color)} />
                 </div>
                 <div>
-                  <h4 className={cn('font-black text-xl mb-2', item.color)}>{item.label}</h4>
+                  <h3 className={cn('font-black text-xl mb-2', item.color)}>{item.label}</h3>
                   <p className="text-white/40 text-sm leading-relaxed font-medium">{item.sub}</p>
                 </div>
                 <ArrowLeft className={cn('w-5 h-5 absolute bottom-8 left-8 opacity-20 group-hover:opacity-100 transition-all group-hover:-translate-x-2', item.color)} />
@@ -886,6 +888,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 >
                     <Link
                         href={section.href}
+                        aria-label={section.label}
                         className="flex flex-col items-center justify-center p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.04)] hover:bg-white/[0.03] group h-full"
                     >
                         <div className={cn("p-4 rounded-2xl bg-white/5 mb-3 group-hover:scale-110 transition-transform", section.color)}>
@@ -1590,10 +1593,10 @@ function InspirationSlider() {
 
       {/* Manual Navigation Arrows */}
       <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-between px-4">
-        <Button variant="ghost" size="icon" onClick={prev} className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
+        <Button variant="ghost" size="icon" onClick={prev} aria-label="الاقتباس السابق" className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
           <ArrowLeft className="w-6 h-6 rotate-180" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={next} className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
+        <Button variant="ghost" size="icon" onClick={next} aria-label="الاقتباس التالي" className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
           <ArrowLeft className="w-6 h-6" />
         </Button>
       </div>
