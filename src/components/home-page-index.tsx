@@ -107,6 +107,7 @@ export function PageIndex() {
                     whileHover={{ scale: 1.1, x: -5 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => scrollTo(section.id)}
+                    aria-label={section.label}
                     className="relative flex items-center group/btn"
                   >
                     <div className={cn(
@@ -153,6 +154,7 @@ export function PageIndex() {
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                   className="p-2 text-white/10 hover:text-primary transition-colors"
                   title="العودة للأعلى"
+                  aria-label="العودة للأعلى"
               >
                   <ChevronLeft className="rotate-90 w-5 h-5" />
               </motion.button>
@@ -168,6 +170,7 @@ export function PageIndex() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-label={isMobileOpen ? "إغلاق قائمة الفهرس" : "فتح قائمة الفهرس"}
               className="w-16 h-16 rounded-full bg-primary text-white shadow-[0_15px_40px_rgba(var(--primary-rgb),0.3)] flex items-center justify-center border border-white/10 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
