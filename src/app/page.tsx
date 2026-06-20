@@ -22,6 +22,12 @@ function HomePageContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  const isLoading = (l1 || l2 || l3 || l4) && !forceFinish;
+
+  if (isLoading) {
+    return <CinematicAppLoader />;
+  }
+
   return (
     <HomePageClient 
         latestLectures={latestLectures || []}

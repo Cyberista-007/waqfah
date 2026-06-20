@@ -3,18 +3,20 @@
 'use client';
 
 import { HomeSearch } from '@/components/home-search';
-import { RecommendedLectures } from '@/components/recommended-lectures';
-import { ContinueWatching } from '@/components/continue-listening';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
-import { DownloaderModal } from './downloader-modal';
-import { SpiritualPrescription } from './spiritual-prescription';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
 import { Marquee } from './marquee';
-import { VerseOfTheDay } from './verse-of-the-day';
 import { Suspense, useState, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+const RecommendedLectures = dynamic(() => import('@/components/recommended-lectures').then(mod => mod.RecommendedLectures), { ssr: false });
+const ContinueWatching = dynamic(() => import('@/components/continue-listening').then(mod => mod.ContinueWatching), { ssr: false });
+const DownloaderModal = dynamic(() => import('./downloader-modal').then(mod => mod.DownloaderModal), { ssr: false });
+const SpiritualPrescription = dynamic(() => import('./spiritual-prescription').then(mod => mod.SpiritualPrescription), { ssr: false });
+const VerseOfTheDay = dynamic(() => import('./verse-of-the-day').then(mod => mod.VerseOfTheDay), { ssr: false });
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import type { Lecture, Series, Program, HomepageDetailedConfig, ScheduleItem, QAPair, Playlist, ListenHistoryItem, Inspiration, HeroBanner } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -196,7 +198,6 @@ const renderFeatureMockup = (id: string) => {
 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
 import { useAppearance } from '@/components/appearance-provider';
 import { useUser, useCollection } from '@/firebase';
 
