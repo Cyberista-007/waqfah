@@ -2,16 +2,16 @@
 
 'use client';
 
-import { HomeSearch } from '@/components/home-search';
 import { SeriesCard } from '@/components/series-card';
 import { LectureCard } from '@/components/lecture-card';
 import { ProgramCard } from '@/components/program-card';
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/images';
-import { Marquee } from './marquee';
 import { Suspense, useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
+const HomeSearch = dynamic(() => import('@/components/home-search').then(mod => mod.HomeSearch), { ssr: false });
+const Marquee = dynamic(() => import('./marquee').then(mod => mod.Marquee), { ssr: false });
 const RecommendedLectures = dynamic(() => import('@/components/recommended-lectures').then(mod => mod.RecommendedLectures), { ssr: false });
 const ContinueWatching = dynamic(() => import('@/components/continue-listening').then(mod => mod.ContinueWatching), { ssr: false });
 const DownloaderModal = dynamic(() => import('./downloader-modal').then(mod => mod.DownloaderModal), { ssr: false });
@@ -641,7 +641,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                         {/* Cover image for special cards */}
                         {cat.image && (
                             <div className="absolute inset-0 z-0 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-500">
-                                <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                                <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
                             </div>
                         )}
@@ -657,7 +657,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                                 >
                                     {cat.image ? (
                                         <div className="relative w-full h-full rounded-xl overflow-hidden">
-                                            <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                                            <Image src={cat.image} alt={cat.name} fill sizes="48px" className="object-cover" />
                                         </div>
                                     ) : (
                                         <cat.icon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />

@@ -418,7 +418,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                                                     )}
                                                                 >
                                                                     <div className="relative w-24 h-14 rounded-2xl overflow-hidden shrink-0 shadow-2xl mt-1">
-                                                                        <Image fill src={imageUrl} alt={lec.title} className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                                        <Image fill src={imageUrl} alt={lec.title} sizes="96px" className="object-cover group-hover:scale-110 transition-transform duration-500" />
                                                                     </div>
                                                                     <div className="flex flex-col justify-center overflow-hidden flex-grow">
                                                                         <div className="flex items-start justify-between gap-2">

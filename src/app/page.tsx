@@ -7,26 +7,10 @@ import type { Lecture, Program, Series, ScheduleItem, QAPair, Playlist, Homepage
 import React, { Suspense, useMemo } from 'react';
 
 function HomePageContent() {
-  const { data: latestLectures, isLoading: l1 } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  const { data: topPrograms, isLoading: l2 } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
-  const { data: latestSeries, isLoading: l3 } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  
-  // For simplicity in client-side fallback, we fetch some basics
-  // In a real app, we'd more precisely match the server component's complex logic
-  const { data: homepageConfig, isLoading: l4 } = useDoc<HomepageDetailedConfig>('settings/homepage');
-  
-  const [forceFinish, setForceFinish] = React.useState(false);
-  
-  React.useEffect(() => {
-    const timer = setTimeout(() => setForceFinish(true), 2500); // 2.5s safety timeout
-    return () => clearTimeout(timer);
-  }, []);
-
-  const isLoading = (l1 || l2 || l3 || l4) && !forceFinish;
-
-  if (isLoading) {
-    return <CinematicAppLoader />;
-  }
+  const { data: latestLectures } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { data: topPrograms } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
+  const { data: latestSeries } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
+  const { data: homepageConfig } = useDoc<HomepageDetailedConfig>('settings/homepage');
 
   return (
     <HomePageClient 

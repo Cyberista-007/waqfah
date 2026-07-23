@@ -28,6 +28,7 @@ export const sourceCodePro = Source_Code_Pro({
   subsets: ['latin'],
   variable: '--font-code',
   display: 'swap',
+  preload: false,
 });
 
 export const tajawal = Tajawal({
@@ -35,6 +36,7 @@ export const tajawal = Tajawal({
   weight: ['400', '700'],
   variable: '--font-tajawal',
   display: 'swap',
+  preload: false,
 });
 
 export const amiri = Amiri({
@@ -42,6 +44,7 @@ export const amiri = Amiri({
   weight: ['400', '700'],
   variable: '--font-amiri',
   display: 'swap',
+  preload: false,
 });
 
 // ── Secondary fonts — NOT preloaded, load on demand (Appearance Settings) ─────

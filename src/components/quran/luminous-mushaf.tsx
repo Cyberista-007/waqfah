@@ -368,12 +368,20 @@ export function LuminousMushaf({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -15, scale: 0.98 }}
                     transition={{ duration: 0.4 }}
-                    className="space-y-8 cursor-pointer"
+                    className={cn(
+                      "space-y-8 cursor-pointer transition-all duration-500 rounded-3xl",
+                      isPlaying && currentAudio?.id === activeVerse?.id 
+                        ? "ring-2 ring-amber-400/80 shadow-[0_0_60px_rgba(245,158,11,0.4)] p-6 bg-amber-500/[0.05]" 
+                        : "p-4"
+                    )}
                     onClick={() => handleVerseClick(activeVerseIndex)}
                   >
                     <p 
                       dir="rtl"
-                      className="text-4xl md:text-6xl font-quran leading-loose md:leading-[2.2] text-amber-100 font-bold transition-all duration-500 select-text"
+                      className={cn(
+                        "text-4xl md:text-6xl font-quran leading-loose md:leading-[2.2] font-bold transition-all duration-500 select-text",
+                        isPlaying && currentAudio?.id === activeVerse?.id ? "text-amber-300 scale-[1.02]" : "text-amber-100"
+                      )}
                       style={{ 
                         textShadow: '0 0 30px rgba(245,158,11,0.25), 0 0 10px rgba(245,158,11,0.5)' 
                       }}

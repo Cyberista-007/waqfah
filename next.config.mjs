@@ -32,6 +32,20 @@ const customRuntimeCaching = [
       },
     },
   },
+  {
+    urlPattern: /^https:\/\/api\.alquran\.cloud\/v1\/.*$/,
+    handler: 'StaleWhileRevalidate',
+    options: {
+      cacheName: 'quran-api-cache',
+      expiration: {
+        maxEntries: 500,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      },
+      cacheableResponse: {
+        statuses: [0, 200],
+      },
+    },
+  },
   ...runtimeCaching
 ];
 

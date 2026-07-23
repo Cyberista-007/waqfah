@@ -1616,10 +1616,10 @@ export default function QuranPage() {
         surahs={surahs}
         currentPage={currentPage}
         selectedSurah={selectedSurah}
-        onSelectSurah={(n) => { loadSurah(n); setView('full'); setViewMode('ayah'); }}
-        onSelectJuzPage={(page) => { setCurrentPage(page); setView('full'); setViewMode('page'); }}
+        onSelectSurah={(n: number) => { loadSurah(n); setView('full'); setViewMode('ayah'); }}
+        onSelectJuzPage={(page: number) => { setCurrentPage(page); setView('full'); setViewMode('page'); }}
         bookmarks={state.favorites || []}
-        onSelectBookmark={(id) => { /* scroll to verse */ }}
+        onSelectBookmark={(id: string | number) => { /* scroll to verse */ }}
       />
 
       {/* ── 3 Floating Nav Strip Buttons ── */}
