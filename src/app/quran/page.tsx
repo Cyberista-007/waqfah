@@ -76,7 +76,6 @@ const getYoutubeId = (url: string): string | null => {
   return (match && match[2].length === 11) ? match[2] : null;
 };
 
-<<<<<<< Updated upstream
 const formatArabicDate = (dateStr: string) => {
   try {
     const date = new Date(dateStr);
@@ -84,1038 +83,12 @@ const formatArabicDate = (dateStr: string) => {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-=======
-const RECITERS = [
-  { id: 'ar.alafasy', name: 'مشاري العفاسي', icon: '🎙️' },
-  { id: 'ar.husary', name: 'محمود خليل الحصري', icon: '📖' },
-  { id: 'ar.minshawi', name: 'محمد صديق المنشاوي', icon: '✨' },
-  { id: 'ar.abdulbasitmurattal', name: 'عبد الباسط عبد الصمد', icon: '🌙' },
-];
-
-const TAFSEERS = [
-  { id: 'ar.muyassar', name: 'التفسير الميسر' },
-  { id: 'ar.jalalayn', name: 'تفسير الجلالين' },
-  { id: 'ar.qurtubi', name: 'تفسير القرطبي' },
-  { id: 'ar.waseet', name: 'التفسير الوسيط (طنطاوي)' },
-  { id: 'ar.baghawi', name: 'تفسير البغوي' },
-  { id: 'ar.miqbas', name: 'تفسير ابن عباس (تنوير المقباس)' },
-];
-
-const SCRIPTS = [
-  { id: 'uthmani', name: 'مصحف المدينة (رسم عثماني)', edition: 'quran-uthmani', font: 'font-quran' },
-  { id: 'simple', name: 'رسم إملائي (بسيط)', edition: 'quran-simple', font: 'font-amiri' },
-];
-
-const TOPICS = [
-  { id: 'all', label: 'الكل' },
-  { id: 'iman', label: 'الإيمان' },
-  { id: 'sabr', label: 'الصبر والتوكل' },
-  { id: 'rahma', label: 'الرحمة والمغفرة' },
-  { id: 'memorized', label: 'المحفوظات' },
-  { id: 'bookmarks', label: 'الإشارات المرجعية' },
-];
-
-const MEMO_PLANS = [
-  { id: '1year', label: 'ختمة في سنة', months: 12, pagesPerDay: 1.7 },
-  { id: '2years', label: 'ختمة في سنتين', months: 24, pagesPerDay: 0.8 },
-  { id: '6months', label: 'ختمة في 6 أشهر', months: 6, pagesPerDay: 3.3 },
-  { id: 'custom', label: 'خطة مخصصة', months: 0, pagesPerDay: 0 },
-];
-
-const TRANSLATIONS = [
-  { id: 'en.sahih', name: 'English (Sahih Intl)', lang: 'en' },
-  { id: 'fr.hamidullah', name: 'Français (Hamidullah)', lang: 'fr' },
-  { id: 'ur.maududi', name: 'اردو (Maududi)', lang: 'ur' },
-  { id: 'tr.ates', name: 'Türkçe (Süleyman Ateş)', lang: 'tr' },
-];
-
-const SEMANTIC_TOPICS = [
-  {
-    keywords: ['والدين', 'والدان', 'بر الوالدين', 'أبي', 'أمي', 'أبوي', 'طاعة الوالدين', 'إحسان الوالدين'],
-    title: 'بر الوالدين والإحسان إليهما',
-    ayahs: [
-      { surah: 17, ayah: 23, text: 'وَقَضَىٰ رَبُّكَ أَلَّا تَعْبُدُوا إِلَّا إِيَّاهُ وَبِالْوَالِدَيْنِ إِحْسَانًا ۚ إِمَّا يَبْلُغَنَّ عِندَكَ الْكِبَرَ أَحَدُهُمَا أَوْ كِلَاهُمَا فَلَا تَقُل لَّهُمَا أُفٍّ وَلَا تَنْهَرْهُمَا وَقُل لَّهُمَا قَوْلًا كَرِيمًا' },
-      { surah: 31, ayah: 14, text: 'وَوَصَّيْنَا الْإِنسَانَ بِوَالِدَيْهِ حَمَلَتْهُ أُمُّهُ وَهْنًا عَلَىٰ وَهْنٍ وَفِصَالُهُ فِي عَامَيْنِ أَنِ اشْكُرْ لِي وَلِوَالِدَيْكَ إِلَيَّ الْمَصِيرُ' },
-      { surah: 46, ayah: 15, text: 'وَوَصَّيْنَا الْإِنسَانَ بِوَالِدَيْهِ إِحْسَانًا ۖ حَمَلَتْهُ أُمُّهُ كُرْهًا وَوَضَعَتْهُ كُرْهًا ۖ وَحَمْلُهُ وَفِصَالُهُ ثَلَاثُونَ شَهْرًا' }
-    ]
-  },
-  {
-    keywords: ['صلاة', 'صلوات', 'إقامة الصلاة', 'الصلوات', 'الفجر', 'العصر', 'أقم الصلاة'],
-    title: 'أهمية الصلاة وإقامتها في وقتها',
-    ayahs: [
-      { surah: 20, ayah: 14, text: 'إِنَّنِي أَنَا اللَّلهِ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي' },
-      { surah: 29, ayah: 45, text: 'اتْلُ مَا أُوحِيَ إِلَيْكَ مِنَ الْكِتَابِ وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ ۗ وَلَذِكْرُ اللَّهِ أَكْبَرُ' },
-      { surah: 2, ayah: 238, text: 'حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ' }
-    ]
-  },
-  {
-    keywords: ['صبر', 'الصبر', 'صابري', 'اصبر', 'صابروا', 'تصبير'],
-    title: 'فضيلة الصبر وبشرى الصابرين',
-    ayahs: [
-      { surah: 2, ayah: 153, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ إِنَّ اللَّهَ مَعَ الصَّابِرِينَ' },
-      { surah: 2, ayah: 155, text: 'وَلَنَبْلُوَنَّكُم بِشَيْءٍ مِّنَ الْخَوْفِ وَالْجُوعِ وَنَقْصٍ مِّنَ الْأَمْوَالِ وَالْأَنفُسِ وَالثَّمَرَاتِ ۗ وَبَشِّرِ الصَّابِرِينَ' },
-      { surah: 39, ayah: 10, text: 'إِنَّمَا يُوَفَّى الصَّابِرُونَ أَجْرَهُم بِغَيْرِ حِسَابٍ' }
-    ]
-  },
-  {
-    keywords: ['توبة', 'استغفار', 'مغفرة', 'تاب', 'يتوب', 'استغفر', 'يغفر', 'ذنوب', 'غفران'],
-    title: 'سعة رحمة الله وقبول التوبة والاستغفار',
-    ayahs: [
-      { surah: 39, ayah: 53, text: 'قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ' },
-      { surah: 66, ayah: 8, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا عَسَىٰ رَبُّكُمْ أَن يُكَفِّرَ عَنكُمْ سَيِّئَاتِكُمْ' },
-      { surah: 71, ayah: 10, text: 'فَقُلْتُ اسْتَغْفِرُوا رَبَّكُمْ إِنَّهُ كَانَ غَفَّارًا ۝ يُرْسِلِ السَّمَاءَ عَلَيْكُم مِّدْرَارًا ۝ وَيُمْدِدْكُم بِأَمْوَالٍ وَبَنِينَ وَيَجْعَل لَّكُمْ جَنَّاتٍ وَيَجْعَل لَّكُمْ أَنْهَارًا' }
-    ]
-  },
-  {
-    keywords: ['ربا', 'الربا', 'أكل الربا', 'ربا الفضل', 'ربا النسيئة'],
-    title: 'تحريم الربا والتحذير منه',
-    ayahs: [
-      { surah: 2, ayah: 275, text: 'الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ ۚ ذَٰلِكَ بِأَنَّهُمْ قَالُوا إِنَّمَا الْبَيْعُ مِثْلُ الرِّبَا ۗ وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا' },
-      { surah: 2, ayah: 278, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا إِن كُنتُم مُّؤْمِنِينَ' }
-    ]
-  },
-  {
-    keywords: ['عدل', 'قسط', 'العدل', 'القسط', 'ميزان', 'العدالة', 'اعدلوا'],
-    title: 'إقامة العدل والقسط بين الناس',
-    ayahs: [
-      { surah: 16, ayah: 90, text: 'إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ وَإِيتَاءِ ذِي الْقُرْبَىٰ وَيَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ وَالْبَغْيِ ۚ يَعِظُكُمْ لَعَلَّكُمْ تَذَكَّرُونَ' },
-      { surah: 5, ayah: 8, text: 'يَا أَيُّهَا الَّذِينَ آمَنُوا كُونُوا قَوَّامِينَ لِلَّهِ شُهَدَاءَ بِالْقُسْطِ ۖ وَلَا يَجْرِمَنَّكُمْ شَنَآنُ قَوْمٍ عَلَىٰ أَلَّا تَعْدِلُوا ۚ اعْدِلُوا هُوَ أَقْرَبُ لِلتَّقْوَىٰ' }
-    ]
-  },
-  {
-    keywords: ['حجاب', 'عفة', 'يغضوا', 'يغضضن', 'فروجهم', 'فروجهن', 'ستر', 'جلايب', 'زينتهن'],
-    title: 'الحجاب الشرعي والحث على العفة وغض البصر',
-    ayahs: [
-      { surah: 24, ayah: 30, text: 'قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ ۗ إِنَّ اللَّهَ خَبِيرٌ بِمَا يَصْنَعُونَ' },
-      { surah: 24, ayah: 31, text: 'وَقُل لِّلْمُؤْمِنَاتِ يَغْضُضْن مِنْ أَبْصَارِهِنَّ وَيَحْفَظْن فُرُوجَهُنَّ وَلَا يُبْدِينَ زِينَتَهُنَّ إِلَّا مَا ظَهَرَ مِنْهَا ۖ وَلْيَضْرِبْنَ بِخُمُرِهِنَّ عَلَىٰ جُيُوبِهِنَّ' },
-      { surah: 33, ayah: 59, text: 'يَا أَيُّهَا النَّبِيُّ قُل لِّأَزْوَاجِكَ وَبَنَاتِكَ وَنِسَاءِ الْمُؤْمِنِينَ يُدْنِينَ عَلَيْهِنَّ مِن جَلَابِيبِهِنَّ ۚ ذَٰلِكَ أَدْنَىٰ أَن يُعْرَفْنَ فَلَا يُؤْذَيْنَ' }
-    ]
-  },
-  {
-    keywords: ['علم', 'العلم', 'علماء', 'طلب العلم', 'تعلم', 'يعلمون', 'علّمه'],
-    title: 'فضل العلم والعلماء والحث على المعرفة',
-    ayahs: [
-      { surah: 20, ayah: 114, text: 'فَتَعَالَى اللَّهُ الْمَلِكُ الْحَقُّ ۗ وَلَا تَعْجَلْ بِالْقُرْآنِ مِن قَبْلِ أَن يُقْضَىٰ إِلَيْكَ وَحْيُهُ ۖ وَقُل رَّبِّ زِدْنِي عِلْمًا' },
-      { surah: 39, ayah: 9, text: 'قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ ۗ إِنَّمَا يَتَذَكَّرُ أُولُو الْأَلْبَابِ' }
-    ]
-  }
-];
-
-
-const AMBIENT_SOUNDS = [
-  { id: 'rain', name: '🌧️ مطر هادئ', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
-  { id: 'birds', name: '🌲 عصافير الغابة', url: 'https://actions.google.com/sounds/v1/animals/forest_birds.ogg' },
-  { id: 'river', name: '💧 خرير الماء', url: 'https://actions.google.com/sounds/v1/water/river_flowing.ogg' },
-  { id: 'night', name: '🌙 هدوء الليل', url: 'https://actions.google.com/sounds/v1/weather/rain_on_roof.ogg' },
-];
-
-const MEMORIZATION_STATUS = {
-  'not-started': { label: 'لم تبدأ', color: 'text-white/20', icon: Clock, bg: 'bg-white/5' },
-  'memorizing': { label: 'جاري الحفظ', color: 'text-amber-400', icon: Target, bg: 'bg-amber-500/10' },
-  'completed': { label: 'تم الحفظ', color: 'text-emerald-400', icon: CheckCircle2, bg: 'bg-emerald-500/10' },
-  'reviewed': { label: 'تمت المراجعة', color: 'text-blue-400', icon: Trophy, bg: 'bg-blue-500/10' },
-};
-
-const CARD_THEMES = [
-  { id: 'emerald', bg: 'bg-gradient-to-br from-[#022c22] via-[#064e3b] to-black', text: 'text-emerald-100', accent: 'bg-emerald-400', textGradient: 'from-emerald-200 to-emerald-500' },
-  { id: 'indigo', bg: 'bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-black', text: 'text-indigo-100', accent: 'bg-indigo-400', textGradient: 'from-indigo-200 to-blue-500' },
-  { id: 'amber', bg: 'bg-gradient-to-br from-[#451a03] via-[#78350f] to-black', text: 'text-amber-100', accent: 'bg-amber-400', textGradient: 'from-yellow-200 to-amber-600' },
-  { id: 'rose', bg: 'bg-gradient-to-br from-[#4c0519] via-[#881337] to-black', text: 'text-rose-100', accent: 'bg-rose-400', textGradient: 'from-rose-200 to-pink-600' },
-  { id: 'purple', bg: 'bg-gradient-to-br from-[#3b0764] via-[#581c87] to-black', text: 'text-purple-100', accent: 'bg-purple-400', textGradient: 'from-purple-200 to-fuchsia-600' },
-  { id: 'dark', bg: 'bg-[#050505]', text: 'text-white', accent: 'bg-white/20', textGradient: 'from-white to-gray-500' },
-  { id: 'gold', bg: 'bg-gradient-to-br from-[#422006] via-[#713f12] to-[#0a0a0a]', text: 'text-yellow-100', accent: 'bg-yellow-500', textGradient: 'from-yellow-100 via-yellow-400 to-yellow-700' },
-  { id: 'royal', bg: 'bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-[#1e3a8a] via-[#1e40af] to-black', text: 'text-blue-100', accent: 'bg-blue-400', textGradient: 'from-blue-200 to-cyan-500' },
-  { id: 'sunset', bg: 'bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#7f1d1d] via-[#991b1b] to-black', text: 'text-red-100', accent: 'bg-red-400', textGradient: 'from-orange-200 to-red-500' },
-];
-
-const CARD_PATTERNS = [
-  { id: 'none', label: 'بدون', css: '', url: '' },
-  { id: 'arabesque', label: 'أرابيسك', css: 'opacity-100', url: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDAnIGhlaWdodD0nNDAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PGNpcmNsZSBjeD0nMjAnIGN5PTIwJyByPScxNScgZmlsbD0nbm9uZScgc3Ryb2tlPSdyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpJyBzdHJva2Utd2lkdGg9JzEuNScvPjxjaXJjbGUgY3g9JzAnIGN5PScwJyByPScxNScgZmlsbD0nbm9uZScgc3Ryb2tlPSdyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpJyBzdHJva2Utd2lkdGg9JzEuNScvPjxjaXJjbGUgY3g9JzQwJyBjeT0nMCcgcj0nMTUnIGZpbGw9J25vbmUnIHN0cm9rZT0ncmdiYSgyNTUsMjU1LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScxLjUnLz48Y2lyY2xlIGN4PScwJyBjeT0nNDAnIHI9JzE1JyBmaWxsPSdub25lJyBzdHJva2U9J3JnYmEoMjU1LDI1NSwyNTUsMC4xNSknIHN0cm9rZS13aWR0aD0nMS41Jy8+PGNpcmNsZSBjeD0nNDAnIGN5PSc0MCcgcj0nMTUnIGZpbGw9J25vbmUnIHN0cm9rZT0ncmdiYSgyNTUsMjU1LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScxLjUnLz48L3N2Zz4=" },
-  { id: 'geometry', label: 'هندسي', css: 'opacity-100', url: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDAnIGhlaWdodD0nNDAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3QgeD0nMTAnIHk9JzEwJyB3aWR0aD0nMjAnIGhlaWdodD0nMjAnIGZpbGw9J25vbmUnIHN0cm9rZT0ncmdiYSgyNTUsMjU1LDI1NSwwLjIpJyBzdHJva2Utd2lkdGg9JzEuNScvPjxyZWN0IHg9JzEwJyB5PScxMCcgd2lkdGg9JzIwJyBoZWlnaHQ9JzIwJyBmaWxsPSdub25lJyBzdHJva2U9J3JnYmEoMjU1LDI1NSwyNTUsMC4yKScgc3Ryb2tlLXdpZHRoPScxLjUnIHRyYW5zZm9ybT0ncm90YXRlKDQ1IDIwIDIwKScvPjwvc3ZnPg==" },
-  { id: 'diamonds', label: 'معين', css: 'opacity-100', url: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMjAnIGhlaWdodD0nMjAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHBhdGggZD0nTTEwIDBMMjAgMTBMMTAgMjBMMCAxMFonIGZpbGw9J25vbmUnIHN0cm9rZT0ncmdiYSgyNTUsMjU1LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScxLjUnLz48L3N2Zz4=" },
-  { id: 'hexagons', label: 'سداسي', css: 'opacity-100', url: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMjgnIGhlaWdodD0nNDknIHZpZXdCb3g9JzAgMCAyOCA0OScgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48ZyBmaWxsPSdub25lJyBzdHJva2U9J3JnYmEoMjU1LDI1NSwyNTUsMC4xNSknIHN0cm9rZS13aWR0aD0nMS41Jz48cGF0aCBkPSdNMTMuOTkgOS4yNWwxMyA3LjV2MTVsLTEzIDcuNUwxIDMxLjc1di0xNWwxMi45OS03LjV6TTAgMTEuOGwxMi45OC03LjVWMS41aDE1djIuOGwxMi45OSA3LjVMMjcuOTkgMTkuM3YxMC40bDEyLjk5IDcuNXYxMC40bC0xMi45OSA3LjVWNThoLTE1di0yLjhsLTEyLjk4LTcuNUwwIDM3Ljd2LTEwLjRsLTEyLjk4LTcuNVY5LjRsMTIuOTgtNy41eicvPjwvZz48L3N2Zz4=" },
-  { id: 'stars', label: 'نجوم', css: 'opacity-100', url: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDAnIGhlaWdodD0nNDAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHBhdGggZD0nTTIwIDE1IEwyMSAxOSBMMjUgMjAgTDIxIDIxIEwyMCAyNSBMMTkgMjEgTDE1IDIwIEwxOSAxOSBaIE01IDUgTDUuNSA2LjUgTDcgNyBMNS41IDcuNSBMNSA5IEw0LjUgNy41IEwzIDcgTDQuNSA2LjUgWicgZmlsbD0ncmdiYSgyNTUsMjU1LDI1NSwwLjMpJy8+PC9zdmc+" },
-];
-
-const CARD_FRAMES = [
-  { id: 'none', label: 'بدون', border: '' },
-  { id: 'minimal', label: 'بسيط', border: 'border-2 border-white/40 m-4 rounded-[2rem]' },
-  { id: 'elegant', label: 'أنيق', border: 'border-[1px] border-white/60 m-8 rounded-[1rem]' },
-  { id: 'classic', label: 'كلاسيك', border: 'border-8 border-double border-white/40 m-6 rounded-[1.5rem]' },
-  { id: 'mihrab', label: 'محراب', border: 'border-4 border-b-0 border-white/50 m-6 rounded-t-full' },
-  { id: 'double', label: 'مضاعف', border: 'border-4 border-white/30 m-4 rounded-[2.5rem] before:content-[""] before:absolute before:inset-2 before:border-2 before:border-white/20 before:rounded-[2rem]' },
-];
-
-// ━━━━━━━━━━━ JUZ DATA ━━━━━━━━━━━
-const JUZ_DATA = [
-  { juz: 1, surah: 'الفاتحة', start: 'الحمد..', page: 1 },
-  { juz: 2, surah: 'البقرة', start: 'سيقول..', page: 22 },
-  { juz: 3, surah: 'البقرة', start: 'تلك الرسل..', page: 42 },
-  { juz: 4, surah: 'آل عمران', start: 'كل الطعام..', page: 62 },
-  { juz: 5, surah: 'النساء', start: 'والمحصنات..', page: 82 },
-  { juz: 6, surah: 'النساء', start: 'لا يحب الله..', page: 102 },
-  { juz: 7, surah: 'المائدة', start: 'لتجدن..', page: 121 },
-  { juz: 8, surah: 'الأنعام', start: 'و لو أنا أنزلنا..', page: 142 },
-  { juz: 9, surah: 'الأعراف', start: 'قال الملأ..', page: 162 },
-  { juz: 10, surah: 'الأنفال', start: 'واعلموا..', page: 182 },
-  { juz: 11, surah: 'التوبة', start: 'يعتذرون..', page: 201 },
-  { juz: 12, surah: 'هود', start: 'وما من دابة..', page: 222 },
-  { juz: 13, surah: 'يوسف', start: 'وما أبرئ..', page: 242 },
-  { juz: 14, surah: 'الحجر', start: 'ربما..', page: 262 },
-  { juz: 15, surah: 'الإسراء', start: 'سبحان..', page: 282 },
-  { juz: 16, surah: 'الكهف', start: 'قال ألم..', page: 302 },
-  { juz: 17, surah: 'الأنبياء', start: 'اقترب..', page: 322 },
-  { juz: 18, surah: 'المؤمنون', start: 'قد أفلح..', page: 342 },
-  { juz: 19, surah: 'الفرقان', start: 'وقال الذين..', page: 362 },
-  { juz: 20, surah: 'النمل', start: 'أمن خلق..', page: 382 },
-  { juz: 21, surah: 'العنكبوت', start: 'اتل ما..', page: 402 },
-  { juz: 22, surah: 'الأحزاب', start: 'ومن يقنت..', page: 422 },
-  { juz: 23, surah: 'يس', start: 'وما لي..', page: 442 },
-  { juz: 24, surah: 'الزمر', start: 'فمن أظلم..', page: 462 },
-  { juz: 25, surah: 'فصلت', start: 'إليه يرد..', page: 482 },
-  { juz: 26, surah: 'الأحقاف', start: 'حم..', page: 502 },
-  { juz: 27, surah: 'الذاريات', start: 'قال فما خطبكم..', page: 522 },
-  { juz: 28, surah: 'المجادلة', start: 'قد سمع..', page: 542 },
-  { juz: 29, surah: 'الملك', start: 'تبارك..', page: 562 },
-  { juz: 30, surah: 'عم', start: 'عم يتساءلون..', page: 582 },
-];
-
-// ━━━━━━━━━━━ QURAN NAV DRAWER ━━━━━━━━━━━
-
-type NavTab = 'surahs' | 'juz' | 'bookmarks';
-
-function QuranNavDrawer({
-  isOpen,
-  activeTab,
-  onClose,
-  onTabChange,
-  surahs,
-  currentPage,
-  onSelectSurah,
-  onSelectJuzPage,
-  selectedSurah,
-  bookmarks,
-  onSelectBookmark,
-}: {
-  isOpen: boolean;
-  activeTab: NavTab;
-  onClose: () => void;
-  onTabChange: (tab: NavTab) => void;
-  surahs: SurahInfo[];
-  currentPage: number;
-  onSelectSurah: (n: number) => void;
-  onSelectJuzPage: (page: number) => void;
-  selectedSurah: number | null;
-  bookmarks: string[];
-  onSelectBookmark: (id: string) => void;
-}) {
-  const tabs: { id: NavTab; label: string }[] = [
-    { id: 'surahs', label: 'السور' },
-    { id: 'juz', label: 'الأجزاء' },
-    { id: 'bookmarks', label: 'علامات' },
-  ];
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm"
-          />
-          {/* Drawer panel */}
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="fixed top-0 right-0 bottom-0 z-[401] w-80 bg-[#111] border-l border-white/10 flex flex-col shadow-2xl"
-            dir="rtl"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                  <BookOpen className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-white leading-none">مصحف وقفة</p>
-                  <p className="text-[10px] text-white/30 font-bold mt-0.5">صفحة {currentPage}</p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4 text-white/50" />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-1 p-3 border-b border-white/10 shrink-0">
-              {tabs.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => onTabChange(t.id)}
-                  className={cn(
-                    'flex-1 py-2.5 rounded-xl text-xs font-black transition-all',
-                    activeTab === t.id
-                      ? 'bg-amber-500 text-black shadow-lg'
-                      : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Surahs Tab */}
-              {activeTab === 'surahs' && (
-                <div className="py-2">
-                  {surahs.map(s => (
-                    <button
-                      key={s.number}
-                      onClick={() => { onSelectSurah(s.number); onClose(); }}
-                      className={cn(
-                        'w-full flex items-center justify-between px-5 py-3 text-right transition-all hover:bg-white/5',
-                        selectedSurah === s.number && 'bg-amber-500/10 border-r-2 border-amber-400'
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className={cn(
-                          'w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0',
-                          s.revelationType === 'Meccan'
-                            ? 'bg-amber-500/15 text-amber-400'
-                            : 'bg-emerald-500/15 text-emerald-400'
-                        )}>
-                          {s.revelationType === 'Meccan' ? '🕌' : '🕌'}
-                        </span>
-                        <span className={cn(
-                          'text-sm font-black',
-                          selectedSurah === s.number ? 'text-amber-400' : 'text-white/80'
-                        )}>
-                          {s.number}. {s.name}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-white/30 font-bold">{s.numberOfAyahs} آية</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Juz Tab */}
-              {activeTab === 'juz' && (
-                <div className="py-2">
-                  {JUZ_DATA.map(j => (
-                    <button
-                      key={j.juz}
-                      onClick={() => { onSelectJuzPage(j.page); onClose(); }}
-                      className="w-full flex items-center justify-between px-5 py-3 text-right transition-all hover:bg-white/5 group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs font-black shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                          {j.juz}
-                        </span>
-                        <div>
-                          <p className="text-sm font-black text-white/80 group-hover:text-white transition-colors">
-                            الجزء {j.juz}
-                          </p>
-                          <p className="text-[10px] text-amber-400/70 font-bold mt-0.5">
-                            {j.surah}: <span className="text-white/40">{j.start}</span>
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-white/30 font-bold shrink-0">{j.page}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Bookmarks Tab */}
-              {activeTab === 'bookmarks' && (
-                <div className="py-2">
-                  {bookmarks.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 px-6 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-                        <Bookmark className="w-7 h-7 text-white/20" />
-                      </div>
-                      <p className="text-white/30 text-xs font-bold">لا توجد علامات مرجعية بعد</p>
-                      <p className="text-white/20 text-[10px]">اضغط على أيقونة الإشارة في أي آية لحفظها هنا</p>
-                    </div>
-                  ) : (
-                    bookmarks.filter(b => b.startsWith('quran_')).map(b => (
-                      <button
-                        key={b}
-                        onClick={() => { onSelectBookmark(b); onClose(); }}
-                        className="w-full flex items-center gap-3 px-5 py-3 text-right transition-all hover:bg-white/5"
-                      >
-                        <Bookmark className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span className="text-sm text-white/70 font-bold">{b.replace('quran_', '')}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-// ━━━━━━━━━━━ COMPONENTS ━━━━━━━━━━━
-
-function ModalPortal({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-  return createPortal(children, document.body);
-}
-
-function PlanProgress({ percentage }: { percentage: number }) {
-  const radius = 60;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative w-40 h-40 flex items-center justify-center mx-auto">
-      <svg className="w-full h-full -rotate-90">
-        <circle cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/5" />
-        <motion.circle
-          cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="8" fill="transparent"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className="text-primary"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-black text-white">{percentage}%</span>
-        <span className="text-[8px] text-white/30 font-black uppercase tracking-[0.2em]">الإنجاز</span>
-      </div>
-    </div>
-  );
-}
-
-function SurahInfoModal({ surah, onClose }: { surah: SurahInfo; onClose: () => void }) {
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-3xl">
-          <div className="p-8 border-b border-white/5 flex items-center justify-between">
-            <h3 className="text-xl font-black text-white flex items-center gap-3"><Info className="w-5 h-5 text-primary" /> تفاصيل السورة</h3>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-5 h-5 text-white/40" /></button>
-          </div>
-          <div className="p-10 space-y-10">
-            <div className="text-center">
-              <h2 className="text-6xl font-black text-white mb-2">{surah.name}</h2>
-              <p className="text-primary font-bold tracking-[0.3em] uppercase text-xs">{surah.englishName}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 text-center">
-                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">مكان النزول</p>
-                <p className="text-xl font-black text-white">{surah.revelationType === 'Meccan' ? 'مكية 🕋' : 'مدنية 🕌'}</p>
-              </div>
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 text-center">
-                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">عدد الآيات</p>
-                <p className="text-xl font-black text-white">{surah.numberOfAyahs} آية</p>
-              </div>
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 text-center">
-                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">ترتيب النزول</p>
-                <p className="text-xl font-black text-white">{surah.number}</p>
-              </div>
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 text-center">
-                <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-2">تاريخ القراءة</p>
-                <p className="text-xl font-black text-emerald-400">نشط الآن</p>
-              </div>
-            </div>
-
-            <div className="p-8 rounded-[2.5rem] bg-primary/10 border border-primary/20 text-center">
-              <p className="text-white/60 text-sm leading-relaxed">
-                تعتبر {surah.name} من السور العظيمة في القرآن الكريم، وتتميز بمواضيعها الإيمانية العميقة وتشريعاتها الحكيمة.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-function ShareModal({ verse, onClose }: { verse: any; onClose: () => void }) {
-  const [activeTheme, setActiveTheme] = useState(CARD_THEMES[0]);
-  const [isCustomTheme, setIsCustomTheme] = useState(false);
-  const [customBg, setCustomBg] = useState('#134e4a'); // Default custom teal
-  const [customText, setCustomText] = useState('#ccfbf1');
-  const [userImage, setUserImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activePatterns, setActivePatterns] = useState([CARD_PATTERNS[1]]);
-  const [activeFrames, setActiveFrames] = useState([CARD_FRAMES[0]]);
-  const [aspectRatio, setAspectRatio] = useState<'square' | 'story'>('square');
-  const [showTafseer, setShowTafseer] = useState(false);
-  const [showLogo, setShowLogo] = useState(true);
-  const [textGlow, setTextGlow] = useState(true);
-  const [glassEffect, setGlassEffect] = useState(true);
-  const [overlayOpacity, setOverlayOpacity] = useState(0.4);
-  const [shadowDepth, setShadowDepth] = useState(40);
-  const [signature, setSignature] = useState('');
-  const [cardFont, setCardFont] = useState(verse.fontClass);
-  const [customFontSize, setCustomFontSize] = useState(verse.arabic?.length > 150 ? 18 : 32);
-  const [textAlign, setTextAlign] = useState<'center' | 'right' | 'justify'>('center');
-  const [cardRadius, setCardRadius] = useState(40);
-  const [filmGrain, setFilmGrain] = useState(false);
-  const [gradientText, setGradientText] = useState(false);
-  const [showMetadata, setShowMetadata] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const copyToClipboard = async () => {
-    if (!cardRef.current) return;
-    setIsCopying(true);
-    try {
-      const { toBlob } = await import('html-to-image');
-      const blob = await toBlob(cardRef.current, { cacheBust: true, pixelRatio: 3 });
-      if (blob) {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        alert('تم نسخ الصورة بنجاح! يمكنك لصقها الآن في أي محادثة.');
-      }
-    } catch (err) { console.error(err); alert('تعذر النسخ، يرجى استخدام زر التحميل.'); } finally { setIsCopying(false); }
-  };
-
-  const exportImage = async () => {
-    if (!cardRef.current) return;
-    setIsExporting(true);
-    try {
-      const { toPng } = await import('html-to-image');
-      const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 3 });
-      const link = document.createElement('a');
-      link.download = `waqfah-ayah-${verse.ayahNumber}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) { console.error(err); } finally { setIsExporting(false); }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserImage(reader.result as string);
-        setIsCustomTheme(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#0a0a0a]" />
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full h-full bg-[#0a0a0a] flex flex-col md:flex-row overflow-hidden"
-        >
-          {/* Preview Area - Left Side */}
-          <div className="flex-1 bg-black/60 p-6 md:p-12 flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-l border-white/5 relative group min-h-0">
-            <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full text-[8px] font-black tracking-widest text-white/20 uppercase z-50">
-              معاينة التصميم <Sparkles className="w-3 h-3" />
-            </div>
-
-            {/* Responsive Card Container */}
-            <div className="w-full h-full flex items-center justify-center overflow-auto custom-scrollbar p-4">
-              <div
-                ref={cardRef}
-                className={cn(
-                  "flex flex-col justify-between relative overflow-hidden transition-all duration-700 shadow-2xl shrink-0 h-auto",
-                  !isCustomTheme && activeTheme.bg,
-                  aspectRatio === 'square' ? "w-full max-w-[500px] min-h-[500px]" : "w-[350px] md:w-[400px] min-h-[620px] md:min-h-[711px]"
-                )}
-                style={{
-                  borderRadius: `${cardRadius}px`,
-                  backgroundColor: isCustomTheme ? customBg : undefined,
-                  backgroundImage: (isCustomTheme && userImage) ? `url(${userImage})` : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              >
-                {/* Pattern, Grain & Overlay Layer */}
-                {activePatterns.map(pattern => (
-                  <div
-                    key={pattern.id}
-                    className={cn("absolute inset-0 pointer-events-none transition-all duration-700", pattern.css)}
-                    style={{ backgroundImage: pattern.url ? `url('${pattern.url}')` : 'none' }}
-                  />
-                ))}
-                {filmGrain && (
-                  <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
-                )}
-                <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: overlayOpacity }} />
-
-                {/* Frame Layers */}
-                {activeFrames.map(frame => (
-                  frame.id !== 'none' && <div key={frame.id} className={cn("absolute inset-0 pointer-events-none z-20 transition-all duration-500", frame.border)} />
-                ))}
-
-                {/* Content Container */}
-                <div className="relative z-30 flex-1 flex flex-col justify-center gap-4 p-6 md:p-10">
-                  <div className={cn(
-                    "p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] transition-all duration-700 w-full flex-1 flex flex-col justify-center",
-                    glassEffect ? "bg-white/[0.03] backdrop-blur-md border border-white/10 shadow-2xl" : ""
-                  )}
-                    style={{ boxShadow: glassEffect ? `0 ${shadowDepth}px ${shadowDepth * 2}px -${shadowDepth / 2}px rgba(0,0,0,0.5)` : 'none' }}>
-                    <Quote className={cn("w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 md:mb-6 opacity-10 shrink-0", !isCustomTheme && activeTheme.text)} style={{ color: isCustomTheme ? customText : undefined }} />
-                    <div className="space-y-4 md:space-y-6" style={{ textAlign }}>
-                      <p
-                        dir="rtl"
-                        style={{
-                          fontSize: `${customFontSize}px`,
-                          textShadow: textGlow ? `0 0 30px ${isCustomTheme || activeTheme.id === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)'}` : 'none',
-                          color: (isCustomTheme && !gradientText) ? customText : undefined
-                        }}
-                        className={cn(
-                          "leading-[1.6] md:leading-[2.2] transition-all",
-                          gradientText ? (isCustomTheme ? "bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-500" : `bg-clip-text text-transparent bg-gradient-to-br ${activeTheme.textGradient}`) : (!isCustomTheme && activeTheme.text),
-                          cardFont
-                        )}
-                      >
-                        {verse.arabic}
-                      </p>
-                      {showTafseer && (
-                        <p className={cn("text-[10px] md:text-sm opacity-60 leading-relaxed max-w-[90%] mx-auto font-medium", !isCustomTheme && activeTheme.text)} style={{ color: isCustomTheme ? customText : undefined }}>
-                          {verse.tafseer}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer Info */}
-                {showMetadata && (
-                  <div className="relative z-30 flex flex-col items-center pt-4 md:pt-6 mt-auto p-6 md:p-8 shrink-0">
-                    <div className={cn("h-px w-12 mb-4 opacity-30", !isCustomTheme && activeTheme.accent)} style={{ backgroundColor: isCustomTheme ? customText : undefined }} />
-                    <div className="text-center">
-                      <span className={cn("text-[10px] md:text-sm font-black uppercase tracking-[0.2em] block mb-1", !isCustomTheme && activeTheme.text)} style={{ color: isCustomTheme ? customText : undefined }}>
-                        سورة {verse.surah}
-                      </span>
-                      <span className={cn("text-[8px] md:text-xs font-bold opacity-60 uppercase tracking-widest", !isCustomTheme && activeTheme.text)} style={{ color: isCustomTheme ? customText : undefined }}>
-                        الآية رقم {verse.ayahNumber}
-                      </span>
-                    </div>
-
-                    {signature && (
-                      <p className={cn("mt-4 text-[8px] md:text-[9px] font-black italic opacity-40", activeTheme.text)}>بواسطة: {signature}</p>
-                    )}
-
-                    {showLogo && (
-                      <div className="mt-6 md:mt-8 flex items-center gap-2">
-                        <div className={cn("px-3 py-1 rounded-full border text-[7px] md:text-[8px] font-black tracking-[0.3em] uppercase", activeTheme.text, "border-white/10 bg-white/5")}>
-                          WAQFAH.COM
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Controls Area - Right Side */}
-          <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col bg-[#080808] border-l border-white/5 h-full shrink-0">
-            <div className="p-6 md:p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#080808]/90 backdrop-blur-md z-50">
-              <div className="flex flex-col">
-                <h3 className="text-lg md:text-xl font-black text-white flex items-center gap-3">التصميم السينمائي</h3>
-                <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">تعديل بطاقة المشاركة</span>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-5 h-5 text-white/40" /></button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-10">
-              {/* Groups... */}
-              <div className="space-y-8">
-                <section className="space-y-4">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">١. التخطيط والأبعاد</p>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'square', label: 'Feed (مربع)', icon: LayoutGrid },
-                        { id: 'story', label: 'Story (رأسي)', icon: Maximize2 }
-                      ].map(opt => (
-                        <button key={opt.id} onClick={() => setAspectRatio(opt.id as any)} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all", aspectRatio === opt.id ? "bg-primary/10 border-primary text-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>
-                          <opt.icon className="w-4 h-4" />
-                          <span className="text-[9px] font-black">{opt.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><span className="text-[9px] font-black text-white/40 uppercase">استدارة الحواف</span><span className="text-[10px] font-black text-primary">{cardRadius}px</span></div>
-                      <input type="range" min="0" max="60" value={cardRadius} onChange={(e) => setCardRadius(parseInt(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-4">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">٢. الهوية البصرية</p>
-                  <div className="grid grid-cols-6 gap-2">
-                    {CARD_THEMES.map(theme => (
-                      <button key={theme.id} onClick={() => { setIsCustomTheme(false); setActiveTheme(theme); }} className={cn("w-full aspect-square rounded-xl border-2 transition-all", theme.bg, !isCustomTheme && activeTheme.id === theme.id ? "border-primary scale-105 shadow-glow-primary" : "border-transparent opacity-40 hover:opacity-100")} />
-                    ))}
-                    <button onClick={() => setIsCustomTheme(true)} className={cn("w-full aspect-square rounded-xl border-2 transition-all flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900", isCustomTheme && !userImage ? "border-primary scale-105 shadow-glow-primary" : "border-transparent opacity-40 hover:opacity-100")}>
-                      <span className="text-[10px] font-black">ألواني</span>
-                    </button>
-                    <button onClick={() => fileInputRef.current?.click()} className={cn("w-full aspect-square rounded-xl border-2 transition-all flex flex-col items-center justify-center bg-white/5", isCustomTheme && userImage ? "border-primary scale-105 shadow-glow-primary" : "border-transparent opacity-40 hover:opacity-100")}>
-                      <ImagePlus className="w-4 h-4 mb-1" />
-                      <span className="text-[8px] font-black uppercase">خلفيتي</span>
-                    </button>
-                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
-                  </div>
-
-                  {isCustomTheme && (
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl animate-in fade-in slide-in-from-top-2">
-                      <div className="space-y-2 flex flex-col items-center">
-                        <label className="text-[9px] font-black text-white/50 uppercase">لون الخلفية</label>
-                        <input type="color" value={customBg} onChange={(e) => setCustomBg(e.target.value)} className="w-full h-10 rounded cursor-pointer bg-transparent border-0" />
-                      </div>
-                      <div className="space-y-2 flex flex-col items-center">
-                        <label className="text-[9px] font-black text-white/50 uppercase">لون النص</label>
-                        <input type="color" value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full h-10 rounded cursor-pointer bg-transparent border-0" />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setGradientText(!gradientText)} className={cn("flex items-center justify-between p-3 rounded-xl border transition-all", gradientText ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>
-                      <span className="text-[9px] font-black">نص مُذَهَّب</span>
-                      {gradientText ? <Check className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-white/20" />}
-                    </button>
-                    <button onClick={() => setFilmGrain(!filmGrain)} className={cn("flex items-center justify-between p-3 rounded-xl border transition-all", filmGrain ? "bg-primary/10 border-primary/20 text-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>
-                      <span className="text-[9px] font-black">تشويش (Grain)</span>
-                      {filmGrain ? <Check className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-white/20" />}
-                    </button>
-                  </div>
-                </section>
-
-                <section className="space-y-4">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">٣. الزخارف والإطارات</p>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-2">
-                      {CARD_PATTERNS.map(p => {
-                        const isActive = activePatterns.some(ap => ap.id === p.id);
-                        return (
-                          <button
-                            key={p.id}
-                            onClick={() => {
-                              if (p.id === 'none') {
-                                setActivePatterns([p]);
-                              } else {
-                                if (isActive) {
-                                  const next = activePatterns.filter(ap => ap.id !== p.id);
-                                  setActivePatterns(next.length ? next : [CARD_PATTERNS[0]]);
-                                } else {
-                                  setActivePatterns([...activePatterns.filter(ap => ap.id !== 'none'), p]);
-                                }
-                              }
-                            }}
-                            className={cn("py-2 px-1 rounded-xl text-[10px] font-black transition-all text-center", isActive ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]" : "bg-white/5 text-white/40 hover:bg-white/10")}
-                          >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {CARD_FRAMES.map(f => {
-                        const isActive = activeFrames.some(af => af.id === f.id);
-                        return (
-                          <button
-                            key={f.id}
-                            onClick={() => {
-                              if (f.id === 'none') {
-                                setActiveFrames([f]);
-                              } else {
-                                if (isActive) {
-                                  const next = activeFrames.filter(af => af.id !== f.id);
-                                  setActiveFrames(next.length ? next : [CARD_FRAMES[0]]);
-                                } else {
-                                  setActiveFrames([...activeFrames.filter(af => af.id !== 'none'), f]);
-                                }
-                              }
-                            }}
-                            className={cn("py-2 px-1 rounded-xl text-[10px] font-black transition-all text-center border", isActive ? "border-primary text-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.1)]" : "border-white/5 text-white/40 hover:bg-white/10")}
-                          >
-                            {f.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-6">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">٤. إعدادات النص المتقدمة</p>
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><span className="text-[9px] font-black text-white/40 uppercase">حجم الخط</span><span className="text-[10px] font-black text-primary">{customFontSize}px</span></div>
-                      <input type="range" min="10" max="64" value={customFontSize} onChange={(e) => setCustomFontSize(parseInt(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-[9px] font-black text-white/40 uppercase">محاذاة النص</p>
-                      <div className="flex gap-2 p-1 bg-white/5 rounded-lg border border-white/5">
-                        {[
-                          { id: 'right', label: 'يمين', icon: AlignRight },
-                          { id: 'center', label: 'توسيط', icon: LayoutGrid },
-                          { id: 'justify', label: 'ضبط', icon: FileText }
-                        ].map(a => (
-                          <button key={a.id} onClick={() => setTextAlign(a.id as any)} className={cn("flex-1 py-2 flex justify-center items-center rounded-md transition-all", textAlign === a.id ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80")}>
-                            <a.icon className="w-3.5 h-3.5" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><span className="text-[9px] font-black text-white/40 uppercase">تعتيم الخلفية</span><span className="text-[10px] font-black text-primary">{Math.round(overlayOpacity * 100)}%</span></div>
-                      <input type="range" min="0" max="0.9" step="0.1" value={overlayOpacity} onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><span className="text-[9px] font-black text-white/40 uppercase">عمق الظل</span><span className="text-[10px] font-black text-primary">{shadowDepth}px</span></div>
-                      <input type="range" min="0" max="100" value={shadowDepth} onChange={(e) => setShadowDepth(parseInt(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => setTextGlow(!textGlow)} className={cn("flex flex-col items-center gap-2 p-3 rounded-xl transition-all", textGlow ? "bg-primary/10 text-primary" : "bg-white/5 text-white/40")}>
-                        <Sparkles className="w-4 h-4" />
-                        <span className="text-[8px] font-black uppercase">توهج النص</span>
-                      </button>
-                      <button onClick={() => setGlassEffect(!glassEffect)} className={cn("flex flex-col items-center gap-2 p-3 rounded-xl transition-all", glassEffect ? "bg-primary/10 text-primary" : "bg-white/5 text-white/40")}>
-                        <Layers className="w-4 h-4" />
-                        <span className="text-[8px] font-black uppercase">تأثير الزجاج</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">نوع الخط</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {['font-quran', 'font-amiri'].map(f => (
-                          <button key={f} onClick={() => setCardFont(f)} className={cn("p-2 rounded-lg text-[9px] font-black transition-all border", cardFont === f ? "border-primary text-primary bg-primary/5" : "border-white/5 text-white/40")}>
-                            {f === 'font-quran' ? 'عثماني' : 'كلاسيك'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-4">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">٥. التوقيع والمحتوى</p>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Edit3 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
-                      <input
-                        type="text"
-                        placeholder="أدخل اسمك للتوقيع..."
-                        value={signature}
-                        onChange={(e) => setSignature(e.target.value)}
-                        className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 pl-10 pr-4 text-[10px] font-bold text-white placeholder:text-white/10 focus:outline-none focus:border-primary/40 transition-all"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { label: 'التفسير', state: showTafseer, setter: setShowTafseer },
-                        { label: 'المعلومات', state: showMetadata, setter: setShowMetadata },
-                        { label: 'الشعار', state: showLogo, setter: setShowLogo },
-                      ].map((t, i) => (
-                        <button key={i} onClick={() => t.setter(!t.state)} className={cn("flex items-center justify-between p-3 rounded-xl transition-all", t.state ? "bg-white/10 text-white" : "bg-white/5 text-white/20", i === 2 && "col-span-2")}>
-                          <span className="text-[9px] font-black">{t.label}</span>
-                          {t.state ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 border-t border-white/5 bg-black/80 sticky bottom-0 z-50 flex gap-2">
-              <button disabled={isCopying} onClick={copyToClipboard} className="h-14 md:h-16 px-6 bg-white/10 text-white rounded-2xl md:rounded-[2rem] font-black flex items-center justify-center hover:bg-white/20 transition-all border border-white/10 shrink-0">
-                {isCopying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Copy className="w-5 h-5" />}
-              </button>
-              <button disabled={isExporting} onClick={exportImage} className="flex-1 h-14 md:h-16 bg-white text-black rounded-2xl md:rounded-[2rem] font-black flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-4xl">
-                {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-                {isExporting ? 'جاري التصدير...' : 'تصدير التصميم النهائي'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-
-
-function ExamModal({ memorizedVerses, onClose, onComplete }: { memorizedVerses: any[]; onClose: () => void; onComplete: (points: number) => void }) {
-  const [currentExamVerse, setCurrentExamVerse] = useState<any>(null);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [examStep, setExamStep] = useState<'question' | 'result'>('question');
-
-  useEffect(() => {
-    if (memorizedVerses.length > 0) {
-      const random = memorizedVerses[Math.floor(Math.random() * memorizedVerses.length)];
-      setCurrentExamVerse(random);
-    }
-  }, [memorizedVerses]);
-
-  if (!currentExamVerse) return null;
-
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-xl" />
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[3.5rem] overflow-hidden shadow-4xl p-10 md:p-16 text-center">
-          <div className="mb-12">
-            <div className="w-20 h-20 bg-primary/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><Trophy className="w-10 h-10 text-primary" /></div>
-            <h3 className="text-3xl font-black text-white">اختبار تثبيت الحفظ</h3>
-            <p className="text-white/40 text-sm mt-2">هل تتذكر الآية التالية؟</p>
-          </div>
-
-          <div className="space-y-10">
-            <div className="p-10 rounded-[2.5rem] bg-white/[0.03] border border-white/5 relative">
-              <div className="absolute -top-4 right-10 px-4 py-1 bg-primary/10 border border-primary/20 rounded-full text-[10px] font-black text-primary uppercase tracking-widest">الآية السابقة</div>
-              <p className="text-2xl md:text-3xl font-quran leading-relaxed text-white/60">"{currentExamVerse.arabic.split(' ').slice(0, -3).join(' ')}..."</p>
-            </div>
-
-            <AnimatePresence>
-              {showAnswer ? (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 rounded-[2.5rem] bg-emerald-500/10 border border-emerald-500/20 text-center">
-                  <p className="text-3xl md:text-4xl font-quran leading-relaxed text-emerald-400 mb-6">{currentExamVerse.arabic}</p>
-                  <div className="flex items-center justify-center gap-4">
-                    <button onClick={() => { onComplete(10); onClose(); }} className="px-8 py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm hover:scale-105 transition-all">أجبت بشكل صحيح ✅</button>
-                    <button onClick={onClose} className="px-8 py-4 bg-white/5 text-white/40 rounded-2xl font-black text-sm hover:bg-white/10 transition-all">أحتاج للمراجعة 🔄</button>
-                  </div>
-                </motion.div>
-              ) : (
-                <button onClick={() => setShowAnswer(true)} className="w-full h-24 rounded-[2.5rem] border-2 border-dashed border-white/10 text-white/20 font-black hover:border-primary/40 hover:text-primary transition-all text-xl">اضغط هنا لكشف الآية والتأكد</button>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <button onClick={onClose} className="mt-12 text-white/20 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">إلغاء الاختبار</button>
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-function WordAnalysisModal({ analysis, onClose }: { analysis: any; onClose: () => void }) {
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-        <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }} className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl p-8 text-center">
-          <div className="absolute top-4 right-4"><button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button></div>
-
-          <h3 className="text-xs font-black text-white/30 uppercase tracking-[0.2em] mb-8">التحليل اللغوي للكلمة</h3>
-
-          {analysis.loading ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-4"><Loader2 className="w-8 h-8 text-primary animate-spin" /><p className="text-white/40 text-xs font-bold">جاري استخراج المعاني...</p></div>
-          ) : analysis.error ? (
-            <div className="py-12"><p className="text-red-400 text-sm font-bold">عذراً، تعذر جلب معلومات الكلمة. تأكد من اتصالك بالإنترنت.</p></div>
-          ) : analysis.wordData ? (
-            <div className="space-y-6">
-              <div className="p-8 rounded-[2rem] bg-white/[0.03] border border-white/5">
-                <p className="text-5xl font-quran text-primary leading-normal mb-4 drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]">{analysis.wordData.text_uthmani}</p>
-                {analysis.wordData.transliteration?.text && <p className="text-white/40 text-[10px] font-mono tracking-widest uppercase">{analysis.wordData.transliteration.text}</p>}
-              </div>
-
-              <div className="space-y-4 text-right">
-                <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                  <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest mb-2 flex items-center gap-2"><FileText className="w-3 h-3" /> المعنى (عربي)</p>
-                  <p className="text-lg font-bold text-white/90 leading-relaxed">{analysis.wordData.translation?.text || 'المعنى غير متوفر لهذه الكلمة'}</p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-function VerseCard({ verse, accentColor, border, index, isReadingMode, fontSize, onPlay, onShare, onBookmark, onWordClick, isPlaying, isBookmarked, reciterName, id, fontClass, searchQuery, isHideRevealMode, selectedTranslation, onChatClick, isComparisonMode, selectedSecondaryTafseerName, selectedSecondaryTranslation }: any) {
-  const [copied, setCopied] = useState(false);
-  const verseRef = useRef<HTMLDivElement>(null);
-  const [revealedWords, setRevealedWords] = useState<Set<number>>(new Set());
-  const [isCinematicFocus, setIsCinematicFocus] = useState(false);
-
-  // Reset revealed words when hide/reveal mode changes or verse changes
-  useEffect(() => {
-    setRevealedWords(new Set());
-  }, [isHideRevealMode, verse?.id]);
-
-  const normalizeArabic = (text: string) => {
-    if (!text) return '';
-    return text
-      .replace(/[ًٌٍَُِّْ]/g, "")
-      .replace(/[أإآ]/g, "ا")
-      .replace(/ة/g, "ه")
-      .replace(/ى/g, "ي")
-      .trim();
-  };
-
-  const highlightMatch = (text: string, query: string) => {
-    if (!query || query.length < 2) return text;
-    const normalizedText = normalizeArabic(text);
-    const normalizedQuery = normalizeArabic(query);
-
-    if (normalizedText.includes(normalizedQuery)) {
-      return <span className="text-primary drop-shadow-glow-primary font-black">{text}</span>;
-    }
-    return text;
-  };
-
-  // Auto-scroll effect
-  useEffect(() => {
-    if (isPlaying && verseRef.current) {
-      verseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [isPlaying]);
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(`${verse.arabic}\n— ${verse.surah}: ${verse.ayahNumber}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const toggleRevealWord = (wordIndex: number) => {
-    setRevealedWords(prev => {
-      const next = new Set(prev);
-      if (next.has(wordIndex)) next.delete(wordIndex);
-      else next.add(wordIndex);
-      return next;
->>>>>>> Stashed changes
     });
   } catch (e) {
     return dateStr;
   }
 };
 
-<<<<<<< Updated upstream
 const formatTime = (secs: number) => {
   if (isNaN(secs) || !isFinite(secs)) return '0:00';
   const h = Math.floor(secs / 3600);
@@ -1128,198 +101,6 @@ const formatTime = (secs: number) => {
   }
   return `${m}:${sStr}`;
 };
-=======
-  return (
-    <motion.div
-      ref={verseRef}
-      id={`verse-${id}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className={cn(
-        "group relative border overflow-hidden p-6 md:p-10 transition-all duration-500",
-        isCinematicFocus ? "fixed inset-0 z-[500] rounded-none bg-black/95 backdrop-blur-3xl flex flex-col justify-center overflow-y-auto m-0 shadow-2xl" : "rounded-[2.5rem]",
-        !isCinematicFocus && isPlaying ? "bg-primary/20 border-primary/60 shadow-[0_0_50px_-10px_rgba(var(--primary),0.4)] scale-[1.02]" : "",
-        !isCinematicFocus && !isPlaying ? "bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.05]" : "",
-        !isCinematicFocus && border
-      )}
-    >
-      {verse.sajdah && <div className="absolute top-0 left-0 bg-primary px-4 py-1 rounded-br-2xl text-[8px] font-black uppercase tracking-widest text-primary-foreground flex items-center gap-1.5 z-20 shadow-lg"><Star className="w-3 h-3 fill-current" /> سجدة تلاوة</div>}
-      {isHideRevealMode && (
-        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/15 border border-violet-500/20">
-          <EyeOff className="w-3 h-3 text-violet-400" />
-          <span className="text-[9px] font-black text-violet-300 uppercase tracking-widest">وضع الاختبار</span>
-        </div>
-      )}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <span className={cn("px-4 py-1.5 rounded-full text-[10px] font-black border bg-black/20", border, accentColor)}>{verse.surah}</span>
-          <span className="px-4 py-1.5 rounded-full text-[10px] font-black border border-white/5 bg-black/20 text-white/40">{verse.ayahNumber}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {isPlaying && <span className="text-[10px] font-bold text-primary animate-pulse ml-2 flex items-center gap-1"><Music className="w-3 h-3" /> جاري التلاوة...</span>}
-          <button onClick={() => onPlay?.(verse)} className={cn("w-12 h-12 rounded-2xl transition-all duration-300 flex items-center justify-center", isPlaying ? "bg-primary text-primary-foreground shadow-glow-primary" : "bg-white/5 text-white/40 hover:bg-primary/20 hover:text-primary")}>{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}</button>
-        </div>
-      </div>
-      <p
-        dir="rtl"
-        className={cn("text-white/95 text-right transition-all duration-500 select-none", isReadingMode ? "text-4xl md:text-6xl" : "text-2xl md:text-3xl", fontClass)}
-        style={{
-          fontWeight: 'var(--quran-weight, 400)',
-          wordSpacing: 'var(--quran-word-spacing, 0px)',
-          letterSpacing: 'var(--quran-kashida, 0em)',
-          fontSize: isReadingMode && fontSize ? `${fontSize + 10}px` : 'var(--quran-font-size, 2rem)',
-          lineHeight: 'var(--quran-line-height, 2.3)',
-          paddingTop: '0.25rem',
-          paddingBottom: '0.25rem'
-        }}
-      >
-        {verse.arabic.split(' ').map((word: string, i: number) => {
-          const isRevealed = revealedWords.has(i);
-          const isHidden = isHideRevealMode && !isRevealed;
-          return (
-            <motion.span
-              key={i}
-              whileHover={{ scale: 1.15, textShadow: "0px 0px 20px rgba(var(--primary-rgb), 0.6)", y: -3, transition: { type: "spring", stiffness: 300, damping: 15 } }}
-              onClick={() => {
-                if (isHideRevealMode) {
-                  toggleRevealWord(i);
-                } else {
-                  onWordClick?.(verse, i);
-                }
-              }}
-              onMouseEnter={(e: any) => {
-                if (isHideRevealMode && !isRevealed) {
-                  e.currentTarget.style.filter = 'blur(0px)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.95)';
-                }
-              }}
-              onMouseLeave={(e: any) => {
-                if (isHideRevealMode && !isRevealed) {
-                  e.currentTarget.style.filter = 'blur(6px)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.15)';
-                }
-              }}
-              className={cn(
-                "rounded-lg px-1.5 py-0.5 cursor-pointer transition-colors duration-300 inline-block",
-                isHidden
-                  ? "text-white/15 bg-white/5 hover:bg-violet-500/10"
-                  : "hover:text-primary hover:bg-primary/10"
-              )}
-              style={isHidden ? { filter: 'blur(6px)' } : {}}
-              title={isHideRevealMode ? "اضغط لكشف الكلمة" : "انقر لمعرفة التحليل اللغوي"}
-            >
-              {searchQuery ? highlightMatch(word, searchQuery) : word}{' '}
-            </motion.span>
-          );
-        })}
-      </p>
-      <div className="mt-8 pt-8 border-t border-white/5 flex flex-col gap-6">
-        {!isComparisonMode ? (
-          <div className="flex flex-col gap-3 max-w-2xl text-right">
-            <div className="flex items-start gap-4">
-              <Info className="w-4 h-4 text-white/20 mt-1 shrink-0" />
-              <p className={cn("text-white/50 text-sm leading-relaxed", isHideRevealMode && "blur-sm hover:blur-none transition-all duration-300")}>{verse.tafseer}</p>
-            </div>
-            {verse.translation && (
-              <div className="flex items-start gap-4 border-t border-white/5 pt-2" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
-                <Languages className="w-4 h-4 text-emerald-400/40 mt-1 shrink-0" />
-                <p className="text-white/40 text-xs font-semibold leading-relaxed">{verse.translation}</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-right w-full">
-            {/* Column 1: Primary Interpretation */}
-            <div className="flex flex-col gap-4 p-5 rounded-3xl bg-white/[0.02] border border-white/5">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">التفسير والترجمة الأساسية</span>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Info className="w-4 h-4 text-white/30 mt-1 shrink-0" />
-                <div>
-                  <p className="text-[10px] font-bold text-white/30 mb-1">تفسير الآية</p>
-                  <p className={cn("text-white/70 text-xs leading-relaxed font-tajawal", isHideRevealMode && "blur-sm hover:blur-none transition-all duration-300")}>{verse.tafseer}</p>
-                </div>
-              </div>
-
-              {verse.translation && (
-                <div className="flex items-start gap-3 border-t border-white/5 pt-3" dir={selectedTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
-                  <Languages className="w-4 h-4 text-emerald-400/30 mt-1 shrink-0" />
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-white/30 mb-1">الترجمة ({selectedTranslation?.name})</p>
-                    <p className="text-white/60 text-xs font-semibold leading-relaxed">{verse.translation}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Column 2: Secondary Interpretation (Comparison) */}
-            <div className="flex flex-col gap-4 p-5 rounded-3xl bg-amber-500/[0.02] border border-amber-500/10">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
-                <span className="text-[10px] font-black text-amber-400/50 uppercase tracking-widest">المقارنة الجانبية</span>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Info className="w-4 h-4 text-amber-400/30 mt-1 shrink-0" />
-                <div>
-                  <p className="text-[10px] font-bold text-amber-400/30 mb-1">التفسير المقارن ({selectedSecondaryTafseerName})</p>
-                  <p className={cn("text-white/70 text-xs leading-relaxed font-tajawal", isHideRevealMode && "blur-sm hover:blur-none transition-all duration-300")}>{verse.secondaryTafseer || "لا يوجد تفسير مقارن متوفر"}</p>
-                </div>
-              </div>
-
-              {verse.secondaryTranslation && (
-                <div className="flex items-start gap-3 border-t border-white/5 pt-3" dir={selectedSecondaryTranslation?.lang === 'ur' ? 'rtl' : 'ltr'}>
-                  <Languages className="w-4 h-4 text-emerald-400/30 mt-1 shrink-0" />
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-white/30 mb-1">الترجمة المقارنة ({selectedSecondaryTranslation?.name})</p>
-                    <p className="text-white/60 text-xs font-semibold leading-relaxed">{verse.secondaryTranslation}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Actions Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mt-2 pt-4 border-t border-white/5 w-full">
-          {/* Smart AI Tafseer Companion Trigger Button */}
-          <button
-            onClick={(e: any) => { e.stopPropagation(); onChatClick?.(verse); }}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600/30 to-indigo-600/30 text-violet-300 border border-violet-500/20 hover:from-violet-600/40 hover:to-indigo-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2.5 text-xs font-black"
-          >
-            <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
-            <span>🤖 رفيق التدبر والتفسير الذكي</span>
-          </button>
-
-          {/* Cinematic Focus Mode Button */}
-          <button
-            onClick={(e: any) => { e.stopPropagation(); setIsCinematicFocus(!isCinematicFocus); }}
-            className={cn(
-              "px-5 py-3 rounded-2xl transition-all flex items-center gap-2.5 text-xs font-black border",
-              isCinematicFocus 
-                ? "bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]" 
-                : "bg-white/5 text-white/40 border-transparent hover:bg-white/10 hover:text-white"
-            )}
-          >
-            <Eye className={cn("w-4 h-4", isCinematicFocus && "animate-pulse")} />
-            <span>{isCinematicFocus ? 'إغلاق وضع التركيز' : 'التركيز السينمائي'}</span>
-          </button>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={(e: any) => { e.stopPropagation(); onShare?.(verse); }} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-primary hover:bg-primary/10 transition-all flex items-center gap-2 text-xs font-bold"><ImageIcon className="w-4 h-4" /> مشاركة</button>
-            <button onClick={(e: any) => { e.stopPropagation(); onBookmark?.(verse); }} className={cn("p-3 rounded-xl transition-all", isBookmarked ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40 hover:text-white")}><BookmarkCheck className={cn("w-4 h-4", isBookmarked && "fill-current")} /></button>
-            <button onClick={handleCopy} className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-white transition-colors">{copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}</button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
->>>>>>> Stashed changes
 
 // ━━━━━━━━━━━ MAIN PAGE ━━━━━━━━━━━
 
@@ -1483,7 +264,6 @@ export default function QuranPage() {
   const [searchFilter, setSearchFilter] = useState<'all' | 'surahs' | 'verses' | 'tafseer'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-<<<<<<< Updated upstream
   // ── ① Debounced Search (reduces re-renders on every keystroke) ──
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1663,8 +443,6 @@ export default function QuranPage() {
     return channelNames[maxChannelId] || 'قناة مخصصة';
   }, [listenedEpisodeIds, customRadioStations, importedChannels]);
 
-=======
->>>>>>> Stashed changes
   // ── Phase 3: Brand New Optimized & Developed Features States ──
   const [mushafType, setMushafType] = useState<'image' | 'digital'>('image');
   const [selectedTranslation, setSelectedTranslation] = useState(TRANSLATIONS[0]);
@@ -1677,7 +455,6 @@ export default function QuranPage() {
   const [customPlanType, setCustomPlanType] = useState<'pages' | 'duration'>('pages');
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
 
-<<<<<<< Updated upstream
   // ── Phase 4: Comparison & AI Chat Hook Integration ──
   const {
     isComparisonMode,
@@ -1699,17 +476,6 @@ export default function QuranPage() {
     handleSendChatMessage,
     startTafseerChat
   } = useQuranChat();
-=======
-  // ── Phase 4: Comparison & AI Chat Companion States ──
-  const [isComparisonMode, setIsComparisonMode] = useState<boolean>(false);
-  const [selectedSecondaryTafseer, setSelectedSecondaryTafseer] = useState(TAFSEERS[1]);
-  const [selectedSecondaryTranslation, setSelectedSecondaryTranslation] = useState(TRANSLATIONS[1]);
-  const [activeChatVerse, setActiveChatVerse] = useState<any | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatInput, setChatInput] = useState<string>('');
-  const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
-  const [chatConnectionMode, setChatConnectionMode] = useState<'online' | 'local'>('online');
->>>>>>> Stashed changes
 
   // ── Phase 5: Dynamic Typography Engine States ──
   const [isTypographyPanelOpen, setIsTypographyPanelOpen] = useState<boolean>(false);
@@ -1719,7 +485,6 @@ export default function QuranPage() {
   const [typoLetterSpacing, setTypoLetterSpacing] = useState<number>(0);
   const [typoFontSize, setTypoFontSize] = useState<number>(32);
 
-<<<<<<< Updated upstream
   // ── Sleep Timer, Surah Filters & Quick Jump States ──
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
@@ -1731,8 +496,6 @@ export default function QuranPage() {
   const [quickJumpAyah, setQuickJumpAyah] = useState<string>('');
   const [isQuickJumpOpen, setIsQuickJumpOpen] = useState<boolean>(false);
 
-=======
->>>>>>> Stashed changes
   // Sync typography to CSS variables
   useEffect(() => {
     const root = document.documentElement;
@@ -1830,44 +593,6 @@ export default function QuranPage() {
   }, []);
 
   // ── Ambient Sound Control Effect ──
-<<<<<<< Updated upstream
-=======
-  useEffect(() => {
-    if (!ambientAudioRef.current && typeof Audio !== 'undefined') {
-      ambientAudioRef.current = new Audio();
-      ambientAudioRef.current.loop = true;
-    }
-
-    if (activeAmbient) {
-      const sound = AMBIENT_SOUNDS.find(s => s.id === activeAmbient);
-      if (sound && ambientAudioRef.current) {
-        ambientAudioRef.current.src = sound.url;
-        ambientAudioRef.current.volume = ambientVolume;
-        ambientAudioRef.current.play().catch(e => console.warn("Failed to play ambient sound:", e));
-      }
-    } else {
-      if (ambientAudioRef.current) {
-        ambientAudioRef.current.pause();
-      }
-    }
-  }, [activeAmbient]);
-
-  useEffect(() => {
-    if (ambientAudioRef.current) {
-      ambientAudioRef.current.volume = ambientVolume;
-    }
-  }, [ambientVolume]);
-
-  useEffect(() => {
-    return () => {
-      if (ambientAudioRef.current) {
-        ambientAudioRef.current.pause();
-        ambientAudioRef.current = null;
-      }
-    };
-  }, []);
-
->>>>>>> Stashed changes
   useEffect(() => {
     if (!ambientAudioRef.current && typeof Audio !== 'undefined') {
       ambientAudioRef.current = new Audio();
@@ -2143,33 +868,6 @@ export default function QuranPage() {
 
     return result;
   }, [surahs, debouncedSearchQuery, surahTypeFilter, surahJuzFilter]);
-
-  const semanticResults = useMemo(() => {
-    const query = normalizeArabic(searchQuery.trim().toLowerCase());
-    if (!query || query.length < 2) return [];
-
-    const foundTopic = SEMANTIC_TOPICS.find(topic =>
-      topic.keywords.some(keyword => query.includes(normalizeArabic(keyword)) || normalizeArabic(keyword).includes(query))
-    );
-
-    if (!foundTopic) return [];
-
-    return foundTopic.ayahs.map((a, index) => {
-      const surahObj = surahs.find(s => s.number === a.surah);
-      const surahName = surahObj ? surahObj.name : 'سورة مجهولة';
-      return {
-        id: a.surah * 1000 + a.ayah,
-        surah: surahName,
-        surahNumber: a.surah,
-        ayahNumber: a.ayah.toString(),
-        arabic: a.text,
-        tafseer: `مطابقة دلالية لموضوع: ${foundTopic.title}`,
-        type: 'verse',
-        isSemantic: true,
-        semanticTitle: foundTopic.title
-      };
-    });
-  }, [searchQuery, surahs]);
 
   const semanticResults = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim().toLowerCase());
@@ -2720,105 +1418,8 @@ export default function QuranPage() {
     updateState({ points: (state.points || 0) + points });
   };
 
-<<<<<<< Updated upstream
   
   
-=======
-  const handleSendChatMessage = async (customPrompt?: string) => {
-    const text = customPrompt || chatInput;
-    if (!text.trim() || !activeChatVerse) return;
-
-    // Add user message
-    const userMsg = { role: 'user', content: text };
-    const updatedMessages = [...chatMessages, userMsg];
-    setChatMessages(updatedMessages);
-    setChatInput('');
-    setIsChatLoading(true);
-
-    try {
-      // Filter out the initial greeting so that the Gemini API chat history starts with a user message
-      const apiMessages = updatedMessages.filter((m, idx) => !(idx === 0 && m.role === 'model'));
-
-      // 1. Try sending to the local Gemini endpoint /api/chat
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: `أنت عالم ومفسر إسلامي خبير ومتخصص في بلاغة القرآن الكريم، أسباب النزول، والدروس الدعوية والتربوية المستفادة.
-أنت تساعد المستخدم حالياً في تدبر وتأمل هذه الآية الكريمة:
-- السورة: سورة ${activeChatVerse.surah} (رقم السورة: ${activeChatVerse.surahNumber})
-- الآية: آية رقم ${activeChatVerse.ayahNumber}
-- نص الآية بالرسم العثماني: "${activeChatVerse.arabic}"
-- التفسير الميسر المعتمد للآية: "${activeChatVerse.tafseer}"
-- ترجمة الآية المعتمدة: "${activeChatVerse.translation || 'غير متوفرة حالياً'}"
-
-توجيهات مهمة للإجابة:
-1. التزم بالمنهج الإسلامي الوسطي المعتمد في التفسير والتدبر.
-2. أجب باللغة العربية الفصحى المبسطة بأسلوب حواري دافئ، محبب وميسر للقلوب.
-3. إذا سألك المستخدم عن البلاغة، فركّز على مواطن الجمال اللغوي، التقديم والتأخير، إعجاز الألفاظ، والطباق أو السجع القرآني الفريد.
-4. إذا سألك عن سبب النزول، اعتمد على الأحاديث والروايات الصحيحة المأثورة في أسباب النزول.
-5. إذا سألك عن الدروس، فاستنبط له فوائد عملية يمكنه تطبيقها في حياته اليومية وعلاقته بالله ومع الناس.
-6. لا تجب عن أي أسئلة خارج نطاق الدين الإسلامي، وتدبر الآية الكريمة المعطاة.`,
-          messages: apiMessages.map(m => ({
-            role: m.role,
-            parts: [{ text: m.content }]
-          }))
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.text) {
-        setChatMessages(prev => [...prev, { role: 'model', content: data.text }]);
-        setChatConnectionMode('online');
-      } else {
-        throw new Error(data.error || "ONLINE_API_FAILED");
-      }
-    } catch (err: any) {
-      console.warn("AI Chat API failed, using local scholar database:", err);
-      setChatConnectionMode('local');
-
-      let explanation = '';
-      const key = `${activeChatVerse.surahNumber}:${activeChatVerse.ayahNumber}`;
-      const lowerText = text.toLowerCase();
-
-      const localData = LOCAL_SCHOLAR_DB[key] || null;
-
-      if (lowerText.includes('بلاغة') || lowerText.includes('إعجاز') || lowerText.includes('جمال')) {
-        explanation = localData?.rhetoric || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'rhetoric');
-      } else if (lowerText.includes('نزول') || lowerText.includes('سبب')) {
-        explanation = localData?.revelation || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'revelation');
-      } else if (lowerText.includes('درس') || lowerText.includes('دروس') || lowerText.includes('عبر') || lowerText.includes('مستفاد')) {
-        explanation = localData?.lessons || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'lessons');
-      } else {
-        explanation = `أهلاً بك في رفيق التفسير والتدبر المحلي. إليك تفصيل لآية ${activeChatVerse.ayahNumber} من سورة ${activeChatVerse.surah}:\n\n` +
-          `**✨ بلاغة الآية:**\n${localData?.rhetoric || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'rhetoric')}\n\n` +
-          `**📜 سبب النزول:**\n${localData?.revelation || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'revelation')}\n\n` +
-          `**💡 الدروس والعبر:**\n${localData?.lessons || getLocalFallbackExplanation(activeChatVerse.surah, activeChatVerse.ayahNumber, activeChatVerse.arabic, 'lessons')}`;
-      }
-
-      setTimeout(() => {
-        setChatMessages(prev => [...prev, { role: 'model', content: explanation }]);
-      }, 500);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const startTafseerChat = (verse: any) => {
-    setActiveChatVerse(verse);
-    setChatMessages([
-      {
-        role: 'model',
-        content: `أهلاً بك في **مساعد التفسير والتدبر الذكي** 🤖 لآية **${verse.ayahNumber}** من **سورة ${verse.surah}**.\n\nيمكنني مساعدتك في استكشاف بلاغة الآية، سبب نزولها، واستنباط الدروس المستفادة. اختر أحد الأسئلة الجاهزة بالأسفل أو اكتب سؤالك الخاص!`
-      }
-    ]);
-    setChatInput('');
-    setIsChatLoading(false);
-    setChatConnectionMode('online');
-  };
-
->>>>>>> Stashed changes
   const saveCustomPlan = () => {
     let pagesPerDay = customPagesInput;
     let months = 0;
@@ -2994,48 +1595,6 @@ export default function QuranPage() {
                   )}
                 >
                   {v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : v === 'plan' ? 'خطة الحفظ' : 'إذاعة القرآن'}
-                </button>
-              ))}
-            </div>
-
-            {/* Left: Reading Mode */}
-            <div className="shrink-0">
-              <ReadingModeToggle />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════════════ FIXED TOP BAR ═══════════════════ */}
-      <div className="fixed top-1 left-1/2 -translate-x-1/2 z-[200] w-[98%] max-w-7xl">
-        <div className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8)] px-4 md:px-6">
-          <div className="flex items-center justify-between h-16 gap-3">
-            {/* Right: View Mode & Tajweed */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsTajweedGuideOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1e1b4b]/40 text-purple-300 border border-purple-900/30 hover:bg-[#1e1b4b]/60 hover:text-white transition-all text-[9px] font-black"
-              >
-                📖 التجويد
-              </button>
-              <div className={cn("flex bg-white/5 border border-white/10 rounded-xl p-1", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
-                <button onClick={() => setViewMode('ayah')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'ayah' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>آيات</button>
-                <button onClick={() => setViewMode('page')} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black transition-all", viewMode === 'page' ? "bg-primary text-primary-foreground shadow-glow-primary" : "text-white/30 hover:text-white")}>صفحة</button>
-              </div>
-            </div>
-
-            {/* Center: Main Tabs */}
-            <div className={cn("flex items-center gap-1.5 flex-1 justify-center overflow-x-auto no-scrollbar", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
-              {['collections', 'full', 'plan', 'luminous'].map((v: any) => (
-                <button
-                  key={v}
-                  onClick={() => setView(v)}
-                  className={cn(
-                    "px-4 md:px-6 py-2 rounded-xl font-black text-[10px] md:text-xs transition-all border relative overflow-hidden whitespace-nowrap",
-                    view === v ? "bg-white text-black border-white shadow-glow-white" : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10"
-                  )}
-                >
-                  {v === 'collections' ? 'آيات مختارة' : v === 'full' ? 'المصحف كاملاً' : v === 'luminous' ? 'المصحف المضيء' : 'خطة الحفظ'}
                 </button>
               ))}
             </div>
@@ -3302,11 +1861,7 @@ export default function QuranPage() {
 
       <div className="container relative z-10 px-4 pt-24">
         {/* ═══ Contextual Toolbar ═══ */}
-<<<<<<< Updated upstream
         <div className={cn("mb-10 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all", (isReadingMode || view === 'radio') && "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none")}>
-=======
-        <div className={cn("mb-10 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none")}>
->>>>>>> Stashed changes
           <div className="flex flex-wrap items-center gap-4 justify-center">
             {/* Tafseer Selector */}
             <div className={cn("relative group transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
@@ -3372,7 +1927,6 @@ export default function QuranPage() {
               </button>
             </div>
 
-<<<<<<< Updated upstream
             {/* Memorization Test Mode Toggle */}
             <div className={cn("relative transition-all", isReadingMode && "opacity-0 scale-95 pointer-events-none")}>
               <button
@@ -3395,8 +1949,6 @@ export default function QuranPage() {
               </button>
             </div>
 
-=======
->>>>>>> Stashed changes
             {isComparisonMode && (
               <>
                 {/* Secondary Tafseer Selector */}
@@ -3616,11 +2168,7 @@ export default function QuranPage() {
         )}
 
         {/* ── Search ── */}
-<<<<<<< Updated upstream
         <div className={cn("w-full mb-16 space-y-8", (isReadingMode || view === 'radio') && "opacity-0 h-0 overflow-hidden mb-0 transition-all pointer-events-none")}>
-=======
-        <div className={cn("w-full mb-16 space-y-8", isReadingMode && "opacity-0 h-0 overflow-hidden mb-0 transition-all")}>
->>>>>>> Stashed changes
           <div className="relative group">
             <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
             <input
@@ -3852,83 +2400,6 @@ export default function QuranPage() {
 
         {/* ── Content View ── */}
         <div className="w-full">
-<<<<<<< Updated upstream
-=======
-          {view === 'collections' && !isReadingMode && (
-            <div className="space-y-12">
-              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar justify-center">{TOPICS.map(topic => (<button key={topic.id} onClick={() => setActiveTopic(topic.id)} className={cn("px-8 py-3 rounded-2xl whitespace-nowrap font-bold transition-all border text-sm", activeTopic === topic.id ? "bg-primary border-primary text-primary-foreground shadow-glow-primary" : "bg-white/5 border-transparent text-white/40 hover:bg-white/10")}>{topic.label}</button>))}</div>
-              <div className="grid gap-10">{QURAN_DATA.map(col => {
-                if (activeTopic === 'memorized') return col.verses.filter(v => state.quranMemorization?.[v.surahNumber] === 'completed').map((v, i) => (
-                  <VerseCard
-                    key={v.id}
-                    verse={v}
-                    accentColor={col.color}
-                    border={col.border}
-                    index={i}
-                    onPlay={handlePlayVerse}
-                    onShare={handleShare}
-                    onBookmark={toggleBookmark}
-                    onWordClick={handleWordClick}
-                    isPlaying={currentAudio?.id === v.id && isPlaying}
-                    isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
-                    reciterName={selectedReciter.name}
-                    fontClass={selectedScript.font}
-                    selectedTranslation={selectedTranslation}
-                    onChatClick={startTafseerChat}
-                    isComparisonMode={isComparisonMode}
-                    selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
-                    selectedSecondaryTranslation={selectedSecondaryTranslation}
-                  />
-                ));
-                if (activeTopic === 'bookmarks') return col.verses.filter(v => state.favorites?.includes(`quran_${v.id}`)).map((v, i) => (
-                  <VerseCard
-                    key={v.id}
-                    verse={v}
-                    accentColor={col.color}
-                    border={col.border}
-                    index={i}
-                    onPlay={handlePlayVerse}
-                    onShare={handleShare}
-                    onBookmark={toggleBookmark}
-                    onWordClick={handleWordClick}
-                    isPlaying={currentAudio?.id === v.id && isPlaying}
-                    isBookmarked={true}
-                    reciterName={selectedReciter.name}
-                    fontClass={selectedScript.font}
-                    selectedTranslation={selectedTranslation}
-                    onChatClick={startTafseerChat}
-                    isComparisonMode={isComparisonMode}
-                    selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
-                    selectedSecondaryTranslation={selectedSecondaryTranslation}
-                  />
-                ));
-                if (activeTopic !== 'all' && col.id !== activeTopic) return null;
-                return col.verses.map((v, i) => (
-                  <VerseCard
-                    key={v.id}
-                    verse={v}
-                    accentColor={col.color}
-                    border={col.border}
-                    index={i}
-                    onPlay={handlePlayVerse}
-                    onShare={handleShare}
-                    onBookmark={toggleBookmark}
-                    onWordClick={handleWordClick}
-                    isPlaying={currentAudio?.id === v.id && isPlaying}
-                    isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
-                    reciterName={selectedReciter.name}
-                    fontClass={selectedScript.font}
-                    selectedTranslation={selectedTranslation}
-                    onChatClick={startTafseerChat}
-                    isComparisonMode={isComparisonMode}
-                    selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
-                    selectedSecondaryTranslation={selectedSecondaryTranslation}
-                  />
-                ));
-              })}</div>
-            </div>
-          )}
->>>>>>> Stashed changes
 
           {view === 'full' && (
             <div className="space-y-12">
@@ -4168,7 +2639,6 @@ export default function QuranPage() {
                               <p className="text-4xl md:text-6xl text-white/90">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
                             </div>
                           )}
-<<<<<<< Updated upstream
                           {versesVirtualizer.getVirtualItems().map((virtualItem) => {
                             const v = surahContent[virtualItem.index];
                             if (!v) return null;
@@ -4209,33 +2679,6 @@ export default function QuranPage() {
                               </div>
                             );
                           })}
-=======
-                          {surahContent.map((v, i) => (
-                            <VerseCard
-                              key={v.id}
-                              id={v.id}
-                              verse={v}
-                              accentColor="text-primary"
-                              border="border-primary/20"
-                              index={i}
-                              isReadingMode={isReadingMode}
-                              fontSize={fontSize}
-                              onPlay={handlePlayVerse}
-                              onShare={handleShare}
-                              onBookmark={toggleBookmark}
-                              onWordClick={handleWordClick}
-                              isBookmarked={state.favorites?.includes(`quran_${v.id}`)}
-                              isPlaying={currentAudio?.id === v.id && isPlaying}
-                              reciterName={selectedReciter.name}
-                              fontClass={selectedScript.font}
-                              selectedTranslation={selectedTranslation}
-                              onChatClick={startTafseerChat}
-                              isComparisonMode={isComparisonMode}
-                              selectedSecondaryTafseerName={selectedSecondaryTafseer.name}
-                              selectedSecondaryTranslation={selectedSecondaryTranslation}
-                            />
-                          ))}
->>>>>>> Stashed changes
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-6 w-full">
@@ -4368,23 +2811,15 @@ export default function QuranPage() {
                                                 {isRightImageLoading && (
                                                   <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                                 )}
-<<<<<<< Updated upstream
                                                 <Image
-=======
-                                                <img
->>>>>>> Stashed changes
                                                   src={rightImgSrc}
                                                   onLoad={() => setIsRightImageLoading(false)}
                                                   onError={handleRightImageError}
                                                   alt={`Page ${rightPage}`}
-<<<<<<< Updated upstream
                                                   width={800}
                                                   height={1160}
                                                   className={cn("max-h-[580px] w-auto h-auto object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                                   priority={true}
-=======
-                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
->>>>>>> Stashed changes
                                                 />
                                               </div>
                                             ) : (
@@ -4414,23 +2849,15 @@ export default function QuranPage() {
                                                 {isLeftImageLoading && (
                                                   <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                                 )}
-<<<<<<< Updated upstream
                                                 <Image
-=======
-                                                <img
->>>>>>> Stashed changes
                                                   src={leftImgSrc}
                                                   onLoad={() => setIsLeftImageLoading(false)}
                                                   onError={handleLeftImageError}
                                                   alt={`Page ${leftPage}`}
-<<<<<<< Updated upstream
                                                   width={800}
                                                   height={1160}
                                                   className={cn("max-h-[580px] w-auto h-auto object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isLeftImageLoading ? "opacity-0" : "opacity-95")}
                                                   priority={true}
-=======
-                                                  className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isLeftImageLoading ? "opacity-0" : "opacity-95")}
->>>>>>> Stashed changes
                                                 />
                                               </div>
                                             ) : (
@@ -4468,23 +2895,15 @@ export default function QuranPage() {
                                               {isRightImageLoading && (
                                                 <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                               )}
-<<<<<<< Updated upstream
                                               <Image
-=======
-                                              <img
->>>>>>> Stashed changes
                                                 src={rightImgSrc}
                                                 onLoad={() => setIsRightImageLoading(false)}
                                                 onError={handleRightImageError}
                                                 alt={`Page ${currentPage}`}
-<<<<<<< Updated upstream
                                                 width={800}
                                                 height={1160}
                                                 className={cn("max-h-[500px] w-auto h-auto object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                                 priority={true}
-=======
-                                                className={cn("max-h-[500px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
->>>>>>> Stashed changes
                                               />
                                             </div>
                                           ) : (
@@ -4522,23 +2941,15 @@ export default function QuranPage() {
                                             {isRightImageLoading && (
                                               <Loader2 className="w-8 h-8 animate-spin text-amber-800/40 absolute" />
                                             )}
-<<<<<<< Updated upstream
                                             <Image
-=======
-                                            <img
->>>>>>> Stashed changes
                                               src={rightImgSrc}
                                               onLoad={() => setIsRightImageLoading(false)}
                                               onError={handleRightImageError}
                                               alt={`Page ${currentPage}`}
-<<<<<<< Updated upstream
                                               width={800}
                                               height={1160}
                                               className={cn("max-h-[580px] w-auto h-auto object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
                                               priority={true}
-=======
-                                              className={cn("max-h-[580px] object-contain mix-blend-multiply opacity-95 transition-opacity duration-300", isRightImageLoading ? "opacity-0" : "opacity-95")}
->>>>>>> Stashed changes
                                             />
                                           </div>
                                         ) : (
@@ -6342,11 +4753,7 @@ export default function QuranPage() {
       {view === 'luminous' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[200] bg-black overflow-y-auto">
           <div className="sticky top-4 left-4 z-50 flex justify-end px-4">
-<<<<<<< Updated upstream
             <button onClick={() => setView('full')} className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full backdrop-blur-md">
-=======
-            <button onClick={() => setView('collections')} className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full backdrop-blur-md">
->>>>>>> Stashed changes
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -6510,281 +4917,3 @@ export default function QuranPage() {
   );
 }
 
-<<<<<<< Updated upstream
-=======
-// ━━━━━━━━━━━ ADDITIONAL MODALS ━━━━━━━━━━━
-
-function CustomPlanModal({ onClose, customPagesInput, setCustomPagesInput, customDurationInput, setCustomDurationInput, customPlanType, setCustomPlanType, onSave }: any) {
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-3xl p-8" dir="rtl">
-          <div className="flex items-center justify-between pb-6 border-b border-white/5">
-            <h3 className="text-lg font-black text-white flex items-center gap-3"><Target className="w-5 h-5 text-primary" /> إنشاء خطة حفظ مخصصة</h3>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-4.5 h-4.5 text-white/40" /></button>
-          </div>
-
-          <div className="py-6 space-y-6">
-            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
-              <button onClick={() => setCustomPlanType('pages')} className={cn("flex-1 py-3 rounded-xl text-xs font-black transition-all", customPlanType === 'pages' ? "bg-primary text-primary-foreground" : "text-white/40 hover:text-white")}>حسب الورد اليومي (صفحات)</button>
-              <button onClick={() => setCustomPlanType('duration')} className={cn("flex-1 py-3 rounded-xl text-xs font-black transition-all", customPlanType === 'duration' ? "bg-primary text-primary-foreground" : "text-white/40 hover:text-white")}>حسب مدة الختم (أشهر)</button>
-            </div>
-
-            {customPlanType === 'pages' ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-white/60">عدد الصفحات يومياً:</span>
-                  <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-xl">{customPagesInput} صفحات</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  step="1"
-                  value={customPagesInput}
-                  onChange={(e) => setCustomPagesInput(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-                />
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2 mt-4">
-                  <p className="text-[11px] font-tajawal text-white/50 leading-relaxed">
-                    بمعدل حفظ <strong className="text-primary font-black">{customPagesInput} صفحات</strong> يومياً، ستختم القرآن الكريم كاملاً في غضون:
-                  </p>
-                  <div className="flex items-center gap-2 text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>~ {Math.round(604 / (customPagesInput * 30)) || 1} أشهر تقريباً</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-white/60">المدة المطلوبة للختم:</span>
-                  <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-xl">{customDurationInput} أشهر</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="36"
-                  step="1"
-                  value={customDurationInput}
-                  onChange={(e) => setCustomDurationInput(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-                />
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2 mt-4">
-                  <p className="text-[11px] font-tajawal text-white/50 leading-relaxed">
-                    لتتمكن من الختم في غضون <strong className="text-primary font-black">{customDurationInput} أشهر</strong>، سيتوجب عليك يومياً حفظ:
-                  </p>
-                  <div className="flex items-center gap-2 text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>~ {Math.round((604 / (customDurationInput * 30)) * 10) / 10} صفحة يومياً</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3 pt-6 border-t border-white/5">
-            <button onClick={onSave} className="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow-primary">تفعيل الخطة المخصصة</button>
-            <button onClick={onClose} className="px-6 py-4 bg-white/5 text-white/60 rounded-2xl font-black text-xs hover:bg-white/10 transition-all">إلغاء</button>
-          </div>
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-function TajweedGuideModal({ onClose }: any) {
-  const rules = [
-    {
-      title: 'أحكام النون الساكنة والتنوين', items: [
-        { name: 'الإظهار', desc: 'إخراج الحرف من مخرجه دون غنة. حروفه: (ء، هـ، ع، ح، غ، خ)', color: 'bg-blue-500/10 border-blue-500/20 text-blue-300' },
-        { name: 'الإدغام', desc: 'دمج النون في الحرف التالي بغنة أو بدونها. حروفه: (ي، ر، م، ل، و، ن)', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' },
-        { name: 'الإقلاب', desc: 'قلب النون الساكنة أو التنوين ميماً مخفاة بغنة عند حرف (الباء)', color: 'bg-amber-500/10 border-amber-500/20 text-amber-300' },
-        { name: 'الإخفاء', desc: 'نطق الحرف بحالة بين الإظهار والإدغام مع الغنة. بقية الحروف الـ 15', color: 'bg-violet-500/10 border-violet-500/20 text-violet-300' }
-      ]
-    },
-    {
-      title: 'المدود الأساسية', items: [
-        { name: 'المد الطبيعي', desc: 'مد بمقدار حركتين عند انعدام الهمز أو السكون بعد حرف المد', color: 'bg-rose-500/10 border-rose-500/20 text-rose-300' },
-        { name: 'المد المتصل', desc: 'أن يقع الهمز بعد حرف المد في كلمة واحدة، ويمد 4 أو 5 حركات واجبة', color: 'bg-purple-500/10 border-purple-500/20 text-purple-300' },
-        { name: 'المد المنفصل', desc: 'أن يقع حرف المد في كلمة والهمز في الكلمة التالية، ويمد 4 أو 5 حركات جائزة', color: 'bg-orange-500/10 border-orange-500/20 text-orange-300' }
-      ]
-    }
-  ];
-
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-md" />
-        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-4xl max-h-[85vh] flex flex-col" dir="rtl">
-          <div className="p-8 border-b border-white/5 flex items-center justify-between shrink-0">
-            <h3 className="text-xl font-black text-white flex items-center gap-3"><Star className="w-5 h-5 text-primary" /> دليل أحكام التجويد المبسط</h3>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-5 h-5 text-white/40" /></button>
-          </div>
-
-          <div className="p-8 overflow-y-auto space-y-8 flex-1 custom-scrollbar">
-            {rules.map((section, idx) => (
-              <div key={idx} className="space-y-4">
-                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-r-2 border-primary pr-3">{section.title}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {section.items.map((item, itemIdx) => (
-                    <div
-                      key={itemIdx}
-                      className={cn(
-                        "p-5 border rounded-2xl space-y-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-white/20 select-none",
-                        item.color
-                      )}
-                    >
-                      <h5 className="font-bold text-sm flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                        {item.name}
-                      </h5>
-                      <p className="text-white/70 text-[11px] leading-relaxed font-tajawal">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-6 border-t border-white/5 bg-black/50 flex justify-end shrink-0">
-            <button onClick={onClose} className="px-8 py-3 bg-white text-black rounded-xl font-black text-xs hover:scale-105 transition-all">فهمت</button>
-          </div>
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-// ━━━━━━━━━━━ SMART AI CHAT COMPANION SUPPORT ━━━━━━━━━━━
-
-function TafseerChatModal({ verse, messages, isListLoading, connectionMode, onClose, onSendMessage, chatInput, setChatInput }: any) {
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-[3rem] overflow-hidden shadow-4xl max-h-[85vh] flex flex-col" dir="rtl">
-
-          {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div className="text-right">
-                <h3 className="text-sm font-black text-white">رفيق التفسير والتدبر الذكي 🤖</h3>
-                <p className="text-[10px] text-white/40">سورة {verse.surah} • آية {verse.ayahNumber}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className={cn(
-                "px-2.5 py-1 rounded-full text-[9px] font-black border",
-                connectionMode === 'online'
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-              )}>
-                {connectionMode === 'online' ? "متصل بالذكاء الاصطناعي 🟢" : "وضع التدبر المحلي 🟠"}
-              </span>
-              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
-                <X className="w-4.5 h-4.5 text-white/40" />
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-black/[0.15]">
-            {messages.map((msg: any, idx: number) => {
-              const isAssistant = msg.role === 'model' || msg.role === 'assistant';
-              return (
-                <div key={idx} className={cn("flex gap-3 max-w-[85%] animate-in fade-in slide-in-from-top-2 duration-300", isAssistant ? "mr-0 ml-auto" : "ml-0 mr-auto flex-row-reverse")}>
-                  <div className={cn("w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs", isAssistant ? "bg-primary/20 text-primary" : "bg-white/10 text-white/80")}>
-                    {isAssistant ? '🤖' : '👤'}
-                  </div>
-                  <div className={cn("p-4 rounded-3xl text-xs leading-relaxed", isAssistant ? "bg-white/[0.03] border border-white/5 text-white/80" : "bg-primary text-primary-foreground font-semibold")}>
-                    <p className="whitespace-pre-line font-tajawal">{msg.content}</p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {isListLoading && (
-              <div className="flex gap-3 max-w-[85%] mr-0 ml-auto items-center animate-pulse">
-                <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-xs text-primary">🤖</div>
-                <div className="p-4 rounded-3xl bg-white/[0.03] border border-white/5 text-white/40 text-[11px] font-tajawal">جاري التدبر والتأمل في الآية...</div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Prompt Recommendations */}
-          {messages.length === 1 && (
-            <div className="p-4 bg-black/40 border-t border-white/5 space-y-2 shrink-0">
-              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest text-right mb-1">أسئلة مقترحة للتدبر:</p>
-              <div className="flex flex-wrap gap-2 justify-start">
-                <button onClick={() => onSendMessage('ما البلاغة والإعجاز اللغوي في هذه الآية الكريمة؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">✨ بلاغة الآية وإعجازها</button>
-                <button onClick={() => onSendMessage('ما هو سبب نزول هذه الآية الكريمة؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">📜 سبب النزول</button>
-                <button onClick={() => onSendMessage('ما هي الدروس والعبر المستفادة من هذه الآية للعمل بها في حياتي؟')} className="px-3.5 py-2 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all">💡 الدروس والعبر</button>
-              </div>
-            </div>
-          )}
-
-          {/* Input Area */}
-          <div className="p-4 border-t border-white/5 bg-black/50 shrink-0 flex gap-2 items-center">
-            <input
-              type="text"
-              placeholder="اكتب سؤالك الخاص حول تفسير الآية أو بلاغتها..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && onSendMessage()}
-              disabled={isListLoading}
-              className="flex-1 bg-white/5 border border-white/5 rounded-2xl px-5 py-3.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary transition-all font-tajawal"
-            />
-            <button
-              onClick={() => onSendMessage()}
-              disabled={isListLoading || !chatInput.trim()}
-              className="p-3.5 bg-primary text-primary-foreground rounded-2xl hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 transition-all"
-            >
-              <ArrowLeft className="w-5 h-5 transform rotate-180" />
-            </button>
-          </div>
-
-        </motion.div>
-      </div>
-    </ModalPortal>
-  );
-}
-
-const LOCAL_SCHOLAR_DB: Record<string, { rhetoric: string; revelation: string; lessons: string }> = {
-  "2:255": {
-    rhetoric: "آية الكرسي هي أعظم آية في القرآن. فيها من البلاغة ما يبهر العقول: الفواصل الموسيقية الهادئة المتسقة، التكرار اللطيف لأسماء الله الحسنى، والتقابل البديع بين (السماوات والأرض)، وطباق السلب بين (لا تأخذه) و(ولا نوم)، والأسلوب الخبري المؤكد لحفظ الكون وعلو الخالق سبحانه وتعالى.",
-    revelation: "لم يرد سبب نزول خاص ثابت لآية الكرسي بخصوص مناسبة معينة، بل نزلت بياناً لعظمة الخالق وإثباتاً لتوحيد الألوهية والربوبية والأسماء والصفات، وهي تعد مستقلاً بذاته كأعظم آية تصف جلال الله سبحانه وتعالى.",
-    lessons: "1. إثبات انفراد الله بالملك والتدبير والقيومية.\n2. إثبات الشفاعة بإذن الله وحده.\n3. سعة علم الله المحيط بالماضي والحاضر والمستقبل.\n4. عظمة سلطان الله وحفظه للكون بلا مشقة أو تعب."
-  },
-  "1:1": {
-    rhetoric: "سورة الفاتحة تسمى الشافية والوافية. البلاغة فيها تتجلى في افتتاحها بـ (الحمد لله) بصيغة الاسم الدال على الثبوت والاستمرار، والالتفات البديع من الغيبة (الحمد لله رب العالمين) إلى الخطاب والدعاء المباشر (إياك نعبد وإياك نستعين) استشعاراً للقرب والعبودية.",
-    revelation: "نزلت سورة الفاتحة بمكة بمناسبة فرض الصلاة، وقيل نزلت مرتين تعظيماً لشأنها (مرة بمكة ومرة بالمدينة)، وهي ركيزة الصلاة ومفتاح القرآن الكريم.",
-    lessons: "1. وجوب إخلاص العبادة والاستعانة بالله وحده.\n2. إثبات الهداية إلى الصراط المستقيم كأعظم نعمة.\n3. التحذير من طريق المغضوب عليهم والضالين."
-  }
-};
-
-const getLocalFallbackExplanation = (surahName: string, ayahNumber: string, arabicText: string, type: 'rhetoric' | 'revelation' | 'lessons') => {
-  const shortText = arabicText.length > 40 ? `${arabicText.slice(0, 40)}...` : arabicText;
-  if (type === 'rhetoric') {
-    return `التأمل البلاغي والجمالي لآية ${ayahNumber} من سورة ${surahName} (${shortText}):\n\nتتجلى البلاغة الإعجازية في هذا الموضع من خلال انتقاء الحروف المتناغمة والفواصل الصوتية الدقيقة. تعزز الآية المعنى الموجه للقلب عبر الطباق أو المقابلة والتقديم والـتأخير بما يفيد الحصر والتعظيم لجلال الله وأحكام رسالته.`;
-  } else if (type === 'revelation') {
-    return `سبب النزول والسياق التاريخي لآية ${ayahNumber} من سورة ${surahName}:\n\nنزلت هذه الآية الكريمة في إطار توجيه المسلمين وتثبيتهم إبان العهد النبوي الشريف. تقرر الآية قاعدة إيمانية أو حكماً تشريعياً استجابةً لتساؤلات الصحابة أو تعقيباً على أحداث ووقائع تاريخية واكبت نزول الوحي.`;
-  } else {
-    return `أهم الدروس والعظات المستخلصة لآية ${ayahNumber} من سورة ${surahName}:\n\n` +
-      `1. استشعار الرقابة الإلهية الدائمة في السر والعلن واللجوء المستمر للخالق تضرعاً وطاعة.\n` +
-      `2. العمل بوجيه التوجيهات القرآنية والأحكام الشرعية المتضمنة بالآية وتطبيقها في السلوك اليومي.\n` +
-      `3. التدبر الدائم والتأمل الواعي في دلالات الوحي لزيادة منسوب اليقين وثبات القلوب.`;
-  }
-};
