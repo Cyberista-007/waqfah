@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Youtube, Upload, Clapperboard, Video, ListVideo } from 'lucide-react';
+import { Loader2, Youtube, Upload, Clapperboard, Video, ListVideo, RefreshCw } from 'lucide-react';
 import { collection, runTransaction, doc, increment, Timestamp, writeBatch } from 'firebase/firestore';
 import { formatDuration, getInitials, getVideoIdFromUrl } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -61,6 +61,7 @@ function ImportPageComponent() {
     const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
     const [selectedShorts, setSelectedShorts] = useState<string[]>([]);
     const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
+    const [isSyncingNow, setIsSyncingNow] = useState(false);
 
     const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
     const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
@@ -320,6 +321,56 @@ function ImportPageComponent() {
                         </Button>
                     </div>
                 </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-headline flex items-center gap-2">
+                                <RefreshCw className={isSyncingNow ? "animate-spin text-primary" : "text-primary"} />
+                                المزامنة التلقائية لجميع البرامج (كل 24 ساعة)
+                            </CardTitle>
+                            <CardDescription>
+                                تعمل المزامنة تلقائياً في الخلفية يومياً لفحص أحدث محاضرات جميع القنوات والبرامج واستيرادها دون تكرار.
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="default"
+                            onClick={async () => {
+                                setIsSyncingNow(true);
+                                try {
+                                    const res = await fetch('/api/cron/youtube-sync');
+                                    const result = await res.json();
+                                    if (result.success) {
+                                        toast({
+                                            title: 'اكتملت المزامنة بنجاح!',
+                                            description: `تم استيراد ${result.totalImported || 0} محاضرة جديدة لكافة البرامج.`
+                                        });
+                                    } else {
+                                        toast({
+                                            variant: 'destructive',
+                                            title: 'حدث خطأ أثناء المزامنة',
+                                            description: result.error || 'فشلت المزامنة.'
+                                        });
+                                    }
+                                } catch (e: any) {
+                                    toast({
+                                        variant: 'destructive',
+                                        title: 'خطأ في الاتصال',
+                                        description: e.message
+                                    });
+                                } finally {
+                                    setIsSyncingNow(false);
+                                }
+                            }} 
+                            disabled={isSyncingNow}
+                        >
+                            {isSyncingNow ? <Loader2 className="animate-spin me-2 h-4 w-4" /> : <RefreshCw className="me-2 h-4 w-4" />}
+                            تشغيل المزامنة الآن لجميع البرامج
+                        </Button>
+                    </div>
+                </CardHeader>
             </Card>
 
             {channelInfo && (
