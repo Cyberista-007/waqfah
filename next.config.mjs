@@ -1,61 +1,4 @@
-import withPWAInit from 'next-pwa';
-import runtimeCaching from 'next-pwa/cache.js';
-
 const exportStatic = process.env.EXPORT_STATIC === 'true';
-
-const customRuntimeCaching = [
-  {
-    urlPattern: /^https:\/\/cdn\.islamic\.network\/quran\/audio\/.*$/,
-    handler: 'CacheFirst',
-    options: {
-      cacheName: 'quran-audio-cache',
-      expiration: {
-        maxEntries: 150,
-        maxAgeSeconds: 30 * 24 * 60 * 60,
-      },
-      cacheableResponse: {
-        statuses: [0, 200],
-      },
-    },
-  },
-  {
-    urlPattern: /^https:\/\/archive\.org\/download\/.*$/,
-    handler: 'CacheFirst',
-    options: {
-      cacheName: 'archive-audio-cache',
-      expiration: {
-        maxEntries: 20,
-        maxAgeSeconds: 30 * 24 * 60 * 60,
-      },
-      cacheableResponse: {
-        statuses: [0, 200],
-      },
-    },
-  },
-  {
-    urlPattern: /^https:\/\/api\.alquran\.cloud\/v1\/.*$/,
-    handler: 'StaleWhileRevalidate',
-    options: {
-      cacheName: 'quran-api-cache',
-      expiration: {
-        maxEntries: 500,
-        maxAgeSeconds: 30 * 24 * 60 * 60,
-      },
-      cacheableResponse: {
-        statuses: [0, 200],
-      },
-    },
-  },
-  ...runtimeCaching
-];
-
-const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-  runtimeCaching: customRuntimeCaching,
-});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -111,4 +54,70 @@ const nextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+let finalConfig = nextConfig;
+
+try {
+  const withPWAInit = (await import('next-pwa')).default;
+  const runtimeCaching = (await import('next-pwa/cache.js')).default;
+  
+  const customRuntimeCaching = [
+    {
+      urlPattern: /^https:\/\/cdn\.islamic\.network\/quran\/audio\/.*$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'quran-audio-cache',
+        expiration: {
+          maxEntries: 150,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/archive\.org\/download\/.*$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'archive-audio-cache',
+        expiration: {
+          maxEntries: 20,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/api\.alquran\.cloud\/v1\/.*$/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'quran-api-cache',
+        expiration: {
+          maxEntries: 500,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    ...runtimeCaching
+  ];
+
+  const withPWA = withPWAInit({
+    dest: 'public',
+    disable: process.env.NODE_ENV === 'development',
+    register: true,
+    skipWaiting: true,
+    runtimeCaching: customRuntimeCaching,
+  });
+
+  finalConfig = withPWA(nextConfig);
+} catch {
+  // PWA wrapper fallback if not installed or during specific environments
+  finalConfig = nextConfig;
+}
+
+export default finalConfig;
