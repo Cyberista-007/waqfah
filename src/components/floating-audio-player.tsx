@@ -47,6 +47,13 @@ export function FloatingAudioPlayer() {
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [sleepTimerDuration, setSleepTimerDuration] = useState(0); // in minutes
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(0); // in seconds
+  const [sleepTimerEndOfTrack, setSleepTimerEndOfTrack] = useState(false);
+
+  const formatCountdown = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -302,15 +309,22 @@ export function FloatingAudioPlayer() {
   
   const setSleepTimer = (minutes: number) => {
     clearSleepTimer(); // Clear any existing timer
+    setSleepTimerEndOfTrack(false);
     if (minutes > 0) {
         setSleepTimerDuration(minutes);
         setSleepTimerRemaining(minutes * 60);
 
         sleepTimerRef.current = setInterval(() => {
             setSleepTimerRemaining(prev => {
+                // Smooth fade-out in the last 10 seconds
+                if (prev <= 10 && prev > 1 && audioRef.current) {
+                    audioRef.current.volume = Math.max(0, (prev / 10) * volume);
+                }
+
                 if (prev <= 1) {
                     pauseTrack();
-                    toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل.` });
+                    if (audioRef.current) audioRef.current.volume = volume;
+                    toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل تلقائياً.` });
                     clearSleepTimer();
                     return 0;
                 }
@@ -320,17 +334,26 @@ export function FloatingAudioPlayer() {
         
         toast({ title: "مؤقت النوم", description: `سيتم إيقاف التشغيل بعد ${minutes} دقيقة.` });
     }
-  }
+  };
+
+  const enableEndOfTrackTimer = () => {
+    clearSleepTimer();
+    setSleepTimerEndOfTrack(true);
+    toast({ title: "مؤقت النوم", description: "سيتم إيقاف التشغيل تلقائياً عند نهاية المقطع الحالي." });
+  };
 
   const clearSleepTimer = useCallback(() => {
     if (sleepTimerRef.current) {
         clearInterval(sleepTimerRef.current);
         sleepTimerRef.current = null;
-        setSleepTimerDuration(0);
-        setSleepTimerRemaining(0);
-        toast({ title: "مؤقت النوم", description: "تم إلغاء مؤقت النوم." });
     }
-  }, [toast]);
+    setSleepTimerDuration(0);
+    setSleepTimerRemaining(0);
+    setSleepTimerEndOfTrack(false);
+    if (audioRef.current) {
+        audioRef.current.volume = volume;
+    }
+  }, [audioRef, volume]);
   
   const handleSeek = (value: number[]) => {
       if (audioRef.current) {
@@ -340,7 +363,7 @@ export function FloatingAudioPlayer() {
   };
 
   const handleVolumeChange = (value: number) => {
-    const newVolume = value / 100;
+    const newVolume = Math.max(0, Math.min(1, value / 100));
     setVolume(newVolume);
     if (audioRef.current) {
         audioRef.current.volume = newVolume;
@@ -380,6 +403,14 @@ export function FloatingAudioPlayer() {
                 event.preventDefault();
                 handleFastForward();
                 break;
+            case 'ArrowUp':
+                event.preventDefault();
+                handleVolumeChange(Math.min(100, Math.round((volume + 0.05) * 100)));
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                handleVolumeChange(Math.max(0, Math.round((volume - 0.05) * 100)));
+                break;
             case 'KeyM':
                 event.preventDefault();
                 toggleMute();
@@ -392,7 +423,7 @@ export function FloatingAudioPlayer() {
         window.removeEventListener('keydown', handleKeyDown);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [togglePlayPause, track]);
+  }, [togglePlayPause, track, volume]);
 
 
   if (!isMounted || !track) {
@@ -597,22 +628,50 @@ export function FloatingAudioPlayer() {
             <div className="flex items-center gap-1">
                  <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("h-10 w-10 text-muted-foreground rounded-2xl", sleepTimerDuration > 0 && "text-primary bg-primary/10")}>
-                            <Timer className="w-5 h-5" />
+                        <Button 
+                            variant="ghost" 
+                            size={sleepTimerRemaining > 0 || sleepTimerEndOfTrack ? "sm" : "icon"} 
+                            className={cn(
+                                "h-10 text-muted-foreground rounded-2xl transition-all duration-300", 
+                                (sleepTimerDuration > 0 || sleepTimerEndOfTrack) && "text-primary bg-primary/15 border border-primary/20 px-2.5 font-mono text-[11px] font-bold"
+                            )}
+                        >
+                            <Timer className={cn("w-4 h-4", (sleepTimerDuration > 0 || sleepTimerEndOfTrack) && "me-1 text-primary animate-pulse")} />
+                            {sleepTimerEndOfTrack ? "نهاية المقطع" : sleepTimerRemaining > 0 ? formatCountdown(sleepTimerRemaining) : null}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-52 p-2 rounded-2xl border-border/50 backdrop-blur-xl">
+                    <PopoverContent className="w-56 p-2 rounded-2xl border-border/50 backdrop-blur-xl shadow-2xl" dir="rtl">
                         <div className="space-y-1">
-                            <p className="px-2 py-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">مؤقت النوم</p>
+                            <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/5 mb-1">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">مؤقت النوم</p>
+                                {(sleepTimerDuration > 0 || sleepTimerEndOfTrack) && (
+                                    <span className="text-[10px] font-mono text-primary font-bold">
+                                        {sleepTimerEndOfTrack ? "مفعل (نهاية المقطع)" : formatCountdown(sleepTimerRemaining)}
+                                    </span>
+                                )}
+                            </div>
                             {[15, 30, 45, 60].map(mins => (
-                                <Button key={mins} onClick={() => setSleepTimer(mins)} variant="ghost" className="w-full justify-start rounded-xl text-xs font-bold">
-                                    <div className={cn("w-2 h-2 rounded-full me-3", sleepTimerDuration === mins ? "bg-primary shadow-glow-primary" : "bg-white/10")} />
+                                <Button 
+                                    key={mins} 
+                                    onClick={() => setSleepTimer(mins)} 
+                                    variant="ghost" 
+                                    className="w-full justify-start rounded-xl text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors"
+                                >
+                                    <div className={cn("w-2 h-2 rounded-full me-2.5", sleepTimerDuration === mins && !sleepTimerEndOfTrack ? "bg-primary shadow-glow-primary" : "bg-white/15")} />
                                     بعد {mins} دقيقة
                                 </Button>
                             ))}
-                            {sleepTimerDuration > 0 && (
-                                <Button onClick={clearSleepTimer} variant="ghost" className="w-full justify-start text-destructive hover:bg-destructive/10 rounded-xl mt-2">
-                                    <X className="w-4 h-4 me-2" /> إيقاف المؤقت
+                            <Button 
+                                onClick={enableEndOfTrackTimer} 
+                                variant="ghost" 
+                                className="w-full justify-start rounded-xl text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors"
+                            >
+                                <div className={cn("w-2 h-2 rounded-full me-2.5", sleepTimerEndOfTrack ? "bg-primary shadow-glow-primary" : "bg-white/15")} />
+                                عند نهاية المقطع الحالي
+                            </Button>
+                            {(sleepTimerDuration > 0 || sleepTimerEndOfTrack) && (
+                                <Button onClick={clearSleepTimer} variant="ghost" className="w-full justify-start text-destructive hover:bg-destructive/10 rounded-xl mt-2 text-xs font-bold">
+                                    <X className="w-4 h-4 me-2" /> إلغاء المؤقت
                                 </Button>
                             )}
                         </div>
