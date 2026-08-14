@@ -91,6 +91,7 @@ import Magnetic from "./magnetic"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية", icon: Home },
+  { href: "/radio", label: "الإذاعة", icon: Headphones },
   { href: "/pathways", label: "المسارات", icon: GraduationCap },
   { href: "/live", label: "البث المباشر", icon: Youtube, isLive: true },
   { href: "/programs", label: "البرامج", icon: Podcast },
