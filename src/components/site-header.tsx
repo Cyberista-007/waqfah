@@ -40,7 +40,8 @@ import {
   Sparkles,
   Droplets,
   Scale,
-  Compass
+  Compass,
+  Mic2
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -91,6 +92,7 @@ import Magnetic from "./magnetic"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية", icon: Home },
+  { href: "/podcasts", label: "البودكاست", icon: Mic2 },
   { href: "/radio", label: "الإذاعة", icon: Headphones },
   { href: "/pathways", label: "المسارات", icon: GraduationCap },
   { href: "/live", label: "البث المباشر", icon: Youtube, isLive: true },
@@ -101,6 +103,7 @@ const mainNavItems = [
 ]
 
 const moreNavItems = [
+  { href: "/podcasts", label: "البودكاست الصوتي", icon: Mic2 },
   { href: "/bayan", label: "بيان (معجم المفردات)", icon: Sparkles },
   { href: "/athar", label: "أثر (أطلس التاريخ)", icon: Compass },
   { href: "/namaa", label: "نماء (حاسبة الزكاة)", icon: Scale },

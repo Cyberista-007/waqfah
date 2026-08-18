@@ -1,0 +1,665 @@
+'use client';
+
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Headphones, 
+  Mic2, 
+  Play, 
+  Pause, 
+  Volume2, 
+  VolumeX, 
+  Clock, 
+  Sparkles, 
+  Rss, 
+  Share2, 
+  Heart, 
+  Search, 
+  Flame, 
+  Radio, 
+  Check, 
+  Copy, 
+  ExternalLink, 
+  RotateCcw, 
+  RotateCw, 
+  Sliders, 
+  Compass, 
+  BookOpen, 
+  Layers, 
+  ArrowUpRight,
+  TrendingUp,
+  Download,
+  Filter,
+  User,
+  ListMusic
+} from 'lucide-react';
+import { useCollection } from '@/firebase';
+import type { Lecture, Series } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useRadio, RadioStation } from '@/components/radio-provider';
+import Link from 'next/link';
+
+// Categories for Podcasts
+const PODCAST_CATEGORIES = [
+  { id: 'all', label: 'جميع الحلقات', icon: Headphones },
+  { id: 'tazkiyah', label: 'الفكر والتزكية', icon: Sparkles },
+  { id: 'seerah', label: 'السيرة والتاريخ', icon: Compass },
+  { id: 'quran', label: 'تأملات قرآنية', icon: BookOpen },
+  { id: 'contemporary', label: 'قضايا معاصرة وشبهات', icon: Flame },
+  { id: 'series', label: 'سلاسل بودكاستية كاملة', icon: Layers },
+  { id: 'favorites', label: 'حلقاتي المفضلة', icon: Heart },
+];
+
+export default function PodcastsPage() {
+  const { toast } = useToast();
+  const { playStation, currentStation, isPlaying, togglePlay, volume, setVolume, playbackRate, setPlaybackRate } = useRadio();
+
+  // Firestore queries for series and lectures
+  const { data: allLectures, isLoading: isLoadingLectures } = useCollection<Lecture>('lectures', {
+    orderBy: ['createdAt', 'desc']
+  });
+
+  const { data: allSeries, isLoading: isLoadingSeries } = useCollection<Series>('series', {
+    orderBy: ['createdAt', 'desc']
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
+  
+  // RSS Feed Modal States
+  const [selectedSeriesForRss, setSelectedSeriesForRss] = useState<Series | null>(null);
+  const [isCopiedRss, setIsCopiedRss] = useState(false);
+
+  // Favorites
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('waqfah_podcast_favorites');
+        if (saved) setFavoriteIds(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavoriteIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('waqfah_podcast_favorites', JSON.stringify(next));
+      toast({
+        title: next.includes(id) ? 'تمت الإضافة إلى المفضلة' : 'تمت الإزالة من المفضلة'
+      });
+      return next;
+    });
+  };
+
+  // Convert Lecture to playable RadioStation format
+  const handlePlayEpisode = (lecture: Lecture) => {
+    const streamUrl = lecture.audioSrc || lecture.youtubeUrl || '';
+    if (!streamUrl) {
+      toast({
+        variant: 'destructive',
+        title: 'عذراً، الرابط الصوتي غير متوفر لهذه الحلقة'
+      });
+      return;
+    }
+
+    const station: RadioStation = {
+      id: `podcast_${lecture.id}`,
+      name: lecture.title,
+      subtitle: lecture.programName || lecture.seriesTitle || 'بودكاست وقفة',
+      url: streamUrl,
+      icon: '🎙️',
+      color: 'from-violet-500/20 to-violet-950/40',
+      borderColor: 'border-violet-500/30',
+      textColor: 'text-violet-400'
+    };
+
+    playStation(station);
+  };
+
+  // Filter lectures
+  const filteredLectures = useMemo(() => {
+    if (!allLectures) return [];
+    let list = allLectures.filter(l => Boolean(l.audioSrc || l.youtubeUrl));
+
+    // Category filter
+    if (selectedCategory === 'favorites') {
+      list = list.filter(l => favoriteIds.includes(l.id));
+    } else if (selectedCategory === 'tazkiyah') {
+      list = list.filter(l => 
+        l.title.includes('قلب') || l.title.includes('نفس') || l.title.includes('تزكية') || l.title.includes('إيمان') || l.title.includes('صبر')
+      );
+    } else if (selectedCategory === 'seerah') {
+      list = list.filter(l => 
+        l.title.includes('سيرة') || l.title.includes('نبي') || l.title.includes('صحابة') || l.title.includes('تاريخ') || l.title.includes('غزوة')
+      );
+    } else if (selectedCategory === 'quran') {
+      list = list.filter(l => 
+        l.title.includes('قرآن') || l.title.includes('سورة') || l.title.includes('آية') || l.title.includes('تفسير') || l.title.includes('تدبر')
+      );
+    } else if (selectedCategory === 'contemporary') {
+      list = list.filter(l => 
+        l.title.includes('شبهة') || l.title.includes('فكر') || l.title.includes('عصر') || l.title.includes('إلحاد') || l.title.includes('معاصر')
+      );
+    }
+
+    // Duration filter
+    if (durationFilter === 'short') {
+      list = list.filter(l => (l.duration || 0) > 0 && l.duration < 900); // < 15 mins
+    } else if (durationFilter === 'medium') {
+      list = list.filter(l => (l.duration || 0) >= 900 && l.duration <= 1800); // 15 - 30 mins
+    } else if (durationFilter === 'long') {
+      list = list.filter(l => (l.duration || 0) > 1800); // > 30 mins
+    }
+
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(l => 
+        l.title.toLowerCase().includes(q) || 
+        (l.description && l.description.toLowerCase().includes(q)) ||
+        (l.programName && l.programName.toLowerCase().includes(q)) ||
+        (l.seriesTitle && l.seriesTitle.toLowerCase().includes(q))
+      );
+    }
+
+    return list;
+  }, [allLectures, selectedCategory, durationFilter, searchQuery, favoriteIds]);
+
+  // Spotlight Episode: First lecture or currently playing
+  const spotlightEpisode = useMemo(() => {
+    if (!allLectures || allLectures.length === 0) return null;
+    return allLectures[0];
+  }, [allLectures]);
+
+  // Format seconds to mm:ss or hh:mm:ss
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return 'حلقة صوتية';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h} س و ${m} د`;
+    return `${m} دقيقة`;
+  };
+
+  const copyRssUrl = (slug: string) => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/api/podcasts/${slug}`;
+    navigator.clipboard.writeText(url);
+    setIsCopiedRss(true);
+    setTimeout(() => setIsCopiedRss(false), 2500);
+    toast({
+      title: 'تم نسخ رابط الـ RSS بنجاح!',
+      description: 'يمكنك الآن لصقه في تطبيق البودكاست المفضل لديك (Apple Podcasts, Spotify, Pocket Casts).'
+    });
+  };
+
+  return (
+    <div className="min-h-screen pb-32 space-y-12" dir="rtl">
+      {/* ── Cinematic Hero Section ── */}
+      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-6 pt-20 pb-20 px-6 md:px-12 flex flex-col items-center text-center overflow-hidden border border-violet-500/20 bg-gradient-to-b from-violet-950/40 via-zinc-950 to-zinc-950 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-violet-500/15 blur-[150px] rounded-full" />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-emerald-500/10 blur-[130px] rounded-full" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 text-xs font-bold tracking-wider shadow-inner">
+            <Mic2 className="w-4 h-4 text-violet-400 animate-pulse" />
+            بودكاست وقفة الصوتي | Waqfah Podcast Hub
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black font-headline tracking-tight text-white leading-tight">
+            أثير <span className="bg-clip-text text-transparent bg-gradient-to-l from-violet-400 via-fuchsia-300 to-white">الفكر والمعرفة</span> الإسلامية
+          </h1>
+
+          <p className="text-base sm:text-xl text-white/60 font-medium leading-relaxed max-w-2xl mx-auto">
+            مكتبة صوتية راقية تضم مئات السلاسل والمحاضرات الفكرية، الإيمانية، والتاريخية، قابلة للاستماع المباشر والاشتراك عبر أشهر تطبيقات البودكاست.
+          </p>
+
+          {/* Quick Counter Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 max-w-xl mx-auto">
+            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="text-2xl sm:text-3xl font-black text-violet-400">{allLectures?.length || '450+'}</div>
+              <div className="text-[11px] text-white/50 font-bold mt-0.5">حلقة صوتية</div>
+            </div>
+            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-400">{allSeries?.length || '35+'}</div>
+              <div className="text-[11px] text-white/50 font-bold mt-0.5">سلسلة بودكاست</div>
+            </div>
+            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl col-span-2 sm:col-span-1">
+              <div className="text-2xl sm:text-3xl font-black text-amber-400">100%</div>
+              <div className="text-[11px] text-white/50 font-bold mt-0.5">دعم خلاصات RSS</div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── Spotlight / Featured Episode Card ── */}
+      {spotlightEpisode && (
+        <section className="container px-4 max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 md:p-10 rounded-[2.5rem] bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-violet-500/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Thumbnail / Visual */}
+              <div className="lg:col-span-4 relative">
+                <div className="w-full aspect-video sm:aspect-square rounded-3xl bg-zinc-950 border border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                  <img
+                    src={spotlightEpisode.youtubeUrl ? `https://img.youtube.com/vi/${spotlightEpisode.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
+                    alt={spotlightEpisode.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
+                  />
+                  <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+                    <Badge className="bg-violet-600 text-white font-bold text-xs px-3 py-1 rounded-xl shadow-lg">
+                      حلقة مميزة
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details & Controls */}
+              <div className="lg:col-span-8 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-xs text-white/50">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-violet-400" />
+                      {formatDuration(spotlightEpisode.duration)}
+                    </span>
+                    <span>•</span>
+                    <span className="text-violet-300 font-medium">
+                      {spotlightEpisode.programName || spotlightEpisode.seriesTitle || 'منصة وقفة'}
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-headline text-white leading-snug">
+                    {spotlightEpisode.title}
+                  </h2>
+
+                  <p className="text-sm text-white/60 line-clamp-2 leading-relaxed font-medium">
+                    {spotlightEpisode.description || 'استمع إلى هذه المادة الصوتية القيمة وتأمل في معانيها العميقة من خلال مشغل وقفة المباشر.'}
+                  </p>
+                </div>
+
+                {/* Player Action Buttons */}
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <Button
+                    onClick={() => handlePlayEpisode(spotlightEpisode)}
+                    size="lg"
+                    className="rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 h-14 text-base gap-3 shadow-lg shadow-violet-600/30"
+                  >
+                    <Play className="w-5 h-5 fill-current" />
+                    <span>استمع الآن</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={(e) => toggleFavorite(spotlightEpisode.id, e)}
+                    className={cn(
+                      "rounded-full h-14 px-5 border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm gap-2",
+                      favoriteIds.includes(spotlightEpisode.id) && "text-rose-400 border-rose-500/30 bg-rose-500/10"
+                    )}
+                  >
+                    <Heart className={cn("w-4 h-4", favoriteIds.includes(spotlightEpisode.id) && "fill-current")} />
+                    <span>{favoriteIds.includes(spotlightEpisode.id) ? 'في المفضلة' : 'حفظ'}</span>
+                  </Button>
+
+                  {spotlightEpisode.seriesSlug && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const s = allSeries?.find(ser => ser.slug === spotlightEpisode.seriesSlug);
+                        if (s) setSelectedSeriesForRss(s);
+                        else copyRssUrl(spotlightEpisode.seriesSlug!);
+                      }}
+                      className="rounded-full h-14 px-5 border-white/10 bg-white/5 hover:bg-white/10 text-white/80 text-sm gap-2"
+                    >
+                      <Rss className="w-4 h-4 text-amber-400" />
+                      <span>خلاصة RSS</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+      )}
+
+      {/* ── Search & Filter Tabs ── */}
+      <section className="container px-4 max-w-6xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Search bar */}
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ابحث في حلقات وسلاسل البودكاست..."
+              className="pr-11 rounded-2xl bg-zinc-900/60 border-white/10 text-white placeholder:text-white/30 h-12"
+            />
+          </div>
+
+          {/* Duration Filter Pills */}
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1">
+            <span className="text-xs text-white/40 font-bold shrink-0 me-1">المدة:</span>
+            {[
+              { id: 'all', label: 'الكل' },
+              { id: 'short', label: 'أقل من 15 د' },
+              { id: 'medium', label: '15 - 30 د' },
+              { id: 'long', label: 'أكثر من 30 د' },
+            ].map(d => (
+              <button
+                key={d.id}
+                onClick={() => setDurationFilter(d.id as any)}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border",
+                  durationFilter === d.id
+                    ? "bg-violet-600 border-violet-500 text-white"
+                    : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {PODCAST_CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <Button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                variant={isSelected ? 'default' : 'outline'}
+                size="sm"
+                className={cn(
+                  "rounded-2xl text-xs gap-2 shrink-0 transition-all h-10 px-4",
+                  isSelected
+                    ? "bg-violet-600 hover:bg-violet-500 text-white font-bold shadow-lg shadow-violet-600/20"
+                    : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {cat.label}
+              </Button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Main Content: Series or Episodes ── */}
+      <section className="container px-4 max-w-6xl mx-auto">
+        {selectedCategory === 'series' ? (
+          /* Series Grid with Direct RSS Feeds */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-violet-400" />
+                السلاسل البودكاستية المكتملة
+              </h3>
+              <span className="text-xs text-white/40 font-bold">{allSeries?.length || 0} سلسلة</span>
+            </div>
+
+            {isLoadingSeries ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-64 rounded-3xl bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allSeries?.map(series => (
+                  <div
+                    key={series.id}
+                    className="p-6 rounded-3xl bg-zinc-900/60 border border-white/10 hover:border-violet-500/40 transition-all space-y-4 flex flex-col justify-between group"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="bg-violet-500/10 border-violet-500/30 text-violet-300 text-[10px]">
+                          {series.lectureCount || 0} حلقة
+                        </Badge>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setSelectedSeriesForRss(series)}
+                          className="h-8 w-8 rounded-full text-white/40 hover:text-amber-400"
+                          title="خلاصة البودكاست RSS"
+                        >
+                          <Rss className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <h4 className="text-lg font-bold text-white group-hover:text-violet-300 transition-colors line-clamp-1">
+                        {series.title}
+                      </h4>
+                      <p className="text-xs text-white/50 line-clamp-2 leading-relaxed">
+                        {series.description || 'سلسلة بودكاستية متكاملة تتناول موضوعات علمية وإيمانية عميقة.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                      <Link
+                        href={`/series/${series.slug}`}
+                        className="text-xs text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1"
+                      >
+                        <span>عرض الحلقات</span>
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </Link>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyRssUrl(series.slug)}
+                        className="rounded-xl text-[11px] h-8 border-white/10 bg-white/5 hover:bg-white/10 text-white/80 gap-1.5"
+                      >
+                        <Copy className="w-3 h-3 text-amber-400" />
+                        <span>نسخ RSS</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Episodes Grid */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Headphones className="w-5 h-5 text-violet-400" />
+                حلقات البودكاست
+              </h3>
+              <span className="text-xs text-white/40 font-bold">{filteredLectures.length} حلقة متوفرة</span>
+            </div>
+
+            {isLoadingLectures ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-60 rounded-3xl bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : filteredLectures.length === 0 ? (
+              <div className="p-12 text-center rounded-3xl bg-white/5 border border-white/10 space-y-3">
+                <Mic2 className="w-10 h-10 text-white/20 mx-auto" />
+                <h4 className="text-lg font-bold text-white">لم يتم العثور على حلقات</h4>
+                <p className="text-xs text-white/50">جرب البحث بكلمات أخرى أو اختر تصنيفاً مختلفاً.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredLectures.map(lecture => {
+                  const isCurrent = currentStation?.id === `podcast_${lecture.id}`;
+                  const isFav = favoriteIds.includes(lecture.id);
+
+                  return (
+                    <motion.div
+                      key={lecture.id}
+                      layout
+                      onClick={() => handlePlayEpisode(lecture)}
+                      className={cn(
+                        "p-4 rounded-3xl border transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden",
+                        isCurrent
+                          ? "bg-violet-600/15 border-violet-500/50 shadow-xl shadow-violet-600/10 ring-1 ring-violet-500/30"
+                          : "bg-zinc-900/60 hover:bg-zinc-800/80 border-white/10 hover:border-white/20"
+                      )}
+                    >
+                      {/* Top Row: Thumbnail + Play Overlay */}
+                      <div className="relative aspect-video rounded-2xl bg-zinc-950 overflow-hidden mb-3">
+                        <img
+                          src={lecture.youtubeUrl ? `https://img.youtube.com/vi/${lecture.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
+                          alt={lecture.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-lg">
+                            <Play className="w-4 h-4 fill-current ms-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] text-white/80 font-bold">
+                          {formatDuration(lecture.duration)}
+                        </div>
+                      </div>
+
+                      {/* Middle: Details */}
+                      <div className="space-y-1.5 flex-1">
+                        <p className="text-[11px] text-violet-400 font-bold truncate">
+                          {lecture.programName || lecture.seriesTitle || 'بودكاست وقفة'}
+                        </p>
+                        <h4 className={cn(
+                          "font-bold text-sm line-clamp-2 leading-snug group-hover:text-violet-300 transition-colors",
+                          isCurrent ? "text-violet-400 font-black" : "text-white"
+                        )}>
+                          {lecture.title}
+                        </h4>
+                      </div>
+
+                      {/* Bottom Row: Actions */}
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/5">
+                        <span className="text-[10px] text-white/40">
+                          {isCurrent && isPlaying ? 'يتم التشغيل الآن' : 'تشغيل الحلقة'}
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={(e) => toggleFavorite(lecture.id, e)}
+                            className={cn(
+                              "h-7 w-7 rounded-full",
+                              isFav ? "text-rose-500" : "text-white/30 hover:text-rose-400"
+                            )}
+                            title="إضافة للمفضلة"
+                          >
+                            <Heart className={cn("w-3.5 h-3.5", isFav && "fill-current")} />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: lecture.title,
+                                  url: window.location.href
+                                }).catch(() => {});
+                              } else {
+                                navigator.clipboard.writeText(window.location.href);
+                                toast({ title: 'تم نسخ الرابط' });
+                              }
+                            }}
+                            className="h-7 w-7 rounded-full text-white/30 hover:text-white"
+                            title="مشاركة"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── RSS Feed Info Modal ── */}
+      <AnimatePresence>
+        {selectedSeriesForRss && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setSelectedSeriesForRss(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg p-6 sm:p-8 rounded-[2.5rem] bg-zinc-900 border border-white/15 shadow-2xl space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <Rss className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">الاشتراك عبر تطبيقات البودكاست</h3>
+                    <p className="text-xs text-white/50">{selectedSeriesForRss.title}</p>
+                  </div>
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => setSelectedSeriesForRss(null)} className="rounded-full text-white/50">
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs text-white/70 leading-relaxed">
+                  انسخ رابط الـ RSS المباشر التالي والصقه في أي تطبيق بودكاست تفضله (Apple Podcasts, Spotify, Pocket Casts, Castbox) للاستماع لجميع حلقات السلسلة ومتابعة جديدها تلقائياً:
+                </p>
+
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950 border border-white/10">
+                  <input
+                    readOnly
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/api/podcasts/${selectedSeriesForRss.slug}` : ''}
+                    className="bg-transparent text-xs text-amber-300 font-mono w-full outline-none"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => copyRssUrl(selectedSeriesForRss.slug)}
+                    className="rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shrink-0 gap-1.5"
+                  >
+                    {isCopiedRss ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{isCopiedRss ? 'تم النسخ' : 'نسخ'}</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button variant="ghost" onClick={() => setSelectedSeriesForRss(null)} className="rounded-xl text-xs">
+                  إغلاق
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
