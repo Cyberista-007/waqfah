@@ -379,8 +379,8 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       if (typeof data !== 'object' || !data) return;
 
       try {
-        if (data.event === 'onStateChange') {
-          const state = data.info;
+        if (data.event === 'onStateChange' || (data.event === 'infoDelivery' && data.info && typeof data.info.playerState === 'number')) {
+          const state = data.info?.playerState ?? data.info;
           if (state === 1) { // playing
             setIsPlaying(true);
             setIsBuffering(false);
@@ -409,15 +409,21 @@ export function RadioProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem(`radio_progress_${currentStationRef.current.id}`);
             }
           }
-        } else if (data.event === 'infoDelivery' && data.info) {
+        }
+        
+        if (data.event === 'infoDelivery' && data.info) {
           if (typeof data.info.currentTime === 'number') {
             const time = data.info.currentTime;
             setCurrentTime(time);
+            if (time > 0) {
+              setIsPlaying(true);
+              setIsBuffering(false);
+            }
             if (time > 0 && currentStationRef.current) {
               localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(time).toString());
             }
           }
-          if (typeof data.info.duration === 'number') {
+          if (typeof data.info.duration === 'number' && data.info.duration > 0) {
             setDuration(data.info.duration);
           }
         }
@@ -489,6 +495,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
           onLoad={() => {
             const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
             if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage('{"event":"listening","id":1,"channel":"widget"}', '*');
               iframe.contentWindow.postMessage(
                 JSON.stringify({
                   event: 'command',
@@ -513,6 +520,11 @@ export function RadioProvider({ children }: { children: ReactNode }) {
                 }),
                 '*'
               );
+              // Fail-safe transition from buffering to playing
+              setTimeout(() => {
+                setIsBuffering(false);
+                setIsPlaying(true);
+              }, 700);
             }
           }}
         />

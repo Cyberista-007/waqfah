@@ -149,32 +149,27 @@ export default function PodcastsPage() {
     if (!ctx) return;
 
     let animationId: number;
-    let width = canvas.width = canvas.offsetWidth;
-    let height = canvas.height = canvas.offsetHeight;
+    let width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+    let height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
+      width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+      height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
     };
     window.addEventListener('resize', handleResize);
 
     let phase = 0;
     const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      if (!isPlaying) {
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 2;
-        ctx.moveTo(0, height / 2);
-        ctx.lineTo(width, height / 2);
-        ctx.stroke();
-        animationId = requestAnimationFrame(render);
-        return;
+      if (!canvas) return;
+      if (width <= 0 || height <= 0 || canvas.width <= 0) {
+        width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+        height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
       }
 
-      phase += 0.08;
+      ctx.clearRect(0, 0, width, height);
+
+      phase += isPlaying ? 0.08 : 0.02;
 
       if (visualizerStyle === 'waves') {
         ctx.beginPath();
@@ -183,7 +178,8 @@ export default function PodcastsPage() {
         const sliceWidth = width / barCount;
 
         for (let i = 0; i <= barCount; i++) {
-          const val = (Math.sin(i * 0.25 + phase) * Math.cos(i * 0.15 - phase * 0.4) + 1) * 70;
+          const amplitude = isPlaying ? 70 : 15;
+          const val = (Math.sin(i * 0.25 + phase) * Math.cos(i * 0.15 - phase * 0.4) + 1) * amplitude;
           const yVal = height - (val / 255) * (height * 0.8) - 4;
           const xVal = i * sliceWidth;
           ctx.lineTo(xVal, yVal);
@@ -193,40 +189,41 @@ export default function PodcastsPage() {
         ctx.closePath();
 
         const grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, 'rgba(139, 92, 246, 0.05)');
-        grad.addColorStop(0.5, 'rgba(139, 92, 246, 0.3)');
-        grad.addColorStop(1, 'rgba(168, 85, 247, 0.7)');
+        grad.addColorStop(0, isPlaying ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)');
+        grad.addColorStop(0.5, isPlaying ? 'rgba(139, 92, 246, 0.4)' : 'rgba(139, 92, 246, 0.15)');
+        grad.addColorStop(1, isPlaying ? 'rgba(192, 132, 252, 0.9)' : 'rgba(192, 132, 252, 0.4)');
         ctx.fillStyle = grad;
         ctx.fill();
       } else if (visualizerStyle === 'particles') {
         const barCount = 28;
         const barWidth = width / barCount;
         for (let i = 0; i < barCount; i++) {
-          const val = (Math.sin(i * 0.4 + phase * 1.5) + 1) * 60;
+          const amplitude = isPlaying ? 60 : 12;
+          const val = (Math.sin(i * 0.4 + phase * 1.5) + 1) * amplitude;
           const barHeight = (val / 255) * (height * 0.75) + 4;
           const x = i * barWidth + barWidth / 2;
           const y = height / 2 - barHeight / 2;
 
           ctx.beginPath();
           ctx.arc(x, y + barHeight / 2, Math.max(2, barHeight / 4), 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(192, 132, 252, 0.8)';
+          ctx.fillStyle = isPlaying ? 'rgba(192, 132, 252, 0.9)' : 'rgba(192, 132, 252, 0.3)';
           ctx.fill();
         }
       } else {
         // Columns
         const barCount = 24;
-        const barWidth = (width / barCount) * 0.65;
-        const gap = (width / barCount) * 0.35;
+        const barWidth = (width / barCount) * 0.62;
+        const gap = (width / barCount) * 0.38;
 
         for (let i = 0; i < barCount; i++) {
-          const val = (Math.sin(i * 0.35 + phase * 1.2) * 0.5 + 0.5) * 180 + 30;
-          const barHeight = Math.max(4, (val / 255) * height * 0.85);
+          const amplitude = isPlaying ? (180 * (Math.sin(i * 0.35 + phase * 1.2) * 0.5 + 0.5) + 30) : 25;
+          const barHeight = Math.max(6, (amplitude / 255) * height * 0.85);
           const x = i * (barWidth + gap) + gap / 2;
           const y = height - barHeight;
 
           const grad = ctx.createLinearGradient(0, height, 0, y);
-          grad.addColorStop(0, '#7c3aed');
-          grad.addColorStop(1, '#c084fc');
+          grad.addColorStop(0, isPlaying ? '#7c3aed' : 'rgba(124, 58, 237, 0.3)');
+          grad.addColorStop(1, isPlaying ? '#c084fc' : 'rgba(192, 132, 252, 0.5)');
           ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
@@ -520,7 +517,7 @@ export default function PodcastsPage() {
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                   />
-                  {isBuffering && (
+                  {isBuffering && !isPlaying && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                       <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
                     </div>
@@ -616,7 +613,7 @@ export default function PodcastsPage() {
                     }}
                     className="rounded-full w-14 h-14 bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/30 shrink-0 transition-transform active:scale-95"
                   >
-                    {isBuffering ? (
+                    {isBuffering && !isPlaying ? (
                       <Loader2 className="w-6 h-6 animate-spin" />
                     ) : isPlaying ? (
                       <Pause className="w-6 h-6 fill-current" />
