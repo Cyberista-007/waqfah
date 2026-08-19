@@ -52,6 +52,14 @@ import { cn } from '@/lib/utils';
 import { useRadio, RadioStation } from '@/components/radio-provider';
 import Link from 'next/link';
 
+// Ambient sounds definition
+const AMBIENT_SOUNDS = [
+  { id: 'rain', label: 'مطر خفيف', icon: '🌧️', src: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db6591201e.mp3?filename=gentle-rain-16274.mp3' },
+  { id: 'birds', label: 'عصافير الفجر', icon: '🕊️', src: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=birds-in-the-forest-24189.mp3' },
+  { id: 'night', label: 'هدوء الليل', icon: '🌌', src: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=night-ambience-17064.mp3' },
+  { id: 'waves', label: 'أمواج البحر', icon: '🌊', src: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c3527e30ec.mp3?filename=sea-waves-112906.mp3' },
+];
+
 // Categories for Podcasts
 const PODCAST_CATEGORIES = [
   { id: 'all', label: 'جميع الحلقات', icon: Headphones },
@@ -104,6 +112,138 @@ export default function PodcastsPage() {
   const [selectedSeriesForRss, setSelectedSeriesForRss] = useState<Series | null>(null);
   const [selectedSeriesDetail, setSelectedSeriesDetail] = useState<Series | null>(null);
   const [isCopiedRss, setIsCopiedRss] = useState(false);
+
+  // Ambient sound states
+  const [activeAmbient, setActiveAmbient] = useState<string | null>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleAmbient = (ambientId: string) => {
+    if (activeAmbient === ambientId) {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+      }
+      setActiveAmbient(null);
+    } else {
+      const sound = AMBIENT_SOUNDS.find(s => s.id === ambientId);
+      if (sound) {
+        if (!ambientAudioRef.current) {
+          ambientAudioRef.current = new Audio();
+          ambientAudioRef.current.loop = true;
+        }
+        ambientAudioRef.current.src = sound.src;
+        ambientAudioRef.current.volume = 0.4;
+        ambientAudioRef.current.play().catch(e => console.warn('Ambient play err:', e));
+        setActiveAmbient(ambientId);
+      }
+    }
+  };
+
+  // Visualizer State & Animation
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [visualizerStyle, setVisualizerStyle] = useState<'columns' | 'waves' | 'particles'>('columns');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId: number;
+    let width = canvas.width = canvas.offsetWidth;
+    let height = canvas.height = canvas.offsetHeight;
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    let phase = 0;
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      if (!isPlaying) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 2;
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        animationId = requestAnimationFrame(render);
+        return;
+      }
+
+      phase += 0.08;
+
+      if (visualizerStyle === 'waves') {
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        const barCount = 36;
+        const sliceWidth = width / barCount;
+
+        for (let i = 0; i <= barCount; i++) {
+          const val = (Math.sin(i * 0.25 + phase) * Math.cos(i * 0.15 - phase * 0.4) + 1) * 70;
+          const yVal = height - (val / 255) * (height * 0.8) - 4;
+          const xVal = i * sliceWidth;
+          ctx.lineTo(xVal, yVal);
+        }
+
+        ctx.lineTo(width, height);
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, 'rgba(139, 92, 246, 0.05)');
+        grad.addColorStop(0.5, 'rgba(139, 92, 246, 0.3)');
+        grad.addColorStop(1, 'rgba(168, 85, 247, 0.7)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+      } else if (visualizerStyle === 'particles') {
+        const barCount = 28;
+        const barWidth = width / barCount;
+        for (let i = 0; i < barCount; i++) {
+          const val = (Math.sin(i * 0.4 + phase * 1.5) + 1) * 60;
+          const barHeight = (val / 255) * (height * 0.75) + 4;
+          const x = i * barWidth + barWidth / 2;
+          const y = height / 2 - barHeight / 2;
+
+          ctx.beginPath();
+          ctx.arc(x, y + barHeight / 2, Math.max(2, barHeight / 4), 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(192, 132, 252, 0.8)';
+          ctx.fill();
+        }
+      } else {
+        // Columns
+        const barCount = 24;
+        const barWidth = (width / barCount) * 0.65;
+        const gap = (width / barCount) * 0.35;
+
+        for (let i = 0; i < barCount; i++) {
+          const val = (Math.sin(i * 0.35 + phase * 1.2) * 0.5 + 0.5) * 180 + 30;
+          const barHeight = Math.max(4, (val / 255) * height * 0.85);
+          const x = i * (barWidth + gap) + gap / 2;
+          const y = height - barHeight;
+
+          const grad = ctx.createLinearGradient(0, height, 0, y);
+          grad.addColorStop(0, '#7c3aed');
+          grad.addColorStop(1, '#c084fc');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
+          ctx.fill();
+        }
+      }
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
+    };
+  }, [isPlaying, visualizerStyle]);
 
   // Sleep Timer
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
@@ -356,115 +496,243 @@ export default function PodcastsPage() {
         </motion.div>
       </section>
 
-      {/* ── Spotlight / Featured Episode Card ── */}
+      {/* ── Active Podcast Live Top Player Dashboard (Styled like Radio) ── */}
       {spotlightEpisode && (
         <section className="container px-4 max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 md:p-10 rounded-[2.5rem] bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-zinc-950 border border-violet-500/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group"
+            className="p-6 md:p-8 rounded-[2.5rem] bg-gradient-to-br from-zinc-900/95 via-zinc-900/80 to-zinc-950 border border-violet-500/40 backdrop-blur-2xl shadow-2xl relative overflow-hidden space-y-6"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Thumbnail / Visual */}
-              <div className="lg:col-span-4 relative">
-                <div className="w-full aspect-video sm:aspect-square rounded-3xl bg-zinc-950 border border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+            {/* Ambient Background Glow */}
+            <div className="absolute top-0 right-1/4 w-72 h-72 bg-violet-600/10 blur-[100px] pointer-events-none rounded-full" />
+            <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-fuchsia-600/10 blur-[100px] pointer-events-none rounded-full" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left/Start: Episode Thumbnail & Info */}
+              <div className="lg:col-span-4 flex items-center gap-4 min-w-0">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-zinc-950 border border-violet-500/30 overflow-hidden relative shadow-xl shrink-0 flex items-center justify-center">
                   <img
-                    src={spotlightEpisode.youtubeUrl ? `https://img.youtube.com/vi/${spotlightEpisode.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
-                    alt={spotlightEpisode.title}
+                    src={(activeLecture || spotlightEpisode).youtubeUrl ? `https://img.youtube.com/vi/${(activeLecture || spotlightEpisode).youtubeUrl!.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
+                    alt={(activeLecture || spotlightEpisode).title}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                   />
-                  <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
-                    <Badge className="bg-violet-600 text-white font-bold text-xs px-3 py-1 rounded-xl shadow-lg">
-                      حلقة مميزة
+                  {isBuffering && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-violet-500/15 border-violet-500/40 text-violet-300 text-[10px] px-2 py-0.5">
+                      {isPlaying ? (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping me-1" />
+                          يتم التشغيل الآن
+                        </>
+                      ) : (
+                        'بودكاست صوتي'
+                      )}
                     </Badge>
                   </div>
+                  <h2 className="text-lg md:text-xl font-black font-headline text-white truncate" title={(activeLecture || spotlightEpisode).title}>
+                    {(activeLecture || spotlightEpisode).title}
+                  </h2>
+                  <p className="text-xs text-violet-400 truncate font-medium">
+                    {(activeLecture || spotlightEpisode).programName || (activeLecture || spotlightEpisode).seriesTitle || 'بودكاست وقفة'}
+                  </p>
                 </div>
               </div>
 
-              {/* Details & Controls */}
-              <div className="lg:col-span-8 space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-xs text-white/50">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-violet-400" />
-                      {formatDuration(spotlightEpisode.duration)}
-                    </span>
-                    <span>•</span>
-                    <span className="text-violet-300 font-medium">
-                      {spotlightEpisode.programName || spotlightEpisode.seriesTitle || 'منصة وقفة'}
-                    </span>
-                  </div>
-
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black font-headline text-white leading-snug">
-                    {spotlightEpisode.title}
-                  </h2>
-
-                  <p className="text-sm text-white/60 line-clamp-2 leading-relaxed font-medium">
-                    {spotlightEpisode.description || 'استمع إلى هذه المادة الصوتية القيمة وتأمل في معانيها العميقة من خلال مشغل وقفة المباشر.'}
-                  </p>
+              {/* Center: Interactive Visualizer Canvas & Mode Selector */}
+              <div className="lg:col-span-4 flex flex-col items-center justify-center space-y-2">
+                <div className="w-full h-16 rounded-2xl bg-black/50 border border-white/10 p-2 overflow-hidden flex items-center justify-center backdrop-blur-sm">
+                  <canvas ref={canvasRef} className="w-full h-full" />
                 </div>
-
-                {/* Player Action Buttons */}
-                <div className="flex flex-wrap items-center gap-4 pt-2">
-                  <Button
-                    onClick={() => handlePlayEpisode(spotlightEpisode)}
-                    size="lg"
-                    className="rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 h-14 text-base gap-3 shadow-lg shadow-violet-600/30 transition-transform active:scale-95"
-                  >
-                    {currentStation?.id === `podcast_${spotlightEpisode.id}` && isPlaying ? (
-                      <>
-                        <Pause className="w-5 h-5 fill-current" />
-                        <span>إيقاف مؤقت</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-5 h-5 fill-current" />
-                        <span>
-                          {currentStation?.id === `podcast_${spotlightEpisode.id}` ? 'استئناف الاستماع' : 'استمع الآن'}
-                        </span>
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    onClick={(e) => toggleFavorite(spotlightEpisode.id, e)}
-                    className={cn(
-                      "rounded-full h-14 px-5 border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm gap-2",
-                      favoriteIds.includes(spotlightEpisode.id) && "text-rose-400 border-rose-500/30 bg-rose-500/10"
-                    )}
-                  >
-                    <Heart className={cn("w-4 h-4", favoriteIds.includes(spotlightEpisode.id) && "fill-current")} />
-                    <span>{favoriteIds.includes(spotlightEpisode.id) ? 'في المفضلة' : 'حفظ'}</span>
-                  </Button>
-
-                  <Link
-                    href={`/lectures/${spotlightEpisode.slug}`}
-                    className="rounded-full h-14 px-5 border border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm font-medium inline-flex items-center gap-2"
-                  >
-                    <BookOpen className="w-4 h-4 text-violet-400" />
-                    <span>صفحة الحلقة</span>
-                  </Link>
-
-                  {spotlightEpisode.seriesSlug && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const s = allSeries?.find(ser => ser.slug === spotlightEpisode.seriesSlug);
-                        if (s) setSelectedSeriesForRss(s);
-                        else copyRssUrl(spotlightEpisode.seriesSlug!);
-                      }}
-                      className="rounded-full h-14 px-5 border-white/10 bg-white/5 hover:bg-white/10 text-white/80 text-sm gap-2"
+                <div className="flex items-center gap-1.5">
+                  {(['columns', 'waves', 'particles'] as const).map(style => (
+                    <button
+                      key={style}
+                      onClick={() => setVisualizerStyle(style)}
+                      className={cn(
+                        "text-[10px] px-2.5 py-0.5 rounded-full transition-all font-medium",
+                        visualizerStyle === style 
+                          ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-600/30" 
+                          : "bg-white/5 text-white/40 hover:text-white"
+                      )}
                     >
-                      <Rss className="w-4 h-4 text-amber-400" />
-                      <span>خلاصة RSS</span>
-                    </Button>
-                  )}
+                      {style === 'columns' ? 'أعمدة' : style === 'waves' ? 'أمواج' : 'نبض'}
+                    </button>
+                  ))}
                 </div>
+              </div>
+
+              {/* Right/End: Volume Slider & Playback Controls */}
+              <div className="lg:col-span-4 flex flex-col sm:flex-row items-center justify-end gap-4">
+                {/* Volume slider */}
+                <div className="flex items-center gap-2 w-full sm:w-28">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setVolume(volume > 0 ? 0 : 0.8)}
+                    className="text-white/60 hover:text-white h-8 w-8 shrink-0"
+                  >
+                    {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </Button>
+                  <Slider
+                    value={[volume * 100]}
+                    max={100}
+                    step={1}
+                    onValueChange={(val) => setVolume(val[0] / 100)}
+                    className="w-full cursor-pointer"
+                  />
+                </div>
+
+                {/* Tuner Navigation: -15s / Play / +15s */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => seekTo(Math.max(0, currentTime - 15))}
+                    className="rounded-2xl w-10 h-10 border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white"
+                    title="تأخير 15 ثانية"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      const ep = activeLecture || spotlightEpisode;
+                      if (!currentStation || currentStation.id !== `podcast_${ep.id}`) {
+                        handlePlayEpisode(ep);
+                      } else {
+                        togglePlay();
+                      }
+                    }}
+                    className="rounded-full w-14 h-14 bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/30 shrink-0 transition-transform active:scale-95"
+                  >
+                    {isBuffering ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : isPlaying ? (
+                      <Pause className="w-6 h-6 fill-current" />
+                    ) : (
+                      <Play className="w-6 h-6 fill-current ms-0.5" />
+                    )}
+                  </Button>
+
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => seekTo(Math.min(duration || currentTime + 15, currentTime + 15))}
+                    className="rounded-2xl w-10 h-10 border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white"
+                    title="تقديم 15 ثانية"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Timeline / Scrubber Bar ── */}
+            <div className="space-y-1 pt-2">
+              <Slider
+                value={[currentTime]}
+                max={duration || (activeLecture || spotlightEpisode).duration || 100}
+                step={1}
+                onValueChange={(val) => seekTo(val[0])}
+                className="w-full cursor-pointer"
+              />
+              <div className="flex justify-between text-[11px] text-white/40 font-mono">
+                <span>{formatTimerDigits(currentTime)}</span>
+                <span>{duration ? formatTimerDigits(duration) : formatDuration((activeLecture || spotlightEpisode).duration)}</span>
+              </div>
+            </div>
+
+            {/* ── Sub-Bar: Ambient Sounds Accompaniment & Sleep Timer & Speed ── */}
+            <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs">
+              {/* Ambient Sounds */}
+              <div className="flex items-center gap-2">
+                <span className="text-white/40 font-bold flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                  أصوات مرافقة:
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {AMBIENT_SOUNDS.map(sound => (
+                    <Button
+                      key={sound.id}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleAmbient(sound.id)}
+                      className={cn(
+                        "rounded-xl text-[11px] h-7 px-2.5 gap-1 transition-all",
+                        activeAmbient === sound.id 
+                          ? "bg-violet-600/30 border-violet-500/50 text-violet-300 font-bold" 
+                          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                      )}
+                    >
+                      <span>{sound.icon}</span>
+                      <span>{sound.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Side: Speed Chips & Sleep Timer & Share */}
+              <div className="flex items-center gap-2 ms-auto">
+                {/* Speed Multiplier */}
+                <div className="flex items-center rounded-xl bg-white/5 border border-white/10 p-0.5">
+                  {[1, 1.25, 1.5, 2].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => setPlaybackRate(rate)}
+                      className={cn(
+                        "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
+                        playbackRate === rate ? "bg-violet-600 text-white" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      {rate}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sleep Timer */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => startSleepTimer(sleepTimerMinutes ? sleepTimerMinutes : 30)}
+                  className={cn(
+                    "rounded-xl text-[11px] h-7 px-2.5 gap-1.5 transition-all",
+                    sleepTimerRemaining ? "bg-amber-500/20 border-amber-500/40 text-amber-300 font-bold" : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                  )}
+                >
+                  <Moon className="w-3 h-3" />
+                  <span>{sleepTimerRemaining ? `مؤقت: ${formatTimerDigits(sleepTimerRemaining)}` : 'مؤقت النوم'}</span>
+                </Button>
+
+                {/* Share Episode */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const ep = activeLecture || spotlightEpisode;
+                    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${ep.slug}` : '';
+                    if (navigator.share) {
+                      navigator.share({ title: ep.title, url: shareUrl }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast({ title: 'تم نسخ رابط الحلقة بنجاح' });
+                    }
+                  }}
+                  className="rounded-xl text-[11px] h-7 px-2.5 border-white/10 bg-white/5 hover:bg-white/10 text-white/70 gap-1"
+                >
+                  <Share2 className="w-3 h-3" />
+                  <span>مشاركة</span>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -895,137 +1163,6 @@ export default function PodcastsPage() {
           </div>
         )}
       </section>
-
-      {/* ── Fixed In-Page Podcast Audio Bar ── */}
-      <AnimatePresence>
-        {activeLecture && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-4 left-4 right-4 md:left-8 md:right-8 z-50 max-w-5xl mx-auto"
-          >
-            <div className="p-4 rounded-3xl bg-zinc-950/95 border border-violet-500/40 backdrop-blur-2xl shadow-2xl space-y-3">
-              {/* Top Row: Track details + Controls */}
-              <div className="flex items-center justify-between gap-4">
-                {/* Left: Thumbnail & Names */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-900 overflow-hidden relative shrink-0 border border-white/10">
-                    <img
-                      src={activeLecture.youtubeUrl ? `https://img.youtube.com/vi/${activeLecture.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
-                      alt={activeLecture.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
-                    />
-                    {isBuffering && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    <h5 className="text-sm font-bold text-white truncate">{activeLecture.title}</h5>
-                    <p className="text-xs text-violet-400 font-medium truncate">
-                      {activeLecture.programName || activeLecture.seriesTitle || 'بودكاست وقفة'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Center: Play / Pause & Skip Buttons */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => seekTo(Math.max(0, currentTime - 15))}
-                    className="p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
-                    title="تأخير 15 ثانية"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={togglePlay}
-                    className="w-11 h-11 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-600/30 transition-transform active:scale-95"
-                    title={isPlaying ? "إيقاف مؤقت" : "تشغيل"}
-                  >
-                    {isBuffering ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : isPlaying ? (
-                      <Pause className="w-5 h-5 fill-current" />
-                    ) : (
-                      <Play className="w-5 h-5 fill-current ms-0.5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => seekTo(Math.min(duration || currentTime + 15, currentTime + 15))}
-                    className="p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
-                    title="تقديم 15 ثانية"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Right: Speed & Sleep Timer */}
-                <div className="hidden sm:flex items-center gap-2 shrink-0">
-                  {/* Speed selector */}
-                  <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
-                    {[1.0, 1.25, 1.5].map(rate => (
-                      <button
-                        key={rate}
-                        onClick={() => setPlaybackRate(rate)}
-                        className={cn(
-                          "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
-                          playbackRate === rate ? "bg-violet-600 text-white" : "text-white/40 hover:text-white"
-                        )}
-                      >
-                        {rate === 1.0 ? '1x' : `${rate}x`}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Sleep timer */}
-                  <button
-                    onClick={() => startSleepTimer(sleepTimerMinutes ? 0 : 30)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5",
-                      sleepTimerMinutes
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                        : "bg-white/5 border-white/10 text-white/50 hover:text-white"
-                    )}
-                    title="مؤقت النوم"
-                  >
-                    <Moon className="w-3.5 h-3.5" />
-                    <span>{sleepTimerRemaining ? formatTimerDigits(sleepTimerRemaining) : 'نوم'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Bottom: Interactive Scrubber Slider */}
-              <div className="flex items-center gap-3 pt-1 text-[11px] font-mono text-white/50" dir="ltr">
-                <span>
-                  {Math.floor(currentTime / 60)}:{(Math.floor(currentTime % 60)).toString().padStart(2, '0')}
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || activeLecture.duration || 100}
-                  step={1}
-                  value={currentTime}
-                  onChange={(e) => seekTo(parseFloat(e.target.value))}
-                  className="w-full h-1.5 accent-violet-500 cursor-pointer bg-white/10 rounded-lg"
-                />
-                <span>
-                  {duration > 0
-                    ? `${Math.floor(duration / 60)}:${(Math.floor(duration % 60)).toString().padStart(2, '0')}`
-                    : formatDuration(activeLecture.duration)}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── RSS Feed Info Modal ── */}
       <AnimatePresence>
