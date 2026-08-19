@@ -366,11 +366,19 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   // Listen to messages from the YouTube player iframe to sync play states
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (typeof event.data !== 'string') return;
-      if (!event.origin.includes('youtube.com')) return;
+      if (!event.data) return;
+      
+      let data = event.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          return;
+        }
+      }
+      if (typeof data !== 'object' || !data) return;
 
       try {
-        const data = JSON.parse(event.data);
         if (data.event === 'onStateChange') {
           const state = data.info;
           if (state === 1) { // playing
@@ -414,7 +422,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (e) {
-        // Not a JSON message or not from YouTube API
+        // Not a valid event
       }
     };
 
@@ -469,6 +477,46 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         seekTo,
       }}
     >
+      {/* Global Background YouTube Audio Player */}
+      {activeYoutubeId && (
+        <iframe
+          id="global-youtube-radio"
+          key={activeYoutubeId}
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${Math.floor(currentTime || 0)}&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+          className="pointer-events-none fixed -top-[9999px] -left-[9999px] w-10 h-10 opacity-0 overflow-hidden"
+          allow="autoplay; encrypted-media"
+          title="global-youtube-audio"
+          onLoad={() => {
+            const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setVolume',
+                  args: [volume * 100],
+                }),
+                '*'
+              );
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setPlaybackRate',
+                  args: [playbackRateRef.current],
+                }),
+                '*'
+              );
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'playVideo',
+                  args: [],
+                }),
+                '*'
+              );
+            }
+          }}
+        />
+      )}
       {children}
     </RadioContext.Provider>
   );

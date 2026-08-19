@@ -59,39 +59,6 @@ export function FloatingRadioPlayer() {
 
   return (
     <>
-      {/* Offscreen YouTube iframe for global background audio without being blocked by hidden display */}
-      {activeYoutubeId && (
-        <iframe
-          id="global-youtube-radio"
-          key={activeYoutubeId}
-          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${startSecond}&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
-          className="pointer-events-none fixed -top-[9999px] -left-[9999px] w-10 h-10 opacity-0 overflow-hidden"
-          allow="autoplay; encrypted-media"
-          title="radio-audio"
-          onLoad={() => {
-            const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
-            if (iframe?.contentWindow) {
-              iframe.contentWindow.postMessage(
-                JSON.stringify({
-                  event: 'command',
-                  func: 'setVolume',
-                  args: [volume * 100],
-                }),
-                '*'
-              );
-              iframe.contentWindow.postMessage(
-                JSON.stringify({
-                  event: 'command',
-                  func: 'playVideo',
-                  args: [],
-                }),
-                '*'
-              );
-            }
-          }}
-        />
-      )}
-
       <AnimatePresence>
         <motion.div
           key="floating-radio"
