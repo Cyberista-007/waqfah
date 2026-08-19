@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Headphones, 
@@ -85,7 +85,8 @@ export default function PodcastsPage() {
     setPlaybackRate,
     currentTime,
     duration,
-    seekTo
+    seekTo,
+    audioRef
   } = useRadio();
 
   // Pagination & Fetch Limits to prevent downloading 6,000+ documents at once
@@ -138,6 +139,42 @@ export default function PodcastsPage() {
     }
   };
 
+  // ── Web Audio API Graph for Podcasts ──
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+  const initAudioGraph = useCallback(() => {
+    if (!audioRef.current || audioRef.current.crossOrigin !== 'anonymous') return;
+    try {
+      if (!audioContextRef.current) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      if (!analyserNodeRef.current) {
+        analyserNodeRef.current = ctx.createAnalyser();
+        analyserNodeRef.current.fftSize = 128;
+      }
+
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current);
+        sourceNodeRef.current.connect(analyserNodeRef.current);
+        analyserNodeRef.current.connect(ctx.destination);
+      }
+    } catch (e) {
+      console.warn('Podcast Web Audio init:', e);
+    }
+  }, [audioRef]);
+
+  useEffect(() => {
+    if (isPlaying && audioRef.current) {
+      initAudioGraph();
+    }
+  }, [isPlaying, audioRef, initAudioGraph]);
+
   // Visualizer State & Animation
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [visualizerStyle, setVisualizerStyle] = useState<'columns' | 'waves' | 'particles'>('columns');
@@ -149,38 +186,73 @@ export default function PodcastsPage() {
     if (!ctx) return;
 
     let animationId: number;
-    let width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+    let width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 360;
     let height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+      width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 360;
       height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
     };
     window.addEventListener('resize', handleResize);
 
     let phase = 0;
+    let dataArray: Uint8Array | null = null;
+    let bufferLength = 0;
+    const analyser = analyserNodeRef.current;
+
+    if (analyser && audioRef.current?.crossOrigin === 'anonymous') {
+      bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+    }
+
+    // Peak bars for gravity fall
+    const peakBars = new Array(35).fill(0);
+
     const render = () => {
       if (!canvas) return;
-      if (width <= 0 || height <= 0 || canvas.width <= 0) {
-        width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 320;
+      if (width <= 0 || height <= 0) {
+        width = canvas.width = canvas.offsetWidth || canvas.parentElement?.clientWidth || 360;
         height = canvas.height = canvas.offsetHeight || canvas.parentElement?.clientHeight || 64;
       }
 
       ctx.clearRect(0, 0, width, height);
 
-      phase += isPlaying ? 0.08 : 0.02;
+      let hasRealData = false;
+      if (analyser && dataArray && audioRef.current?.crossOrigin === 'anonymous') {
+        analyser.getByteFrequencyData(dataArray as any);
+        for (let j = 0; j < dataArray.length; j++) {
+          if (dataArray[j] > 0) {
+            hasRealData = true;
+            break;
+          }
+        }
+      }
+
+      phase += isPlaying ? 0.12 : 0.02;
 
       if (visualizerStyle === 'waves') {
-        ctx.beginPath();
-        ctx.moveTo(0, height);
-        const barCount = 36;
+        const barCount = 40;
         const sliceWidth = width / barCount;
 
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+
         for (let i = 0; i <= barCount; i++) {
-          const amplitude = isPlaying ? 70 : 15;
-          const val = (Math.sin(i * 0.25 + phase) * Math.cos(i * 0.15 - phase * 0.4) + 1) * amplitude;
-          const yVal = height - (val / 255) * (height * 0.8) - 4;
+          let val = 0;
+          if (hasRealData && dataArray && bufferLength > 0) {
+            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.65);
+            val = dataArray[dataIdx] || 0;
+          } else if (isPlaying) {
+            const low = Math.sin(i * 0.22 + phase * 1.4) * 45;
+            const mid = Math.cos(i * 0.45 - phase * 2.1) * 35;
+            const high = Math.sin(i * 0.8 + phase * 3.2) * 20;
+            val = Math.abs(low + mid + high) + 15;
+          } else {
+            val = 8;
+          }
+
+          const yVal = height - Math.min((val / 255) * (height * 0.85), height - 4);
           const xVal = i * sliceWidth;
           ctx.lineTo(xVal, yVal);
         }
@@ -189,45 +261,95 @@ export default function PodcastsPage() {
         ctx.closePath();
 
         const grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, isPlaying ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)');
-        grad.addColorStop(0.5, isPlaying ? 'rgba(139, 92, 246, 0.4)' : 'rgba(139, 92, 246, 0.15)');
-        grad.addColorStop(1, isPlaying ? 'rgba(192, 132, 252, 0.9)' : 'rgba(192, 132, 252, 0.4)');
+        grad.addColorStop(0, isPlaying ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255, 255, 255, 0.02)');
+        grad.addColorStop(0.5, isPlaying ? 'rgba(168, 85, 247, 0.4)' : 'rgba(168, 85, 247, 0.1)');
+        grad.addColorStop(1, isPlaying ? 'rgba(216, 180, 254, 0.9)' : 'rgba(216, 180, 254, 0.3)');
         ctx.fillStyle = grad;
         ctx.fill();
+
+        ctx.strokeStyle = isPlaying ? '#c084fc' : 'rgba(192, 132, 252, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
       } else if (visualizerStyle === 'particles') {
-        const barCount = 28;
+        const barCount = 30;
         const barWidth = width / barCount;
         for (let i = 0; i < barCount; i++) {
-          const amplitude = isPlaying ? 60 : 12;
-          const val = (Math.sin(i * 0.4 + phase * 1.5) + 1) * amplitude;
-          const barHeight = (val / 255) * (height * 0.75) + 4;
+          let val = 0;
+          if (hasRealData && dataArray && bufferLength > 0) {
+            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
+            val = dataArray[dataIdx] || 0;
+          } else if (isPlaying) {
+            val = (Math.sin(i * 0.5 + phase * 2) * Math.cos(i * 0.25 - phase) + 1) * 75 + 15;
+          } else {
+            val = 15;
+          }
+
+          const barHeight = Math.max(4, (val / 255) * (height * 0.8));
           const x = i * barWidth + barWidth / 2;
           const y = height / 2 - barHeight / 2;
 
           ctx.beginPath();
-          ctx.arc(x, y + barHeight / 2, Math.max(2, barHeight / 4), 0, Math.PI * 2);
+          ctx.arc(x, y + barHeight / 2, Math.max(2, barHeight / 3.5), 0, Math.PI * 2);
           ctx.fillStyle = isPlaying ? 'rgba(192, 132, 252, 0.9)' : 'rgba(192, 132, 252, 0.3)';
           ctx.fill();
         }
       } else {
-        // Columns
-        const barCount = 24;
-        const barWidth = (width / barCount) * 0.62;
-        const gap = (width / barCount) * 0.38;
+        // Columns: Authentic Graphic Equalizer with Frequency Spectrum (Bass, Mid, Treble) & Peak Drops
+        const barCount = 32;
+        const barWidth = (width / barCount) * 0.68;
+        const gap = (width / barCount) * 0.32;
 
         for (let i = 0; i < barCount; i++) {
-          const amplitude = isPlaying ? (180 * (Math.sin(i * 0.35 + phase * 1.2) * 0.5 + 0.5) + 30) : 25;
-          const barHeight = Math.max(6, (amplitude / 255) * height * 0.85);
+          let val = 0;
+
+          if (hasRealData && dataArray && bufferLength > 0) {
+            const percentIdx = i / barCount;
+            const dataIdx = Math.floor(percentIdx * bufferLength * 0.7);
+            val = dataArray[dataIdx] || 0;
+          } else if (isPlaying) {
+            // Multi-frequency synthesis tailored to voice/speech frequency bands:
+            const harmonic1 = Math.sin(i * 0.7 + phase * 2.8) * 60;
+            const harmonic2 = Math.cos(i * 1.3 - phase * 3.5) * 45;
+            const harmonic3 = Math.sin(i * 2.1 + phase * 1.7) * 35;
+            const noise = ((i * 13 + Math.floor(phase * 4)) % 7) * 6;
+            
+            // Bass emphasis on left (low i), Voice mids in center, Treble crisp on right
+            const bandWeight = i < 8 ? 1.2 : i < 22 ? 1.4 : 0.9;
+            val = Math.max(0, (Math.abs(harmonic1 + harmonic2 + harmonic3) + noise) * bandWeight);
+          } else {
+            val = 12;
+          }
+
+          let barHeight = Math.max(5, Math.min((val / 255) * height * 0.9, height - 6));
+
+          // Peak cap gravity physics
+          if (barHeight >= peakBars[i]) {
+            peakBars[i] = barHeight;
+          } else {
+            peakBars[i] = Math.max(barHeight, peakBars[i] - 1.2);
+          }
+
           const x = i * (barWidth + gap) + gap / 2;
           const y = height - barHeight;
 
+          // Bar Body Gradient
           const grad = ctx.createLinearGradient(0, height, 0, y);
-          grad.addColorStop(0, isPlaying ? '#7c3aed' : 'rgba(124, 58, 237, 0.3)');
-          grad.addColorStop(1, isPlaying ? '#c084fc' : 'rgba(192, 132, 252, 0.5)');
+          grad.addColorStop(0, isPlaying ? '#6d28d9' : 'rgba(109, 40, 217, 0.3)');
+          grad.addColorStop(0.6, isPlaying ? '#a855f7' : 'rgba(168, 85, 247, 0.4)');
+          grad.addColorStop(1, isPlaying ? '#e9d5ff' : 'rgba(233, 213, 255, 0.6)');
           ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
+          ctx.roundRect(x, y, barWidth, barHeight, [3, 3, 0, 0]);
           ctx.fill();
+
+          // White peak cap dot on top of each bar
+          if (isPlaying) {
+            const peakY = height - peakBars[i] - 3;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(x, Math.max(1, peakY), barWidth, 2, [1, 1, 1, 1]);
+            ctx.fill();
+          }
         }
       }
 
@@ -240,7 +362,7 @@ export default function PodcastsPage() {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationId);
     };
-  }, [isPlaying, visualizerStyle]);
+  }, [isPlaying, visualizerStyle, audioRef]);
 
   // Sleep Timer
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
