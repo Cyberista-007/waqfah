@@ -8,7 +8,21 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export function FloatingRadioPlayer() {
-  const { currentStation, isPlaying, isBuffering, volume, setVolume, togglePlay, stopRadio, activeYoutubeId, playbackRate, setPlaybackRate } = useRadio();
+  const { 
+    currentStation, 
+    isPlaying, 
+    isBuffering, 
+    volume, 
+    setVolume, 
+    togglePlay, 
+    stopRadio, 
+    activeYoutubeId, 
+    playbackRate, 
+    setPlaybackRate,
+    currentTime,
+    duration,
+    seekTo
+  } = useRadio();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const prevVolume = useRef(volume);
@@ -202,13 +216,52 @@ export function FloatingRadioPlayer() {
                           setVolume(parseFloat(e.target.value));
                           setIsMuted(false);
                         }}
-                        className="w-full h-1 accent-emerald-400 cursor-pointer"
+                        className="w-full h-1 accent-violet-400 cursor-pointer"
                       />
                     </div>
 
-                    {/* Speed Control */}
+                    {/* Progress bar / Timeline if duration is available */}
+                    {duration > 0 && (
+                      <div className="space-y-1 border-t border-white/5 pt-2" dir="ltr">
+                        <div className="flex items-center justify-between text-[10px] text-white/50 font-mono">
+                          <span>
+                            {Math.floor(currentTime / 60)}:{(Math.floor(currentTime % 60)).toString().padStart(2, '0')}
+                          </span>
+                          <span>
+                            {Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={duration}
+                          step={1}
+                          value={currentTime}
+                          onChange={(e) => seekTo(parseFloat(e.target.value))}
+                          className="w-full h-1 accent-violet-500 cursor-pointer"
+                        />
+                      </div>
+                    )}
+
+                    {/* Speed Control & Skip 15s */}
                     <div className="flex items-center justify-between border-t border-white/5 pt-2" dir="rtl">
-                      <span className="text-[10px] text-white/40 font-bold">سرعة التشغيل</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => seekTo(Math.max(0, currentTime - 15))}
+                          className="p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-all text-[10px] flex items-center gap-0.5"
+                          title="تأخير 15 ثانية"
+                        >
+                          <span className="text-[9px] font-bold">15-</span>
+                        </button>
+                        <button
+                          onClick={() => seekTo(Math.min(duration || currentTime + 15, currentTime + 15))}
+                          className="p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-all text-[10px] flex items-center gap-0.5"
+                          title="تقديم 15 ثانية"
+                        >
+                          <span className="text-[9px] font-bold">15+</span>
+                        </button>
+                      </div>
+
                       <div className="flex items-center gap-1">
                         {[1.0, 1.25, 1.5, 2.0].map((rate) => (
                           <button
@@ -217,7 +270,7 @@ export function FloatingRadioPlayer() {
                             className={cn(
                               "px-2 py-0.5 rounded text-[9px] font-black transition-all border",
                               playbackRate === rate
-                                ? "bg-primary border-primary text-primary-foreground shadow-glow-primary/5"
+                                ? "bg-violet-600 border-violet-500 text-white shadow-glow-primary/5"
                                 : "bg-white/[0.02] border-white/5 text-white/60 hover:bg-white/10 hover:text-white"
                             )}
                           >
@@ -227,31 +280,37 @@ export function FloatingRadioPlayer() {
                       </div>
                     </div>
 
-                    {/* Live indicator */}
-                    <div className="flex items-center justify-between">
+                    {/* Live indicator & Link back */}
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2">
                       <div className="flex items-center gap-1.5">
                         <span
                           className={cn(
                             'inline-block w-2 h-2 rounded-full',
-                            isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/20'
+                            isPlaying ? (currentStation.id.startsWith('podcast_') ? 'bg-violet-500 animate-pulse' : 'bg-red-500 animate-pulse') : 'bg-white/20'
                           )}
                         />
                         <span className="text-xs text-white/40">
-                          {isPlaying ? 'يُبثّ الآن' : 'متوقف'}
+                          {isPlaying ? (currentStation.id.startsWith('podcast_') ? 'يتم الاستماع' : 'يُبثّ الآن') : 'متوقف'}
                         </span>
                       </div>
 
-                      {/* Link back to Quran page */}
+                      {/* Link back */}
                       <Link
-                        href="/quran?tab=radio"
+                        href={currentStation.id.startsWith('podcast_') ? '/podcasts' : '/radio'}
                         className={cn(
                           'text-xs font-semibold px-2 py-1 rounded-lg transition-all',
                           'bg-white/5 hover:bg-white/10',
                           currentStation.textColor
                         )}
                       >
-                        <Radio className="w-3 h-3 inline ml-1" />
-                        المذياع
+                        {currentStation.id.startsWith('podcast_') ? (
+                          <>بودكاست وقفة</>
+                        ) : (
+                          <>
+                            <Radio className="w-3 h-3 inline ml-1" />
+                            المذياع
+                          </>
+                        )}
                       </Link>
                     </div>
                   </div>

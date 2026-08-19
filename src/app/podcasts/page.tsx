@@ -99,6 +99,17 @@ export default function PodcastsPage() {
     });
   };
 
+  // Normalize Arabic text for robust search
+  const normalizeArabic = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/[\u064B-\u065F\u0670]/g, '') // remove tashkeel
+      .replace(/[إأآا]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .trim();
+  };
+
   // Convert Lecture to playable RadioStation format
   const handlePlayEpisode = (lecture: Lecture) => {
     const streamUrl = lecture.audioSrc || lecture.youtubeUrl || '';
@@ -110,8 +121,14 @@ export default function PodcastsPage() {
       return;
     }
 
+    const stationId = `podcast_${lecture.id}`;
+    if (currentStation?.id === stationId) {
+      togglePlay();
+      return;
+    }
+
     const station: RadioStation = {
-      id: `podcast_${lecture.id}`,
+      id: stationId,
       name: lecture.title,
       subtitle: lecture.programName || lecture.seriesTitle || 'بودكاست وقفة',
       url: streamUrl,
@@ -159,14 +176,14 @@ export default function PodcastsPage() {
       list = list.filter(l => (l.duration || 0) > 1800); // > 30 mins
     }
 
-    // Search query
+    // Search query with Arabic normalization
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
+      const q = normalizeArabic(searchQuery);
       list = list.filter(l => 
-        l.title.toLowerCase().includes(q) || 
-        (l.description && l.description.toLowerCase().includes(q)) ||
-        (l.programName && l.programName.toLowerCase().includes(q)) ||
-        (l.seriesTitle && l.seriesTitle.toLowerCase().includes(q))
+        normalizeArabic(l.title).includes(q) || 
+        (l.description && normalizeArabic(l.description).includes(q)) ||
+        (l.programName && normalizeArabic(l.programName).includes(q)) ||
+        (l.seriesTitle && normalizeArabic(l.seriesTitle).includes(q))
       );
     }
 
@@ -176,7 +193,7 @@ export default function PodcastsPage() {
   // Spotlight Episode: First lecture or currently playing
   const spotlightEpisode = useMemo(() => {
     if (!allLectures || allLectures.length === 0) return null;
-    return allLectures[0];
+    return allLectures.find(l => Boolean(l.audioSrc || l.youtubeUrl)) || allLectures[0];
   }, [allLectures]);
 
   // Format seconds to mm:ss or hh:mm:ss
@@ -184,7 +201,6 @@ export default function PodcastsPage() {
     if (!seconds) return 'حلقة صوتية';
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
     if (h > 0) return `${h} س و ${m} د`;
     return `${m} دقيقة`;
   };
@@ -297,10 +313,21 @@ export default function PodcastsPage() {
                   <Button
                     onClick={() => handlePlayEpisode(spotlightEpisode)}
                     size="lg"
-                    className="rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 h-14 text-base gap-3 shadow-lg shadow-violet-600/30"
+                    className="rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 h-14 text-base gap-3 shadow-lg shadow-violet-600/30 transition-transform active:scale-95"
                   >
-                    <Play className="w-5 h-5 fill-current" />
-                    <span>استمع الآن</span>
+                    {currentStation?.id === `podcast_${spotlightEpisode.id}` && isPlaying ? (
+                      <>
+                        <Pause className="w-5 h-5 fill-current" />
+                        <span>إيقاف مؤقت</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-5 h-5 fill-current" />
+                        <span>
+                          {currentStation?.id === `podcast_${spotlightEpisode.id}` ? 'استئناف الاستماع' : 'استمع الآن'}
+                        </span>
+                      </>
+                    )}
                   </Button>
 
                   <Button
@@ -314,6 +341,14 @@ export default function PodcastsPage() {
                     <Heart className={cn("w-4 h-4", favoriteIds.includes(spotlightEpisode.id) && "fill-current")} />
                     <span>{favoriteIds.includes(spotlightEpisode.id) ? 'في المفضلة' : 'حفظ'}</span>
                   </Button>
+
+                  <Link
+                    href={`/lectures/${spotlightEpisode.slug}`}
+                    className="rounded-full h-14 px-5 border border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm font-medium inline-flex items-center gap-2"
+                  >
+                    <BookOpen className="w-4 h-4 text-violet-400" />
+                    <span>صفحة الحلقة</span>
+                  </Link>
 
                   {spotlightEpisode.seriesSlug && (
                     <Button
@@ -502,6 +537,7 @@ export default function PodcastsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredLectures.map(lecture => {
                   const isCurrent = currentStation?.id === `podcast_${lecture.id}`;
+                  const isThisPlaying = isCurrent && isPlaying;
                   const isFav = favoriteIds.includes(lecture.id);
 
                   return (
@@ -512,7 +548,7 @@ export default function PodcastsPage() {
                       className={cn(
                         "p-4 rounded-3xl border transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden",
                         isCurrent
-                          ? "bg-violet-600/15 border-violet-500/50 shadow-xl shadow-violet-600/10 ring-1 ring-violet-500/30"
+                          ? "bg-violet-600/15 border-violet-500/50 shadow-xl shadow-violet-600/15 ring-1 ring-violet-500/30"
                           : "bg-zinc-900/60 hover:bg-zinc-800/80 border-white/10 hover:border-white/20"
                       )}
                     >
@@ -524,9 +560,19 @@ export default function PodcastsPage() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                         />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-lg">
-                            <Play className="w-4 h-4 fill-current ms-0.5" />
+                        <div className={cn(
+                          "absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity",
+                          isThisPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        )}>
+                          <div className={cn(
+                            "w-10 h-10 rounded-full text-white flex items-center justify-center shadow-lg transition-transform active:scale-90",
+                            isThisPlaying ? "bg-violet-500 ring-4 ring-violet-500/30" : "bg-violet-600"
+                          )}>
+                            {isThisPlaying ? (
+                              <Pause className="w-4 h-4 fill-current" />
+                            ) : (
+                              <Play className="w-4 h-4 fill-current ms-0.5" />
+                            )}
                           </div>
                         </div>
                         <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] text-white/80 font-bold">
@@ -550,10 +596,10 @@ export default function PodcastsPage() {
                       {/* Bottom Row: Actions */}
                       <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/5">
                         <span className="text-[10px] text-white/40">
-                          {isCurrent && isPlaying ? 'يتم التشغيل الآن' : 'تشغيل الحلقة'}
+                          {isCurrent ? (isPlaying ? 'يتم التشغيل الآن' : 'متوقف مؤقتاً') : 'تشغيل الحلقة'}
                         </span>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -571,14 +617,15 @@ export default function PodcastsPage() {
                             variant="ghost"
                             onClick={(e) => {
                               e.stopPropagation();
+                              const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/lectures/${lecture.slug}` : '';
                               if (navigator.share) {
                                 navigator.share({
                                   title: lecture.title,
-                                  url: window.location.href
+                                  url: shareUrl
                                 }).catch(() => {});
                               } else {
-                                navigator.clipboard.writeText(window.location.href);
-                                toast({ title: 'تم نسخ الرابط' });
+                                navigator.clipboard.writeText(shareUrl);
+                                toast({ title: 'تم نسخ رابط الحلقة بنجاح' });
                               }
                             }}
                             className="h-7 w-7 rounded-full text-white/30 hover:text-white"
@@ -586,6 +633,13 @@ export default function PodcastsPage() {
                           >
                             <Share2 className="w-3.5 h-3.5" />
                           </Button>
+                          <Link
+                            href={`/lectures/${lecture.slug}`}
+                            className="h-7 w-7 rounded-full text-white/30 hover:text-violet-400 inline-flex items-center justify-center"
+                            title="عرض صفحة المادة"
+                          >
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </Link>
                         </div>
                       </div>
                     </motion.div>
