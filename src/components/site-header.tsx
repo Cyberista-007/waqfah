@@ -72,9 +72,15 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useState } from "react"
-import { ThemeSwitcherDialog, themes } from "./theme-switcher"
-import { FontSwitcherDialog } from "./font-switcher"
-import { SolidColorSwitcherDialog } from "./solid-color-switcher"
+import dynamic from "next/dynamic"
+import { themes } from "./theme-switcher"
+import { languages } from "./language-switcher"
+
+const ThemeSwitcherDialog = dynamic(() => import("./theme-switcher").then(mod => mod.ThemeSwitcherDialog), { ssr: false })
+const FontSwitcherDialog = dynamic(() => import("./font-switcher").then(mod => mod.FontSwitcherDialog), { ssr: false })
+const SolidColorSwitcherDialog = dynamic(() => import("./solid-color-switcher").then(mod => mod.SolidColorSwitcherDialog), { ssr: false })
+const LanguageSwitcherDialog = dynamic(() => import("./language-switcher").then(mod => mod.LanguageSwitcherDialog), { ssr: false })
+
 import { getInitials } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 import { Separator } from "./ui/separator"
@@ -87,7 +93,6 @@ import { ThemeToggle } from "./theme-toggle"
 import { NotificationBell } from "./notification-bell"
 import { useAuth, useUser } from "@/firebase"
 import { useSearch } from "./search-provider"
-import { LanguageSwitcherDialog, languages } from "./language-switcher"
 import Magnetic from "./magnetic"
 
 const mainNavItems = [

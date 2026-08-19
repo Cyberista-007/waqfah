@@ -357,6 +357,8 @@ export default function PodcastsPage() {
                   <img
                     src={spotlightEpisode.youtubeUrl ? `https://img.youtube.com/vi/${spotlightEpisode.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
                     alt={spotlightEpisode.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                   />
@@ -766,6 +768,8 @@ export default function PodcastsPage() {
                         <img
                           src={lecture.youtubeUrl ? `https://img.youtube.com/vi/${lecture.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
                           alt={lecture.title}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                         />
@@ -878,6 +882,8 @@ export default function PodcastsPage() {
                     <img
                       src={activeLecture.youtubeUrl ? `https://img.youtube.com/vi/${activeLecture.youtubeUrl.match(/([a-zA-Z0-9_-]{11})/)?.[1]}/hqdefault.jpg` : '/icon.jpg'}
                       alt={activeLecture.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                       onError={(e) => { (e.target as HTMLImageElement).src = '/icon.jpg'; }}
                     />

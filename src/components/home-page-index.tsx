@@ -36,35 +36,36 @@ export function PageIndex() {
   const [scrollProgress, setScrollProgress] = useState(0)
 
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      // Calculate scroll progress
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
-      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0
-      setScrollProgress(progress)
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
+          setScrollProgress(progress);
 
-      const sectionOffsets = sections.map(section => {
-        const el = document.getElementById(section.id)
-        return {
-          id: section.id,
-          offset: el ? el.offsetTop - 250 : 0
-        }
-      })
+          const scrollPosition = window.scrollY;
+          let current = "hero";
 
-      const scrollPosition = window.scrollY
-      const current = sectionOffsets.reduce((prev, curr) => {
-        if (scrollPosition >= curr.offset) {
-          return curr.id
-        }
-        return prev
-      }, "hero")
+          for (const section of sections) {
+            const el = document.getElementById(section.id);
+            if (el && scrollPosition >= el.offsetTop - 250) {
+              current = section.id;
+            }
+          }
 
-      setActiveSection(current)
-    }
+          setActiveSection(prev => (prev !== current ? current : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
 
-    handleScroll()
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id)

@@ -133,10 +133,9 @@ export function useCollection<T = any>(
     return () => {
         isMounted = false;
         if (localUnsubscribe) {
-            // Using a tiny timeout for unsubscription helps avoid 
-            // immediate SDK state conflicts during rapid HMR/Turbopack cycles.
-            const toUnsub = localUnsubscribe;
-            setTimeout(() => toUnsub(), 0);
+            try {
+                localUnsubscribe();
+            } catch (e) {}
         }
     };
   }, [firestore, path, memoizedOptionsJSON]); 
