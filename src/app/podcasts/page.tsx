@@ -80,9 +80,14 @@ export default function PodcastsPage() {
     seekTo
   } = useRadio();
 
-  // Firestore queries for series and lectures
+  // Pagination & Fetch Limits to prevent downloading 6,000+ documents at once
+  const [fetchLimit, setFetchLimit] = useState(48);
+  const [displayLimit, setDisplayLimit] = useState(24);
+
+  // Firestore queries for series and lectures with query limits
   const { data: allLectures, isLoading: isLoadingLectures } = useCollection<Lecture>('lectures', {
-    orderBy: ['createdAt', 'desc']
+    orderBy: ['createdAt', 'desc'],
+    limit: fetchLimit
   });
 
   const { data: allSeries, isLoading: isLoadingSeries } = useCollection<Series>('series', {
@@ -259,6 +264,16 @@ export default function PodcastsPage() {
 
     return list;
   }, [allLectures, selectedCategory, durationFilter, searchQuery, favoriteIds, sortBy]);
+
+  // Reset display count when filter or search changes
+  useEffect(() => {
+    setDisplayLimit(24);
+  }, [selectedCategory, durationFilter, searchQuery, sortBy]);
+
+  // Slice to visible count to keep DOM tree lightweight and memory footprint small
+  const visibleLectures = useMemo(() => {
+    return filteredLectures.slice(0, displayLimit);
+  }, [filteredLectures, displayLimit]);
 
   // Spotlight Episode: First lecture or currently playing
   const spotlightEpisode = useMemo(() => {
@@ -648,7 +663,7 @@ export default function PodcastsPage() {
             ) : viewMode === 'list' ? (
               /* List View Mode */
               <div className="space-y-2">
-                {filteredLectures.map((lecture, idx) => {
+                {visibleLectures.map((lecture, idx) => {
                   const isCurrent = currentStation?.id === `podcast_${lecture.id}`;
                   const isThisPlaying = isCurrent && isPlaying;
                   const isFav = favoriteIds.includes(lecture.id);
@@ -746,7 +761,7 @@ export default function PodcastsPage() {
             ) : (
               /* Grid View Mode */
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredLectures.map(lecture => {
+                {visibleLectures.map(lecture => {
                   const isCurrent = currentStation?.id === `podcast_${lecture.id}`;
                   const isThisPlaying = isCurrent && isPlaying;
                   const isFav = favoriteIds.includes(lecture.id);
@@ -858,6 +873,23 @@ export default function PodcastsPage() {
                     </motion.div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Load More Episodes Button */}
+            {(filteredLectures.length > displayLimit || (allLectures && allLectures.length >= fetchLimit)) && (
+              <div className="flex justify-center pt-8">
+                <Button
+                  onClick={() => {
+                    setDisplayLimit(prev => prev + 24);
+                    setFetchLimit(prev => prev + 48);
+                  }}
+                  size="lg"
+                  className="rounded-full bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/40 px-8 h-12 font-bold text-sm gap-2 transition-all shadow-lg hover:shadow-violet-600/20"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>تحميل المزيد من الحلقات</span>
+                </Button>
               </div>
             )}
           </div>
