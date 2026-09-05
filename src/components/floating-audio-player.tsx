@@ -128,6 +128,19 @@ export function FloatingAudioPlayer() {
     }
   }, [user, firestore, track, audioRef]);
   
+  const clearSleepTimer = useCallback(() => {
+    if (sleepTimerRef.current) {
+        clearInterval(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+    }
+    setSleepTimerDuration(0);
+    setSleepTimerRemaining(0);
+    setSleepTimerEndOfTrack(false);
+    if (audioRef.current) {
+        audioRef.current.volume = volume;
+    }
+  }, [audioRef, volume]);
+
   const handleEnded = useCallback(() => {
     if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
     
@@ -138,28 +151,36 @@ export function FloatingAudioPlayer() {
         const duration = audioRef.current.duration;
 
         runTransaction(firestore, async (transaction) => {
-            const historyDoc = await transaction.get(historyRef);
             const userDoc = await transaction.get(userRef);
-            
-            if (!userDoc.exists()) {
-                throw "User document does not exist!";
-            }
-            
-            const lastPosition = historyDoc.exists() ? historyDoc.data().position : 0;
-            const timeListened = currentTime - lastPosition;
+            const historyDoc = await transaction.get(historyRef);
 
-            // 1. Update listen history to mark as complete
+            if (!userDoc.exists()) {
+                console.error("User doc not found in transaction");
+                return;
+            }
+
+            const currentStreak = userDoc.data().streak || 0;
+            const newStreak = currentStreak + 1;
+            
+            const historyData = historyDoc.data();
+            const lastTime = historyData?.playbackPosition || 0;
+            const timeListened = currentTime - lastTime;
+
+            // 1. Prepare history update
             transaction.set(historyRef, {
                 lectureId: track.id,
-                seriesId: track.seriesId,
-                position: currentTime,
+                title: track.title,
+                programName: track.programName,
+                playbackPosition: currentTime,
                 duration: duration,
-                lastListened: Timestamp.now(),
+                lastListenedAt: Timestamp.now(),
+                completed: true
             }, { merge: true });
 
             // 2. Prepare user profile updates
-            const userProfileUpdates: { [key: string]: any } = {
-                lecturesCompleted: increment(1)
+            const userProfileUpdates: any = {
+                points: increment(10),
+                streak: newStreak
             };
             
             // 3. Add last bit of listening time
@@ -177,7 +198,7 @@ export function FloatingAudioPlayer() {
 
     closePlayer();
     clearSleepTimer();
-  }, [user, firestore, track, audioRef, closePlayer]);
+  }, [user, firestore, track, audioRef, closePlayer, clearSleepTimer]);
 
 
   useEffect(() => {
@@ -215,7 +236,7 @@ export function FloatingAudioPlayer() {
       }
       clearSleepTimer();
     };
-  }, [audioRef, track, updateListenHistory, handleEnded]);
+  }, [audioRef, track, updateListenHistory, handleEnded, clearSleepTimer]);
   
    useEffect(() => {
         const audioElement = audioRef.current;
@@ -341,19 +362,6 @@ export function FloatingAudioPlayer() {
     setSleepTimerEndOfTrack(true);
     toast({ title: "مؤقت النوم", description: "سيتم إيقاف التشغيل تلقائياً عند نهاية المقطع الحالي." });
   };
-
-  const clearSleepTimer = useCallback(() => {
-    if (sleepTimerRef.current) {
-        clearInterval(sleepTimerRef.current);
-        sleepTimerRef.current = null;
-    }
-    setSleepTimerDuration(0);
-    setSleepTimerRemaining(0);
-    setSleepTimerEndOfTrack(false);
-    if (audioRef.current) {
-        audioRef.current.volume = volume;
-    }
-  }, [audioRef, volume]);
   
   const handleSeek = (value: number[]) => {
       if (audioRef.current) {
@@ -707,19 +715,41 @@ export function FloatingAudioPlayer() {
             <div className="flex items-center gap-1">
                  <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-2xl">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={cn(
+                              "h-10 w-10 rounded-2xl transition-colors",
+                              isMuted || volume === 0 ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            )}
+                            title={isMuted ? "الصوت مكتوم" : `مستوى الصوت: ${Math.round(volume * 100)}%`}
+                        >
                             {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-12 h-40 p-4 rounded-full border-border/50 backdrop-blur-xl">
-                        <Slider
-                            value={[isMuted ? 0 : volume * 100]}
-                            max={100}
-                            step={1}
-                            orientation="vertical"
-                            onValueChange={(value) => handleVolumeChange(value[0])}
-                            className="h-full"
-                        />
+                    <PopoverContent className="w-16 p-3 flex flex-col items-center gap-3 rounded-2xl border-border/50 backdrop-blur-xl shadow-2xl" align="end">
+                        <span className="text-[10px] font-mono font-bold text-muted-foreground">
+                            {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                        </span>
+                        <div className="h-28 flex items-center justify-center">
+                            <Slider
+                                value={[isMuted ? 0 : volume * 100]}
+                                max={100}
+                                step={1}
+                                orientation="vertical"
+                                onValueChange={(value) => handleVolumeChange(value[0])}
+                                className="h-full"
+                            />
+                        </div>
+                        <Button
+                            onClick={toggleMute}
+                            variant="ghost"
+                            size="icon"
+                            className={cn("h-7 w-7 rounded-lg", isMuted && "text-destructive bg-destructive/10")}
+                            title={isMuted ? "إلغاء الكتم" : "كتم الصوت"}
+                        >
+                            {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                        </Button>
                     </PopoverContent>
                 </Popover>
             </div>

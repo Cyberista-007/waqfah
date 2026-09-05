@@ -5,11 +5,14 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const text = searchParams.get('text');
+    const rawText = searchParams.get('text');
 
-    if (!text) {
-      return new Response('Missing text parameter', { status: 400 });
+    if (!rawText || !rawText.trim()) {
+      return new Response('Missing or empty text parameter', { status: 400 });
     }
+
+    // Google Translate TTS accepts max ~200 characters per segment
+    const text = rawText.trim().slice(0, 250);
 
     const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(text)}`;
 

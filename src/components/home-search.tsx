@@ -5,6 +5,7 @@ import { useSearch } from './search-provider';
 import { motion, AnimatePresence } from 'framer-motion';
 import Magnetic from './magnetic';
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 // Extend Window type to include speech recognition API
@@ -16,6 +17,7 @@ declare global {
 }
 
 export function HomeSearch() {
+  const router = useRouter();
   const { openSearch, isSearchOpen } = useSearch();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -51,9 +53,9 @@ export function HomeSearch() {
 
       if (result.isFinal && text.trim()) {
         setIsListening(false);
-        // Open search and pass the voice query via URL
+        // Open search and pass the voice query via client router push
         const searchUrl = `/search?q=${encodeURIComponent(text.trim())}`;
-        window.location.href = searchUrl;
+        router.push(searchUrl);
       }
     };
 
@@ -67,7 +69,7 @@ export function HomeSearch() {
     };
 
     recognition.start();
-  }, [supported, isListening]);
+  }, [supported, isListening, router]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-0 relative">

@@ -50,7 +50,11 @@ service cloud.firestore {
     match /destructive_sins/{id} { allow read: if true; allow write: if isAdmin(); }
     match /gamification_badges/{id} { allow read: if true; allow write: if isAdmin(); }
     match /series/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /presence/{sessionId} { allow read, write: if true; }
+    match /presence/{sessionId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasOnly(['lastActive', 'device']) && request.resource.data.device in ['mobile', 'desktop'];
+      allow delete: if true;
+    }
 
     // Palestine solidarity pledges — written ONLY by server-side Admin SDK.
     match /palestine_pledges/{fingerprintId} {
@@ -105,9 +109,12 @@ service cloud.firestore {
     // =====================================================================
 
     match /users/{userId} {
-      allow create: if isOwner(userId);
+      // Prevent privilege escalation: Users cannot grant themselves admin role
+      allow create: if isOwner(userId) && (!('role' in request.resource.data) || request.resource.data.role == 'user');
       allow get: if true;
-      allow update, delete: if isOwner(userId) || isAdmin();
+      // Normal owners can update their profile, but cannot modify the 'role' field
+      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
       allow list: if isSignedIn();
 
       // Notifications access
@@ -130,7 +137,7 @@ service cloud.firestore {
         allow read, update, delete: if isOwner(userId) || (resource != null && resource.data.isPublic == true);
       }
 
-      // Recursive Wildcard for other private data
+      // Recursive Wildcard for other private data (notes, history, etc.)
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
@@ -141,14 +148,11 @@ service cloud.firestore {
     // =====================================================================
 
     match /{path=**}/playlists/{playlistId} {
-      allow read: if true;
+      // Only public playlists may be read via collectionGroup query
+      allow read: if resource.data.isPublic == true;
     }
 
     match /{path=**}/clips/{clipId} {
-      allow list, get: if isSignedIn();
-    }
-    
-    match /{path=**}/notes/{lectureId} {
       allow list, get: if isSignedIn();
     }
   }

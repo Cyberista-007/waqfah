@@ -170,7 +170,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       audioRef.current = audio;
     }
     return audioRef.current;
-  }, [volume]);
+  }, [volume, playbackRate]);
 
   // Sync volume to audio element
   const setVolume = useCallback((v: number) => {

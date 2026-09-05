@@ -41,7 +41,7 @@ export function FloatingRadioPlayer() {
       const saved = localStorage.getItem(`radio_progress_${currentStation.id}`);
       setStartSecond(saved ? parseInt(saved, 10) : 0);
     }
-  }, [currentStation?.id]);
+  }, [currentStation]);
 
   // Don't show if no station selected
   if (!currentStation) return null;

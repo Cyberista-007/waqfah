@@ -276,7 +276,8 @@ function parseMarkdown(text: string, onQuery: (q: string) => void) {
 }
 
 const AVAILABLE_MODELS = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (الأحدث)", desc: "سرعة فائقة وذكاء معزز ومثالي للمهام والأسئلة اليومية" },
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash (الأحدث)", desc: "الجيل الأحدث فائق السرعة والذكاء والقدرة الفائقة على الاستيعاب" },
+  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", desc: "سرعة فائقة وذكاء معزز ومثالي للمهام والأسئلة اليومية" },
   { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (الأقوى)", desc: "أداء نخبوي للتحليل الشرعي المعقد والخطط العلمية المفصلة" },
   { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (المستقر)", desc: "سرعة استجابة مذهلة مع جودة إجابة متميزة" },
   { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (الكلاسيكي)", desc: "سريع وموثوق للمهام والاستفسارات القياسية" },
@@ -657,6 +658,7 @@ export function ChatWidget() {
       // List of active and supported models to try in order of preference, starting with the user's selected model
       const modelsToTry = [
         aiModel,
+        "gemini-3.8-flash",
         "gemini-2.5-flash",
         "gemini-2.5-pro",
         "gemini-2.0-flash",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Book, Search, Mic, Star, Heart, Share2, Library, Sparkles,
@@ -372,7 +372,7 @@ export default function HadithHubPage() {
   const [globalHadiths, setGlobalHadiths] = useState<any[]>([]);
   const [loadingGlobalHadiths, setLoadingGlobalHadiths] = useState(false);
 
-  const fetchGlobalHadithsForSearch = async () => {
+  const fetchGlobalHadithsForSearch = useCallback(async () => {
     if (globalHadiths.length > 0 || loadingGlobalHadiths) return;
     setLoadingGlobalHadiths(true);
     try {
@@ -423,7 +423,7 @@ export default function HadithHubPage() {
     } finally {
       setLoadingGlobalHadiths(false);
     }
-  };
+  }, [globalHadiths.length, loadingGlobalHadiths]);
 
   const matchingGlobalHadiths = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length < 2) return [];
@@ -439,7 +439,7 @@ export default function HadithHubPage() {
     if (searchMode === 'hadiths') {
       fetchGlobalHadithsForSearch();
     }
-  }, [searchMode]);
+  }, [searchMode, fetchGlobalHadithsForSearch]);
 
   // 🏆 Trivia States
   const TRIVIA_QUESTIONS = useMemo(() => [

@@ -7,6 +7,7 @@ const OfflineIndicator = dynamic(() => import('@/components/offline-indicator').
 const HomePageIndexWrapper = dynamic(() => import('@/components/home-page-index').then(mod => mod.HomePageIndexWrapper), { ssr: false });
 const ClientAutoSync = dynamic(() => import('@/components/client-auto-sync').then(mod => mod.ClientAutoSync), { ssr: false });
 const FloatingRadioPlayer = dynamic(() => import('@/components/floating-radio-player').then(mod => mod.FloatingRadioPlayer), { ssr: false });
+const BackToTop = dynamic(() => import('@/components/back-to-top').then(mod => mod.BackToTop), { ssr: false });
 
 export function LayoutClientWidgets() {
   return (
@@ -16,6 +17,7 @@ export function LayoutClientWidgets() {
       <OfflineIndicator />
       <ClientAutoSync />
       <FloatingRadioPlayer />
+      <BackToTop />
     </>
   );
 }
