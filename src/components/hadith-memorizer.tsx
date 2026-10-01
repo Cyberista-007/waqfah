@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Dialog, 
@@ -203,20 +203,7 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
     diff: { word: string; status: 'correct' | 'wrong' | 'missing' }[];
   } | null>(null);
 
-  // Parse words on open or text change
-  useEffect(() => {
-    if (isOpen && text) {
-      generateMaskedWords(maskDensity);
-      // Reset testing state
-      setTypedText('');
-      setTestResult(null);
-      // Cancel speech
-      stopSpeech();
-    }
-    return () => stopSpeech();
-  }, [isOpen, text]);
-
-  const generateMaskedWords = (density: number) => {
+  const generateMaskedWords = useCallback((density: number) => {
     const rawWords = text.replace(/«|»/g, '').trim().split(/\s+/);
     const mapped = rawWords.map((word) => {
       const norm = normalizeArabic(word);
@@ -231,7 +218,20 @@ export function HadithMemorizer({ text, reference, trigger }: HadithMemorizerPro
       };
     });
     setWords(mapped);
-  };
+  }, [text]);
+
+  // Parse words on open or text change
+  useEffect(() => {
+    if (isOpen && text) {
+      generateMaskedWords(maskDensity);
+      // Reset testing state
+      setTypedText('');
+      setTestResult(null);
+      // Cancel speech
+      stopSpeech();
+    }
+    return () => stopSpeech();
+  }, [isOpen, text, generateMaskedWords, maskDensity]);
 
   const handleDensityChange = (density: number) => {
     setMaskDensity(density);

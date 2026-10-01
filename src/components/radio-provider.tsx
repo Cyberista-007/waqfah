@@ -50,8 +50,13 @@ export function useRadio() {
 }
 
 function getYoutubeId(url: string): string | null {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  if (!url) return null;
+  const clean = url.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(clean)) {
+    return clean;
+  }
+  const match = clean.match(
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live|shorts)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i
   );
   return match ? match[1] : null;
 }
@@ -165,7 +170,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       audioRef.current = audio;
     }
     return audioRef.current;
-  }, [volume]);
+  }, [volume, playbackRate]);
 
   // Sync volume to audio element
   const setVolume = useCallback((v: number) => {
@@ -361,13 +366,21 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   // Listen to messages from the YouTube player iframe to sync play states
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (typeof event.data !== 'string') return;
-      if (!event.origin.includes('youtube.com')) return;
+      if (!event.data) return;
+      
+      let data = event.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          return;
+        }
+      }
+      if (typeof data !== 'object' || !data) return;
 
       try {
-        const data = JSON.parse(event.data);
-        if (data.event === 'onStateChange') {
-          const state = data.info;
+        if (data.event === 'onStateChange' || (data.event === 'infoDelivery' && data.info && typeof data.info.playerState === 'number')) {
+          const state = data.info?.playerState ?? data.info;
           if (state === 1) { // playing
             setIsPlaying(true);
             setIsBuffering(false);
@@ -396,20 +409,26 @@ export function RadioProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem(`radio_progress_${currentStationRef.current.id}`);
             }
           }
-        } else if (data.event === 'infoDelivery' && data.info) {
+        }
+        
+        if (data.event === 'infoDelivery' && data.info) {
           if (typeof data.info.currentTime === 'number') {
             const time = data.info.currentTime;
             setCurrentTime(time);
+            if (time > 0) {
+              setIsPlaying(true);
+              setIsBuffering(false);
+            }
             if (time > 0 && currentStationRef.current) {
               localStorage.setItem(`radio_progress_${currentStationRef.current.id}`, Math.floor(time).toString());
             }
           }
-          if (typeof data.info.duration === 'number') {
+          if (typeof data.info.duration === 'number' && data.info.duration > 0) {
             setDuration(data.info.duration);
           }
         }
       } catch (e) {
-        // Not a JSON message or not from YouTube API
+        // Not a valid event
       }
     };
 
@@ -464,6 +483,52 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         seekTo,
       }}
     >
+      {/* Global Background YouTube Audio Player */}
+      {activeYoutubeId && (
+        <iframe
+          id="global-youtube-radio"
+          key={activeYoutubeId}
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${Math.floor(currentTime || 0)}&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+          className="pointer-events-none fixed -top-[9999px] -left-[9999px] w-10 h-10 opacity-0 overflow-hidden"
+          allow="autoplay; encrypted-media"
+          title="global-youtube-audio"
+          onLoad={() => {
+            const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage('{"event":"listening","id":1,"channel":"widget"}', '*');
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setVolume',
+                  args: [volume * 100],
+                }),
+                '*'
+              );
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'setPlaybackRate',
+                  args: [playbackRateRef.current],
+                }),
+                '*'
+              );
+              iframe.contentWindow.postMessage(
+                JSON.stringify({
+                  event: 'command',
+                  func: 'playVideo',
+                  args: [],
+                }),
+                '*'
+              );
+              // Fail-safe transition from buffering to playing
+              setTimeout(() => {
+                setIsBuffering(false);
+                setIsPlaying(true);
+              }, 700);
+            }
+          }}
+        />
+      )}
       {children}
     </RadioContext.Provider>
   );

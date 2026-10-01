@@ -18,7 +18,7 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { auth } = initializeAdminApp();
+    const { auth, firestore } = initializeAdminApp();
     if (!auth) {
       return NextResponse.json({ message: 'Internal Server Error: Admin services not initialized.' }, { status: 500, headers: corsHeaders });
     }
@@ -29,7 +29,12 @@ export async function POST(req: NextRequest) {
     }
     
     const decodedToken = await auth.verifyIdToken(idToken);
-    if (decodedToken.role !== 'admin') {
+    let isAdmin = decodedToken.role === 'admin';
+    if (!isAdmin && firestore) {
+      const userDoc = await firestore.collection('users').doc(decodedToken.uid).get();
+      isAdmin = userDoc.exists && userDoc.data()?.role === 'admin';
+    }
+    if (!isAdmin) {
       return NextResponse.json({ message: 'Forbidden: User is not an admin.' }, { status: 403, headers: corsHeaders });
     }
 

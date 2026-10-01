@@ -7,8 +7,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const videoId = searchParams.get('videoId');
     const itag = searchParams.get('itag');
-    const title = searchParams.get('title') || 'video';
-    const container = searchParams.get('container') || 'mp4';
+    const rawTitle = searchParams.get('title') || 'video';
+    const rawContainer = searchParams.get('container') || 'mp4';
+
+    // Sanitize to prevent HTTP response splitting / header injection
+    const container = rawContainer.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) || 'mp4';
+    const title = rawTitle.replace(/[\r\n"';\\]/g, '').trim().slice(0, 120) || 'video';
 
     if (!videoId || !itag || !videoId.trim()) {
         return new NextResponse('Missing videoId or itag', { status: 400 });

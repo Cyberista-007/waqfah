@@ -567,6 +567,43 @@ export function useQuranRadio() {
     });
   }, []);
 
+  const handleNextStation = useCallback((list?: RadioStation[]) => {
+    const all = list && list.length > 0 ? list : [...customRadioStations, ...radioStations];
+    if (all.length === 0) return;
+    if (!currentStation) {
+      handlePlayRadio(all[0]);
+      return;
+    }
+    const idx = all.findIndex(s => s.id === currentStation.id);
+    const nextIdx = (idx + 1) % all.length;
+    handlePlayRadio(all[nextIdx]);
+  }, [currentStation, customRadioStations, radioStations, handlePlayRadio]);
+
+  const handlePrevStation = useCallback((list?: RadioStation[]) => {
+    const all = list && list.length > 0 ? list : [...customRadioStations, ...radioStations];
+    if (all.length === 0) return;
+    if (!currentStation) {
+      handlePlayRadio(all[all.length - 1]);
+      return;
+    }
+    const idx = all.findIndex(s => s.id === currentStation.id);
+    const prevIdx = (idx - 1 + all.length) % all.length;
+    handlePlayRadio(all[prevIdx]);
+  }, [currentStation, customRadioStations, radioStations, handlePlayRadio]);
+
+  const toggleAlarm = useCallback((enabled: boolean, time?: string, stationId?: string) => {
+    setIsAlarmEnabled(enabled);
+    localStorage.setItem('quran_radio_alarm_enabled', String(enabled));
+    if (time) {
+      setAlarmTime(time);
+      localStorage.setItem('quran_radio_alarm_time', time);
+    }
+    if (stationId) {
+      setAlarmStationId(stationId);
+      localStorage.setItem('quran_radio_alarm_station', stationId);
+    }
+  }, []);
+
   return {
     currentStation,
     isPlayingRadio,
@@ -625,6 +662,9 @@ export function useQuranRadio() {
     toggleFavoriteRadio,
     startRecording,
     stopRecording,
-    handleAddCustomRadio
+    handleAddCustomRadio,
+    handleNextStation,
+    handlePrevStation,
+    toggleAlarm,
   };
 }

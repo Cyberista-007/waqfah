@@ -6,7 +6,7 @@ import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import type { Lecture, LectureNote } from '@/lib/types';
 import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Stamp, Edit, Eye, PlayCircle, X } from 'lucide-react';
+import { Loader2, Stamp, Edit, Eye, PlayCircle, Clock, Copy, Download, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { formatDuration } from '@/lib/utils';
@@ -54,10 +54,29 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [clipStartTime, setClipStartTime] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const [quickNoteText, setQuickNoteText] = useState("");
   const [currentTimeFormatted, setCurrentTimeFormatted] = useState("00:00");
+
+  const getCurrentTime = useCallback((): number | undefined => {
+      let currentTime: number | undefined;
+
+      if (iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
+          const playerState = videoPlayerRef.current.getPlayerState();
+          if ([1, 2, 3].includes(playerState)) {
+              currentTime = videoPlayerRef.current.getCurrentTime();
+          }
+      }
+
+      if (currentTime === undefined && audioRef.current) {
+          if (isPlaying || audioRef.current.currentTime > 0) {
+              currentTime = audioRef.current.currentTime;
+          }
+      }
+      return currentTime;
+  }, [iframeTrack, videoPlayerRef, audioRef, isPlaying]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,27 +86,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
       }
     }, 500);
     return () => clearInterval(interval);
-  }, []);
-
-  const handleAddQuickNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickNoteText.trim()) return;
-
-    const time = getCurrentTime();
-    const timeStr = time !== undefined ? formatDuration(time) : "00:00";
-    
-    const newLine = `${content ? '\n' : ''}[${timeStr}] ${quickNoteText.trim()}`;
-    const newContent = content + newLine;
-    
-    setContent(newContent);
-    setQuickNoteText("");
-    saveNote(newContent);
-    
-    toast({
-      title: "تمت إضافة الملاحظة المرتبطة زمنياً",
-      description: `تم ربط الملاحظة باللحظة ${timeStr} بنجاح.`,
-    });
-  };
+  }, [getCurrentTime]);
 
   useEffect(() => {
     if (note) {
@@ -109,7 +108,6 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     saveNote(content);
     setIsEditing(false);
   };
-
 
   const saveNote = useCallback(async (newContent: string) => {
     if (!firestore || !noteDocRef) return;
@@ -135,6 +133,26 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
     }
   }, [firestore, noteDocRef, userId, lecture.id, toast]);
 
+  const handleAddQuickNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickNoteText.trim()) return;
+
+    const time = getCurrentTime();
+    const timeStr = time !== undefined ? formatDuration(time) : "00:00";
+    
+    const newLine = `${content ? '\n' : ''}[${timeStr}] ${quickNoteText.trim()}`;
+    const newContent = content + newLine;
+    
+    setContent(newContent);
+    setQuickNoteText("");
+    saveNote(newContent);
+    
+    toast({
+      title: "تمت إضافة الفائدة الموقوتة",
+      description: `تم ربط الملاحظة باللحظة [${timeStr}] بنجاح.`,
+    });
+  };
+
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
@@ -148,43 +166,41 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
       saveNote(newContent);
     }, 2000); // Auto-save after 2 seconds of inactivity
   };
-  
-    const getCurrentTime = (): number | undefined => {
-        let currentTime: number | undefined;
 
-        // 1. Try to get time from YouTube player (either inline or floating)
-        if (videoPlayerRef.current && typeof videoPlayerRef.current.getPlayerState === 'function') {
-            try {
-                const playerState = videoPlayerRef.current.getPlayerState();
-                // -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (cued)
-                if ([1, 2, 3, 5].includes(playerState)) {
-                    currentTime = videoPlayerRef.current.getCurrentTime();
-                }
-            } catch (e) {
-                console.error("Error getting time from YouTube player:", e);
-            }
-        } 
-        
-        // Handle soundcloud case if iframeTrack is active
-        if (currentTime === undefined && iframeTrack?.type === 'soundcloud') {
-            toast({
-                variant: "default",
-                title: "الميزة غير مدعومة",
-                description: "تحديد الوقت الحالي من مشغل ساوندكلاود غير مدعوم حاليًا. يرجى استخدام المشغل الصوتي.",
-            });
-            return undefined;
-        }
+  const handleInsertSingleTimestamp = () => {
+    const currentTime = getCurrentTime();
+    if (currentTime === undefined) {
+      toast({
+        title: "يرجى تشغيل المحاضرة أولاً",
+        description: "قم بتشغيل الصوت أو الفيديو لإدراج التوقيت الحالي بدقة.",
+      });
+      return;
+    }
 
-        // 2. Try to get time from standard audio player
-        if (currentTime === undefined && audioRef.current) {
-            if (isPlaying || audioRef.current.currentTime > 0) {
-                currentTime = audioRef.current.currentTime;
-            }
-        }
-        return currentTime;
-    };
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-    const handleSetStartTime = () => {
+    const timeStr = `[${formatDuration(currentTime)}] `;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newContent = content.substring(0, start) + timeStr + content.substring(end);
+    setContent(newContent);
+
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    saveNote(newContent);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + timeStr.length;
+    }, 0);
+
+    toast({
+      title: "تم إدراج التوقيت",
+      description: `تم إدراج الموضع ${formatDuration(currentTime)} في ملاحظاتك.`,
+    });
+  };
+
+  const handleSetStartTime = () => {
         const currentTime = getCurrentTime();
         if (currentTime === undefined) {
             toast({
@@ -224,35 +240,56 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
         setContent(newContent);
         setClipStartTime(null);
 
-        // Debounce saving
         if (debounceTimeout.current) {
           clearTimeout(debounceTimeout.current);
         }
         saveNote(newContent);
         
-        // Focus and move cursor
         setTimeout(() => {
           textarea.focus();
           textarea.selectionStart = textarea.selectionEnd = start + timestamp.length;
         }, 0);
     };
 
-  
+    const handleCopyNotes = () => {
+      if (!content) return;
+      navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "تم النسخ بنجاح",
+        description: "تم نسخ ملاحظاتك إلى الحافظة.",
+      });
+    };
+
+    const handleExportNotes = () => {
+      if (!content) return;
+      const exportHeader = `# فوائد وملاحظات: ${lecture.title}\nمنصة وقفة التعليمية\nتاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}\n\n---\n\n`;
+      const blob = new Blob([exportHeader + content], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `فوائد_${lecture.title.replace(/[/\\?%*:|"<>]/g, '_')}.md`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "تم تصدير الملاحظات",
+        description: "تم حفظ الملف بصيغة Markdown على جهازك.",
+      });
+    };
+
     const handleTimestampClick = (startTimeInSeconds: number, endTimeInSeconds: number | null) => {
-        if (videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
-            try {
-                const player = videoPlayerRef.current;
-                player.seekTo(startTimeInSeconds, true);
-                const playerState = player.getPlayerState();
-                if (playerState !== 1) { // if not playing
-                    player.playVideo();
-                }
-                if (endTimeInSeconds) {
-                    setVideoClipEndTime(endTimeInSeconds);
-                }
-            } catch (e) {
-                console.error("Error seeking video player:", e);
-                playTrack(lecture, startTimeInSeconds, endTimeInSeconds);
+        if (isPlayerVisible && iframeTrack?.type === 'youtube' && videoPlayerRef.current && typeof videoPlayerRef.current.seekTo === 'function') {
+            const player = videoPlayerRef.current;
+            player.seekTo(startTimeInSeconds, true);
+            const playerState = player.getPlayerState();
+            if (playerState !== 1) {
+                player.playVideo();
+            }
+            if (endTimeInSeconds) {
+                setVideoClipEndTime(endTimeInSeconds);
             }
         } else {
             playTrack(lecture, startTimeInSeconds, endTimeInSeconds);
@@ -281,12 +318,14 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
                 <button
                     key={`match-${match.index}`}
                     onClick={(e) => {
-                        e.stopPropagation(); // Prevent edit mode from triggering
+                        e.stopPropagation();
                         handleTimestampClick(startTimeInSeconds, endTimeInSeconds);
                     }}
-                    className="bg-primary/10 text-primary font-mono px-2 py-0.5 rounded-md hover:bg-primary/20 transition-colors mx-1 text-sm inline-flex items-center"
+                    className="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary font-mono text-xs font-bold px-2 py-0.5 rounded-lg border border-primary/20 hover:border-primary/40 transition-all mx-1 shadow-sm active:scale-95"
+                    title="انقر للاستماع من هذا الموضع"
                 >
-                    {fullMatch}
+                    <PlayCircle className="w-3 h-3 text-primary" />
+                    <span>{fullMatch}</span>
                 </button>
             );
 
@@ -301,7 +340,6 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
         return <div className="text-base leading-relaxed whitespace-pre-wrap font-body">{parts}</div>;
     };
 
-
   useEffect(() => {
       return () => {
           if (debounceTimeout.current) {
@@ -312,6 +350,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
 
   return (
     <div className="space-y-4">
+       {/* Quick Note Input Bar */}
        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           <form onSubmit={handleAddQuickNote} className="flex-1 flex gap-2 bg-white/5 border border-white/10 rounded-2xl p-1.5 backdrop-blur-md">
              <input
@@ -326,7 +365,7 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
                  type="submit" 
                  disabled={!quickNoteText.trim() || isNoteLoading}
                  size="sm"
-                 className="bg-primary hover:bg-primary/95 text-white font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1.5"
+                 className="bg-primary hover:bg-primary/95 text-white font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
              >
                  <Stamp className="w-3.5 h-3.5" />
                  <span>إضافة عند {currentTimeFormatted}</span>
@@ -334,24 +373,67 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
           </form>
 
           <div className="flex items-center justify-end gap-2 shrink-0">
+             {content && (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleCopyNotes}
+                    className="h-8 text-xs font-bold gap-1 text-muted-foreground hover:text-foreground"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? "تم النسخ" : "نسخ الفوائد"}</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleExportNotes}
+                    className="h-8 text-xs font-bold gap-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>تصدير (.md)</span>
+                  </Button>
+                </>
+             )}
              {isEditing && (
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={clipStartTime === null ? handleSetStartTime : handleInsertClip} disabled={isNoteLoading}>
+                <div className="flex items-center gap-1.5">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={handleInsertSingleTimestamp} 
+                      disabled={isNoteLoading}
+                      className="h-8 text-xs font-bold gap-1"
+                    >
+                      <Clock className="w-3.5 h-3.5 text-primary" />
+                      <span>إدراج الموضع الحالي</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={clipStartTime === null ? handleSetStartTime : handleInsertClip} 
+                      disabled={isNoteLoading}
+                      className="h-8 text-xs font-bold"
+                    >
                         {clipStartTime === null ? (
-                            <><PlayCircle className="w-4 h-4 me-1.5"/> تحديد بداية</>
+                            <><PlayCircle className="w-3.5 h-3.5 me-1.5"/> تحديد مقطع</>
                         ) : (
-                            <><Stamp className="w-4 h-4 me-1.5"/> تحديد نهاية وإدراج</>
+                            <><Stamp className="w-3.5 h-3.5 me-1.5 text-primary"/> إدراج النهاية</>
                         )}
                     </Button>
                     {clipStartTime !== null && (
-                        <Button variant="ghost" size="sm" onClick={() => setClipStartTime(null)}>
+                        <Button variant="ghost" size="sm" onClick={() => setClipStartTime(null)} className="h-8 text-xs text-destructive">
                             إلغاء ({formatDuration(clipStartTime)})
                         </Button>
                     )}
                 </div>
              )}
-             <Button variant="outline" size="sm" onClick={isEditing ? handleSaveClick : handleEditClick}>
-                 {isEditing ? <><Eye className="w-4 h-4 me-1.5"/> عرض الملاحظات</> : <><Edit className="w-4 h-4 me-1.5"/> تعديل الملاحظات</>}
+             <Button 
+               variant={isEditing ? "default" : "outline"} 
+               size="sm" 
+               onClick={isEditing ? handleSaveClick : handleEditClick}
+               className="h-8 text-xs font-bold"
+             >
+                 {isEditing ? <><Eye className="w-3.5 h-3.5 me-1.5"/> عرض وحفظ</> : <><Edit className="w-3.5 h-3.5 me-1.5"/> تعديل الفوائد</>}
              </Button>
           </div>
        </div>
@@ -361,31 +443,41 @@ export function LectureNotes({ lecture, userId }: LectureNotesProps) {
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                placeholder="اكتب ملاحظاتك وفوائدك من هذه المحاضرة هنا. سيتم الحفظ تلقائيًا..."
+                placeholder="اكتب ملاحظاتك وفوائدك من هذه المحاضرة هنا. سيتم الحفظ تلقائيًا... يمكنك إدراج التوقيتات بنقرة زر أعلاه."
                 rows={12}
-                className="w-full text-base leading-relaxed"
+                className="w-full text-base leading-relaxed rounded-2xl border-border/60 bg-muted/20 focus:bg-background transition-colors p-4"
                 disabled={isNoteLoading}
             />
        ) : (
             <div 
-                className="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[224px] bg-muted/30 cursor-text"
+                className="prose dark:prose-invert max-w-none p-5 border border-border/40 rounded-2xl min-h-[224px] bg-muted/20 hover:border-primary/30 transition-colors cursor-text shadow-sm"
                 onClick={handleEditClick}
             >
-                {content ? renderNoteContent(content) : <p className="text-muted-foreground">انقر هنا لبدء كتابة الملاحظات...</p>}
+                {content ? renderNoteContent(content) : (
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/60 gap-2">
+                    <Edit className="w-8 h-8 opacity-40" />
+                    <p className="text-sm font-medium">انقر هنا لبدء كتابة فوائدك وملاحظاتك الموقوتة حول هذه المحاضرة...</p>
+                  </div>
+                )}
             </div>
        )}
 
-      <div className="flex items-center justify-end h-6">
-        {isSaving ? (
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>جاري الحفظ...</span>
-          </div>
-        ) : hasUnsavedChanges ? (
-             <p className="text-muted-foreground text-sm">تغييرات غير محفوظة...</p>
-        ) : (
-            note && <p className="text-muted-foreground text-sm">تم الحفظ</p>
-        )}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span className="text-[11px] opacity-70">
+          💡 يمكنك النقر على أي توقيت داخل الملاحظات للانتقال إليه مباشرة في المشغل.
+        </span>
+        <div className="flex items-center h-5">
+          {isSaving ? (
+            <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>جاري الحفظ...</span>
+            </div>
+          ) : hasUnsavedChanges ? (
+               <p className="text-amber-500 text-xs">تغييرات غير محفوظة...</p>
+          ) : (
+              note && <p className="text-emerald-500 text-xs font-medium flex items-center gap-1"><Check className="w-3 h-3"/> تم الحفظ تلقائيًا</p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -611,7 +611,7 @@ export default function QuranPage() {
         ambientAudioRef.current.pause();
       }
     }
-  }, [activeAmbient]);
+  }, [activeAmbient, ambientVolume]);
 
   useEffect(() => {
     if (ambientAudioRef.current) {

@@ -61,31 +61,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticPages = [
     '/',
+    '/podcasts',
+    '/quran',
+    '/hadith',
+    '/prayer',
+    '/adhkar',
+    '/dua',
     '/lectures',
     '/series',
     '/programs',
     '/topics',
     '/books',
-    '/qa',
-    '/schedule',
-    '/contact',
-    '/donations',
+    '/chastity',
+    '/radio',
     '/curriculums',
-    '/adhkar',
-    '/hadith',
-    '/dua',
-    '/quran',
-    '/muhlikat',
-    '/aqeedah',
-    '/mirath',
+    '/pathways',
     '/sciences-tree',
+    '/aqeedah',
+    '/seerah',
+    '/adab',
+    '/stories',
+    '/shubuhat',
+    '/muhlikat',
+    '/mirath',
     '/memorize',
-  ].map((route) => ({
-    url: `${siteUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as 'weekly',
-    priority: route === '/' ? 1.0 : ['/adhkar', '/hadith', '/dua', '/quran', '/muhlikat', '/aqeedah', '/mirath', '/sciences-tree', '/memorize'].includes(route) ? 0.9 : 0.8,
-  }));
+    '/bayan',
+    '/athar',
+    '/essentials',
+    '/kanaf',
+    '/namaa',
+    '/palestine',
+    '/accountability',
+    '/leaderboard',
+    '/badges',
+    '/playlists',
+    '/schedule',
+    '/qa',
+    '/donations',
+    '/contact',
+  ].map((route) => {
+    let priority = 0.7;
+    let changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never' = 'weekly';
+
+    if (route === '/') {
+      priority = 1.0;
+      changeFrequency = 'daily';
+    } else if (['/quran', '/hadith', '/podcasts', '/prayer', '/adhkar', '/lectures'].includes(route)) {
+      priority = 0.95;
+      changeFrequency = 'daily';
+    } else if (['/series', '/programs', '/books', '/chastity', '/radio', '/curriculums', '/pathways'].includes(route)) {
+      priority = 0.85;
+      changeFrequency = 'weekly';
+    } else if (['/aqeedah', '/seerah', '/sciences-tree', '/dua', '/muhlikat', '/mirath'].includes(route)) {
+      priority = 0.8;
+      changeFrequency = 'weekly';
+    }
+
+    return {
+      url: `${siteUrl}${route}`,
+      lastModified: new Date(),
+      changeFrequency,
+      priority,
+    };
+  });
 
   return [
     ...staticPages,

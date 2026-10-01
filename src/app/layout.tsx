@@ -39,10 +39,26 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'وقفة',
+    default: 'وقفة | المنصة العلمية',
     template: '%s | وقفة',
   },
-  description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث.',
+  description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء. تصفح، استمع، وتعلم العلوم الشرعية: عقيدة، فقه، تفسير، سيرة، وحديث، مع مصحف متكامل ومواقيت الصلاة.',
+  keywords: [
+    'وقفة',
+    'منصة وقفة',
+    'محاضرات إسلامية',
+    'دروس شرعية',
+    'القرآن الكريم',
+    'الحديث الشريف',
+    'صحيح البخاري',
+    'مسند أحمد',
+    'الفقه والأصول',
+    'العقيدة والتوحيد',
+    'السيرة النبوية',
+    'مواقيت الصلاة',
+    'أذكار المسلم',
+    'بودكاست إسلامي'
+  ],
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.jpg',
@@ -54,21 +70,47 @@ export const metadata: Metadata = {
     title: 'وقفة',
   },
   openGraph: {
-    title: 'وقفة',
-    description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
+    title: 'وقفة | المنصة العلمية الإسلامية',
+    description: 'منصة شاملة للمحاضرات والدروس الشرعية والقرآن ومواقيت الصلاة.',
     type: 'website',
     locale: 'ar_SA',
     siteName: 'وقفة',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'وقفة',
-    description: 'منصة شاملة لمحاضرات ودروس نخبة من المشايخ والعلماء.',
+    title: 'وقفة | المنصة العلمية الإسلامية',
+    description: 'منصة شاملة للمحاضرات والدروس الشرعية والقرآن ومواقيت الصلاة.',
   },
 };
 
 import { PageTransition } from '@/components/page-transition';
 
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://waqfah.app/#website',
+      'url': 'https://waqfah.app',
+      'name': 'وقفة - المنصة العلمية',
+      'description': 'منصة إسلامية علمية شاملة للمحاضرات والدروس والقرآن والحديث ومواقيت الصلاة',
+      'inLanguage': 'ar',
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': 'https://waqfah.app/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string'
+      }
+    },
+    {
+      '@type': 'EducationalOrganization',
+      '@id': 'https://waqfah.app/#organization',
+      'name': 'منصة وقفة العلمية',
+      'url': 'https://waqfah.app',
+      'logo': 'https://waqfah.app/icon.jpg',
+      'description': 'منصة تعليمية إسلامية موثوقة لتعليم العلوم الشرعية والقرآن الكريم والحديث النبوي الشريف'
+    }
+  ]
+};
 
 export default async function RootLayout({
   children,
@@ -81,6 +123,10 @@ export default async function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
         <script dangerouslySetInnerHTML={{ __html: `
           window.onerror = function(message, source, lineno, colno, error) {
             console.error("GLOBAL ERROR:", message, source, lineno, colno, error);

@@ -155,7 +155,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [gradientPreset, setGradientPresetState] = useState<string>('cinematic-blue');
   const [particleColor, setParticleColor] = useState('#FFFFFF');
   const [aiApiKey, setAiApiKeyState] = useState<string | null>(null);
-  const [aiModel, setAiModelState] = useState<string>('gemini-2.5-flash');
+  const [aiModel, setAiModelState] = useState<string>('gemini-3.8-flash');
   const [showChatbot, setShowChatbotState] = useState<boolean>(true);
   
   const [particleSettings, setParticleSettingsState] = useState<ParticleSettings>({
@@ -420,8 +420,11 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     setAiApiKeyState(storedApiKey);
 
     const storedModel = localStorage.getItem("site-ai-model");
-    if (storedModel) {
+    if (storedModel && storedModel !== 'gemini-2.5-flash') {
       setAiModelState(storedModel);
+    } else {
+      setAiModelState('gemini-3.8-flash');
+      localStorage.setItem("site-ai-model", 'gemini-3.8-flash');
     }
 
     const storedShowChatbot = localStorage.getItem("site-show-chatbot");
