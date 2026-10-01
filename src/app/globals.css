@@ -1413,3 +1413,253 @@ body:has(#seerah-page) {
 body:has(#seerah-page) [data-site-background] {
   display: none !important;
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   💎 LUXURY DIGITAL ISLAMIC DESIGN SYSTEM
+   Professionalism, Aesthetics & Micro-interactions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@layer utilities {
+  /* High-end glassmorphism surface with specular highlight */
+  .luxury-glass {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.01) 100%
+    );
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 20px 50px -15px rgba(0, 0, 0, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  /* Luxury Card with theme-aware hover glow and top border gleam */
+  .luxury-card {
+    position: relative;
+    border-radius: 2rem;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.035) 0%,
+      rgba(255, 255, 255, 0.01) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 
+      0 12px 35px -10px rgba(0, 0, 0, 0.6),
+      inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .luxury-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(var(--primary-rgb), 0.35);
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.055) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    box-shadow: 
+      0 24px 60px -15px rgba(0, 0, 0, 0.8),
+      0 0 40px -10px rgba(var(--primary-rgb), 0.22),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Specular top highlight line */
+  .luxury-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.4), rgba(255,255,255,0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .luxury-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Luxury interactive badge */
+  .luxury-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: all 0.3s ease;
+  }
+
+  .luxury-badge-primary {
+    background: rgba(var(--primary-rgb), 0.12);
+    border-color: rgba(var(--primary-rgb), 0.3);
+    color: hsl(var(--primary));
+    box-shadow: 0 0 15px -3px rgba(var(--primary-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .luxury-badge-emerald {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .luxury-badge-gold {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+    box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  /* Luxury Button Pill */
+  .luxury-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: hsl(var(--foreground));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 
+      0 4px 15px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .luxury-pill-btn:hover {
+    background: rgba(var(--primary-rgb), 0.15);
+    border-color: rgba(var(--primary-rgb), 0.45);
+    color: hsl(var(--primary));
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 8px 25px -5px rgba(var(--primary-rgb), 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .luxury-pill-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Luxury Stat Box */
+  .luxury-stat-card {
+    position: relative;
+    padding: 1.5rem;
+    border-radius: 1.75rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: all 0.35s ease;
+  }
+  .luxury-stat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(var(--primary-rgb), 0.3);
+    box-shadow: 
+      0 18px 40px -10px rgba(0, 0, 0, 0.7),
+      0 0 25px -8px rgba(var(--primary-rgb), 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  /* Islamic geometric decorative divider */
+  .islamic-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    margin: 2.5rem 0;
+  }
+  .islamic-divider::before,
+  .islamic-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  }
+
+  /* Smooth title gradient */
+  .title-luxury {
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Universal Page Hero Banner */
+  .page-hero-banner {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 2.5rem;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%);
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   🌐 COMPREHENSIVE SITE-WIDE PROFESSIONAL ENHANCEMENTS
+   Applies to EVERY page, dialog, input, card & button
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* Universal Input & Control Glow across all pages */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  box-shadow: 
+    0 0 20px -3px rgba(var(--primary-rgb), 0.35), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(var(--primary-rgb), 0.5) !important;
+  outline: none !important;
+}
+
+/* Universal Dialog & Modal Glass across all pages */
+[role="dialog"] {
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  box-shadow: 
+    0 30px 100px -20px rgba(0, 0, 0, 0.9), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Universal Button spring responsiveness */
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Universal headings crispness */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+

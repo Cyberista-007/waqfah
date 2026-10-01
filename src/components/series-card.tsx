@@ -43,7 +43,7 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
         >
             <ThreeDTilt tiltMax={8} className="h-full">
                 <Link href={`/series/${series.slug}`} className="block h-full group">
-                    <Card className="h-full flex flex-col relative overflow-hidden bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2.5rem] transition-all duration-500 transform-gpu group-hover:border-primary/30 group-hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] group-hover:bg-white/[0.08]">
+                    <Card className="h-full flex flex-col relative overflow-hidden bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2.5rem] transition-all duration-500 transform-gpu group-hover:border-primary/30 group-hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.18)] group-hover:bg-white/[0.08]">
                     
                     {/* Background Visuals */}
                     <div className="absolute inset-0 z-0">

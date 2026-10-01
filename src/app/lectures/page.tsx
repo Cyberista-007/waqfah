@@ -217,7 +217,7 @@ function LecturesListPageClient() {
         </section>
 
         {/* Filters & Content */}
-        <main className="container mx-auto px-6 space-y-12">
+        <main className="container mx-auto px-6 space-y-12 mt-14 sm:mt-18">
             {/* Search and Filters Bar (Glassy & Premium) */}
             <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
                 <div className="relative w-full lg:w-[450px] group/search">

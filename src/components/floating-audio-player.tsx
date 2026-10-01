@@ -531,8 +531,8 @@ export function FloatingAudioPlayer() {
     </AnimatePresence>
 
     <div className={cn(
-      "sticky bottom-8 inset-x-4 max-w-sm mx-auto z-50 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] transition-all duration-700",
-      "bg-background/80 backdrop-blur-2xl border border-white/10",
+      "sticky bottom-8 inset-x-4 max-w-sm mx-auto z-50 rounded-[2.5rem] shadow-[0_25px_60px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10 transition-all duration-700",
+      "bg-zinc-950/85 backdrop-blur-3xl border border-white/15",
       track ? "translate-y-0 opacity-1" : "translate-y-[200%] opacity-0",
       isExpanded && "scale-90 opacity-0 pointer-events-none"
     )}>
@@ -636,8 +636,8 @@ export function FloatingAudioPlayer() {
                     <Rewind className="w-5 h-5" />
                 </Button>
                 
-                <Button onClick={togglePlayPause} size="icon" className="h-12 w-12 rounded-full shadow-lg shadow-primary/20 transition-transform active:scale-90">
-                    {isPlaying ? <Pause className="w-6 h-6 fill-white"/> : <Play className="w-6 h-6 fill-white ml-1"/>}
+                <Button onClick={togglePlayPause} size="icon" className="h-12 w-12 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.5)] transition-all duration-300 hover:scale-105 active:scale-90">
+                    {isPlaying ? <Pause className="w-5 h-5 fill-current"/> : <Play className="w-5 h-5 fill-current ml-0.5"/>}
                 </Button>
                 
                 <Button onClick={handleFastForward} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-primary/10 rounded-full">

@@ -131,18 +131,21 @@ export function SiteFooter() {
         </div>
  
         {/* Bottom Bar */}
-        <div className="mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-8 text-xs font-black uppercase tracking-widest text-white/60">
-             <p>© {new Date().getFullYear()} وقـــفــــة</p>
-             <div className="hidden md:flex gap-6">
-                <Link href="#" prefetch={false} className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-                <Link href="#" prefetch={false} className="hover:text-white transition-colors">شروط الاستخدام</Link>
+        <div className="mt-24 pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-xs font-black uppercase tracking-widest text-white/60">
+             <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p>© {new Date().getFullYear()} منصة وقفة العلمية — وقف خيري لوجه الله تعالى</p>
+             </div>
+             <div className="flex gap-6">
+                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">سياسة الخصوصية</Link>
+                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">شروط الاستخدام</Link>
              </div>
           </div>
           
-          <div className="flex items-center gap-4 text-white/60 text-xs font-bold bg-white/5 px-6 py-3 rounded-full border border-white/10">
+          <div className="flex items-center gap-3 text-white/70 text-xs font-bold bg-white/5 px-6 py-3 rounded-full border border-white/10 shadow-lg backdrop-blur-xl">
              <Globe className="w-4 h-4 text-primary" />
-             بُني بحب لنصرة الدين - <span className="text-white">Waqfah Team</span>
+             <span>بُني باحترافية رقمية لنصرة الدين ونشر العلم الشرعي النافع</span>
           </div>
         </div>
       </div>

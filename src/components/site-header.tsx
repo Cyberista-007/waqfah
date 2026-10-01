@@ -222,7 +222,7 @@ export function SiteHeader() {
         className={cn(
           "sticky z-50 transition-all duration-700 ease-in-out px-4",
           scrolled 
-            ? "top-4 w-full bg-zinc-950/60 backdrop-blur-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.7)] border border-white/10 rounded-[3rem] py-0.5 ring-1 ring-white/5" 
+            ? "top-4 w-full bg-zinc-950/70 backdrop-blur-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] border border-white/10 rounded-[3rem] py-0.5 ring-1 ring-white/5" 
             : "top-0 bg-transparent border-transparent py-6"
         )}
       >
@@ -397,9 +397,9 @@ export function SiteHeader() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center bg-white/5 border border-white/10 rounded-full px-3 py-1.5 gap-2 hover:bg-white/10 transition-all cursor-pointer group" onClick={openSearch}>
+            <div className="hidden lg:flex items-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-full px-3.5 py-1.5 gap-2.5 transition-all duration-300 cursor-pointer group shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]" onClick={openSearch}>
                 <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-xs text-muted-foreground/60 group-hover:text-muted-foreground font-medium">ابحث عن أي شيء...</span>
+                <span className="text-xs text-muted-foreground/70 group-hover:text-foreground font-medium">ابحث عن درس، شيخ، أو كتاب...</span>
                 <kbd className="hidden xl:flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                     <span className="text-xs">⌘</span>K
                 </kbd>
@@ -481,9 +481,9 @@ export function SiteHeader() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button asChild className="btn-magnetic animate-pulse-subtle bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
+                  <Button asChild className="btn-magnetic bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.4)] border border-primary/40 rounded-full px-5">
                     <Link href="/auth/login" prefetch={false}>
-                      <span className="relative z-10 font-bold">تسجيل الدخول</span>
+                      <span className="relative z-10">تسجيل الدخول</span>
                     </Link>
                   </Button>
                 )}

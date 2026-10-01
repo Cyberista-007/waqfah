@@ -34,7 +34,7 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                     className={cn(
                         "h-full flex flex-col relative overflow-hidden transition-all duration-500 transform-gpu",
                         "bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] group",
-                        "hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)] hover:bg-white/[0.08]"
+                        "hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(var(--primary-rgb),0.18)] hover:bg-white/[0.08]"
                     )}
                 >
                 {/* Banner Section */}
@@ -63,7 +63,7 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                 {/* Avatar Section - Floating */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30">
                     <Link href={`/programs/${program.slug}`} className="block relative">
-                        <Avatar className="h-24 w-24 border-[6px] border-[#0c0c0e] bg-[#0c0c0e] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20 group-hover:ring-8 group-hover:ring-primary/10 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                        <Avatar className="h-24 w-24 border-[6px] border-[#0c0c0e] bg-[#0c0c0e] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20 group-hover:ring-8 group-hover:ring-primary/10 group-hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">
                             {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="object-cover" />}
                             <AvatarFallback className="text-3xl font-black bg-gradient-to-br from-primary/20 to-primary/5 text-primary backdrop-blur-md">
                                 {getInitials(program.name)}

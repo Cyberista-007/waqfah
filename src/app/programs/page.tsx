@@ -182,7 +182,7 @@ export default function ProgramsPage() {
             </section>
 
             {/* Main Content */}
-            <main className="container mx-auto px-6">
+            <main className="container mx-auto px-6 mt-14 sm:mt-18">
                 <ProgramsList />
             </main>
         </div>

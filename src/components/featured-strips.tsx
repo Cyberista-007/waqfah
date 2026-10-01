@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, ChevronLeft, ChevronRight, Clock, Headphones, ExternalLink } from 'lucide-react';
+import { Play, Clock, Headphones, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAudioPlayer } from '@/components/audio-player-provider';
@@ -59,14 +59,14 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
 
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative flex-shrink-0 w-[260px] md:w-[300px] group cursor-pointer"
+      className="relative w-full group cursor-pointer flex flex-col"
     >
       {/* Thumbnail */}
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black/40">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black/40 border border-white/5">
         <Image
           src={thumbnailUrl}
           alt={lecture.title}
@@ -105,34 +105,35 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
 
         {/* Duration badge */}
         {lecture.duration > 0 && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-            <Clock className="w-2.5 h-2.5" />
-            {formatDuration(lecture.duration)}
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/10">
+            <Clock className="w-3 h-3 text-white/80" />
+            <span>{formatDuration(lecture.duration)}</span>
           </div>
         )}
 
         {/* Video/Audio indicator */}
         <div
           className={cn(
-            'absolute top-2 right-2 text-[9px] font-black px-2 py-0.5 rounded-full border',
+            'absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-md',
             videoId
-              ? 'bg-red-600/80 border-red-500/50 text-white'
+              ? 'bg-red-600 border-red-500/40 text-white'
               : 'bg-primary/80 border-primary/50 text-primary-foreground'
           )}
         >
-          {videoId ? '▶ فيديو' : '🎧 صوت'}
+          {videoId && <Play className="w-2.5 h-2.5 fill-white text-white rotate-180" />}
+          <span>{videoId ? 'فيديو' : '🎧 صوت'}</span>
         </div>
       </div>
 
       {/* Info */}
-      <div className="mt-3 px-1 space-y-1">
-        <h4 className="font-bold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+      <div className="mt-3 px-1 space-y-1.5 text-right">
+        <h4 className="font-bold text-sm md:text-[15px] leading-snug line-clamp-2 text-white group-hover:text-primary transition-colors">
           {lecture.title}
         </h4>
         {lecture.programName && (
-          <p className="text-[11px] text-white/70 font-medium flex items-center gap-1">
-            <Headphones className="w-3 h-3" />
-            {lecture.programName}
+          <p className="text-xs text-white/50 font-medium flex items-center gap-1.5">
+            <Headphones className="w-3.5 h-3.5 text-white/40" />
+            <span>{lecture.programName}</span>
           </p>
         )}
       </div>
@@ -142,45 +143,36 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
         href={`/lectures/${lecture.slug}`}
         className="absolute inset-0 rounded-2xl"
         aria-label={lecture.title}
-        onClick={(e) => {
-          // Allow navigation but also support direct play
-        }}
       />
     </motion.div>
   );
 }
 
 function SingleStrip({ strip }: { strip: FeaturedStrip }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    const amount = 320;
-    scrollRef.current.scrollBy({
-      left: dir === 'left' ? amount : -amount,
-      behavior: 'smooth',
-    });
-  };
+  const [showAll, setShowAll] = useState(false);
 
   if (!strip.lectures || strip.lectures.length === 0) return null;
 
+  const hasMore = strip.lectures.length > 4;
+  const displayLectures = showAll ? strip.lectures : strip.lectures.slice(0, 4);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Strip Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             {/* Accent line */}
             <div
-              className="w-1 h-8 rounded-full shrink-0"
+              className="w-1.5 h-7 rounded-full shrink-0"
               style={{ background: strip.accentColor }}
             />
             <div>
-              <h3 className="text-xl md:text-2xl font-black font-headline tracking-tight">
+              <h3 className="text-xl md:text-2xl font-black font-headline tracking-tight text-white">
                 {strip.title}
               </h3>
               {strip.subtitle && (
-                <p className="text-xs text-white/60 font-medium mt-0.5">
+                <p className="text-xs text-white/50 font-medium mt-0.5">
                   {strip.subtitle}
                 </p>
               )}
@@ -189,45 +181,35 @@ function SingleStrip({ strip }: { strip: FeaturedStrip }) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Scroll buttons */}
-          <button
-            onClick={() => scroll('left')}
-            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-110 text-muted-foreground hover:text-foreground"
-            aria-label="التالي"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-110 text-muted-foreground hover:text-foreground"
-            aria-label="السابق"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {strip.viewAllHref && (
+          {strip.viewAllHref ? (
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="text-xs font-bold text-white/60 hover:text-primary rounded-xl gap-1.5"
+              className="text-xs font-bold text-white/60 hover:text-primary hover:bg-white/5 rounded-xl gap-1.5"
             >
               <Link href={strip.viewAllHref}>
                 <span>عرض الكل</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </Button>
-          )}
+          ) : hasMore ? (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs font-bold text-white/60 hover:text-primary px-3 py-1.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              {showAll ? 'عرض أقل' : `عرض المزيد (${strip.lectures.length - 4})`}
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {/* Scrollable Cards Row */}
+      {/* Responsive 4-Column Grid: perfectly aligned edge-to-edge */}
       <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-3 no-scrollbar scroll-smooth"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5"
         dir="rtl"
       >
-        {strip.lectures.map((lecture) => (
+        {displayLectures.map((lecture) => (
           <StripCard
             key={lecture.id}
             lecture={lecture}

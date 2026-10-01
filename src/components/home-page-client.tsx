@@ -17,6 +17,7 @@ const ContinueWatching = dynamic(() => import('@/components/continue-listening')
 const DownloaderModal = dynamic(() => import('./downloader-modal').then(mod => mod.DownloaderModal), { ssr: false });
 const SpiritualPrescription = dynamic(() => import('./spiritual-prescription').then(mod => mod.SpiritualPrescription), { ssr: false });
 const VerseOfTheDay = dynamic(() => import('./verse-of-the-day').then(mod => mod.VerseOfTheDay), { ssr: false });
+const AboutPlatformModal = dynamic(() => import('@/components/about-platform-modal').then(mod => mod.AboutPlatformModal), { ssr: false });
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import type { Lecture, Series, Program, HomepageDetailedConfig, ScheduleItem, QAPair, Playlist, ListenHistoryItem, Inspiration, HeroBanner } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,8 @@ import {
   ArrowLeft, ShieldCheck, Smartphone, Search, Zap, Headphones, Users, Music, 
   Globe, Quote, HeartHandshake, Mail, Send, MessageCircle, Layers,
   Library, BookOpenCheck, BookOpen, Sparkles, Heart, Loader2, Star, Play, HandHeart, TriangleAlert, Shield,
-  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap, Compass, Scale
+  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap, Compass, Scale,
+  Podcast, ChevronDown, CheckCircle2, Award
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -214,7 +216,41 @@ import {
 } from '@/components/ui/accordion';
 
 
-// New Component for paginated sections
+// Helper to get section details
+const getSectionMeta = (title: string) => {
+  if (title.includes('محاضرات')) {
+    return {
+      icon: Headphones,
+      badge: 'مكتبة الدروس المسموعة',
+      subtitle: 'محاضرات وتوجيهات منتقاة بعناية لترسيخ العلم الشرعي وتزكية النفوس',
+      badgeClass: 'luxury-badge-emerald'
+    };
+  }
+  if (title.includes('البرامج')) {
+    return {
+      icon: Podcast,
+      badge: 'البرامج والقنوات العلمية',
+      subtitle: 'قنوات ومسارات متسلسلة لنخبة من كبار العلماء والمشايخ الموثوقين',
+      badgeClass: 'luxury-badge-primary'
+    };
+  }
+  if (title.includes('السلاسل')) {
+    return {
+      icon: Layers,
+      badge: 'الدورات والتأصيل العلمي',
+      subtitle: 'شروحات رصينة ومتكاملة للمتون الفقهية والعقدية والكتب المعتمدة',
+      badgeClass: 'luxury-badge-gold'
+    };
+  }
+  return {
+    icon: Sparkles,
+    badge: 'محتوى مميز',
+    subtitle: 'محتوى معرفي وإيماني متجدد لخدمة طالب العلم والمستفيد',
+    badgeClass: 'luxury-badge-primary'
+  };
+};
+
+// Upgraded Component for paginated sections
 function PaginatedSection({
   title,
   items,
@@ -231,25 +267,32 @@ function PaginatedSection({
   gridClassName?: string;
 }) {
   const [visibleCount, setVisibleCount] = useState(itemsPerPage);
+  const meta = useMemo(() => getSectionMeta(title), [title]);
+  const SectionIcon = meta.icon;
 
   if (!items || items.length === 0) {
     if (title === "أحدث المحاضرات") {
       return (
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold font-headline">{title}</h2>
-            <Button asChild variant="outline">
-              <Link href={viewAllHref}>
-                <span>عرض الكل</span>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-              </Link>
-            </Button>
+        <section className="relative my-14">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-white/10">
+            <div>
+              <div className={cn("luxury-badge mb-3", meta.badgeClass)}>
+                <SectionIcon className="w-3.5 h-3.5" />
+                <span>{meta.badge}</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black font-headline text-white tracking-tight">{title}</h2>
+              <p className="text-sm text-white/50 mt-1.5 font-medium">{meta.subtitle}</p>
+            </div>
+            <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
+              <span>عرض الكل</span>
+              <ArrowLeft className="h-4 w-4 mr-1 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
+            </Link>
           </div>
-          <div className="text-center py-10 text-muted-foreground">
+          <div className="text-center py-14 luxury-glass rounded-3xl text-white/40 border border-white/5 font-medium">
             لا يوجد محتوى لعرضه حالياً في هذا القسم.
           </div>
         </section>
-      )
+      );
     }
     return null;
   }
@@ -261,22 +304,39 @@ function PaginatedSection({
   const hasMoreToLoad = visibleCount < items.length;
 
   return (
-    <section>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold font-headline">{title}</h2>
-        <Button asChild variant="outline">
-          <Link href={viewAllHref}>
-            <span>عرض الكل</span>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-          </Link>
-        </Button>
+    <section className="relative my-14">
+      {/* Refined Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-white/10">
+        <div>
+          <div className={cn("luxury-badge mb-3", meta.badgeClass)}>
+            <SectionIcon className="w-3.5 h-3.5" />
+            <span>{meta.badge}</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black font-headline text-white tracking-tight flex items-center gap-3">
+            <span>{title}</span>
+            <div className="hidden sm:block w-2 h-2 rounded-full bg-primary/80 shadow-[0_0_8px_hsl(var(--primary))]" />
+          </h2>
+          <p className="text-sm text-white/50 mt-1.5 font-medium max-w-2xl">{meta.subtitle}</p>
+        </div>
+        <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
+          <span>عرض الكل</span>
+          <ArrowLeft className="h-4 w-4 mr-1 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
+        </Link>
       </div>
+
       <div className={cn("grid gap-8", gridClassName || "grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]")}>
         {items.slice(0, visibleCount).map((item, index) => renderItem(item, index))}
       </div>
+
       {hasMoreToLoad && (
-        <div className="text-center mt-8">
-          <Button onClick={handleShowMore}>تحميل المزيد</Button>
+        <div className="text-center mt-10">
+          <button 
+            onClick={handleShowMore}
+            className="luxury-pill-btn px-8 py-3.5 text-sm font-black group bg-white/5 hover:bg-primary/10 border-white/10 hover:border-primary/40 text-foreground hover:text-primary transition-all duration-300 shadow-xl cursor-pointer"
+          >
+            <span>تحميل المزيد من {title}</span>
+            <ChevronDown className="w-4 h-4 mr-1 group-hover:translate-y-1 transition-transform duration-300 text-primary" />
+          </button>
         </div>
       )}
     </section>
@@ -327,6 +387,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
   const [heroImageUrl, setHeroImageUrl] = useState(customHeroUrl || heroImagePlaceholder?.imageUrl);
 
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const banners = useMemo(() => {
     if (heroBanners && heroBanners.length > 0) return heroBanners;
     
@@ -525,6 +586,17 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                             transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
                             className="max-w-5xl"
                         >
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.8 }}
+                                className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/10 backdrop-blur-2xl border border-white/15 text-white/90 text-xs sm:text-sm font-black mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]"
+                            >
+                                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                                <span>صرحٌ علميٌّ متكامل للعلوم الشرعية والتدبر الرقمي</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            </motion.div>
+
                             <motion.h1 
                                 className="text-5xl md:text-7xl lg:text-9xl font-black mb-6 font-headline tracking-tighter leading-[0.9] italic text-white drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                             >
@@ -543,11 +615,18 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                             </motion.p>
 
                             <div className="flex flex-wrap items-center justify-center gap-4">
-                                {banners[activeBannerIndex].link && (
-                                    <Button asChild size="lg" className="rounded-full px-10 h-14 text-lg font-black bg-primary text-white border-none shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 hover:shadow-primary/40 transition-all duration-500">
-                                        <Link href={banners[activeBannerIndex].link!}>استكشف الآن</Link>
-                                    </Button>
-                                )}
+                                <Button asChild size="lg" className="rounded-full px-10 h-14 text-base sm:text-lg font-black bg-primary text-white border-none shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 hover:shadow-primary/40 transition-all duration-500 cursor-pointer">
+                                    <Link href={banners[activeBannerIndex].link || "/pathways"}>استكشف العلوم الشرعية</Link>
+                                </Button>
+                                <Button 
+                                    type="button"
+                                    onClick={() => setIsAboutModalOpen(true)}
+                                    size="lg" 
+                                    className="rounded-full px-8 h-14 text-base font-black bg-white/10 hover:bg-white/20 text-white backdrop-blur-xl border border-white/20 hover:border-white/40 shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2.5 cursor-pointer"
+                                >
+                                    <Sparkles className="w-4 h-4 text-primary" />
+                                    <span>التعريف بـ وقفة</span>
+                                </Button>
                             </div>
                         </motion.div>
                     </div>
@@ -590,6 +669,77 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     <HomeSearch />
                 </div>
             </div>
+        </div>
+      </section>
+
+      {/* 🏛️ Institutional Trust & Pillars Bar */}
+      <section className="container px-4 relative z-20 mt-4 -mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" dir="rtl">
+          {[
+            {
+              title: "+٢٦,٠٠٠ حديث نبوي",
+              desc: "مسند الإمام أحمد ومصادر السنة المحققة",
+              icon: BookOpen,
+              color: "text-amber-400",
+              bgColor: "bg-amber-400/10",
+              borderColor: "border-amber-400/20"
+            },
+            {
+              title: "نخبة من كبار العلماء",
+              desc: "دروس ومحاضرات منتقاة على منهج السلف",
+              icon: ShieldCheck,
+              color: "text-blue-400",
+              bgColor: "bg-blue-400/10",
+              borderColor: "border-blue-400/20"
+            },
+            {
+              title: "أدوات تدبر تفاعلية",
+              desc: "تفريغ ذكي، حفظ المتون، ومحاسبة النفس",
+              icon: Sparkles,
+              color: "text-emerald-400",
+              bgColor: "bg-emerald-400/10",
+              borderColor: "border-emerald-400/20"
+            },
+            {
+              title: "وقفي وخيري ١٠٠٪",
+              desc: "خالص لوجه الله، بلا إعلانات تجارية",
+              icon: Heart,
+              color: "text-rose-400",
+              bgColor: "bg-rose-400/10",
+              borderColor: "border-rose-400/20"
+            },
+          ].map((pillar, idx) => {
+            const PillarIcon = pillar.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className="luxury-stat-card flex items-center gap-4 group"
+              >
+                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-110", pillar.bgColor, pillar.borderColor)}>
+                  <PillarIcon className={cn("w-6 h-6", pillar.color)} />
+                </div>
+                <div>
+                  <h3 className="text-sm md:text-base font-black font-headline text-white leading-tight">{pillar.title}</h3>
+                  <p className="text-xs text-white/50 mt-1 leading-snug font-medium">{pillar.desc}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => setIsAboutModalOpen(true)}
+            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 text-xs font-black transition-all hover:scale-105 cursor-pointer shadow-md"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span>تعرّف على رسالة ومميزات منصة وقفة بالتفصيل ←</span>
+          </button>
         </div>
       </section>
 
@@ -890,10 +1040,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     <Link
                         href={section.href}
                         aria-label={section.label}
-                        className="flex flex-col items-center justify-center p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.04)] hover:bg-white/[0.03] group h-full"
+                        className="flex flex-col items-center justify-center p-5 rounded-[2rem] bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-2xl border border-white/10 hover:border-primary/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.12),0_10px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_35px_rgba(var(--primary-rgb),0.15),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-400 group h-full cursor-pointer"
                     >
-                        <div className={cn("p-4 rounded-2xl bg-white/5 mb-3 group-hover:scale-110 transition-transform", section.color)}>
-                            <section.icon size={24} />
+                        <div className={cn("w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300 shadow-md", section.color)}>
+                            <section.icon size={22} />
                         </div>
                         <span className="text-xs font-black text-white/70 group-hover:text-white transition-colors text-center">{section.label}</span>
                     </Link>
@@ -984,9 +1134,11 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                   ))}
                 </div>
                 
-                <Button className="w-full mt-12 h-16 rounded-[1.5rem] font-black text-white bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all duration-500 gap-3 group/btn">
-                  ابدأ الرحلة الآن 
-                  <ArrowLeft className="w-5 h-5 group-hover/btn:-translate-x-2 transition-transform" />
+                <Button asChild className="w-full mt-12 h-16 rounded-[1.5rem] font-black text-white bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all duration-500 gap-3 group/btn cursor-pointer">
+                  <Link href="/pathways">
+                    <span>ابدأ الرحلة الآن</span> 
+                    <ArrowLeft className="w-5 h-5 group-hover/btn:-translate-x-2 transition-transform" />
+                  </Link>
                 </Button>
               </motion.div>
             )
@@ -994,295 +1146,32 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </div>
       </section>
 
-      {/* Merits / Landing Page Features — PREMIUM BENTO GRID */}
-      <section id="merits" className="relative py-32 overflow-hidden">
-        {/* Cinematic Background Decoration */}
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-        <div className="absolute top-1/2 left-0 w-96 h-96 bg-primary/10 blur-[150px] rounded-full -translate-x-1/2 -z-10" />
-        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full translate-x-1/2 -z-10" />
-        
-        {/* Style block for equalizer waves animation */}
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes bounceWave {
-            0%, 100% { height: 10px; }
-            50% { height: 36px; }
-          }
-          .wave-bar {
-            animation: bounceWave 1.2s ease-in-out infinite;
-          }
-        `}} />
-
-        <div className="container relative z-10 px-4">
-          <div className="text-center mb-20 space-y-4">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }}
-               whileInView={{ opacity: 1, scale: 1 }}
-               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] font-black uppercase tracking-[0.4em] mb-4"
-            >
-               <Sparkles className="w-3.5 h-3.5" /> لماذا يختارون وقفة
-            </motion.div>
-            <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white drop-shadow-2xl">
-              لماذا <span className="text-primary italic">وقفة</span>؟ ✨
-            </h2>
-            <p className="text-xl text-white/30 max-w-2xl mx-auto font-medium leading-relaxed">
-              نجمَع بين أصالة المحتوى الشرعي وعالمية التطوير التقني، لنقدم لك صرحاً علمياً يليق بثوابتنا.
+      {/* 🌟 Compact About Platform Teaser Banner */}
+      <section className="container px-4 py-8 relative">
+        <div className="p-8 sm:p-12 rounded-[2.5rem] luxury-glass border border-white/10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-right shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
+          <div className="space-y-3 max-w-2xl relative z-10">
+            <div className="luxury-badge luxury-badge-primary inline-flex">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>صرحٌ علميٌّ متكامل</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black font-headline text-white tracking-tight">
+              لماذا <span className="text-primary italic">وقفة</span>؟ وما الذي نُميّزه لك؟
+            </h3>
+            <p className="text-sm sm:text-base text-white/60 font-medium leading-relaxed">
+              جمعنا لك بين أصالة المنهج الشرعي وعالمية التقنية الحديثة: مشغل ذكي، تفريغ آلي، مكتبة ضخمة، وتطبيق للهاتف.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[110px]">
-             {[
-               {
-                 id: "sharia",
-                 icon: "ShieldCheck",
-                 title: "محتوى شرعي موثوق",
-                 desc: "نخبة من المشايخ والعلماء لضمان تقديم العلم الشرعي بوسطية واعتدال وفق منهج أهل السنة.",
-                 color: "text-blue-400",
-                 iconBg: "bg-blue-500/10",
-                 border: "border-blue-500/20",
-                 glow: "group-hover:border-blue-500/40 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]",
-                 className: "md:col-span-3 lg:col-span-7 lg:row-span-4",
-                 featured: true
-               },
-               {
-                 id: "ux",
-                 icon: "Smartphone",
-                 title: "تجربة مستخدم حديثة",
-                 desc: "واجهة سلسة تدعم جميع الأجهزة لراحتك الكاملة.",
-                 color: "text-purple-400",
-                 iconBg: "bg-purple-500/10",
-                 border: "border-purple-500/20",
-                 className: "md:col-span-3 lg:col-span-5 lg:row-span-4"
-               },
-               {
-                 id: "speed",
-                 icon: "Zap",
-                 title: "سرعة وتفاعلية فائقة",
-                 desc: "مشغل فيديو وصوت ذكي يواكب تطلعاتك ويعمل بكفاءة عالية دون تباطؤ.",
-                 color: "text-amber-400",
-                 iconBg: "bg-amber-500/10",
-                 border: "border-amber-500/20",
-                 glow: "group-hover:border-amber-500/40 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]",
-                 className: "md:col-span-3 lg:col-span-4 lg:row-span-4"
-               },
-               {
-                 id: "search",
-                 icon: "Search",
-                 title: "محرك بحث ذكي",
-                 desc: "صل لما تريد في ثوانٍ من بين آلاف الدروس والمحاضرات المفهرسة بدقة.",
-                 color: "text-emerald-400",
-                 iconBg: "bg-emerald-500/10",
-                 border: "border-emerald-500/20",
-                 glow: "group-hover:border-emerald-500/40 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
-                 className: "md:col-span-3 lg:col-span-5 lg:row-span-4"
-               },
-               {
-                 id: "audio",
-                 icon: "Headphones",
-                 title: "جودة صوت نقية",
-                 desc: "استمتع بأفضل نقاء صوتي لتجربة استماع مريحة وممتازة.",
-                 color: "text-rose-400",
-                 iconBg: "bg-rose-500/10",
-                 border: "border-rose-500/20",
-                 glow: "group-hover:border-rose-500/40 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.15)]",
-                 className: "md:col-span-6 lg:col-span-3 lg:row-span-4"
-               }
-             ].map((feature, idx) => {
-               const IconComponent = iconMap[feature.icon as string] || Star;
-               return (
-                 <motion.div
-                   key={idx}
-                   initial={{ opacity: 0, y: 20 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true }}
-                   transition={{ delay: idx * 0.1 }}
-                   className={cn(
-                     "group relative rounded-[2.5rem] border bg-gradient-to-b from-white/[0.01] to-white/[0.003] backdrop-blur-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.03] flex flex-col justify-between",
-                     feature.border,
-                     feature.glow,
-                     feature.className
-                   )}
-                 >
-                   <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent pointer-events-none" />
-                   
-                   <div className="p-6 sm:p-10 flex flex-col h-full justify-between gap-6">
-                      <div className="flex flex-col items-start w-full">
-                         <div className={cn("inline-flex p-4 rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 self-start items-center justify-center border", feature.iconBg, feature.border)}>
-                           <IconComponent className={cn("w-8 h-8 sm:w-10 sm:h-10", feature.color)} />
-                         </div>
-                         <h3 className={cn("font-black mb-3 tracking-tighter text-white font-headline", feature.featured ? "text-2xl sm:text-3xl lg:text-4xl" : "text-xl sm:text-2xl")}>{feature.title}</h3>
-                         <p className={cn("text-white/40 leading-[1.8] font-medium text-xs sm:text-sm")}>
-                           {feature.desc}
-                         </p>
-                      </div>
-
-                      {/* Render custom micro-mockup inside card */}
-                      {renderFeatureMockup(feature.id)}
-                      
-                      <div className="pt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/10 group-hover:text-primary transition-colors mt-auto self-start">
-                        إتقان في التفاصيل <ArrowLeft className="w-4 h-4" />
-                      </div>
-                   </div>
-                 </motion.div>
-               )
-             })}
-          </div>
-        </div>
-      </section>
-
-      {/* App Showcase / Offline Mode — CINEMATIC UPGRADE */}
-      <section id="app" className="py-32 relative overflow-hidden">
-        <div className="container px-4">
-            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden relative">
-            {/* Background Glow */}
-            <div className="absolute -bottom-1/2 -right-1/4 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full -z-10" />
-            <div className="absolute -top-1/2 -left-1/4 w-[800px] h-[800px] bg-emerald-500/5 blur-[150px] rounded-full -z-10" />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-              <motion.div 
-                initial={{ opacity: 0, x: -30 }} 
-                whileInView={{ opacity: 1, x: 0 }}
-                className="space-y-10"
-              >
-                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
-                  <Smartphone className="w-4 h-4" /> تطبيق عابر للمنصات
-                </div>
-                <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter leading-[0.95] text-white">
-                  عِلمٌ راسخٌ.. <br /> <span className="text-primary italic">مَعك أينما كنت!</span>
-                </h2>
-                <p className="text-xl text-white/70 leading-relaxed max-w-xl font-medium">
-                  حوّل "وقفة" إلى تطبيق متكامل على هاتفك بضغطة زر واحدة. استمتع بمميزات الاستماع دون اتصال والتحميل المباشر لتواكب رحلتك العلمية في كل الظروف.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                  {[
-                    { t: "تثبيت فوري بضغطة", d: "أضف الموقع لشاشتك الرئيسية كأي تطبيق أصلي." },
-                    { t: "استماع بلا إنترنت", d: "تحكم كامل في الملفات المحملة وقائمة الاستماع." },
-                    { t: "تنبيهات فورية", d: "كن أول من يحضر المجالس والدروس الجديدة." },
-                    { t: "تزامن سحابي", d: "اكمل من حيث توقفت على أي جهاز آخر." }
-                  ].map((item, i) => (
-                    <div key={i} className="flex gap-4 items-start p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-                      <div className="mt-1 w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-                        <Zap className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-white text-base mb-1">{item.t}</h4>
-                        <p className="text-white/60 text-xs leading-relaxed">{item.d}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="pt-6">
-                   <Button size="lg" className="rounded-2xl h-16 px-10 bg-white text-black font-black text-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all">
-                      اكتشف طريقة التثبيت
-                   </Button>
-                </div>
-              </motion.div>
-
-              <div className="relative group perspective-1000">
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
-                  whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="relative z-10"
-                >
-                  <div className="relative aspect-[9/19] max-w-[320px] mx-auto rounded-[3.5rem] border-[12px] border-[#151515] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden bg-[#0A0A0A]">
-                    <div className="absolute top-0 inset-x-0 h-7 bg-[#151515]" /> {/* Notch area */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-black/40 rounded-full blur-sm" />
-                    
-                    {/* Mock App UI */}
-                    <div className="p-6 pt-12 space-y-8">
-                       <div className="flex justify-between items-center">
-                          <div className="h-10 w-10 bg-primary/20 rounded-xl" />
-                          <div className="h-6 w-24 bg-white/5 rounded-full" />
-                       </div>
-                       <div className="space-y-4">
-                          <div className="h-40 w-full bg-white/5 rounded-3xl" />
-                          <div className="h-6 w-3/4 bg-white/10 rounded-full" />
-                          <div className="h-4 w-1/2 bg-white/5 rounded-full" />
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="h-32 bg-white/5 rounded-2xl" />
-                          <div className="h-32 bg-white/5 rounded-2xl" />
-                       </div>
-                    </div>
-
-                    {/* Overlay Player Mockup */}
-                    <div className="absolute bottom-4 inset-x-4 p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-lg bg-primary/40 animate-pulse" />
-                       <div className="flex-1 space-y-1.5">
-                          <div className="h-2 w-full bg-white/10 rounded-full" />
-                          <div className="h-1.5 w-1/2 bg-white/5 rounded-full" />
-                       </div>
-                    </div>
-                  </div>
-                  
-                  {/* Floating Elements with better styling */}
-                  <motion.div 
-                    animate={{ y: [0, -15, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-10 -right-12 p-6 bg-white/5 backdrop-blur-3xl rounded-[2rem] shadow-2xl border border-white/10 z-20"
-                  >
-                    <Headphones className="w-10 h-10 text-primary" />
-                    <div className="absolute -top-2 -right-2 h-6 w-6 bg-emerald-500 rounded-full border-4 border-black" />
-                  </motion.div>
-
-                  <motion.div 
-                    animate={{ y: [0, 15, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute bottom-10 -left-12 p-6 bg-white/5 backdrop-blur-3xl rounded-[2rem] shadow-2xl border border-white/10 z-20"
-                  >
-                    <Zap className="w-10 h-10 text-amber-500" />
-                  </motion.div>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Platform Statistics — CINEMATIC INFOGRAPHICS */}
-      <section className="py-40 relative px-4">
-        {/* Background Animation Element */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-primary/5 blur-[200px] rounded-full pointer-events-none z-0" />
-        
-        <div className="container relative z-10">
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-8">
-            {[
-              { label: "محاضرة علمية", value: "3,500+", icon: Music, color: "text-blue-400", bg: "bg-blue-500/10" },
-              { label: "مستمع نشط", value: "12,000+", icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-              { label: "برنامج دعوي", value: "85+", icon: Globe, color: "text-rose-400", bg: "bg-rose-500/10" },
-              { label: "ساعة استماع", value: "150K+", icon: Zap, color: "text-amber-400", bg: "bg-amber-500/10" }
-            ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, type: "spring" }}
-                className="relative group p-12 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:bg-white/[0.04] hover:-translate-y-4 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] overflow-hidden"
-              >
-                {/* Dynamic Background Circle */}
-                <div className={cn("absolute -bottom-10 -left-10 w-40 h-40 blur-3xl opacity-0 group-hover:opacity-20 transition-all duration-1000", stat.bg)} />
-                
-                <div className={cn("inline-flex p-6 rounded-[2rem] mb-10 transition-all duration-500 group-hover:scale-125 group-hover:-rotate-12 group-hover:shadow-xl border border-white/5", stat.bg)}>
-                  <stat.icon className={cn("w-12 h-12", stat.color)} />
-                </div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  className="text-5xl lg:text-7xl font-black font-headline tracking-tighter text-white mb-4 italic"
-                >
-                  {stat.value}
-                </motion.div>
-                
-                <div className="text-white/20 text-xs font-black uppercase tracking-[0.4em] mb-2 group-hover:text-primary transition-colors">إحصائيات المنصة</div>
-                <div className="text-white/60 font-bold text-lg">{stat.label}</div>
-                
-                <div className="absolute top-8 right-8 w-1 h-1 bg-white rounded-full opacity-0 group-hover:opacity-40 transition-all duration-1000 group-hover:scale-[50] blur-[1px]" />
-              </motion.div>
-            ))}
+          <div className="relative z-10 shrink-0">
+            <Button
+              type="button"
+              onClick={() => setIsAboutModalOpen(true)}
+              size="lg"
+              className="rounded-full px-8 h-13 text-sm sm:text-base font-black bg-primary text-white border-none shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all duration-300 gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>اكتشف مميزات المنصة بالتفصيل</span>
+            </Button>
           </div>
         </div>
       </section>
@@ -1505,6 +1394,9 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             </div>
           </div>
         </section>
+
+        {/* 🌟 Interactive About Platform Modal */}
+        <AboutPlatformModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />
 
       </motion.div>
   );

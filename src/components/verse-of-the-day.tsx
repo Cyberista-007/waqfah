@@ -136,8 +136,8 @@ export function VerseOfTheDay() {
   const item = getActiveItem();
 
   return (
-    <section className="container px-4 py-20 relative">
-      <div className="max-w-5xl mx-auto">
+    <section className="container px-4 sm:px-6 lg:px-12 py-10 md:py-16 relative">
+      <div className="max-w-4xl mx-auto">
         {/* Sliding Tabs Control */}
         <div className="flex items-center justify-center p-1.5 bg-white/5 border border-white/10 rounded-full mb-8 max-w-md mx-auto backdrop-blur-xl">
           {[
@@ -153,7 +153,7 @@ export function VerseOfTheDay() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "relative flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black transition-all",
+                  "relative flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-black transition-all cursor-pointer",
                   isActive ? "bg-primary text-white shadow-lg shadow-primary/25 scale-105" : "text-white/70 hover:text-white"
                 )}
               >
@@ -165,30 +165,30 @@ export function VerseOfTheDay() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className={cn(
-            "relative p-10 md:p-20 rounded-[4rem] border border-white/10 backdrop-blur-3xl overflow-hidden group transition-all duration-1000",
+            "relative p-7 sm:p-10 md:p-14 rounded-[2.5rem] md:rounded-[3rem] border border-white/10 backdrop-blur-3xl overflow-hidden group transition-all duration-700 shadow-2xl",
             "bg-gradient-to-br", item.theme
           )}
         >
           {/* Animated Background Orbs */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors duration-1000" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
-          
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors duration-1000 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-primary/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
           <div className="relative z-10 flex flex-col items-center text-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', damping: 12, delay: 0.2 }}
-              className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-10 shadow-2xl"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-xl"
             >
-              <Quote className={cn("w-8 h-8 fill-current", item.accent)} />
+              <Quote className={cn("w-6 h-6 sm:w-7 sm:h-7 fill-current", item.accent)} />
             </motion.div>
 
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-[0.4em] mb-8">
-              <Sparkles className="w-3.5 h-3.5" /> 
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] mb-6">
+              <Sparkles className="w-3.5 h-3.5" />
               {activeTab === 'verse' && "آيةٌ تتدبّرها اليَوْم"}
               {activeTab === 'hadith' && "حديثٌ شريف نقتدي به"}
               {activeTab === 'dua' && "دعاءٌ مأثور نرجوه"}
@@ -198,41 +198,42 @@ export function VerseOfTheDay() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab + '-' + item.text}
-                initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+                initial={{ opacity: 0, filter: 'blur(8px)', y: 15 }}
                 animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                exit={{ opacity: 0, filter: 'blur(10px)', y: -20 }}
-                className="space-y-8"
+                exit={{ opacity: 0, filter: 'blur(8px)', y: -15 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-6 max-w-3xl"
               >
-                <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.4] tracking-tight font-quran drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-black text-white leading-[1.6] tracking-normal font-quran drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
                   {item.text}
                 </h2>
 
-                <div className="flex items-center justify-center gap-4 text-xl md:text-2xl font-bold text-white/70 italic">
-                  <div className="h-px w-8 bg-white/10" />
+                <div className="flex items-center justify-center gap-4 text-base sm:text-lg md:text-xl font-bold text-white/70 italic">
+                  <div className="h-px w-6 sm:w-8 bg-white/10" />
                   {activeTab === 'verse' && <span>سورة {(item as any).surah} - الآية {(item as any).number}</span>}
                   {activeTab === 'hadith' && <span>{(item as any).narrator} - {(item as any).topic}</span>}
                   {activeTab === 'dua' && <span>{(item as any).source} - {(item as any).category}</span>}
                   {activeTab === 'wisdom' && <span>{(item as any).author} - {(item as any).category}</span>}
-                  <div className="h-px w-8 bg-white/10" />
+                  <div className="h-px w-6 sm:w-8 bg-white/10" />
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            <div className="mt-16 flex flex-wrap items-center justify-center gap-4">
-              <Button size="lg" className="rounded-full px-10 h-14 font-black bg-white/5 border border-white/10 text-white hover:bg-white/10 gap-3 group/btn">
-                <BookMarked className="w-5 h-5 opacity-40 group-hover/btn:opacity-100 transition-opacity" />
+            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              <Button size="lg" className="rounded-full px-6 sm:px-8 h-11 sm:h-12 text-xs sm:text-sm font-black bg-white/5 border border-white/10 text-white hover:bg-white/10 gap-2.5 group/btn transition-all shadow-md">
+                <BookMarked className="w-4 h-4 opacity-50 group-hover/btn:opacity-100 transition-opacity" />
                 حفظ في المفضلة
               </Button>
-              
-              <Button size="lg" className="rounded-full px-10 h-14 font-black bg-primary text-white border-none shadow-lg shadow-primary/20 hover:scale-105 gap-3 group/share">
-                <Share2 className="w-5 h-5" />
+
+              <Button size="lg" className="rounded-full px-7 sm:px-9 h-11 sm:h-12 text-xs sm:text-sm font-black bg-primary text-white border-none shadow-lg shadow-primary/25 hover:scale-105 gap-2.5 group/share transition-all">
+                <Share2 className="w-4 h-4" />
                 {activeTab === 'verse' && "مشاركة الآية"}
                 {activeTab === 'hadith' && "مشاركة الحديث"}
                 {activeTab === 'dua' && "مشاركة الدعاء"}
                 {activeTab === 'wisdom' && "مشاركة الحكمة"}
               </Button>
 
-              <Button variant="ghost" className="rounded-full px-8 h-14 font-bold text-white/70 hover:text-white gap-3">
+              <Button variant="ghost" className="rounded-full px-5 sm:px-7 h-11 sm:h-12 text-xs sm:text-sm font-bold text-white/70 hover:text-white gap-2 transition-all">
                 {activeTab === 'verse' && "تفسير الآية"}
                 {activeTab === 'hadith' && "شرح الحديث"}
                 {activeTab === 'dua' && "فضل الدعاء"}
@@ -243,8 +244,8 @@ export function VerseOfTheDay() {
           </div>
 
           {/* Decorative Corner Elements */}
-          <div className="absolute top-10 left-10 w-20 h-20 border-t-2 border-l-2 border-white/5 rounded-tl-3xl" />
-          <div className="absolute bottom-10 right-10 w-20 h-20 border-b-2 border-r-2 border-white/5 rounded-br-3xl" />
+          <div className="absolute top-8 left-8 w-14 h-14 border-t-2 border-l-2 border-white/5 rounded-tl-2xl pointer-events-none" />
+          <div className="absolute bottom-8 right-8 w-14 h-14 border-b-2 border-r-2 border-white/5 rounded-br-2xl pointer-events-none" />
         </motion.div>
       </div>
     </section>

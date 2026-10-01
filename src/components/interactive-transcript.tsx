@@ -180,8 +180,8 @@ export function InteractiveTranscript({ transcript }: InteractiveTranscriptProps
                 )}
             </div>
 
-            {/* Transcript Text */}
-            <div ref={containerRef} className="prose prose-lg dark:prose-invert max-w-none text-foreground/80 leading-relaxed font-body max-h-[450px] overflow-y-auto pl-2 custom-scrollbar">
+            {/* Transcript Text Container */}
+            <div ref={containerRef} className="luxury-glass p-6 rounded-3xl max-h-[450px] overflow-y-auto pl-2 custom-scrollbar leading-[2.2] text-base md:text-lg font-medium text-foreground/85 border border-white/10">
                 {sorted.map((item, index) => {
                     const isActive = index === activeIdx;
                     const isMatchedLine = matches[currentMatchIndex]?.lineIndex === index;
@@ -191,12 +191,12 @@ export function InteractiveTranscript({ transcript }: InteractiveTranscriptProps
                             id={`transcript-line-${index}`}
                             onClick={() => handleLineClick(item.timestamp)}
                             className={cn(
-                              "transcript-line cursor-pointer rounded-lg transition-all duration-300 ease-out px-1 inline",
+                              "transcript-line cursor-pointer rounded-md transition-all duration-300 ease-out px-1.5 py-0.5 inline",
                               isActive 
-                                ? "bg-primary/20 text-primary font-bold scale-[1.02] shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] border-b border-primary/30" 
+                                ? "bg-primary/20 text-primary font-bold shadow-[0_0_15px_rgba(var(--primary-rgb),0.25)] border-b-2 border-primary" 
                                 : isMatchedLine && searchQuery.trim()
-                                ? "bg-amber-500/20 text-amber-200 border-b border-amber-500/50"
-                                : "hover:bg-white/5 hover:text-foreground"
+                                ? "bg-amber-500/25 text-amber-200 border-b-2 border-amber-500/50"
+                                : "hover:bg-white/10 hover:text-foreground"
                             )}
                         >
                             {renderHighlightedText(item.text, searchQuery)}{' '}

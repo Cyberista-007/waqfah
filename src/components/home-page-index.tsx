@@ -14,7 +14,8 @@ import {
     Smartphone, 
     PlayCircle, 
     HelpCircle,
-    ChevronLeft
+    ChevronLeft,
+    ChevronUp
 } from "lucide-react"
 
 const sections = [
@@ -22,8 +23,6 @@ const sections = [
   { id: "categories", label: "الأقسام العلمية", sub: "تصفح العلوم حسب التصنيف", icon: Grid },
   { id: "hub", label: "كنوز إسلامية", sub: "قرآن، أذكار، وأحاديث", icon: Layers },
   { id: "pathways", label: "المسارات المنهجية", sub: "خرائط طريق لطلب العلم", icon: GraduationCap },
-  { id: "merits", label: "لماذا وقفة؟", sub: "مميزاتنا وأهداف المنصة", icon: Star },
-  { id: "app", label: "تطبيق الجوال", sub: "تثبيت المنصة على هاتفك", icon: Smartphone },
   { id: "latest", label: "آخر التحديثات", sub: "جديد الدروس والسلاسل", icon: PlayCircle },
   { id: "faq", label: "الأسئلة الشائعة", sub: "إجابات لاستفساراتك", icon: HelpCircle },
 ]
@@ -82,99 +81,89 @@ export function PageIndex() {
     <AnimatePresence>
       {isVisible && (
         <>
-          {/* Desktop Premium Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 50, scale: 0.9 }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className="fixed right-8 top-1/2 -translate-y-1/2 z-[60] hidden lg:flex flex-col gap-1.5 p-2 rounded-[2.5rem] bg-zinc-950/40 backdrop-blur-3xl border border-white/5 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] group/sidebar transition-all duration-500 hover:bg-zinc-950/60"
-          >
-            {/* Scroll Progress Line */}
-            <div className="absolute left-[-2px] top-10 bottom-10 w-0.5 bg-white/5 rounded-full overflow-hidden">
-                <motion.div 
-                    className="w-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
-                    style={{ height: `${scrollProgress}%` }}
-                />
-            </div>
-
-            {sections.map((section, idx) => {
-              const isActive = activeSection === section.id
-              return (
-                <div key={section.id} className="relative flex items-center">
-                  <motion.button
-                    whileHover={{ scale: 1.1, x: -5 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => scrollTo(section.id)}
-                    aria-label={section.label}
-                    className="relative flex items-center group/btn"
-                  >
-                    <div className={cn(
-                      "w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-[0_0_30px_rgba(var(--primary-rgb),0.4)] scale-110 rotate-[-5deg]" 
-                        : "text-white/30 hover:text-white hover:bg-white/5"
-                    )}>
-                      <section.icon size={18} className={cn("transition-transform duration-500", isActive && "scale-110")} />
-                    </div>
+          {/* Desktop Luxury Capsule Sidebar */}
+          <div className="fixed right-5 xl:right-6 top-1/2 -translate-y-1/2 z-[60] hidden lg:flex flex-col items-center pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, x: 30, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 30, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="pointer-events-auto flex flex-col items-center gap-1.5 p-1.5 py-2.5 rounded-full bg-zinc-950/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] group/sidebar transition-all duration-300"
+            >
+              {sections.map((section) => {
+                const isActive = activeSection === section.id
+                return (
+                  <div key={section.id} className="relative flex items-center justify-center">
+                    <button
+                      onClick={() => scrollTo(section.id)}
+                      aria-label={section.label}
+                      className={cn(
+                        "relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer",
+                        isActive 
+                          ? "text-primary-foreground font-black" 
+                          : "text-white/40 hover:text-white hover:bg-white/10"
+                      )}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activePageIndexIndicator"
+                          className="absolute inset-0 rounded-full bg-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] -z-10"
+                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                        />
+                      )}
+                      <section.icon size={17} className={cn("transition-transform duration-300", isActive && "scale-105")} />
+                    </button>
 
                     <AnimatePresence>
                       {isHovered && (
                         <motion.div
-                          initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                          initial={{ opacity: 0, x: 15, scale: 0.95 }}
                           animate={{ opacity: 1, x: 0, scale: 1 }}
-                          exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                          className="absolute right-full mr-5 p-4 rounded-3xl bg-zinc-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] whitespace-nowrap pointer-events-none min-w-[160px]"
+                          exit={{ opacity: 0, x: 15, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-full mr-3.5 px-3.5 py-2 rounded-2xl bg-zinc-950/95 backdrop-blur-2xl border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.7)] whitespace-nowrap pointer-events-none z-20"
                         >
                           <div className="flex flex-col text-right">
-                            <span className="text-sm font-black text-white mb-0.5">{section.label}</span>
-                            <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">{section.sub}</span>
+                            <span className="text-xs font-black text-white">{section.label}</span>
+                            <span className="text-[9px] font-medium text-white/40">{section.sub}</span>
                           </div>
-                          {/* Premium Arrow */}
-                          <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-zinc-900/90 border-r border-t border-white/10 rotate-45" />
                         </motion.div>
                       )}
                     </AnimatePresence>
+                  </div>
+                )
+              })}
+              
+              {/* Subtle Horizontal Divider */}
+              <div className="w-5 h-px bg-white/15 my-1 mx-auto rounded-full" />
 
-                    {isActive && (
-                        <motion.div 
-                            layoutId="activeDot"
-                            className="absolute -right-4 w-2 h-2 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),1)]"
-                        />
-                    )}
-                  </motion.button>
-                </div>
-              )
-            })}
-            
-            <div className="mt-2 pt-2 border-t border-white/5 flex justify-center">
-              <motion.button 
-                  whileHover={{ y: -3 }}
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="p-2 text-white/10 hover:text-primary transition-colors"
-                  title="العودة للأعلى"
-                  aria-label="العودة للأعلى"
+              {/* Back to top Chevron */}
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title="العودة للأعلى"
+                aria-label="العودة للأعلى"
               >
-                  <ChevronLeft className="rotate-90 w-5 h-5" />
-              </motion.button>
-            </div>
-          </motion.div>
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </motion.div>
+          </div>
 
           {/* Mobile Floating Action Menu */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="fixed bottom-32 right-6 z-[60] lg:hidden"
+            className="fixed bottom-28 left-6 z-[60] lg:hidden"
           >
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsMobileOpen(!isMobileOpen)}
               aria-label={isMobileOpen ? "إغلاق قائمة الفهرس" : "فتح قائمة الفهرس"}
-              className="w-16 h-16 rounded-full bg-primary text-white shadow-[0_15px_40px_rgba(var(--primary-rgb),0.3)] flex items-center justify-center border border-white/10 relative overflow-hidden"
+              className="w-12 h-12 rounded-full bg-zinc-950/90 backdrop-blur-2xl text-primary shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-center justify-center border border-white/15 relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
-              {isMobileOpen ? <ChevronLeft className="rotate-90 relative z-10" /> : <Layers className="relative z-10" />}
+              {isMobileOpen ? <ChevronLeft className="rotate-90 w-5 h-5 text-white" /> : <Layers className="w-5 h-5 text-primary" />}
             </motion.button>
 
             <AnimatePresence>
