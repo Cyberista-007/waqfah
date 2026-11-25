@@ -18,6 +18,7 @@ import {
 import { getVideoIdFromUrl } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 function parseISO8601Duration(duration: string): number {
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);

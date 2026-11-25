@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Youtube, Upload, Clapperboard, Video, ListVideo, RefreshCw } from 'lucide-react';
-import { collection, runTransaction, doc, increment, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, runTransaction, doc, increment, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { formatDuration, getInitials, getVideoIdFromUrl } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -89,9 +89,11 @@ function ImportPageComponent() {
 
             if (!response.ok) throw new Error(data.message || 'فشل في جلب البيانات.');
 
-            if (data.channelInfo && allPrograms) {
+            if (data.channelInfo) {
                 setChannelInfo(data.channelInfo);
-                const existingProgram = allPrograms.find(p => p.channelId === data.channelInfo.id);
+                const existingProgram = allPrograms?.find(
+                    p => p.channelId === data.channelInfo.id || p.name === data.channelInfo.name
+                );
                 if (existingProgram) setProgramInfo(existingProgram);
                 else setProgramInfo({ name: data.channelInfo.name, youtubeUrl: `https://youtube.com/channel/${data.channelInfo.id}` } as Program);
             }
@@ -166,7 +168,7 @@ function ImportPageComponent() {
                 throw new Error("لا يمكن تحديد البرنامج، يرجى التأكد من جلب معلومات القناة أولاً.");
             }
 
-            const batch = writeBatch(firestore);
+            const writes: Array<{ ref: ReturnType<typeof doc>; data: Record<string, any> }> = [];
             let newLecturesCount = 0;
             let newSeriesCount = 0;
 
@@ -175,13 +177,18 @@ function ImportPageComponent() {
                 const rawSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                 const slug = rawSlug || `video-${video.videoId}`;
                 const lectureRef = doc(collection(firestore, 'lectures'));
-                batch.set(lectureRef, {
-                    title: video.title, slug, description: video.description || '', programId: programToUse!.id, programName: programToUse!.name || '',
-                    programSlug: programToUse!.slug || '', audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
-                    youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`, duration: video.durationInSeconds,
-                    imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, rating: 0, ratingCount: 0,
-                    viewCount: 0, youtubeViewCount: video.viewCount || 0, transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
-                    language: 'ar',
+                const pubDate = video.publishedAt ? new Date(video.publishedAt) : new Date();
+                writes.push({
+                    ref: lectureRef,
+                    data: {
+                        title: video.title, slug, description: video.description || '', programId: programToUse!.id, programName: programToUse!.name || '',
+                        programSlug: programToUse!.slug || '', audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
+                        youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`, duration: video.durationInSeconds,
+                        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, rating: 0, ratingCount: 0,
+                        viewCount: 0, youtubeViewCount: video.viewCount || 0, transcript: [], createdAt: Timestamp.now(),
+                        publishedAt: Timestamp.fromDate(isNaN(pubDate.getTime()) ? new Date() : pubDate),
+                        language: 'ar',
+                    },
                 });
                 newLecturesCount++;
             });
@@ -201,7 +208,7 @@ function ImportPageComponent() {
                     body: JSON.stringify({ url: playlistUrl }),
                 });
                 const playlistVideoData = await response.json();
-                if (!response.ok) throw new Error(`فشل جلب فيديوهات قائمة التشغيل: ${playlist.title}`);
+                if (!response.ok) throw new Error(playlistVideoData?.message || `فشل جلب فيديوهات قائمة التشغيل: ${playlist.title}`);
                 
                 const playlistVideos: FetchedVideo[] = [...(playlistVideoData.videos || []), ...(playlistVideoData.shorts || [])];
                 const newPlaylistVideos = playlistVideos.filter(v => !existingYoutubeVideoIds.has(v.videoId));
@@ -211,34 +218,49 @@ function ImportPageComponent() {
                     programId: programToUse!.id, programName: programToUse!.name || '', programSlug: programToUse!.slug || '',
                     lectureCount: newPlaylistVideos.length, createdAt: Timestamp.now(),
                 };
-                batch.set(seriesRef, seriesData);
+                writes.push({ ref: seriesRef, data: seriesData });
 
                 // Add lectures from this playlist
                 newPlaylistVideos.forEach(video => {
                     const rawLecSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
                     const lectureSlug = rawLecSlug || `video-${video.videoId}`;
                     const lectureRef = doc(collection(firestore, 'lectures'));
-                    batch.set(lectureRef, {
-                        title: video.title, slug: lectureSlug, description: video.description || '', 
-                        programId: programToUse!.id, programName: programToUse!.name || '', programSlug: programToUse!.slug || '',
-                        seriesId: seriesRef.id, seriesTitle: playlist.title, seriesSlug: seriesSlug,
-                        audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
-                        youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
-                        duration: video.durationInSeconds,
-                        imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, 
-                        rating: 0, ratingCount: 0, viewCount: 0, youtubeViewCount: video.viewCount || 0,
-                        transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
-                        language: 'ar',
+                    const pubDate = video.publishedAt ? new Date(video.publishedAt) : new Date();
+                    writes.push({
+                        ref: lectureRef,
+                        data: {
+                            title: video.title, slug: lectureSlug, description: video.description || '', 
+                            programId: programToUse!.id, programName: programToUse!.name || '', programSlug: programToUse!.slug || '',
+                            seriesId: seriesRef.id, seriesTitle: playlist.title, seriesSlug: seriesSlug,
+                            audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
+                            youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
+                            duration: video.durationInSeconds,
+                            imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, 
+                            rating: 0, ratingCount: 0, viewCount: 0, youtubeViewCount: video.viewCount || 0,
+                            transcript: [], createdAt: Timestamp.now(),
+                            publishedAt: Timestamp.fromDate(isNaN(pubDate.getTime()) ? new Date() : pubDate),
+                            language: 'ar',
+                        },
                     });
                     newLecturesCount++;
                 });
             }
 
+            // Commit in chunks of 400 to stay safely under Firestore's 500-operation batch limit
+            for (let i = 0; i < writes.length; i += 400) {
+                const batch = writeBatch(firestore);
+                const chunk = writes.slice(i, i + 400);
+                chunk.forEach(w => batch.set(w.ref, w.data));
+                await batch.commit();
+            }
+
             const statsRef = doc(firestore, 'stats', 'global');
-            if (newLecturesCount > 0) batch.update(statsRef, { lectures: increment(newLecturesCount) });
-            if (newSeriesCount > 0) batch.update(statsRef, { series: increment(newSeriesCount) });
-            
-            await batch.commit();
+            const statsUpdate: Record<string, any> = {};
+            if (newLecturesCount > 0) statsUpdate.lectures = increment(newLecturesCount);
+            if (newSeriesCount > 0) statsUpdate.series = increment(newSeriesCount);
+            if (Object.keys(statsUpdate).length > 0) {
+                await setDoc(statsRef, statsUpdate, { merge: true });
+            }
             
             toast({ title: 'اكتمل الاستيراد!', description: `تم استيراد ${videosToImport.length} محاضرة و ${playlistsToImport.length} سلسلة جديدة.`});
             router.push('/admin/lectures');

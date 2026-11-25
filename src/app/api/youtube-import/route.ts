@@ -70,10 +70,17 @@ async function getChannelIdFromUrl(url: string, youtube: youtube_v3.Youtube): Pr
         // Case 4 (Fallback): Handle, legacy, or custom URL (e.g., /@handle, /c/name, /user/name, /name)
         const pathParts = pathname.split('/').filter(p => p && p !== 'c' && p !== 'user');
         if (pathParts.length > 0) {
-            let potentialName = pathParts[pathParts.length - 1];
-            // The search API works better without the '@'
-            if (potentialName.startsWith('@')) {
-                potentialName = potentialName.substring(1);
+            const rawSegment = decodeURIComponent(pathParts[pathParts.length - 1]);
+            const potentialName = rawSegment.startsWith('@') ? rawSegment.substring(1) : rawSegment;
+
+            if (rawSegment.startsWith('@')) {
+                const handleRes = await youtube.channels.list({
+                    part: ['id'],
+                    forHandle: potentialName,
+                });
+                if (handleRes.data.items?.[0]?.id) {
+                    return handleRes.data.items[0].id;
+                }
             }
 
             const searchResponse = await youtube.search.list({
@@ -278,6 +285,25 @@ export async function POST(req: NextRequest) {
 
         // 3. Determine which videos to fetch
         const playlistIdFromUrl = new URL(url).searchParams.get('list');
+        if (playlistIdFromUrl && !formattedPlaylists.some(p => p.id === playlistIdFromUrl)) {
+            try {
+                const directPlRes = await youtube.playlists.list({
+                    part: ['snippet', 'contentDetails'],
+                    id: [playlistIdFromUrl],
+                });
+                const plItem = directPlRes.data.items?.[0];
+                if (plItem) {
+                    formattedPlaylists.unshift({
+                        id: plItem.id,
+                        title: plItem.snippet?.title || 'قائمة تشغيل',
+                        description: plItem.snippet?.description || '',
+                        videoCount: plItem.contentDetails?.itemCount || 0,
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to fetch direct playlist metadata:', e);
+            }
+        }
         const targetPlaylistId = playlistIdFromUrl || uploadsPlaylistId;
         
         let videoIds: string[] = [];
