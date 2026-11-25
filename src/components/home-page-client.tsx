@@ -1,348 +1,84 @@
-
-
 'use client';
 
-import { SeriesCard } from '@/components/series-card';
-import { LectureCard } from '@/components/lecture-card';
-import { ProgramCard } from '@/components/program-card';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { getPlaceholderImage } from '@/lib/images';
-import { Suspense, useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
-
-const HomeSearch = dynamic(() => import('@/components/home-search').then(mod => mod.HomeSearch), { ssr: false });
-const Marquee = dynamic(() => import('./marquee').then(mod => mod.Marquee), { ssr: false });
-const RecommendedLectures = dynamic(() => import('@/components/recommended-lectures').then(mod => mod.RecommendedLectures), { ssr: false });
-const ContinueWatching = dynamic(() => import('@/components/continue-listening').then(mod => mod.ContinueWatching), { ssr: false });
-const DownloaderModal = dynamic(() => import('./downloader-modal').then(mod => mod.DownloaderModal), { ssr: false });
-const SpiritualPrescription = dynamic(() => import('./spiritual-prescription').then(mod => mod.SpiritualPrescription), { ssr: false });
-const VerseOfTheDay = dynamic(() => import('./verse-of-the-day').then(mod => mod.VerseOfTheDay), { ssr: false });
-const AboutPlatformModal = dynamic(() => import('@/components/about-platform-modal').then(mod => mod.AboutPlatformModal), { ssr: false });
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import type { Lecture, Series, Program, HomepageDetailedConfig, ScheduleItem, QAPair, Playlist, ListenHistoryItem, Inspiration, HeroBanner } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { 
-  ArrowLeft, ShieldCheck, Smartphone, Search, Zap, Headphones, Users, Music, 
-  Globe, Quote, HeartHandshake, Mail, Send, MessageCircle, Layers,
-  Library, BookOpenCheck, BookOpen, Sparkles, Heart, Loader2, Star, Play, HandHeart, TriangleAlert, Shield,
-  Medal, Trophy, ListMusic, Flame, BookCheck, HelpCircle, GraduationCap, Compass, Scale,
-  Podcast, ChevronDown, CheckCircle2, Award
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import {
+  ArrowLeft,
+  BookCheck,
+  BookOpen,
+  BookOpenCheck,
+  ChevronDown,
+  Compass,
+  Flame,
+  GraduationCap,
+  HandHeart,
+  Headphones,
+  Heart,
+  HeartHandshake,
+  HelpCircle,
+  Layers,
+  Library,
+  ListMusic,
+  Loader2,
+  Mail,
+  Medal,
+  MessageCircle,
+  Podcast,
+  Play,
+  Quote,
+  Radio,
+  Scale,
+  Send,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  TriangleAlert,
+  Trophy,
 } from 'lucide-react';
 
-const iconMap: Record<string, React.ElementType> = {
-  ArrowLeft, ShieldCheck, Smartphone, Search, Zap, Headphones, Users, Music,
-  Globe, Quote, HeartHandshake, Mail, Send, MessageCircle, Layers,
-  BookOpen, Sparkles, Heart, Loader2, Star, Play
-};
-
-const renderFeatureMockup = (id: string) => {
-  switch (id) {
-    case 'sharia':
-      return (
-        <div className="mt-auto pt-6 flex flex-wrap gap-2.5 items-center justify-center p-4 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md relative overflow-hidden group-hover:border-primary/20 transition-all duration-500 w-full">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
-          {[
-            { label: 'العقيدة والتوحيد', icon: Shield, col: 'text-blue-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40 hover:bg-blue-500/10' },
-            { label: 'القرآن والتفسير', icon: BookOpenCheck, col: 'text-amber-400 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40 hover:bg-amber-500/10' },
-            { label: 'الحديث والسيرة', icon: BookCheck, col: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10' },
-            { label: 'الفقه والأحكام', icon: GraduationCap, col: 'text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40 hover:bg-purple-500/10' },
-          ].map((badge, i) => {
-            const BadgeIcon = badge.icon;
-            return (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.05 }}
-                className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold transition-all duration-300", badge.col)}
-              >
-                <BadgeIcon className="w-3.5 h-3.5" />
-                <span>{badge.label}</span>
-              </motion.div>
-            );
-          })}
-        </div>
-      );
-    case 'ux':
-      return (
-        <div className="mt-auto pt-6 relative h-40 w-full flex items-center justify-center overflow-hidden rounded-2xl bg-white/[0.01] border border-white/5">
-          {/* Miniature Phone Mockup */}
-          <motion.div 
-            className="absolute bottom-[-30px] left-[15%] w-[130px] h-[170px] bg-zinc-950 border border-white/10 rounded-[1.5rem] p-2 shadow-2xl flex flex-col gap-1.5 transition-all duration-500 group-hover:translate-y-[-12px] group-hover:rotate-[-3deg]"
-            style={{ transform: 'rotate(-6deg)' }}
-          >
-            <div className="w-8 h-1 bg-zinc-800 rounded-full mx-auto" />
-            <div className="h-4 w-full bg-white/5 rounded-md flex items-center justify-between px-1.5">
-              <div className="w-2.5 h-2 bg-primary/20 rounded-full animate-pulse" />
-              <div className="w-4 h-1 bg-white/10 rounded-full" />
-            </div>
-            <div className="bg-white/5 rounded-lg p-1.5 flex flex-col gap-1 border border-white/5">
-              <div className="w-8 h-1 bg-primary rounded-full" />
-              <div className="w-full h-0.5 bg-white/10 rounded-full" />
-              <div className="w-2/3 h-0.5 bg-white/10 rounded-full" />
-            </div>
-            <div className="mt-auto h-7 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-center gap-1">
-              <Play className="w-2 h-2 text-primary fill-primary" />
-              <span className="text-[6px] font-black text-primary">استماع الآن</span>
-            </div>
-          </motion.div>
-
-          {/* Miniature Tablet Screen Behind it */}
-          <motion.div 
-            className="absolute bottom-[-50px] right-[12%] w-[170px] h-[130px] bg-zinc-900 border border-white/5 rounded-[1rem] p-2 shadow-xl flex flex-col gap-2 opacity-50 transition-all duration-500 group-hover:opacity-75 group-hover:translate-y-[-8px] group-hover:rotate-[3deg]"
-            style={{ transform: 'rotate(5deg)' }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 mx-auto" />
-            <div className="grid grid-cols-3 gap-1">
-              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
-              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
-              <div className="h-8 bg-white/5 rounded-md border border-white/5" />
-            </div>
-            <div className="w-full h-1 bg-white/5 rounded-full" />
-          </motion.div>
-        </div>
-      );
-    case 'search':
-      return (
-        <div className="mt-auto pt-6 flex flex-col gap-3 w-full">
-          {/* Simulated Search Input */}
-          <div className="relative flex items-center w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white/30 text-xs">
-            <Search className="w-4 h-4 ml-2 text-white/30" />
-            <span>ابحث عن درس، شيخ، أو كتاب...</span>
-            <span className="absolute left-3 w-1.5 h-4 bg-primary/80 animate-[pulse_1s_infinite] rounded-full" />
-          </div>
-          {/* Autocomplete suggestions */}
-          <div className="flex flex-wrap gap-2 justify-start">
-            {[
-              { text: 'شرح السيرة النبوية', active: true },
-              { text: 'العقيدة الطحاوية', active: false },
-              { text: 'ابن عثيمين', active: false },
-            ].map((tag, i) => (
-              <span 
-                key={i} 
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors",
-                  tag.active 
-                    ? "bg-primary/10 border-primary/30 text-primary" 
-                    : "bg-white/5 border-white/10 text-white/40 group-hover:border-white/20"
-                )}
-              >
-                {tag.text}
-              </span>
-            ))}
-          </div>
-        </div>
-      );
-    case 'speed':
-      return (
-        <div className="mt-auto pt-6 flex flex-col items-center justify-center relative w-full">
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            {/* Speed Meter Ring */}
-            <svg className="w-full h-full transform -rotate-90">
-              <circle cx="48" cy="48" r="40" className="stroke-white/5 fill-none" strokeWidth="5" />
-              <motion.circle 
-                cx="48" cy="48" r="40" 
-                className="stroke-amber-400 fill-none" 
-                strokeWidth="5" 
-                strokeDasharray="251.2"
-                initial={{ strokeDashoffset: 251.2 }}
-                whileInView={{ strokeDashoffset: 50.2 }} // 80% filled
-                viewport={{ once: true }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
-              />
-            </svg>
-            {/* Central Info */}
-            <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="text-lg font-black text-white leading-none">0.08s</span>
-              <span className="text-[7px] font-bold text-amber-400 mt-1 uppercase tracking-wider">استجابة</span>
-            </div>
-          </div>
-          {/* Status badge */}
-          <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] text-emerald-400 font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>اتصال فائق السرعة</span>
-          </div>
-        </div>
-      );
-    case 'audio':
-      return (
-        <div className="mt-auto pt-6 flex flex-col gap-4 items-center justify-center p-3 rounded-2xl bg-white/[0.01] border border-white/5 w-full">
-          {/* Equalizer Audio Waves */}
-          <div className="flex items-end justify-center gap-1.5 h-10 w-full px-2">
-            {[10, 22, 34, 18, 28, 12, 22, 32, 16, 8].map((h, i) => (
-              <span 
-                key={i} 
-                className="w-1 bg-rose-500 rounded-full wave-bar"
-                style={{ 
-                  height: `${h}px`, 
-                  animationDelay: `${i * 0.1}s`,
-                  opacity: 0.85
-                }} 
-              />
-            ))}
-          </div>
-          {/* Controls mockup */}
-          <div className="flex items-center gap-3">
-            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10">
-              <ArrowLeft className="w-2.5 h-2.5 text-white/60 rotate-180" />
-            </span>
-            <span className="w-7 h-7 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-              <Play className="w-3 h-3 text-rose-400 fill-rose-400" />
-            </span>
-            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10">
-              <ArrowLeft className="w-2.5 h-2.5 text-white/60" />
-            </span>
-          </div>
-        </div>
-      );
-    default:
-      return null;
-  }
-};
-
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { getPlaceholderImage } from '@/lib/images';
+import type {
+  HeroBanner,
+  HomepageDetailedConfig,
+  HomepagePathConfig,
+  Inspiration,
+  Lecture,
+  ListenHistoryItem,
+  Playlist,
+  Program,
+  QAPair,
+  ScheduleItem,
+  Series,
+} from '@/lib/types';
 import { useAppearance } from '@/components/appearance-provider';
-import { useUser, useCollection } from '@/firebase';
-
-// Dynamically imported — not needed for initial render
-const PinnedItems = dynamic(() => import('@/app/pinned-items').then(m => m.PinnedItems), { ssr: false, loading: () => null });
-const ShortsCarousel = dynamic(() => import('@/components/ShortsCarousel').then(m => m.ShortsCarousel), { ssr: false, loading: () => null });
-const FeaturedStrips = dynamic(() => import('@/components/featured-strips').then(m => m.FeaturedStrips), { ssr: false, loading: () => null });
-
+import { useCollection, useUser } from '@/firebase';
+import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { SeriesCard } from '@/components/series-card';
+import { LectureCard } from '@/components/lecture-card';
+import { ProgramCard } from '@/components/program-card';
 
-
-// Helper to get section details
-const getSectionMeta = (title: string) => {
-  if (title.includes('محاضرات')) {
-    return {
-      icon: Headphones,
-      badge: 'مكتبة الدروس المسموعة',
-      subtitle: 'محاضرات وتوجيهات منتقاة بعناية لترسيخ العلم الشرعي وتزكية النفوس',
-      badgeClass: 'luxury-badge-emerald'
-    };
-  }
-  if (title.includes('البرامج')) {
-    return {
-      icon: Podcast,
-      badge: 'البرامج والقنوات العلمية',
-      subtitle: 'قنوات ومسارات متسلسلة لنخبة من كبار العلماء والمشايخ الموثوقين',
-      badgeClass: 'luxury-badge-primary'
-    };
-  }
-  if (title.includes('السلاسل')) {
-    return {
-      icon: Layers,
-      badge: 'الدورات والتأصيل العلمي',
-      subtitle: 'شروحات رصينة ومتكاملة للمتون الفقهية والعقدية والكتب المعتمدة',
-      badgeClass: 'luxury-badge-gold'
-    };
-  }
-  return {
-    icon: Sparkles,
-    badge: 'محتوى مميز',
-    subtitle: 'محتوى معرفي وإيماني متجدد لخدمة طالب العلم والمستفيد',
-    badgeClass: 'luxury-badge-primary'
-  };
-};
-
-// Upgraded Component for paginated sections
-function PaginatedSection({
-  title,
-  items,
-  renderItem,
-  viewAllHref,
-  itemsPerPage = 4,
-  gridClassName,
-}: {
-  title: string;
-  items: any[] | null;
-  renderItem: (item: any, index: number) => React.ReactNode;
-  viewAllHref: string;
-  itemsPerPage?: number;
-  gridClassName?: string;
-}) {
-  const [visibleCount, setVisibleCount] = useState(itemsPerPage);
-  const meta = useMemo(() => getSectionMeta(title), [title]);
-  const SectionIcon = meta.icon;
-
-  if (!items || items.length === 0) {
-    if (title === "أحدث المحاضرات") {
-      return (
-        <section className="relative my-14">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-white/10">
-            <div>
-              <div className={cn("luxury-badge mb-3", meta.badgeClass)}>
-                <SectionIcon className="w-3.5 h-3.5" />
-                <span>{meta.badge}</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black font-headline text-white tracking-tight">{title}</h2>
-              <p className="text-sm text-white/50 mt-1.5 font-medium">{meta.subtitle}</p>
-            </div>
-            <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
-              <span>عرض الكل</span>
-              <ArrowLeft className="h-4 w-4 mr-1 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
-            </Link>
-          </div>
-          <div className="text-center py-14 luxury-glass rounded-3xl text-white/40 border border-white/5 font-medium">
-            لا يوجد محتوى لعرضه حالياً في هذا القسم.
-          </div>
-        </section>
-      );
-    }
-    return null;
-  }
-
-  const handleShowMore = () => {
-    setVisibleCount((prev) => Math.min(prev + itemsPerPage, items.length));
-  };
-
-  const hasMoreToLoad = visibleCount < items.length;
-
-  return (
-    <section className="relative my-14">
-      {/* Refined Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-white/10">
-        <div>
-          <div className={cn("luxury-badge mb-3", meta.badgeClass)}>
-            <SectionIcon className="w-3.5 h-3.5" />
-            <span>{meta.badge}</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black font-headline text-white tracking-tight flex items-center gap-3">
-            <span>{title}</span>
-            <div className="hidden sm:block w-2 h-2 rounded-full bg-primary/80 shadow-[0_0_8px_hsl(var(--primary))]" />
-          </h2>
-          <p className="text-sm text-white/50 mt-1.5 font-medium max-w-2xl">{meta.subtitle}</p>
-        </div>
-        <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
-          <span>عرض الكل</span>
-          <ArrowLeft className="h-4 w-4 mr-1 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
-        </Link>
-      </div>
-
-      <div className={cn("grid gap-8", gridClassName || "grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]")}>
-        {items.slice(0, visibleCount).map((item, index) => renderItem(item, index))}
-      </div>
-
-      {hasMoreToLoad && (
-        <div className="text-center mt-10">
-          <button 
-            onClick={handleShowMore}
-            className="luxury-pill-btn px-8 py-3.5 text-sm font-black group bg-white/5 hover:bg-primary/10 border-white/10 hover:border-primary/40 text-foreground hover:text-primary transition-all duration-300 shadow-xl cursor-pointer"
-          >
-            <span>تحميل المزيد من {title}</span>
-            <ChevronDown className="w-4 h-4 mr-1 group-hover:translate-y-1 transition-transform duration-300 text-primary" />
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
-
+// Dynamically imported interactive & below-the-fold widgets
+const HomeSearch = dynamic(() => import('@/components/home-search').then((m) => m.HomeSearch), { ssr: false });
+const Marquee = dynamic(() => import('./marquee').then((m) => m.Marquee), { ssr: false });
+const RecommendedLectures = dynamic(() => import('@/components/recommended-lectures').then((m) => m.RecommendedLectures), { ssr: false });
+const ContinueWatching = dynamic(() => import('@/components/continue-listening').then((m) => m.ContinueWatching), { ssr: false });
+const SpiritualPrescription = dynamic(() => import('./spiritual-prescription').then((m) => m.SpiritualPrescription), { ssr: false });
+const VerseOfTheDay = dynamic(() => import('./verse-of-the-day').then((m) => m.VerseOfTheDay), { ssr: false });
+const AboutPlatformModal = dynamic(() => import('@/components/about-platform-modal').then((m) => m.AboutPlatformModal), { ssr: false });
+const PinnedItems = dynamic(() => import('@/app/pinned-items').then((m) => m.PinnedItems), { ssr: false, loading: () => null });
+const ShortsCarousel = dynamic(() => import('@/components/ShortsCarousel').then((m) => m.ShortsCarousel), { ssr: false, loading: () => null });
+const FeaturedStrips = dynamic(() => import('@/components/featured-strips').then((m) => m.FeaturedStrips), { ssr: false, loading: () => null });
 
 interface HomePageClientProps {
   latestLectures: Lecture[];
@@ -352,10 +88,21 @@ interface HomePageClientProps {
   latestQAPair?: QAPair | null;
   publicPlaylists?: Playlist[];
   homepageConfig?: HomepageDetailedConfig | null;
-  stripLectures?: Lecture[];  // Extra lectures fetched server-side for strips
+  stripLectures?: Lecture[];
 }
 
-// Keywords per strip topic — used to auto-filter from latestLectures
+const iconMap: Record<string, React.ElementType> = {
+  ArrowLeft,
+  ShieldCheck,
+  Headphones,
+  Layers,
+  BookOpen,
+  Sparkles,
+  Heart,
+  HeartHandshake,
+  Star,
+};
+
 const STRIP_TOPICS = [
   {
     title: 'لا يسع الجاهل جهله',
@@ -380,136 +127,667 @@ const STRIP_TOPICS = [
   },
 ];
 
-export function HomePageClient({ latestLectures, topPrograms, latestSeries, homepageConfig, upcomingLesson, latestQAPair, publicPlaylists, stripLectures = [] }: HomePageClientProps) {
-  const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle, heroBanners } = useAppearance();
+const HERO_QUICK_LINKS = [
+  { label: 'إذاعة القرآن', href: '/quran?view=radio', icon: Radio },
+  { label: 'المصحف الشامل', href: '/quran', icon: BookOpenCheck },
+  { label: 'العقيدة', href: '/aqeedah', icon: ShieldCheck },
+  { label: 'السيرة النبوية', href: '/seerah', icon: Compass },
+  { label: 'الأذكار اليومية', href: '/adhkar', icon: Headphones },
+];
 
+const TRUST_PILLARS = [
+  {
+    title: '+٢٦,٠٠٠ حديث نبوي',
+    desc: 'مسند الإمام أحمد ومصادر السنة المحققة',
+    icon: BookOpen,
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/20',
+  },
+  {
+    title: 'نخبة من كبار العلماء',
+    desc: 'دروس ومحاضرات منتقاة على منهج السلف',
+    icon: ShieldCheck,
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10 border-blue-500/20',
+  },
+  {
+    title: 'أدوات تدبر تفاعلية',
+    desc: 'تفريغ ذكي، حفظ المتون، ومحاسبة النفس',
+    icon: Sparkles,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10 border-emerald-500/20',
+  },
+  {
+    title: 'وقفي وخيري ١٠٠٪',
+    desc: 'خالص لوجه الله، بلا إعلانات تجارية',
+    icon: Heart,
+    color: 'text-rose-400',
+    bg: 'bg-rose-500/10 border-rose-500/20',
+  },
+];
+
+const CORE_SCIENCES = [
+  {
+    name: 'العقيدة والتوحيد',
+    desc: 'أصول الدين وأركان الإيمان الستة وثوابت الاعتقاد',
+    icon: ShieldCheck,
+    accent: '#3b82f6',
+    href: '/aqeedah',
+  },
+  {
+    name: 'الحديث النبوي',
+    desc: 'مصنفات السنة النبوية المشرفة وشروحها المحققة',
+    icon: BookOpen,
+    accent: '#f59e0b',
+    href: '/hadith',
+  },
+  {
+    name: 'السيرة النبوية',
+    desc: 'رحلة تفاعلية في حياة الحبيب المصطفى ﷺ وغزواته',
+    icon: Compass,
+    accent: '#f43f5e',
+    href: '/seerah',
+  },
+  {
+    name: 'الفقه والتفسير',
+    desc: 'أحكام العبادات والمعاملات وتدبر معاني التنزيل',
+    icon: Layers,
+    accent: '#14b8a6',
+    href: '/search?category=الفقه',
+  },
+];
+
+const DIRECTORY_GROUPS = [
+  {
+    id: 'worship',
+    label: 'العبادات والرقائق',
+    items: [
+      { href: '/adhkar', label: 'الأذكار', icon: Headphones, color: 'text-cyan-400' },
+      { href: '/dua', label: 'الأدعية', icon: HandHeart, color: 'text-rose-400' },
+      { href: '/prayer', label: 'الصلاة والخشوع', icon: Sparkles, color: 'text-teal-400' },
+      { href: '/muhlikat', label: 'المهلكات', icon: TriangleAlert, color: 'text-red-400' },
+      { href: '/chastity', label: 'درع العفة', icon: Shield, color: 'text-slate-400' },
+      { href: '/accountability', label: 'محاسبة النفس', icon: BookCheck, color: 'text-emerald-400' },
+    ],
+  },
+  {
+    id: 'knowledge',
+    label: 'التأصيل والعلوم',
+    items: [
+      { href: '/curriculums', label: 'المناهج العلمية', icon: GraduationCap, color: 'text-orange-400' },
+      { href: '/memorize', label: 'حفظ المتون', icon: BookOpen, color: 'text-indigo-400' },
+      { href: '/sciences-tree', label: 'شجرة العلوم', icon: Compass, color: 'text-teal-400' },
+      { href: '/shubuhat', label: 'رد الشبهات', icon: Shield, color: 'text-indigo-400' },
+      { href: '/essentials', label: 'الأساسيات', icon: BookCheck, color: 'text-cyan-400' },
+      { href: '/mirath', label: 'المواريث', icon: Scale, color: 'text-yellow-400' },
+      { href: '/stories', label: 'القصص والعبر', icon: Sparkles, color: 'text-violet-400' },
+      { href: '/qa', label: 'سؤال وجواب', icon: HelpCircle, color: 'text-blue-400' },
+    ],
+  },
+  {
+    id: 'sections',
+    label: 'أقسام ومبادرات',
+    items: [
+      { href: '/bayan', label: 'بيان', icon: Sparkles, color: 'text-violet-400' },
+      { href: '/athar', label: 'أثر', icon: Compass, color: 'text-amber-400' },
+      { href: '/namaa', label: 'نماء', icon: Scale, color: 'text-emerald-400' },
+      { href: '/adab', label: 'أدب', icon: BookCheck, color: 'text-sky-400' },
+      { href: '/kanaf', label: 'كنف', icon: Heart, color: 'text-rose-400' },
+      { href: '/playlists', label: 'قوائم التشغيل', icon: ListMusic, color: 'text-pink-400' },
+      { href: '/challenges', label: 'التحديات', icon: Flame, color: 'text-orange-400' },
+      { href: '/badges', label: 'الأوسمة', icon: Medal, color: 'text-amber-400' },
+      { href: '/leaderboard', label: 'لوحة الصدارة', icon: Trophy, color: 'text-yellow-400' },
+      { href: '/contact', label: 'اتصل بنا', icon: Mail, color: 'text-cyan-400' },
+    ],
+  },
+];
+
+const DEFAULT_PATHS: HomepagePathConfig[] = [
+  {
+    title: 'تأسيس طالب العلم',
+    desc: 'البداية الصحيحة لدراسة المتون العلمية والمقدمات الضرورية في كل فن.',
+    parts: ['متن الآجرومية', 'الأربعين النووية', 'كتاب التوحيد'],
+    icon: 'BookOpen',
+    color: 'text-blue-400',
+    border: 'border-blue-500/20',
+  },
+  {
+    title: 'مسار العبادة والقلوب',
+    desc: 'رحلة إيمانية تركز على تزكية النفس، السيرة النبوية، وفقه العبادات اليومية.',
+    parts: ['فقه الصلاة', 'تهذيب الأخلاق', 'سيرة النبوة'],
+    icon: 'HeartHandshake',
+    color: 'text-rose-400',
+    border: 'border-rose-500/20',
+  },
+  {
+    title: 'الردود والشبهات',
+    desc: 'حصن نفسك بعلم متين للرد على الشبهات المعاصرة بناءً على أصول أهل السنة.',
+    parts: ['تنبيه الغبي', 'ردود على الإلحاد', 'أصول المنهج'],
+    icon: 'ShieldCheck',
+    color: 'text-emerald-400',
+    border: 'border-emerald-500/20',
+  },
+];
+
+const DEFAULT_TESTIMONIALS = [
+  {
+    name: 'أحمد العتيبي',
+    role: 'طالب علم',
+    quote: 'منصة وقفة وفرت علي عناء البحث الطويل. التنظيم هنا يجعلك تشعر أن العلم أصبح في متناول يدك دائماً.',
+  },
+  {
+    name: 'سارة محمد',
+    role: 'باحثة ماجستير',
+    quote: 'أفضل ميزة هي الاستماع دون إنترنت. في المواصلات أو السفر، رفيقي الوحيد هو محاضرات وقفة.',
+  },
+  {
+    name: 'محمد خالد',
+    role: 'محاضر جامعي',
+    quote: 'المحتوى هنا منتقى بعناية بالغة. الثقة في المشايخ هي ما يجعل هذه المنصة هي الأولى لي ولطلابي.',
+  },
+];
+
+const DEFAULT_FAQS = [
+  {
+    q: 'هل المنصة مجانية بالكامل؟',
+    a: 'نعم، كافة الدروس والمحاضرات والمميزات التقنية على منصة وقفة مجانية ومتاحة للجميع كوقف لله سبحانه وتعالى.',
+  },
+  {
+    q: 'كيف يمكنني استخدام ميزة الاستماع دون إنترنت؟',
+    a: 'بمجرد تثبيت المنصة كتطبيق PWA على هاتفك، سيتم حفظ المحاضرات التي تستمع إليها تلقائياً في ذاكرة التطبيق، أو يمكنك النقر على أيقونة الحفظ المتوفرة.',
+  },
+  {
+    q: 'ما هو أفضل مسار للبدء بالنسبة للمبتدئين؟',
+    a: "ننصح بشدة بالبدء بـ 'مسار تأسيس طالب العلم' المتوفر في قسم المسارات المقترحة، حيث يركز على المتون الأولية في العقيدة والفقه واللغة.",
+  },
+  {
+    q: 'كيف يمكنني المساهمة في تطوير الموقع؟',
+    a: "يمكنك المساهمة من خلال التبرع المادي عبر قسم التبرعات، أو التطوع التقني من خلال صفحة 'التواصل'، أو بمجرد نشر رابط الموقع ليعم النفع.",
+  },
+];
+
+function getSectionMeta(title: string) {
+  if (title.includes('محاضرات')) {
+    return {
+      icon: Headphones,
+      badge: 'مكتبة الدروس المسموعة',
+      subtitle: 'محاضرات وتوجيهات منتقاة بعناية لترسيخ العلم الشرعي وتزكية النفوس',
+      badgeClass: 'luxury-badge-emerald',
+    };
+  }
+  if (title.includes('البرامج')) {
+    return {
+      icon: Podcast,
+      badge: 'البرامج والقنوات العلمية',
+      subtitle: 'قنوات ومسارات متسلسلة لنخبة من كبار العلماء والمشايخ الموثوقين',
+      badgeClass: 'luxury-badge-primary',
+    };
+  }
+  if (title.includes('السلاسل')) {
+    return {
+      icon: Layers,
+      badge: 'الدورات والتأصيل العلمي',
+      subtitle: 'شروحات رصينة ومتكاملة للمتون الفقهية والعقدية والكتب المعتمدة',
+      badgeClass: 'luxury-badge-gold',
+    };
+  }
+  return {
+    icon: Sparkles,
+    badge: 'محتوى مميز',
+    subtitle: 'محتوى معرفي وإيماني متجدد لخدمة طالب العلم والمستفيد',
+    badgeClass: 'luxury-badge-primary',
+  };
+}
+
+function getPathHref(path: HomepagePathConfig): string {
+  if (!path.linkType || path.linkType === 'none' || !path.linkId) return '/pathways';
+  switch (path.linkType) {
+    case 'series':
+      return `/series/${path.linkId}`;
+    case 'lecture':
+      return `/lectures/${path.linkId}`;
+    case 'playlist':
+      return `/playlists/${path.linkId}`;
+    case 'url':
+      return path.linkId;
+    default:
+      return '/pathways';
+  }
+}
+
+function SectionHeading({
+  badge,
+  title,
+  highlight,
+  subtitle,
+  actionHref,
+  actionLabel,
+}: {
+  badge: string;
+  title: string;
+  highlight?: string;
+  subtitle?: string;
+  actionHref?: string;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+      <div className="space-y-3">
+        <div className="luxury-badge luxury-badge-primary w-fit">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>{badge}</span>
+        </div>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground">
+          {title} {highlight && <span className="text-primary">{highlight}</span>}
+        </h2>
+        {subtitle && (
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl font-medium leading-relaxed">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {actionHref && actionLabel && (
+        <Link href={actionHref} className="luxury-pill-btn group self-start md:self-auto shrink-0">
+          <span>{actionLabel}</span>
+          <ArrowLeft className="h-4 w-4 text-primary group-hover:-translate-x-1 transition-transform duration-300" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function PaginatedSection({
+  title,
+  items,
+  renderItem,
+  viewAllHref,
+  itemsPerPage = 4,
+  gridClassName,
+  filterBar,
+}: {
+  title: string;
+  items: any[] | null;
+  renderItem: (item: any, index: number) => React.ReactNode;
+  viewAllHref: string;
+  itemsPerPage?: number;
+  gridClassName?: string;
+  filterBar?: React.ReactNode;
+}) {
+  const [visibleCount, setVisibleCount] = useState(itemsPerPage);
+  const meta = useMemo(() => getSectionMeta(title), [title]);
+  const SectionIcon = meta.icon;
+
+  useEffect(() => {
+    setVisibleCount(itemsPerPage);
+  }, [items, itemsPerPage]);
+
+  if (!items || items.length === 0) {
+    if (title.includes('محاضرات')) {
+      return (
+        <section className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-border/60">
+            <div>
+              <div className={cn('luxury-badge mb-3', meta.badgeClass)}>
+                <SectionIcon className="w-3.5 h-3.5" />
+                <span>{meta.badge}</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black font-headline text-foreground tracking-tight">
+                {title}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1.5 font-medium">{meta.subtitle}</p>
+            </div>
+            <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
+              <span>عرض الكل</span>
+              <ArrowLeft className="h-4 w-4 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
+            </Link>
+          </div>
+          <div className="text-center py-14 luxury-glass rounded-3xl text-muted-foreground border border-border/40 font-medium">
+            لا يوجد محتوى لعرضه حالياً في هذا القسم.
+          </div>
+        </section>
+      );
+    }
+    return null;
+  }
+
+  const handleShowMore = () => {
+    setVisibleCount((prev) => Math.min(prev + itemsPerPage, items.length));
+  };
+
+  const hasMoreToLoad = visibleCount < items.length;
+
+  return (
+    <section className="relative">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-border/60">
+        <div>
+          <div className={cn('luxury-badge mb-3', meta.badgeClass)}>
+            <SectionIcon className="w-3.5 h-3.5" />
+            <span>{meta.badge}</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black font-headline text-foreground tracking-tight flex items-center gap-3">
+            <span>{title}</span>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              {items.length}
+            </span>
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1.5 font-medium max-w-2xl">{meta.subtitle}</p>
+        </div>
+        <Link href={viewAllHref} className="luxury-pill-btn group self-start sm:self-auto">
+          <span>عرض الكل</span>
+          <ArrowLeft className="h-4 w-4 text-primary group-hover:-translate-x-1.5 transition-transform duration-300" />
+        </Link>
+      </div>
+
+      {filterBar && <div className="mb-7">{filterBar}</div>}
+
+      <div className={cn('grid gap-7', gridClassName || 'grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))]')}>
+        {items.slice(0, visibleCount).map((item, index) => renderItem(item, index))}
+      </div>
+
+      {hasMoreToLoad && (
+        <div className="text-center mt-10">
+          <button
+            type="button"
+            onClick={handleShowMore}
+            className="luxury-pill-btn px-8 py-3.5 text-sm font-black group bg-card/60 hover:bg-primary/10 border-border hover:border-primary/40 text-foreground hover:text-primary transition-all duration-300 shadow-lg cursor-pointer"
+          >
+            <span>تحميل المزيد من {title}</span>
+            <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform duration-300 text-primary" />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function InspirationSlider() {
+  const [index, setIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { data: remoteQuotes, isLoading } = useCollection<Inspiration>('inspiration', {
+    orderBy: ['createdAt', 'desc'],
+  });
+
+  const fallbackQuotes = [
+    {
+      id: 'f1',
+      text: '"إنما الأعمالُ بالنياتِ، وإنما لكلِّ امرئٍ ما نَوى"',
+      author: 'عمر بن الخطاب',
+      title: 'رواه البخاري ومسلم',
+      type: 'hadith',
+    },
+    {
+      id: 'f2',
+      text: '"من سلَك طريقًا يلتَمِسُ فيه علمًا، سهَّل اللهُ له به طريقًا إلى الجنةِ"',
+      author: 'أبو هريرة',
+      title: 'رواه مسلم',
+      type: 'hadith',
+    },
+    {
+      id: 'f3',
+      text: '"العلمُ صيدٌ والكتابةُ قيدُه ... قَيِّدْ صيودَكَ بالحبالِ الواثقَة"',
+      author: 'الإمام الشافعي',
+      title: 'رحمه الله تعالى',
+      type: 'quote',
+    },
+  ];
+
+  const quotes = remoteQuotes?.length ? remoteQuotes : isLoading ? [] : (fallbackQuotes as any[]);
+
+  useEffect(() => {
+    if (isHovered || !quotes.length) return;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % quotes.length);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [quotes.length, isHovered]);
+
+  if (isLoading && !quotes.length) {
+    return (
+      <div className="h-56 flex items-center justify-center bg-card/40 rounded-[2rem] animate-pulse border border-border/50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+      </div>
+    );
+  }
+
+  if (!quotes.length) return null;
+
+  const current = quotes[index];
+  const Icon = current.type === 'hadith' ? Sparkles : current.type === 'quote' ? Quote : BookOpen;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      viewport={{ once: true }}
+      className="group relative rounded-[2.25rem] luxury-glass border border-white/10 p-8 sm:p-12 overflow-hidden shadow-2xl"
+    >
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/15 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12" dir="rtl">
+        <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center shadow-inner">
+          <Icon className="w-8 h-8 text-primary" />
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.45 }}
+            className="flex-1 space-y-4 text-center md:text-right"
+          >
+            <p className="text-xl md:text-2xl lg:text-3xl font-headline leading-relaxed font-black text-foreground">
+              {current.text}
+            </p>
+            <div className="flex items-center justify-center md:justify-start gap-4">
+              <div className="h-[1px] w-8 bg-primary/50" />
+              <div className="flex items-baseline gap-2.5">
+                <span className="text-base md:text-lg text-primary font-black font-headline">{current.author}</span>
+                <span className="text-xs text-muted-foreground font-bold">{current.title}</span>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIndex((prev) => (prev - 1 + quotes.length) % quotes.length)}
+            aria-label="الاقتباس السابق"
+            className="rounded-full bg-white/5 hover:bg-white/10 h-10 w-10 border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 rotate-180" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIndex((prev) => (prev + 1) % quotes.length)}
+            aria-label="الاقتباس التالي"
+            className="rounded-full bg-white/5 hover:bg-white/10 h-10 w-10 border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-center gap-2">
+        {quotes.map((_: any, i: number) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setIndex(i)}
+            aria-label={`اقتباس ${i + 1}`}
+            className={cn(
+              'h-1.5 rounded-full transition-all duration-500',
+              i === index ? 'w-8 bg-primary' : 'w-2 bg-white/15 hover:bg-white/30'
+            )}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+export function HomePageClient({
+  latestLectures,
+  topPrograms,
+  latestSeries,
+  homepageConfig,
+  stripLectures = [],
+}: HomePageClientProps) {
+  const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle, heroBanners } = useAppearance();
   const heroImagePlaceholder = getPlaceholderImage('hero-background');
   const [heroImageUrl, setHeroImageUrl] = useState(customHeroUrl || heroImagePlaceholder?.imageUrl);
-
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [activeDirectoryTab, setActiveDirectoryTab] = useState<string>('worship');
+  const [selectedLectureProgram, setSelectedLectureProgram] = useState<string>('all');
+  const [hijriDate, setHijriDate] = useState<string>('');
+  const [timeGreeting, setTimeGreeting] = useState<string>('طاب يومك بالعلم والإيمان');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSent, setNewsletterSent] = useState(false);
+
+  useEffect(() => {
+    try {
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour >= 4 && hour < 12) setTimeGreeting('صباح الخير والبركة');
+      else if (hour >= 12 && hour < 17) setTimeGreeting('طاب يومك بذكر الله');
+      else setTimeGreeting('مساء السكينة والطمأنينة');
+
+      const formatted = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(now);
+      setHijriDate(formatted);
+    } catch {
+      // Ignore if Intl Islamic calendar is unavailable
+    }
+  }, []);
+
   const banners = useMemo(() => {
     if (heroBanners && heroBanners.length > 0) return heroBanners;
-    
-    // Default single banner if no plural banners defined
-    return [{
+    return [
+      {
         imageUrl: heroImageUrl || customHeroUrl || heroImagePlaceholder?.imageUrl || '',
         title: heroTitle || 'العلم الشرعي بين يديك',
         subtitle: heroSubtitle || 'منصة شاملة لمحاضرات ودروس نخبة من العلماء. تصفح، استمع، وتعلم.',
-        link: undefined
-    }] as HeroBanner[];
+        link: undefined,
+      },
+    ] as HeroBanner[];
   }, [heroBanners, heroImageUrl, customHeroUrl, heroTitle, heroSubtitle, heroImagePlaceholder?.imageUrl]);
 
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || isHeroHovered) return;
     const interval = setInterval(() => {
-        setActiveBannerIndex(prev => (prev + 1) % banners.length);
+      setActiveBannerIndex((prev) => (prev + 1) % banners.length);
     }, 8000);
     return () => clearInterval(interval);
-  }, [banners.length]);
+  }, [banners.length, isHeroHovered]);
 
   const { shorts, regularLectures } = useMemo(() => {
     if (!latestLectures) return { shorts: [], regularLectures: [] };
     const shortsArr: Lecture[] = [];
     const regularLecturesArr: Lecture[] = [];
-    latestLectures.forEach(lecture => {
-      if (lecture.duration <= 180) {
-        shortsArr.push(lecture);
-      } else {
-        regularLecturesArr.push(lecture);
-      }
+    latestLectures.forEach((lecture) => {
+      if (lecture.duration <= 180) shortsArr.push(lecture);
+      else regularLecturesArr.push(lecture);
     });
     return { shorts: shortsArr, regularLectures: regularLecturesArr };
   }, [latestLectures]);
 
-  // Build featured strips — if admin configured strips in Firestore, use those.
-  // Otherwise fall back to keyword-based auto-detection from latestLectures.
+  const lecturePrograms = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const lec of regularLectures) {
+      if (lec.programName) {
+        counts.set(lec.programName, (counts.get(lec.programName) || 0) + 1);
+      }
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name]) => name);
+  }, [regularLectures]);
+
+  const filteredLectures = useMemo(() => {
+    if (selectedLectureProgram === 'all') return regularLectures;
+    return regularLectures.filter((lec) => lec.programName === selectedLectureProgram);
+  }, [regularLectures, selectedLectureProgram]);
+
   const featuredStrips = useMemo(() => {
     if (!latestLectures) return [];
-
-    // Merge latestLectures with stripLectures (strip-specific lectures fetched server-side)
-    // Use a Map to deduplicate by ID
     const allAvailableLectures = [...latestLectures];
-    const knownIds = new Set(latestLectures.map(l => l.id));
+    const knownIds = new Set(latestLectures.map((l) => l.id));
     for (const lec of stripLectures) {
       if (!knownIds.has(lec.id)) {
         allAvailableLectures.push(lec);
         knownIds.add(lec.id);
       }
     }
-
     if (allAvailableLectures.length === 0) return [];
+    const lecturesById = Object.fromEntries(allAvailableLectures.map((l) => [l.id, l]));
 
-    const lecturesById = Object.fromEntries(allAvailableLectures.map(l => [l.id, l]));
-
-    // ── Priority 1: Admin-configured strips from Firestore ──
     if (homepageConfig?.featuredStrips?.length) {
-      return homepageConfig.featuredStrips.map(strip => {
-        const lectures = (strip.lectureIds || [])
-          .map(id => lecturesById[id])
-          .filter(Boolean) as typeof latestLectures;
-
-        // If configured IDs don't match any loaded lectures, fall back to keyword search
-        // using the strip title as the keyword
-        if (lectures.length === 0) {
-          const titleWords = strip.title.split(' ').filter(w => w.length > 2);
-          const matched = latestLectures.filter(lec =>
-            titleWords.some(kw =>
-              lec.title?.includes(kw) || lec.description?.includes(kw)
-            )
-          );
+      return homepageConfig.featuredStrips
+        .map((strip) => {
+          const lectures = (strip.lectureIds || []).map((id) => lecturesById[id]).filter(Boolean);
+          if (lectures.length === 0) {
+            const titleWords = strip.title.split(' ').filter((w) => w.length > 2);
+            const matched = latestLectures.filter((lec) =>
+              titleWords.some((kw) => lec.title?.includes(kw) || lec.description?.includes(kw))
+            );
+            return {
+              title: strip.title,
+              subtitle: strip.subtitle,
+              accentColor: strip.accentColor,
+              lectures: matched.length > 0 ? matched : latestLectures.slice(0, 6),
+              viewAllHref: strip.viewAllHref,
+            };
+          }
           return {
             title: strip.title,
             subtitle: strip.subtitle,
             accentColor: strip.accentColor,
-            lectures: matched.length > 0 ? matched : latestLectures.slice(0, 6),
+            lectures,
             viewAllHref: strip.viewAllHref,
           };
-        }
-
-        return {
-          title: strip.title,
-          subtitle: strip.subtitle,
-          accentColor: strip.accentColor,
-          lectures,
-          viewAllHref: strip.viewAllHref,
-        };
-      }).filter(s => s.lectures.length > 0);
+        })
+        .filter((s) => s.lectures.length > 0);
     }
 
-    // ── Priority 2: Auto-detect from STRIP_TOPICS keywords ──
-    return STRIP_TOPICS.map(topic => {
-      const matched = latestLectures.filter(lec =>
-        topic.keywords.some(kw =>
-          lec.title?.includes(kw) ||
-          lec.description?.includes(kw) ||
-          lec.programName?.includes(kw)
+    return STRIP_TOPICS.map((topic) => {
+      const matched = latestLectures.filter((lec) =>
+        topic.keywords.some(
+          (kw) => lec.title?.includes(kw) || lec.description?.includes(kw) || lec.programName?.includes(kw)
         )
       );
-
-      // If no matches by keyword, use 6 latest as fallback
-      const lectures = matched.length >= 2 ? matched : latestLectures.slice(0, 6);
-
       return {
         title: topic.title,
         subtitle: topic.subtitle,
         accentColor: topic.accentColor,
-        lectures,
+        lectures: matched.length >= 2 ? matched : latestLectures.slice(0, 6),
         viewAllHref: topic.viewAllHref,
       };
-    }).filter(s => s.lectures.length > 0);
+    }).filter((s) => s.lectures.length > 0);
   }, [latestLectures, stripLectures, homepageConfig]);
 
   const { user } = useUser();
   const listenHistoryPath = user ? `users/${user.uid}/listenHistory` : null;
   const { data: listenHistory } = useCollection<ListenHistoryItem>(listenHistoryPath);
-  
+
   const playlistsPath = user ? `users/${user.uid}/playlists` : null;
   const { data: playlists } = useCollection<Playlist>(playlistsPath);
 
-
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 800], ['0%', '30%']);
+  const heroY = useTransform(scrollY, [0, 800], ['0%', '22%']);
 
   useEffect(() => {
     if (customHeroUrl) {
@@ -525,16 +803,16 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: featuredProgram.youtubeUrl }),
           });
-
           if (response.ok) {
             const data = await response.json();
             if (data.channelInfo?.bannerUrl) {
-              const highResBanner = data.channelInfo.bannerUrl.replace('=w1060', '=w2120').replace('=w1707', '=w2120');
+              const highResBanner = data.channelInfo.bannerUrl
+                .replace('=w1060', '=w2120')
+                .replace('=w1707', '=w2120');
               setHeroImageUrl(highResBanner);
             }
           }
-        } catch (error) {
-          console.error("Failed to fetch YouTube banner for hero:", error);
+        } catch {
           setHeroImageUrl(heroImagePlaceholder?.imageUrl);
         }
       };
@@ -544,998 +822,890 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
     }
   }, [topPrograms, heroImagePlaceholder?.imageUrl, customHeroUrl]);
 
+  const activeBanner = banners[activeBannerIndex] || banners[0];
+  const titleWords = (activeBanner?.title || 'العلم الشرعي بين يديك').split(' ');
+  const headlineFirst = titleWords.slice(0, Math.ceil(titleWords.length / 2)).join(' ');
+  const headlineSecond = titleWords.slice(Math.ceil(titleWords.length / 2)).join(' ');
+
+  const paths = homepageConfig?.paths?.length ? homepageConfig.paths : DEFAULT_PATHS;
+  const faqs = homepageConfig?.faqs?.length ? homepageConfig.faqs : DEFAULT_FAQS;
+  const testimonials = homepageConfig?.testimonials?.length
+    ? homepageConfig.testimonials.map((t) => ({ name: t.name, role: t.role, quote: t.quote }))
+    : DEFAULT_TESTIMONIALS;
+
+  const currentDirectoryGroup =
+    DIRECTORY_GROUPS.find((g) => g.id === activeDirectoryTab) || DIRECTORY_GROUPS[0];
 
   return (
-    <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="space-y-16"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.7 }}
+      className="pb-16 space-y-20 md:space-y-28"
     >
-      <section id="hero" className="relative z-10 px-4 sm:px-0 pt-2 pb-12">
-        <div className="relative w-full h-[70vh] min-h-[550px] max-h-[800px] overflow-hidden rounded-[2.5rem] sm:rounded-[4rem] border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5 group/hero">
-            <AnimatePresence mode="wait">
-                <motion.div 
-                    key={activeBannerIndex}
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full"
+      {/* ══════════════════════════════════════════════════════════════════
+          1. ARCHITECTURAL CINEMATIC HERO + INTEGRATED SEARCH & TRUST BAR
+      ══════════════════════════════════════════════════════════════════ */}
+      <section id="hero" className="relative z-10 container px-4 pt-3">
+        <div
+          onMouseEnter={() => setIsHeroHovered(true)}
+          onMouseLeave={() => setIsHeroHovered(false)}
+          className="relative w-full min-h-[600px] lg:min-h-[680px] overflow-hidden rounded-[2.25rem] sm:rounded-[3.25rem] border border-white/10 shadow-[0_35px_90px_-20px_rgba(0,0,0,0.75)] flex flex-col justify-between group/hero"
+        >
+          {/* Parallax Background Layer */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeBannerIndex}
+              initial={{ opacity: 0, scale: 1.06 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0 z-0"
+            >
+              <motion.div style={{ y: heroY }} className="absolute inset-0 -top-[8%] h-[116%] w-full">
+                {activeBanner?.imageUrl ? (
+                  <Image
+                    src={activeBanner.imageUrl}
+                    alt={activeBanner.title || 'منصة وقفة العلمية'}
+                    fill
+                    priority
+                    className="object-cover brightness-[0.45] contrast-[1.08]"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-950 to-black" />
+                )}
+              </motion.div>
+              {/* Atmospheric Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/55 to-zinc-950/35" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--primary-rgb),0.22),transparent_60%)]" />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Top Bar Inside Hero: Status Pill, Islamic Greeting & Banner Controls */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-6 sm:px-10 pt-6 sm:pt-8">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 text-white/90 text-xs font-black">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>وقف علمي رقمي • بلا إعلانات</span>
+              </div>
+              <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white/80 text-xs font-bold">
+                <span>{timeGreeting}</span>
+                {hijriDate && (
+                  <>
+                    <span className="text-white/30">•</span>
+                    <span className="text-primary font-black">{hijriDate}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {banners.length > 1 && (
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveBannerIndex((prev) => (prev - 1 + banners.length) % banners.length)}
+                  aria-label="الشريحة السابقة"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer"
                 >
-                    <motion.div style={{ y: heroY }} className="absolute inset-0 -top-[10%] h-[120%] w-full">
-                        <Image
-                            src={banners[activeBannerIndex].imageUrl}
-                            alt={banners[activeBannerIndex].title || "Banner"}
-                            fill
-                            className="object-cover image-theme-filter brightness-[0.6] contrast-[1.1] transition-transform duration-[20000ms] ease-linear hover:scale-125"
-                            priority
-                        />
-                    </motion.div>
-                    
-                    {/* Cinematic Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-[2]" />
-                    <div className="absolute inset-0 bg-black/20 z-[1]" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] z-[2]" />
-                    
-                    {/* Content Container */}
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pt-10 pb-36">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                            className="max-w-5xl"
-                        >
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1, duration: 0.8 }}
-                                className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/10 backdrop-blur-2xl border border-white/15 text-white/90 text-xs sm:text-sm font-black mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]"
-                            >
-                                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                                <span>صرحٌ علميٌّ متكامل للعلوم الشرعية والتدبر الرقمي</span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            </motion.div>
-
-                            <motion.h1 
-                                className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 font-headline tracking-tight leading-[1.1] text-white drop-shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
-                            >
-                                <span className="block mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/75">
-                                    {banners[activeBannerIndex].title?.split(' ')[0]}
-                                </span>
-                                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary/90 to-primary/50">
-                                    {banners[activeBannerIndex].title?.split(' ').slice(1).join(' ')}
-                                </span>
-                            </motion.h1>
-                            
-                            <motion.p 
-                                className="text-base sm:text-lg md:text-2xl text-white/80 max-w-3xl mx-auto mb-8 leading-relaxed font-tajawal drop-shadow-md"
-                            >
-                                {banners[activeBannerIndex].subtitle || heroSubtitle}
-                            </motion.p>
-
-                            <div className="flex flex-wrap items-center justify-center gap-4">
-                                <Button asChild size="lg" className="rounded-full px-10 h-14 text-base sm:text-lg font-black bg-primary text-white border-none shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 hover:shadow-primary/40 transition-all duration-500 cursor-pointer">
-                                    <Link href={banners[activeBannerIndex].link || "/pathways"}>استكشف العلوم الشرعية</Link>
-                                </Button>
-                                <Button 
-                                    type="button"
-                                    onClick={() => setIsAboutModalOpen(true)}
-                                    size="lg" 
-                                    className="rounded-full px-8 h-14 text-base font-black bg-white/10 hover:bg-white/20 text-white backdrop-blur-xl border border-white/20 hover:border-white/40 shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2.5 cursor-pointer"
-                                >
-                                    <Sparkles className="w-4 h-4 text-primary" />
-                                    <span>التعريف بـ وقفة</span>
-                                </Button>
-                            </div>
-                        </motion.div>
-                    </div>
-                </motion.div>
-            </AnimatePresence>
-
-            {/* Pagination Dots */}
-            <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 flex gap-2.5">
-                {banners.map((_, idx) => (
+                  <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                </button>
+                <div className="flex items-center gap-1.5">
+                  {banners.map((_, idx) => (
                     <button
-                        key={idx}
-                        onClick={() => setActiveBannerIndex(idx)}
-                        aria-label={`الذهاب إلى الشريحة ${idx + 1}`}
-                        className={cn(
-                            "h-1 rounded-full transition-all duration-700",
-                            idx === activeBannerIndex ? "w-10 bg-primary" : "w-2.5 bg-white/20 hover:bg-white/40"
-                        )}
-                    />
-                ))}
-            </div>
-
-            {/* Knowledge Ticker */}
-            <div className="absolute bottom-20 inset-x-0 z-20 h-12 flex items-center overflow-hidden pointer-events-none opacity-40">
-                <Marquee speed={40} pauseOnHover={false}>
-                    {[
-                        "فقه العبادات", "تزكية النفوس", "عقيدة أهل السنة", "السيرة النبوية", 
-                        "أصول الفقه", "علوم القرآن", "الرد على الشبهات", "مصطلح الحديث"
-                    ].map((topic, i) => (
-                        <div key={i} className="flex items-center gap-4 px-10">
-                            <div className="w-1 h-1 rounded-full bg-primary" />
-                            <span className="text-sm font-black font-headline tracking-widest text-white uppercase">{topic}</span>
-                        </div>
-                    ))}
-                </Marquee>
-            </div>
-
-            {/* Search Anchor Integrated into Card Bottom */}
-            <div className="absolute bottom-0 inset-x-0 z-30 pb-4 px-4 sm:px-8">
-                <div className="max-w-4xl mx-auto backdrop-blur-3xl bg-zinc-950/40 p-2 rounded-full border border-white/5 shadow-2xl transition-transform hover:scale-[1.02] duration-500 ring-1 ring-white/5">
-                    <HomeSearch />
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveBannerIndex(idx)}
+                      aria-label={`الشريحة ${idx + 1}`}
+                      className={cn(
+                        'h-1.5 rounded-full transition-all duration-500 cursor-pointer relative overflow-hidden',
+                        idx === activeBannerIndex ? 'w-8 bg-white/25' : 'w-2 bg-white/30 hover:bg-white/60'
+                      )}
+                    >
+                      {idx === activeBannerIndex && (
+                        <motion.span
+                          key={`progress-${activeBannerIndex}-${isHeroHovered}`}
+                          initial={{ width: '0%' }}
+                          animate={{ width: isHeroHovered ? '50%' : '100%' }}
+                          transition={{ duration: 8, ease: 'linear' }}
+                          className="absolute inset-y-0 right-0 bg-primary rounded-full"
+                        />
+                      )}
+                    </button>
+                  ))}
                 </div>
-            </div>
-        </div>
-      </section>
+                <button
+                  type="button"
+                  onClick={() => setActiveBannerIndex((prev) => (prev + 1) % banners.length)}
+                  aria-label="الشريحة التالية"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
 
-      {/* 🏛️ Institutional Trust & Pillars Bar */}
-      <section className="container px-4 relative z-20 mt-4 -mb-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" dir="rtl">
-          {[
-            {
-              title: "+٢٦,٠٠٠ حديث نبوي",
-              desc: "مسند الإمام أحمد ومصادر السنة المحققة",
-              icon: BookOpen,
-              color: "text-amber-400",
-              bgColor: "bg-amber-400/10",
-              borderColor: "border-amber-400/20"
-            },
-            {
-              title: "نخبة من كبار العلماء",
-              desc: "دروس ومحاضرات منتقاة على منهج السلف",
-              icon: ShieldCheck,
-              color: "text-blue-400",
-              bgColor: "bg-blue-400/10",
-              borderColor: "border-blue-400/20"
-            },
-            {
-              title: "أدوات تدبر تفاعلية",
-              desc: "تفريغ ذكي، حفظ المتون، ومحاسبة النفس",
-              icon: Sparkles,
-              color: "text-emerald-400",
-              bgColor: "bg-emerald-400/10",
-              borderColor: "border-emerald-400/20"
-            },
-            {
-              title: "وقفي وخيري ١٠٠٪",
-              desc: "خالص لوجه الله، بلا إعلانات تجارية",
-              icon: Heart,
-              color: "text-rose-400",
-              bgColor: "bg-rose-400/10",
-              borderColor: "border-rose-400/20"
-            },
-          ].map((pillar, idx) => {
+          {/* Center Editorial Content */}
+          <div className="relative z-10 flex flex-col items-center text-center px-6 py-10 sm:py-14 max-w-4xl mx-auto">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl sm:text-6xl md:text-7xl font-black font-headline tracking-tight leading-[1.12] text-white drop-shadow-2xl mb-5"
+            >
+              <span className="block">{headlineFirst}</span>
+              {headlineSecond && (
+                <span className="block text-transparent bg-clip-text bg-gradient-to-l from-primary via-primary/90 to-white/90 mt-1">
+                  {headlineSecond}
+                </span>
+              )}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12, duration: 0.7 }}
+              className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed font-tajawal"
+            >
+              {activeBanner?.subtitle || heroSubtitle}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.7 }}
+              className="flex flex-wrap items-center justify-center gap-3.5"
+            >
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-8 h-13 text-base font-black bg-primary text-primary-foreground shadow-[0_14px_32px_rgba(var(--primary-rgb),0.35)] hover:scale-[1.03] transition-all duration-300"
+              >
+                <Link href={activeBanner?.link || '/pathways'} className="flex items-center gap-2">
+                  <span>ابدأ رحلتك العلمية</span>
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setIsAboutModalOpen(true)}
+                size="lg"
+                className="rounded-full px-7 h-13 text-base font-bold bg-white/10 hover:bg-white/20 text-white backdrop-blur-xl border border-white/20 transition-all duration-300 flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span>التعريف بـ وقفة</span>
+              </Button>
+            </motion.div>
+
+            {regularLectures[0] && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="mt-6"
+              >
+                <Link
+                  href={`/lectures/${regularLectures[0].slug}`}
+                  className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-xl border border-white/15 hover:border-primary/50 text-xs sm:text-sm text-white/90 transition-all duration-300 group/spot max-w-full"
+                >
+                  <span className="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
+                    <Play className="w-3 h-3 text-primary fill-primary" />
+                  </span>
+                  <span className="text-primary font-black shrink-0">جديد المنصة:</span>
+                  <span className="font-bold truncate max-w-[220px] sm:max-w-sm">{regularLectures[0].title}</span>
+                  <ArrowLeft className="w-3.5 h-3.5 text-white/60 group-hover/spot:-translate-x-1 transition-transform shrink-0" />
+                </Link>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Bottom Search + Quick Access Bar */}
+          <div className="relative z-20 px-4 sm:px-8 pb-6 sm:pb-8 space-y-4">
+            <div className="max-w-3xl mx-auto">
+              <HomeSearch />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              {HERO_QUICK_LINKS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.07] hover:bg-primary/20 border border-white/10 hover:border-primary/40 text-white/85 hover:text-white text-xs font-bold backdrop-blur-md transition-all duration-300"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-primary" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="hidden sm:block pt-2 opacity-40 pointer-events-none">
+              <Marquee speed={45} pauseOnHover={false}>
+                {[
+                  'فقه العبادات',
+                  'تزكية النفوس',
+                  'عقيدة أهل السنة',
+                  'السيرة النبوية',
+                  'أصول الفقه',
+                  'علوم القرآن',
+                  'الرد على الشبهات',
+                  'مصطلح الحديث',
+                ].map((topic, i) => (
+                  <div key={i} className="flex items-center gap-3 px-8">
+                    <span className="w-1 h-1 rounded-full bg-primary" />
+                    <span className="text-xs font-black font-headline tracking-wider text-white">
+                      {topic}
+                    </span>
+                  </div>
+                ))}
+              </Marquee>
+            </div>
+          </div>
+        </div>
+
+        {/* Sleek 4-Pillar Trust Bar */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 mt-6" dir="rtl">
+          {TRUST_PILLARS.map((pillar, idx) => {
             const PillarIcon = pillar.icon;
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="luxury-stat-card flex items-center gap-4 group"
+                transition={{ duration: 0.35, delay: idx * 0.06 }}
+                className="luxury-stat-card flex items-center gap-3.5 p-4 sm:p-5 group"
               >
-                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-110", pillar.bgColor, pillar.borderColor)}>
-                  <PillarIcon className={cn("w-6 h-6", pillar.color)} />
+                <div
+                  className={cn(
+                    'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-110',
+                    pillar.bg
+                  )}
+                >
+                  <PillarIcon className={cn('w-5 h-5', pillar.color)} />
                 </div>
-                <div>
-                  <h3 className="text-sm md:text-base font-black font-headline text-white leading-tight">{pillar.title}</h3>
-                  <p className="text-xs text-white/65 mt-1 leading-snug font-medium">{pillar.desc}</p>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black font-headline text-foreground truncate">{pillar.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 font-medium">{pillar.desc}</p>
                 </div>
               </motion.div>
             );
           })}
         </div>
-
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => setIsAboutModalOpen(true)}
-            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 text-xs font-black transition-all hover:scale-105 cursor-pointer shadow-md"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span>تعرّف على رسالة ومميزات منصة وقفة بالتفصيل ←</span>
-          </button>
-        </div>
       </section>
 
-      {/* Premium Quick Access Categories */}
-      <section id="categories" className="container px-4 mt-20 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 lg:gap-6 max-w-6xl mx-auto" dir="rtl">
-          {[
-            { name: "إذاعة القرآن والبودكاست", desc: "البث المباشر لإذاعة القرآن والدروس وسجل استماعك الخاص", icon: Headphones, accent: "#10b981", href: "/quran?view=radio", span: "col-span-1" },
-            { name: "العقيدة", desc: "أصول الدين والتوحيد وثوابت الإيمان", icon: ShieldCheck, accent: "#3b82f6", href: "/aqeedah", span: "col-span-1" },
-            { name: "الفقه", desc: "الأحكام والعبادات والعمليات الفقهية", icon: Layers, accent: "#14b8a6", href: "/search?category=الفقه", span: "col-span-1" },
-            { name: "الحديث", desc: "دراسات ومصنفات السنة النبوية", icon: BookOpen, accent: "#f59e0b", href: "/hadith", span: "col-span-1" },
-            { name: "التفسير", desc: "تدبر الآيات ومعاني القرآن الكريم", icon: Sparkles, accent: "#a855f7", href: "/search?category=التفسير", span: "col-span-1" },
-            { name: "السيرة", desc: "حياة الحبيب المصطفى ﷺ العطرة", icon: BookOpen, accent: "#f43f5e", href: "/seerah", span: "col-span-1" },
-            { name: "الصلاة والخشوع", desc: "مكتبة وسجل إيماني متكامل لصلاتك", icon: Sparkles, accent: "#06b6d4", href: "/prayer", span: "col-span-1" },
-            { name: "القصص", desc: "قصص الأنبياء وعبر وتاريخ الأمم", icon: Sparkles, accent: "#6366f1", href: "/stories", span: "col-span-1" },
-            { name: "الأذكار", desc: "ورد اليوم والليلة وحصن المسلم المسموع", icon: Headphones, accent: "#22d3ee", href: "/adhkar", span: "col-span-1" },
-            { name: "الشبهات", desc: "الردود المنهجية وتحصين العقل المسلم", icon: Shield, accent: "#818cf8", href: "/shubuhat", span: "col-span-1" },
-            { name: "الكتب والمؤلفات", desc: "المكتبة العلمية الرقمية للمتون والمؤلفات المشروحة", icon: Library, accent: "#f59e0b", href: "/books", image: "/images/book_card_cover.png", span: "col-span-2" },
-            { name: "ما لا يسع المسلم جهله", desc: "العلوم والأساسيات العينية المفروضة والتأصيل الشرعي للمبتدئين", icon: BookOpenCheck, accent: "#10b981", href: "/essential-knowledge", image: "/images/essential_knowledge_cover.png", span: "col-span-2" }
-          ].map((cat, i) => (
-            <motion.div
-                key={i}
-                className={cn(cat.span, "h-full")}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: (i % 4) * 0.07 }}
-            >
-                <Link href={cat.href} aria-label={cat.name} className="block h-full group">
-                    <div
-                        className="relative flex flex-col items-start justify-between p-6 md:p-7 rounded-[1.75rem] luxury-glass transition-all duration-300 overflow-hidden h-full hover:-translate-y-1.5"
-                    >
-                        {/* Corner glow bloom on hover */}
-                        <div
-                            className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-[50px] opacity-0 group-hover:opacity-25 transition-opacity duration-500 pointer-events-none"
-                            style={{ backgroundColor: cat.accent }}
-                        />
-                        {/* Bottom accent line on hover */}
-                        <div
-                            className="absolute bottom-0 inset-x-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ background: `linear-gradient(90deg, transparent, ${cat.accent}66, transparent)` }}
-                        />
-                        {/* Cover image for special cards */}
-                        {cat.image && (
-                            <div className="absolute inset-0 z-0 opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500">
-                                <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
-                            </div>
-                        )}
-                        <div className="relative z-10 flex flex-col justify-between h-full w-full gap-5">
-                            {/* Icon + arrow */}
-                            <div className="flex items-center justify-between">
-                                <div
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0"
-                                    style={{
-                                        backgroundColor: `${cat.accent}18`,
-                                        border: `1px solid ${cat.accent}35`,
-                                    }}
-                                >
-                                    <cat.icon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />
-                                </div>
-                                <div
-                                    className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-300"
-                                    style={{ backgroundColor: `${cat.accent}15`, border: `1px solid ${cat.accent}25` }}
-                                >
-                                    <ArrowLeft size={12} style={{ color: cat.accent }} />
-                                </div>
-                            </div>
-                            {/* Text */}
-                            <div className="space-y-1.5">
-                                <h2 className="font-bold text-lg md:text-xl text-white leading-snug">
-                                    {cat.name}
-                                </h2>
-                                <p className="text-xs md:text-[13px] text-white/60 leading-relaxed group-hover:text-white/85 transition-colors duration-300">
-                                    {cat.desc}
-                                </p>
-                            </div>
-                        </div>
-                        {/* Hover inset border */}
-                        <div
-                            className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ boxShadow: `inset 0 0 0 1px ${cat.accent}40` }}
-                        />
-                    </div>
-                </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* ══════════════════════════════════════════════════════════════════
+          2. PERSONALIZED RESUME SHELF (Pinned & Continue Watching)
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="container px-4 space-y-12 empty:hidden">
+        <Suspense>
+          <PinnedItems />
+        </Suspense>
+        <Suspense>
+          <ContinueWatching />
+        </Suspense>
+      </div>
 
-      {/* 📖 Verse of the Day */}
-      <VerseOfTheDay />
+      {/* ══════════════════════════════════════════════════════════════════
+          3. UNIFIED BENTO HUB — "أبواب العلم والتزكية"
+      ══════════════════════════════════════════════════════════════════ */}
+      <section id="categories" className="container px-4 relative z-20">
+        <SectionHeading
+          badge="خريطة المعرفة الشرعية"
+          title="أبواب العلم"
+          highlight="والتزكية"
+          subtitle="بوابة منظمة تجمع القرآن الكريم والسنة النبوية والعلوم الشرعية وأدوات طالب العلم في مكان واحد."
+          actionHref="/sciences-tree"
+          actionLabel="شجرة العلوم"
+        />
 
-      {/* ══════ Islamic Content Hub ══════ */}
-      <section id="hub" className="container px-4 py-16 relative overflow-hidden">
-        {/* Background Decorative Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[80px] rounded-full pointer-events-none -z-10" />
-
-        <div className="mb-12 flex flex-col md:flex-row items-end justify-between gap-6">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className="flex-1"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-4">
-              <Sparkles className="w-3.5 h-3.5 fill-emerald-400" />
-              محتوى إسلامي متكامل
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">كنوز إسلامية <span className="text-emerald-400">بين يديك</span></h2>
-            <p className="text-white/65 text-lg mt-3 max-w-xl font-medium">أذكار، أحاديث، أدعية وآيات قرآنية — رحلة إيمانية شاملة في تطبيق واحد.</p>
-          </motion.div>
-          <div className="flex items-center gap-4">
-             <div className="hidden md:flex flex-col items-end">
-                <span className="text-white/45 text-[10px] font-black uppercase tracking-widest">تحديثات يومية</span>
-                <span className="text-white/80 font-bold">محتوى متجدد</span>
-             </div>
-             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 animate-pulse">
-                <Heart className="w-6 h-6 fill-current" />
-             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Featured Bento Card (Quran) */}
+        {/* Primary Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" dir="rtl">
+          {/* Featured 2x2 Quran & Radio Card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="md:col-span-2 lg:col-span-2 lg:row-span-2"
+            viewport={{ once: true }}
+            className="md:col-span-2 lg:row-span-2"
           >
-            <Link
-              href="/quran"
-              prefetch={false}
-              aria-label="تصفح المصحف الشامل وآيات التدبر"
-              className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.05)] hover:bg-white/[0.03]"
-            >
-              <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
-              <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
-              
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/20 border-2 border-emerald-500/30 flex items-center justify-center mb-8 shadow-2xl">
-                  <Sparkles className="w-8 h-8 text-emerald-400" />
-                </div>
-                <div className="mt-auto">
-                  <p className="text-emerald-400 font-black text-xs uppercase tracking-[0.4em] mb-3">الركن الأعظم</p>
-                  <h3 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tight">آيات قرآنية مختارة للتدبّر واليقين</h3>
-                  <p className="text-white/70 text-lg leading-relaxed max-w-md">تصفح مجموعات مختارة من كلام الله المقسم حسب المواضيع الإيمانية مع التفسير والتدبر.</p>
-                  <div className="mt-8 inline-flex items-center gap-3 text-white font-black group/link">
-                    ابدأ التدبر الآن 
-                    <ArrowLeft className="w-5 h-5 group-hover/link:-translate-x-2 transition-transform text-emerald-400" />
+            <div className="group relative flex flex-col justify-between h-full min-h-[340px] p-8 sm:p-10 rounded-[2rem] luxury-card overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/15 blur-[90px] rounded-full group-hover:scale-125 transition-transform duration-700 pointer-events-none" />
+              <div className="relative z-10 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <BookOpenCheck className="w-7 h-7" />
                   </div>
+                  <span className="luxury-badge luxury-badge-emerald">الركن الأعظم</span>
+                </div>
+                <div className="space-y-3 pt-4">
+                  <h3 className="text-3xl sm:text-4xl font-black font-headline text-foreground leading-tight">
+                    القرآن الكريم والتدبر
+                  </h3>
+                  <p className="text-muted-foreground text-base leading-relaxed max-w-md font-medium">
+                    تصفح المصحف الشامل مع التفسير الموضوعي، واستمع إلى البث المباشر لإذاعة القرآن الكريم وكبار القراء.
+                  </p>
                 </div>
               </div>
-            </Link>
-          </motion.div>
 
-          {/* Other Hub Items */}
-          {[
-            {
-              href: '/adhkar',
-              label: 'الأذكار',
-              sub: 'حصن المسلم اليومي من أذكار الصباح والمساء.',
-              icon: Headphones,
-              color: 'text-amber-400',
-              bg: 'from-amber-500/10 to-transparent',
-              border: 'border-amber-500/20 hover:border-amber-500/40',
-              iconBg: 'bg-amber-500/10',
-            },
-            {
-              href: '/hadith',
-              label: 'الحديث',
-              sub: 'أحاديث نبوية شريفة من أصح المصادر والكتب.',
-              icon: BookOpen,
-              color: 'text-violet-400',
-              bg: 'from-violet-500/10 to-transparent',
-              border: 'border-violet-500/20 hover:border-violet-500/40',
-              iconBg: 'bg-violet-500/10',
-            },
-            {
-              href: '/dua',
-              label: 'الأدعية',
-              sub: 'أدعية مأثورة ومعثور عليها من هدي النبوة.',
-              icon: HandHeart,
-              color: 'text-rose-400',
-              bg: 'from-rose-500/10 to-transparent',
-              border: 'border-rose-500/20 hover:border-rose-500/40',
-              iconBg: 'bg-rose-500/10',
-            },
-            {
-              href: '/muhlikat',
-              label: 'المهلكات',
-              sub: 'تشخيص أمراض القلوب وكيفية علاجها وتزكيتها.',
-              icon: TriangleAlert,
-              color: 'text-red-400',
-              bg: 'from-red-500/10 to-transparent',
-              border: 'border-red-500/20 hover:border-red-500/40',
-              iconBg: 'bg-red-500/10',
-            },
-            {
-              href: '/aqeedah',
-              label: 'العقيدة',
-              sub: 'شرح مبسط لأركان الإيمان الستة وأصول الاعتقاد.',
-              icon: Shield,
-              color: 'text-indigo-400',
-              bg: 'from-indigo-500/10 to-transparent',
-              border: 'border-indigo-500/20 hover:border-indigo-500/40',
-              iconBg: 'bg-indigo-500/10',
-              className: 'lg:col-span-2'
-            },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={cn(item.className)}
-            >
-              <Link
-                href={item.href}
-                aria-label={item.label}
-                className={cn(
-                  'group relative h-full flex flex-col gap-4 p-8 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] hover:bg-white/[0.04]'
-                )}
-              >
-                <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6', item.iconBg, item.border)}>
-                  <item.icon className={cn('w-7 h-7', item.color)} />
-                </div>
-                <div>
-                  <h3 className={cn('font-black text-xl mb-2', item.color)}>{item.label}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed font-medium">{item.sub}</p>
-                </div>
-                <ArrowLeft className={cn('w-5 h-5 absolute bottom-8 left-8 opacity-20 group-hover:opacity-100 transition-all group-hover:-translate-x-2', item.color)} />
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* 🧭 Additional Sections (Discovery Zone) */}
-      <section className="container px-4 py-16">
-        <div className="mb-10 flex items-center gap-4">
-            <div className="h-px flex-1 bg-white/5" />
-            <h2 className="text-xl font-black uppercase tracking-[0.4em] text-white/60 whitespace-nowrap">أقسام إضافية</h2>
-            <div className="h-px flex-1 bg-white/5" />
-        </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-                { href: "/badges", label: "الأوسمة", icon: Medal, color: "text-amber-400" },
-                { href: "/adhkar", label: "الأذكار", icon: Headphones, color: "text-blue-400" },
-                { href: "/hadith", label: "الحديث", icon: BookOpen, color: "text-emerald-400" },
-                { href: "/dua", label: "الأدعية", icon: HandHeart, color: "text-rose-400" },
-                { href: "/quran", label: "القرآن", icon: Layers, color: "text-purple-400" },
-                { href: "/muhlikat", label: "المهلكات", icon: TriangleAlert, color: "text-red-400" },
-                { href: "/shubuhat", label: "الشبهات", icon: Shield, color: "text-indigo-400" },
-                { href: "/essentials", label: "الأساسيات", icon: BookCheck, color: "text-cyan-400" },
-                { href: "/aqeedah", label: "العقيدة", icon: ShieldCheck, color: "text-sky-400" },
-                { href: "/curriculums", label: "المناهج", icon: GraduationCap, color: "text-orange-400" },
-                { href: "/leaderboard", label: "الصدارة", icon: Trophy, color: "text-yellow-400" },
-                { href: "/playlists", label: "القوائم", icon: ListMusic, color: "text-pink-400" },
-                { href: "/books", label: "الكتب", icon: Library, color: "text-amber-500" },
-                { href: "/challenges", label: "التحديات", icon: Flame, color: "text-orange-500" },
-                { href: "/accountability", label: "المحاسبة", icon: BookCheck, color: "text-emerald-500" },
-                { href: "/prayer", label: "الصلاة والخشوع", icon: Sparkles, color: "text-teal-400" },
-                { href: "/qa", label: "سؤال وجواب", icon: HelpCircle, color: "text-indigo-500" },
-                { href: "/bayan", label: "بيان", icon: Sparkles, color: "text-violet-400" },
-                { href: "/athar", label: "أثر", icon: Compass, color: "text-amber-500" },
-                { href: "/namaa", label: "نماء", icon: Scale, color: "text-emerald-500" },
-                { href: "/adab", label: "أدب", icon: BookCheck, color: "text-sky-400" },
-                { href: "/kanaf", label: "كنف", icon: Heart, color: "text-rose-500" },
-                { href: "/chastity", label: "درع العفة", icon: Shield, color: "text-slate-400" },
-                { href: "/mirath", label: "المواريث", icon: Scale, color: "text-yellow-500" },
-                { href: "/sciences-tree", label: "شجرة العلوم", icon: Compass, color: "text-teal-400" },
-                { href: "/memorize", label: "حفظ المتون", icon: BookOpen, color: "text-indigo-400" },
-                { href: "/contact", label: "اتصل بنا", icon: Mail, color: "text-cyan-500" },
-            ].map((section, idx) => (
-                <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.05, translateY: -5 }}
-                    whileTap={{ scale: 0.95 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: (idx % 6) * 0.05 }}
-                >
-                    <Link
-                        href={section.href}
-                        aria-label={section.label}
-                        className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] backdrop-blur-2xl border border-white/10 hover:border-primary/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_14px_30px_rgba(var(--primary-rgb),0.15),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-300 group h-full cursor-pointer"
-                    >
-                        <div className={cn("w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300 shadow-sm", section.color)}>
-                            <section.icon size={20} />
-                        </div>
-                        <span className="text-xs font-black text-white/80 group-hover:text-white transition-colors text-center">{section.label}</span>
-                    </Link>
-                </motion.div>
-            ))}
-        </div>
-      </section>
-
-      {/* ══════ Spiritual Prescription Tool ══════ */}
-      <SpiritualPrescription />
-
-
-
-      {/* Learning Paths / Curriculum Highlights — MASTERCLASS ROADMAPS */}
-      <section id="pathways" className="py-20 container px-4 relative">
-        <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -z-10" />
-        
-        <div className="text-center mb-14 space-y-5">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/75 text-[10px] font-black uppercase tracking-[0.4em]">
-            <Sparkles className="w-3.5 h-3.5 text-primary" /> مسارات متكاملة
-          </div>
-          <h2 className="text-4xl md:text-6xl font-black font-headline tracking-tight text-white drop-shadow-2xl">
-            خارطة طريقٍ <span className="text-primary">ممنهجة</span>
-          </h2>
-          <p className="text-lg md:text-xl text-white/65 max-w-2xl mx-auto font-medium leading-relaxed text-center">
-            «من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً»
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {(homepageConfig?.paths?.length ? homepageConfig.paths : [
-            {
-              title: "تأسيس طالب العلم",
-              desc: "البداية الصحيحة لدراسة المتون العلمية والمقدمات الضرورية في كل فن.",
-              parts: ["متن الآجرومية", "الأربعين النووية", "كتاب التوحيد"],
-              icon: "BookOpen",
-              color: "text-blue-400",
-              accent: "bg-blue-500/10 border-blue-500/20"
-            },
-            {
-              title: "مسار العبادة والقلوب",
-              desc: "رحلة إيمانية تركز على تزكية النفس، السيرة النبوية، وفقه العبادات اليومية.",
-              parts: ["فقه الصلاة", "تهذيب الأخلاق", "سيرة النبوة"],
-              icon: "HeartHandshake",
-              color: "text-rose-400",
-              accent: "bg-rose-500/10 border-rose-500/20"
-            },
-            {
-              title: "الردود والشبهات",
-              desc: "حصن نفسك بعلم متين للرد على الشبهات المعاصرة بناءً على أصول أهل السنة.",
-              parts: ["تنبيه الغبي", "ردود على الإلحاد", "أصول المنهج"],
-              icon: "ShieldCheck",
-              color: "text-emerald-400",
-              accent: "bg-emerald-500/10 border-emerald-500/20"
-            }
-          ]).map((path: any, idx) => {
-            const IconComponent = iconMap[path.icon as string] || BookOpen;
-            return (
-              <motion.div 
-                key={idx} 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.2 }}
-                className={cn(
-                  "relative p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out hover:-translate-y-4 hover:border-white/20 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(255,255,255,0.05)] hover:bg-white/[0.04] group overflow-hidden"
-                )}
-              >
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                <div className="absolute top-10 left-10 text-[10rem] font-black text-white/[0.02] leading-none select-none pointer-events-none">{idx + 1}</div>
-                
-                <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mb-10 transition-transform group-hover:scale-110 group-hover:rotate-6 border border-white/5", path.accent || "bg-primary/10")}>
-                   <IconComponent className={cn("w-10 h-10", path.color || "text-primary")} />
-                </div>
-                
-                <h3 className="text-2xl sm:text-3xl font-black font-headline mb-4 text-white tracking-tight">{path.title}</h3>
-                <p className="text-white/65 text-base mb-8 leading-relaxed font-medium">{path.desc}</p>
-                
-                <div className="space-y-4 pt-6 border-t border-white/10">
-                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/45 mb-2">منهج المسار</div>
-                  {path.parts.map((p: string, i: number) => (
-                    <div key={i} className="flex items-center gap-4 group/step">
-                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border transition-colors", path.accent || "border-primary/20", path.color || "text-primary")}>
-                         {i + 1}
-                      </div>
-                      <span className="text-white/75 text-sm font-bold group-hover/step:text-white transition-colors">{p}</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <Button asChild className="w-full mt-12 h-16 rounded-[1.5rem] font-black text-white bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all duration-500 gap-3 group/btn cursor-pointer">
-                  <Link href="/pathways">
-                    <span>ابدأ الرحلة الآن</span> 
-                    <ArrowLeft className="w-5 h-5 group-hover/btn:-translate-x-2 transition-transform" />
+              <div className="relative z-10 flex flex-wrap gap-3 pt-8">
+                <Button asChild className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6">
+                  <Link href="/quran" prefetch={false} className="flex items-center gap-2">
+                    <span>المصحف والتدبر</span>
+                    <ArrowLeft className="w-4 h-4" />
                   </Link>
                 </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-emerald-500/30 hover:bg-emerald-500/10 text-foreground font-bold px-5"
+                >
+                  <Link href="/quran?view=radio" className="flex items-center gap-2">
+                    <Radio className="w-4 h-4 text-emerald-400" />
+                    <span>إذاعة القرآن</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 4 Core Science Cards */}
+          {CORE_SCIENCES.map((cat, idx) => {
+            const Icon = cat.icon;
+            return (
+              <motion.div
+                key={cat.href}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.06 }}
+              >
+                <Link href={cat.href} className="block h-full group">
+                  <div className="luxury-card p-6 sm:p-7 h-full flex flex-col justify-between gap-6">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                        style={{
+                          backgroundColor: `${cat.accent}18`,
+                          border: `1px solid ${cat.accent}35`,
+                        }}
+                      >
+                        <Icon className="w-5 h-5" style={{ color: cat.accent }} />
+                      </div>
+                      <ArrowLeft
+                        className="w-4 h-4 opacity-30 group-hover:opacity-100 group-hover:-translate-x-1 transition-all"
+                        style={{ color: cat.accent }}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="font-black text-xl text-foreground font-headline">{cat.name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
+                        {cat.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
               </motion.div>
-            )
+            );
           })}
         </div>
-      </section>
 
-      {/* 🌟 Compact About Platform Teaser Banner */}
-      <section className="container px-4 py-8 relative">
-        <div className="p-8 sm:p-12 rounded-[2.5rem] luxury-glass border border-white/10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-right shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
-          <div className="space-y-3 max-w-2xl relative z-10">
-            <div className="luxury-badge luxury-badge-primary inline-flex">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>صرحٌ علميٌّ متكامل</span>
+        {/* 2 Wide Spotlight Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5" dir="rtl">
+          {[
+            {
+              name: 'ما لا يسع المسلم جهله',
+              desc: 'العلوم والأساسيات العينية المفروضة والتأصيل الشرعي الميسر للمبتدئين',
+              icon: BookOpenCheck,
+              accent: '#10b981',
+              href: '/essential-knowledge',
+              image: '/images/essential_knowledge_cover.png',
+            },
+            {
+              name: 'المكتبة والكتب المشروحة',
+              desc: 'المكتبة العلمية الرقمية للمتون والمؤلفات المعتمدة وشروحها الصوتية',
+              icon: Library,
+              accent: '#f59e0b',
+              href: '/books',
+              image: '/images/book_card_cover.png',
+            },
+          ].map((spotlight) => {
+            const Icon = spotlight.icon;
+            return (
+              <Link key={spotlight.href} href={spotlight.href} className="group block">
+                <div className="relative luxury-card p-7 sm:p-8 overflow-hidden flex items-center justify-between gap-6 min-h-[155px]">
+                  <div className="absolute inset-0 z-0 opacity-[0.1] group-hover:opacity-[0.18] transition-opacity duration-500">
+                    <Image
+                      src={spotlight.image}
+                      alt={spotlight.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-l from-background/95 via-background/70 to-transparent" />
+                  </div>
+                  <div className="relative z-10 flex items-start gap-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        backgroundColor: `${spotlight.accent}18`,
+                        border: `1px solid ${spotlight.accent}35`,
+                      }}
+                    >
+                      <Icon className="w-6 h-6" style={{ color: spotlight.accent }} />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-black font-headline text-foreground">{spotlight.name}</h3>
+                      <p className="text-sm text-muted-foreground font-medium max-w-md">{spotlight.desc}</p>
+                    </div>
+                  </div>
+                  <ArrowLeft className="relative z-10 w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:-translate-x-1.5 transition-all shrink-0" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Tabbed Compact Directory for All Remaining Sections */}
+        <div className="mt-8 p-6 sm:p-8 rounded-[2rem] luxury-glass border border-border/60" dir="rtl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/50">
+            <div>
+              <h3 className="text-lg font-black font-headline text-foreground">استكشف بقية الأقسام والأدوات</h3>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                وصول سريع للأذكار، المتون، المبادرات، وأدوات المتابعة
+              </p>
             </div>
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black font-headline text-white tracking-tight">
-              لماذا <span className="text-primary italic">وقفة</span>؟ وما الذي نُميّزه لك؟
-            </h3>
-            <p className="text-sm sm:text-base text-white/60 font-medium leading-relaxed">
-              جمعنا لك بين أصالة المنهج الشرعي وعالمية التقنية الحديثة: مشغل ذكي، تفريغ آلي، مكتبة ضخمة، وتطبيق للهاتف.
-            </p>
+            <div className="flex flex-wrap gap-2">
+              {DIRECTORY_GROUPS.map((group) => (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => setActiveDirectoryTab(group.id)}
+                  className={cn(
+                    'inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border',
+                    activeDirectoryTab === group.id
+                      ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                      : 'bg-card/50 text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
+                  )}
+                >
+                  <span>{group.label}</span>
+                  <span
+                    className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded-full',
+                      activeDirectoryTab === group.id ? 'bg-white/20 text-primary-foreground' : 'bg-background/60 text-muted-foreground'
+                    )}
+                  >
+                    {group.items.length}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="relative z-10 shrink-0">
-            <Button
-              type="button"
-              onClick={() => setIsAboutModalOpen(true)}
-              size="lg"
-              className="rounded-full px-8 h-13 text-sm sm:text-base font-black bg-primary text-white border-none shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all duration-300 gap-2 cursor-pointer"
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentDirectoryGroup.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-5"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>اكتشف مميزات المنصة بالتفصيل</span>
-            </Button>
-          </div>
+              {currentDirectoryGroup.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-card/40 hover:bg-primary/10 border border-border/50 hover:border-primary/40 transition-all duration-200 group"
+                  >
+                    <div className={cn('w-9 h-9 rounded-lg bg-background/60 border border-border/50 flex items-center justify-center shrink-0', item.color)}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground/85 group-hover:text-foreground truncate">
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
-      {/* 📜 Compact Premium Inspiration Slider */}
-      <section className="py-16 container px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 pointer-events-none" />
-        
-        <div className="max-w-4xl mx-auto">
-          <InspirationSlider />
-        </div>
+      {/* ══════════════════════════════════════════════════════════════════
+          4. DAILY SPIRITUAL SANCTUARY (Verse of the Day & Prescription)
+      ══════════════════════════════════════════════════════════════════ */}
+      <section id="spiritual" className="space-y-12">
+        <VerseOfTheDay />
+        <SpiritualPrescription />
       </section>
 
-      <div className="container py-12 flex flex-col gap-16 lg:gap-24">
-
-        {/* User-specific & Promoted Content */}
-        <div className="space-y-16">
-          <Suspense>
-            <PinnedItems />
-          </Suspense>
-          <Suspense>
-            <ContinueWatching />
-          </Suspense>
-        </div>
-
-        {/* Discovery & Recommended (distinct section with subtle glass background) */}
-        <div className="relative py-16 px-4 md:px-10 rounded-[3rem] bg-gradient-to-b from-primary/5 via-primary/5 to-transparent border border-border/50 overflow-hidden shadow-sm">
-          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
-          <div className="relative z-10 space-y-16">
+      {/* ══════════════════════════════════════════════════════════════════
+          5. MEDIA DISCOVERY: RECOMMENDED, SHORTS, STRIPS & LATEST
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="container px-4 space-y-20">
+        {/* Recommended & Shorts */}
+        <div className="relative py-12 px-4 sm:px-8 rounded-[2.5rem] bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent border border-border/60 overflow-hidden">
+          <div className="relative z-10 space-y-14">
             <Suspense>
               <RecommendedLectures />
             </Suspense>
-            <div className="py-4 border-t border-border/40" />
+            <div className="border-t border-border/50" />
             <ShortsCarousel shorts={shorts} />
           </div>
         </div>
 
-        {/* ✨ Featured Topic Strips */}
+        {/* Featured Topic Strips */}
         {featuredStrips.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-8">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-gradient-to-r from-border/80 to-transparent" />
-              <div className="px-5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest border border-primary/20">
-                محتوى مختار ومنظم
-              </div>
+              <div className="luxury-badge luxury-badge-primary">محتوى مختار ومنظم</div>
               <div className="flex-1 h-px bg-gradient-to-l from-border/80 to-transparent" />
             </div>
             <FeaturedStrips strips={featuredStrips} />
           </div>
         )}
 
-        {/* Channel Categories / Browsing */}
-        <div id="latest" className="space-y-20 mt-4">
+        {/* Main Media Catalog */}
+        <div id="latest" className="space-y-20">
           <PaginatedSection
-            title="أبرز البرامج 🎙️"
+            title="أبرز البرامج"
             items={topPrograms}
             viewAllHref="/programs"
             itemsPerPage={4}
             renderItem={(item, index) => <ProgramCard program={item} index={index} key={item.id} />}
           />
 
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
-
           <PaginatedSection
-            title="أحدث المحاضرات 🎥"
-            items={regularLectures}
+            title="أحدث المحاضرات"
+            items={filteredLectures}
             viewAllHref="/lectures"
-            itemsPerPage={3}
-            gridClassName="lg:grid-cols-3"
+            itemsPerPage={6}
+            gridClassName="md:grid-cols-2 lg:grid-cols-3"
+            filterBar={
+              lecturePrograms.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2" dir="rtl">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLectureProgram('all')}
+                    className={cn(
+                      'px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border',
+                      selectedLectureProgram === 'all'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-card/50 text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
+                    )}
+                  >
+                    الكل ({regularLectures.length})
+                  </button>
+                  {lecturePrograms.map((progName) => (
+                    <button
+                      key={progName}
+                      type="button"
+                      onClick={() => setSelectedLectureProgram(progName)}
+                      className={cn(
+                        'px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border',
+                        selectedLectureProgram === progName
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-card/50 text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
+                      )}
+                    >
+                      {progName}
+                    </button>
+                  ))}
+                </div>
+              ) : undefined
+            }
             renderItem={(item, index) => (
-              <LectureCard 
-                lecture={item} 
-                index={index} 
-                key={item.id} 
+              <LectureCard
+                lecture={item}
+                index={index}
+                key={item.id}
                 listenHistory={listenHistory || undefined}
                 playlists={playlists || undefined}
               />
             )}
           />
 
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
-
           <PaginatedSection
-            title="أحدث السلاسل 📚"
+            title="أحدث السلاسل"
             items={latestSeries}
             viewAllHref="/series"
             itemsPerPage={3}
-            gridClassName="lg:grid-cols-3"
+            gridClassName="md:grid-cols-2 lg:grid-cols-3"
             renderItem={(item, index) => <SeriesCard series={item} index={index} key={item.id} />}
           />
         </div>
+      </div>
 
-        {/* Testimonials / Impact Section */}
-        <section className="py-20 border-y border-white/10">
-          <div className="text-center mb-14 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-white">أصوات من رحاب المنصة</h2>
-            <p className="text-white/60 max-w-xl mx-auto">أثر الوقف العلمي لا يقاس بالأرقام فحسب، بل بحياة تغيرت وعقول استنارت.</p>
+      {/* ══════════════════════════════════════════════════════════════════
+          6. STRUCTURED LEARNING PATHWAYS
+      ══════════════════════════════════════════════════════════════════ */}
+      <section id="pathways" className="container px-4 relative">
+        <div className="text-center mb-12 space-y-4">
+          <div className="luxury-badge luxury-badge-primary mx-auto">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>مسارات علمية متدرجة</span>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-6 lg:gap-8">
-            {[
-              { name: "أحمد العتيبي", r: "طالب علم", q: "منصة وقفة وفرت علي عناء البحث الطويل. التنظيم هنا يجعلك تشعر أن العلم أصبح في متناول يدك دائماً." },
-              { name: "سارة محمد", r: "باحثة ماجستير", q: "أفضل ميزة هي الاستماع دون إنترنت. في المواصلات أو السفر، رفيقي الوحيد هو محاضرات وقفة." },
-              { name: "محمد خالد", r: "محاضر جامعي", q: "المحتوى هنا منتقى بعناية بالغة. الثقة في المشايخ هي ما يجعل هذه المنصة هي الأولى لي ولطلابي." }
-            ].map((t, idx) => (
-              <div key={idx} className="p-8 rounded-[2rem] luxury-card relative group">
-                <Quote className="absolute top-6 left-6 w-12 h-12 text-primary/15 transition-transform group-hover:scale-110" />
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+          <h2 className="text-3xl sm:text-5xl font-black font-headline tracking-tight text-foreground">
+            خارطة طريقٍ <span className="text-primary">ممنهجة</span>
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+            «من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً»
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8" dir="rtl">
+          {paths.map((path, idx) => {
+            const IconComponent = iconMap[path.icon as string] || BookOpen;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="luxury-card p-8 flex flex-col justify-between relative overflow-hidden group"
+              >
+                <div className="absolute top-6 left-6 text-7xl font-black text-foreground/[0.04] select-none pointer-events-none">
+                  0{idx + 1}
                 </div>
-                <p className="text-base md:text-lg leading-relaxed mb-6 text-white/85">«{t.q}»</p>
-                <div className="flex items-center gap-4 pt-4 border-t border-white/10">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-primary/30 to-primary/60 border border-primary/30 flex items-center justify-center font-black text-base text-white">{t.name[0]}</div>
+
+                <div>
+                  <div
+                    className={cn(
+                      'w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border bg-primary/10',
+                      path.border || 'border-primary/20'
+                    )}
+                  >
+                    <IconComponent className={cn('w-7 h-7', path.color || 'text-primary')} />
+                  </div>
+
+                  <h3 className="text-2xl font-black font-headline mb-3 text-foreground">{path.title}</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed font-medium">
+                    {path.desc}
+                  </p>
+
+                  <div className="space-y-3 pt-5 border-t border-border/60">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                      منهج المسار
+                    </div>
+                    {path.parts.map((part, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span
+                          className={cn(
+                            'w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border bg-card/60',
+                            path.border || 'border-primary/25',
+                            path.color || 'text-primary'
+                          )}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className="text-sm font-bold text-foreground/85">{part}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  asChild
+                  className="w-full mt-8 h-12 rounded-xl font-black bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border hover:border-primary transition-all duration-300"
+                >
+                  <Link href={getPathHref(path)} className="flex items-center justify-center gap-2">
+                    <span>ابدأ المسار الآن</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          7. INSPIRATION, TESTIMONIALS & FAQ
+      ══════════════════════════════════════════════════════════════════ */}
+      <section className="container px-4 space-y-20">
+        <div className="max-w-4xl mx-auto">
+          <InspirationSlider />
+        </div>
+
+        {/* Testimonials */}
+        <div>
+          <div className="text-center mb-12 space-y-3">
+            <h2 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-foreground">
+              أصوات من رحاب المنصة
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base font-medium">
+              أثر الوقف العلمي لا يقاس بالأرقام فحسب، بل بحياة تغيرت وعقول استنارت.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" dir="rtl">
+            {testimonials.map((t, idx) => (
+              <div key={idx} className="p-7 rounded-[2rem] luxury-card relative flex flex-col justify-between">
+                <Quote className="absolute top-6 left-6 w-10 h-10 text-primary/15" />
+                <div>
+                  <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-base leading-relaxed mb-6 text-foreground/90 font-medium">«{t.quote}»</p>
+                </div>
+                <div className="flex items-center gap-3.5 pt-4 border-t border-border/50">
+                  <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center font-black text-sm text-primary">
+                    {t.name[0]}
+                  </div>
                   <div>
-                    <h4 className="font-bold text-sm text-white">{t.name}</h4>
-                    <p className="text-xs text-white/55">{t.r}</p>
+                    <h4 className="font-bold text-sm text-foreground">{t.name}</h4>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
 
-        {/* Frequently Asked Questions (FAQ) */}
-        <section id="faq" className="py-20 container px-4 max-w-4xl mx-auto">
-          <div className="text-center mb-12 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-white">الأسئلة الشائعة</h2>
-            <p className="text-white/60 text-lg">كل ما تحتاج معرفته عن استخدام المنصة ودعم المشروع.</p>
+        {/* FAQ */}
+        <div id="faq" className="max-w-4xl mx-auto">
+          <div className="text-center mb-10 space-y-3">
+            <h2 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-foreground">
+              الأسئلة الشائعة
+            </h2>
+            <p className="text-muted-foreground text-base font-medium">
+              كل ما تحتاج معرفته عن استخدام المنصة ودعم المشروع.
+            </p>
           </div>
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            {(homepageConfig?.faqs?.length ? homepageConfig.faqs : [
-              { q: "هل المنصة مجانية بالكامل؟", a: "نعم، كافة الدروس والمحاضرات والمميزات التقنية على منصة وقفة مجانية ومتاحة للجميع كوقف لله سبحانه وتعالى." },
-              { q: "كيف يمكنني استخدام ميزة الاستماع دون إنترنت؟", a: "بمجرد تثبيت المنصة كتطبيق PWA على هاتفك، سيتم حفظ المحاضرات التي تستمع إليها تلقائياً في ذاكرة التطبيق، أو يمكنك النقر على أيقونة الحفظ المتوفرة." },
-              { q: "ما هو أفضل مسار للبدء بالنسبة للمبتدئين؟", a: "ننصح بشدة بالبدء بـ 'مسار تأسيس طالب العلم' المتوفر في قسم المسارات المقترحة، حيث يركز على المتون الأولية في العقيدة والفقه واللغة." },
-              { q: "كيف يمكنني المساهمة في تطوير الموقع؟", a: "يمكنك المساهمة من خلال التبرع المادي عبر قسم التبرعات، أو التطوع التقني من خلال صفحة 'التواصل'، أو بمجرد نشر رابط الموقع ليعم النفع." }
-            ]).map((item, idx) => (
-              <AccordionItem key={idx} value={`item-${idx}`} className="luxury-glass rounded-2xl px-6 border border-white/10 overflow-hidden transition-all hover:border-primary/30">
-                <AccordionTrigger className="text-right py-5 font-bold text-base md:text-lg text-white hover:no-underline hover:text-primary transition-colors">
+          <Accordion type="single" collapsible className="w-full space-y-3.5">
+            {faqs.map((item, idx) => (
+              <AccordionItem
+                key={idx}
+                value={`item-${idx}`}
+                className="luxury-glass rounded-2xl px-6 border border-border/60 overflow-hidden transition-all hover:border-primary/35"
+              >
+                <AccordionTrigger className="text-right py-5 font-bold text-base md:text-lg text-foreground hover:no-underline hover:text-primary transition-colors">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-right text-white/70 leading-relaxed pb-6 text-base">
+                <AccordionContent className="text-right text-muted-foreground leading-relaxed pb-5 text-sm sm:text-base">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </section>
+        </div>
+      </section>
 
-        {/* Newsletter Section */}
-        <section className="py-10 relative px-4 md:px-0">
-          <div className="relative rounded-[2.5rem] luxury-glass border border-white/10 p-8 sm:p-10 md:p-14 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 group mx-auto max-w-6xl w-full">
-            <div className="absolute top-0 right-[-10%] w-[30rem] h-[30rem] bg-primary/10 rounded-full blur-[100px] animate-blob pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[20rem] h-[20rem] bg-emerald-500/10 rounded-full blur-[100px] animate-blob animation-delay-4000 pointer-events-none" />
-            <div className="relative z-10 space-y-6 max-w-xl text-center md:text-right">
-              <div className="inline-flex p-4 rounded-3xl bg-primary/10 border border-primary/20 shadow-inner mb-2 group-hover:scale-110 transition-transform duration-500">
-                <Mail className="w-8 h-8 text-primary" />
+      {/* ══════════════════════════════════════════════════════════════════
+          8. UNIFIED CLOSING: WAQF CONTRIBUTION & NEWSLETTER
+      ══════════════════════════════════════════════════════════════════ */}
+      <section className="container px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" dir="rtl">
+          {/* Waqf CTA Card */}
+          <div className="lg:col-span-7 rounded-[2.25rem] luxury-glass border border-primary/25 p-8 sm:p-10 relative overflow-hidden flex flex-col justify-between gap-8">
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-primary/15 rounded-full blur-[90px] pointer-events-none" />
+            <div className="relative z-10 space-y-4">
+              <div className="luxury-badge luxury-badge-primary w-fit">
+                <HeartHandshake className="w-4 h-4" />
+                <span>ساهم في الأجر</span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-black font-headline tracking-tighter">ابقَ على اتصال بكل جديد</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed font-medium">اشترك في قائمتنا البريدية لتصلك أحدث المحاضرات والسلاسل العلمية فور صدورها.</p>
+              <h2 className="text-3xl sm:text-4xl font-black font-headline tracking-tight text-foreground">
+                كن جزءاً من رحلة <span className="text-primary">نشر العلم</span>
+              </h2>
+              <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-xl">
+                ساهم في استكمال هذا المشروع الوقفي وتوسيع انتشاره ليصل العلم لكل طالب وراغب. وقفتك اليوم هي صدقة جارية وأجر مستمر.
+              </p>
             </div>
-            <div className="relative z-10 w-full max-w-md mx-auto md:mx-0">
-              <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => e.preventDefault()}>
-                <div className="relative flex-grow">
-                  <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    placeholder="بريدك الإلكتروني"
-                    className="w-full h-16 pr-12 pl-4 rounded-2xl bg-background/50 backdrop-blur-md border border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none font-bold placeholder:font-medium"
-                  />
-                </div>
-                <Button size="lg" className="h-16 px-8 rounded-2xl font-bold shadow-[0_10px_30px_-10px_rgba(var(--primary-rgb),0.5)] btn-magnetic bg-primary text-primary-foreground shrink-0 cursor-pointer">
-                  <Send className="w-5 h-5 ml-2" /> اشترك
-                </Button>
-              </form>
-              <div className="mt-8 flex flex-wrap gap-4 items-center justify-center md:justify-start">
-                <p className="text-sm text-muted-foreground font-bold">أو عبر المنصات الاجتماعية:</p>
-                <Link href="#" aria-label="رابط قناة الواتساب" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(14,165,233,0.3)]">
-                  <MessageCircle className="w-5 h-5 text-sky-500 group-hover/icon:scale-110 transition-transform" />
+            <div className="relative z-10 flex flex-wrap gap-3.5">
+              <Button
+                asChild
+                size="lg"
+                className="h-13 px-8 rounded-xl text-base font-black bg-primary text-primary-foreground shadow-lg"
+              >
+                <Link href="/donations" prefetch={false} className="flex items-center gap-2.5">
+                  <Heart className="w-5 h-5 fill-current" />
+                  <span>ادعم المشروع الآن</span>
                 </Link>
-                <Link href="#" aria-label="رابط قناة التليجرام" className="p-3 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-blue-600/10 hover:border-blue-600/30 transition-all group/icon cursor-pointer hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-                  <Send className="w-5 h-5 text-blue-600 group-hover/icon:scale-110 transition-transform" />
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-13 px-7 rounded-xl text-base font-bold border-border hover:border-primary/50"
+              >
+                <Link href="/contact" prefetch={false} className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  <span>تطوع معنا</span>
                 </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Community CTA */}
-        <section className="py-10 relative px-4 md:px-0">
-          <div className="rounded-[2.5rem] luxury-glass border border-primary/25 p-10 md:p-16 text-foreground relative overflow-hidden group mx-auto max-w-6xl w-full">
-            <div className="absolute top-[0%] right-[0%] w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[120px] group-hover:bg-primary/30 group-hover:scale-110 animate-blob transition-all duration-1000 pointer-events-none" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[35rem] h-[35rem] bg-secondary/20 rounded-full blur-[120px] animate-blob animation-delay-2000 pointer-events-none" />
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-right">
-              <div className="space-y-6 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-bold shadow-inner">
-                  <HeartHandshake className="w-5 h-5 animate-pulse" /> ساهم في الأجر
-                </div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-foreground to-primary drop-shadow-sm">
-                  كن جزءاً من رحلة نشر العلم ❤️
-                </h2>
-                <p className="text-xl text-muted-foreground font-bold leading-relaxed">
-                  ساهم في استكمال هذا المشروع وتوسيع انتشاره ليصل العلم لكل طالب وراغب. وقفتك اليوم هي أجر مستمر.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-5 shrink-0 mx-auto lg:mx-0 min-w-max">
-                <Button asChild size="lg" className="h-16 px-10 rounded-2xl text-lg font-black shadow-2xl btn-magnetic animate-pulse-subtle bg-primary text-primary-foreground hover:bg-primary cursor-pointer w-full sm:w-auto">
-                  <Link href="/donations" prefetch={false} className="flex items-center gap-3">
-                    <Heart className="w-6 h-6 fill-current" />
-                    ادعم المشروع الآن
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="h-16 px-10 rounded-2xl text-lg font-bold border-primary/40 text-foreground hover:bg-primary/10 hover:border-primary/60 btn-magnetic cursor-pointer w-full sm:w-auto backdrop-blur-sm">
-                  <Link href="/contact" prefetch={false} className="flex items-center gap-2">
-                    <ShieldCheck className="w-6 h-6 text-primary" />
-                    تطوع معنا
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 🌟 Interactive About Platform Modal */}
-        <AboutPlatformModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />
-
-      </motion.div>
-  );
-}
-
-function InspirationSlider() {
-  const [index, setIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const { data: remoteQuotes, isLoading } = useCollection<Inspiration>('inspiration', {
-    orderBy: ['createdAt', 'desc']
-  });
-
-  const fallbackQuotes = [
-    {
-      id: 'f1',
-      text: '"إنما الأعمالُ بالنياتِ، وإنما لكلِّ امرئٍ ما نَوى"',
-      author: 'عمر بن الخطاب',
-      title: 'رواه البخاري ومسلم',
-      type: 'hadith'
-    },
-    {
-      id: 'f2',
-      text: '"من سلَك طريقًا يلتَمِسُ فيه علمًا، سهَّل اللهُ له به طريقًا إلى الجنةِ"',
-      author: 'أبو هريرة',
-      title: 'رواه مسلم',
-      type: 'hadith'
-    },
-    {
-      id: 'f3',
-      text: '"العلمُ صيدٌ والكتابةُ قيدُه ... قَيِّدْ صيودَكَ بالحبالِ الواثقَة"',
-      author: 'الإمام الشافعي',
-      title: 'رحمه الله تعالى',
-      type: 'quote'
-    }
-  ];
-
-  const quotes = remoteQuotes?.length ? remoteQuotes : (isLoading ? [] : (fallbackQuotes as any[]));
-
-  useEffect(() => {
-    if (isHovered || !quotes.length) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % quotes.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [quotes.length, isHovered]);
-
-  const next = () => setIndex((prev) => (prev + 1) % quotes.length);
-  const prev = () => setIndex((prev) => (prev - 1 + quotes.length) % quotes.length);
-
-  if (isLoading && !quotes.length) {
-      return (
-          <div className="h-64 flex items-center justify-center bg-white/5 rounded-[3rem] animate-pulse">
-              <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-          </div>
-      )
-  }
-
-  if (!quotes.length) return null;
-
-  const current = quotes[index];
-  const Icon = current.type === 'hadith' ? Sparkles : current.type === 'quote' ? Quote : BookOpen;
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      viewport={{ once: true }}
-      className="group relative rounded-[2.5rem] border border-white/5 p-10 md:p-14 overflow-hidden shadow-2xl transition-all duration-700 hover:shadow-primary/20 bg-[#080808]/40 backdrop-blur-3xl"
-    >
-      {/* 🕯️ Textured Cinema Background */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')] " />
-      
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 90, 0],
-            x: isHovered ? [0, 10, 0] : 0
-          }} 
-          transition={{ duration: 20, repeat: Infinity }} 
-          className="absolute -top-1/2 -right-1/2 w-full h-full bg-primary/20 rounded-full blur-[100px]" 
-        />
-      </div>
-
-      {/* Manual Navigation Arrows */}
-      <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-between px-4">
-        <Button variant="ghost" size="icon" onClick={prev} aria-label="الاقتباس السابق" className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
-          <ArrowLeft className="w-6 h-6 rotate-180" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={next} aria-label="الاقتباس التالي" className="pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-all rounded-full bg-white/5 h-12 w-12 border border-white/10">
-          <ArrowLeft className="w-6 h-6" />
-        </Button>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current.id}
-          initial={{ opacity: 0, x: 30, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, x: -30, filter: 'blur(10px)' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 flex flex-col md:flex-row items-center gap-10 md:gap-14"
-          dir="rtl"
-        >
-          <div className="shrink-0 relative group-hover:scale-110 transition-transform duration-700">
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-background/50 border border-white/10 rounded-[1.5rem] flex items-center justify-center relative z-10 shadow-inner overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
-                <Icon className="w-8 h-8 text-primary" />
+              </Button>
             </div>
           </div>
 
-          <div className="flex-1 space-y-6 text-center md:text-right">
-            <p className="text-xl md:text-2xl lg:text-3xl font-headline leading-relaxed font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-sm">
-              {current.text}
-            </p>
-            <div className="flex items-center justify-center md:justify-start gap-5">
-              <div className="h-[1px] w-10 bg-gradient-to-l from-primary/50 to-transparent" />
-              <div className="flex flex-col">
-                <span className="text-lg md:text-xl text-primary font-black font-headline tracking-tighter">{current.author}</span>
-                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-40">{current.title}</span>
+          {/* Newsletter Card */}
+          <div className="lg:col-span-5 rounded-[2.25rem] luxury-glass border border-border/60 p-8 sm:p-10 relative overflow-hidden flex flex-col justify-between gap-6">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <Mail className="w-6 h-6" />
               </div>
+              <h3 className="text-2xl font-black font-headline text-foreground">ابقَ على اتصال بكل جديد</h3>
+              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                اشترك لتصلك أحدث المحاضرات والسلاسل العلمية فور صدورها.
+              </p>
             </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
 
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-        {quotes.map((_, i) => (
-          <button 
-            key={i} 
-            onClick={() => setIndex(i)}
-            className={cn(
-                "h-1.5 rounded-full transition-all duration-700 relative overflow-hidden",
-                i === index ? "w-10 bg-primary/20" : "w-3 bg-white/5 hover:bg-white/10"
-            )} 
-          >
-            {i === index && (
-                <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: isHovered ? '50%' : '100%' }}
-                    transition={{ duration: 10, ease: "linear" }}
-                    className="absolute inset-y-0 right-0 bg-primary"
+            <form
+              className="space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newsletterEmail.trim()) return;
+                setNewsletterSent(true);
+                setNewsletterEmail('');
+              }}
+            >
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <input
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => {
+                    setNewsletterEmail(e.target.value);
+                    if (newsletterSent) setNewsletterSent(false);
+                  }}
+                  placeholder="بريدك الإلكتروني"
+                  className="flex-1 h-12 px-4 rounded-xl bg-background/60 border border-border text-sm font-bold outline-none"
                 />
-            )}
-          </button>
-        ))}
-      </div>
+                <Button type="submit" className="h-12 px-6 rounded-xl font-bold shrink-0 cursor-pointer">
+                  <Send className="w-4 h-4 ml-1.5" />
+                  <span>اشترك</span>
+                </Button>
+              </div>
+              {newsletterSent && (
+                <p className="text-xs font-bold text-emerald-400">تم تسجيل بريدك بنجاح، جزاك الله خيراً.</p>
+              )}
+            </form>
+
+            <div className="flex items-center gap-3 pt-2 border-t border-border/50">
+              <span className="text-xs text-muted-foreground font-bold">قنواتنا:</span>
+              <Link
+                href="/contact"
+                aria-label="التواصل عبر الواتساب"
+                className="p-2.5 rounded-xl bg-card/60 border border-border/60 hover:border-sky-500/40 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 text-sky-400" />
+              </Link>
+              <Link
+                href="/contact"
+                aria-label="التواصل عبر تليجرام"
+                className="p-2.5 rounded-xl bg-card/60 border border-border/60 hover:border-blue-500/40 transition-colors"
+              >
+                <Send className="w-4 h-4 text-blue-400" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <AboutPlatformModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />
     </motion.div>
   );
 }

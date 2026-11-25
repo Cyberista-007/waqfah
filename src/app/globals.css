@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   WAQFAH DESIGN SYSTEM — MODERN CSS ARCHITECTURE
+   OKLCH / color-mix(), @property GPU Beams, Spatial Liquid Glass & 19 Themes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 @font-face {
   font-family: 'KFGQPC-v2';
   src: url('https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/fonts/hafs-uthmanic-v14-full.woff2') format('woff2');
@@ -10,7 +15,20 @@
   font-display: swap;
 }
 
-/* Mobile GPU performance optimizations for Lighthouse & mobile devices */
+/* Smooth GPU-interpolatable custom properties */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --glass-glow {
+  syntax: '<percentage>';
+  initial-value: 12%;
+  inherits: false;
+}
+
+/* Mobile GPU performance guard */
 @media (max-width: 768px) {
   .backdrop-blur-xl,
   .backdrop-blur-2xl,
@@ -22,12 +40,18 @@
   }
 }
 
-@layer base {
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 1 — DEEP SLATE (Default) ✨ UPGRADED
-     احترافي داكن، أزرق رمادي عميق متطور
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@layer base {
+  /* ── THEME 1: DEEP SLATE (Default) ── */
   :root, .theme-deep-slate {
     --background: 224 22% 5%;
     --foreground: 210 22% 97%;
@@ -58,7 +82,6 @@
     --gradient-mid: 235 85% 65%;
     --gradient-end: 265 80% 65%;
     --gradient-extra: 195 90% 60%;
-    /* Aurora Enhancement Variables */
     --aurora-speed: 1.2;
     --aurora-blur: 1.3;
     --aurora-complexity: 7;
@@ -67,10 +90,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 2 — MIDNIGHT INDIGO ✨ UPGRADED
-     بنفسجي أزرق داكن، مستوحى من الكون الواسع
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 2: MIDNIGHT INDIGO ── */
   .theme-midnight-indigo {
     --background: 248 28% 5%;
     --foreground: 248 22% 96%;
@@ -109,10 +129,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 3 — GOLDEN DUSK ✨ UPGRADED
-     ذهبي داكن فاخر، ليالي العرب والصحاري الملكية
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 3: GOLDEN DUSK ── */
   .theme-golden-dusk {
     --background: 22 20% 5%;
     --foreground: 42 35% 95%;
@@ -151,10 +168,7 @@
     --aurora-grain: 0.03;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 4 — FOREST SAGE ✨ UPGRADED
-     أخضر طبيعي هادئ، سكينة الغابات والبحر
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 4: FOREST SAGE ── */
   .theme-forest-sage {
     --background: 152 28% 5%;
     --foreground: 148 22% 94%;
@@ -193,10 +207,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 5 — ARCTIC WHITE ✨ UPGRADED
-     فاتح نظيف وأنيق، تصميم Apple-inspired
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 5: ARCTIC WHITE (Light) ── */
   .theme-arctic-white {
     --background: 212 32% 97%;
     --foreground: 222 28% 10%;
@@ -205,6 +216,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 25% 12%;
     --primary: 217 91% 48%;
+    --primary-rgb: 11, 95, 234;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 25% 92%;
     --secondary-foreground: 222 25% 30%;
@@ -228,10 +240,7 @@
     --gradient-extra: 200 80% 55%;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 6 — DESERT GOLD 🏜️
-     بني ذهبي صحراوي دافئ وفاخر
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 6: DESERT GOLD ── */
   .theme-desert-gold {
     --background: 36 52% 4%;
     --foreground: 42 35% 95%;
@@ -270,10 +279,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 7 — RUBY EMBER 🔥
-     أحمر ياقوتي ناري وجريء كالجمر
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 7: RUBY EMBER ── */
   .theme-ruby-ember {
     --background: 0 52% 4%;
     --foreground: 0 20% 95%;
@@ -312,10 +318,7 @@
     --aurora-grain: 0.03;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 8 — AQUA DEEP 🌊
-     أزرق مائي عميق وهادئ كالمحيط
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 8: AQUA DEEP ── */
   .theme-aqua-deep {
     --background: 189 62% 3%;
     --foreground: 180 20% 95%;
@@ -354,10 +357,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 9 — ROSE GARDEN 🌸
-     وردي دافئ وفاخر وراقي
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 9: ROSE GARDEN ── */
   .theme-rose-garden {
     --background: 338 40% 4%;
     --foreground: 340 20% 95%;
@@ -396,10 +396,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 10 — OBSIDIAN NEON ⚫
-     أسود عميق ونيون أخضر للمستقبل الرقمي
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 10: OBSIDIAN NEON ── */
   .theme-obsidian-neon {
     --background: 0 0% 3%;
     --foreground: 0 0% 95%;
@@ -438,10 +435,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 11 — EMERALD OASIS 🌴
-     أخضر زمردي وذهبي دافئ من واحات النخيل
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 11: EMERALD OASIS ── */
   .theme-emerald-oasis {
     --background: 146 54% 4%;
     --foreground: 146 20% 95%;
@@ -480,10 +474,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 12 — VINTAGE PARCHMENT 📜
-     طابع الكتب العتيقة الكلاسيكي الفاتح
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 12: VINTAGE PARCHMENT (Light) ── */
   .theme-vintage-parchment {
     --background: 42 35% 96%;
     --foreground: 30 25% 15%;
@@ -522,10 +513,7 @@
     --aurora-grain: 0.035;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 13 — ROYAL VELVET 👑
-     بنفسجي مخملي عميق للمظهر الكلاسيكي الفخم
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 13: ROYAL VELVET ── */
   .theme-royal-velvet {
     --background: 273 60% 4%;
     --foreground: 270 20% 95%;
@@ -564,10 +552,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 14 — OCEAN BREEZE 🌀
-     نسيم البحر المنعش باللون السماوي الهادئ الفاتح
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 14: OCEAN BREEZE (Light) ── */
   .theme-ocean-breeze {
     --background: 210 100% 97%;
     --foreground: 215 30% 12%;
@@ -606,10 +591,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 15 — AL-RAWDAH AL-SHARIFAH 🕌
-     أخضر زمردي وهادئ، سكينة الروضة الشريفة والقلب
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 15: AL-RAWDAH AL-SHARIFAH ── */
   .theme-rawdah {
     --background: 156 60% 3%;
     --foreground: 120 37% 94%;
@@ -648,10 +630,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 16 — KISWAT AL-KA'BAH 🕋
-     أسود وذهبي فاخر، هيبة الكعبة المشرفة وجلال البيت الحرام
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 16: KISWAT AL-KA'BAH ── */
   .theme-kaaba {
     --background: 240 23% 4%;
     --foreground: 43 63% 79%;
@@ -690,10 +669,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 17 — NIGHT SKY 🌌
-     أزرق داكن وهادئ، مستوحى من سماء الليل البديعة
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 17: NIGHT SKY ── */
   .theme-night-sky {
     --background: 231 63% 5%;
     --foreground: 210 40% 96%;
@@ -732,10 +708,7 @@
     --aurora-grain: 0.02;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 18 — DAWN SUNRISE 🌅
-     بني دافئ مائل للبرتقالي، مستوحى من شروق فجر جديد
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 18: DAWN SUNRISE ── */
   .theme-dawn-sunrise {
     --background: 36 33% 5%;
     --foreground: 45 100% 96%;
@@ -774,10 +747,7 @@
     --aurora-grain: 0.025;
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     THEME 19 — CLASSIC DIGNITY 🏛️
-     داكن هادئ مع لمسة تركوازية للوقار والهدوء البصري
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── THEME 19: CLASSIC DIGNITY ── */
   .theme-classic-dignity {
     --background: 240 14% 4%;
     --foreground: 200 15% 88%;
@@ -815,273 +785,348 @@
     --aurora-saturation: 120;
     --aurora-grain: 0.025;
   }
-}
 
-@layer base {
+  /* ── Base Document & Typography ── */
   * {
     @apply border-border;
   }
+
+  html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   .body-background {
     background-color: hsl(var(--background));
   }
 
-  .font-body {
-    font-family: var(--font-body), sans-serif;
-  }
-  .font-headline {
-      font-family: var(--font-headline), sans-serif;
-  }
-  .font-cairo {
-    font-family: var(--font-cairo);
-  }
-  .font-noto-sans-arabic {
-    font-family: var(--font-noto-sans-arabic);
-  }
-  .font-lalezar {
-    font-family: var(--font-lalezar);
-  }
-  .font-tajawal {
-    font-family: var(--font-tajawal);
-  }
-  .font-amiri {
-    font-family: var(--font-amiri);
-  }
-  .font-quran {
-    font-family: 'KFGQPC-v2', serif;
-  }
-  .font-markazi-text {
-    font-family: var(--font-markazi-text);
-  }
-  .font-ibm-plex-sans-arabic {
-    font-family: var(--font-ibm-plex-sans-arabic);
-  }
-  .font-almarai {
-    font-family: var(--font-almarai);
-  }
-  .font-changa {
-    font-family: var(--font-changa);
-  }
-  .font-el-messiri {
-    font-family: var(--font-el-messiri);
-  }
-  .font-reem-kufi {
-    font-family: var(--font-reem-kufi);
-  }
-  .font-mada {
-    font-family: var(--font-mada);
-  }
-  .font-scheherazade-new {
-    font-family: var(--font-scheherazade-new);
-  }
-  .font-rubik-origami {
-    font-family: var(--font-rubik-origami);
-  }
+  /* Dynamic Font Families */
+  .font-body { font-family: var(--font-body), sans-serif; }
+  .font-headline { font-family: var(--font-headline), sans-serif; }
+  .font-cairo { font-family: var(--font-cairo); }
+  .font-noto-sans-arabic { font-family: var(--font-noto-sans-arabic); }
+  .font-lalezar { font-family: var(--font-lalezar); }
+  .font-tajawal { font-family: var(--font-tajawal); }
+  .font-amiri { font-family: var(--font-amiri); }
+  .font-quran { font-family: 'KFGQPC-v2', serif; }
+  .font-markazi-text { font-family: var(--font-markazi-text); }
+  .font-ibm-plex-sans-arabic { font-family: var(--font-ibm-plex-sans-arabic); }
+  .font-almarai { font-family: var(--font-almarai); }
+  .font-changa { font-family: var(--font-changa); }
+  .font-el-messiri { font-family: var(--font-el-messiri); }
+  .font-reem-kufi { font-family: var(--font-reem-kufi); }
+  .font-mada { font-family: var(--font-mada); }
+  .font-scheherazade-new { font-family: var(--font-scheherazade-new); }
+  .font-rubik-origami { font-family: var(--font-rubik-origami); }
+}
 
-  .animated-gradient {
-    background: linear-gradient(
-      -45deg,
-      hsl(var(--gradient-start)),
-      hsl(var(--gradient-mid)),
-      hsl(var(--gradient-end)),
-      hsl(var(--gradient-extra))
-    );
-    background-size: 400% 400%;
-    animation: gradient-move 15s ease infinite;
-  }
-  .animate-slide-in {
-      animation: slide-in 0.5s ease-out forwards;
-  }
-
-  /* Supporter wall animation */
-  .supporter-sphere {
-    border-radius: 50%;
-    background-color: rgba(29, 78, 216, 0.1);
-    box-shadow: 0 0 10px rgba(29, 78, 216, 0.3), inset 0 0 10px rgba(29, 78, 216, 0.2);
-    border: 1px solid rgba(29, 78, 216, 0.2);
-    animation: float 20s infinite ease-in-out;
-    animation-delay: calc(var(--i, 0) * -1.2s);
-    transform-style: preserve-3d;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(20px) translateX(10px) translateZ(0) scale(1);
-    }
-    25% {
-      transform: translateY(-15px) translateX(-10px) translateZ(10px) scale(1.05);
-    }
-    50% {
-      transform: translateY(10px) translateX(20px) translateZ(-5px) scale(1);
-    }
-    75% {
-      transform: translateY(-10px) translateX(-15px) translateZ(5px) scale(0.95);
-    }
-  }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   KEYFRAMES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes beam-spin {
+  to { --beam-angle: 360deg; }
 }
 
 @keyframes gradient-move {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 @keyframes slide-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(20px) translateX(10px) translateZ(0) scale(1); }
+  25% { transform: translateY(-15px) translateX(-10px) translateZ(10px) scale(1.05); }
+  50% { transform: translateY(10px) translateX(20px) translateZ(-5px) scale(1); }
+  75% { transform: translateY(-10px) translateX(-15px) translateZ(5px) scale(0.95); }
 }
 
 @keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
   25% { transform: translate(4vw, -4vw) scale(1.1) rotate(45deg); }
   50% { transform: translate(-2vw, 5vw) scale(0.9) rotate(90deg); }
   75% { transform: translate(-5vw, -2vw) scale(1.05) rotate(135deg); }
-  100% { transform: translate(0px, 0px) scale(1) rotate(180deg); }
-}
-.animate-blob {
-  animation: blob 25s infinite alternate ease-in-out;
-  border-radius: 40% 60% 60% 40% / 60% 40% 70% 40%; /* static irregular shape */
-}
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-.animation-delay-4000 {
-  animation-delay: 4s;
+  100% { transform: translate(0, 0) scale(1) rotate(180deg); }
 }
 
+@keyframes holo-shift {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 6px hsl(var(--primary) / 0.35), 0 0 16px hsl(var(--primary) / 0.15);
+  }
+  50% {
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.65), 0 0 28px hsl(var(--primary) / 0.35);
+  }
+}
+
+@keyframes shimmer-move {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  70% { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   GLOBAL SELECTION, SCROLLBARS & INTERACTIVE FOCUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+::selection {
+  background: hsl(var(--primary) / 0.28);
+  color: hsl(var(--foreground));
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.32);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18), 0 0 20px -4px hsl(var(--primary) / 0.35);
+  border-color: hsl(var(--primary) / 0.65);
+  outline: none;
+}
+
+[role="dialog"] {
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  box-shadow:
+    0 30px 90px -20px hsl(0 0% 0% / 0.75),
+    inset 0 1px 0 hsl(var(--foreground) / 0.1) !important;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SPATIAL LIQUID GLASS & LUXURY DESIGN UTILITIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @layer utilities {
-  .custom-scrollbar-red::-webkit-scrollbar {
-    width: 12px;
-  }
-
-  .custom-scrollbar-red::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar-red::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--destructive) / 0.7);
-    border-radius: 10px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-  
-  .custom-scrollbar-red::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--destructive));
-  }
-
-  .custom-scrollbar-blue::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .custom-scrollbar-blue::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar-blue::-webkit-scrollbar-thumb {
-    background-color: hsl(220 70% 70% / 0.7);
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-  
-  .custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(220 70% 80%);
-  }
-
-  .custom-scrollbar-gradient::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .custom-scrollbar-gradient::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar-gradient::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(to bottom, #4f46e5, #a855f7);
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  /* ━━━━ GLOW SHADOWS ━━━━ */
-  .shadow-glow-white   { box-shadow: 0 0 30px rgba(255,255,255,0.15); }
-  .shadow-glow-primary {
-    box-shadow:
-      0 0 12px hsl(var(--primary) / 0.35),
-      0 0 30px hsl(var(--primary) / 0.15),
-      0 0 60px hsl(var(--primary) / 0.06);
-  }
-  .shadow-glow-primary-sm {
-    box-shadow:
-      0 0 8px hsl(var(--primary) / 0.45),
-      0 0 20px hsl(var(--primary) / 0.2);
-  }
-  .shadow-glow-primary-lg {
-    box-shadow:
-      0 0 20px hsl(var(--primary) / 0.5),
-      0 0 50px hsl(var(--primary) / 0.25),
-      0 0 100px hsl(var(--primary) / 0.1);
-  }
-
-  /* ━━━━ GLASSMORPHISM PREMIUM ━━━━ */
-  .glass-card {
+  /* ── Theme-Aware Spatial Glass Surface ── */
+  .luxury-glass {
     background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.6) 0%,
-      hsl(var(--card) / 0.3) 100%
+      145deg,
+      color-mix(in srgb, hsl(var(--card)) 78%, hsl(var(--foreground)) 4%) 0%,
+      color-mix(in srgb, hsl(var(--card)) 58%, transparent) 100%
     );
+    backdrop-filter: blur(26px) saturate(175%);
+    -webkit-backdrop-filter: blur(26px) saturate(175%);
+    border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, hsl(var(--foreground)) 8%);
+    box-shadow:
+      0 20px 48px -18px hsl(0 0% 0% / 0.45),
+      inset 0 1px 0 hsl(var(--foreground) / 0.09);
+  }
+
+  /* ── Spatial Interactive Card with Specular Top Beam ── */
+  .luxury-card {
+    position: relative;
+    border-radius: 2rem;
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, hsl(var(--card)) 82%, hsl(var(--foreground)) 3%) 0%,
+      color-mix(in srgb, hsl(var(--card)) 60%, transparent) 100%
+    );
+    border: 1px solid color-mix(in srgb, hsl(var(--border)) 72%, hsl(var(--foreground)) 6%);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.35s ease,
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.35s ease;
+    box-shadow:
+      0 12px 34px -14px hsl(0 0% 0% / 0.45),
+      inset 0 1px 0 hsl(var(--foreground) / 0.08);
+  }
+
+  .luxury-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.55),
+      hsl(var(--foreground) / 0.25),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .luxury-card:hover {
+    transform: translateY(-5px);
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow:
+      0 24px 55px -18px hsl(0 0% 0% / 0.55),
+      0 0 36px -12px hsl(var(--primary) / 0.24),
+      inset 0 1px 0 hsl(var(--foreground) / 0.14);
+  }
+
+  .luxury-card:hover::before {
+    opacity: 1;
+  }
+
+  /* ── Luxury Badges ── */
+  .luxury-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    background: hsl(var(--card) / 0.7);
+    border: 1px solid hsl(var(--border) / 0.8);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: all 0.25s ease;
+  }
+
+  .luxury-badge-primary {
+    background: hsl(var(--primary) / 0.12);
+    border-color: hsl(var(--primary) / 0.3);
+    color: hsl(var(--primary));
+    box-shadow: 0 4px 16px -4px hsl(var(--primary) / 0.25);
+  }
+
+  .luxury-badge-emerald {
+    background: color-mix(in srgb, #10b981 14%, transparent);
+    border-color: color-mix(in srgb, #10b981 35%, transparent);
+    color: #34d399;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, #10b981 25%, transparent);
+  }
+
+  .luxury-badge-gold {
+    background: color-mix(in srgb, #f59e0b 14%, transparent);
+    border-color: color-mix(in srgb, #f59e0b 35%, transparent);
+    color: #fbbf24;
+    box-shadow: 0 4px 16px -4px color-mix(in srgb, #f59e0b 25%, transparent);
+  }
+
+  /* ── Luxury Pill Button ── */
+  .luxury-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.35rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 0.875rem;
+    background: hsl(var(--card) / 0.7);
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 4px 14px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(var(--foreground) / 0.08);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .luxury-pill-btn:hover {
+    background: hsl(var(--primary) / 0.14);
+    border-color: hsl(var(--primary) / 0.45);
+    color: hsl(var(--primary));
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px hsl(var(--primary) / 0.35);
+  }
+
+  /* ── Luxury Stat Card ── */
+  .luxury-stat-card {
+    position: relative;
+    padding: 1.35rem;
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, hsl(var(--card)) 74%, transparent);
+    border: 1px solid hsl(var(--border) / 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 28px -12px hsl(0 0% 0% / 0.35), inset 0 1px 0 hsl(var(--foreground) / 0.07);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .luxury-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.35);
+    box-shadow: 0 16px 36px -12px hsl(0 0% 0% / 0.45), 0 0 24px -10px hsl(var(--primary) / 0.22);
+  }
+
+  /* ── Glass Card Variants (Theme-Safe) ── */
+  .glass-card {
+    background: linear-gradient(135deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.4) 100%);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid hsl(var(--border) / 0.6);
-    box-shadow:
-      0 8px 32px rgba(0,0,0,0.4),
-      inset 0 1px 0 hsl(var(--foreground) / 0.06);
+    border: 1px solid hsl(var(--border) / 0.7);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.25), inset 0 1px 0 hsl(var(--foreground) / 0.06);
   }
+
   .glass-card-hover {
-    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .glass-card-hover:hover {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.75) 0%,
-      hsl(var(--card) / 0.45) 100%
-    );
-    border-color: hsl(var(--primary) / 0.3);
-    box-shadow:
-      0 12px 40px rgba(0,0,0,0.5),
-      0 0 30px hsl(var(--primary) / 0.1),
-      inset 0 1px 0 hsl(var(--foreground) / 0.1);
+    border-color: hsl(var(--primary) / 0.35);
+    box-shadow: 0 14px 40px hsl(0 0% 0% / 0.35), 0 0 28px hsl(var(--primary) / 0.14);
     transform: translateY(-4px);
   }
 
-  /* ━━━━ BORDER GLOW ANIMATE ━━━━ */
+  .frosted-glass {
+    background: linear-gradient(165deg, hsl(var(--card) / 0.78) 0%, hsl(var(--card) / 0.42) 100%) !important;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid hsl(var(--border) / 0.65) !important;
+    box-shadow: 0 10px 36px -10px hsl(0 0% 0% / 0.35) !important;
+  }
+
+  /* ── Conic Rotating Border Glow (@property) ── */
   .border-glow-primary {
     position: relative;
   }
@@ -1090,95 +1135,40 @@
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.6), transparent, hsl(var(--gradient-end) / 0.6));
+    background: conic-gradient(
+      from var(--beam-angle),
+      hsl(var(--primary) / 0.65),
+      transparent 35%,
+      hsl(var(--gradient-end) / 0.65),
+      transparent 80%
+    );
     z-index: -1;
     opacity: 0;
     transition: opacity 0.4s ease;
+    animation: beam-spin 6s linear infinite;
   }
   .border-glow-primary:hover::after {
     opacity: 1;
   }
 
-  /* ━━━━ TEXT GRADIENT ━━━━ */
-  .text-gradient-primary {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)),
-      hsl(var(--gradient-mid)),
-      hsl(var(--gradient-end))
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* ── Glow Shadows ── */
+  .shadow-glow-white { box-shadow: 0 0 30px hsl(var(--foreground) / 0.12); }
+  .shadow-glow-primary {
+    box-shadow:
+      0 0 12px hsl(var(--primary) / 0.35),
+      0 0 30px hsl(var(--primary) / 0.15),
+      0 0 60px hsl(var(--primary) / 0.06);
+  }
+  .shadow-glow-primary-sm {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.4), 0 0 20px hsl(var(--primary) / 0.18);
+  }
+  .shadow-glow-primary-lg {
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.5),
+      0 0 50px hsl(var(--primary) / 0.25),
+      0 0 100px hsl(var(--primary) / 0.1);
   }
 
-  /* ━━━━ MICRO SHINE ━━━━ */
-  /* Adds a subtle top-left specular highlight to cards */
-  .shine-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .shine-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.15), transparent);
-    pointer-events: none;
-  }
-}
-
-@media print {
-  .non-printable {
-    display: none;
-  }
-  .printable-area {
-    display: block;
-  }
-  body {
-    background-image: none !important;
-    background-color: white !important;
-  }
-}
-@page {
-    size: A4;
-    margin: 20mm;
-}
-
-/* ========================================= */
-/* 💎 PREMIUM VISUAL UPGRADES (Global Scope) */
-/* ========================================= */
-
-/* 2. Global Text Selection (Glow Effect) */
-::selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--foreground));
-  text-shadow: 0 0 10px hsl(var(--primary) / 0.8), 0 0 20px hsl(var(--primary) / 0.4);
-}
-::-moz-selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--foreground));
-}
-
-/* ========================================= */
-/* 💎 PREMIUM UTILITIES (utilities layer)    */
-/* ========================================= */
-@layer utilities {
-  /* Glowing Cards / Glassmorphism Hover */
-  .hover-glow {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  .hover-glow:hover, .group:hover .group-hover\:hover-glow {
-    box-shadow: 
-      0 0 30px -10px hsl(var(--primary) / 0.4),
-      0 0 60px -20px hsl(var(--primary) / 0.2),
-      inset 0 0 0 1px hsl(var(--primary) / 0.3) !important;
-    border-color: hsl(var(--primary) / 0.5) !important;
-    transform: translateY(-8px) scale(1.01) !important;
-    z-index: 10;
-  }
-
-  /* Premium Colored Glow (Shadow that takes accent color) */
   .premium-glow {
     box-shadow: 0 0 30px -10px hsl(var(--primary) / 0.4);
     transition: box-shadow 0.3s ease;
@@ -1187,77 +1177,39 @@
     box-shadow: 0 0 50px -5px hsl(var(--primary) / 0.6);
   }
 
-  /* Frosted Glass Effect (Enhanced) */
-  .frosted-glass {
-    background: linear-gradient(165deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.3) 100%) !important;
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid hsl(var(--border) / 0.5) !important;
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5) !important;
+  .hover-glow {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hover-glow:hover,
+  .group:hover .group-hover\:hover-glow {
+    box-shadow:
+      0 0 30px -10px hsl(var(--primary) / 0.4),
+      0 0 60px -20px hsl(var(--primary) / 0.2),
+      inset 0 0 0 1px hsl(var(--primary) / 0.3) !important;
+    border-color: hsl(var(--primary) / 0.5) !important;
+    transform: translateY(-6px) scale(1.01);
+    z-index: 10;
   }
 
-  /* Magnetic Buttons / Ripple Effect */
-  .btn-magnetic {
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease !important;
-  }
-  .btn-magnetic::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, hsl(var(--primary)/0.5) 0%, transparent 100%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .btn-magnetic > * {
-    position: relative;
-    z-index: 1;
-  }
-  .btn-magnetic:hover {
-    transform: scale(1.05) translateY(-2px) !important;
-    box-shadow: 0 10px 25px -5px hsl(var(--primary)/0.4), 0 0 10px -2px hsl(var(--primary)/0.2) !important;
-    border-color: hsl(var(--primary)/0.5) !important;
-  }
-  .btn-magnetic:hover::after {
-    width: 250px;
-    height: 250px;
-    opacity: 1;
+  .hover-glow-strong:hover {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.3), 0 0 30px hsl(var(--primary) / 0.12);
   }
 
-  .animate-pulse-subtle {
-    animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* ── Typography & Gradient Effects ── */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-mid)), hsl(var(--gradient-end)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .title-luxury {
+    background: linear-gradient(180deg, hsl(var(--foreground)) 0%, hsl(var(--foreground) / 0.68) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-
-  /* ━━━━ IMAGE BLUR REVEAL ━━━━ */
-  .img-reveal {
-    filter: blur(0px);
-    transition: filter 0.6s ease-out, opacity 0.6s ease-out;
-  }
-  .img-reveal.loading {
-    filter: blur(20px);
-    opacity: 0.4;
-  }
-
-  /* ━━━━ HOLOGRAPHIC TEXT ━━━━ */
   .holo-text {
     background: linear-gradient(
       135deg,
@@ -1272,75 +1224,7 @@
     -webkit-text-fill-color: transparent;
     animation: holo-shift 4s linear infinite;
   }
-  @keyframes holo-shift {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
-  }
 
-  /* ━━━━ GLOW ON HOVER ━━━━ */
-  .hover-glow {
-    transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .hover-glow-strong:hover {
-    box-shadow:
-      0 0 15px hsl(var(--primary) / 0.3),
-      0 0 30px hsl(var(--primary) / 0.1);
-  }
-
-  /* ━━━━ NEON BORDER ANIMATE ━━━━ */
-  @keyframes neon-pulse {
-    0%, 100% { box-shadow: 0 0 4px hsl(var(--primary)/0.4), 0 0 12px hsl(var(--primary)/0.2); }
-    50% { box-shadow: 0 0 8px hsl(var(--primary)/0.7), 0 0 24px hsl(var(--primary)/0.4); }
-  }
-  .neon-border-animate {
-    animation: neon-pulse 2.5s ease-in-out infinite;
-  }
-
-  /* ━━━━ SHIMMER SWEEP ━━━━ */
-  .shimmer-sweep {
-    position: relative;
-    overflow: hidden;
-  }
-  .shimmer-sweep::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      105deg,
-      transparent 40%,
-      rgba(255,255,255,0.07) 50%,
-      transparent 60%
-    );
-    background-size: 200% 100%;
-    animation: shimmer-move 3s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 1;
-  }
-  @keyframes shimmer-move {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-
-  /* ━━━━ CUSTOM PREMIUM SCROLLBAR ━━━━ */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.3);
-    border-radius: 99px;
-    border: 1px solid hsl(var(--background));
-    background-clip: padding-box;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.6);
-  }
-
-  /* ━━━━ WATERMARK TYPOGRAPHY ━━━━ */
   .typography-watermark {
     position: absolute;
     font-size: clamp(6rem, 20vw, 18rem);
@@ -1354,232 +1238,93 @@
     white-space: nowrap;
   }
 
-  .animation-delay-2000 {
-    animation-delay: 2s !important;
-  }
-  .animation-delay-4000 {
-    animation-delay: 4s !important;
-  }
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   READING MODE SYSTEM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.reading-mode-active .hide-in-reading-mode {
-  display: none !important;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.reading-mode-active .reading-content {
-  max-width: 850px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding-top: 5rem !important;
-  padding-bottom: 5rem !important;
-}
-
-.reading-mode-active .reading-text {
-  line-height: 2.3 !important;
-  font-family: 'KFGQPC-v2', serif !important;
-}
-
-.reading-mode-active body {
-  background: #050505 !important;
-}
-
-/* Hide header/footer on Palestine Portal for true immersion */
-body:has(#palestine-portal-root) .hide-in-reading-mode {
-  display: none !important;
-}
-
-@keyframes pulse-subtle {
-  0%, 100% {
-    box-shadow: 0 0 0 0 hsl(var(--primary)/0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px hsl(var(--primary)/0);
-  }
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SEERAH PAGE — Full Immersive Starfield Mode
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-body:has(#seerah-page) {
-  background-color: #02050a !important;
-}
-
-body:has(#seerah-page) [data-site-background] {
-  display: none !important;
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   💎 LUXURY DIGITAL ISLAMIC DESIGN SYSTEM
-   Professionalism, Aesthetics & Micro-interactions
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-@layer utilities {
-  /* High-end glassmorphism surface with specular highlight */
-  .luxury-glass {
+  /* ── Micro Interactions & Animations ── */
+  .animated-gradient {
     background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0.01) 100%
+      -45deg,
+      hsl(var(--gradient-start)),
+      hsl(var(--gradient-mid)),
+      hsl(var(--gradient-end)),
+      hsl(var(--gradient-extra))
     );
-    backdrop-filter: blur(28px) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 
-      0 20px 50px -15px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    background-size: 400% 400%;
+    animation: gradient-move 15s ease infinite;
   }
 
-  /* Luxury Card with theme-aware hover glow and top border gleam */
-  .luxury-card {
+  .animate-slide-in { animation: slide-in 0.5s ease-out forwards; }
+  .animate-pulse-subtle { animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  .neon-border-animate { animation: neon-pulse 2.5s ease-in-out infinite; }
+  .animate-blob {
+    animation: blob 25s infinite alternate ease-in-out;
+    border-radius: 40% 60% 60% 40% / 60% 40% 70% 40%;
+  }
+  .animation-delay-2000 { animation-delay: 2s !important; }
+  .animation-delay-4000 { animation-delay: 4s !important; }
+
+  .shine-card {
     position: relative;
-    border-radius: 2rem;
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.035) 0%,
-      rgba(255, 255, 255, 0.01) 100%
-    );
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 
-      0 12px 35px -10px rgba(0, 0, 0, 0.6),
-      inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
   }
-
-  .luxury-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(var(--primary-rgb), 0.35);
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.055) 0%,
-      rgba(255, 255, 255, 0.02) 100%
-    );
-    box-shadow: 
-      0 24px 60px -15px rgba(0, 0, 0, 0.8),
-      0 0 40px -10px rgba(var(--primary-rgb), 0.22),
-      inset 0 1px 2px rgba(255, 255, 255, 0.2);
-  }
-
-  /* Specular top highlight line */
-  .luxury-card::before {
+  .shine-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
+    top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.4), rgba(255,255,255,0.3), transparent);
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.16), transparent);
     pointer-events: none;
-    z-index: 2;
   }
-  .luxury-card:hover::before {
+
+  .shimmer-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-sweep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, hsl(var(--foreground) / 0.06) 50%, transparent 60%);
+    background-size: 200% 100%;
+    animation: shimmer-move 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .btn-magnetic {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease !important;
+  }
+  .btn-magnetic::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.45) 0%, transparent 100%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.55s ease-out, height 0.55s ease-out, opacity 0.55s ease-out;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .btn-magnetic > * {
+    position: relative;
+    z-index: 1;
+  }
+  .btn-magnetic:hover {
+    transform: scale(1.04) translateY(-2px) !important;
+    box-shadow: 0 10px 25px -5px hsl(var(--primary) / 0.38) !important;
+    border-color: hsl(var(--primary) / 0.5) !important;
+  }
+  .btn-magnetic:hover::after {
+    width: 240px;
+    height: 240px;
     opacity: 1;
   }
 
-  /* Luxury interactive badge */
-  .luxury-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.85rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    transition: all 0.3s ease;
-  }
-
-  .luxury-badge-primary {
-    background: rgba(var(--primary-rgb), 0.12);
-    border-color: rgba(var(--primary-rgb), 0.3);
-    color: hsl(var(--primary));
-    box-shadow: 0 0 15px -3px rgba(var(--primary-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  .luxury-badge-emerald {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: rgba(16, 185, 129, 0.3);
-    color: #34d399;
-    box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  .luxury-badge-gold {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: rgba(245, 158, 11, 0.3);
-    color: #fbbf24;
-    box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  /* Luxury Button Pill */
-  .luxury-pill-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.4rem;
-    border-radius: 9999px;
-    font-weight: 800;
-    font-size: 0.875rem;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: hsl(var(--foreground));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 
-      0 4px 15px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .luxury-pill-btn:hover {
-    background: rgba(var(--primary-rgb), 0.15);
-    border-color: rgba(var(--primary-rgb), 0.45);
-    color: hsl(var(--primary));
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 
-      0 8px 25px -5px rgba(var(--primary-rgb), 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-
-  .luxury-pill-btn:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  /* Luxury Stat Box */
-  .luxury-stat-card {
-    position: relative;
-    padding: 1.5rem;
-    border-radius: 1.75rem;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(24px);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    transition: all 0.35s ease;
-  }
-  .luxury-stat-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(var(--primary-rgb), 0.3);
-    box-shadow: 
-      0 18px 40px -10px rgba(0, 0, 0, 0.7),
-      0 0 25px -8px rgba(var(--primary-rgb), 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  /* Islamic geometric decorative divider */
+  /* ── Structural Helpers ── */
   .islamic-divider {
     display: flex;
     align-items: center;
@@ -1593,73 +1338,132 @@ body:has(#seerah-page) [data-site-background] {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
   }
 
-  /* Smooth title gradient */
-  .title-luxury {
-    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  /* Universal Page Hero Banner */
   .page-hero-banner {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid hsl(var(--border) / 0.7);
     border-radius: 2.5rem;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%);
+    box-shadow: 0 30px 80px -20px hsl(0 0% 0% / 0.6), inset 0 1px 0 hsl(var(--foreground) / 0.1);
+    background: linear-gradient(180deg, hsl(var(--card) / 0.65) 0%, hsl(var(--card) / 0.25) 100%);
+  }
+
+  .supporter-sphere {
+    border-radius: 50%;
+    background-color: hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.3), inset 0 0 10px hsl(var(--primary) / 0.2);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    animation: float 20s infinite ease-in-out;
+    animation-delay: calc(var(--i, 0) * -1.2s);
+    transform-style: preserve-3d;
+  }
+
+  .img-reveal {
+    filter: blur(0px);
+    transition: filter 0.6s ease-out, opacity 0.6s ease-out;
+  }
+  .img-reveal.loading {
+    filter: blur(20px);
+    opacity: 0.4;
+  }
+
+  /* ── Specialized Scrollbars ── */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.16);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground) / 0.3);
+  }
+
+  .custom-scrollbar-red::-webkit-scrollbar { width: 12px; }
+  .custom-scrollbar-red::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar-red::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--destructive) / 0.7);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  .custom-scrollbar-red::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--destructive));
+  }
+
+  .custom-scrollbar-blue::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar-blue::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar-blue::-webkit-scrollbar-thumb {
+    background-color: hsl(220 70% 70% / 0.7);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(220 70% 80%);
+  }
+
+  .custom-scrollbar-gradient::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar-gradient::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar-gradient::-webkit-scrollbar-thumb {
+    background-image: linear-gradient(to bottom, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    border-radius: 10px;
   }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   🌐 COMPREHENSIVE SITE-WIDE PROFESSIONAL ENHANCEMENTS
-   Applies to EVERY page, dialog, input, card & button
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-html {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SPECIAL MODES: READING, SEERAH & PALESTINE PORTAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.reading-mode-active .hide-in-reading-mode {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Universal Input & Control Glow across all pages */
-input:not([type="checkbox"]):not([type="radio"]),
-textarea,
-select {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+.reading-mode-active .reading-content {
+  max-width: 850px !important;
+  margin-inline: auto !important;
+  padding-block: 5rem !important;
 }
 
-input:not([type="checkbox"]):not([type="radio"]):focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  box-shadow: 
-    0 0 20px -3px rgba(var(--primary-rgb), 0.35), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-  border-color: rgba(var(--primary-rgb), 0.5) !important;
-  outline: none !important;
+.reading-mode-active .reading-text {
+  line-height: 2.3 !important;
+  font-family: 'KFGQPC-v2', serif !important;
 }
 
-/* Universal Dialog & Modal Glass across all pages */
-[role="dialog"] {
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-  box-shadow: 
-    0 30px 100px -20px rgba(0, 0, 0, 0.9), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+.reading-mode-active body {
+  background: #050505 !important;
 }
 
-/* Universal Button spring responsiveness */
-button:active:not(:disabled) {
-  transform: scale(0.97);
+body:has(#palestine-portal-root) .hide-in-reading-mode {
+  display: none !important;
 }
 
-/* Universal headings crispness */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
+body:has(#seerah-page) {
+  background-color: #02050a !important;
 }
 
+body:has(#seerah-page) [data-site-background] {
+  display: none !important;
+}
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PRINT STYLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media print {
+  .non-printable { display: none; }
+  .printable-area { display: block; }
+  body {
+    background-image: none !important;
+    background-color: white !important;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 20mm;
+}

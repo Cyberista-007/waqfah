@@ -278,21 +278,48 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-[80px] p-6 md:p-12 overflow-y-auto custom-scrollbar"
+                    onClick={onClose}
+                    className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 backdrop-blur-md p-3 sm:p-6 pt-10 sm:pt-16"
                 >
-                    <div className="container mx-auto max-w-6xl h-full flex flex-col">
-                        <div className="flex justify-between items-center mb-8">
-                            <div className="text-3xl font-black font-headline text-primary italic tracking-tight shadow-glow-primary">وقـــفــــة</div>
-                            <button onClick={onClose} className="p-4 rounded-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10 group">
-                                <X className="w-6 h-6 text-white group-hover:rotate-90 transition-transform duration-300" />
-                            </button>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96, y: -12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: -12 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        onClick={(e) => e.stopPropagation()}
+                        dir="rtl"
+                        className="w-full max-w-3xl max-h-[82vh] flex flex-col rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/80 shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
+                    >
+                        {/* Compact Top Bar */}
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+                            <div className="flex items-center gap-2.5">
+                                <span className="text-base font-black font-headline text-primary">وقفة</span>
+                                <span className="text-xs text-muted-foreground font-bold">• البحث السريع</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-bold border border-border/60">
+                                    ESC
+                                </kbd>
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    aria-label="إغلاق البحث"
+                                    className="w-8 h-8 rounded-full bg-muted/60 hover:bg-muted flex items-center justify-center border border-border/60 transition-colors cursor-pointer group"
+                                >
+                                    <X className="w-4 h-4 text-foreground group-hover:rotate-90 transition-transform duration-300" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="relative mb-8">
-                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="relative flex items-center">
-                                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 z-10">
-                                    {isSearching && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
-                                    <Search className="w-8 h-8 text-primary shadow-glow-primary opacity-50" />
+                        {/* Compact Search Input */}
+                        <div className="px-5 pt-4 pb-3 border-b border-border/50 space-y-3">
+                            <div className="relative flex items-center rounded-2xl bg-background/60 border border-border/80 focus-within:border-primary/60 transition-colors">
+                                <div className="pr-4 pl-2 flex items-center gap-2 shrink-0">
+                                    {isSearching ? (
+                                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                                    ) : (
+                                        <Search className="w-5 h-5 text-primary/70" />
+                                    )}
                                 </div>
                                 <input
                                     ref={inputRef}
@@ -300,46 +327,26 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder={isListening ? 'جارٍ الاستماع... تحدث الآن' : 'ما الذي تبحث عنه...'}
-                                    className="w-full h-24 md:h-32 bg-transparent text-3xl md:text-5xl lg:text-7xl font-black text-white placeholder:text-white/10 outline-none ps-24 pe-24 border-b-2 border-white/5 focus:border-primary transition-all duration-500"
+                                    placeholder={isListening ? 'جارٍ الاستماع... تحدث الآن' : 'ابحث عن محاضرة، سلسلة، برنامج، أو كتاب...'}
+                                    className="w-full h-12 sm:h-14 bg-transparent text-base sm:text-lg font-bold text-foreground placeholder:text-muted-foreground/60 outline-none pl-12"
                                 />
-                                {/* Voice Search Button */}
                                 {voiceSupported && (
-                                    <motion.button
+                                    <button
                                         type="button"
                                         onClick={isListening ? stopVoiceSearch : startVoiceSearch}
-                                        className={`absolute right-4 top-1/2 -translate-y-1/2 p-4 rounded-2xl border transition-all duration-500 z-10 relative overflow-hidden ${
+                                        className={cn(
+                                            'absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer',
                                             isListening
-                                                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
-                                                : 'bg-white/5 border-white/10 text-white/30 hover:bg-primary/10 hover:text-primary hover:border-primary/30'
-                                        }`}
+                                                ? 'bg-primary/20 border-primary text-primary'
+                                                : 'bg-muted/50 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40'
+                                        )}
                                         title={isListening ? 'إيقاف الاستماع' : 'بحث صوتي'}
                                     >
-                                        {isListening && (
-                                            <>
-                                                <motion.div
-                                                    className="absolute inset-0 rounded-2xl bg-primary/20"
-                                                    animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
-                                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                                />
-                                                <motion.div
-                                                    className="absolute inset-0 rounded-2xl bg-primary/10"
-                                                    animate={{ scale: [1, 2.2, 1], opacity: [0.3, 0, 0.3] }}
-                                                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-                                                />
-                                            </>
-                                        )}
-                                        <motion.div
-                                            animate={isListening ? { scale: [1, 1.2, 1] } : {}}
-                                            transition={{ duration: 0.8, repeat: Infinity }}
-                                            className="relative z-10"
-                                        >
-                                            {isListening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-                                        </motion.div>
-                                    </motion.button>
+                                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                    </button>
                                 )}
-                            </motion.div>
-                            {/* Listening Status Bar */}
+                            </div>
+
                             <AnimatePresence>
                                 {isListening && (
                                     <motion.div
@@ -348,282 +355,366 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="flex items-center gap-3 pt-3 pb-1 px-1">
-                                            <div className="flex items-center gap-0.5 h-5">
+                                        <div className="flex items-center gap-2.5 px-1">
+                                            <div className="flex items-center gap-0.5 h-4">
                                                 {[0, 0.1, 0.2, 0.15, 0.05].map((delay, i) => (
                                                     <motion.div
                                                         key={i}
                                                         className="w-1 bg-primary rounded-full"
-                                                        animate={{ height: ['4px', '18px', '4px'] }}
+                                                        animate={{ height: ['4px', '14px', '4px'] }}
                                                         transition={{ duration: 0.6, repeat: Infinity, delay, ease: 'easeInOut' }}
                                                     />
                                                 ))}
                                             </div>
-                                            <span className="text-primary text-sm font-bold">جارٍ التعرف على الصوت...</span>
+                                            <span className="text-primary text-xs font-bold">جارٍ التعرف على الصوت...</span>
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
 
-                        <div className="flex flex-wrap gap-2 mb-12 animate-reveal" dir="rtl">
-                            {categories.map((cat, i) => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setCategory(cat.id as SearchCategory)}
-                                    className={cn(
-                                        "px-6 py-2 rounded-full border transition-all text-sm font-bold active:scale-95",
-                                        category === cat.id
-                                            ? "bg-primary border-primary text-primary-foreground shadow-glow-primary"
-                                            : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                                    )}
-                                    style={{ animationDelay: `${i * 50}ms` }}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-12 text-right mb-20" dir="rtl">
-                            <div className="lg:col-span-8 space-y-10">
-                                {isSearching ? (
-                                    <SearchSkeleton />
-                                ) : (debouncedQuery ? (
-                                    <>
-                                        {(category === 'all' || category === 'lectures') && results.lectures.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> المحاضرات
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {results.lectures.map((lec, idx) => {
-                                                        const isSelected = idx === selectedIndex;
-                                                        const videoId = getVideoIdFromUrl(lec.youtubeUrl);
-                                                        const placeholder = getPlaceholderImage(lec.imageId);
-                                                        const imageUrl = videoId
-                                                            ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                                                            : placeholder?.imageUrl || `https://picsum.photos/seed/${lec.slug}/400/225`;
-                                                        const isExpanded = expandedItems.has(lec.id);
-
-                                                        return (
-                                                            <ThreeDTilt key={lec.id} tiltMax={10}>
-                                                                <motion.div
-                                                                    initial={{ opacity: 0, y: 10 }}
-                                                                    animate={{ opacity: 1, y: 0 }}
-                                                                    layout
-                                                                    onClick={() => handleSelect(lec, 'lecture')}
-                                                                    className={cn(
-                                                                        "group flex gap-4 p-5 rounded-[2rem] border transition-all cursor-pointer overflow-hidden items-start h-full",
-                                                                        isSelected ? "bg-primary/20 border-primary shadow-glow-primary" : "bg-white/5 border-white/5 hover:bg-white/10"
-                                                                    )}
-                                                                >
-                                                                    <div className="relative w-24 h-14 rounded-2xl overflow-hidden shrink-0 shadow-2xl mt-1">
-                                                                        <Image fill src={imageUrl} alt={lec.title} sizes="96px" className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                                                                    </div>
-                                                                    <div className="flex flex-col justify-center overflow-hidden flex-grow">
-                                                                        <div className="flex items-start justify-between gap-2">
-                                                                            <motion.div 
-                                                                                layout
-                                                                                className={cn(
-                                                                                    "font-bold text-white group-hover:text-primary transition-all duration-300 pr-1",
-                                                                                    isExpanded ? "line-clamp-none" : "line-clamp-1"
-                                                                            )}>
-                                                                                {highlightMatch(lec.title, debouncedQuery)}
-                                                                            </motion.div>
-                                                                            {lec.title.length > 30 && (
-                                                                                <button 
-                                                                                    onClick={(e) => toggleExpand(e, lec.id)}
-                                                                                    className="p-1 rounded-full hover:bg-white/10 text-white/40 hover:text-primary transition-colors mt-0.5"
-                                                                                >
-                                                                                    <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", isExpanded && "rotate-180")} />
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="text-[10px] text-white/40 uppercase font-black">{lec.programName}</div>
-                                                                    </div>
-                                                                </motion.div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
+                            {/* Compact Category Filter Pills */}
+                            <div className="flex flex-wrap gap-1.5">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => setCategory(cat.id as SearchCategory)}
+                                        className={cn(
+                                            'px-3.5 py-1 rounded-full border transition-all text-xs font-bold cursor-pointer',
+                                            category === cat.id
+                                                ? 'bg-primary border-primary text-primary-foreground shadow-sm'
+                                                : 'bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted'
                                         )}
-
-                                        {(category === 'all' || category === 'series') && results.series.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> السلاسل العلمية
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.series.map((ser, idx) => {
-                                                        const selectOffset = results.lectures.length + idx;
-                                                        const isSelected = selectOffset === selectedIndex;
-                                                        return (
-                                                            <ThreeDTilt key={ser.id} tiltMax={10}>
-                                                                <div onClick={() => handleSelect(ser, 'series')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
-                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
-                                                                        <Hash className="w-5 h-5" />
-                                                                    </div>
-                                                                    <div className="font-bold text-white/80">{highlightMatch(ser.title, debouncedQuery)}</div>
-                                                                </div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
-                                        )}
-
-                                        {(category === 'all' || category === 'programs') && results.programs.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> البرامج الدعوية
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.programs.map((prog, idx) => {
-                                                        const selectOffset = results.lectures.length + results.series.length + idx;
-                                                        const isSelected = selectOffset === selectedIndex;
-                                                        return (
-                                                            <ThreeDTilt key={prog.id} tiltMax={10}>
-                                                                <div onClick={() => handleSelect(prog, 'program')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
-                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
-                                                                        <Podcast className="w-5 h-5" />
-                                                                    </div>
-                                                                    <div className="font-bold text-white/80">{highlightMatch(prog.name, debouncedQuery)}</div>
-                                                                </div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
-                                        )}
-
-                                        {(category === 'all' || category === 'books') && results.books.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> المكتبة الرقمية
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.books.map((book, idx) => {
-                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + idx;
-                                                        const isSelected = selectOffset === selectedIndex;
-                                                        return (
-                                                            <ThreeDTilt key={book.id} tiltMax={10}>
-                                                                <div onClick={() => handleSelect(book, 'book')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
-                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
-                                                                        <BookOpen className="w-5 h-5" />
-                                                                    </div>
-                                                                    <div className="font-bold text-white/80">{highlightMatch(book.title, debouncedQuery)}</div>
-                                                                </div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
-                                        )}
-
-                                        {(category === 'all' || category === 'shubuhat') && results.shubuhat.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> تفنيد الشبهات
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.shubuhat.map((shubha, idx) => {
-                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + results.books.length + idx;
-                                                        const isSelected = selectOffset === selectedIndex;
-                                                        return (
-                                                            <ThreeDTilt key={shubha.id} tiltMax={10}>
-                                                                <div onClick={() => handleSelect(shubha, 'shubha')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
-                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
-                                                                        <ShieldAlert className="w-5 h-5" />
-                                                                    </div>
-                                                                    <div className="font-bold text-white/80">{highlightMatch(shubha.question, debouncedQuery)}</div>
-                                                                </div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
-                                        )}
-
-                                        {(category === 'all' || category === 'destructive_sins') && results.destructive_sins.length > 0 && (
-                                            <section>
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 flex items-center gap-3">
-                                                    <div className="h-px w-8 bg-white/10" /> أمراض القلوب (المهلكات)
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    {results.destructive_sins.map((muhlika, idx) => {
-                                                        const selectOffset = results.lectures.length + results.series.length + results.programs.length + results.books.length + results.shubuhat.length + idx;
-                                                        const isSelected = selectOffset === selectedIndex;
-                                                        return (
-                                                            <ThreeDTilt key={muhlika.id} tiltMax={10}>
-                                                                <div onClick={() => handleSelect(muhlika, 'muhlika')} className={cn("flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group h-full", isSelected ? "bg-primary/20 border-primary" : "bg-white/5 border-transparent hover:border-white/10")}>
-                                                                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all", isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
-                                                                        <TriangleAlert className="w-5 h-5" />
-                                                                    </div>
-                                                                    <div className="font-bold text-white/80">{highlightMatch(muhlika.title, debouncedQuery)}</div>
-                                                                </div>
-                                                            </ThreeDTilt>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </section>
-                                        )}
-
-                                        {results.lectures.length === 0 && results.series.length === 0 && results.programs.length === 0 && results.books.length === 0 && results.shubuhat.length === 0 && results.destructive_sins.length === 0 && (
-                                            <div className="flex flex-col items-center justify-center py-20 text-white/10">
-                                                <Search className="w-20 h-20 mb-6 opacity-5" />
-                                                <h2 className="text-3xl font-black italic tracking-tighter">لم نعثر على كنوز مطابقة...</h2>
-                                                <p className="mt-2 text-white/20">جرب البحث بكلمات أبسط أو التحقق من الإملاء.</p>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-32 text-white/5">
-                                        <Search className="w-32 h-32 mb-8 opacity-5 animate-pulse" />
-                                        <h2 className="text-5xl font-black italic tracking-tighter mix-blend-overlay">اكتشف العلم</h2>
-                                    </div>
+                                    >
+                                        {cat.label}
+                                    </button>
                                 ))}
                             </div>
+                        </div>
 
-                            <div className="lg:col-span-4 space-y-12">
-                                {recentSearches.length > 0 && !query && (
-                                    <section className="bg-white/5 rounded-[3.5rem] p-10 border border-white/5">
-                                        <div className="flex justify-between items-center mb-8">
-                                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">عمليات البحث الأخيرة</h4>
-                                            <button 
-                                                onClick={clearRecentSearches}
-                                                className="text-[10px] font-black text-primary/40 hover:text-primary transition-colors hover:underline"
-                                            >
-                                                مسح الكل
-                                            </button>
-                                        </div>
-                                        <div className="space-y-5">
-                                            {recentSearches.map((term, i) => (
-                                                <button key={i} onClick={() => setQuery(term)} className="flex items-center gap-4 w-full text-white/50 hover:text-primary transition-all text-right group">
-                                                    <Loader2 className="w-4 h-4 opacity-10 group-hover:rotate-180 transition-transform duration-700" />
-                                                    <span className="font-bold">{term}</span>
+                        {/* Scrollable Results & Discovery Area */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6 text-right">
+                            {isSearching ? (
+                                <SearchSkeleton />
+                            ) : debouncedQuery ? (
+                                <div className="space-y-6">
+                                    {(category === 'all' || category === 'lectures') && results.lectures.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3 flex items-center gap-2">
+                                                <span>المحاضرات</span>
+                                                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]">
+                                                    {results.lectures.length}
+                                                </span>
+                                            </h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.lectures.map((lec, idx) => {
+                                                    const isSelected = idx === selectedIndex;
+                                                    const videoId = getVideoIdFromUrl(lec.youtubeUrl);
+                                                    const placeholder = getPlaceholderImage(lec.imageId);
+                                                    const imageUrl = videoId
+                                                        ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                                                        : placeholder?.imageUrl || `https://picsum.photos/seed/${lec.slug}/400/225`;
+                                                    const isExpanded = expandedItems.has(lec.id);
+
+                                                    return (
+                                                        <div
+                                                            key={lec.id}
+                                                            onClick={() => handleSelect(lec, 'lecture')}
+                                                            className={cn(
+                                                                'group flex gap-3 p-2.5 rounded-2xl border transition-all cursor-pointer items-center',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="relative w-16 h-11 rounded-xl overflow-hidden shrink-0">
+                                                                <Image
+                                                                    fill
+                                                                    src={imageUrl}
+                                                                    alt={lec.title}
+                                                                    sizes="64px"
+                                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-1.5">
+                                                                    <div
+                                                                        className={cn(
+                                                                            'font-bold text-sm text-foreground group-hover:text-primary transition-colors',
+                                                                            isExpanded ? 'line-clamp-none' : 'line-clamp-1'
+                                                                        )}
+                                                                    >
+                                                                        {highlightMatch(lec.title, debouncedQuery)}
+                                                                    </div>
+                                                                    {lec.title.length > 30 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => toggleExpand(e, lec.id)}
+                                                                            className="p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-primary shrink-0"
+                                                                        >
+                                                                            <ChevronDown
+                                                                                className={cn(
+                                                                                    'w-3.5 h-3.5 transition-transform duration-200',
+                                                                                    isExpanded && 'rotate-180'
+                                                                                )}
+                                                                            />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                {lec.programName && (
+                                                                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                                                        {lec.programName}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {(category === 'all' || category === 'series') && results.series.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3">السلاسل العلمية</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.series.map((ser, idx) => {
+                                                    const selectOffset = results.lectures.length + idx;
+                                                    const isSelected = selectOffset === selectedIndex;
+                                                    return (
+                                                        <div
+                                                            key={ser.id}
+                                                            onClick={() => handleSelect(ser, 'series')}
+                                                            className={cn(
+                                                                'flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                                                <Hash className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm text-foreground truncate">
+                                                                {highlightMatch(ser.title, debouncedQuery)}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {(category === 'all' || category === 'programs') && results.programs.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3">البرامج الدعوية</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.programs.map((prog, idx) => {
+                                                    const selectOffset = results.lectures.length + results.series.length + idx;
+                                                    const isSelected = selectOffset === selectedIndex;
+                                                    return (
+                                                        <div
+                                                            key={prog.id}
+                                                            onClick={() => handleSelect(prog, 'program')}
+                                                            className={cn(
+                                                                'flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                                                <Podcast className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm text-foreground truncate">
+                                                                {highlightMatch(prog.name, debouncedQuery)}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {(category === 'all' || category === 'books') && results.books.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3">المكتبة الرقمية</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.books.map((book, idx) => {
+                                                    const selectOffset =
+                                                        results.lectures.length + results.series.length + results.programs.length + idx;
+                                                    const isSelected = selectOffset === selectedIndex;
+                                                    return (
+                                                        <div
+                                                            key={book.id}
+                                                            onClick={() => handleSelect(book, 'book')}
+                                                            className={cn(
+                                                                'flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                                                <BookOpen className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm text-foreground truncate">
+                                                                {highlightMatch(book.title, debouncedQuery)}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {(category === 'all' || category === 'shubuhat') && results.shubuhat.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3">تفنيد الشبهات</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.shubuhat.map((shubha, idx) => {
+                                                    const selectOffset =
+                                                        results.lectures.length +
+                                                        results.series.length +
+                                                        results.programs.length +
+                                                        results.books.length +
+                                                        idx;
+                                                    const isSelected = selectOffset === selectedIndex;
+                                                    return (
+                                                        <div
+                                                            key={shubha.id}
+                                                            onClick={() => handleSelect(shubha, 'shubha')}
+                                                            className={cn(
+                                                                'flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                                                <ShieldAlert className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm text-foreground truncate">
+                                                                {highlightMatch(shubha.question, debouncedQuery)}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {(category === 'all' || category === 'destructive_sins') && results.destructive_sins.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-black text-muted-foreground mb-3">أمراض القلوب (المهلكات)</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {results.destructive_sins.map((muhlika, idx) => {
+                                                    const selectOffset =
+                                                        results.lectures.length +
+                                                        results.series.length +
+                                                        results.programs.length +
+                                                        results.books.length +
+                                                        results.shubuhat.length +
+                                                        idx;
+                                                    const isSelected = selectOffset === selectedIndex;
+                                                    return (
+                                                        <div
+                                                            key={muhlika.id}
+                                                            onClick={() => handleSelect(muhlika, 'muhlika')}
+                                                            className={cn(
+                                                                'flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 border-primary'
+                                                                    : 'bg-background/40 border-border/50 hover:bg-muted/60 hover:border-primary/30'
+                                                            )}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                                                <TriangleAlert className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="font-bold text-sm text-foreground truncate">
+                                                                {highlightMatch(muhlika.title, debouncedQuery)}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {results.lectures.length === 0 &&
+                                        results.series.length === 0 &&
+                                        results.programs.length === 0 &&
+                                        results.books.length === 0 &&
+                                        results.shubuhat.length === 0 &&
+                                        results.destructive_sins.length === 0 && (
+                                            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                                                <Search className="w-10 h-10 mb-3 opacity-30" />
+                                                <h3 className="text-base font-black text-foreground">لم نعثر على نتائج مطابقة</h3>
+                                                <p className="mt-1 text-xs">جرب البحث بكلمات أبسط أو التحقق من الإملاء.</p>
+                                            </div>
+                                        )}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Trending Tags */}
+                                    <section className="bg-primary/10 rounded-2xl p-4 sm:p-5 border border-primary/20">
+                                        <h4 className="text-primary font-black mb-3 text-sm flex items-center gap-2">
+                                            <Sparkles className="w-4 h-4" />
+                                            <span>الأكثر رواجاً</span>
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['#فقه', '#تفسير', '#سيرة', '#رقائق', '#فلسطين', '#عقيدة'].map((tag) => (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => setQuery(tag)}
+                                                    className="px-3 py-1.5 rounded-xl bg-background/60 hover:bg-primary text-foreground/80 hover:text-primary-foreground transition-all text-xs font-bold border border-border/50 cursor-pointer"
+                                                >
+                                                    {tag}
                                                 </button>
                                             ))}
                                         </div>
                                     </section>
-                                )}
 
-                                <section className="bg-primary/10 rounded-[4rem] p-12 border border-primary/20 relative overflow-hidden group">
-                                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 blur-[100px] group-hover:bg-primary/30 transition-all duration-1000" />
-                                    <h4 className="text-primary font-black mb-8 text-2xl flex items-center gap-3">
-                                        <Sparkles className="w-8 h-8 shadow-glow-primary" /> الأكثر رواجاً
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2 relative z-10">
-                                        {['#فقه', '#تفسير', '#سيرة', '#رقائق', '#فلسطين', '#عقيدة'].map(tag => (
-                                            <button key={tag} onClick={() => setQuery(tag)} className="px-6 py-3 rounded-2xl bg-black/40 hover:bg-primary text-white/60 hover:text-white transition-all text-sm font-black tracking-tighter">
-                                                {tag}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </section>
-                            </div>
+                                    {/* Recent Searches */}
+                                    {recentSearches.length > 0 ? (
+                                        <section className="bg-muted/30 rounded-2xl p-4 sm:p-5 border border-border/60">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <h4 className="text-xs font-black text-muted-foreground">عمليات البحث الأخيرة</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={clearRecentSearches}
+                                                    className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                                                >
+                                                    مسح الكل
+                                                </button>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                {recentSearches.map((term, i) => (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() => setQuery(term)}
+                                                        className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-bold text-foreground/80 hover:text-primary hover:bg-muted/60 transition-all text-right cursor-pointer"
+                                                    >
+                                                        <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                                        <span className="truncate">{term}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    ) : (
+                                        <section className="bg-muted/30 rounded-2xl p-4 sm:p-5 border border-border/60 flex flex-col items-center justify-center text-center">
+                                            <Search className="w-7 h-7 text-primary/40 mb-2" />
+                                            <p className="text-xs font-bold text-muted-foreground">
+                                                اكتب أي كلمة للبحث في الدروس والكتب والسلاسل
+                                            </p>
+                                        </section>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    </motion.div>
                 </motion.div>
             )}
         </AnimatePresence>

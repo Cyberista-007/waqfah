@@ -20,10 +20,10 @@ import {
 
 const sections = [
   { id: "hero", label: "الرئيسية", sub: "بداية الرحلة والبحث", icon: Home },
-  { id: "categories", label: "الأقسام العلمية", sub: "تصفح العلوم حسب التصنيف", icon: Grid },
-  { id: "hub", label: "كنوز إسلامية", sub: "قرآن، أذكار، وأحاديث", icon: Layers },
+  { id: "categories", label: "أبواب العلم", sub: "القرآن والعلوم والأقسام", icon: Grid },
+  { id: "spiritual", label: "وقفات إيمانية", sub: "آية اليوم والروشتة الإيمانية", icon: Star },
+  { id: "latest", label: "أحدث المحتوى", sub: "البرامج والمحاضرات والسلاسل", icon: PlayCircle },
   { id: "pathways", label: "المسارات المنهجية", sub: "خرائط طريق لطلب العلم", icon: GraduationCap },
-  { id: "latest", label: "آخر التحديثات", sub: "جديد الدروس والسلاسل", icon: PlayCircle },
   { id: "faq", label: "الأسئلة الشائعة", sub: "إجابات لاستفساراتك", icon: HelpCircle },
 ]
 
