@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, MessageSquare, Download, ListPlus, MoreVertical, Clock, Ban, Flag, PlaySquare, Loader2, Brain } from "lucide-react"
+import { Headphones, Play, Share2, Eye, Calendar, MessageSquare, Download, ListPlus, MoreVertical, Clock, Flag, PlaySquare, Loader2, Brain } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
-import { subDays } from "date-fns";
+import { format, subDays } from "date-fns";
+import { ar } from 'date-fns/locale';
 
-import type { Lecture, ListenHistoryItem, Playlist, Quiz } from "@/lib/types"
+import type { Lecture, ListenHistoryItem, Playlist, Quiz, Program } from "@/lib/types"
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -16,10 +17,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { cn, formatDuration, getVideoIdFromUrl } from "@/lib/utils"
+import { cn, formatDuration, formatViews, getVideoIdFromUrl, getInitials } from "@/lib/utils"
 import { getPlaceholderImage } from "@/lib/images"
-import { useUser } from "@/firebase"
+import { useUser, useDoc } from "@/firebase"
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
 import { useRouter } from "next/navigation"
 import { TooltipProvider } from "./ui/tooltip"
@@ -56,6 +58,7 @@ const LectureCardComponent = ({
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
+  const { data: programDoc } = useDoc<Program>(lecture.programId ? `programs/${lecture.programId}` : null);
 
   const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
@@ -262,6 +265,9 @@ const LectureCardComponent = ({
   };
 
   const publicationDate = toDate(lecture.publishedAt) || toDate(lecture.createdAt);
+  const dateText = publicationDate
+    ? format(publicationDate, 'EEEE، d MMMM yyyy', { locale: ar })
+    : null;
   const isNew = publicationDate && publicationDate > subDays(new Date(), 7);
 
   return (
@@ -363,9 +369,47 @@ const LectureCardComponent = ({
           )}
         </div>
 
-        {/* Clean Info Below Thumbnail (matches StripCard) */}
-        <div className="mt-3 px-1 flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 space-y-1.5 text-right">
+        {/* Clean Info Below Thumbnail */}
+        <div className="mt-3 px-1 flex items-start justify-between gap-2.5">
+          {/* Channel / Program Logo */}
+          {lecture.programSlug && (
+            <Link
+              href={`/programs/${lecture.programSlug}`}
+              className="shrink-0 mt-0.5 transition-transform hover:scale-105 active:scale-95"
+              onClick={(e) => e.stopPropagation()}
+              title={lecture.programName}
+            >
+              <Avatar className="h-9 w-9 border border-border bg-background shadow-sm">
+                <AvatarImage src={programDoc?.imageUrl} alt={lecture.programName} className="object-cover" />
+                <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                  {getInitials(lecture.programName || "P")}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          )}
+
+          <div className="min-w-0 flex-1 space-y-1 text-right">
+            {/* Stats Above Title */}
+            {(dateText || (lecture.youtubeViewCount ?? 0) > 0) && (
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                {dateText && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{dateText}</span>
+                  </div>
+                )}
+                {dateText && (lecture.youtubeViewCount ?? 0) > 0 && (
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
+                )}
+                {(lecture.youtubeViewCount ?? 0) > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-3 h-3 shrink-0" />
+                    <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <h3 className="font-bold text-sm md:text-[15px] leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
               <Link href={`/lectures/${lecture.slug}`}>
                 {lecture.title}
@@ -473,11 +517,6 @@ const LectureCardComponent = ({
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
-
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "تم إخفاء المحاضرة من الاقتراحات." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100">
-                  <Ban className="w-4 h-4" />
-                  <span>لا يهمني</span>
-                </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "شكراً لبلاغك. سيتم مراجعة المحتوى." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100">
                   <Flag className="w-4 h-4" />
