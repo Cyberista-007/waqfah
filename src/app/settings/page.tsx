@@ -1,910 +1,1031 @@
-
 'use client';
 
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { deleteUser, signOut, type User } from 'firebase/auth';
+import { collection, doc, getDocs, writeBatch } from 'firebase/firestore';
 import {
   Bell,
-  ChevronRight,
+  Book,
+  Bot,
+  CaseSensitive,
+  CheckCircle2,
   ChevronLeft,
-  Download,
+  ChevronRight,
+  Crown,
+  Database,
+  Droplets,
+  Edit,
+  ExternalLink,
   Globe,
-  Headphones,
-  History,
+  Grid,
+  HardDriveDownload,
+  ImageIcon,
+  Info,
+  ListMusic,
   Loader2,
   LogOut,
-  Sparkles,
-  User as UserIcon,
-  Edit,
-  Book,
-  ListMusic,
-  Youtube,
-  ImageIcon,
-  Palette,
-  CaseSensitive,
-  Grid,
-  XCircle,
-  Bot,
   MessageSquare,
-
-  DownloadCloud,
-  Wifi,
-  Database,
-  Contrast,
+  Palette,
+  Settings,
+  ShieldAlert,
+  Sparkles,
   Trash2,
-  HardDriveDownload,
   UserX,
-  Crown,
-  Link as LinkIcon,
-  Smartphone,
-  PlayCircle,
-  Stamp,
-  Eye,
-  X,
-  ExternalLink,
-  CheckCircle2,
-  Info,
-  Wind,
-  Layers as LayersIcon,
-  Zap,
-  Activity,
-  Droplets,
-  Waves,
+  Wifi,
+  XCircle,
+  Youtube,
 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import Link from 'next/link';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, updateDocumentNonBlocking, useAuth } from '@/firebase';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { doc, collection, deleteDoc, getDocs, writeBatch } from 'firebase/firestore';
-import type { UserProfile, Following, Program, NotificationSettings, Lecture, ListenHistoryItem } from '@/lib/types';
-import { getInitials, formatBytes } from '@/lib/utils';
-import { EditProfileForm } from '@/components/profile/edit-profile-form';
-import { signOut, deleteUser } from 'firebase/auth';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
+import type {
+  Following,
+  Lecture,
+  ListenHistoryItem,
+  NotificationSettings,
+  Program,
+  UserProfile,
+} from '@/lib/types';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { ThemeSwitcherDialog, themes } from '@/components/theme-switcher';
+  updateDocumentNonBlocking,
+  useAuth,
+  useCollection,
+  useDoc,
+  useFirestore,
+  useMemoFirebase,
+  useUser,
+} from '@/firebase';
+import { cn, formatBytes, getInitials } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useAppearance } from '@/components/appearance-provider';
+import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance, gradientPresets } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { SolidColorSwitcherDialog } from '@/components/solid-color-switcher';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { DonationTierBadge } from '@/components/DonationTierBadge';
 import { LanguageSwitcherDialog, languages } from '@/components/language-switcher';
-import { cn } from '@/lib/utils';
+import { DonationTierBadge } from '@/components/DonationTierBadge';
+import { EditProfileForm } from '@/components/profile/edit-profile-form';
+import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
-import type { User } from 'firebase/auth';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
+type SettingsTab = 'appearance' | 'ai' | 'notifications' | 'account';
 
-const SettingsHeader = ({ title, onBack }: { title: string, onBack: () => void }) => (
-    <div className="flex items-center gap-2 mb-4">
-        <Button onClick={onBack} variant="ghost" size="icon" className="shrink-0">
-            <ChevronRight className="h-6 w-6" />
-        </Button>
-        <h1 className="text-2xl font-bold font-headline">{title}</h1>
-    </div>
+const SubViewHeader = ({ title, onBack }: { title: string; onBack: () => void }) => (
+  <div className="flex items-center gap-3 mb-6">
+    <Button onClick={onBack} variant="outline" size="icon" className="rounded-xl shrink-0">
+      <ChevronRight className="h-5 w-5" />
+    </Button>
+    <h1 className="text-2xl font-black font-headline text-foreground">{title}</h1>
+  </div>
 );
 
-const SettingsItem = ({
+const SettingsRow = ({
   icon: Icon,
   label,
+  description,
   value,
-  href,
   onClick,
-  className,
+  danger,
 }: {
   icon: React.ElementType;
   label: string;
+  description?: string;
   value?: string;
-  href?: string;
   onClick?: () => void;
-  className?: string;
-}) => {
-  const content = (
-    <div className={cn("flex items-center py-3 px-2", className)}>
-      <Icon className="w-6 h-6 me-4 text-muted-foreground" />
-      <span className="flex-grow text-lg">{label}</span>
-      {value && <span className="text-muted-foreground text-lg me-2">{value}</span>}
-      <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+  danger?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-all text-right cursor-pointer group"
+  >
+    <div className="flex items-center gap-3.5 min-w-0">
+      <div
+        className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border',
+          danger
+            ? 'bg-destructive/10 border-destructive/20 text-destructive'
+            : 'bg-primary/10 border-primary/20 text-primary'
+        )}
+      >
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0">
+        <div className={cn('text-sm sm:text-base font-bold', danger ? 'text-destructive' : 'text-foreground')}>
+          {label}
+        </div>
+        {description && <div className="text-xs text-muted-foreground mt-0.5 truncate">{description}</div>}
+      </div>
     </div>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className="block text-right hover:bg-muted/50 rounded-lg transition-colors">
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <button onClick={onClick} className="w-full text-right hover:bg-muted/50 rounded-lg transition-colors">
-      {content}
-    </button>
-  );
-};
-
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-2 pt-6 pb-2">
-    {title}
-  </h2>
+    <div className="flex items-center gap-2 shrink-0">
+      {value && <span className="text-xs font-bold text-muted-foreground">{value}</span>}
+      <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:-translate-x-0.5 transition-transform" />
+    </div>
+  </button>
 );
 
-function NotificationsView({ onBack, onSelectNewEpisodes, userProfile, userId }: { onBack: () => void; onSelectNewEpisodes: () => void; userProfile: UserProfile; userId: string; }) {
-    const firestore = useFirestore();
+function NotificationsView({
+  onBack,
+  onSelectNewEpisodes,
+  userProfile,
+  userId,
+}: {
+  onBack: () => void;
+  onSelectNewEpisodes: () => void;
+  userProfile: UserProfile;
+  userId: string;
+}) {
+  const firestore = useFirestore();
 
-    const handleSettingChange = (setting: keyof NotificationSettings, value: boolean) => {
-        if (!firestore) return;
+  const handleSettingChange = (setting: keyof NotificationSettings, value: boolean) => {
+    if (!firestore) return;
+    const userRef = doc(firestore, 'users', userId);
+    updateDocumentNonBlocking(userRef, {
+      [`notificationSettings.${setting}`]: value,
+    });
+  };
 
-        const userRef = doc(firestore, 'users', userId);
-        updateDocumentNonBlocking(userRef, {
-            [`notificationSettings.${setting}`]: value
-        });
-    };
-    
-    const newPrograms = userProfile?.notificationSettings?.newPrograms ?? true;
-    const newPlaylists = userProfile?.notificationSettings?.newPlaylists ?? false;
-    const newBooks = userProfile?.notificationSettings?.newBooks ?? true;
+  const newPrograms = userProfile?.notificationSettings?.newPrograms ?? true;
+  const newPlaylists = userProfile?.notificationSettings?.newPlaylists ?? false;
+  const newBooks = userProfile?.notificationSettings?.newBooks ?? true;
 
-    return (
-        <div>
-            <SettingsHeader title="الإشعارات" onBack={onBack} />
-            <div className="bg-card rounded-xl p-2">
-                <div className="px-2 py-3">
-                    <p className="text-muted-foreground">يصلني اشعار عندما:</p>
-                </div>
-                <button onClick={onSelectNewEpisodes} className="w-full text-right hover:bg-muted/50 rounded-lg transition-colors">
-                    <div className="flex items-center justify-between py-3 px-2">
-                        <div className="flex items-center gap-4">
-                            <Bell className="w-6 h-6 text-muted-foreground" />
-                            <span className="text-lg">عند صدور حلقات جديدة</span>
-                        </div>
-                        <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                </button>
-                <Separator />
-                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                    <Label htmlFor="switch-new-programs" className="text-lg cursor-pointer flex items-center gap-4">
-                        <Youtube className="w-6 h-6 text-muted-foreground" />
-                        <span>عند صدور برامج جديدة</span>
-                    </Label>
-                    <Switch
-                        id="switch-new-programs"
-                        checked={newPrograms}
-                        onCheckedChange={(value) => handleSettingChange('newPrograms', value)}
-                    />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                    <Label htmlFor="switch-new-playlists" className="text-lg cursor-pointer flex items-center gap-4">
-                        <ListMusic className="w-6 h-6 text-muted-foreground" />
-                        <span>عند صدور قوائم تشغيل جديدة</span>
-                    </Label>
-                    <Switch
-                        id="switch-new-playlists"
-                        checked={newPlaylists}
-                        onCheckedChange={(value) => handleSettingChange('newPlaylists', value)}
-                    />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                    <Label htmlFor="switch-new-books" className="text-lg cursor-pointer flex items-center gap-4">
-                        <Book className="w-6 h-6 text-muted-foreground" />
-                        <span>عند صدور كتب جديدة</span>
-                    </Label>
-                    <Switch
-                        id="switch-new-books"
-                        checked={newBooks}
-                        onCheckedChange={(value) => handleSettingChange('newBooks', value)}
-                    />
-                </div>
-            </div>
+  return (
+    <div className="max-w-3xl mx-auto py-6 px-4" dir="rtl">
+      <SubViewHeader title="إعدادات الإشعارات" onBack={onBack} />
+      <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
+        <p className="text-xs font-bold text-muted-foreground px-2 pb-2">يصلني إشعار عند:</p>
+        <SettingsRow
+          icon={Bell}
+          label="صدور حلقات جديدة"
+          description="تخصيص الإشعارات لكل برنامج تتابعه"
+          onClick={onSelectNewEpisodes}
+        />
+        <Separator />
+        <div className="flex items-center justify-between p-4 rounded-2xl">
+          <Label htmlFor="switch-new-programs" className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3.5">
+            <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <Youtube className="w-5 h-5" />
+            </span>
+            <span>صدور برامج جديدة</span>
+          </Label>
+          <Switch
+            id="switch-new-programs"
+            checked={newPrograms}
+            onCheckedChange={(value) => handleSettingChange('newPrograms', value)}
+          />
         </div>
-    );
+        <Separator />
+        <div className="flex items-center justify-between p-4 rounded-2xl">
+          <Label htmlFor="switch-new-playlists" className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3.5">
+            <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <ListMusic className="w-5 h-5" />
+            </span>
+            <span>صدور سلاسل وقوائم تشغيل جديدة</span>
+          </Label>
+          <Switch
+            id="switch-new-playlists"
+            checked={newPlaylists}
+            onCheckedChange={(value) => handleSettingChange('newPlaylists', value)}
+          />
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between p-4 rounded-2xl">
+          <Label htmlFor="switch-new-books" className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3.5">
+            <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <Book className="w-5 h-5" />
+            </span>
+            <span>إضافة كتب جديدة للمكتبة</span>
+          </Label>
+          <Switch
+            id="switch-new-books"
+            checked={newBooks}
+            onCheckedChange={(value) => handleSettingChange('newBooks', value)}
+          />
+        </div>
+      </Card>
+    </div>
+  );
 }
 
-function NewEpisodesView({ onBack }: { onBack: () => void; }) {
-    const { user } = useUser();
-    const firestore = useFirestore();
+function NewEpisodesView({ onBack }: { onBack: () => void }) {
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-    const followingPath = user ? `users/${user.uid}/following` : null;
-    const { data: following, isLoading: followingLoading } = useCollection<Following>(followingPath);
+  const followingPath = user ? `users/${user.uid}/following` : null;
+  const { data: following, isLoading: followingLoading } = useCollection<Following>(followingPath);
+  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
 
-    const [followedPrograms, setFollowedPrograms] = useState<Program[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const isLoading = programsLoading || followingLoading;
 
-    const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
+  const followedPrograms = useMemo(() => {
+    if (!allPrograms || !following) return [];
+    const subscribedProgramIds = new Set(following.map((f) => f.programId));
+    return allPrograms.filter((c) => subscribedProgramIds.has(c.id));
+  }, [allPrograms, following]);
 
-     useState(() => {
-        if (programsLoading || followingLoading || !allPrograms || !following) {
-             if (!programsLoading && !followingLoading) {
-                setIsLoading(false);
-             }
-            return;
-        };
-        
-        const subscribedProgramIds = following.map(f => f.programId);
-        const subscribedPrograms = allPrograms.filter(c => subscribedProgramIds.includes(c.id));
-        setFollowedPrograms(subscribedPrograms);
-        setIsLoading(false);
+  const handleToggle = (programId: string, newState: boolean) => {
+    if (!user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'following', programId);
+    updateDocumentNonBlocking(docRef, { notificationsEnabled: newState });
+  };
 
-    });
-
-    const handleToggle = (programId: string, newState: boolean) => {
-        if (!user || !firestore) return;
-        const docRef = doc(firestore, 'users', user.uid, 'following', programId);
-        updateDocumentNonBlocking(docRef, { notificationsEnabled: newState });
-    };
-
-    return (
-        <div>
-            <SettingsHeader title="عند صدور حلقات جديدة" onBack={onBack} />
-             {isLoading ? (
-                <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8" /></div>
-            ) : followedPrograms.length > 0 ? (
-                <div className="bg-card rounded-xl p-2 space-y-1">
-                    {followedPrograms.map(program => {
-                        const followInfo = following?.find(f => f.programId === program.id);
-                        // Default to true if the field is not set
-                        const isEnabled = followInfo?.notificationsEnabled ?? true;
-
-                        return (
-                             <div key={program.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                                <Label htmlFor={`switch-${program.id}`} className="text-lg cursor-pointer flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={program.imageUrl} />
-                                        <AvatarFallback>{getInitials(program.name)}</AvatarFallback>
-                                    </Avatar>
-                                    {program.name}
-                                </Label>
-                                <Switch
-                                    id={`switch-${program.id}`}
-                                    checked={isEnabled}
-                                    onCheckedChange={(checked) => handleToggle(program.id, checked)}
-                                />
-                            </div>
-                        )
-                    })}
-                </div>
-            ) : (
-                <Card className="text-center">
-                    <CardContent className="p-8">
-                        <p className="text-muted-foreground">أنت لا تتابع أي برامج حاليًا.</p>
-                        <Button variant="link" asChild><Link href="/programs">تصفح البرامج</Link></Button>
-                    </CardContent>
-                </Card>
-            )}
+  return (
+    <div className="max-w-3xl mx-auto py-6 px-4" dir="rtl">
+      <SubViewHeader title="إشعارات الحلقات الجديدة" onBack={onBack} />
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
         </div>
-    )
+      ) : followedPrograms.length > 0 ? (
+        <Card className="rounded-3xl luxury-card p-3 space-y-1">
+          {followedPrograms.map((program) => {
+            const followInfo = following?.find((f) => f.programId === program.id);
+            const isEnabled = followInfo?.notificationsEnabled ?? true;
+
+            return (
+              <div
+                key={program.id}
+                className="flex items-center justify-between p-3.5 rounded-2xl hover:bg-muted/50 transition-colors"
+              >
+                <Label htmlFor={`switch-${program.id}`} className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={program.imageUrl} />
+                    <AvatarFallback>{getInitials(program.name)}</AvatarFallback>
+                  </Avatar>
+                  <span>{program.name}</span>
+                </Label>
+                <Switch
+                  id={`switch-${program.id}`}
+                  checked={isEnabled}
+                  onCheckedChange={(checked) => handleToggle(program.id, checked)}
+                />
+              </div>
+            );
+          })}
+        </Card>
+      ) : (
+        <Card className="rounded-3xl luxury-card text-center p-10">
+          <p className="text-muted-foreground font-medium mb-4">أنت لا تتابع أي برامج حالياً.</p>
+          <Button asChild className="rounded-xl font-bold">
+            <Link href="/programs">تصفح البرامج</Link>
+          </Button>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 function StorageManagementView({ onBack, user }: { onBack: () => void; user: User }) {
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(true);
-    const [downloadedLectures, setDownloadedLectures] = useState<(Lecture & { size: number })[]>([]);
-    const [itemToDelete, setItemToDelete] = useState<(Lecture & { size: number }) | null>(null);
-    const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const { toast } = useToast();
+  const [downloadedLectures, setDownloadedLectures] = useState<(Lecture & { size: number })[]>([]);
+  const [itemToDelete, setItemToDelete] = useState<(Lecture & { size: number }) | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
-    const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(user ? `users/${user.uid}/listenHistory` : null);
-    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
+  const { data: listenHistory, isLoading: historyLoading } = useCollection<ListenHistoryItem>(
+    user ? `users/${user.uid}/listenHistory` : null
+  );
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
 
-    useEffect(() => {
-        if (historyLoading || lecturesLoading) return;
+  const isLoading = historyLoading || lecturesLoading;
 
-        if (listenHistory && allLectures) {
-            const downloads = listenHistory.map(historyItem => {
-                const lecture = allLectures.find(l => l.id === historyItem.lectureId);
-                if (lecture) {
-                    const size = Math.round((lecture.duration / 60) * 1.5 * 1024 * 1024); // Fake size: 1.5MB per minute
-                    return { ...lecture, size };
-                }
-                return null;
-            }).filter((l): l is Lecture & { size: number } => !!l);
-            setDownloadedLectures(downloads);
-        }
-        setIsLoading(false);
-    }, [listenHistory, allLectures, historyLoading, lecturesLoading]);
-
-    const totalSize = useMemo(() => downloadedLectures.reduce((acc, l) => acc + l.size, 0), [downloadedLectures]);
-    const FAKE_TOTAL_STORAGE = 5 * 1024 * 1024 * 1024; // 5 GB
-
-    const handleDelete = (lectureId: string) => {
-        // In a real app, you would also delete from device storage and firestore listen history.
-        setDownloadedLectures(prev => prev.filter(l => l.id !== lectureId));
-        toast({ title: "تم حذف التنزيل." });
-        setItemToDelete(null);
-    };
-    
-    const handleDeleteAll = () => {
-        setDownloadedLectures([]);
-        toast({ variant: 'destructive', title: "تم حذف جميع التنزيلات." });
-        setIsDeletingAll(false);
+  useEffect(() => {
+    if (isLoading) return;
+    if (listenHistory && allLectures) {
+      const downloads = listenHistory
+        .map((historyItem) => {
+          const lecture = allLectures.find((l) => l.id === historyItem.lectureId);
+          if (lecture) {
+            const size = Math.round((lecture.duration / 60) * 1.5 * 1024 * 1024);
+            return { ...lecture, size };
+          }
+          return null;
+        })
+        .filter((l): l is Lecture & { size: number } => !!l);
+      setDownloadedLectures(downloads);
     }
+  }, [listenHistory, allLectures, isLoading]);
 
-    return (
-        <div>
-            <SettingsHeader title="إدارة مساحة التخزين" onBack={onBack} />
-            <Card>
-                <CardHeader>
-                    <CardTitle>مساحة التخزين المستخدمة</CardTitle>
-                    <CardDescription>
-                        هنا يمكنك رؤية المحاضرات التي تم تنزيلها وحذفها لتوفير مساحة على جهازك.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Progress value={(totalSize / FAKE_TOTAL_STORAGE) * 100} />
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>المستخدم: {formatBytes(totalSize)}</span>
-                            <span>الإجمالي المتوفر: {formatBytes(FAKE_TOTAL_STORAGE)}</span>
-                        </div>
+  const totalSize = useMemo(() => downloadedLectures.reduce((acc, l) => acc + l.size, 0), [downloadedLectures]);
+  const TOTAL_QUOTA = 5 * 1024 * 1024 * 1024;
+
+  const handleDelete = (lectureId: string) => {
+    setDownloadedLectures((prev) => prev.filter((l) => l.id !== lectureId));
+    toast({ title: 'تم حذف العنصر من القائمة المحلية.' });
+    setItemToDelete(null);
+  };
+
+  const handleDeleteAll = () => {
+    setDownloadedLectures([]);
+    toast({ variant: 'destructive', title: 'تم تفريغ جميع العناصر المحفوظة.' });
+    setIsDeletingAll(false);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto py-6 px-4" dir="rtl">
+      <SubViewHeader title="إدارة مساحة التخزين" onBack={onBack} />
+      <Card className="rounded-3xl luxury-card">
+        <CardHeader>
+          <CardTitle className="font-headline font-black">مساحة التخزين المستخدمة</CardTitle>
+          <CardDescription>
+            استعرض المحاضرات المحفوظة في الذاكرة المؤقتة وأزل ما لا تحتاجه.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Progress value={(totalSize / TOTAL_QUOTA) * 100} />
+            <div className="flex justify-between text-xs font-bold text-muted-foreground">
+              <span>المستخدم: {formatBytes(totalSize)}</span>
+              <span>السعة التقديرية: {formatBytes(TOTAL_QUOTA)}</span>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+            </div>
+          ) : downloadedLectures.length > 0 ? (
+            <ScrollArea className="h-72 rounded-2xl border border-border/60 p-3">
+              <div className="space-y-2">
+                {downloadedLectures.map((lecture) => (
+                  <div
+                    key={lecture.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-background/50 border border-border/50"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{lecture.title}</p>
+                      <p className="text-xs text-muted-foreground">{formatBytes(lecture.size)}</p>
                     </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-destructive hover:bg-destructive/10 shrink-0"
+                      onClick={() => setItemToDelete(lecture)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground py-8">لا توجد ملفات محفوظة حالياً.</p>
+          )}
 
-                    <div className="flex justify-end">
-                        <Button variant="destructive" onClick={() => setIsDeletingAll(true)} disabled={downloadedLectures.length === 0}>
-                            <Trash2 className="me-2 h-4 w-4" />
-                            حذف جميع التنزيلات
-                        </Button>
-                    </div>
+          {downloadedLectures.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setIsDeletingAll(true)}
+              className="w-full rounded-xl font-bold"
+            >
+              <Trash2 className="w-4 h-4 ml-2" />
+              تفريغ جميع المحفوظات
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
-                    <ScrollArea className="h-96 rounded-md border p-2">
-                        <div className="space-y-2 p-2">
-                            {isLoading ? (
-                                <div className="text-center p-4 flex justify-center"><Loader2 className="animate-spin" /></div>
-                            ) : downloadedLectures.length > 0 ? (
-                                downloadedLectures.map(lecture => (
-                                    <div key={lecture.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
-                                        <div>
-                                            <p className="font-semibold">{lecture.title}</p>
-                                            <p className="text-sm text-muted-foreground">{formatBytes(lecture.size)}</p>
-                                        </div>
-                                        <Button size="icon" variant="ghost" onClick={() => setItemToDelete(lecture)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-muted-foreground p-8">لا توجد تنزيلات حالياً.</p>
-                            )}
-                        </div>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+      <DeleteConfirmationDialog
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={() => itemToDelete && handleDelete(itemToDelete.id)}
+        title="حذف المحاضرة المحفوظة"
+        description={`هل تريد حذف "${itemToDelete?.title}" من المساحة المؤقتة؟`}
+      />
 
-            {itemToDelete && <DeleteConfirmationDialog
-                isOpen={!!itemToDelete}
-                onClose={() => setItemToDelete(null)}
-                onConfirm={() => handleDelete(itemToDelete!.id)}
-                title={`حذف "${itemToDelete?.title}"؟`}
-                description="سيتم حذف الملف من جهازك. هل أنت متأكد؟"
-            />}
-            <DeleteConfirmationDialog
-                isOpen={isDeletingAll}
-                onClose={() => setIsDeletingAll(false)}
-                onConfirm={handleDeleteAll}
-                title={`حذف جميع التنزيلات؟`}
-                description={`سيتم حذف ${downloadedLectures.length} ملف من جهازك. هل أنت متأكد؟`}
-            />
-        </div>
-    );
-}
-
-const hexToHSL = (hex: string): string => {
-    let r = 0, g = 0, b = 0;
-    if (hex.length === 4) {
-        r = parseInt(hex[1] + hex[1], 16);
-        g = parseInt(hex[2] + hex[2], 16);
-        b = parseInt(hex[3] + hex[3], 16);
-    } else if (hex.length === 7) {
-        r = parseInt(hex.substring(1, 3), 16);
-        g = parseInt(hex.substring(3, 5), 16);
-        b = parseInt(hex.substring(5, 7), 16);
-    }
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+      <DeleteConfirmationDialog
+        isOpen={isDeletingAll}
+        onClose={() => setIsDeletingAll(false)}
+        onConfirm={handleDeleteAll}
+        title="تفريغ المساحة بالكامل"
+        description="سيتم مسح جميع المحاضرات المحفوظة مؤقتاً من هذه القائمة."
+      />
+    </div>
+  );
 }
 
 export default function SettingsPage() {
-    const { user, isUserLoading } = useUser();
-    const auth = useAuth();
-    const firestore = useFirestore();
-    const router = useRouter();
-    const { toast } = useToast();
-    const { 
-        isBackgroundShown, 
-        toggleBackground, 
-        language,
-        aiApiKey,
-        setAiApiKey,
-        aiModel,
-        setAiModel,
-        showChatbot,
-        setShowChatbot,
-        gradientPreset: activePreset, 
-        setGradientPreset,
-        customColors,
-        setCustomColors,
-        auroraSpeed,
-        setAuroraSpeed,
-        auroraBlur,
-        setAuroraBlur,
-        auroraComplexity,
-        setAuroraComplexity,
-        auroraChaos,
-        setAuroraChaos,
-        auroraSaturation,
-        setAuroraSaturation,
-        auroraGrain,
-        setAuroraGrain
-    } = useAppearance();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
+  const { toast } = useToast();
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
 
-    const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
-    const [isEditing, setIsEditing] = useState(false);
-    const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
-    const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
-    const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
-    const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
-    const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
-    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
+  const {
+    isBackgroundShown,
+    toggleBackground,
+    setBackground,
+    language,
+    aiApiKey,
+    setAiApiKey,
+    aiModel,
+    setAiModel,
+    showChatbot,
+    setShowChatbot,
+  } = useAppearance();
 
-    const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, "users", user.uid) : null), [user, firestore]);
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const [activeTab, setActiveTab] = useState<SettingsTab>('appearance');
+  const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
+  const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
+  const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
+  const [isPatternSwitcherOpen, setIsPatternSwitcherOpen] = useState(false);
+  const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isClearHistoryConfirmOpen, setIsClearHistoryConfirmOpen] = useState(false);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [wifiOnly, setWifiOnly] = useState(true);
 
-    // Guest users are allowed to access settings to change appearance/AI keys.
-    // So we do not redirect them to login page.
+  useEffect(() => {
+    const savedWifi = localStorage.getItem('waqfah_wifi_only');
+    if (savedWifi !== null) setWifiOnly(savedWifi === 'true');
+  }, []);
 
-    const onLogout = async () => {
-        if (auth) {
-            await signOut(auth);
-            router.push('/');
-        }
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
+  const onLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
     }
-    
-    const handleDownloadData = async () => {
-        if (isDownloading || !user || !firestore) {
-            if(!user) {
-                toast({
-                    variant: "destructive",
-                    title: "خطأ",
-                    description: "يجب تسجيل الدخول لتنزيل بياناتك.",
-                });
-            }
-            return;
+  };
+
+  const handleBackgroundFileUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setBackground({ image: `url("${reader.result}")`, color: null, type: 'image' });
+          toast({ title: 'تم تحديث صورة الخلفية بنجاح.' });
         }
-    
-        setIsDownloading(true);
-        toast({
-            title: "جاري تجهيز بياناتك...",
-            description: "قد تستغرق هذه العملية بضع لحظات.",
-        });
-    
-        try {
-            const userData: any = {
-                profile: userProfile,
-                subcollections: {},
-            };
-    
-            const subcollections = [
-                'favorites', 'following', 'listenHistory', 'playlists', 'notes',
-                'user_challenges', 'accountability', 'user_badges', 'curriculum_progress'
-            ];
-    
-            for (const subcollection of subcollections) {
-                const querySnapshot = await getDocs(collection(firestore, 'users', user.uid, subcollection));
-                userData.subcollections[subcollection] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            }
-    
-            const dataStr = JSON.stringify(userData, (key, value) => {
-                if (value && typeof value === 'object' && value.toDate instanceof Function) {
-                    return value.toDate().toISOString();
-                }
-                return value;
-            }, 2);
-            
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const fileName = `${user.displayName} - تلك البيانات الخاصة بحسابك في موقع وقفة.json`;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            toast({
-                title: "اكتمل التنزيل!",
-                description: "تم تنزيل بياناتك بنجاح.",
-            });
-    
-        } catch (error) {
-            console.error("Error downloading data:", error);
-            toast({
-                variant: "destructive",
-                title: "فشل تنزيل البيانات",
-                description: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
-            });
-        } finally {
-            setIsDownloading(false);
-        }
-    };
+      };
+      reader.readAsDataURL(file);
+    },
+    [setBackground, toast]
+  );
 
-    const handleDeleteAccount = async () => {
-        if (!user || !auth || !firestore) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'المستخدم غير مسجل دخوله أو أن خدمات Firebase غير جاهزة.' });
-            return;
-        }
-
-        setIsDeleting(true);
-        try {
-            const subcollections = [
-                'favorites', 
-                'following', 
-                'listenHistory', 
-                'playlists', 
-                'notes', 
-                'user_challenges', 
-                'accountability', 
-                'user_badges', 
-                'curriculum_progress'
-            ];
-
-            const batch = writeBatch(firestore);
-
-            for (const subcollection of subcollections) {
-                const querySnapshot = await getDocs(collection(firestore, 'users', user.uid, subcollection));
-                querySnapshot.forEach((doc) => {
-                    batch.delete(doc.ref);
-                });
-            }
-
-            const userDocRef = doc(firestore, 'users', user.uid);
-            batch.delete(userDocRef);
-
-            await batch.commit();
-            await deleteUser(user);
-            
-            toast({ title: 'تم حذف الحساب بنجاح', description: 'نأمل أن نراك مرة أخرى قريبًا.' });
-            
-        } catch (error: any) {
-            console.error("Error deleting account:", error);
-            let description = 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.';
-            if (error.code === 'auth/requires-recent-login') {
-                description = 'هذه عملية حساسة وتتطلب منك تسجيل الدخول مرة أخرى قبل حذف حسابك. الرجاء تسجيل الخروج ثم إعادة تسجيل الدخول والمحاولة مرة أخرى.';
-            } else if (error.code === 'permission-denied') {
-                 description = 'ليس لديك الصلاحية لحذف هذا الحساب.';
-            }
-            toast({
-                variant: 'destructive',
-                title: 'حدث خطأ',
-                description: description,
-                duration: 9000,
-            });
-        } finally {
-            setIsDeleting(false);
-            setIsDeleteConfirmOpen(false);
-        }
-    };
-
-
-    if (isUserLoading || (user && isProfileLoading)) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-16 w-16 animate-spin" />
-            </div>
-        )
+  const handleClearListenHistory = async () => {
+    if (!user || !firestore) return;
+    setIsClearingHistory(true);
+    try {
+      const snap = await getDocs(collection(firestore, 'users', user.uid, 'listenHistory'));
+      const batch = writeBatch(firestore);
+      snap.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      toast({ title: 'تم مسح سجل الاستماع بنجاح.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'تعذر مسح سجل الاستماع.' });
+    } finally {
+      setIsClearingHistory(false);
+      setIsClearHistoryConfirmOpen(false);
     }
-    
-    if (view === 'notifications' && userProfile && user) {
-        return <NotificationsView onBack={() => setView('main')} onSelectNewEpisodes={() => setView('newEpisodes')} userProfile={userProfile} userId={user.uid} />;
+  };
+
+  const handleDownloadData = async () => {
+    if (isDownloading || !user || !firestore) {
+      if (!user) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يجب تسجيل الدخول لتنزيل بياناتك.' });
+      }
+      return;
     }
 
-    if (view === 'newEpisodes') {
-        return <NewEpisodesView onBack={() => setView('notifications')} />;
+    setIsDownloading(true);
+    toast({ title: 'جاري تجهيز بياناتك...', description: 'قد تستغرق هذه العملية بضع لحظات.' });
+
+    try {
+      const userData: any = { profile: userProfile, subcollections: {} };
+      const subcollections = [
+        'favorites',
+        'following',
+        'listenHistory',
+        'playlists',
+        'notes',
+        'user_challenges',
+        'accountability',
+        'user_badges',
+        'curriculum_progress',
+      ];
+
+      for (const sub of subcollections) {
+        const querySnapshot = await getDocs(collection(firestore, 'users', user.uid, sub));
+        userData.subcollections[sub] = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+
+      const dataStr = JSON.stringify(
+        userData,
+        (_key, value) => (value && typeof value === 'object' && value.toDate instanceof Function ? value.toDate().toISOString() : value),
+        2
+      );
+
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${user.displayName || 'user'}-waqfah-data.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({ title: 'اكتمل التنزيل!', description: 'تم تنزيل بياناتك بنجاح.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'فشل تنزيل البيانات', description: 'حدث خطأ غير متوقع.' });
+    } finally {
+      setIsDownloading(false);
     }
-    
-    if (view === 'storage' && user) {
-        return <StorageManagementView onBack={() => setView('main')} user={user} />;
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || !auth || !firestore) {
+      toast({ variant: 'destructive', title: 'خطأ', description: 'خدمات الحساب غير جاهزة.' });
+      return;
     }
-    
-    const currentLanguageName = languages.find(l => l.value === language)?.name || 'العربية';
+
+    setIsDeleting(true);
+    try {
+      const subcollections = [
+        'favorites',
+        'following',
+        'listenHistory',
+        'playlists',
+        'notes',
+        'user_challenges',
+        'accountability',
+        'user_badges',
+        'curriculum_progress',
+      ];
+
+      const batch = writeBatch(firestore);
+      for (const sub of subcollections) {
+        const snap = await getDocs(collection(firestore, 'users', user.uid, sub));
+        snap.forEach((d) => batch.delete(d.ref));
+      }
+      batch.delete(doc(firestore, 'users', user.uid));
+      await batch.commit();
+      await deleteUser(user);
+
+      toast({ title: 'تم حذف الحساب بنجاح', description: 'نأمل أن نراك مرة أخرى قريباً.' });
+    } catch (error: any) {
+      let description = 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.';
+      if (error.code === 'auth/requires-recent-login') {
+        description = 'تتطلب هذه العملية تسجيل الدخول مجدداً قبل الحذف.';
+      }
+      toast({ variant: 'destructive', title: 'حدث خطأ', description, duration: 8000 });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmOpen(false);
+    }
+  };
+
+  if (isUserLoading || (user && isProfileLoading)) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (view === 'notifications' && userProfile && user) {
+    return (
+      <NotificationsView
+        onBack={() => setView('main')}
+        onSelectNewEpisodes={() => setView('newEpisodes')}
+        userProfile={userProfile}
+        userId={user.uid}
+      />
+    );
+  }
+
+  if (view === 'newEpisodes') {
+    return <NewEpisodesView onBack={() => setView('notifications')} />;
+  }
+
+  if (view === 'storage' && user) {
+    return <StorageManagementView onBack={() => setView('main')} user={user} />;
+  }
+
+  const currentLanguageName = languages.find((l) => l.value === language)?.name || 'العربية';
+
+  const tabs: { id: SettingsTab; label: string; icon: React.ElementType; desc: string }[] = [
+    { id: 'appearance', label: 'المظهر واللغة', icon: Palette, desc: 'السمة، الخطوط، والخلفيات' },
+    { id: 'ai', label: 'المساعد الذكي', icon: Bot, desc: 'مفتاح Gemini والنموذج' },
+    { id: 'notifications', label: 'الإشعارات والتخزين', icon: Bell, desc: 'التنبيهات وإدارة المحفوظات' },
+    { id: 'account', label: 'الحساب والبيانات', icon: ShieldAlert, desc: 'التصدير وسجل الاستماع' },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto">
-      
-      {user ? (
-        <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl mb-8">
-          <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
-              <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
-          <div className="text-center sm:text-right">
-              <div className="flex items-center gap-3 justify-center sm:justify-start">
-                  <h2 className="text-2xl font-bold font-headline">{user.displayName}</h2>
+    <div className="container max-w-5xl mx-auto px-4 py-8 space-y-8" dir="rtl">
+      {/* Hidden image uploader */}
+      <input
+        ref={bgFileInputRef}
+        id="background-uploader-input"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleBackgroundFileUpload}
+      />
+
+      {/* Page Title & Profile Banner */}
+      <header className="rounded-3xl luxury-glass border border-border/70 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        {user ? (
+          <>
+            <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-right">
+              <Avatar className="h-20 w-20 border-2 border-primary/30">
+                <AvatarImage src={user.photoURL || userProfile?.photoURL || ''} alt={user.displayName || 'User'} />
+                <AvatarFallback className="text-2xl font-black bg-primary/15 text-primary">
+                  {getInitials(user.displayName)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2.5 justify-center sm:justify-start">
+                  <h1 className="text-2xl font-black font-headline text-foreground">{user.displayName}</h1>
                   {userProfile && <DonationTierBadge tier={userProfile.donationTier} />}
                   {userProfile?.role === 'admin' && (
                     <Link href="/admin/dashboard">
-                      <Badge variant="destructive" className="cursor-pointer hover:bg-destructive/80">وضع المدير</Badge>
+                      <Badge variant="destructive" className="cursor-pointer">
+                        وضع المدير
+                      </Badge>
                     </Link>
                   )}
-              </div>
-              <p className="text-muted-foreground">{user.email}</p>
-              {userProfile?.bio && <p className="mt-2 text-foreground">{userProfile.bio}</p>}
-              <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                      <Edit className="me-2 h-4 w-4" /> تعديل الملف الشخصي
-                  </Button>
-                  <Button onClick={onLogout} variant="secondary" size="sm">
-                      <LogOut className="me-2 h-4 w-4" /> تسجيل الخروج
-                  </Button>
-              </div>
-          </div>
-        </header>
-      ) : (
-        <header className="flex flex-col sm:flex-row items-center gap-6 bg-card p-6 rounded-xl mb-8">
-          <Avatar className="h-24 w-24">
-              <AvatarFallback className="text-3xl bg-primary/20 text-primary">زائر</AvatarFallback>
-          </Avatar>
-          <div className="text-center sm:text-right">
-              <h2 className="text-2xl font-bold font-headline">زائر المنصة</h2>
-              <p className="text-muted-foreground text-sm">سجل الدخول لحفظ سجل استماعك وقوائم تشغيلك ومزامنتها عبر أجهزتك المختلفة.</p>
-              <div className="flex gap-2 mt-4 justify-center sm:justify-start">
-                  <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground font-black">
-                      <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول / إنشاء حساب</Link>
-                  </Button>
-              </div>
-          </div>
-        </header>
-      )}
-        
-      <h1 className="text-4xl font-bold mb-6 font-headline text-center">
-        الإعدادات
-      </h1>
-
-      <div className="space-y-2 mt-8">
-        <SectionTitle title="عام" />
-        <div className="bg-card rounded-xl p-2">
-          {user && (
-            <>
-              <SettingsItem icon={Bell} label="الإشعارات" onClick={() => setView('notifications')}/>
-              <Separator />
-            </>
-          )}
-          <SettingsItem icon={Globe} label="اللغة" value={currentLanguageName} onClick={() => setIsLanguageSwitcherOpen(true)} />
-          <Separator />
-          <SettingsItem icon={Headphones} label="إعدادات الصوت" />
-        </div>
-
-        <SectionTitle title="المظهر" />
-        <div className="bg-card rounded-xl p-2">
-            <SettingsItem icon={Palette} label="تغيير الثيم" onClick={() => setIsThemeSwitcherOpen(true)} />
-            <Separator />
-            <SettingsItem icon={CaseSensitive} label="تغيير الخط" onClick={() => setIsFontSwitcherOpen(true)} />
-            <Separator />
-            <SettingsItem icon={Droplets} label="الألوان السادة" onClick={() => setIsSolidColorSwitcherOpen(true)} />
-            <Separator />
-            <SettingsItem icon={ImageIcon} label="رفع صورة خلفية" onClick={() => document.getElementById('background-uploader-input')?.click()} />
-            <Separator />
-            <SettingsItem icon={Grid} label="اختيار نمط خلفية" onClick={() => setIsPatternSwitcherOpen(true)} />
-            <Separator />
-            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                <Label htmlFor="bg-switch" className="text-lg cursor-pointer flex items-center gap-4">
-                    <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                    <span>إظهار الخلفية</span>
-                </Label>
-                <Switch
-                    id="bg-switch"
-                    checked={isBackgroundShown}
-                    onCheckedChange={toggleBackground}
-                />
-            </div>
-        </div>
-
-        {user && (
-          <>
-            <SectionTitle title="التنزيلات والتخزين" />
-            <div className="bg-card rounded-xl p-2">
-                <SettingsItem icon={DownloadCloud} label="جودة التنزيل" value="عالية" />
-                <Separator />
-                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                    <Label htmlFor="wifi-only-switch" className="text-lg cursor-pointer flex items-center gap-4">
-                        <Wifi className="w-6 h-6 text-muted-foreground" />
-                        <span>التنزيل عبر Wi-Fi فقط</span>
-                    </Label>
-                    <Switch id="wifi-only-switch" defaultChecked={true} />
                 </div>
-                <Separator />
-                <SettingsItem icon={Database} label="إدارة مساحة التخزين" onClick={() => setView('storage')} />
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+                {userProfile?.bio && <p className="text-xs text-foreground/80 pt-1">{userProfile.bio}</p>}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2.5 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="rounded-xl font-bold cursor-pointer">
+                <Edit className="ml-1.5 h-4 w-4" />
+                تعديل الملف
+              </Button>
+              <Button onClick={onLogout} variant="ghost" size="sm" className="rounded-xl font-bold text-destructive hover:bg-destructive/10 cursor-pointer">
+                <LogOut className="ml-1.5 h-4 w-4" />
+                خروج
+              </Button>
             </div>
           </>
-        )}
-
-        <SectionTitle title="إمكانية الوصول" />
-        <div className="bg-card rounded-xl p-2">
-             <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-                <Label htmlFor="high-contrast-switch" className="text-lg cursor-pointer flex items-center gap-4">
-                    <Contrast className="w-6 h-6 text-muted-foreground" />
-                    <span>وضع التباين العالي</span>
-                </Label>
-                <Switch id="high-contrast-switch" />
-            </div>
-        </div>
-
-        <SectionTitle title="المساعد الذكي (AI)" />
-        <div className="bg-card rounded-xl p-6 space-y-6">
-            <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <Sparkles className="w-6 h-6 text-primary" />
-                        <Label htmlFor="ai-api-key" className="text-lg">مفتاح Gemini API</Label>
-                    </div>
-                    <Link 
-                        href="https://aistudio.google.com/app/apikey" 
-                        target="_blank" 
-                        className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
-                    >
-                        احصل على مفتاح مجاني <ExternalLink className="w-3 h-3" />
-                    </Link>
-                </div>
-                <div className="relative group">
-                    <Input 
-                        id="ai-api-key"
-                        type="password"
-                        placeholder="أدخل مفتاح الـ API الخاص بك هنا..."
-                        value={aiApiKey || ''}
-                        onChange={(e) => setAiApiKey(e.target.value)}
-                        className="h-14 bg-white/5 border-white/5 rounded-2xl focus:bg-white/10 focus:ring-4 focus:ring-primary/10 transition-all font-mono"
-                    />
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                        {aiApiKey ? (
-                            <div className="flex items-center gap-2 text-emerald-500 animate-in fade-in zoom-in">
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase">مفعل</span>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 text-white/20">
-                                <XCircle className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase">غير مفعل</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-                    <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <p className="text-[11px] text-white/50 leading-relaxed font-medium">
-                        هذا المفتاح يتم تخزينه **محلياً في متصفحك فقط** ولا يرسل إلى خوادمنا. سيُستخدم لتمكين المساعد الذكي من الإجابة على تساؤلاتك المتعلقة بمحتوى المنصة وبناء خططك العلمية.
-                    </p>
-                </div>
-            </div>
-            
-            <div className="space-y-4 pt-4 border-t border-white/5">
-                <div className="flex items-center gap-3">
-                    <Bot className="w-6 h-6 text-primary" />
-                    <Label htmlFor="ai-model-select" className="text-lg">نموذج الذكاء الاصطناعي (Gemini Model)</Label>
-                </div>
-                <Select value={aiModel} onValueChange={(value) => setAiModel(value)}>
-                    <SelectTrigger id="ai-model-select" className="h-12 bg-white/5 border-white/5 rounded-xl">
-                        <SelectValue placeholder="اختر نموذجًا..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="gemini-4-hydrogen">Gemini 4 Hydrogen (الأحدث - الجيل الجديد فائق الذكاء والسرعة)</SelectItem>
-                        <SelectItem value="gemini-3.8-flash">Gemini 3.8 Flash (سريع وذكي متطور)</SelectItem>
-                        <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (سريع وذكي)</SelectItem>
-                        <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (الأقوى - للمسائل والخطط العلمية المعقدة)</SelectItem>
-                        <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (سرعة فائقة واستقرار)</SelectItem>
-                        <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash (الكلاسيكي السريع)</SelectItem>
-                        <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro (الكلاسيكي المحترف - للكتب الطويلة)</SelectItem>
-                    </SelectContent>
-                </Select>
-                <p className="text-[10px] text-white/30 leading-normal font-medium">
-                    إذا كان النموذج المختار غير معتمد لمفتاحك، سيتحول النظام تلقائياً للنموذج المستقر التالي لضمان عدم توقف الخدمة.
+        ) : (
+          <>
+            <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-right">
+              <div className="w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary">
+                <Settings className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-2xl font-black font-headline text-foreground">إعدادات المنصة</h1>
+                <p className="text-sm text-muted-foreground">
+                  سجل الدخول لحفظ تفضيلاتك، إشعاراتك، وسجل استماعك عبر أجهزتك.
                 </p>
+              </div>
             </div>
+            <Button asChild className="rounded-xl font-black shrink-0">
+              <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول / حساب جديد</Link>
+            </Button>
+          </>
+        )}
+      </header>
 
-            <div className="space-y-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <MessageSquare className="w-6 h-6 text-primary" />
-                    <div className="flex flex-col gap-0.5 text-right">
-                        <Label htmlFor="show-chatbot-switch" className="text-lg cursor-pointer font-bold">إظهار أيقونة المساعد الذكي</Label>
-                        <span className="text-[11px] text-white/40 leading-normal">إظهار أو إخفاء أيقونة الشات بوت العائمة أسفل الشاشة</span>
-                    </div>
+      {/* 2-Column Settings Workspace */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        {/* Category Navigation */}
+        <aside className="md:col-span-4 flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-3 p-3.5 rounded-2xl border text-right transition-all shrink-0 md:w-full cursor-pointer',
+                  isActive
+                    ? 'bg-primary/15 border-primary/35 text-primary shadow-sm'
+                    : 'bg-card/50 border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <div
+                  className={cn(
+                    'w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                    isActive ? 'bg-primary/20 text-primary' : 'bg-muted/50'
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
                 </div>
-                <Switch 
-                    id="show-chatbot-switch" 
-                    checked={showChatbot}
-                    onCheckedChange={setShowChatbot}
-                />
-            </div>
-        </div>
+                <div className="hidden md:block min-w-0">
+                  <div className="text-sm font-black">{tab.label}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{tab.desc}</div>
+                </div>
+                <span className="md:hidden text-xs font-black whitespace-nowrap">{tab.label}</span>
+              </button>
+            );
+          })}
+        </aside>
 
-        <SectionTitle title="الحساب والبيانات" />
-        {user ? (
-            <div className="bg-card rounded-xl p-2">
-              <SettingsItem icon={Crown} label="إدارة الاشتراكات" />
-              <Separator />
-              <SettingsItem icon={LinkIcon} label="الحسابات المرتبطة" />
-              <Separator />
-              <SettingsItem icon={Smartphone} label="الأجهزة المتصلة" />
-              <Separator />
-              <SettingsItem icon={Trash2} label="مسح سجل الاستماع" />
-              <Separator />
-              <SettingsItem 
-                icon={isDownloading ? Loader2 : HardDriveDownload} 
-                label={isDownloading ? "جاري التجهيز..." : "تنزيل بياناتي"} 
-                onClick={handleDownloadData} 
-                className={cn(isDownloading && "animate-pulse cursor-not-allowed")} 
+        {/* Active Panel */}
+        <div className="md:col-span-8">
+          {activeTab === 'appearance' && (
+            <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
+              <div className="px-2 pb-2">
+                <h2 className="text-xl font-black font-headline text-foreground">المظهر واللغة</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">خصّص شكل المنصة والخطوط بما يريح عينيك.</p>
+              </div>
+              <SettingsRow
+                icon={Palette}
+                label="السمة اللونية (الثيم)"
+                description="اختر من بين 19 سمة فاتحة وداكنة"
+                onClick={() => setIsThemeSwitcherOpen(true)}
               />
               <Separator />
-              <SettingsItem icon={UserX} label="حذف الحساب" className="text-destructive" onClick={() => setIsDeleteConfirmOpen(true)} />
-            </div>
-        ) : (
-            <Card className="border-2 border-dashed bg-card/50">
-                <CardContent className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
-                    <Crown className="w-10 h-10 text-primary opacity-30" />
-                    <p className="font-bold">الحساب والبيانات محمية</p>
-                    <p className="text-xs">يرجى تسجيل الدخول للوصول إلى إدارة الاشتراكات، الحسابات المرتبطة، ومسح سجلات الاستماع.</p>
-                </CardContent>
+              <SettingsRow
+                icon={CaseSensitive}
+                label="نوع الخط العربي"
+                description="اختر خط القراءة والعناوين المفضل"
+                onClick={() => setIsFontSwitcherOpen(true)}
+              />
+              <Separator />
+              <SettingsRow
+                icon={Globe}
+                label="اللغة"
+                value={currentLanguageName}
+                onClick={() => setIsLanguageSwitcherOpen(true)}
+              />
+              <Separator />
+              <SettingsRow
+                icon={Droplets}
+                label="الألوان السادة للخلفية"
+                onClick={() => setIsSolidColorSwitcherOpen(true)}
+              />
+              <Separator />
+              <SettingsRow
+                icon={Grid}
+                label="اختيار نمط خلفية"
+                onClick={() => setIsPatternSwitcherOpen(true)}
+              />
+              <Separator />
+              <SettingsRow
+                icon={ImageIcon}
+                label="رفع صورة خلفية مخصصة"
+                onClick={() => bgFileInputRef.current?.click()}
+              />
+              <Separator />
+              <div className="flex items-center justify-between p-4 rounded-2xl">
+                <Label htmlFor="bg-switch" className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3.5">
+                  <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <ImageIcon className="w-5 h-5" />
+                  </span>
+                  <span>إظهار الخلفية المخصصة</span>
+                </Label>
+                <Switch id="bg-switch" checked={isBackgroundShown} onCheckedChange={toggleBackground} />
+              </div>
             </Card>
-        )}
+          )}
+
+          {activeTab === 'ai' && (
+            <Card className="rounded-3xl luxury-card p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-black font-headline text-foreground">المساعد الذكي (Gemini AI)</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  إعدادات المساعد العلمي الذكي لتلخيص الدروس والإجابة عن الاستفسارات.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="ai-api-key" className="text-sm font-bold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span>مفتاح Gemini API</span>
+                  </Label>
+                  <Link
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>احصل على مفتاح مجاني</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    id="ai-api-key"
+                    type="password"
+                    placeholder="أدخل مفتاح الـ API الخاص بك هنا..."
+                    value={aiApiKey || ''}
+                    onChange={(e) => setAiApiKey(e.target.value)}
+                    className="h-12 bg-background/60 border-border rounded-xl font-mono pl-24"
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    {aiApiKey ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-500 text-xs font-black">
+                        <CheckCircle2 className="w-4 h-4" />
+                        مفعل
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-muted-foreground text-xs font-bold">
+                        <XCircle className="w-4 h-4" />
+                        غير مفعل
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-2.5">
+                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                    يُحفظ هذا المفتاح محلياً في متصفحك فقط ولا يُرسل إلى خوادمنا إلا لتنفيذ طلبات الذكاء الاصطناعي.
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <Label htmlFor="ai-model-select" className="text-sm font-bold flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-primary" />
+                  <span>نموذج الذكاء الاصطناعي</span>
+                </Label>
+                <Select value={aiModel} onValueChange={setAiModel}>
+                  <SelectTrigger id="ai-model-select" className="h-12 bg-background/60 border-border rounded-xl">
+                    <SelectValue placeholder="اختر نموذجاً..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gemini-4-hydrogen">Gemini 4 Hydrogen (الأحدث والأسرع)</SelectItem>
+                    <SelectItem value="gemini-3.8-flash">Gemini 3.8 Flash</SelectItem>
+                    <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                    <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (للمسائل المعقدة)</SelectItem>
+                    <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                  <div>
+                    <Label htmlFor="show-chatbot-switch" className="text-sm font-bold cursor-pointer block">
+                      إظهار أيقونة المساعد الذكي
+                    </Label>
+                    <span className="text-xs text-muted-foreground">إظهار أو إخفاء زر المساعد العائم أسفل الشاشة</span>
+                  </div>
+                </div>
+                <Switch id="show-chatbot-switch" checked={showChatbot} onCheckedChange={setShowChatbot} />
+              </div>
+            </Card>
+          )}
+
+          {activeTab === 'notifications' && (
+            <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
+              <div className="px-2 pb-2">
+                <h2 className="text-xl font-black font-headline text-foreground">الإشعارات والتخزين</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">التحكم بالتنبيهات وسعة التخزين المؤقتة.</p>
+              </div>
+
+              {user ? (
+                <>
+                  <SettingsRow
+                    icon={Bell}
+                    label="تفضيلات الإشعارات"
+                    description="تنبيهات الحلقات الجديدة والبرامج والكتب"
+                    onClick={() => setView('notifications')}
+                  />
+                  <Separator />
+                  <SettingsRow
+                    icon={Database}
+                    label="إدارة مساحة التخزين"
+                    description="عرض وحذف المحاضرات المحفوظة مؤقتاً"
+                    onClick={() => setView('storage')}
+                  />
+                  <Separator />
+                </>
+              ) : (
+                <div className="p-4 rounded-2xl bg-muted/40 text-xs text-muted-foreground font-medium mb-2">
+                  سجل الدخول للوصول إلى إشعارات البرامج وإدارة مساحة التخزين الخاصة بحسابك.
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-4 rounded-2xl">
+                <Label htmlFor="wifi-only-switch" className="text-sm sm:text-base font-bold cursor-pointer flex items-center gap-3.5">
+                  <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <Wifi className="w-5 h-5" />
+                  </span>
+                  <span>التنزيل عبر Wi-Fi فقط</span>
+                </Label>
+                <Switch
+                  id="wifi-only-switch"
+                  checked={wifiOnly}
+                  onCheckedChange={(checked) => {
+                    setWifiOnly(checked);
+                    localStorage.setItem('waqfah_wifi_only', String(checked));
+                  }}
+                />
+              </div>
+            </Card>
+          )}
+
+          {activeTab === 'account' && (
+            <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
+              <div className="px-2 pb-2">
+                <h2 className="text-xl font-black font-headline text-foreground">الحساب والبيانات</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">تصدير بياناتك الشخصية أو إدارة سجلات الحساب.</p>
+              </div>
+
+              {user ? (
+                <>
+                  <SettingsRow
+                    icon={isClearingHistory ? Loader2 : Trash2}
+                    label="مسح سجل الاستماع"
+                    description="حذف سجل المحاضرات التي استمعت إليها"
+                    onClick={() => setIsClearHistoryConfirmOpen(true)}
+                  />
+                  <Separator />
+                  <SettingsRow
+                    icon={isDownloading ? Loader2 : HardDriveDownload}
+                    label={isDownloading ? 'جاري تجهيز البيانات...' : 'تنزيل نسخة من بياناتي (JSON)'}
+                    description="تصدير المفضلة وقوائم التشغيل والتقدم العلمي"
+                    onClick={handleDownloadData}
+                  />
+                  <Separator />
+                  <SettingsRow
+                    icon={UserX}
+                    label="حذف الحساب نهائياً"
+                    description="حذف الحساب وكافة البيانات المرتبطة به"
+                    danger
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                  />
+                </>
+              ) : (
+                <div className="p-8 text-center space-y-3">
+                  <Crown className="w-10 h-10 text-primary/40 mx-auto" />
+                  <p className="font-bold text-foreground">الحساب والبيانات محمية</p>
+                  <p className="text-xs text-muted-foreground">
+                    يرجى تسجيل الدخول لتصدير بياناتك أو إدارة سجل الاستماع.
+                  </p>
+                  <Button asChild size="sm" className="rounded-xl font-bold mt-2">
+                    <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول</Link>
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
       </div>
 
-       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogContent className="p-0 border-0 max-w-2xl bg-transparent">
-                <DialogHeader className="sr-only">
-                  <DialogTitle>تعديل الملف الشخصي</DialogTitle>
-                </DialogHeader>
-                {user && userProfile && (
-                    <EditProfileForm 
-                        user={user} 
-                        userProfile={userProfile}
-                        onClose={() => setIsEditing(false)}
-                    />
-                )}
-            </DialogContent>
-        </Dialog>
+      {/* Dialogs */}
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="p-0 border-0 max-w-2xl bg-transparent">
+          <DialogHeader className="sr-only">
+            <DialogTitle>تعديل الملف الشخصي</DialogTitle>
+          </DialogHeader>
+          {user && userProfile && (
+            <EditProfileForm user={user} userProfile={userProfile} onClose={() => setIsEditing(false)} />
+          )}
+        </DialogContent>
+      </Dialog>
 
-        <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
-        <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
-        <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
-        <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
-        <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />
-        
-        <DeleteConfirmationDialog
-            isOpen={isDeleteConfirmOpen}
-            onClose={() => setIsDeleteConfirmOpen(false)}
-            onConfirm={handleDeleteAccount}
-            title="هل أنت متأكد من حذف حسابك؟"
-            description="سيتم حذف جميع بياناتك بشكل دائم، بما في ذلك قوائم التشغيل والمفضلة وسجل الاستماع. لا يمكن التراجع عن هذا الإجراء."
-            confirmButtonText={isDeleting ? "جاري الحذف..." : "نعم، قم بحذف حسابي"}
-        />
+      <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />
+      <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />
+      <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />
+      <PatternSwitcherDialog isOpen={isPatternSwitcherOpen} onOpenChange={setIsPatternSwitcherOpen} />
+      <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />
+
+      <DeleteConfirmationDialog
+        isOpen={isClearHistoryConfirmOpen}
+        onClose={() => setIsClearHistoryConfirmOpen(false)}
+        onConfirm={handleClearListenHistory}
+        title="هل تريد مسح سجل الاستماع؟"
+        description="سيتم حذف سجل المحاضرات التي استمعت إليها من حسابك بشكل دائم."
+        confirmButtonText={isClearingHistory ? 'جاري المسح...' : 'نعم، امسح السجل'}
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="هل أنت متأكد من حذف حسابك؟"
+        description="سيتم حذف جميع بياناتك بشكل دائم، بما في ذلك قوائم التشغيل والمفضلة وسجل الاستماع."
+        confirmButtonText={isDeleting ? 'جاري الحذف...' : 'نعم، قم بحذف حسابي'}
+      />
     </div>
   );
 }
