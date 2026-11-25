@@ -22,12 +22,19 @@ type AudioPlayerContextType = {
   // Audio state
   track: Track | null;
   isPlaying: boolean;
+  isYoutubeAudio: boolean;
+  audioCurrentTime: number;
+  audioDuration: number;
   audioRef: React.RefObject<HTMLAudioElement>;
   clipEndTime: number | null;
   playTrack: (track: Track, startTime?: number, endTime?: number | null) => void;
   pauseTrack: () => void;
   closePlayer: () => void;
   togglePlayPause: () => void;
+  seekAudio: (seconds: number) => void;
+  setAudioRate: (rate: number) => void;
+  setAudioVolume: (vol: number) => void;
+  setAudioMuted: (muted: boolean) => void;
 
   // Iframe player state
   iframeTrack: IframeTrack | null;
@@ -52,6 +59,14 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [clipEndTime, setClipEndTime] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Hidden YouTube Audio-Only Player state
+  const [youtubeAudioId, setYoutubeAudioId] = useState<string | null>(null);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const ytAudioPlayerRef = useRef<any>(null);
+  const ytAudioHostRef = useRef<HTMLDivElement>(null);
+  const ytAudioStartRef = useRef<number>(0);
+
   // Iframe Player State
   const [iframeTrack, setIframeTrack] = useState<IframeTrack | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
@@ -73,6 +88,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (audioRef.current) {
       audioRef.current.pause();
     }
+    if (ytAudioPlayerRef.current && typeof ytAudioPlayerRef.current.pauseVideo === 'function') {
+      try { ytAudioPlayerRef.current.pauseVideo(); } catch {}
+    }
   }, []);
 
   const pauseVideo = useCallback(() => {
@@ -81,34 +99,197 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // Load / sync hidden YouTube Audio-Only player when youtubeAudioId changes
+  useEffect(() => {
+    if (!youtubeAudioId) {
+      if (ytAudioPlayerRef.current && typeof ytAudioPlayerRef.current.destroy === 'function') {
+        try { ytAudioPlayerRef.current.destroy(); } catch {}
+        ytAudioPlayerRef.current = null;
+      }
+      return;
+    }
+
+    let cancelled = false;
+
+    const initPlayer = () => {
+      if (cancelled || !ytAudioHostRef.current || !(window as any).YT?.Player) return;
+
+      if (ytAudioPlayerRef.current && typeof ytAudioPlayerRef.current.loadVideoById === 'function') {
+        try {
+          ytAudioPlayerRef.current.loadVideoById({
+            videoId: youtubeAudioId,
+            startSeconds: Math.floor(ytAudioStartRef.current || 0),
+          });
+          setIsPlaying(true);
+          return;
+        } catch {}
+      }
+
+      ytAudioHostRef.current.innerHTML = '';
+      const playerDiv = document.createElement('div');
+      ytAudioHostRef.current.appendChild(playerDiv);
+
+      ytAudioPlayerRef.current = new (window as any).YT.Player(playerDiv, {
+        width: '1',
+        height: '1',
+        videoId: youtubeAudioId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          start: Math.floor(ytAudioStartRef.current || 0),
+        },
+        events: {
+          onReady: (event: any) => {
+            if (cancelled) return;
+            try {
+              const savedVol = parseFloat(localStorage.getItem('audioPlayerVolume') || '1');
+              event.target.setVolume(Math.round(savedVol * 100));
+              const savedRate = parseFloat(localStorage.getItem('audioPlayerSpeed') || '1');
+              if (typeof event.target.setPlaybackRate === 'function') {
+                event.target.setPlaybackRate(savedRate);
+              }
+              event.target.playVideo();
+              const dur = event.target.getDuration?.() || 0;
+              if (dur > 0) setAudioDuration(dur);
+              setIsPlaying(true);
+            } catch {}
+          },
+          onStateChange: (event: any) => {
+            if (cancelled) return;
+            const YTState = (window as any).YT?.PlayerState;
+            if (!YTState) return;
+            if (event.data === YTState.PLAYING) {
+              setIsPlaying(true);
+              const dur = event.target.getDuration?.() || 0;
+              if (dur > 0) setAudioDuration(dur);
+            } else if (event.data === YTState.PAUSED) {
+              setIsPlaying(false);
+            } else if (event.data === YTState.ENDED) {
+              setIsPlaying(false);
+            }
+          },
+        },
+      });
+    };
+
+    if ((window as any).YT?.Player) {
+      initPlayer();
+    } else {
+      const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+      if (!existingScript) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.body.appendChild(tag);
+      }
+      const prevReady = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        if (typeof prevReady === 'function') prevReady();
+        initPlayer();
+      };
+      const poll = setInterval(() => {
+        if ((window as any).YT?.Player) {
+          clearInterval(poll);
+          initPlayer();
+        }
+      }, 200);
+      return () => {
+        cancelled = true;
+        clearInterval(poll);
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [youtubeAudioId]);
+
+  // Poll YouTube audio progress & handle clipEndTime
+  useEffect(() => {
+    if (!youtubeAudioId) return;
+    const interval = setInterval(() => {
+      const player = ytAudioPlayerRef.current;
+      if (!player || typeof player.getCurrentTime !== 'function') return;
+      try {
+        const cur = player.getCurrentTime() || 0;
+        const dur = player.getDuration?.() || 0;
+        setAudioCurrentTime(cur);
+        if (dur > 0) setAudioDuration(dur);
+        if (clipEndTime && cur >= clipEndTime) {
+          pauseTrack();
+          setClipEndTime(null);
+        }
+      } catch {}
+    }, 400);
+    return () => clearInterval(interval);
+  }, [youtubeAudioId, clipEndTime, pauseTrack]);
+
+  // Sync native <audio> progress
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || youtubeAudioId) return;
+
+    const onTime = () => {
+      setAudioCurrentTime(audioEl.currentTime || 0);
+      setAudioDuration(audioEl.duration || 0);
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    audioEl.addEventListener('timeupdate', onTime);
+    audioEl.addEventListener('loadedmetadata', onTime);
+    audioEl.addEventListener('play', onPlay);
+    audioEl.addEventListener('pause', onPause);
+    return () => {
+      audioEl.removeEventListener('timeupdate', onTime);
+      audioEl.removeEventListener('loadedmetadata', onTime);
+      audioEl.removeEventListener('play', onPlay);
+      audioEl.removeEventListener('pause', onPause);
+    };
+  }, [youtubeAudioId]);
+
   const playTrack = useCallback((newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
     if (isPlayerVisible) {
       pauseVideo();
     }
     setVideoClipEndTime(null);
+    setClipEndTime(endTime);
 
-    let audioUrl = newTrack.audioSrc;
-    if (audioUrl && (audioUrl.includes('youtube.com') || audioUrl.includes('youtu.be'))) {
-      const vId = getVideoIdFromUrl(audioUrl);
-      if (vId) {
-        audioUrl = `/api/download?videoId=${vId}&itag=140&title=${encodeURIComponent(newTrack.title)}&container=m4a`;
+    const vId = getVideoIdFromUrl(newTrack.audioSrc);
+    if (vId) {
+      if (audioRef.current) {
+        audioRef.current.pause();
       }
+      ytAudioStartRef.current = startTime;
+      setAudioCurrentTime(startTime);
+      setAudioDuration(0);
+      setTrack(newTrack);
+      if (youtubeAudioId === vId && ytAudioPlayerRef.current?.seekTo) {
+        try {
+          ytAudioPlayerRef.current.seekTo(startTime, true);
+          ytAudioPlayerRef.current.playVideo();
+          setIsPlaying(true);
+        } catch {}
+      } else {
+        setYoutubeAudioId(vId);
+      }
+      return;
     }
 
-    const trackWithPlayableSrc = {
-      ...newTrack,
-      audioSrc: audioUrl
-    };
+    // Native direct audio URL
+    setYoutubeAudioId(null);
+    setAudioCurrentTime(startTime);
+    setAudioDuration(0);
 
     if (track?.id !== newTrack.id) {
-      setTrack(trackWithPlayableSrc);
+      setTrack(newTrack);
       if (audioRef.current) {
-        audioRef.current.src = audioUrl;
+        audioRef.current.src = newTrack.audioSrc;
         audioRef.current.load();
       }
     }
-
-    setClipEndTime(endTime);
 
     setTimeout(() => {
       if (audioRef.current) {
@@ -118,27 +299,82 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }).catch(e => console.error("Error playing audio:", e));
       }
     }, 50);
-  }, [isPlayerVisible, pauseVideo, track?.id]);
+  }, [isPlayerVisible, pauseVideo, track?.id, youtubeAudioId]);
 
-  const playIframe = useCallback((track: IframeTrack) => {
+  const playIframe = useCallback((iframe: IframeTrack) => {
     pauseTrack();
     setClipEndTime(null);
-    setIframeTrack({ ...track }); // Ensure reference change
+    setIframeTrack({ ...iframe });
     setIsPlayerVisible(true);
   }, [pauseTrack]);
 
   const togglePlayPause = useCallback(() => {
+    if (youtubeAudioId && ytAudioPlayerRef.current) {
+      try {
+        if (isPlaying) {
+          ytAudioPlayerRef.current.pauseVideo();
+          setIsPlaying(false);
+        } else {
+          ytAudioPlayerRef.current.playVideo();
+          setIsPlaying(true);
+        }
+      } catch {}
+      return;
+    }
+
     if (isPlaying) {
       pauseTrack();
     } else if (track) {
       playTrack(track, audioRef.current?.currentTime || 0);
     }
-  }, [isPlaying, pauseTrack, track, playTrack]);
+  }, [youtubeAudioId, isPlaying, pauseTrack, track, playTrack]);
+
+  const seekAudio = useCallback((seconds: number) => {
+    if (youtubeAudioId && ytAudioPlayerRef.current?.seekTo) {
+      try {
+        ytAudioPlayerRef.current.seekTo(seconds, true);
+        setAudioCurrentTime(seconds);
+      } catch {}
+    } else if (audioRef.current) {
+      audioRef.current.currentTime = seconds;
+      setAudioCurrentTime(seconds);
+    }
+  }, [youtubeAudioId]);
+
+  const setAudioRate = useCallback((rate: number) => {
+    if (youtubeAudioId && ytAudioPlayerRef.current?.setPlaybackRate) {
+      try { ytAudioPlayerRef.current.setPlaybackRate(rate); } catch {}
+    } else if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  }, [youtubeAudioId]);
+
+  const setAudioVolume = useCallback((vol: number) => {
+    if (youtubeAudioId && ytAudioPlayerRef.current?.setVolume) {
+      try { ytAudioPlayerRef.current.setVolume(Math.round(vol * 100)); } catch {}
+    } else if (audioRef.current) {
+      audioRef.current.volume = vol;
+    }
+  }, [youtubeAudioId]);
+
+  const setAudioMuted = useCallback((muted: boolean) => {
+    if (youtubeAudioId && ytAudioPlayerRef.current) {
+      try {
+        if (muted) ytAudioPlayerRef.current.mute();
+        else ytAudioPlayerRef.current.unMute();
+      } catch {}
+    } else if (audioRef.current) {
+      audioRef.current.muted = muted;
+    }
+  }, [youtubeAudioId]);
 
   const closePlayer = useCallback(() => {
     pauseTrack();
+    setYoutubeAudioId(null);
     setTrack(null);
     setClipEndTime(null);
+    setAudioCurrentTime(0);
+    setAudioDuration(0);
   }, [pauseTrack]);
 
   const hidePlayer = useCallback(() => {
@@ -471,12 +707,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     <AudioPlayerContext.Provider value={{
       track,
       isPlaying,
+      isYoutubeAudio: Boolean(youtubeAudioId),
+      audioCurrentTime,
+      audioDuration,
       audioRef,
       clipEndTime,
       playTrack,
       pauseTrack,
       closePlayer,
       togglePlayPause,
+      seekAudio,
+      setAudioRate,
+      setAudioVolume,
+      setAudioMuted,
       iframeTrack,
       isPlayerVisible,
       videoPlayerRef,
@@ -488,6 +731,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       siteTimeInSeconds,
     }}>
       {children}
+      <audio ref={audioRef} preload="metadata" className="hidden" />
+      <div
+        ref={ytAudioHostRef}
+        aria-hidden="true"
+        className="fixed -left-[9999px] -top-[9999px] w-px h-px opacity-0 pointer-events-none"
+      />
     </AudioPlayerContext.Provider>
   );
 };

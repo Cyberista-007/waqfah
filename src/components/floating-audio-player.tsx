@@ -30,7 +30,22 @@ function formatTime(seconds: number) {
 
 
 export function FloatingAudioPlayer() {
-  const { track, isPlaying, audioRef, closePlayer, playTrack, pauseTrack, togglePlayPause } = useAudioPlayer();
+  const {
+    track,
+    isPlaying,
+    isYoutubeAudio,
+    audioCurrentTime,
+    audioDuration,
+    audioRef,
+    closePlayer,
+    playTrack,
+    pauseTrack,
+    togglePlayPause,
+    seekAudio,
+    setAudioRate,
+    setAudioVolume,
+    setAudioMuted,
+  } = useAudioPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -72,24 +87,11 @@ export function FloatingAudioPlayer() {
     }
   }, [audioRef]);
   
-  // Update progress bar
-    useEffect(() => {
-        const audioElement = audioRef.current;
-        if (!audioElement) return;
-
-        const updateProgress = () => {
-            setProgress(audioElement.currentTime);
-            setDuration(audioElement.duration || 0);
-        };
-        
-        audioElement.addEventListener('timeupdate', updateProgress);
-        audioElement.addEventListener('loadedmetadata', updateProgress);
-
-        return () => {
-            audioElement.removeEventListener('timeupdate', updateProgress);
-            audioElement.removeEventListener('loadedmetadata', updateProgress);
-        };
-    }, [audioRef]);
+  // Sync progress & duration from unified AudioPlayerProvider
+  useEffect(() => {
+    setProgress(audioCurrentTime);
+    setDuration(audioDuration);
+  }, [audioCurrentTime, audioDuration]);
 
 
   const updateListenHistory = useCallback(async () => {
@@ -239,6 +241,7 @@ export function FloatingAudioPlayer() {
   }, [audioRef, track, updateListenHistory, handleEnded, clearSleepTimer]);
   
    useEffect(() => {
+        if (isYoutubeAudio) return;
         const audioElement = audioRef.current;
         if (!audioElement) return;
         if (isPlaying) {
@@ -246,7 +249,7 @@ export function FloatingAudioPlayer() {
         } else {
             audioElement.pause();
         }
-    }, [isPlaying, audioRef]);
+    }, [isPlaying, isYoutubeAudio, audioRef]);
     
   // Media Session API Integration
   useEffect(() => {
@@ -301,14 +304,12 @@ export function FloatingAudioPlayer() {
 
 
   const handleRewind = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
-    }
+    seekAudio(Math.max(0, progress - 10));
   };
 
   const handleFastForward = () => {
-    if (audioRef.current && duration) {
-      audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10);
+    if (duration) {
+      seekAudio(Math.min(duration, progress + 10));
     }
   };
 
@@ -321,9 +322,7 @@ export function FloatingAudioPlayer() {
 
   const handleSpeedChange = (value: string) => {
     const speed = parseFloat(value);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = speed;
-    }
+    setAudioRate(speed);
     setPlaybackSpeed(speed);
     localStorage.setItem('audioPlayerSpeed', value);
   };
@@ -364,31 +363,25 @@ export function FloatingAudioPlayer() {
   };
   
   const handleSeek = (value: number[]) => {
-      if (audioRef.current) {
-          audioRef.current.currentTime = value[0];
-          setProgress(value[0]);
-      }
+      seekAudio(value[0]);
+      setProgress(value[0]);
   };
 
   const handleVolumeChange = (value: number) => {
     const newVolume = Math.max(0, Math.min(1, value / 100));
     setVolume(newVolume);
-    if (audioRef.current) {
-        audioRef.current.volume = newVolume;
-        if (newVolume > 0 && audioRef.current.muted) {
-            audioRef.current.muted = false;
-            setIsMuted(false);
-        }
+    setAudioVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+        setAudioMuted(false);
+        setIsMuted(false);
     }
     localStorage.setItem('audioPlayerVolume', newVolume.toString());
   };
 
   const toggleMute = () => {
-      if (audioRef.current) {
-          const currentlyMuted = !audioRef.current.muted;
-          audioRef.current.muted = currentlyMuted;
-          setIsMuted(currentlyMuted);
-      }
+      const currentlyMuted = !isMuted;
+      setAudioMuted(currentlyMuted);
+      setIsMuted(currentlyMuted);
   };
 
   useEffect(() => {
