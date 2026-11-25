@@ -2,13 +2,11 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Headphones, Play, Share2, Eye, MessageSquare, Calendar, Download, ListPlus, MoreVertical, Clock, Ban, Flag, PlaySquare, Loader2 } from "lucide-react"
+import { Headphones, Play, Share2, MessageSquare, Download, ListPlus, MoreVertical, Clock, Ban, Flag, PlaySquare, Loader2, Brain } from "lucide-react"
 import { useState, useMemo, useRef, memo } from "react"
-import { format, subDays } from "date-fns";
-import { ar } from 'date-fns/locale';
+import { subDays } from "date-fns";
 
-import type { Lecture, ListenHistoryItem, Playlist } from "@/lib/types"
-import { Button } from "@/components/ui/button"
+import type { Lecture, ListenHistoryItem, Playlist, Quiz } from "@/lib/types"
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -18,21 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAudioPlayer } from "./audio-player-provider"
 import { useToast } from "@/hooks/use-toast"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { cn, formatDuration, formatViews, getVideoIdFromUrl, getInitials } from "@/lib/utils"
+import { cn, formatDuration, getVideoIdFromUrl } from "@/lib/utils"
 import { getPlaceholderImage } from "@/lib/images"
-import { useUser, useDoc } from "@/firebase"
-import { Program } from "@/lib/types"
+import { useUser } from "@/firebase"
 import { AddToPlaylistDialog } from "./profile/add-to-playlist-dialog"
 import { useRouter } from "next/navigation"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
-import { Brain } from "lucide-react"
+import { TooltipProvider } from "./ui/tooltip"
 import { QuizDialog } from "./quiz-dialog"
 import { DownloaderModal } from "./downloader-modal"
-import type { Quiz } from "@/lib/types"
 import { motion } from "framer-motion"
-import { ThreeDTilt } from "./ui/three-d-tilt"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -63,7 +56,6 @@ const LectureCardComponent = ({
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
-  const { data: programDoc } = useDoc<Program>(lecture.programId ? `programs/${lecture.programId}` : null);
 
   const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
@@ -270,278 +262,231 @@ const LectureCardComponent = ({
   };
 
   const publicationDate = toDate(lecture.publishedAt) || toDate(lecture.createdAt);
-  const dateText = publicationDate 
-    ? format(publicationDate, 'EEEE، d MMMM yyyy', { locale: ar })
-    : null;
-
   const isNew = publicationDate && publicationDate > subDays(new Date(), 7);
 
   return (
     <TooltipProvider delayDuration={100}>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ y: -4 }}
+        whileTap={{ scale: 0.99 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="h-full"
+        className="relative w-full group flex flex-col"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       >
-        <ThreeDTilt tiltMax={8} className="h-full">
-            <div 
-                className={cn(
-                "group relative flex flex-col h-full rounded-[2.25rem] transition-all duration-500 transform-gpu overflow-hidden",
-                "bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)]",
-                "hover:-translate-y-2 hover:border-primary/35 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(var(--primary-rgb),0.12)] hover:bg-white/[0.04]"
-                )}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
-            >
-                {/* Media Container */}
-                <div className="relative aspect-video overflow-hidden bg-black/40 flex-shrink-0 border-b border-white/10">
-                    <Link href={`/lectures/${lecture.slug}`} className="absolute inset-0 z-10" aria-hidden="true" tabIndex={-1} />
-                    <Image
-                        src={imageUrl}
-                        alt={lecture.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        priority={index < 4}
-                        className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-100"
-                    />
+        {/* Thumbnail */}
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black/40 border border-border/50">
+          <Link
+            href={`/lectures/${lecture.slug}`}
+            className="absolute inset-0 z-10"
+            aria-label={lecture.title}
+          />
+          <Image
+            src={imageUrl}
+            alt={lecture.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            priority={index < 4}
+            className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-75 brightness-95"
+          />
 
-                    {/* Gradient Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
-                    
-                    {/* Play Button Overlay - Choosing Video or Audio */}
-                    <div 
-                        className={cn(
-                            "absolute inset-0 flex flex-col items-center justify-center gap-2 transition-all duration-300 z-20 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100",
-                        )}
-                    >
-                        <div className="flex flex-col gap-2 w-4/5 max-w-[150px]">
-                            {/* Audio Play Button */}
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handlePlay();
-                                }}
-                                className="h-9 w-full bg-white/10 hover:bg-primary border border-white/20 hover:border-primary text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all animate-fade-in-up"
-                                title="استماع صوتي"
-                            >
-                                <Headphones className="w-3.5 h-3.5 text-white" />
-                                <span>استماع (صوت)</span>
-                            </button>
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                            {/* Video Play Button (only if videoId is available) */}
-                            {videoId && (
-                                <button
-                                    onClick={handleWatch}
-                                    className="h-9 w-full bg-white/10 hover:bg-emerald-600 border border-white/20 hover:border-emerald-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all animate-fade-in-up"
-                                    title="مشاهدة الفيديو"
-                                >
-                                    <Play className="w-3.5 h-3.5 fill-current text-emerald-400 group-hover:text-white" />
-                                    <span>مشاهدة (فيديو)</span>
-                                </button>
-                            )}
-                        </div>
+          {/* Hover Play / Audio Overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-20 bg-black/45 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handlePlay();
+                }}
+                className="h-10 px-3.5 rounded-full bg-white/15 hover:bg-primary border border-white/25 hover:border-primary text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95"
+                title="استماع (صوت)"
+              >
+                <Headphones className="w-3.5 h-3.5" />
+                <span>صوت</span>
+              </button>
 
-                        {/* Detail Page Link */}
-                        <Link
-                            href={`/lectures/${lecture.slug}`}
-                            className="text-[10px] font-black text-white/50 hover:text-white uppercase tracking-wider transition-colors mt-1.5"
-                        >
-                            تفاصيل وتدبر 🔍
-                        </Link>
-                    </div>
-
-                    {/* Top Badges */}
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-30">
-                        {isNew && (
-                            <div className="px-3 py-1 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg animate-pulse flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                                جديد
-                            </div>
-                        )}
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <button
-                                    onClick={handleShare}
-                                    aria-label="مشاركة المحاضرة"
-                                    className="h-9 w-9 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-2xl hover:bg-primary transition-all duration-300 border border-white/10 group/share"
-                                >
-                                    <Share2 className="w-4 h-4 text-white group-hover/share:scale-110" />
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left">مشاركة</TooltipContent>
-                        </Tooltip>
-                    </div>
-
-                    {/* Duration Badge */}
-                    {lecture.duration > 0 && (
-                        <div className="absolute bottom-4 left-4 z-30">
-                            <div className="px-2 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-md text-white text-[10px] font-mono">
-                                {formatDuration(lecture.duration)}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Progress Bar */}
-                    {progress > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-30">
-                            <div 
-                                className="h-full bg-primary transition-all duration-500" 
-                                style={{ width: `${progress}%` }} 
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Content Container */}
-                <div className="p-5 flex-grow flex flex-col gap-4 relative z-20 bg-[#09090b]/40">
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
-                            {dateText && (
-                                <div className="flex items-center gap-1.5">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{dateText}</span>
-                                </div>
-                            )}
-                            {(lecture.youtubeViewCount ?? 0) > 0 && (
-                                <>
-                                    <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                                    <div className="flex items-center gap-1.5">
-                                        <Eye className="w-3 h-3" />
-                                        <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        
-                        <h3 className="font-headline text-xl leading-snug group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[3.5rem]">
-                            <Link href={`/lectures/${lecture.slug}`}>
-                                {lecture.title}
-                            </Link>
-                        </h3>
-                    </div>
-
-                    {pinnedMessage && (
-                        <div className="bg-primary/5 p-3 rounded-2xl border border-primary/10">
-                            <p className="text-xs text-primary/80 italic leading-relaxed flex gap-2">
-                            <MessageSquare className="w-3.5 h-3.5 shrink-0 mt-0.5" /> 
-                            <span className="line-clamp-2">{pinnedMessage}</span>
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5">
-                        <div className="flex items-center gap-2">
-                            {lecture.programSlug && (
-                                <Link 
-                                    href={`/programs/${lecture.programSlug}`}
-                                    className="transition-transform hover:scale-110 active:scale-95"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <Avatar className="h-10 w-10 border-2 border-primary/20 bg-background shadow-lg">
-                                        <AvatarImage src={programDoc?.imageUrl} alt={lecture.programName} className="object-cover" />
-                                        <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
-                                            {getInitials(lecture.programName || "P")}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </Link>
-                            )}
-                            <FavoriteButton lectureId={lecture.id} className="h-10 w-10 rounded-xl" />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <DropdownMenu dir="rtl">
-                                <DropdownMenuTrigger asChild>
-                                    <button 
-                                        aria-label="المزيد من خيارات المحاضرة"
-                                        className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
-                                    >
-                                        <MoreVertical className="w-5 h-5" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10">
-                                    <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 focus:bg-white/10 text-emerald-400">
-                                        <Headphones className="w-4 h-4" />
-                                        <span className="font-bold">استماع للمحاضرة (صوت)</span>
-                                    </DropdownMenuItem>
-                                    
-                                    {videoId && (
-                                        <DropdownMenuItem onClick={handleWatch} className="gap-3 cursor-pointer py-2 focus:bg-white/10 text-primary">
-                                            <Play className="w-4 h-4 fill-current" />
-                                            <span className="font-bold">مشاهدة المحاضرة (فيديو)</span>
-                                        </DropdownMenuItem>
-                                    )}
-                                    
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
-                                        <Clock className="w-4 h-4" />
-                                        <span>الحفظ في قائمة "المشاهدة لاحقاً"</span>
-                                    </DropdownMenuItem>
-                                    
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
-                                        <ListPlus className="w-4 h-4" />
-                                        <span>حفظ في قائمة تشغيل</span>
-                                    </DropdownMenuItem>
-
-                                    <DropdownMenuItem 
-                                        onClick={handleDownloadClick} 
-                                        disabled={isFetchingFormats}
-                                        className="gap-3 cursor-pointer py-2 focus:bg-white/10"
-                                    >
-                                        {isFetchingFormats ? (
-                                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                                        ) : (
-                                            <Download className="w-4 h-4" />
-                                        )}
-                                        <span>{isFetchingFormats ? 'جاري جلب صيغ التنزيل...' : 'تنزيل'}</span>
-                                    </DropdownMenuItem>
-                                    
-                                    <DropdownMenuItem onClick={handleShare} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
-                                        <Share2 className="w-4 h-4" />
-                                        <span>مشاركة</span>
-                                    </DropdownMenuItem>
-                                    
-                                    <DropdownMenuSeparator className="bg-white/10" />
-
-                                    {videoId && (
-                                        <DropdownMenuItem asChild className="py-2 focus:bg-white/10">
-                                            <a 
-                                              href={`https://www.youtube.com/watch?v=${videoId}`} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                              className="gap-3 cursor-pointer flex w-full items-center"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <PlaySquare className="w-4 h-4" />
-                                                <span>مشاهدة على يوتيوب</span>
-                                            </a>
-                                        </DropdownMenuItem>
-                                    )}
-
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setIsQuizOpen(true); }} className="gap-3 cursor-pointer py-2 focus:bg-white/10">
-                                        <Brain className="w-4 h-4" />
-                                        <span>اختبر معرفتك</span>
-                                    </DropdownMenuItem>
-                                    
-                                    <DropdownMenuSeparator className="bg-white/10" />
-                                    
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "تم إخفاء المحاضرة من الاقتراحات." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100 focus:bg-white/10">
-                                        <Ban className="w-4 h-4" />
-                                        <span>لا يهمني</span>
-                                    </DropdownMenuItem>
-                                    
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "شكراً لبلاغك. سيتم مراجعة المحتوى." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100 focus:bg-white/10">
-                                        <Flag className="w-4 h-4" />
-                                        <span>إبلاغ</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-                </div>
+              {videoId && (
+                <button
+                  onClick={handleWatch}
+                  className="h-10 px-3.5 rounded-full bg-white/15 hover:bg-red-600 border border-white/25 hover:border-red-500 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95"
+                  title="مشاهدة (فيديو)"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>فيديو</span>
+                </button>
+              )}
             </div>
-        </ThreeDTilt>
+          </div>
+
+          {/* Top-right Video/Audio indicator */}
+          <div
+            className={cn(
+              "absolute top-2.5 right-2.5 z-30 flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-md pointer-events-none",
+              videoId
+                ? "bg-red-600 border-red-500/40 text-white"
+                : "bg-primary/90 border-primary/50 text-primary-foreground"
+            )}
+          >
+            {videoId && <Play className="w-2.5 h-2.5 fill-white text-white rotate-180" />}
+            <span>{videoId ? "فيديو" : "🎧 صوت"}</span>
+          </div>
+
+          {/* Optional New badge top-left */}
+          {isNew && (
+            <div className="absolute top-2.5 left-2.5 z-30 px-2 py-0.5 bg-primary/90 text-primary-foreground text-[10px] font-black rounded-full shadow-md pointer-events-none">
+              جديد
+            </div>
+          )}
+
+          {/* Duration badge */}
+          {lecture.duration > 0 && (
+            <div className="absolute bottom-2.5 left-2.5 z-30 flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/10 pointer-events-none">
+              <Clock className="w-3 h-3 text-white/80" />
+              <span>{formatDuration(lecture.duration)}</span>
+            </div>
+          )}
+
+          {/* Progress Bar */}
+          {progress > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/15 z-30 pointer-events-none">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Clean Info Below Thumbnail (matches StripCard) */}
+        <div className="mt-3 px-1 flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-1.5 text-right">
+            <h3 className="font-bold text-sm md:text-[15px] leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+              <Link href={`/lectures/${lecture.slug}`}>
+                {lecture.title}
+              </Link>
+            </h3>
+
+            {lecture.programName && (
+              <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                <Headphones className="w-3.5 h-3.5 text-muted-foreground/70 shrink-0" />
+                {lecture.programSlug ? (
+                  <Link
+                    href={`/programs/${lecture.programSlug}`}
+                    className="truncate hover:text-foreground transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {lecture.programName}
+                  </Link>
+                ) : (
+                  <span className="truncate">{lecture.programName}</span>
+                )}
+              </p>
+            )}
+
+            {pinnedMessage && (
+              <p className="text-[11px] text-primary/80 italic line-clamp-1 flex items-center gap-1.5 pt-0.5">
+                <MessageSquare className="w-3 h-3 shrink-0" />
+                <span className="truncate">{pinnedMessage}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Subtle Quick Actions */}
+          <div className="flex items-center gap-0.5 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity -mt-0.5">
+            <FavoriteButton lectureId={lecture.id} className="h-8 w-8 rounded-lg" />
+            <DropdownMenu dir="rtl">
+              <DropdownMenuTrigger asChild>
+                <button
+                  aria-label="المزيد من خيارات المحاضرة"
+                  className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg transition-all"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border">
+                <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 text-emerald-500">
+                  <Headphones className="w-4 h-4" />
+                  <span className="font-bold">استماع للمحاضرة (صوت)</span>
+                </DropdownMenuItem>
+
+                {videoId && (
+                  <DropdownMenuItem onClick={handleWatch} className="gap-3 cursor-pointer py-2 text-primary">
+                    <Play className="w-4 h-4 fill-current" />
+                    <span className="font-bold">مشاهدة المحاضرة (فيديو)</span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2">
+                  <Clock className="w-4 h-4" />
+                  <span>الحفظ في قائمة "المشاهدة لاحقاً"</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddToPlaylist(e); }} className="gap-3 cursor-pointer py-2">
+                  <ListPlus className="w-4 h-4" />
+                  <span>حفظ في قائمة تشغيل</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={handleDownloadClick}
+                  disabled={isFetchingFormats}
+                  className="gap-3 cursor-pointer py-2"
+                >
+                  {isFetchingFormats ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  <span>{isFetchingFormats ? 'جاري جلب صيغ التنزيل...' : 'تنزيل'}</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={handleShare} className="gap-3 cursor-pointer py-2">
+                  <Share2 className="w-4 h-4" />
+                  <span>مشاركة</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {videoId && (
+                  <DropdownMenuItem asChild className="py-2">
+                    <a
+                      href={`https://www.youtube.com/watch?v=${videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gap-3 cursor-pointer flex w-full items-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <PlaySquare className="w-4 h-4" />
+                      <span>مشاهدة على يوتيوب</span>
+                    </a>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setIsQuizOpen(true); }} className="gap-3 cursor-pointer py-2">
+                  <Brain className="w-4 h-4" />
+                  <span>اختبر معرفتك</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "تم إخفاء المحاضرة من الاقتراحات." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100">
+                  <Ban className="w-4 h-4" />
+                  <span>لا يهمني</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast({ title: "شكراً لبلاغك. سيتم مراجعة المحتوى." }); }} className="gap-3 cursor-pointer py-2 opacity-70 hover:opacity-100">
+                  <Flag className="w-4 h-4" />
+                  <span>إبلاغ</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </motion.div>
       
       {user && (
