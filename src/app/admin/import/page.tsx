@@ -172,11 +172,12 @@ function ImportPageComponent() {
 
             // Import individual videos
             videosToImport.forEach(video => {
-                const slug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                const rawSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                const slug = rawSlug || `video-${video.videoId}`;
                 const lectureRef = doc(collection(firestore, 'lectures'));
                 batch.set(lectureRef, {
-                    title: video.title, slug, description: video.description, programId: programToUse!.id, programName: programToUse!.name,
-                    programSlug: programToUse!.slug, audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
+                    title: video.title, slug, description: video.description || '', programId: programToUse!.id, programName: programToUse!.name || '',
+                    programSlug: programToUse!.slug || '', audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
                     youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`, duration: video.durationInSeconds,
                     imageId: `lecture-thumbnail-${Math.floor(Math.random() * 4) + 1}`, rating: 0, ratingCount: 0,
                     viewCount: 0, youtubeViewCount: video.viewCount || 0, transcript: [], createdAt: Timestamp.now(), publishedAt: Timestamp.fromDate(new Date(video.publishedAt)),
@@ -188,7 +189,8 @@ function ImportPageComponent() {
             // Import playlists as series with their videos
             for (const playlist of playlistsToImport) {
                 newSeriesCount++;
-                const seriesSlug = playlist.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                const rawSeriesSlug = playlist.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                const seriesSlug = rawSeriesSlug || `series-${playlist.id}`;
                 const seriesRef = doc(collection(firestore, 'series'));
                 
                 // Fetch videos for this specific playlist
@@ -206,18 +208,19 @@ function ImportPageComponent() {
                 
                 const seriesData = {
                     title: playlist.title, slug: seriesSlug, description: playlist.description || "", imageId: `series-${seriesSlug}`,
-                    programId: programToUse!.id, programName: programToUse!.name, programSlug: programToUse!.slug,
+                    programId: programToUse!.id, programName: programToUse!.name || '', programSlug: programToUse!.slug || '',
                     lectureCount: newPlaylistVideos.length, createdAt: Timestamp.now(),
                 };
                 batch.set(seriesRef, seriesData);
 
                 // Add lectures from this playlist
                 newPlaylistVideos.forEach(video => {
-                    const lectureSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                    const rawLecSlug = video.title.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\u0600-\u06FF-]/g, '');
+                    const lectureSlug = rawLecSlug || `video-${video.videoId}`;
                     const lectureRef = doc(collection(firestore, 'lectures'));
                     batch.set(lectureRef, {
-                        title: video.title, slug: lectureSlug, description: video.description, 
-                        programId: programToUse!.id, programName: programToUse!.name, programSlug: programToUse!.slug,
+                        title: video.title, slug: lectureSlug, description: video.description || '', 
+                        programId: programToUse!.id, programName: programToUse!.name || '', programSlug: programToUse!.slug || '',
                         seriesId: seriesRef.id, seriesTitle: playlist.title, seriesSlug: seriesSlug,
                         audioSrc: `https://www.youtube.com/watch?v=${video.videoId}`,
                         youtubeUrl: `https://www.youtube.com/watch?v=${video.videoId}`,
@@ -340,12 +343,16 @@ function ImportPageComponent() {
                             onClick={async () => {
                                 setIsSyncingNow(true);
                                 try {
-                                    const res = await fetch('/api/cron/youtube-sync');
+                                    const res = await fetch('/api/cron/youtube-sync', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({}),
+                                    });
                                     const result = await res.json();
-                                    if (result.success) {
+                                    if (res.ok && result.success) {
                                         toast({
                                             title: 'اكتملت المزامنة بنجاح!',
-                                            description: `تم استيراد ${result.totalImported || 0} محاضرة جديدة لكافة البرامج.`
+                                            description: `تم فحص ${result.syncedProgramsCount || 0} برنامج واستيراد ${result.totalImported || 0} محاضرة جديدة.`
                                         });
                                     } else {
                                         toast({
