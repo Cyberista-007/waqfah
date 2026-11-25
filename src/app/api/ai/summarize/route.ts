@@ -32,21 +32,12 @@ export async function POST(req: Request) {
     }
 
     // 3. Initialize Gemini
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
     if (!apiKey) {
       return NextResponse.json({ error: "API_KEY_MISSING", message: "مفتاح الذكاء الاصطناعي غير متوفر." }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-4-hydrogen",
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.3,
-      }
-    });
-
-    // 4. Construct prompt
     const prompt = `
 أنت مساعد تعليمي ذكي لمنصة 'وقفة' العلمية الإسلامية. 
 مهمتك هي قراءة تفريغ أو وصف المحاضرة التالي وتلخيصه وتوليد أسئلة اختبار تفاعلية لزيادة تحصيل الطالب العلمي.
@@ -81,8 +72,35 @@ ${textToAnalyze.slice(0, 15000)}  // limit to 15k chars to avoid token limits
 تأكد من أن الأسئلة دقيقة وعلمية ومستمدة مباشرة من النص، وأن التلخيص يبرز الأفكار الجوهرية للدرس.
 `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    let responseText = "";
+    let lastError: any = null;
+    for (const candidateModel of ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"]) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: candidateModel,
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          }
+        });
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text();
+        if (responseText) break;
+      } catch (err: any) {
+        lastError = err;
+        const msg = (err?.message || err?.toString() || "").toLowerCase();
+        if (msg.includes("api_key_invalid") || msg.includes("api key not valid")) {
+          return NextResponse.json({
+            error: "API_KEY_INVALID",
+            message: "مفتاح Gemini API في الخادم غير صالح أو منتهي الصلاحية."
+          }, { status: 401 });
+        }
+      }
+    }
+
+    if (!responseText) {
+      throw lastError || new Error("Failed to generate summary");
+    }
 
     // Parse safety output
     const parsedData = JSON.parse(responseText);

@@ -891,8 +891,8 @@ export function ChatWidget() {
       let errorMessageContent = "عذراً، حدث خطأ أثناء التواصل.";
       const errorStr = error.toString().toLowerCase();
 
-      if (errorStr.includes("401") || errorStr.includes("403")) {
-        errorMessageContent = "مفتاح الـ API غير صالح. تأكد من نسخه بشكل صحيح دون مسافات إضافية.";
+      if (errorStr.includes("api_key_invalid") || errorStr.includes("api key not valid") || errorStr.includes("401") || errorStr.includes("403")) {
+        errorMessageContent = "مفتاح Gemini API غير صالح أو منتهي الصلاحية. يمكنك إضافة مفتاحك المجاني من الإعدادات (/settings) في قسم المساعد الذكي، أو تحديث المتغير GOOGLE_API_KEY في ملف .env.";
       } else if (errorStr.includes("429")) {
         errorMessageContent = "تم تجاوز حصة الاستخدام المؤقتة (429). يمكنك الانتظار قليلاً أو إضافة مفتاح آخر في الإعدادات.";
       } else if (errorStr.includes("safety")) {
