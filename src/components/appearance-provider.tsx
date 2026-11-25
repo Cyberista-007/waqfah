@@ -229,10 +229,17 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     setFont(newFont);
   }, []);
   
+  const applyLanguageAttributes = useCallback((langCode: string) => {
+    const dir = langCode === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = langCode;
+    document.documentElement.dir = dir;
+  }, []);
+
   const handleSetLanguage = useCallback((newLang: string) => {
     localStorage.setItem("site-language", newLang);
+    applyLanguageAttributes(newLang);
     setLanguageState(newLang);
-  }, []);
+  }, [applyLanguageAttributes]);
 
   const setAiApiKey = useCallback((key: string | null) => {
     if (key) {
@@ -291,6 +298,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
 
     const storedLang = localStorage.getItem("site-language");
     const initialLang = storedLang || 'ar';
+    applyLanguageAttributes(initialLang);
     setLanguageState(initialLang);
 
     const storedApiKey = localStorage.getItem("site-ai-api-key");
@@ -383,7 +391,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
       setAuroraGrainState(g);
       document.documentElement.style.setProperty('--aurora-grain', g.toString());
     }
-  }, [defaultFont, applyBackground, clearBackgroundStyles, applyGradientPreset]);
+  }, [defaultFont, applyBackground, clearBackgroundStyles, applyGradientPreset, applyLanguageAttributes]);
 
   const value = {
     font,

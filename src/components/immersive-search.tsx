@@ -22,6 +22,7 @@ import { SearchSkeleton } from './skeletons';
 import Fuse from 'fuse.js';
 import { ThreeDTilt } from './ui/three-d-tilt';
 import { BookOpen, ShieldAlert, TriangleAlert } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ImmersiveSearchProps {
     isOpen: boolean;
@@ -261,14 +262,16 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         });
     };
 
+    const { t, isRtl } = useTranslation();
+
     const categories = [
-        { id: 'all', label: 'الكل' },
-        { id: 'lectures', label: 'المحاضرات' },
-        { id: 'series', label: 'السلاسل' },
-        { id: 'programs', label: 'البرامج' },
-        { id: 'books', label: 'المكتبة' },
-        { id: 'shubuhat', label: 'الشبهات' },
-        { id: 'destructive_sins', label: 'المهلكات' },
+        { id: 'all', label: t('الكل', 'All') },
+        { id: 'lectures', label: t('المحاضرات', 'Lectures') },
+        { id: 'series', label: t('السلاسل', 'Series') },
+        { id: 'programs', label: t('البرامج', 'Programs') },
+        { id: 'books', label: t('المكتبة', 'Library') },
+        { id: 'shubuhat', label: t('الشبهات', 'Refutations') },
+        { id: 'destructive_sins', label: t('المهلكات', 'Heart Diseases') },
     ];
 
     return (
@@ -287,14 +290,14 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                         exit={{ opacity: 0, scale: 0.96, y: -12 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                         onClick={(e) => e.stopPropagation()}
-                        dir="rtl"
+                        dir={isRtl ? 'rtl' : 'ltr'}
                         className="w-full max-w-3xl max-h-[82vh] flex flex-col rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/80 shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
                     >
                         {/* Compact Top Bar */}
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
                             <div className="flex items-center gap-2.5">
-                                <span className="text-base font-black font-headline text-primary">وقفة</span>
-                                <span className="text-xs text-muted-foreground font-bold">• البحث السريع</span>
+                                <span className="text-base font-black font-headline text-primary">{t('وقفة', 'Waqfah')}</span>
+                                <span className="text-xs text-muted-foreground font-bold">• {t('البحث السريع', 'Quick Search')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-bold border border-border/60">
@@ -327,7 +330,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder={isListening ? 'جارٍ الاستماع... تحدث الآن' : 'ابحث عن محاضرة، سلسلة، برنامج، أو كتاب...'}
+                                    placeholder={isListening ? t('جارٍ الاستماع... تحدث الآن', 'Listening... Speak now') : t('ابحث عن محاضرة، سلسلة، برنامج، أو كتاب...', 'Search lectures, series, programs, or books...')}
                                     className="w-full h-12 sm:h-14 bg-transparent text-base sm:text-lg font-bold text-foreground placeholder:text-muted-foreground/60 outline-none pl-12"
                                 />
                                 {voiceSupported && (
@@ -660,7 +663,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                     <section className="bg-primary/10 rounded-2xl p-4 sm:p-5 border border-primary/20">
                                         <h4 className="text-primary font-black mb-3 text-sm flex items-center gap-2">
                                             <Sparkles className="w-4 h-4" />
-                                            <span>الأكثر رواجاً</span>
+                                            <span>{t('الأكثر رواجاً', 'Trending')}</span>
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
                                             {['#فقه', '#تفسير', '#سيرة', '#رقائق', '#فلسطين', '#عقيدة'].map((tag) => (
@@ -707,7 +710,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
                                         <section className="bg-muted/30 rounded-2xl p-4 sm:p-5 border border-border/60 flex flex-col items-center justify-center text-center">
                                             <Search className="w-7 h-7 text-primary/40 mb-2" />
                                             <p className="text-xs font-bold text-muted-foreground">
-                                                اكتب أي كلمة للبحث في الدروس والكتب والسلاسل
+                                                {t('اكتب أي كلمة للبحث في الدروس والكتب والسلاسل', 'Type any keyword to search lectures, books, and series')}
                                             </p>
                                         </section>
                                     )}

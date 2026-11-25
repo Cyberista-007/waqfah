@@ -56,6 +56,7 @@ import type {
   Series,
 } from '@/lib/types';
 import { useAppearance } from '@/components/appearance-provider';
+import { useTranslation } from '@/lib/i18n';
 import { useCollection, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
@@ -642,6 +643,7 @@ export function HomePageClient({
   stripLectures = [],
 }: HomePageClientProps) {
   const { heroImageUrl: customHeroUrl, heroTitle, heroSubtitle, heroBanners } = useAppearance();
+  const { t, lang, isRtl } = useTranslation();
   const heroImagePlaceholder = getPlaceholderImage('hero-background');
   const [heroImageUrl, setHeroImageUrl] = useState(customHeroUrl || heroImagePlaceholder?.imageUrl);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -658,11 +660,11 @@ export function HomePageClient({
     try {
       const now = new Date();
       const hour = now.getHours();
-      if (hour >= 4 && hour < 12) setTimeGreeting('صباح الخير والبركة');
-      else if (hour >= 12 && hour < 17) setTimeGreeting('طاب يومك بذكر الله');
-      else setTimeGreeting('مساء السكينة والطمأنينة');
+      if (hour >= 4 && hour < 12) setTimeGreeting(t('صباح الخير والبركة', 'Blessed Morning'));
+      else if (hour >= 12 && hour < 17) setTimeGreeting(t('طاب يومك بذكر الله', 'Peaceful Day'));
+      else setTimeGreeting(t('مساء السكينة والطمأنينة', 'Serene Evening'));
 
-      const formatted = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+      const formatted = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -671,7 +673,7 @@ export function HomePageClient({
     } catch {
       // Ignore if Intl Islamic calendar is unavailable
     }
-  }, []);
+  }, [lang, t]);
 
   const banners = useMemo(() => {
     if (heroBanners && heroBanners.length > 0) return heroBanners;
@@ -823,9 +825,17 @@ export function HomePageClient({
   }, [topPrograms, heroImagePlaceholder?.imageUrl, customHeroUrl]);
 
   const activeBanner = banners[activeBannerIndex] || banners[0];
-  const titleWords = (activeBanner?.title || 'العلم الشرعي بين يديك').split(' ');
+  const rawTitle =
+    lang === 'en' && (!activeBanner?.title || activeBanner.title === 'العلم الشرعي بين يديك')
+      ? 'Islamic Knowledge Within Reach'
+      : activeBanner?.title || t('العلم الشرعي بين يديك', 'Islamic Knowledge Within Reach');
+  const titleWords = rawTitle.split(' ');
   const headlineFirst = titleWords.slice(0, Math.ceil(titleWords.length / 2)).join(' ');
   const headlineSecond = titleWords.slice(Math.ceil(titleWords.length / 2)).join(' ');
+  const resolvedSubtitle =
+    lang === 'en'
+      ? 'A comprehensive platform for authentic Islamic lectures, Quran, Hadith, and structured learning paths.'
+      : activeBanner?.subtitle || heroSubtitle;
 
   const paths = homepageConfig?.paths?.length ? homepageConfig.paths : DEFAULT_PATHS;
   const faqs = homepageConfig?.faqs?.length ? homepageConfig.faqs : DEFAULT_FAQS;
@@ -886,7 +896,7 @@ export function HomePageClient({
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 text-white/90 text-xs font-black">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>وقف علمي رقمي • بلا إعلانات</span>
+                <span>{t('وقف علمي رقمي • بلا إعلانات', 'Digital Islamic Endowment • Ad-Free')}</span>
               </div>
               <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white/80 text-xs font-bold">
                 <span>{timeGreeting}</span>
@@ -967,7 +977,7 @@ export function HomePageClient({
               transition={{ delay: 0.12, duration: 0.7 }}
               className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed font-tajawal"
             >
-              {activeBanner?.subtitle || heroSubtitle}
+              {resolvedSubtitle}
             </motion.p>
 
             <motion.div
@@ -982,8 +992,8 @@ export function HomePageClient({
                 className="rounded-full px-8 h-13 text-base font-black bg-primary text-primary-foreground shadow-[0_14px_32px_rgba(var(--primary-rgb),0.35)] hover:scale-[1.03] transition-all duration-300"
               >
                 <Link href={activeBanner?.link || '/pathways'} className="flex items-center gap-2">
-                  <span>ابدأ رحلتك العلمية</span>
-                  <ArrowLeft className="w-4 h-4" />
+                  <span>{t('ابدأ رحلتك العلمية', 'Start Learning')}</span>
+                  <ArrowLeft className={cn('w-4 h-4', !isRtl && 'rotate-180')} />
                 </Link>
               </Button>
               <Button
@@ -993,7 +1003,7 @@ export function HomePageClient({
                 className="rounded-full px-7 h-13 text-base font-bold bg-white/10 hover:bg-white/20 text-white backdrop-blur-xl border border-white/20 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span>التعريف بـ وقفة</span>
+                <span>{t('التعريف بـ وقفة', 'About Waqfah')}</span>
               </Button>
             </motion.div>
 
@@ -1113,12 +1123,12 @@ export function HomePageClient({
       ══════════════════════════════════════════════════════════════════ */}
       <section id="categories" className="container px-4 relative z-20">
         <SectionHeading
-          badge="خريطة المعرفة الشرعية"
-          title="أبواب العلم"
-          highlight="والتزكية"
-          subtitle="بوابة منظمة تجمع القرآن الكريم والسنة النبوية والعلوم الشرعية وأدوات طالب العلم في مكان واحد."
+          badge={t('خريطة المعرفة الشرعية', 'Islamic Knowledge Map')}
+          title={t('أبواب العلم', 'Doors of')}
+          highlight={t('والتزكية', 'Knowledge')}
+          subtitle={t('بوابة منظمة تجمع القرآن الكريم والسنة النبوية والعلوم الشرعية وأدوات طالب العلم في مكان واحد.', 'An organized gateway uniting the Quran, Sunnah, Islamic sciences, and student tools.')}
           actionHref="/sciences-tree"
-          actionLabel="شجرة العلوم"
+          actionLabel={t('شجرة العلوم', 'Sciences Tree')}
         />
 
         {/* Primary Bento Grid */}
@@ -1447,13 +1457,13 @@ export function HomePageClient({
         <div className="text-center mb-12 space-y-4">
           <div className="luxury-badge luxury-badge-primary mx-auto">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>مسارات علمية متدرجة</span>
+            <span>{t('مسارات علمية متدرجة', 'Structured Learning Paths')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-black font-headline tracking-tight text-foreground">
-            خارطة طريقٍ <span className="text-primary">ممنهجة</span>
+            {t('خارطة طريقٍ', 'Structured')} <span className="text-primary">{t('ممنهجة', 'Roadmaps')}</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-            «من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً»
+            {t('«من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً»', 'Guided curriculums designed step-by-step for seekers of beneficial knowledge.')}
           </p>
         </div>
 
@@ -1608,13 +1618,13 @@ export function HomePageClient({
             <div className="relative z-10 space-y-4">
               <div className="luxury-badge luxury-badge-primary w-fit">
                 <HeartHandshake className="w-4 h-4" />
-                <span>ساهم في الأجر</span>
+                <span>{t('ساهم في الأجر', 'Share the Reward')}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-black font-headline tracking-tight text-foreground">
-                كن جزءاً من رحلة <span className="text-primary">نشر العلم</span>
+                {t('كن جزءاً من رحلة', 'Be part of spreading')} <span className="text-primary">{t('نشر العلم', 'knowledge')}</span>
               </h2>
               <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-xl">
-                ساهم في استكمال هذا المشروع الوقفي وتوسيع انتشاره ليصل العلم لكل طالب وراغب. وقفتك اليوم هي صدقة جارية وأجر مستمر.
+                {t('ساهم في استكمال هذا المشروع الوقفي وتوسيع انتشاره ليصل العلم لكل طالب وراغب. وقفتك اليوم هي صدقة جارية وأجر مستمر.', 'Support this non-profit Islamic endowment so beneficial knowledge reaches every seeker worldwide.')}
               </p>
             </div>
             <div className="relative z-10 flex flex-wrap gap-3.5">
@@ -1625,7 +1635,7 @@ export function HomePageClient({
               >
                 <Link href="/donations" prefetch={false} className="flex items-center gap-2.5">
                   <Heart className="w-5 h-5 fill-current" />
-                  <span>ادعم المشروع الآن</span>
+                  <span>{t('ادعم المشروع الآن', 'Support Now')}</span>
                 </Link>
               </Button>
               <Button
@@ -1636,7 +1646,7 @@ export function HomePageClient({
               >
                 <Link href="/contact" prefetch={false} className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-primary" />
-                  <span>تطوع معنا</span>
+                  <span>{t('تطوع معنا', 'Volunteer')}</span>
                 </Link>
               </Button>
             </div>
@@ -1648,9 +1658,9 @@ export function HomePageClient({
               <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <Mail className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-black font-headline text-foreground">ابقَ على اتصال بكل جديد</h3>
+              <h3 className="text-2xl font-black font-headline text-foreground">{t('ابقَ على اتصال بكل جديد', 'Stay Updated')}</h3>
               <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                اشترك لتصلك أحدث المحاضرات والسلاسل العلمية فور صدورها.
+                {t('اشترك لتصلك أحدث المحاضرات والسلاسل العلمية فور صدورها.', 'Subscribe to receive the latest lectures and series upon release.')}
               </p>
             </div>
 

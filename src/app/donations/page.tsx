@@ -34,6 +34,7 @@ import {
 import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +65,7 @@ function OneClickDonation({ currency }: { currency: Currency }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { t, isRtl } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState<number | null>(null);
 
   const userDocRef = useMemoFirebase(
@@ -129,6 +131,7 @@ export default function DonationsPage() {
     limit: 30,
   });
   const { toast } = useToast();
+  const { t, isRtl } = useTranslation();
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -234,7 +237,7 @@ export default function DonationsPage() {
   ];
 
   return (
-    <div className="pb-20" dir="rtl">
+    <div className="pb-20" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Top Scroll Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 origin-right z-[100] h-1 bg-primary"
@@ -252,15 +255,18 @@ export default function DonationsPage() {
           <div className="relative z-10 max-w-3xl mx-auto space-y-6">
             <div className="luxury-badge luxury-badge-primary mx-auto">
               <Star className="w-3.5 h-3.5 fill-current" />
-              <span>صدقة جارية بأثرٍ باقٍ</span>
+              <span>{t('صدقة جارية بأثرٍ باقٍ', 'Ongoing Charity (Sadaqah Jariyah)')}</span>
             </div>
 
             <h1 className="text-4xl sm:text-6xl font-black font-headline tracking-tight leading-[1.12] text-foreground">
-              كُن سبباً في <span className="text-primary">استنارة عقل</span>
+              {t('كُن سبباً في', 'Be a Light for')} <span className="text-primary">{t('استنارة عقل', 'Enlightened Minds')}</span>
             </h1>
 
             <p className="text-base sm:text-xl text-muted-foreground leading-relaxed font-medium">
-              «وقفة» مشروع وقفي خالص لخدمة العلم الشرعي بلا إعلانات. مساهمتك اليوم تضمن استمرار الخوادم، وإنتاج الدروس، وتفريغ المحاضرات لتبقى صدقة جارية في ميزانك.
+              {t(
+                '«وقفة» مشروع وقفي خالص لخدمة العلم الشرعي بلا إعلانات. مساهمتك اليوم تضمن استمرار الخوادم، وإنتاج الدروس، وتفريغ المحاضرات لتبقى صدقة جارية في ميزانك.',
+                'Waqfah is an ad-free Islamic knowledge endowment. Your contribution keeps servers running, produces lectures, and transcribes lessons as ongoing charity.'
+              )}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
@@ -271,7 +277,7 @@ export default function DonationsPage() {
                 }
               >
                 <SelectTrigger className="w-44 h-12 rounded-xl bg-background/70 border-border font-bold">
-                  <SelectValue placeholder="اختر العملة" />
+                  <SelectValue placeholder={t('اختر العملة', 'Select Currency')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
@@ -288,8 +294,8 @@ export default function DonationsPage() {
                 onClick={() => scrollToSection('contribute')}
                 className="h-12 px-8 rounded-xl font-black cursor-pointer"
               >
-                <span>ساهم الآن</span>
-                <ArrowDown className="w-4 h-4 mr-2" />
+                <span>{t('ساهم الآن', 'Contribute Now')}</span>
+                <ArrowDown className="w-4 h-4 ms-2" />
               </Button>
 
               <Button
@@ -299,7 +305,7 @@ export default function DonationsPage() {
                 onClick={() => scrollToSection('breakdown')}
                 className="h-12 px-6 rounded-xl font-bold cursor-pointer"
               >
-                أين يذهب تبرعك؟
+                {t('أين يذهب تبرعك؟', 'Where Funds Go')}
               </Button>
             </div>
           </div>
@@ -439,10 +445,10 @@ export default function DonationsPage() {
             <CardHeader className="p-0 pb-6">
               <CardTitle className="text-2xl font-black font-headline flex items-center gap-2.5 text-foreground">
                 <CreditCard className="h-6 w-6 text-primary" />
-                <span>بوابة المساهمة المباشرة</span>
+                <span>{t('بوابة المساهمة المباشرة', 'Direct Contribution Portal')}</span>
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm font-medium">
-                نموذج محاكاة آمن لتسجيل نية المساهمة وإصدار إيصال فوري قابل للطباعة.
+                {t('نموذج محاكاة آمن لتسجيل نية المساهمة وإصدار إيصال فوري قابل للطباعة.', 'Secure contribution form with instant printable receipt.')}
               </CardDescription>
             </CardHeader>
 
@@ -590,9 +596,9 @@ export default function DonationsPage() {
         ════════════════════════════════════════════════════════════ */}
         <section id="breakdown" className="space-y-10">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">أين تذهب مساهمتك؟</h2>
+            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">{t('أين تذهب مساهمتك؟', 'Where Your Contribution Goes')}</h2>
             <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto font-medium">
-              كل مساهمة تُوجّه مباشرة لتشغيل المنصة وتوسيع أثرها العلمي.
+              {t('كل مساهمة تُوجّه مباشرة لتشغيل المنصة وتوسيع أثرها العلمي.', 'Every contribution goes directly toward operating and expanding the platform.')}
             </p>
           </div>
 
@@ -618,9 +624,9 @@ export default function DonationsPage() {
         {/* Tiers of Benevolence */}
         <section className="space-y-10">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">درجات الإحسان</h2>
+            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">{t('درجات الإحسان', 'Supporter Tiers')}</h2>
             <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto font-medium">
-              تدرج الداعمين في البذل والعطاء، تسابقاً في الخيرات وبناءً لمجتمع متعلم.
+              {t('تدرج الداعمين في البذل والعطاء، تسابقاً في الخيرات وبناءً لمجتمع متعلم.', 'Recognizing generous supporters helping build an enlightened community.')}
             </p>
           </div>
 
@@ -651,9 +657,9 @@ export default function DonationsPage() {
         ════════════════════════════════════════════════════════════ */}
         <section className="rounded-[2.25rem] luxury-glass border border-border/60 p-7 sm:p-10 space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">قنوات البذل والمساهمة</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">{t('قنوات البذل والمساهمة', 'Payment Channels')}</h2>
             <p className="text-sm text-muted-foreground font-medium">
-              اختر الوسيلة الأنسب لك للمساهمة في هذا الوقف العلمي.
+              {t('اختر الوسيلة الأنسب لك للمساهمة في هذا الوقف العلمي.', 'Choose the most convenient method to support this endowment.')}
             </p>
           </div>
 
@@ -754,9 +760,9 @@ export default function DonationsPage() {
         ════════════════════════════════════════════════════════════ */}
         <section className="rounded-[2.25rem] luxury-glass border border-border/60 p-8 sm:p-12 text-center space-y-6">
           <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">سجل الداعمين بأثرهم</h2>
+            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">{t('سجل الداعمين بأثرهم', 'Wall of Supporters')}</h2>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto font-medium">
-              «أحب الأعمال إلى الله أدومها وإن قلّ» — جزا الله كل من ساهم ويسّر نشر العلم.
+              {t('«أحب الأعمال إلى الله أدومها وإن قلّ» — جزا الله كل من ساهم ويسّر نشر العلم.', 'May Allah reward everyone who contributed to spreading beneficial knowledge.')}
             </p>
           </div>
 

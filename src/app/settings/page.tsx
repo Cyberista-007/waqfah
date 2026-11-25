@@ -58,6 +58,7 @@ import {
 import { cn, formatBytes, getInitials } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAppearance } from '@/components/appearance-provider';
+import { useTranslation } from '@/lib/i18n';
 import { ThemeSwitcherDialog } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
@@ -420,6 +421,7 @@ export default function SettingsPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const { t, isRtl } = useTranslation();
   const bgFileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -627,14 +629,14 @@ export default function SettingsPage() {
   const currentLanguageName = languages.find((l) => l.value === language)?.name || 'العربية';
 
   const tabs: { id: SettingsTab; label: string; icon: React.ElementType; desc: string }[] = [
-    { id: 'appearance', label: 'المظهر واللغة', icon: Palette, desc: 'السمة، الخطوط، والخلفيات' },
-    { id: 'ai', label: 'المساعد الذكي', icon: Bot, desc: 'مفتاح Gemini والنموذج' },
-    { id: 'notifications', label: 'الإشعارات والتخزين', icon: Bell, desc: 'التنبيهات وإدارة المحفوظات' },
-    { id: 'account', label: 'الحساب والبيانات', icon: ShieldAlert, desc: 'التصدير وسجل الاستماع' },
+    { id: 'appearance', label: t('المظهر واللغة', 'Appearance & Language'), icon: Palette, desc: t('السمة، الخطوط، والخلفيات', 'Themes, fonts & backgrounds') },
+    { id: 'ai', label: t('المساعد الذكي', 'AI Assistant'), icon: Bot, desc: t('مفتاح Gemini والنموذج', 'Gemini API key & model') },
+    { id: 'notifications', label: t('الإشعارات والتخزين', 'Notifications & Storage'), icon: Bell, desc: t('التنبيهات وإدارة المحفوظات', 'Alerts & offline cache') },
+    { id: 'account', label: t('الحساب والبيانات', 'Account & Data'), icon: ShieldAlert, desc: t('التصدير وسجل الاستماع', 'Export & listen history') },
   ];
 
   return (
-    <div className="container max-w-5xl mx-auto px-4 py-8 space-y-8" dir="rtl">
+    <div className="container max-w-5xl mx-auto px-4 py-8 space-y-8" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Hidden image uploader */}
       <input
         ref={bgFileInputRef}
@@ -674,30 +676,30 @@ export default function SettingsPage() {
             </div>
             <div className="flex flex-wrap gap-2.5 shrink-0">
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="rounded-xl font-bold cursor-pointer">
-                <Edit className="ml-1.5 h-4 w-4" />
-                تعديل الملف
+                <Edit className="me-1.5 h-4 w-4" />
+                {t('تعديل الملف', 'Edit Profile')}
               </Button>
               <Button onClick={onLogout} variant="ghost" size="sm" className="rounded-xl font-bold text-destructive hover:bg-destructive/10 cursor-pointer">
-                <LogOut className="ml-1.5 h-4 w-4" />
-                خروج
+                <LogOut className="me-1.5 h-4 w-4" />
+                {t('خروج', 'Sign Out')}
               </Button>
             </div>
           </>
         ) : (
           <>
-            <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-right">
+            <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-start">
               <div className="w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary">
                 <Settings className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h1 className="text-2xl font-black font-headline text-foreground">إعدادات المنصة</h1>
+                <h1 className="text-2xl font-black font-headline text-foreground">{t('إعدادات المنصة', 'Platform Settings')}</h1>
                 <p className="text-sm text-muted-foreground">
-                  سجل الدخول لحفظ تفضيلاتك، إشعاراتك، وسجل استماعك عبر أجهزتك.
+                  {t('سجل الدخول لحفظ تفضيلاتك، إشعاراتك، وسجل استماعك عبر أجهزتك.', 'Sign in to save your preferences, notifications, and listen history across devices.')}
                 </p>
               </div>
             </div>
             <Button asChild className="rounded-xl font-black shrink-0">
-              <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول / حساب جديد</Link>
+              <Link href="/auth/login?redirect_to=/settings">{t('تسجيل الدخول / حساب جديد', 'Sign In / Create Account')}</Link>
             </Button>
           </>
         )}
@@ -745,45 +747,45 @@ export default function SettingsPage() {
           {activeTab === 'appearance' && (
             <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
               <div className="px-2 pb-2">
-                <h2 className="text-xl font-black font-headline text-foreground">المظهر واللغة</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">خصّص شكل المنصة والخطوط بما يريح عينيك.</p>
+                <h2 className="text-xl font-black font-headline text-foreground">{t('المظهر واللغة', 'Appearance & Language')}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('خصّص شكل المنصة والخطوط بما يريح عينيك.', 'Customize the platform theme, fonts, and display language.')}</p>
               </div>
               <SettingsRow
                 icon={Palette}
-                label="السمة اللونية (الثيم)"
-                description="اختر من بين 19 سمة فاتحة وداكنة"
+                label={t('السمة اللونية (الثيم)', 'Color Theme')}
+                description={t('اختر من بين 19 سمة فاتحة وداكنة', 'Choose from 19 dark & light themes')}
                 onClick={() => setIsThemeSwitcherOpen(true)}
               />
               <Separator />
               <SettingsRow
                 icon={CaseSensitive}
-                label="نوع الخط العربي"
-                description="اختر خط القراءة والعناوين المفضل"
+                label={t('نوع الخط', 'Font Family')}
+                description={t('اختر خط القراءة والعناوين المفضل', 'Select your preferred reading & heading font')}
                 onClick={() => setIsFontSwitcherOpen(true)}
               />
               <Separator />
               <SettingsRow
                 icon={Globe}
-                label="اللغة"
+                label={t('اللغة', 'Language')}
                 value={currentLanguageName}
                 onClick={() => setIsLanguageSwitcherOpen(true)}
               />
               <Separator />
               <SettingsRow
                 icon={Droplets}
-                label="الألوان السادة للخلفية"
+                label={t('الألوان السادة للخلفية', 'Solid Background Colors')}
                 onClick={() => setIsSolidColorSwitcherOpen(true)}
               />
               <Separator />
               <SettingsRow
                 icon={Grid}
-                label="اختيار نمط خلفية"
+                label={t('اختيار نمط خلفية', 'Background Pattern')}
                 onClick={() => setIsPatternSwitcherOpen(true)}
               />
               <Separator />
               <SettingsRow
                 icon={ImageIcon}
-                label="رفع صورة خلفية مخصصة"
+                label={t('رفع صورة خلفية مخصصة', 'Upload Custom Background')}
                 onClick={() => bgFileInputRef.current?.click()}
               />
               <Separator />
@@ -792,7 +794,7 @@ export default function SettingsPage() {
                   <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <ImageIcon className="w-5 h-5" />
                   </span>
-                  <span>إظهار الخلفية المخصصة</span>
+                  <span>{t('إظهار الخلفية المخصصة', 'Show Custom Background')}</span>
                 </Label>
                 <Switch id="bg-switch" checked={isBackgroundShown} onCheckedChange={toggleBackground} />
               </div>
@@ -802,9 +804,9 @@ export default function SettingsPage() {
           {activeTab === 'ai' && (
             <Card className="rounded-3xl luxury-card p-6 space-y-6">
               <div>
-                <h2 className="text-xl font-black font-headline text-foreground">المساعد الذكي (Gemini AI)</h2>
+                <h2 className="text-xl font-black font-headline text-foreground">{t('المساعد الذكي (Gemini AI)', 'AI Assistant (Gemini AI)')}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  إعدادات المساعد العلمي الذكي لتلخيص الدروس والإجابة عن الاستفسارات.
+                  {t('إعدادات المساعد العلمي الذكي لتلخيص الدروس والإجابة عن الاستفسارات.', 'Configure the AI assistant for lecture summaries and Q&A.')}
                 </p>
               </div>
 
@@ -812,14 +814,14 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-center">
                   <Label htmlFor="ai-api-key" className="text-sm font-bold flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary" />
-                    <span>مفتاح Gemini API</span>
+                    <span>{t('مفتاح Gemini API', 'Gemini API Key')}</span>
                   </Label>
                   <Link
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                   >
-                    <span>احصل على مفتاح مجاني</span>
+                    <span>{t('احصل على مفتاح مجاني', 'Get a free key')}</span>
                     <ExternalLink className="w-3 h-3" />
                   </Link>
                 </div>
@@ -828,7 +830,7 @@ export default function SettingsPage() {
                   <Input
                     id="ai-api-key"
                     type="password"
-                    placeholder="أدخل مفتاح الـ API الخاص بك هنا..."
+                    placeholder={t('أدخل مفتاح الـ API الخاص بك هنا...', 'Enter your Gemini API key here...')}
                     value={aiApiKey || ''}
                     onChange={(e) => setAiApiKey(e.target.value)}
                     className="h-12 bg-background/60 border-border rounded-xl font-mono pl-24"
@@ -837,12 +839,12 @@ export default function SettingsPage() {
                     {aiApiKey ? (
                       <span className="inline-flex items-center gap-1 text-emerald-500 text-xs font-black">
                         <CheckCircle2 className="w-4 h-4" />
-                        مفعل
+                        {t('مفعل', 'Active')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-muted-foreground text-xs font-bold">
                         <XCircle className="w-4 h-4" />
-                        غير مفعل
+                        {t('غير مفعل', 'Inactive')}
                       </span>
                     )}
                   </div>
@@ -851,7 +853,7 @@ export default function SettingsPage() {
                 <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-2.5">
                   <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                    يُحفظ هذا المفتاح محلياً في متصفحك فقط ولا يُرسل إلى خوادمنا إلا لتنفيذ طلبات الذكاء الاصطناعي.
+                    {t('يُحفظ هذا المفتاح محلياً في متصفحك فقط ولا يُرسل إلى خوادمنا إلا لتنفيذ طلبات الذكاء الاصطناعي.', 'This key is stored locally in your browser only and is used solely to process AI requests.')}
                   </p>
                 </div>
               </div>
@@ -861,17 +863,17 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <Label htmlFor="ai-model-select" className="text-sm font-bold flex items-center gap-2">
                   <Bot className="w-4 h-4 text-primary" />
-                  <span>نموذج الذكاء الاصطناعي</span>
+                  <span>{t('نموذج الذكاء الاصطناعي', 'AI Model')}</span>
                 </Label>
                 <Select value={aiModel} onValueChange={setAiModel}>
                   <SelectTrigger id="ai-model-select" className="h-12 bg-background/60 border-border rounded-xl">
-                    <SelectValue placeholder="اختر نموذجاً..." />
+                    <SelectValue placeholder={t('اختر نموذجاً...', 'Select a model...')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gemini-4-hydrogen">Gemini 4 Hydrogen (الأحدث والأسرع)</SelectItem>
+                    <SelectItem value="gemini-4-hydrogen">Gemini 4 Hydrogen ({t('الأحدث والأسرع', 'Latest & Fastest')})</SelectItem>
                     <SelectItem value="gemini-3.8-flash">Gemini 3.8 Flash</SelectItem>
                     <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                    <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (للمسائل المعقدة)</SelectItem>
+                    <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro ({t('للمسائل المعقدة', 'Complex Reasoning')})</SelectItem>
                     <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
                   </SelectContent>
                 </Select>
@@ -884,9 +886,9 @@ export default function SettingsPage() {
                   <MessageSquare className="w-5 h-5 text-primary" />
                   <div>
                     <Label htmlFor="show-chatbot-switch" className="text-sm font-bold cursor-pointer block">
-                      إظهار أيقونة المساعد الذكي
+                      {t('إظهار أيقونة المساعد الذكي', 'Show Floating AI Assistant')}
                     </Label>
-                    <span className="text-xs text-muted-foreground">إظهار أو إخفاء زر المساعد العائم أسفل الشاشة</span>
+                    <span className="text-xs text-muted-foreground">{t('إظهار أو إخفاء زر المساعد العائم أسفل الشاشة', 'Show or hide the floating assistant button')}</span>
                   </div>
                 </div>
                 <Switch id="show-chatbot-switch" checked={showChatbot} onCheckedChange={setShowChatbot} />
@@ -897,30 +899,30 @@ export default function SettingsPage() {
           {activeTab === 'notifications' && (
             <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
               <div className="px-2 pb-2">
-                <h2 className="text-xl font-black font-headline text-foreground">الإشعارات والتخزين</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">التحكم بالتنبيهات وسعة التخزين المؤقتة.</p>
+                <h2 className="text-xl font-black font-headline text-foreground">{t('الإشعارات والتخزين', 'Notifications & Storage')}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('التحكم بالتنبيهات وسعة التخزين المؤقتة.', 'Manage alerts and offline cache storage.')}</p>
               </div>
 
               {user ? (
                 <>
                   <SettingsRow
                     icon={Bell}
-                    label="تفضيلات الإشعارات"
-                    description="تنبيهات الحلقات الجديدة والبرامج والكتب"
+                    label={t('تفضيلات الإشعارات', 'Notification Preferences')}
+                    description={t('تنبيهات الحلقات الجديدة والبرامج والكتب', 'Alerts for new episodes, programs & books')}
                     onClick={() => setView('notifications')}
                   />
                   <Separator />
                   <SettingsRow
                     icon={Database}
-                    label="إدارة مساحة التخزين"
-                    description="عرض وحذف المحاضرات المحفوظة مؤقتاً"
+                    label={t('إدارة مساحة التخزين', 'Manage Storage')}
+                    description={t('عرض وحذف المحاضرات المحفوظة مؤقتاً', 'View and remove cached lectures')}
                     onClick={() => setView('storage')}
                   />
                   <Separator />
                 </>
               ) : (
                 <div className="p-4 rounded-2xl bg-muted/40 text-xs text-muted-foreground font-medium mb-2">
-                  سجل الدخول للوصول إلى إشعارات البرامج وإدارة مساحة التخزين الخاصة بحسابك.
+                  {t('سجل الدخول للوصول إلى إشعارات البرامج وإدارة مساحة التخزين الخاصة بحسابك.', 'Sign in to manage your program notifications and storage.')}
                 </div>
               )}
 
@@ -929,7 +931,7 @@ export default function SettingsPage() {
                   <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <Wifi className="w-5 h-5" />
                   </span>
-                  <span>التنزيل عبر Wi-Fi فقط</span>
+                  <span>{t('التنزيل عبر Wi-Fi فقط', 'Download over Wi-Fi only')}</span>
                 </Label>
                 <Switch
                   id="wifi-only-switch"
@@ -946,30 +948,30 @@ export default function SettingsPage() {
           {activeTab === 'account' && (
             <Card className="rounded-3xl luxury-card p-4 sm:p-6 space-y-2">
               <div className="px-2 pb-2">
-                <h2 className="text-xl font-black font-headline text-foreground">الحساب والبيانات</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">تصدير بياناتك الشخصية أو إدارة سجلات الحساب.</p>
+                <h2 className="text-xl font-black font-headline text-foreground">{t('الحساب والبيانات', 'Account & Data')}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('تصدير بياناتك الشخصية أو إدارة سجلات الحساب.', 'Export your personal data or manage account records.')}</p>
               </div>
 
               {user ? (
                 <>
                   <SettingsRow
                     icon={isClearingHistory ? Loader2 : Trash2}
-                    label="مسح سجل الاستماع"
-                    description="حذف سجل المحاضرات التي استمعت إليها"
+                    label={t('مسح سجل الاستماع', 'Clear Listen History')}
+                    description={t('حذف سجل المحاضرات التي استمعت إليها', 'Delete your listening history records')}
                     onClick={() => setIsClearHistoryConfirmOpen(true)}
                   />
                   <Separator />
                   <SettingsRow
                     icon={isDownloading ? Loader2 : HardDriveDownload}
-                    label={isDownloading ? 'جاري تجهيز البيانات...' : 'تنزيل نسخة من بياناتي (JSON)'}
-                    description="تصدير المفضلة وقوائم التشغيل والتقدم العلمي"
+                    label={isDownloading ? t('جاري تجهيز البيانات...', 'Preparing your data...') : t('تنزيل نسخة من بياناتي (JSON)', 'Download My Data (JSON)')}
+                    description={t('تصدير المفضلة وقوائم التشغيل والتقدم العلمي', 'Export favorites, playlists & progress')}
                     onClick={handleDownloadData}
                   />
                   <Separator />
                   <SettingsRow
                     icon={UserX}
-                    label="حذف الحساب نهائياً"
-                    description="حذف الحساب وكافة البيانات المرتبطة به"
+                    label={t('حذف الحساب نهائياً', 'Delete Account Permanently')}
+                    description={t('حذف الحساب وكافة البيانات المرتبطة به', 'Permanently remove your account and all data')}
                     danger
                     onClick={() => setIsDeleteConfirmOpen(true)}
                   />
@@ -977,12 +979,12 @@ export default function SettingsPage() {
               ) : (
                 <div className="p-8 text-center space-y-3">
                   <Crown className="w-10 h-10 text-primary/40 mx-auto" />
-                  <p className="font-bold text-foreground">الحساب والبيانات محمية</p>
+                  <p className="font-bold text-foreground">{t('الحساب والبيانات محمية', 'Account & Data Protected')}</p>
                   <p className="text-xs text-muted-foreground">
-                    يرجى تسجيل الدخول لتصدير بياناتك أو إدارة سجل الاستماع.
+                    {t('يرجى تسجيل الدخول لتصدير بياناتك أو إدارة سجل الاستماع.', 'Please sign in to export your data or manage listen history.')}
                   </p>
                   <Button asChild size="sm" className="rounded-xl font-bold mt-2">
-                    <Link href="/auth/login?redirect_to=/settings">تسجيل الدخول</Link>
+                    <Link href="/auth/login?redirect_to=/settings">{t('تسجيل الدخول', 'Sign In')}</Link>
                   </Button>
                 </div>
               )}

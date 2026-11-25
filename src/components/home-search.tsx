@@ -7,6 +7,7 @@ import Magnetic from './magnetic';
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 // Extend Window type to include speech recognition API
 declare global {
@@ -19,6 +20,7 @@ declare global {
 export function HomeSearch() {
   const router = useRouter();
   const { openSearch, isSearchOpen } = useSearch();
+  const { t } = useTranslation();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [supported, setSupported] = useState(true);
@@ -103,7 +105,7 @@ export function HomeSearch() {
                 exit={{ opacity: 0, y: -5 }}
                 className="text-xl font-bold tracking-tight text-primary truncate"
               >
-                {transcript || 'جارٍ الاستماع...'}
+                {transcript || t('جارٍ الاستماع...', 'Listening...')}
               </motion.span>
             ) : (
               <motion.span
@@ -113,7 +115,7 @@ export function HomeSearch() {
                 exit={{ opacity: 0, y: -5 }}
                 className="text-xl font-bold tracking-tight truncate"
               >
-                ابحث عن محاضرة، سلسلة، كتاب...
+                {t('ابحث عن محاضرة، سلسلة، كتاب...', 'Search lectures, series, books...')}
               </motion.span>
             )}
           </AnimatePresence>

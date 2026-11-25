@@ -7,10 +7,13 @@ import {
   MessageCircle, Send, Globe, ArrowUpRight, Sparkles 
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 export function SiteFooter() {
+  const { t, isRtl } = useTranslation();
+
   return (
-    <footer className="relative bg-black text-white py-20 overflow-hidden border-t border-white/10 mt-20">
+    <footer className="relative bg-black text-white py-20 overflow-hidden border-t border-white/10 mt-20" dir={isRtl ? "rtl" : "ltr"}>
       {/* Cinematic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full" />
@@ -25,15 +28,18 @@ export function SiteFooter() {
               <motion.span 
                 className="text-5xl font-black font-headline tracking-tighter text-white block mb-2 group-hover:text-primary transition-colors"
               >
-                وقـــفــــة
+                {t("وقـــفــــة", "WAQFAH")}
               </motion.span>
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/60 block group-hover:text-white/80 transition-colors">
-                للعلم الشرعي الموثوق
+                {t("للعلم الشرعي الموثوق", "AUTHENTIC ISLAMIC KNOWLEDGE")}
               </span>
             </Link>
             
             <p className="max-w-md text-lg text-white/60 leading-relaxed font-medium">
-              صرحٌ تعليميٌّ متكاملٌ يهدفُ إلى تقريبِ العلمِ النافعِ، وربطِ المسلمِ بالكتابِ والسنةِ على فهمِ سلفِ الأمةِ، عبرَ تجربةٍ تقنيةٍ عالمية.
+              {t(
+                "صرحٌ تعليميٌّ متكاملٌ يهدفُ إلى تقريبِ العلمِ النافعِ، وربطِ المسلمِ بالكتابِ والسنةِ على فهمِ سلفِ الأمةِ، عبرَ تجربةٍ تقنيةٍ عالمية.",
+                "An integrated educational platform dedicated to making beneficial Islamic knowledge accessible and connecting Muslims to the Quran and Sunnah through a modern digital experience."
+              )}
             </p>
  
             <div className="flex gap-4">
@@ -62,16 +68,16 @@ export function SiteFooter() {
             <div>
               <h3 className="text-white font-black text-sm uppercase tracking-widest mb-8 flex items-center gap-2">
                 <div className="w-1 h-4 bg-primary rounded-full" />
-                المنصة
+                {t("المنصة", "Platform")}
               </h3>
               <ul className="space-y-4">
                 {[
-                  { label: "جميع البرامج", href: "/programs" },
-                  { label: "السلاسل العلمية", href: "/series" },
-                  { label: "أحدث المحاضرات", href: "/lectures" },
-                  { label: "القصص والعبر", href: "/stories" },
-                  { label: "محاسبة النفس", href: "/accountability" },
-                  { label: "المصحف الشامل", href: "/quran" }
+                  { label: t("جميع البرامج", "All Programs"), href: "/programs" },
+                  { label: t("السلاسل العلمية", "Series"), href: "/series" },
+                  { label: t("أحدث المحاضرات", "Latest Lectures"), href: "/lectures" },
+                  { label: t("القصص والعبر", "Stories"), href: "/stories" },
+                  { label: t("محاسبة النفس", "Accountability"), href: "/accountability" },
+                  { label: t("المصحف الشامل", "Holy Quran"), href: "/quran" }
                 ].map((link, i) => (
                   <li key={i}>
                     <Link href={link.href} prefetch={false} className="text-white/60 hover:text-white transition-colors text-base font-bold flex items-center group">
@@ -86,15 +92,15 @@ export function SiteFooter() {
             <div>
               <h3 className="text-white font-black text-sm uppercase tracking-widest mb-8 flex items-center gap-2">
                 <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-                المحتوى
+                {t("المحتوى", "Content")}
               </h3>
               <ul className="space-y-4">
                 {[
-                  { label: "أركان الإيمان", href: "/aqeedah" },
-                  { label: "أحاديث نبوية", href: "/hadith" },
-                  { label: "أذكار وأدعية", href: "/adhkar" },
-                  { label: "تزكية القلوب", href: "/muhlikat" },
-                  { label: "تفسير وآيات", href: "/search?category=تفسير" }
+                  { label: t("أركان الإيمان", "Creed (Aqeedah)"), href: "/aqeedah" },
+                  { label: t("أحاديث نبوية", "Hadith"), href: "/hadith" },
+                  { label: t("أذكار وأدعية", "Adhkar & Duas"), href: "/adhkar" },
+                  { label: t("تزكية القلوب", "Purification of Hearts"), href: "/muhlikat" },
+                  { label: t("تفسير وآيات", "Tafsir & Verses"), href: "/search?category=تفسير" }
                 ].map((link, i) => (
                   <li key={i}>
                     <Link href={link.href} prefetch={false} className="text-white/60 hover:text-white transition-colors text-base font-bold flex items-center group">
@@ -108,21 +114,21 @@ export function SiteFooter() {
             <div className="col-span-2 md:col-span-1">
               <h3 className="text-white font-black text-sm uppercase tracking-widest mb-8 flex items-center gap-2">
                 <div className="w-1 h-4 bg-amber-500 rounded-full" />
-                الدعم
+                {t("الدعم", "Support")}
               </h3>
               <ul className="space-y-4">
                 <li>
                   <Link href="/contact" prefetch={false} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/10 transition-all group">
-                    <span className="text-white font-black text-sm">تواصل معنا</span>
-                    <span className="text-white/60 text-xs">نحن هنا للإجابة على استفساراتك</span>
+                    <span className="text-white font-black text-sm">{t("تواصل معنا", "Contact Us")}</span>
+                    <span className="text-white/60 text-xs">{t("نحن هنا للإجابة على استفساراتك", "We are here to answer your questions")}</span>
                   </Link>
                 </li>
                 <li>
                   <Link href="/donations" prefetch={false} className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col gap-1 hover:bg-primary/20 transition-all group">
                     <span className="text-primary font-black text-sm flex items-center gap-2">
-                      <Heart className="w-3 h-3 fill-current" /> ادعم المنصة
+                      <Heart className="w-3 h-3 fill-current" /> {t("ادعم المنصة", "Support Waqfah")}
                     </span>
-                    <span className="text-primary/70 text-xs">ساهم في نشر العلم الشرعي</span>
+                    <span className="text-primary/70 text-xs">{t("ساهم في نشر العلم الشرعي", "Contribute to spreading beneficial knowledge")}</span>
                   </Link>
                 </li>
               </ul>
@@ -135,17 +141,17 @@ export function SiteFooter() {
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-xs font-black uppercase tracking-widest text-white/60">
              <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p>© {new Date().getFullYear()} منصة وقفة العلمية — وقف خيري لوجه الله تعالى</p>
+                <p>© {new Date().getFullYear()} {t("منصة وقفة العلمية — وقف خيري لوجه الله تعالى", "Waqfah Platform — Non-Profit Islamic Endowment")}</p>
              </div>
              <div className="flex gap-6">
-                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">سياسة الخصوصية</Link>
-                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">شروط الاستخدام</Link>
+                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">{t("سياسة الخصوصية", "Privacy Policy")}</Link>
+                <Link href="#" prefetch={false} className="hover:text-primary transition-colors">{t("شروط الاستخدام", "Terms of Use")}</Link>
              </div>
           </div>
           
           <div className="flex items-center gap-3 text-white/70 text-xs font-bold bg-white/5 px-6 py-3 rounded-full border border-white/10 shadow-lg backdrop-blur-xl">
              <Globe className="w-4 h-4 text-primary" />
-             <span>بُني باحترافية رقمية لنصرة الدين ونشر العلم الشرعي النافع</span>
+             <span>{t("بُني باحترافية رقمية لنصرة الدين ونشر العلم الشرعي النافع", "Crafted digitally to serve and spread authentic Islamic knowledge")}</span>
           </div>
         </div>
       </div>

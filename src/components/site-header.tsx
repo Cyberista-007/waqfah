@@ -94,6 +94,7 @@ import { NotificationBell } from "./notification-bell"
 import { useAuth, useUser } from "@/firebase"
 import { useSearch } from "./search-provider"
 import Magnetic from "./magnetic"
+import { useTranslation } from "@/lib/i18n"
 
 const mainNavItems = [
   { href: "/", label: "الرئيسية", icon: Home },
@@ -162,8 +163,68 @@ export function SiteHeader() {
   const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
   const { openSearch } = useSearch();
   const { language: activeLanguage } = useAppearance();
+  const { t, isRtl } = useTranslation();
 
-  const activeLanguageName = languages.find(l => l.value === activeLanguage)?.name.slice(0, 2) || 'عر';
+  const localizedMainNav = mainNavItems.map(item => {
+    const enLabels: Record<string, string> = {
+      "/": "Home",
+      "/podcasts": "Podcasts",
+      "/radio": "Radio",
+      "/pathways": "Pathways",
+      "/live": "Live",
+      "/programs": "Programs",
+      "/lectures": "Lectures",
+      "/palestine": "Palestine",
+      "/profile": "My Library",
+    };
+    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
+  });
+
+  const localizedMoreNav = moreNavItems.map(item => {
+    const enLabels: Record<string, string> = {
+      "/podcasts": "Audio Podcasts",
+      "/bayan": "Bayan (Lexicon)",
+      "/athar": "Athar (Atlas)",
+      "/namaa": "Namaa (Zakat)",
+      "/adab": "Adab (Ethics)",
+      "/kanaf": "Kanaf (Family)",
+      "/badges": "Badges",
+      "/adhkar": "Adhkar",
+      "/hadith": "Hadith",
+      "/dua": "Duas",
+      "/quran": "Quran Verses",
+      "/muhlikat": "Heart Diseases",
+      "/chastity": "Chastity Shield",
+      "/shubuhat": "Refutations",
+      "/essentials": "Essentials",
+      "/aqeedah": "Aqeedah",
+      "/mirath": "Inheritance Calc",
+      "/sciences-tree": "Sciences Tree",
+      "/memorize": "Memorization",
+      "/curriculums": "Curriculums",
+      "/leaderboard": "Leaderboard",
+      "/playlists": "Playlists",
+      "/books": "Books",
+      "/challenges": "Challenges",
+      "/accountability": "Accountability",
+      "/qa": "Q & A",
+      "/contact": "Contact Us",
+    };
+    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
+  });
+
+  const localizedMobileNav = mobileNavLinks.map(item => {
+    const enLabels: Record<string, string> = {
+      "/": "Home",
+      "/programs": "Programs",
+      "/palestine": "Palestine",
+      "/search": "Search",
+      "/profile": "Library",
+    };
+    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
+  });
+
+  const activeLanguageName = activeLanguage === 'en' ? 'EN' : (languages.find(l => l.value === activeLanguage)?.name.slice(0, 2) || 'عر');
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
   const activeIndex = mainNavItems.findIndex(
@@ -191,8 +252,8 @@ export function SiteHeader() {
   }
 
   const dynamicMoreNavItems = isAdmin
-    ? [...moreNavItems, { href: "/admin/dashboard", label: "لوحة التحكم", icon: LayoutDashboard }]
-    : moreNavItems;
+    ? [...localizedMoreNav, { href: "/admin/dashboard", label: t("لوحة التحكم", "Admin Dashboard"), icon: LayoutDashboard }]
+    : localizedMoreNav;
 
   return (
     <>
@@ -249,21 +310,21 @@ export function SiteHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent 
-              side="right" 
+              side={isRtl ? "right" : "left"} 
               className="w-[300px] sm:w-[350px] p-0 border-l border-white/10 bg-zinc-950/95 backdrop-blur-2xl text-white shadow-2xl flex flex-col h-full"
-              dir="rtl"
+              dir={isRtl ? "rtl" : "ltr"}
             >
               {isMobileMenuOpen && (
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-white/10 bg-white/[0.02]">
-                    <h2 className="text-2xl font-black font-headline text-primary">وقـــفــــة</h2>
-                    <p className="text-xs text-zinc-400 mt-1">القائمة الرئيسية للمنصة</p>
+                    <h2 className="text-2xl font-black font-headline text-primary">{t("وقـــفــــة", "WAQFAH")}</h2>
+                    <p className="text-xs text-zinc-400 mt-1">{t("القائمة الرئيسية للمنصة", "Main Navigation Menu")}</p>
                   </div>
                   <ScrollArea className="flex-1 p-6">
                     <div className="space-y-8">
                       <div className="space-y-3">
-                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">التنقل السريع</p>
-                        {mainNavItems.map(item => (
+                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">{t("التنقل السريع", "Quick Navigation")}</p>
+                        {localizedMainNav.map(item => (
                           <SheetClose asChild key={item.href}>
                             <Link 
                               href={item.href} 
@@ -283,7 +344,7 @@ export function SiteHeader() {
                         ))}
                       </div>
                       <div className="space-y-3">
-                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">الأقسام الإضافية</p>
+                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">{t("الأقسام الإضافية", "More Sections")}</p>
                         {dynamicMoreNavItems.map(item => (
                           <SheetClose asChild key={item.href}>
                             <Link 
@@ -300,8 +361,8 @@ export function SiteHeader() {
                     </div>
                   </ScrollArea>
                   <div className="p-6 border-t border-white/10 bg-white/[0.01] flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsThemeSwitcherOpen(true)}>ثيمات</Button>
-                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsFontSwitcherOpen(true)}>الخطوط</Button>
+                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsThemeSwitcherOpen(true)}>{t("ثيمات", "Themes")}</Button>
+                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsFontSwitcherOpen(true)}>{t("الخطوط", "Fonts")}</Button>
                   </div>
                 </div>
               )}
@@ -314,16 +375,16 @@ export function SiteHeader() {
           >
             <div className="relative">
                 <div className="text-3xl font-black font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 transition-all duration-500 group-hover:tracking-normal">
-                وقـــفــــة
+                {t("وقـــفــــة", "WAQFAH")}
                 </div>
                 <div className="absolute -bottom-1 right-0 w-0 h-0.5 bg-primary transition-all duration-500 group-hover:w-full opacity-50" />
             </div>
           </Link>
 
           <div className="hidden md:flex flex-grow overflow-hidden">
-            <ScrollArea className="w-full whitespace-nowrap" dir="rtl">
+            <ScrollArea className="w-full whitespace-nowrap" dir={isRtl ? "rtl" : "ltr"}>
               <div className="flex justify-center items-center gap-2 px-4 py-1" onMouseLeave={() => setHoveredIndex(null)}>
-                {mainNavItems.map((item, index) => {
+                {localizedMainNav.map((item, index) => {
                   const isActive = index === activeIndex;
                   const hasBackdrop = index === backdropIndex;
                   return (
@@ -361,12 +422,12 @@ export function SiteHeader() {
                   <HoverCardTrigger asChild>
                     <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold shrink-0 flex items-center gap-2 rounded-2xl group transition-all hover:scale-105 active:scale-95">
                       <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      <span>المزيد</span>
+                      <span>{t("المزيد", "More")}</span>
                     </Button>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl" dir="rtl">
+                  <HoverCardContent className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl" dir={isRtl ? "rtl" : "ltr"}>
                     <div className="flex flex-col space-y-1">
-                      <p className="px-3 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">أقسام إضافية</p>
+                      <p className="px-3 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("أقسام إضافية", "More Sections")}</p>
                       {dynamicMoreNavItems.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -387,15 +448,15 @@ export function SiteHeader() {
                       <Separator className="my-2 bg-border/40" />
                       <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
                         <Palette className="h-4 w-4 text-primary" />
-                        <span>تغيير الثيم</span>
+                        <span>{t("تغيير الثيم", "Change Theme")}</span>
                       </button>
                       <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
                         <CaseSensitive className="h-4 w-4 text-primary" />
-                        <span>تغيير الخط</span>
+                        <span>{t("تغيير الخط", "Change Font")}</span>
                       </button>
                       <button onClick={() => setIsSolidColorSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
                         <Droplets className="h-4 w-4 text-primary" />
-                        <span>الألوان السادة</span>
+                        <span>{t("الألوان السادة", "Solid Colors")}</span>
                       </button>
                     </div>
                   </HoverCardContent>
@@ -408,7 +469,7 @@ export function SiteHeader() {
           <div className="flex items-center gap-2">
             <div className="hidden lg:flex items-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-full px-3.5 py-1.5 gap-2.5 transition-all duration-300 cursor-pointer group shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]" onClick={openSearch}>
                 <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-xs text-muted-foreground/70 group-hover:text-foreground font-medium">ابحث عن درس، شيخ، أو كتاب...</span>
+                <span className="text-xs text-muted-foreground/70 group-hover:text-foreground font-medium">{t("ابحث عن درس، شيخ، أو كتاب...", "Search lectures, scholars, books...")}</span>
                 <kbd className="hidden xl:flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                     <span className="text-xs">⌘</span>K
                 </kbd>
@@ -450,7 +511,7 @@ export function SiteHeader() {
               <Button asChild variant="outline" className="hidden md:flex border-primary/40 text-primary hover:bg-primary/10 btn-magnetic rounded-full relative overflow-hidden group/donate shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
                 <Link href="/donations" prefetch={false}>
                   <Heart className="me-2 h-4 w-4 fill-primary/20 group-hover/donate:fill-primary transition-all group-hover/donate:scale-110" />
-                  <span className="relative z-10 font-black">ادعمنا</span>
+                  <span className="relative z-10 font-black">{t("ادعمنا", "Donate")}</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 translate-x-[-100%] group-hover/donate:translate-x-[100%] transition-transform duration-1000" />
                 </Link>
               </Button>
@@ -472,27 +533,27 @@ export function SiteHeader() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background border-border">
                       <DropdownMenuItem asChild>
-                        <Link href="/profile" prefetch={false}><UserIcon className="me-2 h-4 w-4" />الملف الشخصي</Link>
+                        <Link href="/profile" prefetch={false}><UserIcon className="me-2 h-4 w-4" />{t("الملف الشخصي", "Profile")}</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/settings" prefetch={false}><Settings className="me-2 h-4 w-4" />الإعدادات</Link>
+                        <Link href="/settings" prefetch={false}><Settings className="me-2 h-4 w-4" />{t("الإعدادات", "Settings")}</Link>
                       </DropdownMenuItem>
                       {isAdmin && (
                         <DropdownMenuItem asChild>
-                          <Link href="/admin/dashboard" prefetch={false}><LayoutDashboard className="me-2 h-4 w-4" />لوحة التحكم</Link>
+                          <Link href="/admin/dashboard" prefetch={false}><LayoutDashboard className="me-2 h-4 w-4" />{t("لوحة التحكم", "Admin Dashboard")}</Link>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="me-2 h-4 w-4" />
-                        تسجيل الخروج
+                        {t("تسجيل الخروج", "Sign Out")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
                   <Button asChild className="btn-magnetic bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.4)] border border-primary/40 rounded-full px-5">
                     <Link href="/auth/login" prefetch={false}>
-                      <span className="relative z-10">تسجيل الدخول</span>
+                      <span className="relative z-10">{t("تسجيل الدخول", "Sign In")}</span>
                     </Link>
                   </Button>
                 )}
@@ -510,7 +571,7 @@ export function SiteHeader() {
         }} 
         className="md:hidden fixed bottom-6 left-4 right-4 z-40 h-20 bg-background/40 border border-white/10 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-around px-2 overflow-hidden"
       >
-          {mobileNavLinks.map((item) => {
+          {localizedMobileNav.map((item) => {
             const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
             const href = ((item.href === '/profile' || item.href === '/settings') && !user) ? `/auth/login?redirect_to=${item.href}` : item.href;
             return (

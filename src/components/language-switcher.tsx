@@ -10,13 +10,11 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Check } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 
 export const languages = [
   { name: "العربية", value: "ar" },
   { name: "English", value: "en" },
-  { name: "Français", value: "fr" },
-  { name: "Español", value: "es" },
-  { name: "Deutsch", value: "de" },
 ];
 
 interface LanguageSwitcherDialogProps {
@@ -26,14 +24,18 @@ interface LanguageSwitcherDialogProps {
 
 export function LanguageSwitcherDialog({ isOpen, onOpenChange }: LanguageSwitcherDialogProps) {
   const { language: activeLanguage, setLanguage } = useAppearance()
+  const { t, isRtl } = useTranslation()
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>اختر اللغة</DialogTitle>
+      <DialogContent className="max-w-md" dir={isRtl ? "rtl" : "ltr"}>
+        <DialogHeader className={isRtl ? "text-right" : "text-left"}>
+          <DialogTitle>{t("اختر اللغة", "Choose Language")}</DialogTitle>
           <DialogDescription>
-            اختر لغة المحتوى المفضلة لديك. هذا الإعداد سيؤثر على المحتوى المعروض في المستقبل.
+            {t(
+              "اختر لغة الواجهة والمحتوى المفضلة لديك.",
+              "Choose your preferred interface and content language."
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-4 py-4">
