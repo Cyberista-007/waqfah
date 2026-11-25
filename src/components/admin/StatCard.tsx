@@ -1,24 +1,31 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 interface StatCardProps {
-    title: string;
-    value: number;
-    icon: React.ElementType;
-    isLoading: boolean;
+  title: string;
+  value: number;
+  icon: React.ElementType;
+  isLoading: boolean;
 }
 
 export function StatCard({ title, value, icon: Icon, isLoading }: StatCardProps) {
-    return (
-        <Card className="rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground font-headline">{title}</CardTitle>
-                <Icon className="w-5 h-5 text-muted-foreground animate-icon-draw" />
-            </CardHeader>
-            <CardContent>
-                {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <p className="text-3xl font-bold">{value}</p>}
-            </CardContent>
-        </Card>
-    );
+  return (
+    <Card className="rounded-2xl luxury-card border-border/70 p-5 flex flex-col justify-between gap-3">
+      <CardHeader className="flex flex-row items-center justify-between p-0">
+        <CardTitle className="text-xs font-bold text-muted-foreground font-headline">{title}</CardTitle>
+        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+          <Icon className="w-4 h-4" />
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
+        ) : (
+          <p className="text-3xl font-black font-mono text-foreground tracking-tight">
+            {value.toLocaleString('ar-EG')}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
