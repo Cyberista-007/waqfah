@@ -3,32 +3,29 @@
 import { useParams, notFound, usePathname } from 'next/navigation';
 import type { Program, Lecture, Series } from '@/lib/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { getPlaceholderImage } from '@/lib/images';
-import { getInitials } from '@/lib/utils';
-import { Users, Video, Clapperboard, ListVideo, Home, Play, Bell, Share2, Verified, TrendingUp, Sparkles } from 'lucide-react';
-import Image from 'next/image';
+import { getInitials, getVideoIdFromUrl, cn } from '@/lib/utils';
+import {
+  Users,
+  Video,
+  Clapperboard,
+  ListVideo,
+  Home,
+  Play,
+  Share2,
+  Verified,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { FollowButton } from '@/components/follow-button';
 import { useCollection } from '@/firebase';
 import { CinematicAppLoader } from '@/components/skeletons';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import useEmblaCarousel from 'embla-carousel-react';
-import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Html5Player } from '@/components/html5-player';
-import { getVideoIdFromUrl } from '@/lib/utils';
-
-function StatBadge({ value, label, icon: Icon, color }: { value: string | number; label: string; icon: any; color: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1 group w-24">
-      <div className={cn("flex items-center justify-center gap-2 font-black text-3xl md:text-4xl drop-shadow-md", color)}>
-        <span>{value}</span>
-        <Icon className="w-5 h-5 opacity-80" />
-      </div>
-      <span className="text-[11px] font-bold text-zinc-400">{label}</span>
-    </div>
-  );
-}
+import { useToast } from '@/hooks/use-toast';
 
 function ProgramHeader({
   program,
@@ -40,12 +37,9 @@ function ProgramHeader({
   featuredLecture: Lecture | null;
 }) {
   const pathname = usePathname();
+  const { toast } = useToast();
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
-  const headerRef = useRef<HTMLDivElement>(null);
-
-  const [statsRef] = useEmblaCarousel({ dragFree: true, direction: "rtl", align: "start" });
-  const [navRef] = useEmblaCarousel({ dragFree: true, direction: "rtl", align: "center", containScroll: "keepSnaps" });
 
   const placeholder = getPlaceholderImage(program.imageId);
   const imageUrl = program.imageUrl || placeholder?.imageUrl;
@@ -63,128 +57,195 @@ function ProgramHeader({
   ];
 
   useEffect(() => {
-    if (program.youtubeUrl) {
-      const fetchBanner = async () => {
-        try {
-          const response = await fetch(`${window.location.origin}/api/youtube-import`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.channelInfo?.bannerUrl) {
-              setBannerUrl(data.channelInfo.bannerUrl.replace('=w1060', '=w2560'));
-            }
+    if (!program.youtubeUrl) return;
+    const fetchBanner = async () => {
+      try {
+        const response = await fetch(`${window.location.origin}/api/youtube-import`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: program.youtubeUrl, fetchChannelInfo: true }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.channelInfo?.bannerUrl) {
+            setBannerUrl(data.channelInfo.bannerUrl.replace('=w1060', '=w2560'));
           }
-        } catch (e) {
-          console.error('Failed to fetch YouTube banner:', e);
         }
-      };
-      fetchBanner();
-    }
+      } catch (e) {
+        console.error('Failed to fetch YouTube banner:', e);
+      }
+    };
+    fetchBanner();
   }, [program.youtubeUrl]);
 
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (!url) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: program.name, text: program.bio || program.name, url });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'تم نسخ رابط القناة!' });
+    } catch {
+      toast({ variant: 'destructive', title: 'فشل نسخ الرابط' });
+    }
+  };
+
   return (
-    <div ref={headerRef} className="container mx-auto px-2 sm:px-4 lg:px-6 mt-4 lg:mt-8" dir="rtl">
-      {/* ─── CINEMATIC BANNER ─── */}
-      <div className="relative min-h-[360px] md:min-h-[420px] max-h-[600px] mb-8 md:mb-12">
-        {/* Background & Gradients (Clipped to oval) */}
-        <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] md:rounded-[3.5rem] border border-border/20 shadow-2xl frosted-glass group">
-          <div className="absolute inset-0">
-            <img
-              src={bannerUrl || featuredThumbnail}
-              alt={program.name}
-              className="w-full h-full object-cover object-top scale-105 transition-transform hover:scale-100"
-              style={{ transitionDuration: '10s' }}
-            />
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-transparent" />
-
-          <div className="absolute top-8 left-8 w-32 h-32 bg-primary/20 blur-3xl rounded-full pointer-events-none" />
-          <div className="absolute bottom-16 right-16 w-64 h-64 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
+    <header className="w-full" dir="rtl">
+      <div className="container mx-auto px-3 sm:px-6 pt-4 md:pt-6 space-y-6">
+        {/* ─── CLEAN CHANNEL BANNER ─── */}
+        <div className="relative h-40 sm:h-52 md:h-64 w-full rounded-2xl md:rounded-3xl overflow-hidden border border-border/60 bg-muted shadow-sm">
+          <img
+            src={bannerUrl || featuredThumbnail}
+            alt={program.name}
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent pointer-events-none" />
         </div>
 
-        {/* Header Content (Allowed to pop out) */}
-        <div className="absolute inset-0 flex flex-col justify-end px-4 md:px-12 pb-0 pointer-events-none">
-          <div className="container mx-auto pointer-events-auto">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10 translate-y-6 md:translate-y-4">
-              {/* Avatar */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-                className="relative shrink-0 z-10"
+        {/* ─── CHANNEL IDENTITY & ACTIONS ─── */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-right">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-xl ring-2 ring-primary/20">
+                {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="object-cover" />}
+                <AvatarFallback className="text-3xl font-black bg-primary/15 text-primary">
+                  {getInitials(program.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div
+                className="absolute bottom-1 left-1 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md ring-2 ring-background"
+                title="قناة موثقة"
               >
-                <div className="absolute inset-0 bg-primary/40 blur-3xl rounded-full scale-150" />
-                <Avatar className="h-28 w-28 md:h-36 md:w-36 border-4 border-background/50 shadow-2xl ring-4 ring-primary/20 relative backdrop-blur-sm group-hover:scale-105 transition-transform duration-500">
-                  {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="object-cover" />}
-                  <AvatarFallback className="text-5xl font-black bg-gradient-to-br from-primary/30 to-primary/60 text-primary">
-                    {getInitials(program.name)}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Verified Badge */}
-                <div className="absolute -bottom-1 -left-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg ring-2 ring-background">
-                  <Verified className="w-4 h-4 text-white fill-white" />
-                </div>
-              </motion.div>
+                <Verified className="w-3.5 h-3.5 text-primary-foreground" />
+              </div>
+            </div>
 
-              {/* Info */}
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="flex-1 min-w-0 pb-4 md:pb-12 flex flex-col items-center md:items-start text-center md:text-start"
-              >
-                <div className="flex items-center gap-3 mb-2 md:mb-3">
-                  <div className="px-3 py-1 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary flex items-center gap-2 hover-glow w-fit shadow-md">
-                    <Sparkles className="w-3 h-3 animate-pulse" />
-                    قناة علمية
-                  </div>
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black font-headline tracking-tighter leading-[1.1] text-foreground drop-shadow-lg mb-3">
+            {/* Name, Bio & Stats */}
+            <div className="space-y-2.5 max-w-2xl">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-headline text-foreground tracking-tight">
                   {program.name}
                 </h1>
-                <p className="text-zinc-400 text-base md:text-lg max-w-2xl line-clamp-2 leading-relaxed mb-6">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold">
+                  <Sparkles className="w-3 h-3" />
+                  قناة علمية
+                </span>
+              </div>
+
+              {program.bio && (
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-2">
                   {program.bio}
                 </p>
+              )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 md:gap-3 max-w-lg mt-3 md:mt-4 w-full px-2 md:px-0">
-                  <FollowButton programId={program.id} className="w-full h-12 md:h-[52px] rounded-2xl text-base md:text-lg font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] btn-magnetic text-primary-foreground" />
-                  
-                  <div className="flex items-center gap-3 w-full">
-                    {featuredVideoId && (
-                      <button
-                        onClick={() => setShowPlayer(true)}
-                        className="flex-1 flex justify-center items-center gap-2 h-12 md:h-[52px] px-4 md:px-6 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white font-bold text-xs md:text-sm hover:bg-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        <Play className="w-5 h-5" />
-                        مشاهدة أحدث محاضرة
-                      </button>
-                    )}
-                    <button className="w-12 h-12 md:w-[52px] md:h-[52px] shrink-0 flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl text-white hover:bg-white/20 transition-all hover:scale-105">
-                      <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Stats */}
-              <motion.div
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="hidden lg:flex flex-col gap-6 pb-6 md:pb-12 pr-4 shrink-0 items-end"
-              >
-                <StatBadge value={program.followerCount || 0} label="متابع" icon={Users} color="text-primary" />
-                <StatBadge value={contentCounts.lectures} label="محاضرة" icon={Clapperboard} color="text-blue-400" />
-                <StatBadge value={contentCounts.series} label="سلسلة" icon={ListVideo} color="text-emerald-400" />
-              </motion.div>
+              {/* Compact Stats Pills */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 text-xs font-semibold text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/60 border border-border/60 text-foreground">
+                  <Users className="w-3.5 h-3.5 text-primary" />
+                  <span>{program.followerCount || 0} متابع</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/60 border border-border/60">
+                  <Clapperboard className="w-3.5 h-3.5 text-blue-500" />
+                  <span>{contentCounts.lectures} محاضرة</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/60 border border-border/60">
+                  <ListVideo className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{contentCounts.series} سلسلة</span>
+                </span>
+                {contentCounts.shorts > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/60 border border-border/60">
+                    <Video className="w-3.5 h-3.5 text-orange-500" />
+                    <span>{contentCounts.shorts} مقطع قصير</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 shrink-0">
+            <FollowButton
+              programId={program.id}
+              className="h-11 px-6 rounded-xl text-sm font-bold shadow-sm"
+            />
+
+            {featuredVideoId && (
+              <Button
+                onClick={() => setShowPlayer(true)}
+                variant="outline"
+                className="h-11 px-4 rounded-xl text-sm font-bold gap-2"
+              >
+                <Play className="w-4 h-4 fill-current text-primary" />
+                <span>أحدث محاضرة</span>
+              </Button>
+            )}
+
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              size="icon"
+              className="h-11 w-11 rounded-xl"
+              aria-label="مشاركة القناة"
+              title="مشاركة القناة"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── CHANNEL NAVIGATION TABS ─── */}
+      <div className="sticky top-16 z-30 mt-6 border-b border-border bg-background/85 backdrop-blur-xl">
+        <div className="container mx-auto px-3 sm:px-6">
+          <nav
+            className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2"
+            aria-label="أقسام القناة"
+          >
+            {tabs.map((tab) => {
+              const isActive = pathname === tab.href;
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={cn(
+                    'relative inline-flex items-center gap-2 px-4 py-2 text-sm font-bold whitespace-nowrap rounded-xl transition-all',
+                    isActive
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeProgramTab"
+                      className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-sm"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    />
+                  )}
+                  <tab.icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span
+                      className={cn(
+                        'text-[11px] font-bold px-2 py-0.5 rounded-full',
+                        isActive
+                          ? 'bg-primary-foreground/20 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       </div>
 
@@ -195,23 +256,26 @@ function ProgramHeader({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-12"
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-10"
             onClick={() => setShowPlayer(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.94, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-6xl"
+              exit={{ scale: 0.94, y: 16 }}
+              className="w-full max-w-5xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-white font-bold text-lg">{featuredLecture?.title}</h2>
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <h2 className="text-white font-bold text-base md:text-lg line-clamp-1">
+                  {featuredLecture?.title}
+                </h2>
                 <button
                   onClick={() => setShowPlayer(false)}
-                  className="text-zinc-400 hover:text-white transition-colors text-sm font-bold px-4 py-2 rounded-xl hover:bg-white/10"
+                  className="text-white/70 hover:text-white transition-colors p-2 rounded-xl hover:bg-white/10 shrink-0"
+                  aria-label="إغلاق"
                 >
-                  إغلاق ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <Html5Player
@@ -223,68 +287,9 @@ function ProgramHeader({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ─── MOBILE STATS ─── */}
-      <div className="lg:hidden container mx-auto px-4 pb-6 mt-8 md:mt-2">
-        <div className="bg-card/50 backdrop-blur-xl border border-border/20 shadow-inner rounded-[2rem] p-4 cursor-grab active:cursor-grabbing overflow-hidden" ref={statsRef}>
-          <div className="flex items-center gap-2">
-            <div className="shrink-0 w-24"><StatBadge value={program.followerCount || 0} label="متابع"   icon={Users}      color="text-primary"    /></div>
-            <div className="w-px h-10 bg-border/50 shrink-0" />
-            <div className="shrink-0 w-24"><StatBadge value={contentCounts.lectures}    label="محاضرة"   icon={Clapperboard} color="text-blue-400"  /></div>
-            <div className="w-px h-10 bg-border/50 shrink-0" />
-            <div className="shrink-0 w-24"><StatBadge value={contentCounts.series}      label="سلسلة"    icon={ListVideo}  color="text-emerald-400" /></div>
-            <div className="w-px h-10 bg-border/50 shrink-0" />
-            <div className="shrink-0 w-24"><StatBadge value={contentCounts.shorts}      label="مقطع قصير" icon={Video}     color="text-orange-400" /></div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── NAVIGATION TABS (Floating Oval Dock) ─── */}
-      <div className="sticky top-24 z-40 w-full px-4 flex justify-center mt-6 mb-10 pointer-events-none">
-        <div className="bg-card/70 backdrop-blur-3xl border border-border/50 shadow-2xl shadow-primary/5 rounded-full p-2 pointer-events-auto frosted-glass ring-1 ring-white/10 max-w-full overflow-hidden cursor-grab active:cursor-grabbing" ref={navRef} dir="rtl">
-          <nav className="flex items-center gap-1.5 w-max" aria-label="Program sections">
-            {tabs.map((tab) => {
-              const isActive = pathname === tab.href;
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  className={cn(
-                    'group relative inline-flex items-center gap-2 py-2.5 px-6 text-sm font-bold font-headline whitespace-nowrap rounded-full transition-all duration-300 z-10',
-                    isActive
-                      ? 'text-primary-foreground drop-shadow-md'
-                      : 'text-foreground/80 hover:text-primary hover:bg-primary/10'
-                  )}
-                >
-                  {/* Active Pill Background */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeProgramTab"
-                      className="absolute inset-0 bg-primary rounded-full shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] -z-10"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  
-                  <tab.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "text-primary")} />
-                  <span>{tab.label}</span>
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className={cn(
-                      "text-[10px] font-black px-2 py-0.5 rounded-full transition-colors",
-                      isActive ? "bg-background/20 text-primary-foreground" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-                    )}>
-                      {tab.count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-        </nav>
-        </div>
-      </div>
-    </div>
+    </header>
   );
 }
-
 
 export default function ProgramLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -303,27 +308,31 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
     }
 
     const program = allPrograms.find((p) => p.slug === slug);
-    if (!program) return { program: null, contentCounts: { lectures: 0, shorts: 0, series: 0 }, featuredLecture: null };
+    if (!program) {
+      return { program: null, contentCounts: { lectures: 0, shorts: 0, series: 0 }, featuredLecture: null };
+    }
 
-    const seriesForProgram = allSeries.filter((s) => s.programId === program.id || s.programSlug === program.slug);
+    const seriesForProgram = allSeries.filter(
+      (s) => s.programId === program.id || s.programSlug === program.slug
+    );
     const seriesIds = new Set(seriesForProgram.map((s) => s.id));
 
     let lectureCount = 0;
     let shortCount = 0;
     let featuredLecture: Lecture | null = null;
 
-    // Sort by date descending
-    const sortedLectures = [...allLectures].sort((a, b) => {
-      const toMs = (ts: any) => {
-        if (!ts) return 0;
-        if (typeof ts.toDate === 'function') return ts.toDate().getTime();
-        if (typeof ts.seconds === 'number') return ts.seconds * 1000;
-        if (typeof ts._seconds === 'number') return ts._seconds * 1000;
-        const d = new Date(ts);
-        return isNaN(d.getTime()) ? 0 : d.getTime();
-      };
-      return toMs(b.publishedAt || b.createdAt) - toMs(a.publishedAt || a.createdAt);
-    });
+    const toMs = (ts: any) => {
+      if (!ts) return 0;
+      if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+      if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+      if (typeof ts._seconds === 'number') return ts._seconds * 1000;
+      const d = new Date(ts);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    };
+
+    const sortedLectures = [...allLectures].sort(
+      (a, b) => toMs(b.publishedAt || b.createdAt) - toMs(a.publishedAt || a.createdAt)
+    );
 
     sortedLectures.forEach((l) => {
       const belongsToProgram =
@@ -336,7 +345,6 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
           shortCount++;
         } else {
           lectureCount++;
-          // Pick a lecture with YouTube URL as featured
           if (!featuredLecture && l.youtubeUrl) {
             featuredLecture = l;
           }
@@ -365,7 +373,7 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen">
       <ProgramHeader program={program} contentCounts={contentCounts} featuredLecture={featuredLecture} />
-      <main className="container mx-auto px-6 py-10" dir="rtl">
+      <main className="container mx-auto px-3 sm:px-6 py-8" dir="rtl">
         {children}
       </main>
     </div>

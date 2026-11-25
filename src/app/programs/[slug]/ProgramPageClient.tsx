@@ -40,12 +40,10 @@ export default function ProgramPageClient() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-       <ProgramClientPage 
-          program={program} 
-          lectures={programLectures || []} 
-          series={programSeries || []} 
-        />
-    </div>
+    <ProgramClientPage 
+      program={program} 
+      lectures={programLectures || []} 
+      series={programSeries || []} 
+    />
   );
 }
