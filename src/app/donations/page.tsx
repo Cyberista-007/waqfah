@@ -1,904 +1,782 @@
 'use client';
 
+import { useMemo, useState, useEffect } from 'react';
+import Link from 'next/link';
+import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion';
+import { doc } from 'firebase/firestore';
+import {
+  ArrowDown,
+  ArrowLeft,
+  BadgeCheck,
+  BookOpen,
+  CreditCard,
+  Crown,
+  Download,
+  Film,
+  Gem,
+  Gift,
+  Globe,
+  HandHeart,
+  Heart,
+  Landmark,
+  Loader2,
+  MessageCircle,
+  Quote,
+  Server,
+  Share2,
+  Shield,
+  Sparkles,
+  Star,
+  Users,
+  Zap,
+} from 'lucide-react';
+
+import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Server, Film, BookOpen, Gift, Users, Share2, CreditCard, Landmark, Loader2, Star, Shield, Gem, Crown, HandHeart, Sparkles, Zap, Quote, Globe, MessageCircle, DollarSign, Download, BadgeCheck } from 'lucide-react';
-import Link from 'next/link';
-import { useCollection, useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import type { Donation, DonationSettings, UserProfile } from '@/lib/types';
-import { Progress } from '@/components/ui/progress';
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { doc } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAppearance } from '@/components/appearance-provider';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring, Variants } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getInitials } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { GlowCard, HoloBadge } from '@/components/ui/glow';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Currency = {
-    code: string;
-    name: string;
-    rate: number;
-    symbol: string;
+  code: string;
+  name: string;
+  rate: number;
+  symbol: string;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                ANIMATION VARS                               */
-/* -------------------------------------------------------------------------- */
+const CURRENCIES: Currency[] = [
+  { code: 'EGP', name: 'جنيه مصري', rate: 1, symbol: 'ج.م' },
+  { code: 'SAR', name: 'ريال سعودي', rate: 3.75 / 47.5, symbol: 'ر.س' },
+  { code: 'USD', name: 'دولار أمريكي', rate: 1 / 47.5, symbol: '$' },
+  { code: 'EUR', name: 'يورو', rate: 0.92 / 47.5, symbol: '€' },
+];
 
-const scrollFadeVariant: Variants = {
-    hidden: { opacity: 0, y: 150, scale: 0.85, filter: 'blur(20px)' },
-    visible: { 
-        opacity: 1, 
-        y: 0, 
-        scale: 1, 
-        filter: 'blur(0px)',
-        transition: { 
-            duration: 1.5, 
-            ease: [0.16, 1, 0.3, 1] 
-        } 
-    }
-};
-
-const staggerContainer: Variants = {
-    hidden: {},
-    visible: {
-        transition: {
-            staggerChildren: 0.15
-        }
-    }
-};
-
-/* -------------------------------------------------------------------------- */
-/*                                 COMPONENTS                                 */
-/* -------------------------------------------------------------------------- */
-
-function DonationGoalBackgroundController() {
-    const { setBackgroundEffect, setParticleColor, setParticleSettings } = useAppearance();
-    const { data: settings } = useDoc<DonationSettings>('settings/donations');
-
-    const progress = useMemo(() => {
-        if (!settings || !settings.monthlyGoal || settings.monthlyGoal <= 0) {
-            return 0;
-        }
-        const { monthlyGoal = 0, currentAmount = 0 } = settings;
-        return (monthlyGoal > 0) ? Math.min((currentAmount / monthlyGoal) * 100, 100) : 0;
-    }, [settings]);
-
-    const handleSetParticleSettings = useCallback(setParticleSettings, [setParticleSettings]);
-    const handleSetParticleColor = useCallback(setParticleColor, [setParticleColor]);
-    const handleSetBackgroundEffect = useCallback(setBackgroundEffect, [setBackgroundEffect]);
-
-    useEffect(() => {
-        const originalParticleColor = localStorage.getItem("site-particle-color") || '#FFFFFF';
-        const originalParticleSettings = localStorage.getItem("site-particle-settings");
-        const originalEffect = localStorage.getItem("site-background-effect") as 'none' | 'particles' | null;
-
-        handleSetBackgroundEffect('particles');
-        
-        if (progress < 25) {
-            handleSetParticleColor('#FFFFFF'); 
-            handleSetParticleSettings({ count: 50, speed: 0.1, lineDistance: 150 });
-        } else if (progress < 50) {
-            handleSetParticleColor('#FFFFE0'); 
-            handleSetParticleSettings({ count: 70, speed: 0.2, lineDistance: 140 });
-        } else if (progress < 75) {
-            handleSetParticleColor('#FFD700'); 
-            handleSetParticleSettings({ count: 100, speed: 0.3, lineDistance: 130 });
-        } else if (progress < 100) {
-            handleSetParticleColor('#FFAC1C');
-            handleSetParticleSettings({ count: 150, speed: 0.5, lineDistance: 120 });
-        } else { 
-            handleSetParticleColor('#FFD700'); 
-            handleSetParticleSettings({ count: 250, speed: 1, lineDistance: 150 }); 
-        }
-
-        return () => {
-            handleSetBackgroundEffect(originalEffect || 'none');
-            if (originalParticleSettings) {
-                try { handleSetParticleSettings(JSON.parse(originalParticleSettings)); } catch (e) { /* ignore */ }
-            } else {
-                handleSetParticleSettings({ interaction: true, count: 80, speed: 0.3, lineDistance: 120 });
-            }
-            handleSetParticleColor(originalParticleColor);
-        };
-    }, [progress, handleSetBackgroundEffect, handleSetParticleSettings, handleSetParticleColor]);
-
-    return null;
+function formatMoney(amountInEgp: number, currency: Currency): string {
+  const converted = Math.round(amountInEgp * currency.rate);
+  return `${new Intl.NumberFormat('ar-EG').format(converted)} ${currency.symbol}`;
 }
 
 function OneClickDonation({ currency }: { currency: Currency }) {
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState<number | null>(null);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState<number | null>(null);
 
-    const userDocRef = useMemoFirebase(
-        () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
-        [user, firestore]
-    );
-    const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
 
-    const handleOneClickDonate = async (amount: number) => {
-        setIsSubmitting(amount);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast({
-            title: "شكرًا لدعمك المستمر!",
-            description: `تم التبرع بمبلغ ${new Intl.NumberFormat('ar-EG').format(amount)} جنيه مصري بنجاح.`,
-        });
-        setIsSubmitting(null);
-    };
-
-    if (isLoading || !user || !userProfile?.savedCardLast4) return null;
-
-    const cardBrand = userProfile?.savedCardBrand || 'Visa';
-    const last4 = userProfile?.savedCardLast4 || '4242';
-    const amounts = [100, 250, 500];
-
-    return (
-        <motion.div variants={scrollFadeVariant} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
-            <Card className="bg-primary/5 border-primary/20 backdrop-blur-xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                <CardHeader>
-                    <CardTitle className="text-2xl font-black font-headline flex items-center gap-3">
-                        <CreditCard className="h-7 w-7 text-primary" />
-                        تبرع سريع (بنقرة واحدة)
-                    </CardTitle>
-                    <CardDescription className="text-md text-right">
-                        بما أنك داعم سابق، يمكنك استخدام بطاقتك المحفوظة ({cardBrand} •••• {last4}) للمساهمة فوراً.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col sm:flex-row justify-around gap-4 pt-4">
-                    {amounts.map(amount => {
-                        const convertedAmount = amount * currency.rate;
-                        const formattedAmount = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(Math.round(convertedAmount));
-                        return (
-                            <Button
-                                key={amount}
-                                size="lg"
-                                className="flex-grow h-14 rounded-2xl text-lg font-bold"
-                                onClick={() => handleOneClickDonate(amount)}
-                                disabled={!!isSubmitting}
-                            >
-                                {isSubmitting === amount ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                ) : (
-                                    `تبرع بـ ${formattedAmount} ${currency.code}`
-                                )}
-                            </Button>
-                        )
-                    })}
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-}
-
-function ImpactCalculator({ currency }: { currency: Currency }) {
-    const [amount, setAmount] = useState(250);
-    
-    const impacts = useMemo(() => {
-        const egpAmount = amount / currency.rate;
-        return {
-            students: Math.max(1, Math.floor(egpAmount / 5)),
-            minutesEdited: Math.max(1, Math.floor(egpAmount / 15)), 
-            pagesTranslated: Math.max(1, Math.floor(egpAmount / 50))
-        };
-    }, [amount, currency]);
-
-    return (
-        <motion.div 
-            variants={scrollFadeVariant} 
-            initial="hidden" 
-            whileInView="visible" 
-            viewport={{ once: true, amount: 0.2 }}
-            className="h-full"
-        >
-            <Card className="bg-card/40 backdrop-blur-2xl border-primary/20 overflow-hidden relative group h-full">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
-                 <CardHeader>
-                    <CardTitle className="text-3xl font-black font-headline tracking-tighter flex items-center gap-3 text-right">
-                       <Zap className="h-8 w-8 text-primary animate-pulse" />
-                       تخيل أثرك الحقيقي
-                    </CardTitle>
-                    <CardDescription className="text-lg text-right">
-                        حرك المؤشر لترى كيف ستساهم تبرعاتك في تغيير حياة الآخرين بالعلم.
-                    </CardDescription>
-                 </CardHeader>
-                 <CardContent className="space-y-10">
-                    <div className="space-y-4">
-                        <input 
-                            type="range" 
-                            min="50" 
-                            max="5000" 
-                            step="50"
-                            value={amount}
-                            onChange={(e) => setAmount(parseInt(e.target.value))}
-                            className="w-full h-3 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary"
-                        />
-                        <div className="text-center">
-                            <span className="text-5xl font-black text-primary font-headline tracking-tighter">
-                                {new Intl.NumberFormat('ar-EG').format(amount)} {currency.code}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { label: 'طالب علم ستصل إليه', value: impacts.students, icon: Users, color: 'text-blue-500' },
-                            { label: 'دقيقة من المحتوى المنقى', value: impacts.minutesEdited, icon: Film, color: 'text-rose-500' },
-                            { label: 'صفحة مترجمة بالكامل', value: impacts.pagesTranslated, icon: Globe, color: 'text-emerald-500' }
-                        ].map((impact, i) => (
-                            <motion.div 
-                                key={i}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2 relative overflow-hidden"
-                            >
-                                <div className={cn("mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4", impact.color)}>
-                                    <impact.icon className="h-6 w-6" />
-                                </div>
-                                <div className="text-3xl font-black font-headline tabular-nums">{impact.value}</div>
-                                <div className="text-sm text-muted-foreground font-bold">{impact.label}</div>
-                            </motion.div>
-                        ))}
-                    </div>
-                 </CardContent>
-            </Card>
-        </motion.div>
-    )
-}
-
-function WallOfSupporters() {
-    const { data: supporters, isLoading } = useCollection<Donation>('donations', {
-        where: ['isAnonymous', '==', false],
-        orderBy: ['donatedAt', 'desc'],
-        limit: 50
+  const handleOneClickDonate = async (amount: number) => {
+    setIsSubmitting(amount);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    toast({
+      title: 'شكراً لدعمك المستمر!',
+      description: `تم تسجيل مساهمتك بمبلغ ${formatMoney(amount, currency)} بنجاح.`,
     });
+    setIsSubmitting(null);
+  };
 
-    if (isLoading) return null;
+  if (isLoading || !user || !userProfile?.savedCardLast4) return null;
 
-    return (
-        <motion.section 
-            variants={scrollFadeVariant} 
-            initial="hidden" 
-            whileInView="visible" 
-            viewport={{ once: true, amount: 0.1 }}
-            className="py-24 relative overflow-hidden rounded-[4rem] bg-card/10 border border-white/5"
-        >
-            <div className="absolute inset-0 bg-primary/5 blur-[120px] rounded-full translate-y-20 opacity-30" />
-            <div className="text-center mb-16 space-y-4 relative z-10 px-4">
-                <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tighter">سجل الخالدين بأثرهم</h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto italic">"أحب الأعمال إلى الله أدومها وإن قل.. فكيف بمن غرس نبتة علم تورق للأبد؟"</p>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-4 max-w-6xl mx-auto relative z-10 px-6">
-                <AnimatePresence>
-                {supporters?.slice(0, 30).map((supporter, index) => (
-                    <motion.div 
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.02, type: 'spring', stiffness: 100 }}
-                        className="px-6 py-3 rounded-full bg-card/60 backdrop-blur-xl border border-white/5 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-default group shadow-lg"
-                    >
-                         <div className="flex items-center gap-2">
-                            {index < 3 && <Star className="w-3 h-3 text-amber-400 fill-current animate-pulse" />}
-                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 group-hover:from-primary group-hover:to-primary/70 transition-all">
-                                {supporter.donorName}
-                            </span>
-                         </div>
-                    </motion.div>
-                ))}
-                </AnimatePresence>
-            </div>
-            {(!supporters || supporters.length === 0) && (
-                <p className="text-center text-muted-foreground py-10">كُن أول من يخط اسمه في هذه اللائحة المباركة.</p>
+  const cardBrand = userProfile?.savedCardBrand || 'Visa';
+  const last4 = userProfile?.savedCardLast4 || '4242';
+  const amounts = [100, 250, 500];
+
+  return (
+    <Card className="rounded-3xl luxury-glass border-primary/25 overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-black font-headline flex items-center gap-2.5 text-foreground">
+          <CreditCard className="h-5 w-5 text-primary" />
+          <span>تبرع سريع (بنقرة واحدة)</span>
+        </CardTitle>
+        <CardDescription className="text-xs font-medium">
+          باستخدام بطاقتك المحفوظة ({cardBrand} •••• {last4})
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-3">
+        {amounts.map((amount) => (
+          <Button
+            key={amount}
+            size="sm"
+            className="flex-1 min-w-[110px] h-11 rounded-xl font-bold cursor-pointer"
+            onClick={() => handleOneClickDonate(amount)}
+            disabled={!!isSubmitting}
+          >
+            {isSubmitting === amount ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              `تبرع بـ ${formatMoney(amount, currency)}`
             )}
-        </motion.section>
-    );
+          </Button>
+        ))}
+      </CardContent>
+    </Card>
+  );
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               MAIN PAGE                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function DonationsPage() {
-  const currencies: Currency[] = [
-    { code: 'EGP', name: 'جنيه مصري', rate: 1, symbol: 'ج.م' },
-    { code: 'USD', name: 'دولار أمريكي', rate: 1 / 47.5, symbol: '$' },
-    { code: 'SAR', name: 'ريال سعودي', rate: 3.75 / 47.5, symbol: 'ر.س' },
-    { code: 'EUR', name: 'يورو', rate: 0.92 / 47.5, symbol: '€' }
-  ];
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(CURRENCIES[0]);
   const { data: settings } = useDoc<DonationSettings>('settings/donations');
+  const { data: recentDonations } = useCollection<Donation>('donations', {
+    where: ['isAnonymous', '==', false],
+    orderBy: ['donatedAt', 'desc'],
+    limit: 30,
+  });
   const { toast } = useToast();
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
-  // Direct checkout states
+  // Impact & checkout state
+  const [impactAmountEgp, setImpactAmountEgp] = useState(250);
   const [checkoutAmount, setCheckoutAmount] = useState('250');
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
   const [isCheckoutDone, setIsCheckoutDone] = useState(false);
 
-  // Live simulation donors ticker
-  const [liveDonors, setLiveDonors] = useState<any[]>([
-    { name: 'فاعل خير', amount: 150, time: 'منذ دقيقة', target: 'الخوادم والاستضافة' },
-    { name: 'عبد الله صالح', amount: 500, time: 'منذ 8 دقائق', target: 'صناعة المحتوى' },
-    { name: 'أخت في الله', amount: 100, time: 'منذ 25 دقيقة', target: 'ترجمة الكتب' }
-  ]);
-
-  const progress = useMemo(() => {
-      if (!settings || !settings.monthlyGoal || settings.monthlyGoal <= 0) return 40; // Default mockup placeholder
-      return Math.min(((settings.currentAmount || 0) / settings.monthlyGoal) * 100, 100);
-  }, [settings]);
-
   useEffect(() => {
-    const localeCurrencyMap: { [key: string]: string } = {
-        'ar-EG': 'EGP', 'ar-SA': 'SAR', 'en-GB': 'EUR', 'de-DE': 'EUR', 'fr-FR': 'EUR'
+    const localeCurrencyMap: Record<string, string> = {
+      'ar-EG': 'EGP',
+      'ar-SA': 'SAR',
+      'en-GB': 'EUR',
+      'de-DE': 'EUR',
+      'fr-FR': 'EUR',
     };
-    const userLocale = navigator.language;
-    const currencyCode = localeCurrencyMap[userLocale];
+    const currencyCode = localeCurrencyMap[navigator.language];
     if (currencyCode) {
-        const currency = currencies.find(c => c.code === currencyCode);
-        if (currency) setSelectedCurrency(currency);
+      const found = CURRENCIES.find((c) => c.code === currencyCode);
+      if (found) setSelectedCurrency(found);
     }
-
-    // Interval to simulate live donor additions
-    const names = ['أبو بكر', 'فاعل خير', 'طالب علم', 'أم محمد', 'عمر السعدي', 'يوسف الحسن'];
-    const targets = ['الخوادم والاستضافة', 'صناعة المحتوى', 'ترجمة الكتب', 'تحرير الدروس'];
-    const interval = setInterval(() => {
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-      const randomAmount = [50, 100, 200, 300, 500][Math.floor(Math.random() * 5)];
-      setLiveDonors(prev => [
-        { name: randomName, amount: randomAmount, time: 'منذ ثوانٍ', target: randomTarget },
-        ...prev.slice(0, 4)
-      ]);
-    }, 18000);
-
-    return () => clearInterval(interval);
   }, []);
+
+  const monthlyGoalEgp = settings?.monthlyGoal && settings.monthlyGoal > 0 ? settings.monthlyGoal : 8000;
+  const currentAmountEgp = settings?.currentAmount ?? 3200;
+  const progress = Math.min((currentAmountEgp / monthlyGoalEgp) * 100, 100);
+  const remainingEgp = Math.max(monthlyGoalEgp - currentAmountEgp, 0);
+
+  const impacts = useMemo(
+    () => ({
+      students: Math.max(1, Math.floor(impactAmountEgp / 5)),
+      minutesEdited: Math.max(1, Math.floor(impactAmountEgp / 15)),
+      pagesTranslated: Math.max(1, Math.floor(impactAmountEgp / 50)),
+    }),
+    [impactAmountEgp]
+  );
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cardName.trim() || !cardNumber.trim()) return;
     setIsProcessingCheckout(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1400));
     setIsProcessingCheckout(false);
     setIsCheckoutDone(true);
     toast({
-      title: 'تم قبول تبرعكم المبارك!',
-      description: 'جزاكم الله خيراً، تم تجهيز إيصال إثبات المساهمة.'
+      title: 'تم استلام مساهمتك الكريمة!',
+      description: 'جزاك الله خيراً، تم تجهيز إيصال إثبات المساهمة.',
     });
   };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const tiers = [
+    { name: 'داعم برونزي', icon: Star, color: 'text-orange-400', border: 'border-orange-500/25', amount: 500 },
+    { name: 'داعم فضي', icon: Star, color: 'text-slate-300', border: 'border-slate-400/25', amount: 2500, fill: true },
+    { name: 'داعم ذهبي', icon: Shield, color: 'text-amber-400', border: 'border-amber-500/30', amount: 5000, fill: true },
+    { name: 'داعم بلاتيني', icon: Gem, color: 'text-cyan-400', border: 'border-cyan-500/25', amount: 10000 },
+    { name: 'داعم ماسي', icon: Crown, color: 'text-violet-400', border: 'border-violet-500/25', amount: 25000 },
+    {
+      name: 'محسن معطاء',
+      icon: HandHeart,
+      color: 'text-rose-400',
+      border: 'border-rose-500/35',
+      amount: 50000,
+      fill: true,
+      highlight: true,
+    },
+  ];
 
   const donationReasons = [
     {
       icon: Server,
-      title: 'تكاليف الاستضافة الخارقة',
-      description: 'ضمان بقاء الموقع سريعًا ومتاحًا للملايين على مدار الساعة دون انقطاع.',
-      example: 'كل 50$ تغطي تكاليف الخادم وقواعد البيانات ليوم كامل.'
+      title: 'استدامة الخوادم والاستضافة',
+      description: 'ضمان بقاء المنصة والمكتبة الصوتية سريعة ومتاحة لطلبة العلم على مدار الساعة.',
+      example: 'تغطي تكلفة الاستضافة وقواعد البيانات',
     },
     {
       icon: Film,
-      title: 'صناعة المحتوى الإبداعي',
-      description: 'تمويل عمليات التسجيل، المونتاج، والإنتاج الفني للمحاضرات والسلاسل.',
-      example: 'كل 25$ تساهم في تحرير وإخراج ساعة من المحتوى العلمي.'
+      title: 'إنتاج وتحرير الدروس',
+      description: 'تمويل عمليات التنقية الصوتية، المونتاج، وفهرسة السلاسل العلمية.',
+      example: 'تساهم في إخراج ساعات علمية متقنة',
     },
     {
       icon: BookOpen,
-      title: 'التراث الرقمي والترجمة',
-      description: 'أرشفة الدروس، التفريغ النصي الدقيق، والترجمة للعالمية.',
-      example: 'كل 10$ توفر تفريغاً نصياً احترافياً لمحاضرة كاملة.'
+      title: 'التفريغ النصي والترجمة',
+      description: 'تحويل المحاضرات إلى نصوص قابلة للبحث والتدبر وإتاحتها للناطقين بغير العربية.',
+      example: 'تحفظ العلم مكتوباً وميسراً للجميع',
     },
   ];
 
+  const gateways = [
+    { name: 'بطاقة ائتمانية', icon: CreditCard, desc: 'دفع آمن ومباشر عبر بوابة الدفع المشفرة.', action: 'تبرع بالبطاقة' },
+    { name: 'تحويل بنكي / وقفي', icon: Landmark, desc: 'للمساهمات الكبيرة والأوقاف المباشرة لمنصة وقفة.', href: '/contact', action: 'طلب بيانات التحويل' },
+    { name: 'باتريون (شهري)', icon: Heart, desc: 'للدعم الشهري المستدام وتطوير الميزات التقنية.', href: '/contact', action: 'التفاصيل' },
+    { name: 'باي بال', icon: Zap, desc: 'للمساهمات السريعة من خارج مصر.', href: '/contact', action: 'التفاصيل' },
+  ];
+
   return (
-    <>
-      <DonationGoalBackgroundController />
-      
-      {/* 🚀 Apple-style Top Progress Bar */}
-      <motion.div className="fixed top-0 left-0 right-0 origin-left z-[100] h-1.5 bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" style={{ scaleX }} />
+    <div className="pb-20" dir="rtl">
+      {/* Top Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 origin-right z-[100] h-1 bg-primary"
+        style={{ scaleX }}
+      />
 
-      {/* 🔮 1. Cinematic Hero Section */}
-      <section className="relative h-[115vh] md:h-[110vh] -mt-20 overflow-hidden flex items-center justify-center">
-         <div className="absolute inset-0 z-0">
-            <motion.img 
-               initial={{ scale: 1.1 }}
-               animate={{ scale: 1 }}
-               transition={{ duration: 2 }}
-               src="/donation_hero_cinematic_1774731279542.png" 
-               className="w-full h-full object-cover filter brightness-[0.35] saturate-[0.8]" 
-               alt="cinematic legacy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
-         </div>
+      <div className="container px-4 pt-6 space-y-16 md:space-y-24 max-w-6xl mx-auto">
+        {/* ════════════════════════════════════════════════════════════
+            1. ARCHITECTURAL WAQF HERO
+        ════════════════════════════════════════════════════════════ */}
+        <section className="relative overflow-hidden rounded-[2.25rem] sm:rounded-[3rem] luxury-glass border border-primary/20 p-8 sm:p-14 text-center">
+          <div className="absolute -top-28 -right-28 w-80 h-80 bg-primary/20 blur-[110px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-28 -left-28 w-80 h-80 bg-emerald-500/15 blur-[110px] rounded-full pointer-events-none" />
 
-         <div className="container relative z-10 px-6 text-center space-y-12 max-w-5xl">
-            <motion.div 
-               initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
-               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-               transition={{ duration: 1, ease: 'easeOut' }}
-               className="space-y-8"
-            >
-               <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/15 border border-primary/20 backdrop-blur-md text-primary font-black tracking-widest text-xs uppercase mb-4 animate-pulse">
-                  <Star className="w-4 h-4 fill-primary" />
-                  صدقة جارية بـأثرٍ باقٍ
-               </div>
-               <h1 className="text-5xl md:text-8xl font-black font-headline tracking-tighter leading-[0.95] bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 drop-shadow-2xl">
-                  كُن سبباً <br/> في استنارة عقل
-               </h1>
-               <p className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto leading-relaxed font-medium italic">
-                  &quot;وقفة&quot; هو وقفٌ إسلامي رقمي، كل حرفٍ يُبث فيه هو صدقة جارية في ميزانك. بدعمك، تضمن استدامة هذا النور الرباني.
-               </p>
-            </motion.div>
+          <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+            <div className="luxury-badge luxury-badge-primary mx-auto">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>صدقة جارية بأثرٍ باقٍ</span>
+            </div>
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ delay: 1, duration: 1 }}
-                className="flex flex-col md:flex-row items-center justify-center gap-6 pt-10"
-            >
-                <div className="w-48">
-                   <Select value={selectedCurrency.code} onValueChange={(code) => setSelectedCurrency(currencies.find(c => c.code === code) || currencies[0])}>
-                       <SelectTrigger className="bg-white/5 border-white/20 backdrop-blur-xl h-14 rounded-2xl text-lg font-bold">
-                           <SelectValue placeholder="اختر العملة..." />
-                       </SelectTrigger>
-                       <SelectContent>
-                           {currencies.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
-                       </SelectContent>
-                   </Select>
+            <h1 className="text-4xl sm:text-6xl font-black font-headline tracking-tight leading-[1.12] text-foreground">
+              كُن سبباً في <span className="text-primary">استنارة عقل</span>
+            </h1>
+
+            <p className="text-base sm:text-xl text-muted-foreground leading-relaxed font-medium">
+              «وقفة» مشروع وقفي خالص لخدمة العلم الشرعي بلا إعلانات. مساهمتك اليوم تضمن استمرار الخوادم، وإنتاج الدروس، وتفريغ المحاضرات لتبقى صدقة جارية في ميزانك.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+              <Select
+                value={selectedCurrency.code}
+                onValueChange={(code) =>
+                  setSelectedCurrency(CURRENCIES.find((c) => c.code === code) || CURRENCIES[0])
+                }
+              >
+                <SelectTrigger className="w-44 h-12 rounded-xl bg-background/70 border-border font-bold">
+                  <SelectValue placeholder="اختر العملة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name} ({c.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => scrollToSection('contribute')}
+                className="h-12 px-8 rounded-xl font-black cursor-pointer"
+              >
+                <span>ساهم الآن</span>
+                <ArrowDown className="w-4 h-4 mr-2" />
+              </Button>
+
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                onClick={() => scrollToSection('breakdown')}
+                className="h-12 px-6 rounded-xl font-bold cursor-pointer"
+              >
+                أين يذهب تبرعك؟
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            2. MONTHLY GOAL & INTERACTIVE IMPACT CALCULATOR
+        ════════════════════════════════════════════════════════════ */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-6 flex flex-col gap-6">
+            <OneClickDonation currency={selectedCurrency} />
+
+            <Card className="rounded-3xl luxury-card p-6 sm:p-8 flex-1 flex flex-col justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="luxury-badge luxury-badge-emerald">الهدف الشهري</span>
+                  <span className="text-sm font-black text-primary font-mono">{Math.round(progress)}%</span>
                 </div>
-                <Button size="lg" className="h-14 px-12 rounded-2xl text-xl font-black font-headline bg-primary hover:bg-primary/90 shadow-[0_0_30px_rgba(var(--primary-rgb),0.5)] group overflow-hidden relative">
-                    <span className="relative z-10">ابدأ في بناء أثرك الآن</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                </Button>
-            </motion.div>
-         </div>
-
-         {/* Cinematic Floating Down Arrow */}
-         <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 10, 0] }}
-            transition={{ delay: 2, duration: 2, repeat: Infinity }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/30"
-         >
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/50 to-transparent mx-auto" />
-         </motion.div>
-      </section>
-
-      <div className="space-y-48 py-32 px-4 md:px-10 max-w-7xl mx-auto">
-        
-        {/* 🏔️ 2. Modernized One Click & Progress (Scroll Reveal) */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-stretch">
-            <div className="lg:col-span-3 space-y-16">
-                <OneClickDonation currency={selectedCurrency} />
-                
-                <motion.section 
-                    variants={scrollFadeVariant}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.2 }}
-                    className="relative p-10 md:p-14 rounded-[4rem] bg-card/60 backdrop-blur-3xl border border-border/40 space-y-10 shadow-2xl relative overflow-hidden h-full flex flex-col justify-center text-right"
-                >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
-                    <div className="space-y-4 text-center">
-                        <h3 className="text-4xl font-black font-headline tracking-tighter">استدامة الوقف التقني</h3>
-                        <p className="text-muted-foreground font-medium text-lg italic">&quot;وقفة&quot; أمانة في أعناقنا جميعاً.</p>
-                    </div>
-                    
-                    <div className="space-y-6">
-                        <div className="flex justify-between text-sm font-black uppercase tracking-widest text-muted-foreground">
-                            <span className="text-primary italic animate-pulse">تم الإنجاز: {Math.round(progress)}%</span>
-                            <span>{new Intl.NumberFormat('ar-EG').format(Math.round(settings?.currentAmount || 3200))} / {new Intl.NumberFormat('ar-EG').format(settings?.monthlyGoal || 8000)} {selectedCurrency.symbol || 'ر.س'}</span>
-                        </div>
-                        <div className="relative h-5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-1 shadow-inner">
-                            <motion.div 
-                                initial={{ width: 0 }}
-                                whileInView={{ width: `${progress}%` }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
-                                className="h-full bg-primary rounded-full relative group shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)]"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent animate-shimmer" />
-                            </motion.div>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-6 items-center justify-center p-6 rounded-[2rem] bg-primary/5 border border-primary/20">
-                        <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-                        <p className="text-lg font-black text-foreground text-center line-clamp-2">
-                            تبقّى فقط القليل لضمان التشغيل والرفع السحابي الكامل هذا الشهر.
-                        </p>
-                    </div>
-                </motion.section>
-            </div>
-            
-            <div className="lg:col-span-2">
-                <ImpactCalculator currency={selectedCurrency} />
-            </div>
-        </div>
-
-        {/* Live Donation Simulation Checkout Portal & Activity Stream */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-right">
-          {/* Direct Custom Checkout Form */}
-          <GlowCard className="lg:col-span-2 bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative">
-            <h3 className="text-2xl font-black font-headline text-white mb-2 flex items-center gap-2">
-              <CreditCard className="h-6 w-6 text-primary" />
-              <span>بوابة الدعم والمساهمة المباشرة الآمنة</span>
-            </h3>
-            <p className="text-xs text-muted-foreground mb-6">ساهم بشكل آمن عبر البوابة الرقمية المشفرة مع إمكانية تنزيل بطاقة الإثبات.</p>
-
-            <AnimatePresence mode="wait">
-              {!isCheckoutDone ? (
-                <motion.form
-                  key="form"
-                  onSubmit={handleCheckoutSubmit}
-                  className="space-y-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <label className="text-xs text-muted-foreground font-bold">مبلغ التبرع والمساهمة:</label>
-                      <Input
-                        type="number"
-                        value={checkoutAmount}
-                        onChange={(e) => setCheckoutAmount(e.target.value)}
-                        className="bg-white/5 border-white/10 text-right text-base font-bold rounded-xl"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground font-bold">اسم المحسن الكريم:</label>
-                      <Input
-                        placeholder="أو اكتب: فاعل خير"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        className="bg-white/5 border-white/10 text-right text-xs rounded-xl"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground font-bold">رقم البطاقة الائتمانية (محاكاة):</label>
-                      <Input
-                        placeholder="4242 4242 4242 4242"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        className="bg-white/5 border-white/10 text-right text-xs rounded-xl"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isProcessingCheckout}
-                    className="w-full rounded-2xl h-14 bg-primary hover:bg-primary/95 text-black font-black text-base"
-                  >
-                    {isProcessingCheckout ? (
-                      <Loader2 className="h-5 w-5 animate-spin mx-auto" />
-                    ) : (
-                      `مساهمة بمبلغ ${checkoutAmount} ${selectedCurrency.code}`
-                    )}
-                  </Button>
-                </motion.form>
-              ) : (
-                <motion.div
-                  key="receipt"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white text-zinc-950 p-6 rounded-2xl text-center space-y-4 border border-zinc-200 shadow-xl"
-                >
-                  <BadgeCheck className="h-12 w-12 text-emerald-600 mx-auto animate-bounce" />
-                  <div>
-                    <h4 className="text-lg font-black">تقبل الله طاعتكم ومساهمتكم الكريمة! 🌸</h4>
-                    <p className="text-xs text-zinc-500 mt-1">تمت معالجة تبرعكم كصدقة جارية بنجاح.</p>
-                  </div>
-
-                  <div className="border border-zinc-100 p-4 rounded-xl space-y-2 text-sm max-w-sm mx-auto text-right">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">المحسن الكريم:</span>
-                      <span className="font-bold text-zinc-800">{cardName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">مبلغ المساهمة:</span>
-                      <span className="font-bold text-emerald-700">{checkoutAmount} {selectedCurrency.code}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">البوابة ونوع الدفع:</span>
-                      <span className="font-bold text-zinc-800">بطاقة ائتمانية آمنة</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button onClick={() => window.print()} className="flex-1 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold">
-                      <Download className="h-4 w-4 me-1.5" /> تحميل إثبات المساهمة
-                    </Button>
-                    <Button onClick={() => setIsCheckoutDone(false)} variant="outline" className="flex-1 rounded-xl text-xs">
-                      مساهمة أخرى
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </GlowCard>
-
-          {/* Live Activity Supporter Stream Ticker */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl space-y-4 flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-white">
-                <Heart className="h-5 w-5 text-red-500 animate-pulse" />
-                <span>شريط المساهمات المباشرة الحالية</span>
-              </h3>
-              <p className="text-[10px] text-muted-foreground mb-4">تحديث فوري للمساهمات التي يقدمها مجتمع وقفة لضمان تشغيل الموقع.</p>
+                <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground pt-2">
+                  استدامة الوقف التقني
+                </h2>
+                <p className="text-sm text-muted-foreground font-medium">
+                  تكلفة تشغيل الخوادم والخدمات السحابية وتطوير المنصة لهذا الشهر.
+                </p>
+              </div>
 
               <div className="space-y-3">
-                <AnimatePresence>
-                  {liveDonors.map((item, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="bg-white/5 border border-white/5 p-3 rounded-2xl text-xs space-y-1"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-white">{item.name}</span>
-                        <span className="text-[10px] text-primary">{item.time}</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">ساهم بمبلغ {item.amount} {selectedCurrency.code} لـ {item.target}.</p>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                <div className="flex justify-between text-xs sm:text-sm font-bold text-muted-foreground">
+                  <span>تم جمع: {formatMoney(currentAmountEgp, selectedCurrency)}</span>
+                  <span>الهدف: {formatMoney(monthlyGoalEgp, selectedCurrency)}</span>
+                </div>
+                <div className="h-3.5 w-full bg-muted rounded-full overflow-hidden border border-border/60 p-0.5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${progress}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full bg-primary rounded-full"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground font-bold">
+                  {remainingEgp > 0
+                    ? `المتبقي لاستكمال هدف الشهر: ${formatMoney(remainingEgp, selectedCurrency)}`
+                    : 'اكتمل هدف هذا الشهر بحمد الله، وكل زيادة تُوجّه للتطوير المستقبلي.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20">
+                <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-xs sm:text-sm font-bold text-foreground">
+                  ١٠٠٪ من التبرعات تُصرف على تشغيل المنصة ونشر العلم دون أي رواتب شخصية.
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="lg:col-span-6 rounded-3xl luxury-card p-6 sm:p-8 flex flex-col justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-primary text-xs font-black">
+                <Zap className="w-4 h-4" />
+                <span>حاسبة الأثر التفاعلية</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">
+                تخيّل أثر مساهمتك
+              </h2>
+              <p className="text-sm text-muted-foreground font-medium">
+                اختر مبلغاً أو حرّك المؤشر لترى الأثر التقديري لمساهمتك في نشر العلم.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground">مبلغ المساهمة التقديري</span>
+                <span className="text-2xl sm:text-3xl font-black text-primary font-headline">
+                  {formatMoney(impactAmountEgp, selectedCurrency)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={5000}
+                step={50}
+                value={impactAmountEgp}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setImpactAmountEgp(val);
+                  setCheckoutAmount(String(Math.max(1, Math.round(val * selectedCurrency.rate))));
+                }}
+                className="w-full h-2.5 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <div className="flex flex-wrap gap-2">
+                {[100, 250, 500, 1000, 2500].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => {
+                      setImpactAmountEgp(preset);
+                      setCheckoutAmount(String(Math.max(1, Math.round(preset * selectedCurrency.rate))));
+                    }}
+                    className={cn(
+                      'px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer',
+                      impactAmountEgp === preset
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background/60 text-muted-foreground border-border hover:text-foreground'
+                    )}
+                  >
+                    {formatMoney(preset, selectedCurrency)}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/5 text-center text-[9px] text-muted-foreground">
-              * يتم تشفير وحماية جميع معاملات السند المالي بشكل كامل وآمن.
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'طالب علم مستفيد', value: impacts.students, icon: Users, color: 'text-blue-400' },
+                { label: 'دقيقة محتوى منقّاة', value: impacts.minutesEdited, icon: Film, color: 'text-rose-400' },
+                { label: 'صفحة مفرغة/مترجمة', value: impacts.pagesTranslated, icon: Globe, color: 'text-emerald-400' },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-2xl bg-background/50 border border-border/60 text-center space-y-1.5"
+                >
+                  <item.icon className={cn('w-5 h-5 mx-auto', item.color)} />
+                  <div className="text-xl sm:text-2xl font-black font-mono text-foreground">{item.value}</div>
+                  <div className="text-[11px] text-muted-foreground font-bold leading-snug">{item.label}</div>
+                </div>
+              ))}
             </div>
           </Card>
-        </div>
+        </section>
 
-        {/* 🏆 3. Levels of Benevolence (Staggered Scroll) */}
-        <motion.section 
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            className="space-y-24"
-        >
-          <div className="text-center space-y-6">
-            <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white">درجات الإحسان</h2>
-            <p className="text-muted-foreground text-xl max-w-3xl mx-auto font-medium leading-relaxed text-center">
-                بمشاركتك تتدرج في مراتب الداعمين، ليس فخراً بالرقم، وإنما تسابقاً في عمل الخير وتأكيداً على الالتزام ببناء مجتمعٍ متعلم.
+        {/* ════════════════════════════════════════════════════════════
+            3. CONTRIBUTION PORTAL & RECENT SUPPORTERS
+        ════════════════════════════════════════════════════════════ */}
+        <section id="contribute" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <Card className="lg:col-span-7 rounded-3xl luxury-card p-6 sm:p-8">
+            <CardHeader className="p-0 pb-6">
+              <CardTitle className="text-2xl font-black font-headline flex items-center gap-2.5 text-foreground">
+                <CreditCard className="h-6 w-6 text-primary" />
+                <span>بوابة المساهمة المباشرة</span>
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm font-medium">
+                نموذج محاكاة آمن لتسجيل نية المساهمة وإصدار إيصال فوري قابل للطباعة.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <AnimatePresence mode="wait">
+                {!isCheckoutDone ? (
+                  <motion.form
+                    key="form"
+                    onSubmit={handleCheckoutSubmit}
+                    className="space-y-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground font-bold">
+                        مبلغ المساهمة ({selectedCurrency.code}):
+                      </label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={checkoutAmount}
+                        onChange={(e) => setCheckoutAmount(e.target.value)}
+                        className="h-12 bg-background/60 border-border text-right text-base font-black rounded-xl"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground font-bold">اسم المحسن الكريم:</label>
+                        <Input
+                          placeholder="أو اكتب: فاعل خير"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          className="h-11 bg-background/60 border-border text-right text-sm rounded-xl"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground font-bold">رقم البطاقة (محاكاة):</label>
+                        <Input
+                          placeholder="4242 4242 4242 4242"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          className="h-11 bg-background/60 border-border text-right text-sm rounded-xl font-mono"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={isProcessingCheckout}
+                      className="w-full rounded-xl h-12 font-black text-base cursor-pointer"
+                    >
+                      {isProcessingCheckout ? (
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                      ) : (
+                        `إتمام المساهمة بمبلغ ${checkoutAmount} ${selectedCurrency.symbol}`
+                      )}
+                    </Button>
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="receipt"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-background/80 border border-emerald-500/30 p-6 rounded-2xl text-center space-y-4"
+                  >
+                    <BadgeCheck className="h-12 w-12 text-emerald-500 mx-auto" />
+                    <div>
+                      <h4 className="text-lg font-black text-foreground">تقبل الله مساهمتكم الكريمة!</h4>
+                      <p className="text-xs text-muted-foreground mt-1">تم تجهيز إيصال إثبات المساهمة بنجاح.</p>
+                    </div>
+
+                    <div className="bg-card/80 border border-border p-4 rounded-xl space-y-2 text-sm max-w-sm mx-auto text-right">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">المحسن الكريم:</span>
+                        <span className="font-bold text-foreground">{cardName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">مبلغ المساهمة:</span>
+                        <span className="font-bold text-emerald-500">
+                          {checkoutAmount} {selectedCurrency.symbol}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button onClick={() => window.print()} className="flex-1 rounded-xl font-bold text-xs cursor-pointer">
+                        <Download className="h-4 w-4 ml-1.5" />
+                        طباعة / حفظ الإيصال
+                      </Button>
+                      <Button
+                        onClick={() => setIsCheckoutDone(false)}
+                        variant="outline"
+                        className="flex-1 rounded-xl text-xs font-bold cursor-pointer"
+                      >
+                        مساهمة أخرى
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-5 rounded-3xl luxury-card p-6 space-y-4">
+            <CardHeader className="p-0">
+              <CardTitle className="text-lg font-black flex items-center gap-2 text-foreground">
+                <Heart className="h-5 w-5 text-rose-500" />
+                <span>أحدث المساهمين</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                سجل المساهمات المعلنة في وقف المنصة.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-0 space-y-2.5 max-h-[270px] overflow-y-auto custom-scrollbar pl-1">
+              {recentDonations && recentDonations.length > 0 ? (
+                recentDonations.slice(0, 6).map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-border/60 text-xs"
+                  >
+                    <div className="font-bold text-foreground truncate">{d.donorName}</div>
+                    <span className="font-mono font-black text-primary shrink-0">
+                      {formatMoney(d.amount || 0, selectedCurrency)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground py-8 text-center">
+                  كن أول من يخط اسمه في سجل الداعمين لهذا الشهر.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            4. WHERE YOUR WAQF GOES & TIERS
+        ════════════════════════════════════════════════════════════ */}
+        <section id="breakdown" className="space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">أين تذهب مساهمتك؟</h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto font-medium">
+              كل مساهمة تُوجّه مباشرة لتشغيل المنصة وتوسيع أثرها العلمي.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {[
-                { name: 'داعم برونزي', icon: Star, color: 'text-orange-400', border: 'border-orange-500/20', amount: 500 },
-                { name: 'داعم فضي', icon: Star, color: 'text-slate-300', border: 'border-slate-500/20', amount: 2500, fill: true },
-                { name: 'داعم ذهبي', icon: Shield, color: 'text-amber-400', border: 'border-amber-500/20', amount: 5000, fill: true },
-                { name: 'داعم بلاتيني', icon: Gem, color: 'text-cyan-400', border: 'border-cyan-500/20', amount: 10000 },
-                { name: 'داعم ماسي', icon: Crown, color: 'text-violet-400', border: 'border-violet-500/20', amount: 25000 },
-                { name: 'محسن معطاء', icon: HandHeart, color: 'text-rose-400', border: 'border-rose-500/30', amount: 50000, fill: true, highlight: true }
-              ].map((tier, idx) => (
-                <motion.div 
-                    key={idx}
-                    variants={scrollFadeVariant}
-                    whileHover={{ scale: 1.05, y: -10 }}
-                    className={cn(
-                        "p-12 rounded-[3rem] border-2 bg-card/40 backdrop-blur-xl transition-all relative overflow-hidden group mb-4 text-center",
-                        tier.border,
-                        tier.highlight && "ring-4 ring-rose-500/20 shadow-[0_20px_50px_rgba(244,63,94,0.2)]"
-                    )}
-                >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br from-white to-transparent" />
-                    <tier.icon className={cn("w-16 h-16 mb-8 block mx-auto drop-shadow-2xl", tier.color, tier.fill && "fill-current animate-pulse")} />
-                    <h3 className={cn("text-3xl font-black font-headline text-center mb-3", tier.color)}>{tier.name}</h3>
-                    <p className="text-center text-muted-foreground font-black tracking-tight text-lg">عند تجاوز {new Intl.NumberFormat('ar-EG').format(tier.amount)} ج.م</p>
-                </motion.div>
-              ))}
-          </div>
-        </motion.section>
-
-        {/* 💎 4. Detailed Breakdown (Parallax-ish Scroll) */}
-        <motion.section 
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="space-y-24 py-16"
-        >
-          <div className="text-center space-y-4">
-            <h2 className="text-5xl font-black font-headline tracking-tighter text-white">أين تذهب بذرتك؟</h2>
-            <p className="text-muted-foreground text-lg italic font-bold text-center">كل قرشٍ يوضع في مكانه الصحيح لخدمة العلم الشريف.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {donationReasons.map((reason, index) => {
               const Icon = reason.icon;
               return (
-                <motion.div 
-                     key={index}
-                     variants={scrollFadeVariant}
-                     className="text-center space-y-8 group"
-                >
-                  <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-[2.5rem] bg-primary/10 group-hover:bg-primary/20 transition-all duration-700 border border-primary/20 shadow-2xl group-hover:scale-110 group-hover:rotate-12 group-hover:shadow-primary/30">
-                    <Icon className="h-12 w-12 text-primary" />
+                <div key={index} className="luxury-card p-7 space-y-4 text-center">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary">
+                    <Icon className="h-7 w-7" />
                   </div>
-                  <div className="space-y-4">
-                    <h3 className="text-3xl font-black font-headline text-white">{reason.title}</h3>
-                    <p className="text-muted-foreground text-lg leading-relaxed font-medium">{reason.description}</p>
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="inline-block px-6 py-2 rounded-full bg-primary/5 border border-primary/20 text-primary text-md font-black shadow-inner"
-                    >
-                        {reason.example}
-                    </motion.div>
+                  <h3 className="text-xl font-black font-headline text-foreground">{reason.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">{reason.description}</p>
+                  <div className="inline-block px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+                    {reason.example}
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </motion.section>
-
-        {/* 💳 5. Payment Gateways (Sliding Reveal) */}
-        <motion.section 
-            variants={scrollFadeVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            className="py-32 p-10 md:p-20 rounded-[5rem] bg-card/30 border border-border/40 relative overflow-hidden ring-1 ring-white/5 shadow-2xl text-right"
-        >
-             <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[200px] pointer-events-none" />
-             <div className="text-center mb-20 space-y-6 relative z-10">
-                <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white">قنوات البذل</h2>
-                <p className="text-muted-foreground font-black text-xl text-center">اختر الوسيلة التي تناسبك لغرس أثرك اليوم في أرض العلم.</p>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 relative z-10">
-                {[
-                    { name: 'باتريون', icon: Heart, desc: 'للدعم الشهري المستدام وتطوير الميزات.', variant: 'secondary' },
-                    { name: 'باي بال', icon: Zap, desc: 'للمساهمات السريعة والعالمية.' },
-                    { name: 'بطاقة ائتمانية', icon: CreditCard, desc: 'دفع آمن ومباشر عبر نظام Stripe العالمي.' },
-                    { name: 'تحويل بنكي', icon: Landmark, desc: 'للمساهمات الكبيرة والأوقاف المباشرة لمنصة وقفة.', variant: 'secondary' }
-                ].map((gate, idx) => (
-                    <motion.div 
-                        key={idx} 
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.15 }}
-                        className="flex flex-col"
-                    >
-                        <Card className="bg-white/5 border-white/10 hover:border-primary/40 transition-all p-10 rounded-[3.5rem] flex flex-col justify-between group h-full hover:shadow-2xl hover:shadow-primary/20 hover:bg-white/10">
-                            <div className="space-y-8">
-                                <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 group-hover:bg-primary/20 border border-white/10 flex items-center justify-center text-primary group-hover:scale-110 transition-all group-hover:rotate-12 shadow-inner">
-                                    <gate.icon className="w-8 h-8" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h3 className="text-2xl font-black font-headline mb-2 text-white">{gate.name}</h3>
-                                    <p className="text-md text-muted-foreground leading-relaxed font-bold">{gate.desc}</p>
-                                </div>
-                            </div>
-                            <Button className="mt-12 rounded-[1.5rem] h-14 text-lg font-black transition-all group-hover:scale-[1.05] shadow-lg" variant={gate.variant as any || 'default'}>رابط الدعم</Button>
-                        </Card>
-                    </motion.div>
-                ))}
-             </div>
-        </motion.section>
-
-        {/* 🤝 6. Community Support & Developer's Message (Deep Reveal) */}
-        <section className="space-y-16">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-right">
-                {/* 🏰 The Developer's Message (Apple-style Slide & Blur) */}
-                <motion.div 
-                    initial="hidden"
-                    whileInView="visible"
-                    variants={{
-                        hidden: { opacity: 0, x: -100, filter: 'blur(20px)' },
-                        visible: { opacity: 1, x: 0, filter: 'blur(0px)' }
-                    }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                    className="lg:col-span-2 p-12 md:p-16 rounded-[4rem] bg-gradient-to-br from-primary/30 via-primary/5 to-transparent border border-primary/30 space-y-10 relative overflow-hidden flex flex-col justify-center shadow-2xl ring-1 ring-white/10"
-                >
-                    <Quote className="absolute top-12 right-12 w-48 h-48 text-primary/10 -rotate-12 pointer-events-none" />
-                    
-                    <div className="space-y-6 relative z-10">
-                        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-black uppercase tracking-widest shadow-lg">
-                            <Sparkles className="w-4 h-4 animate-pulse" />
-                            كلمة من خلف الكواليس
-                        </div>
-                        <h2 className="text-5xl md:text-6xl font-black font-headline tracking-tighter text-white leading-tight">حكاية وقفة..<br/> ورسالة مطورها</h2>
-                    </div>
-
-                    <div className="space-y-8 relative z-10">
-                        <p className="text-2xl md:text-3xl text-foreground font-black leading-tight italic border-r-8 border-primary pr-8 drop-shadow-sm">
-                            &quot;إخوتي وأخواتي في الله، أنا مطور هذا الموقع. أريدكم أن تعلموا أن مشروع &apos;وقفة&apos; هو جهدٌ فردي تماماً، بدأ بفضل الله ثم برغبة في تطويع التقنية لخدمة دينه.&quot;
-                        </p>
-                        <p className="text-xl text-muted-foreground font-black leading-relaxed">
-                            أود التأكيد بأنني <span className="text-primary underline underline-offset-8 decoration-primary/50 text-2xl">أعمل على هذا المشروع بشكل تطوعي خالص ولا أتقاضى عنه أي أجر مادي أو راتب</span>؛ فكل تبرعاتكم تُوجّه بالكامل لتغطية تكاليف التشغيل وتطوير المنصة. جزاكم الله خيراً على السند.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-8 pt-8 relative z-10 border-t border-white/10">
-                        <div className="relative">
-                            <Avatar className="h-24 w-24 border-3 border-primary/40 shadow-2xl ring-8 ring-primary/5">
-                                <AvatarImage src="/dev-avatar.png" alt="Developer" />
-                                <AvatarFallback className="bg-primary/20 text-primary font-black text-3xl">A</AvatarFallback>
-                            </Avatar>
-                            <motion.div 
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ repeat: Infinity, duration: 2 }}
-                                className="absolute -bottom-2 -right-2 bg-primary text-white p-2.5 rounded-full shadow-2xl border-4 border-background"
-                            >
-                                <Heart className="w-5 h-5 fill-current" />
-                            </motion.div>
-                        </div>
-                        <div className="space-y-1 text-right">
-                            <p className="font-black text-3xl font-headline tracking-tight text-white">مطور منصة وقفة</p>
-                            <p className="text-lg text-primary font-black uppercase tracking-widest opacity-80 italic">خادم لطلبة العلم.</p>
-                        </div>
-                    </div>
-                </motion.div>
-                
-                <div className="flex flex-col gap-8 text-right">
-                    {[
-                        { title: 'شارك النور', icon: Share2, desc: 'تذكر أن الدال على الخير كفاعله، نشرك للمنصة هو صدقة جارية عظيمة.' },
-                        { title: 'التطوع التقني', icon: MessageCircle, desc: 'هل تملك مهارات برمجية أو لغوية؟ ساعدنا في النمو المستمر.', link: '/contact' },
-                        { title: 'الدعاء الصادق', icon: Gift, desc: 'دعواتكم بظهر الغيب هي المحرك الحقيقي لنا في هذه الرحلة.' }
-                    ].map((item, i) => (
-                        <motion.div 
-                            key={i}
-                            initial="hidden"
-                            whileInView="visible"
-                            variants={{
-                                hidden: { opacity: 0, x: 50 },
-                                visible: { opacity: 1, x: 0 }
-                            }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.2, duration: 0.8 }}
-                            className="p-10 rounded-[3rem] bg-card/60 border border-border/40 hover:border-primary/50 transition-all flex flex-col justify-between group shadow-xl hover:bg-white/5"
-                        >
-                            <div className="space-y-6">
-                                <item.icon className="w-12 h-12 text-muted-foreground transition-all group-hover:scale-125 group-hover:text-primary mb-2 group-hover:rotate-12" />
-                                <h3 className="text-2xl font-black font-headline text-white">{item.title}</h3>
-                                <p className="text-md text-muted-foreground font-black leading-relaxed">{item.desc}</p>
-                            </div>
-                            {item.link && (
-                                <Button asChild variant="link" className="p-0 h-auto justify-end text-primary font-black mt-8 text-xl hover:no-underline group">
-                                    <Link href={item.link} className="flex items-center gap-3">تواصل معنا <span className="group-hover:translate-x-[-12px] transition-transform">←</span></Link>
-                                </Button>
-                            )}
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
         </section>
 
-        <WallOfSupporters />
-      </div>
+        {/* Tiers of Benevolence */}
+        <section className="space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl sm:text-4xl font-black font-headline text-foreground">درجات الإحسان</h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto font-medium">
+              تدرج الداعمين في البذل والعطاء، تسابقاً في الخيرات وبناءً لمجتمع متعلم.
+            </p>
+          </div>
 
-      {/* 🌠 Bottom Atmospheric Aura */}
-      <div className="fixed bottom-0 left-0 right-0 h-[60vh] bg-gradient-to-t from-primary/20 via-primary/5 to-transparent pointer-events-none z-[-1]" />
-    </>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {tiers.map((tier, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'p-5 rounded-2xl luxury-card border text-center flex flex-col items-center justify-between gap-3',
+                  tier.border,
+                  tier.highlight && 'ring-2 ring-rose-500/30'
+                )}
+              >
+                <tier.icon className={cn('w-8 h-8', tier.color, tier.fill && 'fill-current')} />
+                <div>
+                  <h3 className={cn('text-sm font-black font-headline', tier.color)}>{tier.name}</h3>
+                  <p className="text-[11px] text-muted-foreground font-bold mt-1">
+                    {formatMoney(tier.amount, selectedCurrency)}+
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            5. PAYMENT CHANNELS
+        ════════════════════════════════════════════════════════════ */}
+        <section className="rounded-[2.25rem] luxury-glass border border-border/60 p-7 sm:p-10 space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">قنوات البذل والمساهمة</h2>
+            <p className="text-sm text-muted-foreground font-medium">
+              اختر الوسيلة الأنسب لك للمساهمة في هذا الوقف العلمي.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {gateways.map((gate, idx) => (
+              <div key={idx} className="luxury-card p-6 flex flex-col justify-between gap-5">
+                <div className="space-y-3">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary">
+                    <gate.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg font-black font-headline text-foreground">{gate.name}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">{gate.desc}</p>
+                </div>
+                {gate.href ? (
+                  <Button asChild variant="outline" className="rounded-xl font-bold text-xs h-10">
+                    <Link href={gate.href}>{gate.action}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={() => scrollToSection('contribute')}
+                    className="rounded-xl font-bold text-xs h-10 cursor-pointer"
+                  >
+                    {gate.action}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            6. DEVELOPER'S MESSAGE & OTHER WAYS TO HELP
+        ════════════════════════════════════════════════════════════ */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-8 p-8 sm:p-10 rounded-3xl luxury-glass border border-primary/25 relative overflow-hidden flex flex-col justify-between gap-6">
+            <Quote className="absolute top-6 left-6 w-24 h-24 text-primary/10 pointer-events-none" />
+            <div className="space-y-4 relative z-10">
+              <div className="luxury-badge luxury-badge-primary w-fit">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>كلمة من خلف الكواليس</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black font-headline text-foreground">
+                حكاية وقفة.. ورسالة مطورها
+              </h2>
+              <p className="text-base sm:text-lg text-foreground/90 font-bold leading-relaxed border-r-4 border-primary pr-4">
+                «مشروع وقفة هو جهدٌ فردي خالص لوجه الله تعالى، بدأ برغبة في تطويع التقنية الحديثة لخدمة العلم الشرعي وتيسيره لكل طالب ومستفيد.»
+              </p>
+              <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
+                أعمل على هذا المشروع بشكل تطوعي كامل ولا أتقاضى عنه أي أجر مادي أو راتب؛ فكل مساهماتكم تُوجّه بالكامل لتغطية تكاليف التشغيل والخوادم وتطوير المنصة.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 pt-4 border-t border-border/60 relative z-10">
+              <Avatar className="h-14 w-14 border-2 border-primary/40">
+                <AvatarImage src="/dev-avatar.png" alt="مطور منصة وقفة" />
+                <AvatarFallback className="bg-primary/15 text-primary font-black text-xl">و</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-black text-base text-foreground font-headline">مطور منصة وقفة</p>
+                <p className="text-xs text-primary font-bold">خادم لطلبة العلم</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {[
+              { title: 'شارك النور', icon: Share2, desc: 'الدال على الخير كفاعله، نشرك للمنصة صدقة جارية عظيمة.' },
+              { title: 'التطوع التقني', icon: MessageCircle, desc: 'هل تملك مهارات برمجية أو لغوية؟ ساعدنا في النمو.', link: '/contact' },
+              { title: 'الدعاء الصادق', icon: Gift, desc: 'دعواتكم بظهر الغيب هي المحرك الحقيقي لنا في هذه الرحلة.' },
+            ].map((item, i) => (
+              <div key={i} className="luxury-card p-5 flex-1 flex flex-col justify-between gap-3">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black font-headline text-foreground">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">{item.desc}</p>
+                  </div>
+                </div>
+                {item.link && (
+                  <Link
+                    href={item.link}
+                    className="inline-flex items-center gap-1.5 text-xs font-black text-primary hover:underline self-end"
+                  >
+                    <span>تواصل معنا</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            7. WALL OF SUPPORTERS
+        ════════════════════════════════════════════════════════════ */}
+        <section className="rounded-[2.25rem] luxury-glass border border-border/60 p-8 sm:p-12 text-center space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black font-headline text-foreground">سجل الداعمين بأثرهم</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto font-medium">
+              «أحب الأعمال إلى الله أدومها وإن قلّ» — جزا الله كل من ساهم ويسّر نشر العلم.
+            </p>
+          </div>
+
+          {recentDonations && recentDonations.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+              {recentDonations.slice(0, 24).map((supporter, index) => (
+                <div
+                  key={supporter.id || index}
+                  className="px-4 py-2 rounded-full bg-background/60 border border-border/70 flex items-center gap-2 text-sm font-bold text-foreground"
+                >
+                  {index < 3 && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
+                  <span>{supporter.donorName}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-4">كُن أول من يخط اسمه في هذه اللائحة المباركة.</p>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }
