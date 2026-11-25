@@ -32,6 +32,7 @@ export interface CollectionOptions {
     orderBy?: [string, 'asc' | 'desc'];
     limit?: number;
     where?: [string, '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'not-in' | 'array-contains' | 'array-contains-any', any];
+    silent?: boolean;
 }
 
 /**
@@ -115,11 +116,13 @@ export function useCollection<T = any>(
                     path: path,
                 });
             
-            console.error(`Firestore useCollection error at [${path}]:`, err.message);
+            if (!options?.silent) {
+              console.warn(`Firestore useCollection warning at [${path}]:`, err.message);
+            }
             setError(contextualError);
             setData(null);
             setIsLoading(false);
-            if (contextualError instanceof FirestorePermissionError) {
+            if (!options?.silent && contextualError instanceof FirestorePermissionError) {
                 errorEmitter.emit('permission-error', contextualError);
             }
           }

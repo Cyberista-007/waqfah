@@ -1033,7 +1033,8 @@ export default function SettingsPage() {
                         <SelectValue placeholder="اختر نموذجًا..." />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="gemini-3.8-flash">Gemini 3.8 Flash (الأحدث - سريع وذكي فائق التطور)</SelectItem>
+                        <SelectItem value="gemini-4-hydrogen">Gemini 4 Hydrogen (الأحدث - الجيل الجديد فائق الذكاء والسرعة)</SelectItem>
+                        <SelectItem value="gemini-3.8-flash">Gemini 3.8 Flash (سريع وذكي متطور)</SelectItem>
                         <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (سريع وذكي)</SelectItem>
                         <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (الأقوى - للمسائل والخطط العلمية المعقدة)</SelectItem>
                         <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (سرعة فائقة واستقرار)</SelectItem>

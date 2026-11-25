@@ -74,16 +74,16 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
                                     <Layers className="w-5 h-5 text-primary" />
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 italic">Scientific Series</span>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-primary/90">سلسلة علمية</span>
                                     <div className="h-0.5 w-10 bg-primary mt-1 rounded-full shadow-[0_0_10px_hsl(var(--primary))]" />
                                 </div>
                             </div>
                             
-                            <CardTitle className="font-headline text-3xl md:text-4xl font-black text-white leading-tight mb-4 transition-all duration-500 group-hover:tracking-tight">
+                            <CardTitle className="font-headline text-xl md:text-2xl font-black text-white leading-snug mb-3 line-clamp-2 transition-all duration-300 group-hover:text-primary">
                                 {series.title}
                             </CardTitle>
                             
-                            <CardDescription className="text-zinc-400 font-medium line-clamp-3 text-base leading-relaxed mb-6 opacity-70 group-hover:opacity-100 transition-opacity">
+                            <CardDescription className="text-white/65 font-medium line-clamp-2 text-sm leading-relaxed mb-6 group-hover:text-white/85 transition-colors">
                                 {series.description}
                             </CardDescription>
 
@@ -119,7 +119,7 @@ const SeriesCardComponent = ({ series, index = 0, pinnedMessage }: SeriesCardPro
                                             <Clock className="w-3 h-3 text-primary" />
                                             <span>{series.isCompleted ? 'مكتملة' : 'قيد النشر'}</span>
                                         </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 italic">الحالة</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">الحالة</span>
                                     </div>
                                 </div>
                                 <div className="h-12 w-12 bg-primary rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110 group-active:scale-95 shadow-primary/20">

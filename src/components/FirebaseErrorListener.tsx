@@ -18,7 +18,7 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      console.error("Firestore Permission Error emitted:", error);
+      console.warn("Firestore Permission Error emitted:", error);
       // In development, we'll display a more informative inline error.
       if (process.env.NODE_ENV !== 'production') {
         setError(error);

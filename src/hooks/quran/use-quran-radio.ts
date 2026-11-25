@@ -234,7 +234,6 @@ export function useQuranRadio() {
           handlePlayRadio(target);
           setIsAlarmEnabled(false);
           localStorage.setItem('quran_radio_alarm_enabled', 'false');
-          alert(`⏰ حان الآن وقت تشغيل الإذاعة المجدولة: ${target.name}`);
         }
       }
     };

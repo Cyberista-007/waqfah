@@ -579,7 +579,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] z-[2]" />
                     
                     {/* Content Container */}
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pt-12 pb-24">
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pt-10 pb-36">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -598,18 +598,18 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                             </motion.div>
 
                             <motion.h1 
-                                className="text-5xl md:text-7xl lg:text-9xl font-black mb-6 font-headline tracking-tighter leading-[0.9] italic text-white drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                                className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 font-headline tracking-tight leading-[1.1] text-white drop-shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
                             >
-                                <span className="block mb-2 md:translate-x-8 opacity-90">
+                                <span className="block mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/75">
                                     {banners[activeBannerIndex].title?.split(' ')[0]}
                                 </span>
-                                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary/90 to-primary/40 md:-translate-x-8">
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary/90 to-primary/50">
                                     {banners[activeBannerIndex].title?.split(' ').slice(1).join(' ')}
                                 </span>
                             </motion.h1>
                             
                             <motion.p 
-                                className="text-lg md:text-2xl text-white/70 max-w-3xl mx-auto mb-10 leading-relaxed font-tajawal drop-shadow-md"
+                                className="text-base sm:text-lg md:text-2xl text-white/80 max-w-3xl mx-auto mb-8 leading-relaxed font-tajawal drop-shadow-md"
                             >
                                 {banners[activeBannerIndex].subtitle || heroSubtitle}
                             </motion.p>
@@ -724,7 +724,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 </div>
                 <div>
                   <h3 className="text-sm md:text-base font-black font-headline text-white leading-tight">{pillar.title}</h3>
-                  <p className="text-xs text-white/50 mt-1 leading-snug font-medium">{pillar.desc}</p>
+                  <p className="text-xs text-white/65 mt-1 leading-snug font-medium">{pillar.desc}</p>
                 </div>
               </motion.div>
             );
@@ -770,27 +770,21 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
             >
                 <Link href={cat.href} aria-label={cat.name} className="block h-full group">
                     <div
-                        className="relative flex flex-col items-start justify-between p-7 md:p-8 rounded-[1.75rem] border transition-all duration-300 overflow-hidden h-full hover:-translate-y-1.5"
-                        style={{
-                            background: 'rgba(18, 18, 28, 0.75)',
-                            borderColor: 'rgba(255,255,255,0.07)',
-                            boxShadow: '0 2px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
-                            backdropFilter: 'blur(24px)',
-                        }}
+                        className="relative flex flex-col items-start justify-between p-6 md:p-7 rounded-[1.75rem] luxury-glass transition-all duration-300 overflow-hidden h-full hover:-translate-y-1.5"
                     >
                         {/* Corner glow bloom on hover */}
                         <div
-                            className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-[50px] opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
+                            className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-[50px] opacity-0 group-hover:opacity-25 transition-opacity duration-500 pointer-events-none"
                             style={{ backgroundColor: cat.accent }}
                         />
                         {/* Bottom accent line on hover */}
                         <div
                             className="absolute bottom-0 inset-x-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ background: `linear-gradient(90deg, transparent, ${cat.accent}55, transparent)` }}
+                            style={{ background: `linear-gradient(90deg, transparent, ${cat.accent}66, transparent)` }}
                         />
                         {/* Cover image for special cards */}
                         {cat.image && (
-                            <div className="absolute inset-0 z-0 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-500">
+                            <div className="absolute inset-0 z-0 opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500">
                                 <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
                             </div>
@@ -802,16 +796,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                                     className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0"
                                     style={{
                                         backgroundColor: `${cat.accent}18`,
-                                        border: `1px solid ${cat.accent}28`,
+                                        border: `1px solid ${cat.accent}35`,
                                     }}
                                 >
-                                    {cat.image ? (
-                                        <div className="relative w-full h-full rounded-xl overflow-hidden">
-                                            <Image src={cat.image} alt={cat.name} fill sizes="48px" className="object-cover" />
-                                        </div>
-                                    ) : (
-                                        <cat.icon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />
-                                    )}
+                                    <cat.icon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />
                                 </div>
                                 <div
                                     className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-300"
@@ -825,7 +813,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                                 <h2 className="font-bold text-lg md:text-xl text-white leading-snug">
                                     {cat.name}
                                 </h2>
-                                <p className="text-xs md:text-[13px] text-white/35 leading-relaxed group-hover:text-white/55 transition-colors duration-300">
+                                <p className="text-xs md:text-[13px] text-white/60 leading-relaxed group-hover:text-white/85 transition-colors duration-300">
                                     {cat.desc}
                                 </p>
                             </div>
@@ -833,7 +821,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                         {/* Hover inset border */}
                         <div
                             className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ boxShadow: `inset 0 0 0 1px ${cat.accent}35` }}
+                            style={{ boxShadow: `inset 0 0 0 1px ${cat.accent}40` }}
                         />
                     </div>
                 </Link>
@@ -861,13 +849,13 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               <Sparkles className="w-3.5 h-3.5 fill-emerald-400" />
               محتوى إسلامي متكامل
             </div>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">كنوز إسلامية <span className="text-emerald-400">بين يديك</span></h2>
-            <p className="text-white/30 text-lg mt-3 max-w-xl font-medium">أذكار، أحاديث، أدعية وآيات قرآنية — رحلة إيمانية شاملة في تطبيق واحد.</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">كنوز إسلامية <span className="text-emerald-400">بين يديك</span></h2>
+            <p className="text-white/65 text-lg mt-3 max-w-xl font-medium">أذكار، أحاديث، أدعية وآيات قرآنية — رحلة إيمانية شاملة في تطبيق واحد.</p>
           </motion.div>
           <div className="flex items-center gap-4">
              <div className="hidden md:flex flex-col items-end">
-                <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">تحديثات يومية</span>
-                <span className="text-white/60 font-bold">محتوى متجدد</span>
+                <span className="text-white/45 text-[10px] font-black uppercase tracking-widest">تحديثات يومية</span>
+                <span className="text-white/80 font-bold">محتوى متجدد</span>
              </div>
              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 animate-pulse">
                 <Heart className="w-6 h-6 fill-current" />
@@ -889,7 +877,7 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               className="group relative flex flex-col h-full min-h-[400px] p-10 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.05)] hover:bg-white/[0.03]"
             >
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
               
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/20 border-2 border-emerald-500/30 flex items-center justify-center mb-8 shadow-2xl">
@@ -897,8 +885,8 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                 </div>
                 <div className="mt-auto">
                   <p className="text-emerald-400 font-black text-xs uppercase tracking-[0.4em] mb-3">الركن الأعظم</p>
-                  <h3 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tighter">آيات قرآنية مختارة للتدبّر واليقين</h3>
-                  <p className="text-white/40 text-lg leading-relaxed max-w-md">تصفح مجموعات مختارة من كلام الله المقسم حسب المواضيع الإيمانية مع التفسير والتدبر.</p>
+                  <h3 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tight">آيات قرآنية مختارة للتدبّر واليقين</h3>
+                  <p className="text-white/70 text-lg leading-relaxed max-w-md">تصفح مجموعات مختارة من كلام الله المقسم حسب المواضيع الإيمانية مع التفسير والتدبر.</p>
                   <div className="mt-8 inline-flex items-center gap-3 text-white font-black group/link">
                     ابدأ التدبر الآن 
                     <ArrowLeft className="w-5 h-5 group-hover/link:-translate-x-2 transition-transform text-emerald-400" />
@@ -1040,12 +1028,12 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                     <Link
                         href={section.href}
                         aria-label={section.label}
-                        className="flex flex-col items-center justify-center p-5 rounded-[2rem] bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-2xl border border-white/10 hover:border-primary/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.12),0_10px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_15px_35px_rgba(var(--primary-rgb),0.15),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-400 group h-full cursor-pointer"
+                        className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] backdrop-blur-2xl border border-white/10 hover:border-primary/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_14px_30px_rgba(var(--primary-rgb),0.15),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-300 group h-full cursor-pointer"
                     >
-                        <div className={cn("w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300 shadow-md", section.color)}>
-                            <section.icon size={22} />
+                        <div className={cn("w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300 shadow-sm", section.color)}>
+                            <section.icon size={20} />
                         </div>
-                        <span className="text-xs font-black text-white/70 group-hover:text-white transition-colors text-center">{section.label}</span>
+                        <span className="text-xs font-black text-white/80 group-hover:text-white transition-colors text-center">{section.label}</span>
                     </Link>
                 </motion.div>
             ))}
@@ -1058,18 +1046,18 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
 
 
       {/* Learning Paths / Curriculum Highlights — MASTERCLASS ROADMAPS */}
-      <section id="pathways" className="py-32 container px-4 relative">
+      <section id="pathways" className="py-20 container px-4 relative">
         <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -z-10" />
         
-        <div className="text-center mb-24 space-y-6">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-[0.4em]">
-            <Sparkles className="w-3.5 h-3.5" /> مسارات متكاملة
+        <div className="text-center mb-14 space-y-5">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/75 text-[10px] font-black uppercase tracking-[0.4em]">
+            <Sparkles className="w-3.5 h-3.5 text-primary" /> مسارات متكاملة
           </div>
-          <h2 className="text-5xl md:text-7xl font-black font-headline tracking-tighter text-white drop-shadow-2xl">
+          <h2 className="text-4xl md:text-6xl font-black font-headline tracking-tight text-white drop-shadow-2xl">
             خارطة طريقٍ <span className="text-primary">ممنهجة</span>
           </h2>
-          <p className="text-xl text-white/60 max-w-2xl mx-auto font-medium leading-relaxed italic text-center">
-            "من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً"
+          <p className="text-lg md:text-xl text-white/65 max-w-2xl mx-auto font-medium leading-relaxed text-center">
+            «من أراد العلم فليقرأ القرآن، ومن أراد الفهم فليقرأ سيرة النبي ﷺ، ومن أراد الحكمة فليأخذ من كل فن نصيباً»
           </p>
         </div>
 
@@ -1119,17 +1107,17 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
                    <IconComponent className={cn("w-10 h-10", path.color || "text-primary")} />
                 </div>
                 
-                <h3 className="text-3xl font-black font-headline mb-4 text-white tracking-tight">{path.title}</h3>
-                <p className="text-white/40 text-base mb-10 leading-relaxed font-medium">{path.desc}</p>
+                <h3 className="text-2xl sm:text-3xl font-black font-headline mb-4 text-white tracking-tight">{path.title}</h3>
+                <p className="text-white/65 text-base mb-8 leading-relaxed font-medium">{path.desc}</p>
                 
-                <div className="space-y-4 pt-6 border-t border-white/5">
-                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">منهج المسار</div>
+                <div className="space-y-4 pt-6 border-t border-white/10">
+                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/45 mb-2">منهج المسار</div>
                   {path.parts.map((p: string, i: number) => (
                     <div key={i} className="flex items-center gap-4 group/step">
                       <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border transition-colors", path.accent || "border-primary/20", path.color || "text-primary")}>
                          {i + 1}
                       </div>
-                      <span className="text-white/60 text-sm font-bold group-hover/step:text-white transition-colors">{p}</span>
+                      <span className="text-white/75 text-sm font-bold group-hover/step:text-white transition-colors">{p}</span>
                     </div>
                   ))}
                 </div>
@@ -1266,28 +1254,28 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </div>
 
         {/* Testimonials / Impact Section */}
-        <section className="py-24 border-y border-border/40">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-black font-headline tracking-tighter">أصوات من رحيب المنصة</h2>
-            <p className="text-muted-foreground">أثر الوقف العلمي لا يقاس بالأرقام فحسب، بل بحياة تغيرت وعقول استنارت.</p>
+        <section className="py-20 border-y border-white/10">
+          <div className="text-center mb-14 space-y-4">
+            <h2 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-white">أصوات من رحاب المنصة</h2>
+            <p className="text-white/60 max-w-xl mx-auto">أثر الوقف العلمي لا يقاس بالأرقام فحسب، بل بحياة تغيرت وعقول استنارت.</p>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-8">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-6 lg:gap-8">
             {[
               { name: "أحمد العتيبي", r: "طالب علم", q: "منصة وقفة وفرت علي عناء البحث الطويل. التنظيم هنا يجعلك تشعر أن العلم أصبح في متناول يدك دائماً." },
               { name: "سارة محمد", r: "باحثة ماجستير", q: "أفضل ميزة هي الاستماع دون إنترنت. في المواصلات أو السفر، رفيقي الوحيد هو محاضرات وقفة." },
               { name: "محمد خالد", r: "محاضر جامعي", q: "المحتوى هنا منتقى بعناية بالغة. الثقة في المشايخ هي ما يجعل هذه المنصة هي الأولى لي ولطلابي." }
             ].map((t, idx) => (
-              <div key={idx} className="p-8 rounded-[2rem] bg-card/60 border border-border/50 relative group hover:shadow-xl transition-all">
-                <Quote className="absolute top-6 right-6 w-12 h-12 text-primary/10 transition-transform group-hover:scale-110" />
+              <div key={idx} className="p-8 rounded-[2rem] luxury-card relative group">
+                <Quote className="absolute top-6 left-6 w-12 h-12 text-primary/15 transition-transform group-hover:scale-110" />
                 <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-500 fill-amber-500" />)}
+                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
                 </div>
-                <p className="text-lg leading-relaxed mb-6 italic text-foreground/90">"{t.q}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary/20 to-primary/50 flex items-center justify-center font-bold text-lg">{t.name[0]}</div>
+                <p className="text-base md:text-lg leading-relaxed mb-6 text-white/85">«{t.q}»</p>
+                <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-primary/30 to-primary/60 border border-primary/30 flex items-center justify-center font-black text-base text-white">{t.name[0]}</div>
                   <div>
-                    <h4 className="font-bold text-sm">{t.name}</h4>
-                    <p className="text-xs text-muted-foreground">{t.r}</p>
+                    <h4 className="font-bold text-sm text-white">{t.name}</h4>
+                    <p className="text-xs text-white/55">{t.r}</p>
                   </div>
                 </div>
               </div>
@@ -1297,10 +1285,10 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
       </div>
 
         {/* Frequently Asked Questions (FAQ) */}
-        <section id="faq" className="py-24 container px-4 max-w-4xl mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tighter">الأسئلة الشائعة</h2>
-            <p className="text-muted-foreground text-lg italic">كل ما تحتاج معرفته عن استخدام المنصة ودعم المشروع.</p>
+        <section id="faq" className="py-20 container px-4 max-w-4xl mx-auto">
+          <div className="text-center mb-12 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-white">الأسئلة الشائعة</h2>
+            <p className="text-white/60 text-lg">كل ما تحتاج معرفته عن استخدام المنصة ودعم المشروع.</p>
           </div>
           <Accordion type="single" collapsible className="w-full space-y-4">
             {(homepageConfig?.faqs?.length ? homepageConfig.faqs : [
@@ -1309,11 +1297,11 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
               { q: "ما هو أفضل مسار للبدء بالنسبة للمبتدئين؟", a: "ننصح بشدة بالبدء بـ 'مسار تأسيس طالب العلم' المتوفر في قسم المسارات المقترحة، حيث يركز على المتون الأولية في العقيدة والفقه واللغة." },
               { q: "كيف يمكنني المساهمة في تطوير الموقع؟", a: "يمكنك المساهمة من خلال التبرع المادي عبر قسم التبرعات، أو التطوع التقني من خلال صفحة 'التواصل'، أو بمجرد نشر رابط الموقع ليعم النفع." }
             ]).map((item, idx) => (
-              <AccordionItem key={idx} value={`item-${idx}`} className="border-none bg-card/60 backdrop-blur-md rounded-2xl px-6 border border-border/50 overflow-hidden shadow-sm transition-all hover:bg-card/80">
-                <AccordionTrigger className="text-right py-6 font-bold text-lg hover:no-underline hover:text-primary transition-colors">
+              <AccordionItem key={idx} value={`item-${idx}`} className="luxury-glass rounded-2xl px-6 border border-white/10 overflow-hidden transition-all hover:border-primary/30">
+                <AccordionTrigger className="text-right py-5 font-bold text-base md:text-lg text-white hover:no-underline hover:text-primary transition-colors">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-right text-muted-foreground leading-relaxed pb-6 text-base">
+                <AccordionContent className="text-right text-white/70 leading-relaxed pb-6 text-base">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -1322,8 +1310,8 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </section>
 
         {/* Newsletter Section */}
-        <section className="py-12 relative px-4 md:px-0">
-          <div className="relative rounded-[3rem] bg-card/40 backdrop-blur-2xl border border-border/50 p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 group hover-glow frosted-glass mx-auto max-w-6xl w-full">
+        <section className="py-10 relative px-4 md:px-0">
+          <div className="relative rounded-[2.5rem] luxury-glass border border-white/10 p-8 sm:p-10 md:p-14 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 group mx-auto max-w-6xl w-full">
             <div className="absolute top-0 right-[-10%] w-[30rem] h-[30rem] bg-primary/10 rounded-full blur-[100px] animate-blob pointer-events-none" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[20rem] h-[20rem] bg-emerald-500/10 rounded-full blur-[100px] animate-blob animation-delay-4000 pointer-events-none" />
             <div className="relative z-10 space-y-6 max-w-xl text-center md:text-right">
@@ -1361,8 +1349,8 @@ export function HomePageClient({ latestLectures, topPrograms, latestSeries, home
         </section>
 
         {/* Community CTA */}
-        <section className="py-12 relative px-4 md:px-0">
-          <div className="rounded-[3rem] bg-card/40 backdrop-blur-3xl border border-primary/20 p-12 md:p-20 text-foreground relative overflow-hidden group hover-glow frosted-glass mx-auto max-w-6xl w-full">
+        <section className="py-10 relative px-4 md:px-0">
+          <div className="rounded-[2.5rem] luxury-glass border border-primary/25 p-10 md:p-16 text-foreground relative overflow-hidden group mx-auto max-w-6xl w-full">
             <div className="absolute top-[0%] right-[0%] w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[120px] group-hover:bg-primary/30 group-hover:scale-110 animate-blob transition-all duration-1000 pointer-events-none" />
             <div className="absolute bottom-[-20%] left-[-10%] w-[35rem] h-[35rem] bg-secondary/20 rounded-full blur-[120px] animate-blob animation-delay-2000 pointer-events-none" />
             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-right">

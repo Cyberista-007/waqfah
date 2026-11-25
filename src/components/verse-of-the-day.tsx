@@ -208,8 +208,8 @@ export function VerseOfTheDay() {
                   {item.text}
                 </h2>
 
-                <div className="flex items-center justify-center gap-4 text-base sm:text-lg md:text-xl font-bold text-white/70 italic">
-                  <div className="h-px w-6 sm:w-8 bg-white/10" />
+                <div className="flex items-center justify-center gap-4 text-base sm:text-lg md:text-xl font-bold text-white/75">
+                  <div className="h-px w-6 sm:w-8 bg-white/15" />
                   {activeTab === 'verse' && <span>سورة {(item as any).surah} - الآية {(item as any).number}</span>}
                   {activeTab === 'hadith' && <span>{(item as any).narrator} - {(item as any).topic}</span>}
                   {activeTab === 'dua' && <span>{(item as any).source} - {(item as any).category}</span>}

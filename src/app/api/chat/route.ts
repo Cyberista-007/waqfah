@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-const ALLOWED_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const ALLOWED_MODELS = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_HISTORY_LENGTH = 25;
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const selectedModel = ALLOWED_MODELS.includes(modelName) ? modelName : "gemini-3.8-flash";
+    const selectedModel = ALLOWED_MODELS.includes(modelName) ? modelName : "gemini-4-hydrogen";
 
     // Enforce responsible safety thresholds suitable for an Islamic educational platform
     const model = genAI.getGenerativeModel({

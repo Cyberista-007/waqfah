@@ -327,7 +327,7 @@ const LectureCardComponent = ({
                                 className="h-9 w-full bg-white/10 hover:bg-primary border border-white/20 hover:border-primary text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all animate-fade-in-up"
                                 title="استماع صوتي"
                             >
-                                <Headphones className="w-3.5 h-3.5 text-primary-foreground" />
+                                <Headphones className="w-3.5 h-3.5 text-white" />
                                 <span>استماع (صوت)</span>
                             </button>
 

@@ -256,7 +256,7 @@ export function SiteHeader() {
               {isMobileMenuOpen && (
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b border-white/10 bg-white/[0.02]">
-                    <h2 className="text-2xl font-black font-headline text-primary italic">وقـــفــــة</h2>
+                    <h2 className="text-2xl font-black font-headline text-primary">وقـــفــــة</h2>
                     <p className="text-xs text-zinc-400 mt-1">القائمة الرئيسية للمنصة</p>
                   </div>
                   <ScrollArea className="flex-1 p-6">

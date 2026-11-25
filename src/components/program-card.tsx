@@ -63,7 +63,7 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                 {/* Avatar Section - Floating */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30">
                     <Link href={`/programs/${program.slug}`} className="block relative">
-                        <Avatar className="h-24 w-24 border-[6px] border-[#0c0c0e] bg-[#0c0c0e] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20 group-hover:ring-8 group-hover:ring-primary/10 group-hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">
+                        <Avatar className="h-24 w-24 border-[6px] border-background bg-background shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20 group-hover:ring-8 group-hover:ring-primary/10 group-hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">
                             {imageUrl && <AvatarImage src={imageUrl} alt={program.name} className="object-cover" />}
                             <AvatarFallback className="text-3xl font-black bg-gradient-to-br from-primary/20 to-primary/5 text-primary backdrop-blur-md">
                                 {getInitials(program.name)}
@@ -120,7 +120,7 @@ const ProgramCardComponent = ({ program, index = 0, pinnedMessage }: ProgramCard
                         </div>
                         <Link 
                             href={`/programs/${program.slug}`}
-                            className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all group/btn"
+                            className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.35)] transition-all group/btn"
                         >
                             <ChevronLeft className="w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
                         </Link>

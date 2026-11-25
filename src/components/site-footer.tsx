@@ -10,7 +10,7 @@ import { Button } from "./ui/button";
 
 export function SiteFooter() {
   return (
-    <footer className="relative bg-black text-white py-24 overflow-hidden border-t border-white/10 mt-32">
+    <footer className="relative bg-black text-white py-20 overflow-hidden border-t border-white/10 mt-20">
       {/* Cinematic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full" />

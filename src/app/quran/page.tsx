@@ -3430,70 +3430,70 @@ export default function QuranPage() {
           )}
 
           {view === 'radio' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
               
               {/* Listening Analytics Header Dashboard */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" dir="rtl">
-                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04]">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-xl shrink-0 text-primary">
-                    ⏳
+                <div className="luxury-stat-card flex items-center gap-4 group">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0 text-primary transition-transform duration-300 group-hover:scale-110">
+                    <Clock className="w-5 h-5" />
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-white/40 block font-bold">إجمالي دقائق الاستماع</span>
-                    <span className="text-lg font-black text-white">{listeningMinutes} دقيقة</span>
+                    <span className="text-xs text-white/60 block font-bold">إجمالي دقائق الاستماع</span>
+                    <span className="text-xl font-black text-white">{listeningMinutes} دقيقة</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04]">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-xl shrink-0 text-emerald-400">
-                    ✔️
+                <div className="luxury-stat-card flex items-center gap-4 group">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0 text-emerald-400 transition-transform duration-300 group-hover:scale-110">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-white/40 block font-bold">الحلقات المكتملة إجمالياً</span>
-                    <span className="text-lg font-black text-white">{listenedEpisodeIds.length} حلقة</span>
+                    <span className="text-xs text-white/60 block font-bold">الحلقات المكتملة</span>
+                    <span className="text-xl font-black text-white">{listenedEpisodeIds.length} حلقة</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-3xl transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04] min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-xl shrink-0 text-amber-400">
-                    🔥
+                <div className="luxury-stat-card flex items-center gap-4 group min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0 text-amber-400 transition-transform duration-300 group-hover:scale-110">
+                    <Flame className="w-5 h-5" />
                   </div>
                   <div className="text-right min-w-0 flex-1">
-                    <span className="text-[10px] text-white/40 block font-bold">القناة الأكثر استماعاً</span>
-                    <span className="text-xs font-black text-white truncate block">{mostListenedChannel}</span>
+                    <span className="text-xs text-white/60 block font-bold">القناة الأكثر استماعاً</span>
+                    <span className="text-sm font-black text-white truncate block">{mostListenedChannel}</span>
                   </div>
                 </div>
               </div>
 
               {/* Top Banner Player (Now Playing) */}
-              <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-6 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300 hover:border-white/10">
+              <div className="luxury-glass rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group transition-all duration-300 hover:border-primary/25">
                 {/* Glowing ambient background based on selected station */}
                 <div
                   className={cn(
-                    "absolute -top-32 -right-32 w-96 h-96 blur-[120px] rounded-full opacity-20 transition-all duration-1000 pointer-events-none bg-gradient-to-br",
+                    "absolute -top-32 -right-32 w-96 h-96 blur-[120px] rounded-full opacity-25 transition-all duration-1000 pointer-events-none bg-gradient-to-br",
                     currentRadioStation ? currentRadioStation.color : "from-primary/30 to-transparent"
                   )}
                 />
 
-                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6" dir="rtl">
+                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8" dir="rtl">
                   {/* Left Column: Metadata & Vinyl & Play Button */}
-                  <div className="flex flex-col sm:flex-row items-center gap-6 lg:w-[55%] w-full">
-                    {/* Rotating Vinyl design (smaller for horizontal layout) */}
-                    <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
+                  <div className="flex flex-col sm:flex-row items-center gap-5 md:gap-6 lg:w-[55%] w-full">
+                    {/* Rotating Vinyl design */}
+                    <div className="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center shrink-0">
                       <div
                         className={cn(
-                          "absolute inset-0 rounded-full border border-white/5 bg-black/50 transition-all duration-[4s] shadow-2xl flex items-center justify-center",
+                          "absolute inset-0 rounded-full border border-white/10 bg-black/60 transition-all duration-[4s] shadow-2xl flex items-center justify-center",
                           isPlayingRadio && !isRadioBuffering ? "animate-spin" : ""
                         )}
                         style={{ animationDuration: '10s' }}
                       >
-                        <div className="absolute inset-1 rounded-full border border-dashed border-white/5" />
-                        <div className="absolute inset-2 rounded-full border border-white/5" />
-                        <div className="absolute inset-4 rounded-full border border-dashed border-white/5" />
-                        <div className="absolute inset-6 rounded-full border border-white/5" />
+                        <div className="absolute inset-1.5 rounded-full border border-dashed border-white/10" />
+                        <div className="absolute inset-3 rounded-full border border-white/10" />
+                        <div className="absolute inset-5 rounded-full border border-dashed border-white/10" />
+                        <div className="absolute inset-7 rounded-full border border-white/10" />
                       </div>
                       <div className={cn(
-                        "w-12 h-12 rounded-full bg-gradient-to-tr flex flex-col items-center justify-center border-[4px] border-black/90 shadow-2xl relative z-10 transition-all duration-700 overflow-hidden",
+                        "w-14 h-14 rounded-full bg-gradient-to-tr flex flex-col items-center justify-center border-[4px] border-black/90 shadow-2xl relative z-10 transition-all duration-700 overflow-hidden",
                         currentRadioStation ? currentRadioStation.color : "from-zinc-800 to-zinc-900"
                       )}>
                         {currentRadioStation && currentRadioStation.icon ? (
@@ -3504,44 +3504,45 @@ export default function QuranPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-xl">{currentRadioStation.icon}</span>
+                            <span className="text-2xl">{currentRadioStation.icon}</span>
                           )
                         ) : (
-                          <span className="text-xl">📻</span>
+                          <Radio className="w-6 h-6 text-primary" />
                         )}
                       </div>
                     </div>
 
                     {/* Info & Play controls */}
-                    <div className="flex-1 text-center sm:text-right space-y-2">
-                      <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[8px] font-black uppercase tracking-[0.25em] inline-flex items-center gap-1.5">
-                        <Radio className="w-3 h-3 animate-pulse" />
+                    <div className="flex-1 text-center sm:text-right space-y-2.5 min-w-0">
+                      <div className="px-3.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[11px] font-black inline-flex items-center gap-2">
+                        <span className={cn("w-2 h-2 rounded-full", isPlayingRadio ? "bg-emerald-400 animate-ping" : "bg-primary animate-pulse")} />
                         <span>إذاعة القرآن الكريم</span>
                       </div>
                       
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         {currentRadioStation ? (
                           <>
-                            <h3 className="text-base font-black text-white leading-tight">{currentRadioStation.name}</h3>
-                            <p className="text-white/40 text-[10px] font-semibold">{currentRadioStation.subtitle}</p>
+                            <h3 className="text-xl sm:text-2xl font-black text-white leading-snug truncate">{currentRadioStation.name}</h3>
+                            <p className="text-white/65 text-xs font-semibold truncate">{currentRadioStation.subtitle}</p>
                           </>
                         ) : (
                           <>
-                            <h3 className="text-base font-black text-white/40">بانتظار اختيار محطة</h3>
-                            <p className="text-white/20 text-[10px] font-medium">استمع بتلاوات وبث مباشر على مدار الساعة</p>
+                            <h3 className="text-xl sm:text-2xl font-black text-white/80">بانتظار اختيار محطة</h3>
+                            <p className="text-white/55 text-xs sm:text-sm font-medium">اختر من بين عشرات القراء وإذاعات البث المباشر على مدار الساعة</p>
                           </>
                         )}
                       </div>
 
                       {/* Play & Volume controls row */}
-                      <div className="flex items-center justify-center sm:justify-start gap-4 mt-2">
+                      <div className="flex items-center justify-center sm:justify-start gap-3 pt-1">
                         {currentRadioStation && (
                           <button
                             onClick={() => handlePlayRadio(currentRadioStation)}
                             className={cn(
-                              "w-11 h-11 rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shrink-0",
+                              "w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shrink-0 cursor-pointer",
                               isPlayingRadio && !isRadioBuffering ? "bg-white text-black hover:bg-white/90" : "bg-primary text-primary-foreground shadow-glow-primary"
                             )}
+                            aria-label={isPlayingRadio ? "إيقاف مؤقت" : "تشغيل"}
                           >
                             {isRadioBuffering ? (
                               <Loader2 className="w-5 h-5 animate-spin" />
@@ -3553,8 +3554,8 @@ export default function QuranPage() {
                           </button>
                         )}
 
-                        <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl w-full max-w-[150px]">
-                          <button onClick={() => setRadioVolume(radioVolume === 0 ? 0.8 : 0)} className="text-white/40 hover:text-white transition-colors shrink-0">
+                        <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 px-3.5 py-2 rounded-xl w-full max-w-[180px]">
+                          <button onClick={() => setRadioVolume(radioVolume === 0 ? 0.8 : 0)} className="text-white/60 hover:text-white transition-colors shrink-0 cursor-pointer" aria-label="كتم الصوت">
                             {radioVolume === 0 ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-primary" />}
                           </button>
                           <input
@@ -3564,7 +3565,7 @@ export default function QuranPage() {
                             step="0.05"
                             value={radioVolume}
                             onChange={(e) => setRadioVolume(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                            className="w-full h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-primary"
                           />
                         </div>
                       </div>
@@ -3573,10 +3574,10 @@ export default function QuranPage() {
 
                   {/* Center Column: Real-time Visualizer & Shortcuts */}
                   <div className="flex flex-col justify-center gap-3 lg:w-[45%] w-full">
-                    <div className="w-full h-12 relative overflow-hidden rounded-2xl border border-white/5 bg-black/40 group/viz">
+                    <div className="w-full h-16 relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 group/viz">
                       <canvas ref={isAmbientScreenSaver ? null : canvasRef} className="w-full h-full" />
                       
-                      <div className="absolute top-1.5 left-2 z-20 flex gap-1 bg-black/70 p-0.5 rounded-lg border border-white/10 opacity-0 group-hover/viz:opacity-100 transition-opacity">
+                      <div className="absolute top-2 left-2 z-20 flex gap-1 bg-black/75 backdrop-blur-md p-1 rounded-xl border border-white/10 opacity-80 group-hover/viz:opacity-100 transition-opacity">
                         {([
                           { id: 'columns', name: 'أعمدة' },
                           { id: 'waves', name: 'موجات' },
@@ -3586,8 +3587,8 @@ export default function QuranPage() {
                             key={style.id}
                             onClick={() => setVisualizerStyle(style.id)}
                             className={cn(
-                              "px-2 py-0.5 rounded text-[8px] font-black transition-all whitespace-nowrap",
-                              visualizerStyle === style.id ? "bg-primary text-black font-black" : "text-white/40 hover:text-white"
+                              "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all whitespace-nowrap cursor-pointer",
+                              visualizerStyle === style.id ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
                             )}
                           >
                             {style.name}
@@ -3596,22 +3597,22 @@ export default function QuranPage() {
                       </div>
 
                       {isRadioBuffering && (
-                        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 text-white/60 text-[10px] font-black backdrop-blur-[1px]">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/70 text-white/80 text-xs font-black backdrop-blur-sm">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
                           <span>جاري الاتصال بالبث...</span>
                         </div>
                       )}
                     </div>
 
                     {currentRadioStation && (
-                      <div className="grid grid-cols-4 gap-1.5 w-full">
+                      <div className="grid grid-cols-4 gap-2 w-full">
                         <button
                           onClick={() => setRadioQuality(prev => prev === 'high' ? 'low' : 'high')}
                           className={cn(
-                            "flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl border text-[8px] font-black transition-all active:scale-95",
+                            "flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-[10px] font-black transition-all active:scale-95 cursor-pointer",
                             radioQuality === 'high'
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : "bg-white/5 text-white/50 border-white/5 hover:bg-white/10"
+                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                              : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
                           )}
                           title="تحديد جودة البث للحفاظ على باقة الإنترنت"
                         >
@@ -3621,7 +3622,7 @@ export default function QuranPage() {
 
                         <button
                           onClick={() => setIsAmbientScreenSaver(true)}
-                          className="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl bg-white/5 text-white/60 border border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all active:scale-95"
+                          className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-white/5 text-white/75 border border-white/10 hover:bg-primary/15 hover:text-primary hover:border-primary/30 transition-all active:scale-95 text-[10px] font-black cursor-pointer"
                           title="تفعيل وضع ملء الشاشة الهادئ"
                         >
                           <span className="text-xs mb-0.5">🌙</span>
@@ -3631,10 +3632,10 @@ export default function QuranPage() {
                         <button
                           onClick={isRecording ? stopRecording : startRecording}
                           className={cn(
-                            "flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl border text-[8px] font-black transition-all active:scale-95",
+                            "flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-[10px] font-black transition-all active:scale-95 cursor-pointer",
                             isRecording
                               ? "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse"
-                              : "bg-white/5 text-white/60 border-white/5 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20"
+                              : "bg-white/5 text-white/75 border-white/10 hover:bg-rose-500/15 hover:text-rose-400 hover:border-rose-500/30"
                           )}
                           title="تسجيل مقطع صوتي من البث المباشر"
                         >
@@ -3650,10 +3651,10 @@ export default function QuranPage() {
                             setTimeout(() => setIsShareCopied(false), 2000);
                           }}
                           className={cn(
-                            "flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl border text-[8px] font-black transition-all active:scale-95",
+                            "flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-[10px] font-black transition-all active:scale-95 cursor-pointer",
                             isShareCopied
                               ? "bg-primary/20 text-primary border-primary/30"
-                              : "bg-white/5 text-white/60 border-white/5 hover:bg-white/10"
+                              : "bg-white/5 text-white/75 border-white/10 hover:bg-white/10"
                           )}
                           title="مشاركة رابط الإذاعة المباشر"
                         >
@@ -3692,24 +3693,30 @@ export default function QuranPage() {
                 {/* Stations List Grid Section (lg:col-span-2) */}
                 <div className="lg:col-span-2 space-y-6 flex flex-col">
                   {/* Search bar inside Radio View */}
-                  <div className="relative group">
-                    <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/30 group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      placeholder="ابحث عن محطة بث أو اسم قارئ..."
-                      value={radioSearchQuery}
-                      onChange={(e) => setRadioSearchQuery(e.target.value)}
-                      className="w-full h-16 bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-[1.5rem] ps-14 pe-6 text-sm text-white outline-none focus:border-primary/20 focus:bg-white/[0.04] transition-all"
-                    />
-                    {radioSearchQuery && (
-                      <button onClick={() => setRadioSearchQuery('')} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
-                        <X className="w-4.5 h-4.5" />
-                      </button>
-                    )}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative group flex-1">
+                      <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="ابحث عن محطة بث أو اسم قارئ..."
+                        value={radioSearchQuery}
+                        onChange={(e) => setRadioSearchQuery(e.target.value)}
+                        className="w-full h-12 luxury-glass rounded-2xl ps-11 pe-10 text-sm text-white placeholder:text-white/40 outline-none focus:border-primary/40 transition-all"
+                      />
+                      {radioSearchQuery && (
+                        <button onClick={() => setRadioSearchQuery('')} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer" aria-label="مسح البحث">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="px-4 py-2.5 rounded-2xl luxury-glass text-xs font-black text-white/70 flex items-center justify-center gap-2 shrink-0">
+                      <Radio className="w-3.5 h-3.5 text-primary" />
+                      <span>{filteredStations.length} محطة</span>
+                    </div>
                   </div>
 
                   {/* Category Selector Tabs */}
-                  <div className="flex flex-wrap gap-2 pb-2 overflow-x-auto no-scrollbar" dir="rtl">
+                  <div className="flex flex-wrap gap-2 pb-1" dir="rtl">
                     {[
                       { id: 'all', label: 'الكل 📻' },
                       { id: 'premium_reciters', label: 'كبار القرّاء 🎙️' },
@@ -3723,10 +3730,10 @@ export default function QuranPage() {
                         key={cat.id}
                         onClick={() => setRadioCategory(cat.id as any)}
                         className={cn(
-                          "px-4 py-2 rounded-xl text-xs font-black transition-all border whitespace-nowrap active:scale-95 backdrop-blur-md",
+                          "px-4 py-2 rounded-full text-xs font-black transition-all border whitespace-nowrap active:scale-95 backdrop-blur-md cursor-pointer",
                           radioCategory === cat.id
-                            ? "bg-primary text-primary-foreground border-primary shadow-glow-primary"
-                            : "bg-white/[0.01] text-white/50 border-white/5 hover:bg-white/5 hover:text-white"
+                            ? "bg-primary text-primary-foreground border-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.35)]"
+                            : "bg-white/[0.03] text-white/65 border-white/10 hover:bg-white/[0.08] hover:text-white"
                         )}
                       >
                         {cat.label}
@@ -4413,7 +4420,7 @@ export default function QuranPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pe-1 no-scrollbar" dir="rtl">
                       {filteredStations.map(station => {
                         const isCurrent = currentRadioStation?.id === station.id;
                         const isPlayingThis = isCurrent && isPlayingRadio;
@@ -4423,16 +4430,16 @@ export default function QuranPage() {
                             key={station.id}
                             onClick={() => handlePlayRadio(station)}
                             className={cn(
-                              "flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group shadow-lg",
+                              "flex items-center justify-between gap-3 p-3.5 rounded-2xl border cursor-pointer backdrop-blur-md transition-all duration-300 group",
                               isCurrent
-                                ? "bg-primary/10 border-primary/25 shadow-glow-primary/5"
-                                : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-primary/20"
+                                ? "bg-primary/15 border-primary/40 shadow-[0_8px_25px_-5px_rgba(var(--primary-rgb),0.25)]"
+                                : "bg-white/[0.02] border-white/10 hover:bg-white/[0.06] hover:border-primary/30 hover:-translate-y-0.5"
                             )}
                           >
                             {/* Icon */}
                             <div className={cn(
-                              "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden",
-                              isCurrent ? "bg-primary/20" : "bg-white/5"
+                              "w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden border border-white/10 transition-transform duration-300 group-hover:scale-105",
+                              isCurrent ? "bg-primary/25 border-primary/30" : "bg-white/5"
                             )}>
                               {station.icon && (station.icon.startsWith('http://') || station.icon.startsWith('https://')) ? (
                                 <img src={station.icon} alt={station.name} className="w-full h-full object-cover rounded-xl" />
@@ -4442,89 +4449,99 @@ export default function QuranPage() {
                             </div>
 
                             {/* Name */}
-                            <div className="flex-1 text-right">
+                            <div className="flex-1 text-right min-w-0">
                               <p className={cn(
-                                "font-bold text-sm leading-snug",
-                                isCurrent ? "text-primary" : "text-white/80 group-hover:text-white"
+                                "font-bold text-sm leading-snug truncate",
+                                isCurrent ? "text-primary" : "text-white/90 group-hover:text-white"
                               )}>
                                 {station.name}
                               </p>
-                              <p className={cn(
-                                "text-[10px] mt-0.5 font-semibold",
-                                isPlayingThis ? "text-emerald-400" : isCurrent && isRadioBuffering ? "text-amber-400" : "text-white/30"
-                              )}>
-                                {isPlayingThis ? "🟢 البث نشط" : isCurrent && isRadioBuffering ? "⏳ جاري التوصيل..." : "● بث مباشر"}
-                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full shrink-0",
+                                  isPlayingThis ? "bg-emerald-400 animate-ping" : isCurrent && isRadioBuffering ? "bg-amber-400 animate-pulse" : "bg-white/30"
+                                )} />
+                                <p className={cn(
+                                  "text-[11px] font-semibold truncate",
+                                  isPlayingThis ? "text-emerald-400" : isCurrent && isRadioBuffering ? "text-amber-400" : "text-white/50"
+                                )}>
+                                  {isPlayingThis ? "البث نشط الآن" : isCurrent && isRadioBuffering ? "جاري التوصيل..." : "بث مباشر"}
+                                </p>
+                              </div>
                             </div>
 
-                            {/* Favorite */}
-                            <button
-                              onClick={(e) => toggleFavoriteRadio(station.id, e)}
-                              className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-white/5 transition-all z-10 shrink-0 group/fav"
-                              title="إضافة إلى المفضلة"
-                            >
-                              <Heart
-                                className={cn(
-                                  "w-6 h-6 transition-all duration-300 transform group-hover/fav:scale-110",
-                                  isFav
-                                    ? "text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]"
-                                    : "text-white/40 group-hover:text-white/80"
-                                )}
-                              />
-                            </button>
-
-                            {/* Custom Delete Button */}
-                            {station.id.startsWith('custom_') && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {/* Favorite */}
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (confirm('هل أنت متأكد من حذف هذه الإذاعة المخصصة؟')) {
-                                    setCustomRadioStations(prev => {
-                                      const next = prev.filter(s => s.id !== station.id);
-                                      localStorage.setItem('quran_custom_radios', JSON.stringify(next));
-                                      return next;
-                                    });
-                                    if (currentRadioStation?.id === station.id) {
-                                      stopRadio();
-                                    }
-                                  }
-                                }}
-                                className="w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-rose-500/10 text-rose-400/60 hover:text-rose-400 transition-all z-10 shrink-0 group/del"
-                                title="حذف الإذاعة"
+                                onClick={(e) => toggleFavoriteRadio(station.id, e)}
+                                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all z-10 shrink-0 group/fav cursor-pointer"
+                                title="إضافة إلى المفضلة"
+                                aria-label="إضافة إلى المفضلة"
                               >
-                                <Trash2 className="w-5 h-5 transition-transform group-hover/del:scale-110" />
+                                <Heart
+                                  className={cn(
+                                    "w-4 h-4 transition-all duration-300 transform group-hover/fav:scale-110",
+                                    isFav
+                                      ? "text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                                      : "text-white/45 group-hover:text-white/85"
+                                  )}
+                                />
                               </button>
-                            )}
 
-                            {/* Play Button */}
-                            <div className={cn(
-                              "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300",
-                              isCurrent
-                                ? "bg-primary text-white shadow-glow-primary scale-105"
-                                : "bg-white/5 text-white/60 group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-105"
-                            )}>
-                              {isPlayingThis
-                                ? <Pause className="w-5 h-5 fill-current" />
-                                : <Play className="w-5 h-5 fill-current translate-x-[1.5px]" />
-                              }
+                              {/* Custom Delete Button */}
+                              {station.id.startsWith('custom_') && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('هل أنت متأكد من حذف هذه الإذاعة المخصصة؟')) {
+                                      setCustomRadioStations(prev => {
+                                        const next = prev.filter(s => s.id !== station.id);
+                                        localStorage.setItem('quran_custom_radios', JSON.stringify(next));
+                                        return next;
+                                      });
+                                      if (currentRadioStation?.id === station.id) {
+                                        stopRadio();
+                                      }
+                                    }
+                                  }}
+                                  className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-rose-500/15 text-rose-400/70 hover:text-rose-400 transition-all z-10 shrink-0 group/del cursor-pointer"
+                                  title="حذف الإذاعة"
+                                  aria-label="حذف الإذاعة"
+                                >
+                                  <Trash2 className="w-4 h-4 transition-transform group-hover/del:scale-110" />
+                                </button>
+                              )}
+
+                              {/* Play Button */}
+                              <div className={cn(
+                                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
+                                isCurrent
+                                  ? "bg-primary text-primary-foreground shadow-glow-primary scale-105"
+                                  : "bg-white/5 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105"
+                              )}>
+                                {isPlayingThis
+                                  ? <Pause className="w-4 h-4 fill-current" />
+                                  : <Play className="w-4 h-4 fill-current translate-x-[1px]" />
+                                }
+                              </div>
                             </div>
                           </div>
                         );
                       })}
 
                     {isLoadingRadios && (
-                      <div className="col-span-full py-20 text-center text-white/30">
+                      <div className="col-span-full py-20 text-center text-white/55">
                         <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin text-primary" />
                         <p className="text-sm font-bold">جاري تحميل محطات الإذاعة...</p>
-                        <p className="text-[10px] text-white/20 mt-1">يتصل بـ mp3quran.net</p>
+                        <p className="text-xs text-white/40 mt-1">يتصل بـ mp3quran.net</p>
                       </div>
                     )}
 
                     {!isLoadingRadios && filteredStations.length === 0 && (
-                      <div className="col-span-full py-20 text-center text-white/20">
-                        <Radio className="w-12 h-12 mx-auto opacity-15 mb-4 animate-pulse" />
+                      <div className="col-span-full py-20 text-center text-white/50">
+                        <Radio className="w-12 h-12 mx-auto opacity-30 mb-4 animate-pulse" />
                         <p className="text-sm font-bold">لم نجد محطة بث تطابق بحثك</p>
-                        <p className="text-[10px] text-white/10 mt-1">تأكد من إدخال اسم القارئ بشكل صحيح</p>
+                        <p className="text-xs text-white/35 mt-1">تأكد من إدخال اسم القارئ بشكل صحيح</p>
                       </div>
                     )}
                   </div>
@@ -4532,45 +4549,45 @@ export default function QuranPage() {
               </div>
 
                 {/* Sidebar (lg:col-span-1): Analytics & Ambient focus mixer */}
-                <div className="lg:col-span-1 space-y-6 flex flex-col">
+                <div className="lg:col-span-1 space-y-5 flex flex-col">
                   {/* Playback Tools Card (Sleep Timer & Alarm) */}
-                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-6 space-y-5 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
-                    <div className="flex items-center justify-between pb-3 border-b border-white/5">
-                      <h4 className="text-xs font-black text-white flex items-center gap-2">
+                  <div className="luxury-glass rounded-[2rem] p-6 space-y-5 text-right transition-all duration-300 hover:border-white/15" dir="rtl">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <h4 className="text-sm font-black text-white flex items-center gap-2">
                         <span>⏰ مؤقت النوم والتشغيل التلقائي</span>
                       </h4>
-                      <span className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg">الأدوات</span>
+                      <span className="text-[10px] font-bold text-primary bg-primary/15 border border-primary/25 px-2.5 py-0.5 rounded-full">الأدوات</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       {/* Sleep Timer */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black text-white/45 uppercase tracking-widest">⏳ مؤقت النوم</span>
-                          {sleepTimerMinutes && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">نشط</span>}
+                          <span className="text-xs font-black text-white/75">⏳ مؤقت النوم</span>
+                          {sleepTimerMinutes && <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full">نشط</span>}
                         </div>
 
                         {sleepTimerMinutes ? (
                           <div className="flex flex-col items-center justify-center py-2">
-                            <span className="text-2xl font-black text-primary tracking-wider font-mono">
+                            <span className="text-3xl font-black text-primary tracking-wider font-mono">
                               {Math.floor(sleepTimerRemaining / 60)}:{String(sleepTimerRemaining % 60).padStart(2, '0')}
                             </span>
                             <button
                               onClick={cancelSleepTimer}
-                              className="mt-2 text-[9px] font-bold text-rose-400 hover:text-rose-300 transition-colors"
+                              className="mt-2 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
                             >
                               إلغاء المؤقت ✖
                             </button>
                           </div>
                         ) : (
-                          <div className="space-y-3">
+                          <div className="space-y-2.5">
                             <div className="flex gap-2">
                               <input
                                 type="number"
                                 placeholder="دقائق"
                                 value={customTimerMinutes}
                                 onChange={(e) => setCustomTimerMinutes(e.target.value)}
-                                className="w-16 bg-black/40 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-primary/45 text-center"
+                                className="w-20 bg-black/40 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white placeholder:text-white/35 outline-none focus:border-primary/45 text-center"
                                 min="1"
                               />
                               <button
@@ -4581,17 +4598,17 @@ export default function QuranPage() {
                                     setCustomTimerMinutes('');
                                   }
                                 }}
-                                className="flex-1 py-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/95 transition-all shadow-glow-primary"
+                                className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:bg-primary/90 transition-all shadow-glow-primary cursor-pointer"
                               >
                                 تفعيل ⚡
                               </button>
                             </div>
-                            <div className="grid grid-cols-4 gap-1">
+                            <div className="grid grid-cols-4 gap-1.5">
                               {[15, 30, 45, 60].map(mins => (
                                 <button
                                   key={mins}
                                   onClick={() => startSleepTimer(mins)}
-                                  className="py-1 rounded-lg bg-white/5 text-white/50 text-[10px] font-black hover:text-primary transition-all border border-white/5"
+                                  className="py-1.5 rounded-xl bg-white/5 text-white/75 text-xs font-black hover:text-primary hover:bg-primary/10 transition-all border border-white/10 cursor-pointer"
                                 >
                                   {mins}د
                                 </button>
@@ -4602,10 +4619,10 @@ export default function QuranPage() {
                       </div>
 
                       {/* Scheduled Alarm */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black text-white/45 uppercase tracking-widest">🔔 تشغيل تلقائي</span>
-                          {isAlarmEnabled && <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">مفعل</span>}
+                          <span className="text-xs font-black text-white/75">🔔 تشغيل تلقائي</span>
+                          {isAlarmEnabled && <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full">مفعل</span>}
                         </div>
 
                         <div className="space-y-2">
@@ -4617,7 +4634,7 @@ export default function QuranPage() {
                                 setAlarmTime(e.target.value);
                                 localStorage.setItem('quran_radio_alarm_time', e.target.value);
                               }}
-                              className="w-20 bg-black/40 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white outline-none focus:border-primary/45 text-center font-mono"
+                              className="w-28 bg-black/40 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white outline-none focus:border-primary/45 text-center font-mono"
                             />
                             <button
                               onClick={() => {
@@ -4630,14 +4647,14 @@ export default function QuranPage() {
                                 }
                               }}
                               className={cn(
-                                "flex-1 py-1.5 rounded-xl font-black text-xs transition-all",
-                                isAlarmEnabled ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "bg-primary text-primary-foreground hover:bg-primary/95"
+                                "flex-1 py-2 rounded-xl font-black text-xs transition-all cursor-pointer",
+                                isAlarmEnabled ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "bg-primary text-primary-foreground hover:bg-primary/90"
                               )}
                             >
                               {isAlarmEnabled ? "إلغاء" : "جدولة"}
                             </button>
                           </div>
-                          <p className="text-[9px] text-white/30 text-center leading-tight">
+                          <p className="text-[11px] text-white/55 text-center leading-tight">
                             {isAlarmEnabled ? `يعمل تلقائياً الساعة ${alarmTime}` : "جدول موعد لتشغيل الإذاعة تلقائياً"}
                           </p>
                         </div>
@@ -4645,64 +4662,62 @@ export default function QuranPage() {
                     </div>
                   </div>
                   {/* Listening Analytics Dashboard Card */}
-                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-8 space-y-6 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
-                    <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                  <div className="luxury-glass rounded-[2rem] p-6 space-y-5 text-right transition-all duration-300 hover:border-white/15" dir="rtl">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
                       <h4 className="text-sm font-black text-white flex items-center gap-2">
-                        <span>📊 إحصائيات الاستماع الشخصية</span>
+                        <span>📊 الهدف اليومي والحسنات</span>
                       </h4>
-                      <span className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg">تحديث مباشر</span>
+                      <span className="text-[10px] font-bold text-primary bg-primary/15 border border-primary/25 px-2.5 py-0.5 rounded-full">تحديث مباشر</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 text-center">
-                        <span className="text-2xl block mb-1">⏳</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 text-center">
                         <span className="text-xl font-black text-white block">{listeningMinutes}</span>
-                        <span className="text-[9px] text-white/30 font-bold block mt-1">دقائق الاستماع</span>
+                        <span className="text-[11px] text-white/60 font-bold block mt-1">دقائق الاستماع</span>
                       </div>
-                      <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 text-center">
-                        <span className="text-2xl block mb-1">📿</span>
+                      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 text-center">
                         <span className="text-xl font-black text-emerald-400 block">+{listeningMinutes * 10}</span>
-                        <span className="text-[9px] text-white/30 font-bold block mt-1">حسنات تقديرية</span>
+                        <span className="text-[11px] text-white/60 font-bold block mt-1">حسنات تقديرية</span>
                       </div>
                     </div>
 
-                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-2">
-                      <div className="flex justify-between text-[10px] text-white/40 font-bold">
+                    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 space-y-2.5">
+                      <div className="flex justify-between text-xs text-white/70 font-bold">
                         <span>الهدف اليومي: 30 دقيقة</span>
-                        <span>{Math.min(100, Math.round((listeningMinutes / 30) * 100))}%</span>
+                        <span className="text-primary">{Math.min(100, Math.round((listeningMinutes / 30) * 100))}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-500 rounded-full"
                           style={{ width: `${Math.min(100, (listeningMinutes / 30) * 100)}%` }}
                         />
                       </div>
-                      <p className="text-[9px] text-white/30 text-center font-semibold pt-1">
+                      <p className="text-[11px] text-white/55 text-center font-semibold pt-0.5">
                         {listeningMinutes >= 30 ? "🎉 أحسنت! لقد أكملت هدف الاستماع اليومي." : "استمر في الاستماع لتصل إلى هدفك اليومي!"}
                       </p>
                     </div>
                   </div>
 
                   {/* Ambient Focus Sound Mixer Card */}
-                  <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] p-8 space-y-6 shadow-2xl text-right transition-all duration-300 hover:border-white/10" dir="rtl">
-                    <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                  <div className="luxury-glass rounded-[2rem] p-6 space-y-5 text-right transition-all duration-300 hover:border-white/15" dir="rtl">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
                       <h4 className="text-sm font-black text-white flex items-center gap-2">
                         <span>🌧️ دمج الأصوات الإيمانية المهدئة</span>
                       </h4>
                       {activeAmbient && (
                         <button
                           onClick={() => setActiveAmbient(null)}
-                          className="text-[10px] text-rose-400 font-bold hover:text-rose-300"
+                          className="text-xs text-rose-400 font-bold hover:text-rose-300 cursor-pointer"
                         >
-                          إيقاف دمج الصوت
+                          إيقاف الصوت
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-white/40 leading-relaxed">
+                    <p className="text-xs text-white/60 leading-relaxed">
                       اختر مؤثراً صوتياً طبيعياً لدمجه وتشغيله بهدوء في الخلفية أثناء استماعك للقرآن الكريم:
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {AMBIENT_SOUNDS.map(s => {
                         const isActive = activeAmbient === s.id;
                         return (
@@ -4710,10 +4725,10 @@ export default function QuranPage() {
                             key={s.id}
                             onClick={() => setActiveAmbient(isActive ? null : s.id)}
                             className={cn(
-                              "p-4 rounded-2xl text-xs font-black text-right transition-all flex items-center justify-between border active:scale-95 backdrop-blur-md",
+                              "p-3.5 rounded-2xl text-xs font-black text-right transition-all flex items-center justify-between border active:scale-95 backdrop-blur-md cursor-pointer",
                               isActive
-                                ? "bg-primary/10 border-primary/25 text-primary font-bold shadow-sm"
-                                : "bg-white/[0.01] border-white/5 text-white/50 hover:bg-white/5 hover:text-white"
+                                ? "bg-primary/15 border-primary/40 text-primary font-bold shadow-sm"
+                                : "bg-white/[0.02] border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
                             )}
                           >
                             <span>{s.name}</span>
@@ -4725,9 +4740,9 @@ export default function QuranPage() {
 
                     {activeAmbient && (
                       <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
-                        <div className="flex justify-between items-center text-[10px] font-black text-white/30">
+                        <div className="flex justify-between items-center text-xs font-black text-white/60">
                           <span>حجم صوت الطبيعة المدمج</span>
-                          <span>{Math.round(ambientVolume * 100)}%</span>
+                          <span className="text-primary">{Math.round(ambientVolume * 100)}%</span>
                         </div>
                         <input
                           type="range"
@@ -4736,7 +4751,7 @@ export default function QuranPage() {
                           step="0.05"
                           value={ambientVolume}
                           onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
-                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                          className="w-full h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                       </div>
                     )}
