@@ -28,55 +28,6 @@ export const gradientPresets: GradientPreset[] = [
   { name: "Cyberpunk", value: "cyberpunk", colors: ["320 100% 60%", "280 90% 60%", "190 90% 50%", "250 80% 65%"] },
 ];
 
-export type BackgroundEffect = 'none' | 'particles' | 'liquid-image';
-
-export const liquidImagePresets = {
-  images: [
-    {
-      name: 'المسجد الأقصى - القدس',
-      src: '/palestine_gallery_jerusalem_old_city.png',
-      alt: 'القدس القديمة ومسجد قبة الصخرة'
-    },
-    {
-      name: 'غروب الشمس في غزة',
-      src: '/palestine_gallery_gaza_sunset.png',
-      alt: 'غروب الشمس الجميل على ساحل غزة'
-    },
-    {
-      name: 'مسجد المدينة المنورة القديم',
-      src: '/madinah_early_mosque_cinematic_1777413331481.png',
-      alt: 'رسم سينمائي للمسجد النبوي في المدينة المنورة'
-    },
-    {
-      name: 'أشجار الزيتون الفلسطينية',
-      src: '/palestine_landscape_olive_trees.png',
-      alt: 'شجر الزيتون المبارك في تلال فلسطين'
-    },
-    {
-      name: 'نقوش هندسية إسلامية ذهبية',
-      src: '/islamic_geometric_pattern_gold_cinematic_1777414372644.png',
-      alt: 'فن الزخرفة الإسلامية باللون الذهبي'
-    }
-  ],
-  videos: [
-    {
-      name: 'تموجات الألوان التجريدية',
-      src: 'https://framerusercontent.com/assets/MLWPbW1dUQawJLhhun3dBwpgJak.mp4'
-    },
-    {
-      name: 'حبر سائل متدفق',
-      src: 'https://assets.mixkit.co/videos/preview/mixkit-liquid-ink-swirling-underwater-43187-large.mp4'
-    }
-  ]
-};
-
-export type ParticleSettings = {
-  interaction: boolean;
-  count: number;
-  speed: number;
-  lineDistance: number;
-};
-
 type AppearanceContextType = {
   font: string;
   setFont: (font: string) => void;
@@ -86,24 +37,8 @@ type AppearanceContextType = {
   setBackground: (background: BackgroundState | null) => void;
   isBackgroundShown: boolean;
   toggleBackground: (shown: boolean) => void;
-  backgroundEffect: BackgroundEffect;
-  setBackgroundEffect: (effect: BackgroundEffect) => void;
-  liquidImageSourceType: 'image' | 'video';
-  setLiquidImageSourceType: (type: 'image' | 'video') => void;
-  liquidImageImage: string;
-  setLiquidImageImage: (image: string) => void;
-  liquidImageVideo: string;
-  setLiquidImageVideo: (video: string) => void;
-  liquidImageStrength: number;
-  setLiquidImageStrength: (strength: number) => void;
-  liquidImageSpeed: number;
-  setLiquidImageSpeed: (speed: number) => void;
   gradientPreset: string;
   setGradientPreset: (preset: string) => void;
-  particleColor: string;
-  setParticleColor: (color: string) => void;
-  particleSettings: ParticleSettings;
-  setParticleSettings: (settings: Partial<ParticleSettings>) => void;
   aiApiKey: string | null;
   setAiApiKey: (key: string | null) => void;
   aiModel: string;
@@ -151,19 +86,10 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [language, setLanguageState] = useState('ar');
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
   const [isBackgroundShown, setIsBackgroundShown] = useState(true);
-  const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>('none');
   const [gradientPreset, setGradientPresetState] = useState<string>('cinematic-blue');
-  const [particleColor, setParticleColor] = useState('#FFFFFF');
   const [aiApiKey, setAiApiKeyState] = useState<string | null>(null);
   const [aiModel, setAiModelState] = useState<string>('gemini-4-hydrogen');
   const [showChatbot, setShowChatbotState] = useState<boolean>(true);
-  
-  const [particleSettings, setParticleSettingsState] = useState<ParticleSettings>({
-    interaction: true,
-    count: 80,
-    speed: 0.3,
-    lineDistance: 120,
-  });
 
   const [customColors, setCustomColorsState] = useState<[string, string, string, string]>(["217 91% 60%", "240 80% 65%", "270 75% 62%", "200 85% 58%"]);
   const [auroraSpeed, setAuroraSpeedState] = useState(1);
@@ -172,12 +98,6 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
   const [auroraChaos, setAuroraChaosState] = useState(1);
   const [auroraSaturation, setAuroraSaturationState] = useState(100);
   const [auroraGrain, setAuroraGrainState] = useState(0.03);
-
-  const [liquidImageSourceType, setLiquidImageSourceTypeState] = useState<'image' | 'video'>('image');
-  const [liquidImageImage, setLiquidImageImageState] = useState<string>('/palestine_gallery_jerusalem_old_city.png');
-  const [liquidImageVideo, setLiquidImageVideoState] = useState<string>('https://framerusercontent.com/assets/MLWPbW1dUQawJLhhun3dBwpgJak.mp4');
-  const [liquidImageStrength, setLiquidImageStrengthState] = useState<number>(0.12);
-  const [liquidImageSpeed, setLiquidImageSpeedState] = useState<number>(0.15);
 
   const applyGradientPreset = useCallback((presetValue: string) => {
     const preset = gradientPresets.find(p => p.value === presetValue);
@@ -253,31 +173,6 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     document.documentElement.style.setProperty('--aurora-grain', grain.toString());
   }, []);
 
-  const setLiquidImageSourceType = useCallback((type: 'image' | 'video') => {
-    setLiquidImageSourceTypeState(type);
-    localStorage.setItem("site-liquid-image-source-type", type);
-  }, []);
-
-  const setLiquidImageImage = useCallback((image: string) => {
-    setLiquidImageImageState(image);
-    localStorage.setItem("site-liquid-image-image", image);
-  }, []);
-
-  const setLiquidImageVideo = useCallback((video: string) => {
-    setLiquidImageVideoState(video);
-    localStorage.setItem("site-liquid-image-video", video);
-  }, []);
-
-  const setLiquidImageStrength = useCallback((strength: number) => {
-    setLiquidImageStrengthState(strength);
-    localStorage.setItem("site-liquid-image-strength", strength.toString());
-  }, []);
-
-  const setLiquidImageSpeed = useCallback((speed: number) => {
-    setLiquidImageSpeedState(speed);
-    localStorage.setItem("site-liquid-image-speed", speed.toString());
-  }, []);
-
   const applyBackground = useCallback(() => {
     const customBgImage = localStorage.getItem("site-background-image");
     const customBgColor = localStorage.getItem("site-background-color");
@@ -314,11 +209,6 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     document.body.style.backgroundImage = '';
     document.body.style.backgroundColor = '';
     document.body.classList.add('body-background');
-  }, []);
-
-  const setBackgroundEffect = useCallback((effect: BackgroundEffect) => {
-    setBackgroundEffectState(effect);
-    localStorage.setItem("site-background-effect", effect);
   }, []);
 
   const toggleBackground = useCallback((shown: boolean) => {
@@ -390,19 +280,6 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     }
   }, [isBackgroundShown, toggleBackground, applyBackground]);
 
-  const handleSetParticleColor = useCallback((color: string) => {
-    setParticleColor(color);
-    localStorage.setItem("site-particle-color", color);
-  }, []);
-  
-  const setParticleSettings = useCallback((newSettings: Partial<ParticleSettings>) => {
-    setParticleSettingsState(prev => {
-        const updated = {...prev, ...newSettings};
-        localStorage.setItem("site-particle-settings", JSON.stringify(updated));
-        return updated;
-    });
-  }, []);
-
   useEffect(() => {
     const allFontClasses = fonts.map(f => f.value);
     const storedFont = localStorage.getItem("site-font");
@@ -443,55 +320,11 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     } else {
       clearBackgroundStyles();
     }
-    
-    const storedEffect = localStorage.getItem("site-background-effect") as BackgroundEffect | null;
-    if (storedEffect && ['none', 'particles', 'liquid-image'].includes(storedEffect)) {
-      setBackgroundEffectState(storedEffect);
-    } else {
-        setBackgroundEffectState('none');
-    }
-
-    const storedLiquidSourceType = localStorage.getItem("site-liquid-image-source-type") as 'image' | 'video' | null;
-    if (storedLiquidSourceType) {
-      setLiquidImageSourceTypeState(storedLiquidSourceType);
-    }
-
-    const storedLiquidImage = localStorage.getItem("site-liquid-image-image");
-    if (storedLiquidImage) {
-      setLiquidImageImageState(storedLiquidImage);
-    }
-
-    const storedLiquidVideo = localStorage.getItem("site-liquid-image-video");
-    if (storedLiquidVideo) {
-      setLiquidImageVideoState(storedLiquidVideo);
-    }
-
-    const storedLiquidStrength = localStorage.getItem("site-liquid-image-strength");
-    if (storedLiquidStrength) {
-      setLiquidImageStrengthState(parseFloat(storedLiquidStrength));
-    }
-
-    const storedLiquidSpeed = localStorage.getItem("site-liquid-image-speed");
-    if (storedLiquidSpeed) {
-      setLiquidImageSpeedState(parseFloat(storedLiquidSpeed));
-    }
 
     const storedGradient = localStorage.getItem("site-gradient-preset");
     if (storedGradient) {
       setGradientPresetState(storedGradient);
       applyGradientPreset(storedGradient);
-    }
-
-    const storedParticleColor = localStorage.getItem("site-particle-color");
-    if (storedParticleColor) {
-      setParticleColor(storedParticleColor);
-    }
-
-    const storedParticleSettings = localStorage.getItem("site-particle-settings");
-    if (storedParticleSettings) {
-      try {
-        setParticleSettingsState(prev => ({...prev, ...JSON.parse(storedParticleSettings)}));
-      } catch (e) { console.error("Failed to parse particle settings", e) }
     }
 
     const storedCustomColors = localStorage.getItem("site-custom-colors");
@@ -561,14 +394,8 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     setBackground: handleSetBackground,
     isBackgroundShown,
     toggleBackground,
-    backgroundEffect,
-    setBackgroundEffect,
     gradientPreset,
     setGradientPreset,
-    particleColor,
-    setParticleColor: handleSetParticleColor,
-    particleSettings,
-    setParticleSettings,
     aiApiKey,
     setAiApiKey,
     aiModel,
@@ -594,17 +421,7 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     auroraSaturation,
     setAuroraSaturation,
     auroraGrain,
-    setAuroraGrain,
-    liquidImageSourceType,
-    setLiquidImageSourceType,
-    liquidImageImage,
-    setLiquidImageImage,
-    liquidImageVideo,
-    setLiquidImageVideo,
-    liquidImageStrength,
-    setLiquidImageStrength,
-    liquidImageSpeed,
-    setLiquidImageSpeed
+    setAuroraGrain
   };
 
   return (

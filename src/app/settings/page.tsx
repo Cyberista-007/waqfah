@@ -73,7 +73,7 @@ import {
 } from '@/components/ui/dialog';
 import { ThemeSwitcherDialog, themes } from '@/components/theme-switcher';
 import { FontSwitcherDialog } from '@/components/font-switcher';
-import { useAppearance, BackgroundEffect, ParticleSettings, gradientPresets, liquidImagePresets } from '@/components/appearance-provider';
+import { useAppearance, gradientPresets } from '@/components/appearance-provider';
 import { PatternSwitcherDialog } from '@/components/pattern-switcher';
 import { SolidColorSwitcherDialog } from '@/components/solid-color-switcher';
 import { Input } from '@/components/ui/input';
@@ -439,12 +439,6 @@ export default function SettingsPage() {
     const { 
         isBackgroundShown, 
         toggleBackground, 
-        particleColor, 
-        setParticleColor,
-        backgroundEffect,
-        setBackgroundEffect,
-        particleSettings,
-        setParticleSettings,
         language,
         aiApiKey,
         setAiApiKey,
@@ -467,17 +461,7 @@ export default function SettingsPage() {
         auroraSaturation,
         setAuroraSaturation,
         auroraGrain,
-        setAuroraGrain,
-        liquidImageSourceType,
-        setLiquidImageSourceType,
-        liquidImageImage,
-        setLiquidImageImage,
-        liquidImageVideo,
-        setLiquidImageVideo,
-        liquidImageStrength,
-        setLiquidImageStrength,
-        liquidImageSpeed,
-        setLiquidImageSpeed
+        setAuroraGrain
     } = useAppearance();
 
     const [view, setView] = useState<'main' | 'notifications' | 'newEpisodes' | 'storage'>('main');
@@ -743,208 +727,6 @@ export default function SettingsPage() {
                 />
             </div>
         </div>
-        
-        <SectionTitle title="المؤثرات الخلفية" />
-        <div className="bg-card rounded-xl p-4 space-y-4">
-            <div>
-                <Label htmlFor="bg-effect-select">تأثير الخلفية</Label>
-                <Select value={backgroundEffect} onValueChange={(value) => setBackgroundEffect(value as 'none' | 'particles' | 'liquid-image')}>
-                    <SelectTrigger id="bg-effect-select">
-                        <SelectValue placeholder="اختر تأثيرًا..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">بدون تأثير</SelectItem>
-                        <SelectItem value="particles">جزيئات متفاعلة</SelectItem>
-                        <SelectItem value="liquid-image">خلفية مائية تفاعلية WebGL</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {backgroundEffect === 'particles' && (
-                <div className="space-y-4 pt-4 border-t">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="particle-interaction" className="flex items-center gap-2">تفاعل مع الفأرة</Label>
-                        <Switch 
-                            id="particle-interaction" 
-                            checked={particleSettings.interaction}
-                            onCheckedChange={(checked) => setParticleSettings({ interaction: checked })}
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="particle-color-picker">لون الجزيئات</Label>
-                         <div className="flex items-center gap-2">
-                             <Input 
-                                id="particle-color-picker" 
-                                type="color"
-                                value={particleColor}
-                                onChange={(e) => setParticleColor(e.target.value)}
-                                className="p-1 h-10 w-14 cursor-pointer"
-                                aria-label="Color picker"
-                            />
-                            <Input 
-                                id="particle-color-text" 
-                                type="text"
-                                value={particleColor}
-                                onChange={(e) => setParticleColor(e.target.value)}
-                                aria-label="Hex color code"
-                            />
-                         </div>
-                    </div>
-                     <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <Label>الكثافة</Label>
-                            <span className="text-sm text-muted-foreground">{particleSettings.count}</span>
-                        </div>
-                        <Slider 
-                            value={[particleSettings.count]}
-                            max={300}
-                            step={10}
-                            onValueChange={([value]) => setParticleSettings({ count: value })}
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <Label>السرعة</Label>
-                            <span className="text-sm text-muted-foreground">{particleSettings.speed.toFixed(1)}</span>
-                        </div>
-                        <Slider 
-                            value={[particleSettings.speed]}
-                            max={2}
-                            step={0.1}
-                            onValueChange={([value]) => setParticleSettings({ speed: value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <Label>مسافة الربط</Label>
-                            <span className="text-sm text-muted-foreground">{particleSettings.lineDistance}</span>
-                        </div>
-                        <Slider 
-                            value={[particleSettings.lineDistance]}
-                            max={300}
-                            step={10}
-                            onValueChange={([value]) => setParticleSettings({ lineDistance: value })}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {backgroundEffect === 'liquid-image' && (
-                <div className="space-y-6 pt-4 border-t border-white/5">
-                    {/* Source Type Selector */}
-                    <div className="space-y-2">
-                        <Label>نوع مصدر الخلفية</Label>
-                        <div className="grid grid-cols-2 gap-2 bg-white/5 p-1 rounded-xl border border-white/5">
-                            <Button 
-                                type="button"
-                                variant={liquidImageSourceType === 'image' ? 'default' : 'ghost'}
-                                onClick={() => setLiquidImageSourceType('image')}
-                                className={cn(
-                                    "py-2 h-9 rounded-lg text-xs font-bold transition-all",
-                                    liquidImageSourceType === 'image' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                                )}
-                            >
-                                <ImageIcon className="w-4 h-4 me-2" />
-                                <span>صورة</span>
-                            </Button>
-                            <Button 
-                                type="button"
-                                variant={liquidImageSourceType === 'video' ? 'default' : 'ghost'}
-                                onClick={() => setLiquidImageSourceType('video')}
-                                className={cn(
-                                    "py-2 h-9 rounded-lg text-xs font-bold transition-all",
-                                    liquidImageSourceType === 'video' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                                )}
-                            >
-                                <PlayCircle className="w-4 h-4 me-2" />
-                                <span>فيديو</span>
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Preset Picker */}
-                    <div className="space-y-2">
-                        <Label>المحتوى المختار</Label>
-                        {liquidImageSourceType === 'image' ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {liquidImagePresets.images.map((img, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => setLiquidImageImage(img.src)}
-                                        className={cn(
-                                            "flex flex-col gap-2 p-2 rounded-xl border text-right transition-all group overflow-hidden",
-                                            liquidImageImage === img.src ? 'bg-primary/10 border-primary shadow-lg' : 'bg-white/[0.01] border-white/5 hover:bg-white/5'
-                                        )}
-                                    >
-                                        <div className="aspect-[16/9] w-full rounded-lg overflow-hidden relative border border-white/5">
-                                            <img 
-                                                src={img.src} 
-                                                alt={img.name} 
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        </div>
-                                        <span className="text-[10px] font-bold text-zinc-300 truncate w-full text-center block">{img.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {liquidImagePresets.videos.map((vid, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => setLiquidImageVideo(vid.src)}
-                                        className={cn(
-                                            "flex items-center gap-3 p-3 rounded-xl border text-right transition-all group",
-                                            liquidImageVideo === vid.src ? 'bg-primary/10 border-primary shadow-lg' : 'bg-white/[0.01] border-white/5 hover:bg-white/5'
-                                        )}
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center shrink-0">
-                                            <PlayCircle className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                                        </div>
-                                        <div className="flex flex-col gap-0.5 truncate text-start">
-                                            <span className="text-xs font-bold text-zinc-200 truncate">{vid.name}</span>
-                                            <span className="text-[9px] text-zinc-500 truncate">{vid.src}</span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Strength Slider */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <Label>قوة التموج (Strength)</Label>
-                            <span className="text-sm font-bold text-primary font-mono">{liquidImageStrength.toFixed(2)}</span>
-                        </div>
-                        <Slider 
-                            value={[liquidImageStrength]}
-                            min={0.01}
-                            max={0.40}
-                            step={0.01}
-                            onValueChange={([value]) => setLiquidImageStrength(value)}
-                        />
-                    </div>
-
-                    {/* Speed Slider */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <Label>سرعة الحركة (Speed)</Label>
-                            <span className="text-sm font-bold text-primary font-mono">{liquidImageSpeed.toFixed(2)}</span>
-                        </div>
-                        <Slider 
-                            value={[liquidImageSpeed]}
-                            min={0.01}
-                            max={0.80}
-                            step={0.01}
-                            onValueChange={([value]) => setLiquidImageSpeed(value)}
-                        />
-                    </div>
-                </div>
-            )}
-        </div>
-
-
 
         {user && (
           <>

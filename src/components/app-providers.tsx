@@ -33,11 +33,6 @@ const AuroraBackground = dynamic(
   { ssr: false }
 );
 
-const ParticlesBackground = dynamic(
-  () => import('./particles-background').then(mod => mod.ParticlesBackground),
-  { ssr: false }
-);
-
 
 export function AppProviders({
   children,

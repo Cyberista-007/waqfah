@@ -23,7 +23,6 @@ import {
   scheherazadeNew,
   mada
 } from './fonts';
-import { SiteBackground } from '@/components/site-background';
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
@@ -162,7 +161,6 @@ export default async function RootLayout({
                 <AnnouncementBar text={announcement.text} link={announcement.link} />
               </div>
             )}
-            <SiteBackground />
             <div className="relative flex min-h-screen flex-col">
               <div className="hide-in-reading-mode">
                 <SiteHeader />
