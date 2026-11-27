@@ -59,6 +59,7 @@ import { useAppearance } from '@/components/appearance-provider';
 import { useTranslation } from '@/lib/i18n';
 import { useCollection, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { LatestLecturesSection } from '@/components/latest-lectures-section';
 import {
   Accordion,
   AccordionContent,
@@ -650,7 +651,6 @@ export function HomePageClient({
   const [isHeroHovered, setIsHeroHovered] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [activeDirectoryTab, setActiveDirectoryTab] = useState<string>('worship');
-  const [selectedLectureProgram, setSelectedLectureProgram] = useState<string>('all');
   const [hijriDate, setHijriDate] = useState<string>('');
   const [timeGreeting, setTimeGreeting] = useState<string>('طاب يومك بالعلم والإيمان');
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -705,24 +705,6 @@ export function HomePageClient({
     });
     return { shorts: shortsArr, regularLectures: regularLecturesArr };
   }, [latestLectures]);
-
-  const lecturePrograms = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const lec of regularLectures) {
-      if (lec.programName) {
-        counts.set(lec.programName, (counts.get(lec.programName) || 0) + 1);
-      }
-    }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name]) => name);
-  }, [regularLectures]);
-
-  const filteredLectures = useMemo(() => {
-    if (selectedLectureProgram === 'all') return regularLectures;
-    return regularLectures.filter((lec) => lec.programName === selectedLectureProgram);
-  }, [regularLectures, selectedLectureProgram]);
 
   const featuredStrips = useMemo(() => {
     if (!latestLectures) return [];
@@ -1389,54 +1371,11 @@ export function HomePageClient({
             renderItem={(item, index) => <ProgramCard program={item} index={index} key={item.id} />}
           />
 
-          <PaginatedSection
-            title="أحدث المحاضرات"
-            items={filteredLectures}
-            viewAllHref="/lectures"
-            itemsPerPage={6}
-            gridClassName="md:grid-cols-2 lg:grid-cols-3"
-            filterBar={
-              lecturePrograms.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2" dir="rtl">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedLectureProgram('all')}
-                    className={cn(
-                      'px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border',
-                      selectedLectureProgram === 'all'
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : 'bg-card/50 text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
-                    )}
-                  >
-                    الكل ({regularLectures.length})
-                  </button>
-                  {lecturePrograms.map((progName) => (
-                    <button
-                      key={progName}
-                      type="button"
-                      onClick={() => setSelectedLectureProgram(progName)}
-                      className={cn(
-                        'px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border',
-                        selectedLectureProgram === progName
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                          : 'bg-card/50 text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
-                      )}
-                    >
-                      {progName}
-                    </button>
-                  ))}
-                </div>
-              ) : undefined
-            }
-            renderItem={(item, index) => (
-              <LectureCard
-                lecture={item}
-                index={index}
-                key={item.id}
-                listenHistory={listenHistory || undefined}
-                playlists={playlists || undefined}
-              />
-            )}
+          <LatestLecturesSection
+            programs={topPrograms}
+            regularLectures={regularLectures}
+            listenHistory={listenHistory}
+            playlists={playlists}
           />
 
           <PaginatedSection

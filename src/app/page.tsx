@@ -8,7 +8,7 @@ import React, { Suspense, useMemo } from 'react';
 
 function HomePageContent() {
   const { data: latestLectures } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12 });
-  const { data: topPrograms } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 12 });
+  const { data: topPrograms } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 50 });
   const { data: latestSeries } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 });
   const { data: homepageConfig } = useDoc<HomepageDetailedConfig>('settings/homepage');
 
