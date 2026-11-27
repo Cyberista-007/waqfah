@@ -655,7 +655,7 @@ function ImportPageComponent() {
                                     const res = await fetch('/api/cron/youtube-sync', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({}),
+                                        body: JSON.stringify({ renewWebSub: true }),
                                     });
                                     const result = await res.json();
                                     if (res.ok && result.success) {

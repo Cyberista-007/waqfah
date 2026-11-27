@@ -136,6 +136,8 @@ export type Program = Serializable<{
   rssFeedUrl?: string;
   createdAt: Timestamp;
   followerCount: number;
+  lastSyncedVideoId?: string;
+  websubSubscribedAt?: any;
 }>;
 
 export type LectureChapter = {
