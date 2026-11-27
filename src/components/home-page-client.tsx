@@ -34,6 +34,7 @@ import {
   Send,
   Shield,
   ShieldCheck,
+  Shuffle,
   Sparkles,
   Star,
   TriangleAlert,
@@ -42,6 +43,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/images';
+import { IMPACTFUL_HADITHS } from '@/data/impactful-hadiths';
 import type {
   HeroBanner,
   HomepageDetailedConfig,
@@ -503,6 +505,30 @@ function PaginatedSection({
   );
 }
 
+const FALLBACK_QUOTES: Inspiration[] = [
+  {
+    id: 'f1',
+    text: '"إنما الأعمالُ بالنياتِ، وإنما لكلِّ امرئٍ ما نَوى"',
+    author: 'عمر بن الخطاب',
+    title: 'رواه البخاري ومسلم',
+    type: 'hadith',
+  },
+  {
+    id: 'f2',
+    text: '"من سلَك طريقًا يلتَمِسُ فيه علمًا، سهَّل اللهُ له به طريقًا إلى الجنةِ"',
+    author: 'أبو هريرة',
+    title: 'رواه مسلم',
+    type: 'hadith',
+  },
+  {
+    id: 'f3',
+    text: '"العلمُ صيدٌ والكتابةُ قيدُه ... قَيِّدْ صيودَكَ بالحبالِ الواثقَة"',
+    author: 'الإمام الشافعي',
+    title: 'رحمه الله تعالى',
+    type: 'quote',
+  },
+];
+
 function InspirationSlider() {
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -512,31 +538,18 @@ function InspirationSlider() {
     once: true,
   });
 
-  const fallbackQuotes = [
-    {
-      id: 'f1',
-      text: '"إنما الأعمالُ بالنياتِ، وإنما لكلِّ امرئٍ ما نَوى"',
-      author: 'عمر بن الخطاب',
-      title: 'رواه البخاري ومسلم',
-      type: 'hadith',
-    },
-    {
-      id: 'f2',
-      text: '"من سلَك طريقًا يلتَمِسُ فيه علمًا، سهَّل اللهُ له به طريقًا إلى الجنةِ"',
-      author: 'أبو هريرة',
-      title: 'رواه مسلم',
-      type: 'hadith',
-    },
-    {
-      id: 'f3',
-      text: '"العلمُ صيدٌ والكتابةُ قيدُه ... قَيِّدْ صيودَكَ بالحبالِ الواثقَة"',
-      author: 'الإمام الشافعي',
-      title: 'رحمه الله تعالى',
-      type: 'quote',
-    },
-  ];
-
-  const quotes = remoteQuotes?.length ? remoteQuotes : (fallbackQuotes as any[]);
+  const quotes = useMemo(() => {
+    const merged = [...(remoteQuotes ?? []), ...FALLBACK_QUOTES, ...IMPACTFUL_HADITHS];
+    const seen = new Set<string>();
+    return merged.filter((item) => {
+      const normalized = item.text
+        .replace(/[\u064B-\u065F\u0670"'«».,،؛؟!…\s]+/g, '')
+        .trim();
+      if (!normalized || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  }, [remoteQuotes]);
 
   useEffect(() => {
     if (isHovered || !quotes.length) return;
@@ -548,8 +561,26 @@ function InspirationSlider() {
 
   if (!quotes.length) return null;
 
-  const current = quotes[index % quotes.length];
+  const activeIndex = index % quotes.length;
+  const current = quotes[activeIndex];
   const Icon = current.type === 'hadith' ? Sparkles : current.type === 'quote' ? Quote : BookOpen;
+
+  const maxVisibleDots = 7;
+  const dotWindowSize = Math.min(maxVisibleDots, quotes.length);
+  const halfWindow = Math.floor(dotWindowSize / 2);
+  let dotStart = Math.max(0, activeIndex - halfWindow);
+  if (dotStart + dotWindowSize > quotes.length) {
+    dotStart = Math.max(0, quotes.length - dotWindowSize);
+  }
+
+  const handleRandomQuote = () => {
+    if (quotes.length <= 1) return;
+    let next = activeIndex;
+    while (next === activeIndex) {
+      next = Math.floor(Math.random() * quotes.length);
+    }
+    setIndex(next);
+  };
 
   return (
     <motion.div
@@ -580,9 +611,11 @@ function InspirationSlider() {
             </p>
             <div className="flex items-center justify-center md:justify-start gap-4">
               <div className="h-[1px] w-8 bg-primary/50" />
-              <div className="flex items-baseline gap-2.5">
+              <div className="flex items-baseline gap-2.5 flex-wrap justify-center md:justify-start">
                 <span className="text-base md:text-lg text-primary font-black font-headline">{current.author}</span>
-                <span className="text-xs text-muted-foreground font-bold">{current.title}</span>
+                {current.title && (
+                  <span className="text-xs text-muted-foreground font-bold">{current.title}</span>
+                )}
               </div>
             </div>
           </motion.div>
@@ -594,7 +627,7 @@ function InspirationSlider() {
             size="icon"
             onClick={() => setIndex((prev) => (prev - 1 + quotes.length) % quotes.length)}
             aria-label="الاقتباس السابق"
-            className="rounded-full bg-white/5 hover:bg-white/10 h-10 w-10 border border-white/10"
+            className="rounded-full bg-muted/60 hover:bg-muted h-10 w-10 border border-border/80 text-foreground"
           >
             <ArrowLeft className="w-4 h-4 rotate-180" />
           </Button>
@@ -603,26 +636,46 @@ function InspirationSlider() {
             size="icon"
             onClick={() => setIndex((prev) => (prev + 1) % quotes.length)}
             aria-label="الاقتباس التالي"
-            className="rounded-full bg-white/5 hover:bg-white/10 h-10 w-10 border border-white/10"
+            className="rounded-full bg-muted/60 hover:bg-muted h-10 w-10 border border-border/80 text-foreground"
           >
             <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRandomQuote}
+            aria-label="حديث عشوائي"
+            title="حديث عشوائي"
+            className="rounded-full bg-muted/60 hover:bg-muted h-10 w-10 border border-border/80 text-foreground"
+          >
+            <Shuffle className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center gap-2">
-        {quotes.map((_: any, i: number) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setIndex(i)}
-            aria-label={`اقتباس ${i + 1}`}
-            className={cn(
-              'h-1.5 rounded-full transition-all duration-500',
-              i === index ? 'w-8 bg-primary' : 'w-2 bg-white/15 hover:bg-white/30'
-            )}
-          />
-        ))}
+      <div className="mt-6 flex items-center justify-center gap-3" dir="rtl">
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: dotWindowSize }, (_, offset) => {
+            const targetIndex = dotStart + offset;
+            return (
+              <button
+                key={targetIndex}
+                type="button"
+                onClick={() => setIndex(targetIndex)}
+                aria-label={`اقتباس ${targetIndex + 1}`}
+                className={cn(
+                  'h-1.5 rounded-full transition-all duration-300',
+                  targetIndex === activeIndex
+                    ? 'w-7 bg-primary'
+                    : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                )}
+              />
+            );
+          })}
+        </div>
+        <span className="text-[11px] font-bold text-muted-foreground tabular-nums px-2 py-0.5 rounded-full bg-muted/60 border border-border/60">
+          {activeIndex + 1} / {quotes.length}
+        </span>
       </div>
     </motion.div>
   );
