@@ -59,6 +59,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [voiceSupported, setVoiceSupported] = useState(false);
+    const [hasOpened, setHasOpened] = useState(false);
 
     useEffect(() => {
         const hasApi = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -94,12 +95,12 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
         setIsListening(false);
     };
 
-    const { data: allLectures } = useCollection<Lecture>('lectures', { limit: 100 });
-    const { data: allPrograms } = useCollection<Program>('programs', { limit: 50 });
-    const { data: allSeries } = useCollection<Series>('series', { limit: 50 });
-    const { data: allBooks } = useCollection<Book>('books', { limit: 50 });
-    const { data: allShubuhat } = useCollection<Shubha>('shubuhat', { limit: 50 });
-    const { data: allDestructiveSins } = useCollection<DestructiveSin>('destructive_sins', { limit: 50 });
+    const { data: allLectures } = useCollection<Lecture>(hasOpened ? 'lectures' : null, { limit: 100, once: true });
+    const { data: allPrograms } = useCollection<Program>(hasOpened ? 'programs' : null, { limit: 50, once: true });
+    const { data: allSeries } = useCollection<Series>(hasOpened ? 'series' : null, { limit: 50, once: true });
+    const { data: allBooks } = useCollection<Book>(hasOpened ? 'books' : null, { limit: 50, once: true });
+    const { data: allShubuhat } = useCollection<Shubha>(hasOpened ? 'shubuhat' : null, { limit: 50, once: true });
+    const { data: allDestructiveSins } = useCollection<DestructiveSin>(hasOpened ? 'destructive_sins' : null, { limit: 50, once: true });
 
     useEffect(() => {
         const stored = localStorage.getItem('recentSearches');
@@ -108,6 +109,7 @@ export function ImmersiveSearch({ isOpen, onClose }: ImmersiveSearchProps) {
 
     useEffect(() => {
         if (isOpen) {
+            setHasOpened(true);
             document.body.style.overflow = 'hidden';
             setSelectedIndex(-1);
             setTimeout(() => inputRef.current?.focus(), 100);
