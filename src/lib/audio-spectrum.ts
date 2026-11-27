@@ -89,7 +89,7 @@ export interface SpectrumSampleInput {
 
 /**
  * Computes normalized [0..1] bar heights with smooth rise/decay and real FFT support
- * when available, falling back to speech-cadence synthesis driven by time, speed, and volume.
+ * when available, falling back to rich 60fps speech-cadence synthesis scaled by speed & volume.
  */
 export function computeSpectrumBands({
   barCount,
@@ -124,57 +124,42 @@ export function computeSpectrumBands({
   const levels = new Array<number>(barCount);
   let sum = 0;
 
-  // Timeline clock for speech-like modulation synced with playback position & speed
-  const timeline = (currentTime > 0 ? currentTime : phase * 0.45) * Math.max(0.5, playbackRate);
-  // Syllabic envelope: mimics natural speech bursts (~3-5 syllables/sec + breath pauses)
-  const syllableWave =
-    0.55 +
-    0.25 * Math.sin(timeline * 9.5) +
-    0.2 * Math.cos(timeline * 14.3);
-  const phraseEnvelope = Math.max(
-    0.22,
-    0.68 + 0.32 * Math.sin(timeline * 1.35 + Math.cos(timeline * 0.55))
-  );
-  const volumeScale = 0.25 + 0.75 * effectiveVolume;
+  // Continuous 60fps clock blended with playback position so motion never freezes between YouTube polls
+  const rate = Math.max(0.5, playbackRate);
+  const clock = phase + (currentTime > 0 ? (currentTime % 60) * 0.35 : 0);
+  const volumeScale = 0.35 + 0.65 * effectiveVolume;
+  const phrasePulse = 0.68 + 0.32 * Math.sin(clock * 0.55 * rate);
 
   for (let i = 0; i < barCount; i++) {
     let target = 0;
 
     if (active) {
       if (hasRealFft && dataArray && dataArray.length > 0) {
-        // Map index non-linearly so voice fundamentals (lower bins) aren't crammed at one edge
         const normIdx = i / Math.max(1, barCount - 1);
         const binIndex = Math.min(
           dataArray.length - 1,
-          Math.floor(Math.pow(normIdx, 1.35) * (dataArray.length * 0.72))
+          Math.floor(Math.pow(normIdx, 1.3) * (dataArray.length * 0.7))
         );
-        const raw = dataArray[binIndex] / 255;
-        target = Math.min(1, raw * 1.15);
+        target = Math.min(1, (dataArray[binIndex] / 255) * 1.2);
       } else {
-        // Multi-band harmonic energy profile synced to timeline & playbackRate
-        const normPos = i / Math.max(1, barCount - 1);
-        const vocalCenter = Math.exp(-Math.pow((normPos - 0.36) / 0.34, 2));
-        const harmonic =
-          Math.abs(Math.sin(i * 0.72 + timeline * 5.8 * (1 + (i % 3) * 0.15))) * 0.6 +
-          Math.abs(Math.cos(i * 1.35 - phase * (0.9 + playbackRate * 0.35))) * 0.4;
-        target = Math.min(
-          1,
-          (0.16 + 0.84 * vocalCenter) * harmonic * syllableWave * phraseEnvelope * volumeScale
-        );
+        // Multi-wave speech/recitation profile matching the Radio visualizer's lush full-height motion
+        const waveA = Math.abs(Math.sin(i * 0.22 + clock * 1.15 * rate));
+        const waveB = Math.abs(Math.cos(i * 0.13 - clock * 0.72 * rate));
+        const syllableBurst = 0.55 + 0.45 * Math.abs(Math.sin(clock * 2.2 * rate + i * 0.48));
+        const rawLevel = (waveA * 0.58 + waveB * 0.42) * syllableBurst * phrasePulse * volumeScale;
+        target = Math.min(0.96, Math.max(0.14, rawLevel * 1.18));
       }
     } else if (isBuffering) {
-      // Gentle scanning ripple while buffering
-      target = 0.12 + 0.18 * Math.max(0, Math.sin(phase * 1.4 - i * 0.35));
+      target = 0.14 + 0.22 * Math.max(0, Math.sin(phase * 1.5 - i * 0.35));
     } else {
       target = 0;
     }
 
     const prev = prevLevels[i] ?? 0;
-    // Fast attack, smooth gravity decay
     const smoothed =
       target >= prev
-        ? prev + (target - prev) * 0.52
-        : Math.max(target, prev - 0.065);
+        ? prev + (target - prev) * 0.48
+        : Math.max(target, prev - 0.055);
 
     levels[i] = smoothed;
     prevLevels[i] = smoothed;

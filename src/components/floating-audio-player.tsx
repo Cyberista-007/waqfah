@@ -456,7 +456,7 @@ export function FloatingAudioPlayer() {
                 </div>
               </div>
 
-              <div className="h-14 flex items-center justify-center shrink-0">
+              <div className="flex items-center justify-center shrink-0 pt-1">
                 <AudioVisualizer
                   audioElement={audioRef.current}
                   isPlaying={isPlaying}
