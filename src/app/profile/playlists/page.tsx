@@ -1,235 +1,235 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useCollection, useUser, useFirestore } from '@/firebase';
+import type { Playlist, Lecture } from '@/lib/types';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useCollection, useUser, useFirestore } from "@/firebase";
-import type { Playlist, Lecture } from "@/lib/types";
-import { Loader2, PlusCircle, Edit, Trash2, ArrowRight, Settings2, Shield, Lock, Globe, ListMusic, Sparkles } from "lucide-react";
-import { PlaylistForm } from "@/components/profile/playlist-form";
-import { DeleteConfirmationDialog } from "@/components/admin/delete-dialog";
-import { doc } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+  Loader2,
+  PlusCircle,
+  Edit,
+  Trash2,
+  ArrowRight,
+  Lock,
+  Globe,
+  ListMusic,
+  Play,
+} from 'lucide-react';
+import { PlaylistForm } from '@/components/profile/playlist-form';
+import { DeleteConfirmationDialog } from '@/components/admin/delete-dialog';
+import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export default function ManagePlaylistsPage() {
-    const { user } = useUser();
-    const { toast } = useToast();
-    const router = useRouter();
-    const firestore = useFirestore();
+  const { t, isRtl } = useTranslation();
+  const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
+  const router = useRouter();
+  const firestore = useFirestore();
 
-    const playlistsPath = user ? `users/${user.uid}/playlists` : null;
-    const { data: playlists, isLoading: playlistsLoading } = useCollection<Playlist>(playlistsPath, { orderBy: ['createdAt', 'desc'] });
-    const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
-    
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [playlistToEdit, setPlaylistToEdit] = useState<Playlist | null>(null);
-    const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
+  const playlistsPath = user ? `users/${user.uid}/playlists` : null;
+  const { data: playlists, isLoading: playlistsLoading } = useCollection<Playlist>(playlistsPath, {
+    orderBy: ['createdAt', 'desc'],
+  });
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
 
-    if (!user) {
-        router.push('/auth/login?redirect_to=/profile/playlists');
-        return <div className="min-h-screen bg-[#050505] flex items-center justify-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [playlistToEdit, setPlaylistToEdit] = useState<Playlist | null>(null);
+  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/auth/login?redirect_to=/profile/playlists');
     }
-    
-    const handleNew = () => {
-        setPlaylistToEdit(null);
-        setIsFormOpen(true);
-    };
+  }, [isUserLoading, user, router]);
 
-    const handleEdit = (playlist: Playlist) => {
-        setPlaylistToEdit(playlist);
-        setIsFormOpen(true);
-    };
-
-    const handleFormClose = () => {
-        setIsFormOpen(false);
-        setPlaylistToEdit(null);
-    };
-    
-    const handleDelete = async () => {
-        if (!playlistToDelete || !firestore || !user) return;
-        
-        const playlistRef = doc(firestore, 'users', user.uid, 'playlists', playlistToDelete.id);
-        
-        deleteDocumentNonBlocking(playlistRef);
-
-        toast({
-            title: "تم الحذف بنجاح",
-            description: `تم حذف قائمة التشغيل "${playlistToDelete.name}".`,
-        });
-        setPlaylistToDelete(null);
-    };
-    
-    const isLoading = playlistsLoading || lecturesLoading;
-
+  if (isUserLoading || !user) {
     return (
-        <div className="min-h-screen pb-40 overflow-hidden bg-[#050505] text-right" dir="rtl">
-            {/* 🎭 Cinematic Deep Background */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full -translate-y-1/2 translate-x-1/3" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/3" />
-            </div>
-
-            <div className="w-full relative z-10 px-4 md:px-8 lg:px-12 xl:px-20 mx-auto max-w-7xl pt-32">
-                
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16"
-                >
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
-                            <Settings2 className="h-4 w-4 text-primary animate-spin-slow" />
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/80">لوحة التحكم الشخصية</span>
-                        </div>
-                        <h1 className="text-5xl md:text-6xl font-black font-headline text-white drop-shadow-lg">إدارة <span className="text-primary italic px-2">قوائمك</span></h1>
-                        <p className="text-xl text-white/40 font-medium">قم ببناء وتنسيق مكتبتك الصوتية المفضلة بكل سهولة.</p>
-                    </div>
-
-                    {!isFormOpen && (
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <Button asChild variant="outline" className="h-16 rounded-[1.5rem] px-8 bg-white/5 border-white/10 hover:bg-white/10 text-white font-black hover:scale-105 transition-all flex-1 md:flex-none">
-                                <Link href="/playlists">
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                    تصفح القوائم العامة
-                                </Link>
-                            </Button>
-                            <Button onClick={handleNew} className="h-16 rounded-[1.5rem] px-10 bg-primary text-white hover:bg-primary/90 font-black shadow-[0_0_40px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all flex-1 md:flex-none text-lg">
-                                <PlusCircle className="ml-3 h-6 w-6" />
-                                قائمة جديدة
-                            </Button>
-                        </div>
-                    )}
-                </motion.div>
-
-                <AnimatePresence mode="wait">
-                    {isFormOpen ? (
-                        <motion.div
-                            key="form"
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                            className="bg-[#0a0a0a]/80 backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl overflow-hidden relative"
-                        >
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                            <div className="p-2">
-                                <PlaylistForm 
-                                    playlist={playlistToEdit} 
-                                    allLectures={allLectures || []} 
-                                    onFormClose={handleFormClose} 
-                                    userId={user.uid}
-                                />
-                            </div>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="list"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                        >
-                            {isLoading ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {[1, 2, 3, 4, 5, 6].map(i => (
-                                        <div key={i} className="h-[250px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5 shadow-2xl" />
-                                    ))}
-                                </div>
-                            ) : playlists && playlists.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {playlists.map((p, index) => (
-                                        <motion.div 
-                                            key={p.id}
-                                            initial={{ opacity: 0, y: 30 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                            className="group relative"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-                                            <Card className="relative h-full flex flex-col overflow-hidden border-white/10 bg-[#0a0a0a]/60 backdrop-blur-3xl rounded-[2.5rem] transition-all duration-500 hover:border-white/20 shadow-2xl group-hover:-translate-y-2">
-                                                <CardContent className="p-8 space-y-6 flex-grow flex flex-col">
-                                                    <div className="flex justify-between items-start w-full">
-                                                        <div className="w-14 h-14 rounded-[1rem] flex items-center justify-center border border-white/10 bg-white/5 text-white transition-transform duration-500 group-hover:rotate-6 group-hover:bg-primary/20 group-hover:text-primary group-hover:border-primary/30">
-                                                           <ListMusic className="w-7 h-7" />
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                           <Badge variant="outline" className="rounded-full px-4 py-1.5 bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
-                                                              {p.lectureIds?.length || 0} مادة
-                                                           </Badge>
-                                                           <Badge variant={p.isPublic ? "secondary" : "outline"} className={cn("rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-md flex items-center gap-1.5", p.isPublic ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-white/5 border-white/10 text-white/50")}>
-                                                              {p.isPublic ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                                                              {p.isPublic ? 'عامة' : 'خاصة'}
-                                                           </Badge>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-2 flex-grow">
-                                                        <h3 className="text-2xl font-black font-headline text-white group-hover:text-primary transition-colors line-clamp-1">
-                                                            {p.name}
-                                                        </h3>
-                                                        <p className="text-white/40 text-sm font-medium line-clamp-2 leading-relaxed">
-                                                            {p.description || "لا يوجد وصف."}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="flex gap-3 pt-6 border-t border-white/10 mt-auto w-full">
-                                                        <Button onClick={() => handleEdit(p)} className="flex-1 h-14 rounded-[1.2rem] bg-white/10 hover:bg-white/20 text-white font-black text-sm transition-all flex items-center justify-center gap-2">
-                                                            <Edit className="w-4 h-4" />
-                                                            تعديل
-                                                        </Button>
-                                                        <Button onClick={() => setPlaylistToDelete(p)} variant="destructive" className="w-14 h-14 rounded-[1.2rem] bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 transition-all shrink-0">
-                                                            <Trash2 className="w-5 h-5" />
-                                                        </Button>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="py-32 text-center space-y-8 bg-white/[0.02] border-2 border-dashed border-white/10 rounded-[4rem] backdrop-blur-md max-w-4xl mx-auto shadow-2xl relative overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-primary/5 blur-[100px] pointer-events-none" />
-                                    <div className="w-32 h-32 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mx-auto shadow-inner relative z-10">
-                                        <Shield className="w-16 h-16 text-white/20" />
-                                    </div>
-                                    <div className="space-y-4 relative z-10">
-                                        <h3 className="text-4xl font-black font-headline text-white/60">مكتبتك فارغة حالياً</h3>
-                                        <p className="text-white/30 font-medium max-w-md mx-auto leading-relaxed text-lg">
-                                            لم تقم بإنشاء أي قوائم تشغيل بعد. ابدأ الآن بإنشاء أول قائمة لتنظيم رحلتك العلمية.
-                                        </p>
-                                    </div>
-                                    <Button onClick={handleNew} className="relative z-10 rounded-[2rem] h-16 px-12 bg-primary text-white font-black text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform gap-3">
-                                        <PlusCircle className="w-6 h-6" />
-                                        إنشاء أول قائمة
-                                    </Button>
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            <DeleteConfirmationDialog 
-                isOpen={!!playlistToDelete}
-                onClose={() => setPlaylistToDelete(null)}
-                onConfirm={handleDelete}
-                title="حذف القائمة نهائياً"
-                description={`هل أنت متأكد من رغبتك في حذف قائمة "${playlistToDelete?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`}
-            />
-        </div>
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
     );
+  }
+
+  const handleNew = () => {
+    setPlaylistToEdit(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (playlist: Playlist) => {
+    setPlaylistToEdit(playlist);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setPlaylistToEdit(null);
+  };
+
+  const handleDelete = async () => {
+    if (!playlistToDelete || !firestore || !user) return;
+    const playlistRef = doc(firestore, 'users', user.uid, 'playlists', playlistToDelete.id);
+    deleteDocumentNonBlocking(playlistRef);
+    toast({
+      title: t('تم الحذف بنجاح', 'Deleted successfully'),
+      description: `${t('تم حذف قائمة التشغيل', 'Deleted playlist')} "${playlistToDelete.name}".`,
+    });
+    setPlaylistToDelete(null);
+  };
+
+  const isLoading = playlistsLoading || lecturesLoading;
+
+  return (
+    <div className="min-h-screen pb-20" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-8 max-w-6xl">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/60">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+              <ListMusic className="w-3.5 h-3.5" />
+              <span>{t('لوحة التحكم الشخصية', 'Personal Library')}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black font-headline text-foreground tracking-tight">
+              {t('إدارة', 'Manage')} <span className="text-primary">{t('قوائم التشغيل', 'Playlists')}</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {t('أنشئ ورتّب قوائمك الصوتية والمرئية بكل سهولة.', 'Create and organize your audio & video playlists.')}
+            </p>
+          </div>
+
+          {!isFormOpen && (
+            <div className="flex items-center gap-2.5">
+              <Button asChild variant="outline" className="h-10 px-4 rounded-xl font-bold gap-2">
+                <Link href="/playlists">
+                  <ArrowRight className="w-4 h-4" />
+                  <span>{t('القوائم العامة', 'Public Playlists')}</span>
+                </Link>
+              </Button>
+              <Button onClick={handleNew} className="h-10 px-5 rounded-xl font-bold gap-2">
+                <PlusCircle className="w-4 h-4" />
+                <span>{t('قائمة جديدة', 'New Playlist')}</span>
+              </Button>
+            </div>
+          )}
+        </header>
+
+        {isFormOpen ? (
+          <div className="bg-card/85 backdrop-blur-xl border border-border rounded-3xl p-4 sm:p-6 shadow-sm">
+            <PlaylistForm
+              playlist={playlistToEdit}
+              allLectures={allLectures || []}
+              onFormClose={handleFormClose}
+              userId={user.uid}
+            />
+          </div>
+        ) : isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-[220px] rounded-2xl bg-muted/50 animate-pulse border border-border" />
+            ))}
+          </div>
+        ) : playlists && playlists.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {playlists.map((p) => (
+              <div
+                key={p.id}
+                className="flex flex-col rounded-2xl border border-border bg-card/80 p-5 space-y-4 shadow-sm hover:border-primary/40 transition-all"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <ListMusic className="w-5 h-5" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="secondary" className="text-[11px] font-bold">
+                      {p.lectureIds?.length || 0} {t('مادة', 'Items')}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'text-[11px] font-bold gap-1',
+                        p.isPublic ? 'text-emerald-500 border-emerald-500/30' : 'text-muted-foreground'
+                      )}
+                    >
+                      {p.isPublic ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                      <span>{p.isPublic ? t('عامة', 'Public') : t('خاصة', 'Private')}</span>
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-1 flex-1">
+                  <h3 className="text-lg font-bold text-foreground line-clamp-1">{p.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {p.description || t('لا يوجد وصف.', 'No description.')}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 pt-3 border-t border-border/60">
+                  <Button asChild variant="outline" className="h-9 px-3 rounded-xl font-bold text-xs gap-1.5">
+                    <Link href={`/playlists/${p.id}?u=${user.uid}`}>
+                      <Play className="w-3.5 h-3.5" />
+                      <span>{t('فتح', 'Open')}</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    onClick={() => handleEdit(p)}
+                    variant="secondary"
+                    className="flex-1 h-9 rounded-xl font-bold text-xs gap-1.5"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>{t('تعديل', 'Edit')}</span>
+                  </Button>
+                  <Button
+                    onClick={() => setPlaylistToDelete(p)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center space-y-4 bg-card/50 border border-dashed border-border rounded-3xl">
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+              <ListMusic className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-foreground">
+                {t('مكتبتك فارغة حالياً', 'Your playlist library is empty')}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {t(
+                  'لم تقم بإنشاء أي قوائم تشغيل بعد. ابدأ الآن بإنشاء أول قائمة لتنظيم محاضراتك.',
+                  'Create your first playlist to organize your favorite lectures.'
+                )}
+              </p>
+            </div>
+            <Button onClick={handleNew} className="rounded-xl h-10 px-6 font-bold gap-2">
+              <PlusCircle className="w-4 h-4" />
+              <span>{t('إنشاء أول قائمة', 'Create First Playlist')}</span>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <DeleteConfirmationDialog
+        isOpen={!!playlistToDelete}
+        onClose={() => setPlaylistToDelete(null)}
+        onConfirm={handleDelete}
+        title={t(`حذف "${playlistToDelete?.name}"؟`, `Delete "${playlistToDelete?.name}"?`)}
+        description={t(
+          'هل أنت متأكد من رغبتك في حذف قائمة التشغيل هذه؟ هذا الإجراء لا يمكن التراجع عنه.',
+          'Are you sure you want to delete this playlist? This action cannot be undone.'
+        )}
+      />
+    </div>
+  );
 }

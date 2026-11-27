@@ -1,179 +1,219 @@
+'use client';
 
-"use client"
-
-import { motion } from 'framer-motion';
-import { 
-  Radio, Users, MessageCircle, Share2, 
-  Heart, Calendar, Play, Bell, Info, 
-  Sparkles, Youtube, ExternalLink, Lock
+import Link from 'next/link';
+import {
+  Radio,
+  Calendar,
+  Share2,
+  Bell,
+  Heart,
+  Youtube,
+  Clapperboard,
+  Headphones,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export default function LivePage() {
+  const { t, isRtl } = useTranslation();
+  const { toast } = useToast();
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
+
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (!url) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: t('البث المباشر — وقفة', 'Live Majalis — Waqfah'),
+          url,
+        });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: t('تم نسخ رابط البث المباشر!', 'Live page link copied!') });
+    } catch {
+      toast({ variant: 'destructive', title: t('فشل نسخ الرابط', 'Failed to copy link') });
+    }
+  };
+
+  const handleToggleAlert = () => {
+    const next = !alertsEnabled;
+    setAlertsEnabled(next);
+    toast({
+      title: next
+        ? t('تم تفعيل تنبيهات البث', 'Stream alerts enabled')
+        : t('تم إيقاف تنبيهات البث', 'Stream alerts disabled'),
+      description: next
+        ? t('يمكنك متابعة المواعيد المحدثة عبر صفحة الجدول الزمني.', 'Check the schedule page for upcoming sessions.')
+        : undefined,
+    });
+  };
+
   return (
-    <div className="min-h-screen pb-20 space-y-16">
-      {/* Cinematic Hero Section */}
-      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 pt-32 pb-20 flex flex-col items-center text-center overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-zinc-950" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-red-500/10 blur-[120px] rounded-full opacity-20" />
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="container px-4 space-y-8"
-        >
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse">
-            <Radio className="w-3.5 h-3.5" /> البث المباشر الآن
+    <div className="min-h-screen pb-20" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-8 max-w-6xl">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/60">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+              <Radio className="w-3.5 h-3.5" />
+              <span>{t('مجالس الذكر المباشرة', 'Live Majalis')}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline text-foreground tracking-tight">
+              {t('البث', 'Live')} <span className="text-primary">{t('المباشر', 'Streams')}</span>
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+              {t(
+                'تابع البثوث المباشرة للدروس والمجالس العلمية، واطّلع على المواعيد القادمة.',
+                'Follow live Islamic lectures and check upcoming broadcast schedules.'
+              )}
+            </p>
           </div>
-          
-          <h1 className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-white">
-            مجالس <span className="text-red-500 italic">الذِّكرِ المباشرة</span>
-          </h1>
-          
-          <p className="text-xl text-white/30 max-w-2xl mx-auto font-medium leading-relaxed italic">
-            شارك في الدروس المباشرة، اسأل المشايخ، وتفاعل مع طلاب العلم من كل مكان في الوقت الحقيقي.
-          </p>
-        </motion.div>
-      </section>
 
-      {/* Main Live Player Section */}
-      <section className="container px-4 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Player Area */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="lg:col-span-2 space-y-8"
-          >
-            <div className="relative aspect-video rounded-[3rem] overflow-hidden border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5 bg-zinc-900 group">
-                {/* Simulated Player Background */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12 bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-zinc-950">
-                   <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                      <Youtube className="w-12 h-12 text-red-600" />
-                   </div>
-                   <h3 className="text-2xl font-black text-white mb-4">لا يوجد بث مباشر حالياً</h3>
-                   <p className="text-white/30 max-w-xs mx-auto text-sm font-medium">
-                     ترقبوا البث القادم: شرح متن العقيدة الطحاوية - اليوم الساعة ٨:٠٠ م بتوقيت القاهرة.
-                   </p>
-                   <Button variant="outline" className="mt-8 rounded-2xl border-white/10 hover:bg-white/5 text-white gap-3 h-12 px-8">
-                     <Calendar className="w-4 h-4" /> جدول المواعيد
-                   </Button>
-                </div>
-                
-                {/* Live Badge Top Right */}
-                <div className="absolute top-8 right-8 z-10 flex items-center gap-3">
-                   <div className="px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-red-600/20">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                      مباشر
-                   </div>
-                   <div className="px-4 py-2 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5" /> 1.2K مشاهد
-                   </div>
-                </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleToggleAlert}
+              variant={alertsEnabled ? 'default' : 'outline'}
+              className="h-10 px-4 rounded-xl font-bold gap-2"
+            >
+              <Bell className="w-4 h-4" />
+              <span>{alertsEnabled ? t('التنبيه مفعّل', 'Notified') : t('تنبيه بالبث', 'Notify me')}</span>
+            </Button>
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 rounded-xl"
+              title={t('مشاركة', 'Share')}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </header>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Player Stage */}
+          <div className="lg:col-span-8 space-y-5">
+            <div className="relative aspect-video rounded-2xl md:rounded-3xl overflow-hidden border border-border bg-zinc-950 shadow-xl flex flex-col items-center justify-center text-center p-6 sm:p-10">
+              <div className="absolute top-4 right-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                <span>{t('في وضع الاستعداد', 'Standby')}</span>
+              </div>
+
+              <div className="w-16 h-16 rounded-2xl bg-red-500/15 border border-red-500/25 flex items-center justify-center mb-5">
+                <Youtube className="w-8 h-8 text-red-500" />
+              </div>
+
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+                {t('لا يوجد بث مباشر نشط في هذه اللحظة', 'No live broadcast is active right now')}
+              </h2>
+              <p className="text-sm text-white/60 max-w-md leading-relaxed mb-6">
+                {t(
+                  'يمكنك الاستماع إلى إذاعة وقفة المستمرة على مدار الساعة أو تصفح أرشيف المحاضرات المسجلة حتى موعد البث القادم.',
+                  'Listen to 24/7 radio broadcasts or browse recorded lectures while waiting for the next live session.'
+                )}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Button asChild className="h-11 px-5 rounded-xl font-bold gap-2">
+                  <Link href="/radio">
+                    <Headphones className="w-4 h-4" />
+                    <span>{t('الاستماع للإذاعة المباشرة', 'Listen to Live Radio')}</span>
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-11 px-5 rounded-xl font-bold gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <Link href="/schedule">
+                    <Calendar className="w-4 h-4" />
+                    <span>{t('جدول المواعيد', 'Broadcast Schedule')}</span>
+                  </Link>
+                </Button>
+              </div>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between gap-6 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl">
-               <div className="space-y-4">
-                  <h2 className="text-3xl font-black text-white">ترقبوا: شرح متن العقيدة الطحاوية</h2>
-                  <div className="flex items-center gap-4 text-white/40">
-                     <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        <span className="text-sm font-bold">للباحثين عن الحق</span>
-                     </div>
-                     <div className="w-1 h-1 rounded-full bg-white/20" />
-                     <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm font-bold">كل إثنين وجمعة</span>
-                     </div>
+            {/* Quick Info Bar */}
+            <div className="bg-card/80 border border-border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-foreground">
+                  {t('دعم استمرارية البث العلمي', 'Support Live Broadcasts')}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    'ساهم في تطوير البثوث المباشرة ونشر العلم الشرعي.',
+                    'Help sustain live broadcasts and Islamic education.'
+                  )}
+                </p>
+              </div>
+              <Button asChild className="h-10 px-5 rounded-xl font-bold gap-2 shrink-0">
+                <Link href="/donations">
+                  <Heart className="w-4 h-4" />
+                  <span>{t('ادعم المنصة', 'Support Platform')}</span>
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <aside className="lg:col-span-4 space-y-5">
+            <div className="bg-card/80 border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center gap-2 text-sm font-bold text-foreground border-b border-border pb-3">
+                <Clock className="w-4 h-4 text-primary" />
+                <span>{t('روابط سريعة', 'Quick Access')}</span>
+              </div>
+
+              <div className="space-y-2.5">
+                <Link
+                  href="/schedule"
+                  className={cn(
+                    'flex items-center gap-3 p-3 rounded-xl border border-border bg-background hover:border-primary/40 transition-colors'
+                  )}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4" />
                   </div>
-               </div>
-               <div className="flex items-center gap-3">
-                  <Button variant="outline" className="rounded-2xl border-white/10 hover:bg-white/5 text-white h-14 w-14 p-0">
-                     <Share2 className="w-6 h-6" />
-                  </Button>
-                  <Button variant="outline" className="rounded-2xl border-white/10 hover:bg-white/5 text-white h-14 w-14 p-0">
-                     <Bell className="w-6 h-6" />
-                  </Button>
-                  <Button className="rounded-2xl bg-primary text-white hover:bg-primary/90 h-14 px-8 font-black text-lg gap-3">
-                     <Heart className="w-5 h-5 fill-current" /> دعم البث
-                  </Button>
-               </div>
-            </div>
-          </motion.div>
-
-          {/* Chat / Sidebar Area */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-8"
-          >
-            {/* Live Chat Simulated */}
-            <div className="h-[600px] flex flex-col rounded-[2.5rem] bg-[#0a0a0a]/60 backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl">
-               <div className="p-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <MessageCircle className="w-5 h-5 text-primary" />
-                     <h4 className="text-sm font-black text-white uppercase tracking-tight">الدردشة الحية</h4>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">{t('جدول الدروس', 'Class Schedule')}</p>
+                    <p className="text-xs text-muted-foreground">{t('مواعيد المحاضرات والبثوث', 'Upcoming lesson times')}</p>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-               </div>
-               
-               <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar opacity-30 pointer-events-none">
-                  {[
-                    { u: "أحمد", m: "جزاكم الله خيراً على هذا المجهود", c: "text-emerald-400" },
-                    { u: "طالب علم", m: "هل سيكون هناك ملف PDF للدرس؟", c: "text-sky-400" },
-                    { u: "فاطمة", m: "البث واضح جداً شكراً لكم", c: "text-rose-400" },
-                    { u: "يوسف", m: "متى يبدأ درس التفسير؟", c: "text-amber-400" },
-                  ].map((msg, i) => (
-                    <div key={i} className="space-y-1">
-                       <span className={cn("text-[10px] font-black uppercase tracking-widest", msg.c)}>{msg.u}</span>
-                       <p className="text-sm text-white/70 leading-relaxed font-medium">{msg.m}</p>
-                    </div>
-                  ))}
-                  <div className="pt-20 text-center space-y-4">
-                     <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-                        <Lock className="w-6 h-6 text-white/20" />
-                     </div>
-                     <p className="text-xs text-white/20 font-bold">يجب تسجيل الدخول للمشاركة في الدردشة</p>
+                </Link>
+
+                <Link
+                  href="/lectures"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background hover:border-primary/40 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                    <Clapperboard className="w-4 h-4" />
                   </div>
-               </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">{t('مكتبة المحاضرات', 'Lectures Library')}</p>
+                    <p className="text-xs text-muted-foreground">{t('شاهد الدروس المسجلة', 'Watch recorded lessons')}</p>
+                  </div>
+                </Link>
 
-               <div className="p-6 bg-white/[0.02] border-t border-white/5">
-                  <Button className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 hover:text-white transition-all font-black text-sm">
-                     اكتب رسالة...
-                  </Button>
-               </div>
+                <Link
+                  href="/radio"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background hover:border-primary/40 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                    <Radio className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">{t('إذاعة القرآن والدروس', 'Quran & Lessons Radio')}</p>
+                    <p className="text-xs text-muted-foreground">{t('بث صوتي مباشر على مدار الساعة', '24/7 audio broadcast')}</p>
+                  </div>
+                </Link>
+              </div>
             </div>
-
-            {/* Upcoming Streams */}
-            <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 space-y-6">
-               <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">بثوث قادمة</h4>
-               <div className="space-y-6">
-                  {[
-                    { t: "فقه المعاملات المالية", d: "غداً ٧:٣٠ م", i: Play },
-                    { t: "تنبيه الغبي لشرح المنهج", d: "الأحد ٩:٠٠ م", i: Play },
-                  ].map((s, i) => (
-                    <div key={i} className="flex items-center gap-4 group cursor-pointer">
-                       <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                          <s.i className="w-5 h-5 text-primary" />
-                       </div>
-                       <div>
-                          <h5 className="font-bold text-white text-sm group-hover:text-primary transition-colors">{s.t}</h5>
-                          <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">{s.d}</p>
-                       </div>
-                    </div>
-                  ))}
-               </div>
-            </div>
-          </motion.div>
+          </aside>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
