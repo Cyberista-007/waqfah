@@ -1,349 +1,331 @@
-"use client";
+'use client';
 
-import { Trophy, Award, Loader2, Sparkles, Medal, User, Crown, Star, Flame, ChevronLeft } from 'lucide-react';
+import { useMemo } from 'react';
+import Link from 'next/link';
+import { Trophy, Award, Loader2, Sparkles, Medal, User, Crown, Flame, ChevronLeft } from 'lucide-react';
 import { useCollection, useUser } from '@/firebase';
 import type { UserProfile, GamificationBadge, UserBadge } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getInitials } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useBadgeManager } from '@/hooks/useBadgeManager';
-import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
 import { iconMap } from '@/lib/icon-map';
-import { motion, AnimatePresence } from 'framer-motion';
+import { cn, getInitials } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
-function BadgeItem({ badge, earned }: { badge: GamificationBadge, earned: boolean }) {
-    const Icon = iconMap[badge.icon] || Sparkles;
+function BadgeItem({ badge, earned }: { badge: GamificationBadge; earned: boolean }) {
+  const { t } = useTranslation();
+  const Icon = iconMap[badge.icon] || Sparkles;
 
-    return (
-         <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <motion.div 
-                        whileHover={{ y: -5, scale: 1.05 }}
-                        className={cn(
-                            "group flex flex-col items-center justify-center text-center p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden",
-                            earned 
-                                ? "border-amber-500/30 bg-amber-500/10 shadow-[0_0_30px_rgba(245,158,11,0.1)]" 
-                                : "border-white/5 bg-white/[0.02] grayscale opacity-40 hover:grayscale-0 hover:opacity-100"
-                        )}
-                    >
-                        {earned && (
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
-                        <div className={cn(
-                            "flex items-center justify-center h-20 w-20 rounded-2xl mb-4 shadow-2xl transition-all duration-700 group-hover:rotate-12",
-                             earned ? "bg-amber-500 text-white" : "bg-zinc-800 text-zinc-500"
-                        )}>
-                            <Icon className="h-10 w-10" />
-                        </div>
-                        <h4 className="font-black text-sm text-white">{badge.title}</h4>
-                        <div className="mt-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-white/40">
-                             +{badge.points} نقطة
-                        </div>
-                    </motion.div>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs p-4 rounded-2xl bg-zinc-900 border-white/10 backdrop-blur-xl">
-                    <p className="font-medium leading-relaxed">{badge.description}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    )
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              'flex flex-col items-center justify-center text-center p-5 rounded-2xl border transition-all',
+              earned
+                ? 'border-amber-500/35 bg-amber-500/10 shadow-sm'
+                : 'border-border bg-card/60 opacity-60 hover:opacity-100'
+            )}
+          >
+            <div
+              className={cn(
+                'flex items-center justify-center h-14 w-14 rounded-2xl mb-3 shadow-sm',
+                earned ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
+              )}
+            >
+              <Icon className="h-7 w-7" />
+            </div>
+            <h4 className="font-bold text-sm text-foreground line-clamp-1">{badge.title}</h4>
+            <div className="mt-2 px-2.5 py-0.5 rounded-full bg-muted text-[11px] font-bold text-muted-foreground">
+              +{badge.points} {t('نقطة', 'pts')}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs p-3 rounded-xl">
+          <p className="text-xs font-medium leading-relaxed">{badge.description}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 export default function LeaderboardPage() {
-    const { user } = useUser();
-    useBadgeManager();
+  const { t, isRtl } = useTranslation();
+  const { user } = useUser();
+  useBadgeManager();
 
-    const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users', { orderBy: ['points', 'desc'], limit: 100 });
-    const { data: allBadges, isLoading: allBadgesLoading } = useCollection<GamificationBadge>('gamification_badges', { orderBy: ['points', 'asc'] });
-    const userBadgesPath = user ? `users/${user.uid}/user_badges` : null;
-    const { data: earnedBadges, isLoading: userBadgesLoading } = useCollection<UserBadge>(userBadgesPath);
-    
-    const isLoading = usersLoading || allBadgesLoading || (user && userBadgesLoading);
-    
-    const { top3, restOfUsers } = useMemo(() => {
-        if (!users) return { top3: [], restOfUsers: [] };
-        return {
-            top3: users.slice(0, 3),
-            restOfUsers: users.slice(3)
-        };
-    }, [users]);
+  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>('users', {
+    orderBy: ['points', 'desc'],
+    limit: 100,
+  });
+  const { data: allBadges, isLoading: allBadgesLoading } = useCollection<GamificationBadge>(
+    'gamification_badges',
+    { orderBy: ['points', 'asc'] }
+  );
+  const userBadgesPath = user ? `users/${user.uid}/user_badges` : null;
+  const { data: earnedBadges, isLoading: userBadgesLoading } = useCollection<UserBadge>(userBadgesPath);
 
-    const userRank = useMemo(() => {
-        if (!user || !users) return null;
-        const rank = users.findIndex(u => u.id === user.uid);
-        return rank !== -1 ? rank + 1 : null;
-    }, [user, users]);
+  const isLoading = usersLoading || allBadgesLoading || (user && userBadgesLoading);
 
-    const earnedBadgeIds = useMemo(() => new Set(earnedBadges?.map(b => b.id) || []), [earnedBadges]);
-    
-    if (isLoading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-[#030303]">
-                <Loader2 className="h-16 w-16 animate-spin text-primary/20" />
-            </div>
-        )
-    }
+  const { top3, restOfUsers } = useMemo(() => {
+    if (!users) return { top3: [], restOfUsers: [] };
+    return {
+      top3: users.slice(0, 3),
+      restOfUsers: users.slice(3),
+    };
+  }, [users]);
 
+  const userRank = useMemo(() => {
+    if (!user || !users) return null;
+    const rank = users.findIndex((u) => u.id === user.uid);
+    return rank !== -1 ? rank + 1 : null;
+  }, [user, users]);
+
+  const earnedBadgeIds = useMemo(() => new Set(earnedBadges?.map((b) => b.id) || []), [earnedBadges]);
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen pb-32 overflow-x-hidden">
-        {/* ── Background Aura ── */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-amber-500/5 blur-[150px] rounded-full" />
-            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full translate-x-1/4 translate-y-1/4" />
-        </div>
-
-        <div className="container relative z-10 px-4">
-            <header className="text-center pt-20 pb-16">
-                <motion.div 
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-[0.4em] mb-8"
-                >
-                    <Trophy className="w-4 h-4 fill-current" /> قاعة الخالدين
-                </motion.div>
-                <motion.h1 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="text-6xl md:text-8xl font-black font-headline tracking-tighter text-white mb-6"
-                >
-                    لوحة <span className="text-transparent bg-clip-text bg-gradient-to-l from-amber-200 via-amber-500 to-amber-700 italic">الصدارة</span>
-                </motion.h1>
-                <motion.p 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="max-w-2xl mx-auto text-xl text-white/40 font-medium leading-relaxed italic"
-                >
-                    "وفي ذلك فليتنافس المتنافسون".. رحلة التسابق في ميادين العلم والعمل الصالح تبدأ من هنا.
-                </motion.p>
-            </header>
-
-            {/* ── Podium Section ── */}
-            <section className="mb-32">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-end">
-                    {/* Second Place */}
-                    {top3[1] && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="order-2 md:order-1"
-                        >
-                            <div className="flex flex-col items-center">
-                                <div className="relative mb-6">
-                                    <div className="w-24 h-24 rounded-full border-4 border-slate-400 p-1 bg-zinc-900 shadow-2xl">
-                                        <Avatar className="w-full h-full">
-                                            <AvatarImage src={top3[1].photoURL} />
-                                            <AvatarFallback className="bg-zinc-800 text-slate-400 font-black">{getInitials(top3[1].name)}</AvatarFallback>
-                                        </Avatar>
-                                    </div>
-                                    <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-slate-400 flex items-center justify-center text-white font-black shadow-lg">2</div>
-                                </div>
-                                <div className="w-full h-32 bg-gradient-to-t from-white/5 to-white/[0.02] border border-white/5 rounded-t-[2rem] flex flex-col items-center justify-center p-6 text-center">
-                                    <p className="text-xl font-black text-white line-clamp-1">{top3[1].name}</p>
-                                    <p className="text-slate-400 font-black text-sm mt-1">{top3[1].points} نقطة</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* First Place */}
-                    {top3[0] && (
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="order-1 md:order-2"
-                        >
-                            <div className="flex flex-col items-center -mt-8">
-                                <div className="relative mb-8">
-                                    <motion.div 
-                                        animate={{ y: [0, -10, 0] }}
-                                        transition={{ repeat: Infinity, duration: 3 }}
-                                        className="absolute -top-16 left-1/2 -translate-x-1/2"
-                                    >
-                                        <Crown className="w-16 h-16 text-amber-500 fill-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
-                                    </motion.div>
-                                    <div className="w-32 h-32 rounded-full border-4 border-amber-500 p-1.5 bg-zinc-900 shadow-[0_0_50px_rgba(245,158,11,0.3)]">
-                                        <Avatar className="w-full h-full">
-                                            <AvatarImage src={top3[0].photoURL} />
-                                            <AvatarFallback className="bg-zinc-800 text-amber-500 font-black text-2xl">{getInitials(top3[0].name)}</AvatarFallback>
-                                        </Avatar>
-                                    </div>
-                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-500 px-6 py-1 rounded-full text-zinc-950 text-xs font-black uppercase tracking-widest shadow-xl">البطل</div>
-                                </div>
-                                <div className="w-full h-48 bg-gradient-to-t from-amber-500/10 to-amber-500/[0.02] border border-amber-500/20 rounded-t-[3rem] flex flex-col items-center justify-center p-8 text-center shadow-[0_-20px_50px_rgba(245,158,11,0.05)]">
-                                    <p className="text-3xl font-black text-white font-headline leading-tight">{top3[0].name}</p>
-                                    <div className="flex items-center gap-2 text-amber-500 font-black text-lg mt-2">
-                                        <Sparkles className="w-5 h-5 fill-current" />
-                                        {top3[0].points} نقطة
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Third Place */}
-                    {top3[2] && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="order-3"
-                        >
-                            <div className="flex flex-col items-center">
-                                <div className="relative mb-6">
-                                    <div className="w-24 h-24 rounded-full border-4 border-amber-700/50 p-1 bg-zinc-900 shadow-2xl">
-                                        <Avatar className="w-full h-full">
-                                            <AvatarImage src={top3[2].photoURL} />
-                                            <AvatarFallback className="bg-zinc-800 text-amber-700 font-black">{getInitials(top3[2].name)}</AvatarFallback>
-                                        </Avatar>
-                                    </div>
-                                    <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-amber-700/80 flex items-center justify-center text-white font-black shadow-lg">3</div>
-                                </div>
-                                <div className="w-full h-24 bg-gradient-to-t from-white/5 to-white/[0.02] border border-white/5 rounded-t-[2rem] flex flex-col items-center justify-center p-6 text-center">
-                                    <p className="text-xl font-black text-white line-clamp-1">{top3[2].name}</p>
-                                    <p className="text-amber-700 font-black text-sm mt-1">{top3[2].points} نقطة</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </div>
-            </section>
-
-            <Tabs defaultValue="leaderboard" className="w-full">
-                <div className="flex justify-center mb-12">
-                    <TabsList className="h-auto p-2 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-full flex gap-2">
-                        <TabsTrigger value="leaderboard" className="px-8 py-3 rounded-full data-[state=active]:bg-white data-[state=active]:text-black text-white/50 font-black text-sm transition-all flex items-center gap-2 tracking-tight">
-                            <Medal className="h-4 w-4" /> المتصدرون
-                        </TabsTrigger>
-                        <TabsTrigger value="all-badges" className="px-8 py-3 rounded-full data-[state=active]:bg-white data-[state=active]:text-black text-white/50 font-black text-sm transition-all flex items-center gap-2 tracking-tight">
-                            <Award className="h-4 w-4" /> الأوسمة
-                        </TabsTrigger>
-                        <TabsTrigger value="my-badges" className="px-8 py-3 rounded-full data-[state=active]:bg-white data-[state=active]:text-black text-white/50 font-black text-sm transition-all flex items-center gap-2 tracking-tight">
-                            <Sparkles className="h-4 w-4" /> أوسمتي
-                        </TabsTrigger>
-                    </TabsList>
-                </div>
-
-                <div className="max-w-5xl mx-auto">
-                    <TabsContent value="leaderboard" className="mt-0 outline-none">
-                        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl">
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b border-white/5">
-                                            <th className="px-8 py-6 text-right text-xs font-black text-white/20 uppercase tracking-[0.3em]">الترتيب</th>
-                                            <th className="px-8 py-6 text-right text-xs font-black text-white/20 uppercase tracking-[0.3em]">المستخدم</th>
-                                            <th className="px-8 py-6 text-left text-xs font-black text-white/20 uppercase tracking-[0.3em]">النقاط المكتسبة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {restOfUsers?.map((u, index) => {
-                                            const actualRank = index + 4;
-                                            const isMe = user && u.id === user.uid;
-                                            return (
-                                                <tr key={u.id} className={cn(
-                                                    "group transition-all duration-300 hover:bg-white/[0.03]",
-                                                    isMe && "bg-primary/5"
-                                                )}>
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-2xl font-black text-white/10 group-hover:text-white/40 transition-colors tabular-nums">#{actualRank}</span>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-2xl border border-white/10 p-0.5 overflow-hidden group-hover:scale-110 transition-transform">
-                                                                <Avatar className="w-full h-full rounded-xl">
-                                                                    <AvatarImage src={u.photoURL} alt={u.name} />
-                                                                    <AvatarFallback className="bg-zinc-800 text-white/40 font-bold text-xs">{getInitials(u.name)}</AvatarFallback>
-                                                                </Avatar>
-                                                            </div>
-                                                            <div className="space-y-0.5">
-                                                                <p className="font-black text-white group-hover:text-amber-400 transition-colors">{u.name}</p>
-                                                                {isMe && <span className="text-[10px] font-black uppercase text-primary tracking-widest italic animate-pulse">أنت هنا</span>}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6 text-left">
-                                                        <div className="inline-flex items-center gap-2 font-black text-xl text-white font-mono tracking-tighter">
-                                                            {u.points || 0}
-                                                            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                             {user && userRank && (
-                                <div className="p-10 bg-primary/10 border-t border-primary/20 flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <p className="text-white/40 text-xs font-black uppercase tracking-widest">موقعك الحالي</p>
-                                        <h4 className="text-4xl font-black text-white tracking-tighter">المركز #{userRank}</h4>
-                                    </div>
-                                    <div className="w-16 h-16 rounded-3xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-                                        <User className="w-8 h-8 text-primary" />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="all-badges" className="mt-0 outline-none">
-                         <div className="space-y-12">
-                            <div className="text-center space-y-4">
-                                <h2 className="text-4xl font-black font-headline text-white">متجر الأوسمة</h2>
-                                <p className="text-white/30 text-lg font-medium italic">"أكمل المهام المعرفية لتحظى بهذه الأوسمة في ملفك الشخصي."</p>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                                {allBadges?.map(badge => (
-                                    <BadgeItem key={badge.id} badge={badge} earned={earnedBadgeIds.has(badge.id)} />
-                                ))}
-                            </div>
-                        </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="my-badges" className="mt-0 outline-none">
-                        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[4rem] p-12 shadow-2xl relative overflow-hidden">
-                             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-                             
-                            {earnedBadges && earnedBadges.length > 0 ? (
-                                <div className="space-y-12 relative z-10">
-                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-3xl font-black font-headline text-white">إنجازاتك</h3>
-                                        <div className="px-6 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-black uppercase tracking-widest">
-                                            {earnedBadges.length} وسام مكتسب
-                                        </div>
-                                     </div>
-                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                                        {allBadges?.filter(b => earnedBadgeIds.has(b.id)).map(badge => (
-                                            <BadgeItem key={badge.id} badge={badge} earned={true} />
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-20 space-y-8 relative z-10">
-                                    <div className="w-24 h-24 mx-auto rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                                        <Award className="w-12 h-12 text-white/10" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-2xl font-black text-white/40">لم تحصل على أي أوسمة بعد</p>
-                                        <p className="text-white/20 font-medium">ابدأ الاستماع للمحاضرات وإتمام السلاسل لتحصل على أول أوسمتك!</p>
-                                    </div>
-                                    <button className="px-8 py-3 rounded-full bg-white text-black font-black text-sm flex items-center gap-2 mx-auto hover:bg-zinc-200 transition-colors">
-                                        ابدأ الرحلة الآن <ChevronLeft className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </TabsContent>
-                </div>
-            </Tabs>
-        </div>
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
-    )
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-20" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-10 max-w-5xl">
+        {/* Clean Header */}
+        <header className="text-center space-y-3 pb-6 border-b border-border/60">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+            <Trophy className="w-3.5 h-3.5" />
+            <span>{t('لوحة الشرف والمنافسة', 'Hall of Honor')}</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline text-foreground tracking-tight">
+            {t('لوحة', 'Points')} <span className="text-primary">{t('الصدارة', 'Leaderboard')}</span>
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+            {t(
+              '«وفي ذلك فليتنافس المتنافسون» — تسابق في طلب العلم والعمل الصالح واجمع الأوسمة.',
+              'Compete in learning, consistency, and collecting scientific achievement badges.'
+            )}
+          </p>
+        </header>
+
+        {/* Podium Section */}
+        {top3.length > 0 && (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            {/* Second Place */}
+            {top3[1] && (
+              <div className="order-2 md:order-1 bg-card/80 border border-border rounded-2xl p-6 flex flex-col items-center text-center shadow-sm">
+                <div className="relative mb-3">
+                  <Avatar className="w-16 h-16 border-2 border-slate-400">
+                    <AvatarImage src={top3[1].photoURL} />
+                    <AvatarFallback className="font-bold">{getInitials(top3[1].name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-slate-500 text-white text-xs font-black flex items-center justify-center shadow">
+                    2
+                  </span>
+                </div>
+                <p className="font-bold text-base text-foreground line-clamp-1">{top3[1].name}</p>
+                <p className="text-sm font-bold text-muted-foreground mt-1">
+                  {top3[1].points || 0} {t('نقطة', 'pts')}
+                </p>
+              </div>
+            )}
+
+            {/* First Place */}
+            {top3[0] && (
+              <div className="order-1 md:order-2 bg-amber-500/10 border border-amber-500/30 rounded-3xl p-7 flex flex-col items-center text-center shadow-sm">
+                <Crown className="w-8 h-8 text-amber-500 fill-amber-500 mb-2" />
+                <div className="relative mb-3">
+                  <Avatar className="w-20 h-20 border-4 border-amber-500">
+                    <AvatarImage src={top3[0].photoURL} />
+                    <AvatarFallback className="font-black text-xl text-amber-500">
+                      {getInitials(top3[0].name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 text-[10px] font-black px-3 py-0.5 rounded-full shadow">
+                    #1
+                  </span>
+                </div>
+                <p className="font-black text-lg text-foreground line-clamp-1">{top3[0].name}</p>
+                <p className="text-sm font-black text-amber-500 mt-1 flex items-center gap-1">
+                  <Sparkles className="w-4 h-4" />
+                  <span>{top3[0].points || 0} {t('نقطة', 'pts')}</span>
+                </p>
+              </div>
+            )}
+
+            {/* Third Place */}
+            {top3[2] && (
+              <div className="order-3 bg-card/80 border border-border rounded-2xl p-5 flex flex-col items-center text-center shadow-sm">
+                <div className="relative mb-3">
+                  <Avatar className="w-16 h-16 border-2 border-amber-700/70">
+                    <AvatarImage src={top3[2].photoURL} />
+                    <AvatarFallback className="font-bold">{getInitials(top3[2].name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-amber-700 text-white text-xs font-black flex items-center justify-center shadow">
+                    3
+                  </span>
+                </div>
+                <p className="font-bold text-base text-foreground line-clamp-1">{top3[2].name}</p>
+                <p className="text-sm font-bold text-amber-600 mt-1">
+                  {top3[2].points || 0} {t('نقطة', 'pts')}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Tabs */}
+        <Tabs defaultValue="leaderboard" className="w-full space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
+          <div className="flex justify-center">
+            <TabsList className="h-11 p-1 bg-muted/60 border border-border rounded-xl inline-flex gap-1">
+              <TabsTrigger value="leaderboard" className="px-5 rounded-lg text-xs sm:text-sm font-bold gap-2">
+                <Medal className="h-4 w-4" />
+                <span>{t('المتصدرون', 'Rankings')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="all-badges" className="px-5 rounded-lg text-xs sm:text-sm font-bold gap-2">
+                <Award className="h-4 w-4" />
+                <span>{t('الأوسمة', 'All Badges')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="my-badges" className="px-5 rounded-lg text-xs sm:text-sm font-bold gap-2">
+                <Sparkles className="h-4 w-4" />
+                <span>{t('أوسمتي', 'My Badges')}</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="leaderboard" className="m-0">
+            <div className="bg-card/80 border border-border rounded-2xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40">
+                      <th className="px-5 py-3.5 text-right text-xs font-bold text-muted-foreground">
+                        {t('الترتيب', 'Rank')}
+                      </th>
+                      <th className="px-5 py-3.5 text-right text-xs font-bold text-muted-foreground">
+                        {t('المستخدم', 'User')}
+                      </th>
+                      <th className="px-5 py-3.5 text-left text-xs font-bold text-muted-foreground">
+                        {t('النقاط', 'Points')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {restOfUsers?.map((u, index) => {
+                      const actualRank = index + 4;
+                      const isMe = user && u.id === user.uid;
+                      return (
+                        <tr
+                          key={u.id}
+                          className={cn('hover:bg-accent/40 transition-colors', isMe && 'bg-primary/5')}
+                        >
+                          <td className="px-5 py-3.5 font-bold text-sm text-muted-foreground tabular-nums">
+                            #{actualRank}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-9 h-9 border border-border">
+                                <AvatarImage src={u.photoURL} alt={u.name} />
+                                <AvatarFallback className="text-xs font-bold">{getInitials(u.name)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-bold text-sm text-foreground">{u.name}</p>
+                                {isMe && (
+                                  <span className="text-[11px] font-bold text-primary">
+                                    {t('أنت', 'You')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-left">
+                            <div className="inline-flex items-center gap-1.5 font-bold text-sm text-foreground tabular-nums">
+                              <span>{u.points || 0}</span>
+                              <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {user && userRank && (
+                <div className="p-5 bg-primary/10 border-t border-primary/20 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground">{t('ترتيبك الحالي', 'Your Rank')}</p>
+                    <h4 className="text-2xl font-black text-foreground">#{userRank}</h4>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-primary">
+                    <User className="w-5 h-5" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="all-badges" className="m-0 space-y-6">
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-bold text-foreground">{t('متجر الأوسمة', 'Available Badges')}</h2>
+              <p className="text-xs text-muted-foreground">
+                {t('أكمل المهام المعرفية لتحظى بهذه الأوسمة في ملفك الشخصي.', 'Complete study milestones to unlock these badges.')}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {allBadges?.map((badge) => (
+                <BadgeItem key={badge.id} badge={badge} earned={earnedBadgeIds.has(badge.id)} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="my-badges" className="m-0">
+            <div className="bg-card/80 border border-border rounded-3xl p-6 sm:p-8 shadow-sm">
+              {earnedBadges && earnedBadges.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-foreground">{t('إنجازاتك', 'Your Achievements')}</h3>
+                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+                      {earnedBadges.length} {t('وسام مكتسب', 'Earned')}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {allBadges
+                      ?.filter((b) => earnedBadgeIds.has(b.id))
+                      .map((badge) => (
+                        <BadgeItem key={badge.id} badge={badge} earned={true} />
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-14 space-y-4">
+                  <Award className="w-12 h-12 text-muted-foreground/40 mx-auto" />
+                  <div className="space-y-1">
+                    <p className="text-lg font-bold text-foreground">
+                      {t('لم تحصل على أي أوسمة بعد', 'No badges earned yet')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('ابدأ الاستماع للمحاضرات وإتمام السلاسل لتحصل على أول أوسمتك!', 'Start listening to lectures to earn your first badge.')}
+                    </p>
+                  </div>
+                  <Button asChild className="rounded-xl font-bold gap-2">
+                    <Link href="/lectures">
+                      <span>{t('ابدأ الرحلة الآن', 'Start Learning')}</span>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
 }
