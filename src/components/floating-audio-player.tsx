@@ -314,29 +314,29 @@ export function FloatingAudioPlayer() {
             initial={{ opacity: 0, scale: 0.95, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 40 }}
-            className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-2xl p-6 md:p-12 overflow-y-auto"
+            className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-2xl p-4 sm:p-6 md:p-8 overflow-y-auto"
           >
-            <div className="container mx-auto max-w-5xl h-full flex flex-col justify-between gap-6">
-              <div className="flex justify-between items-center">
-                <div className="text-2xl sm:text-3xl font-black font-headline text-primary">
+            <div className="container mx-auto max-w-5xl min-h-full flex flex-col justify-between gap-4">
+              <div className="flex justify-between items-center shrink-0">
+                <div className="text-xl sm:text-2xl font-black font-headline text-primary">
                   وقفة
                 </div>
                 <Button
                   onClick={() => setIsExpanded(false)}
                   variant="outline"
                   size="icon"
-                  className="h-11 w-11 rounded-full"
+                  className="h-10 w-10 rounded-full"
                   aria-label="تصغير المشغل"
                 >
-                  <ChevronDown className="w-6 h-6" />
+                  <ChevronDown className="w-5 h-5" />
                 </Button>
               </div>
 
               <div
-                className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 flex-1 justify-center py-4"
+                className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12 flex-1 justify-center py-2"
                 dir="rtl"
               >
-                <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted shrink-0">
+                <div className="relative w-44 h-44 sm:w-56 sm:h-56 lg:w-[min(21rem,42vh)] lg:h-[min(21rem,42vh)] rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted shrink-0">
                   {artworkUrl ? (
                     <img
                       src={artworkUrl}
@@ -346,25 +346,25 @@ export function FloatingAudioPlayer() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary">
-                      <Headphones className="w-16 h-16" />
+                      <Headphones className="w-14 h-14" />
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-right space-y-6 w-full">
-                  <div>
-                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-headline text-foreground leading-tight mb-2">
+                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-right space-y-4 w-full min-w-0">
+                  <div className="w-full">
+                    <h1 className="text-xl sm:text-3xl lg:text-4xl font-black font-headline text-foreground leading-snug mb-1.5 line-clamp-3">
                       {track.title}
                     </h1>
                     {track.programName && (
-                      <p className="text-base sm:text-xl text-primary font-bold">
+                      <p className="text-sm sm:text-lg text-primary font-bold truncate">
                         {track.programName}
                       </p>
                     )}
                   </div>
 
-                  <div className="w-full space-y-5">
-                    <div className="space-y-2" dir="ltr">
+                  <div className="w-full space-y-4">
+                    <div className="space-y-1.5" dir="ltr">
                       <Slider
                         value={[progress]}
                         max={duration || 1}
@@ -378,27 +378,27 @@ export function FloatingAudioPlayer() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-center lg:justify-start gap-6">
+                    <div className="flex items-center justify-center lg:justify-start gap-5">
                       <Button
                         onClick={handleRewind}
                         variant="ghost"
                         size="icon"
-                        className="w-12 h-12 rounded-full"
+                        className="w-11 h-11 rounded-full"
                         aria-label="تأخير 15 ثانية"
                       >
-                        <Rewind className="w-6 h-6" />
+                        <Rewind className="w-5 h-5" />
                       </Button>
 
                       <Button
                         onClick={togglePlayPause}
                         size="icon"
-                        className="w-16 h-16 rounded-full shadow-lg"
+                        className="w-14 h-14 rounded-full shadow-lg"
                         aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
                       >
                         {isPlaying ? (
-                          <Pause className="w-7 h-7 fill-current" />
+                          <Pause className="w-6 h-6 fill-current" />
                         ) : (
-                          <Play className="w-7 h-7 fill-current" />
+                          <Play className="w-6 h-6 fill-current" />
                         )}
                       </Button>
 
@@ -406,22 +406,22 @@ export function FloatingAudioPlayer() {
                         onClick={handleFastForward}
                         variant="ghost"
                         size="icon"
-                        className="w-12 h-12 rounded-full"
+                        className="w-11 h-11 rounded-full"
                         aria-label="تقديم 15 ثانية"
                       >
-                        <FastForward className="w-6 h-6" />
+                        <FastForward className="w-5 h-5" />
                       </Button>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
                       <Select
                         onValueChange={handleSpeedChange}
                         value={playbackSpeed.toString()}
                       >
-                        <SelectTrigger className="w-24 h-10 font-bold rounded-xl">
+                        <SelectTrigger className="w-24 h-9 font-bold rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl">
+                        <SelectContent className="z-[110] rounded-xl">
                           {[0.5, 1, 1.25, 1.5, 2].map((s) => (
                             <SelectItem key={s} value={s.toString()}>
                               {s}x
@@ -430,7 +430,7 @@ export function FloatingAudioPlayer() {
                         </SelectContent>
                       </Select>
 
-                      <div className="flex items-center gap-3 bg-muted/60 px-3 py-2 rounded-xl border border-border w-44">
+                      <div className="flex items-center gap-3 bg-muted/60 px-3 py-1.5 rounded-xl border border-border w-44">
                         <button
                           type="button"
                           onClick={toggleMute}
@@ -438,9 +438,9 @@ export function FloatingAudioPlayer() {
                           aria-label={isMuted ? 'إلغاء الكتم' : 'كتم الصوت'}
                         >
                           {isMuted || volume === 0 ? (
-                            <VolumeX className="w-5 h-5" />
+                            <VolumeX className="w-4 h-4" />
                           ) : (
-                            <Volume2 className="w-5 h-5" />
+                            <Volume2 className="w-4 h-4" />
                           )}
                         </button>
                         <Slider
@@ -456,7 +456,7 @@ export function FloatingAudioPlayer() {
                 </div>
               </div>
 
-              <div className="h-12 flex items-center justify-center">
+              <div className="h-8 flex items-center justify-center shrink-0">
                 <AudioVisualizer
                   audioElement={audioRef.current}
                   isPlaying={isPlaying}
