@@ -102,6 +102,7 @@ const LectureCardComponent = ({
       imageId: lecture.imageId,
       slug: lecture.slug,
       programName: lecture.programName,
+      transcript: lecture.transcript,
     }, startTime);
   };
 

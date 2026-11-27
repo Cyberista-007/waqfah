@@ -464,6 +464,7 @@ export function FloatingAudioPlayer() {
                   currentTime={progress}
                   playbackRate={playbackSpeed}
                   volume={isMuted ? 0 : volume}
+                  transcript={track.transcript}
                   variant="expanded"
                 />
               </div>
@@ -520,6 +521,7 @@ export function FloatingAudioPlayer() {
                     currentTime={progress}
                     playbackRate={playbackSpeed}
                     volume={isMuted ? 0 : volume}
+                    transcript={track.transcript}
                     variant="compact"
                   />
                 </div>

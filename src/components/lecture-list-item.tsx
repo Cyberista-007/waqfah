@@ -85,6 +85,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
             imageId: lecture.imageId,
             slug: lecture.slug,
             programName: lecture.programName,
+            transcript: lecture.transcript,
         }, startTime);
     };
 

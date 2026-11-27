@@ -6,6 +6,7 @@ import {
   getOrCreateMediaAnalyser,
   resolveCanvasColor,
 } from '@/lib/audio-spectrum';
+import type { TranscriptItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export type VisualizerStyle = 'columns' | 'waves' | 'particles';
@@ -18,6 +19,7 @@ interface AudioVisualizerProps {
   playbackRate?: number;
   volume?: number;
   isBuffering?: boolean;
+  transcript?: TranscriptItem[];
   variant?: 'compact' | 'expanded';
   className?: string;
 }
@@ -30,6 +32,7 @@ export function AudioVisualizer({
   playbackRate = 1,
   volume = 1,
   isBuffering = false,
+  transcript,
   variant = 'compact',
   className,
 }: AudioVisualizerProps) {
@@ -45,6 +48,7 @@ export function AudioVisualizer({
     playbackRate,
     volume,
     audioElement,
+    transcript,
     styleMode,
   });
 
@@ -55,6 +59,7 @@ export function AudioVisualizer({
     playbackRate,
     volume,
     audioElement,
+    transcript,
     styleMode,
   };
 
@@ -88,6 +93,7 @@ export function AudioVisualizer({
         playbackRate: rate,
         volume: vol,
         audioElement: audioEl,
+        transcript: cues,
         styleMode: activeStyle,
       } = liveStateRef.current;
 
@@ -116,6 +122,7 @@ export function AudioVisualizer({
         volume: vol,
         phase,
         prevLevels: prevLevelsRef.current,
+        transcript: cues,
       });
 
       ctx.clearRect(0, 0, width, height);

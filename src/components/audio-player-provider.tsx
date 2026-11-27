@@ -9,7 +9,7 @@ import { doc, getDoc, setDoc, Timestamp, runTransaction, increment } from "fireb
 import { useToast } from "@/hooks/use-toast";
 import { getVideoIdFromUrl } from "@/lib/utils";
 
-export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName' | 'youtubeUrl'>;
+export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName' | 'youtubeUrl'> & { transcript?: Lecture['transcript'] };
 export type IframeTrack = {
   type: 'youtube' | 'soundcloud';
   src: string; // youtube videoId or soundcloud URL
