@@ -72,13 +72,18 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
           alt={lecture.title}
           fill
           className={cn(
-            'object-cover transition-all duration-700',
-            isHovered ? 'scale-110 brightness-75' : 'scale-100 brightness-90'
+            'object-cover transition-all duration-500',
+            isHovered ? 'scale-105 brightness-75' : 'scale-100'
           )}
         />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {/* Hover-only gradient overlay */}
+        <div
+          className={cn(
+            'absolute inset-0 bg-black/30 transition-opacity duration-300 pointer-events-none',
+            isHovered ? 'opacity-100' : 'opacity-0'
+          )}
+        />
 
         {/* Play Button */}
         <AnimatePresence>

@@ -295,11 +295,8 @@ const LectureCardComponent = ({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             priority={index < 4}
-            className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-75 brightness-95"
+            className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-75"
           />
-
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
           {/* Hover Play / Audio Overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-20 bg-black/45 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
