@@ -110,6 +110,7 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
 ]
 
 const SECONDARY_QUICK_ITEMS: NavItem[] = [
+  { href: "/pathways", label: "المسارات", enLabel: "Pathways", icon: GraduationCap },
   { href: "/programs", label: "البرامج", enLabel: "Programs", icon: Podcast },
   { href: "/lectures", label: "المحاضرات", enLabel: "Lectures", icon: ListVideo },
   { href: "/palestine", label: "فلسطين", enLabel: "Palestine", icon: Flag },
@@ -187,7 +188,11 @@ export function SiteHeader() {
     router.push("/")
   }
 
-  const allDrawerMain = [...PRIMARY_NAV_ITEMS, ...SECONDARY_QUICK_ITEMS]
+  const allDrawerMain = Array.from(
+    new Map(
+      [...PRIMARY_NAV_ITEMS, ...SECONDARY_QUICK_ITEMS].map((item) => [item.href, item])
+    ).values()
+  )
   const drawerMore = isAdmin
     ? [
         ...MORE_NAV_ITEMS,
@@ -402,64 +407,67 @@ export function SiteHeader() {
               </Link>
             </div>
 
-            {/* Center Zone: Clean Non-Wrapping Primary Links */}
+            {/* Center Zone: Bounded, Non-Overlapping Primary Links */}
             <nav
               aria-label={t("التنقل الرئيسي", "Primary navigation")}
-              className="hidden lg:flex items-center justify-center gap-1 min-w-0"
+              className="hidden lg:flex flex-1 min-w-0 overflow-x-auto px-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
-              {PRIMARY_NAV_ITEMS.map((item) => {
-                const active = isRouteActive(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={false}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
-                      active
-                        ? "bg-primary/12 text-primary border border-primary/25"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
-                    )}
-                  >
-                    <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                    <span>{t(item.label, item.enLabel)}</span>
-                    {item.isLive && (
-                      <span className="relative flex h-2 w-2 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                      </span>
-                    )}
-                  </Link>
-                )
-              })}
+              <div className="mx-auto flex w-max items-center justify-center gap-1">
+                {PRIMARY_NAV_ITEMS.map((item) => {
+                  const active = isRouteActive(item.href)
+                  const isXlOnly = item.href === "/pathways"
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      prefetch={false}
+                      className={cn(
+                        isXlOnly ? "hidden xl:inline-flex" : "inline-flex",
+                        "items-center gap-1.5 px-2.5 py-1.5 xl:px-3 xl:py-2 rounded-xl text-[13px] xl:text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
+                        active
+                          ? "bg-primary/12 text-primary border border-primary/25"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+                      )}
+                    >
+                      <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+                      <span>{t(item.label, item.enLabel)}</span>
+                      {item.isLive && (
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
 
-              {/* 2xl+ Extra Direct Link */}
-              <Link
-                href="/programs"
-                prefetch={false}
-                className={cn(
-                  "hidden 2xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
-                  isRouteActive("/programs")
-                    ? "bg-primary/12 text-primary border border-primary/25"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
-                )}
-              >
-                <Podcast className="h-4 w-4 shrink-0" />
-                <span>{t("البرامج", "Programs")}</span>
-              </Link>
+                {/* 2xl+ Extra Direct Link */}
+                <Link
+                  href="/programs"
+                  prefetch={false}
+                  className={cn(
+                    "hidden 2xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
+                    isRouteActive("/programs")
+                      ? "bg-primary/12 text-primary border border-primary/25"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+                  )}
+                >
+                  <Podcast className="h-4 w-4 shrink-0" />
+                  <span>{t("البرامج", "Programs")}</span>
+                </Link>
 
-              {/* Click-Friendly More Dropdown */}
-              <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="h-9 px-3 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 gap-1.5 whitespace-nowrap shrink-0"
-                  >
-                    <Grid2x2 className="h-4 w-4" />
-                    <span>{t("الأقسام", "Sections")}</span>
-                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                  </Button>
-                </DropdownMenuTrigger>
+                {/* Click-Friendly More Dropdown */}
+                <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-9 px-2.5 xl:px-3 rounded-xl text-[13px] xl:text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 gap-1.5 whitespace-nowrap shrink-0"
+                    >
+                      <Grid2x2 className="h-4 w-4" />
+                      <span>{t("الأقسام", "Sections")}</span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    </Button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="center"
                   className="w-[460px] p-3 rounded-2xl border-border bg-popover text-popover-foreground shadow-xl"
@@ -542,6 +550,7 @@ export function SiteHeader() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </nav>
 
             {/* End Zone: Search, Utilities, Donate CTA, User */}
@@ -550,7 +559,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={openSearch}
-                className="hidden xl:flex items-center justify-between gap-3 h-9 w-52 2xl:w-60 rounded-xl border border-border/80 bg-muted/50 hover:bg-muted hover:border-primary/40 px-3 text-xs text-muted-foreground transition-colors whitespace-nowrap shrink-0 group"
+                className="hidden xl:flex items-center justify-between gap-2.5 h-9 w-44 2xl:w-56 rounded-xl border border-border/80 bg-muted/50 hover:bg-muted hover:border-primary/40 px-3 text-xs text-muted-foreground transition-colors whitespace-nowrap shrink-0 group"
                 aria-label={t("بحث", "Search")}
               >
                 <span className="flex items-center gap-2 min-w-0">
