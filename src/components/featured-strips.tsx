@@ -111,18 +111,12 @@ function StripCard({ lecture, accentColor }: { lecture: Lecture; accentColor: st
           </div>
         )}
 
-        {/* Video/Audio indicator */}
-        <div
-          className={cn(
-            'absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-md',
-            videoId
-              ? 'bg-red-600 border-red-500/40 text-white'
-              : 'bg-primary/80 border-primary/50 text-primary-foreground'
-          )}
-        >
-          {videoId && <Play className="w-2.5 h-2.5 fill-white text-white rotate-180" />}
-          <span>{videoId ? 'فيديو' : '🎧 صوت'}</span>
-        </div>
+        {/* Audio-only indicator */}
+        {!videoId && (
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-md bg-primary/80 border-primary/50 text-primary-foreground">
+            <span>🎧 صوت</span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
