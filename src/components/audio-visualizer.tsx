@@ -8,97 +8,88 @@ interface AudioVisualizerProps {
   barColor?: string;
 }
 
-export function AudioVisualizer({ audioElement, isPlaying, barColor = '#8b5cf6' }: AudioVisualizerProps) {
+const DEFAULT_COLOR = '#10b981';
+
+function resolveCanvasColor(canvas: HTMLCanvasElement, color?: string): string {
+  if (!color) return DEFAULT_COLOR;
+  try {
+    if (!color.includes('var(')) return color;
+    const match = color.match(/var\((--[^)]+)\)/);
+    if (!match) return DEFAULT_COLOR;
+    const raw = getComputedStyle(canvas).getPropertyValue(match[1]).trim();
+    if (!raw) return DEFAULT_COLOR;
+    // Tailwind HSL variable format: e.g. "160 84% 39%"
+    if (/^\d/.test(raw) && !raw.startsWith('#') && !raw.startsWith('hsl') && !raw.startsWith('rgb')) {
+      return `hsl(${raw})`;
+    }
+    return raw;
+  } catch {
+    return DEFAULT_COLOR;
+  }
+}
+
+export function AudioVisualizer({ audioElement, isPlaying, barColor }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   useEffect(() => {
-    if (!audioElement || !canvasRef.current) return;
-
-    // Initialize Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const analyser = audioContext.createAnalyser();
-    
-    // Connect audio element to analyser
-    // Only connect if not already connected (to prevent errors on re-mount)
-    if (!sourceRef.current) {
-        try {
-            const source = audioContext.createMediaElementSource(audioElement);
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
-            sourceRef.current = source;
-        } catch (e) {
-            console.warn("Audio source already connected or blocked by CORS", e);
-        }
-    }
-
-    analyser.fftSize = 64; // Smaller for a simpler look
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyserRef.current = analyser;
-
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const draw = () => {
-      if (!isPlaying) {
-          // Flatten bars when paused
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          const barWidth = (canvas.width / bufferLength) * 2.5;
-          let x = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            ctx.fillStyle = barColor; // Use primary color
-            ctx.globalAlpha = 0.2;
-            ctx.fillRect(x, canvas.height - 2, barWidth - 2, 2);
-            x += barWidth;
-          }
-          return;
-      }
+    const resolvedColor = resolveCanvasColor(canvas, barColor);
+    const barCount = 18;
+    const stepWidth = canvas.width / barCount;
+    const barWidth = Math.max(2, stepWidth - 2.5);
+    let phase = 0;
 
-      animationRef.current = requestAnimationFrame(draw);
-      analyser.getByteFrequencyData(dataArray);
-
+    const drawFrame = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const barWidth = (canvas.width / bufferLength) * 2.5;
-      let barHeight;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        barHeight = (dataArray[i] / 255) * canvas.height;
-
-        // Gradient for a premium look
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, barColor);
-        gradient.addColorStop(1, `${barColor}33`); // Transparent version
-
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = 0.8;
-        
-        // Rounded bars logic (simulated with rect)
-        ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
-
-        x += barWidth;
+      if (!isPlaying) {
+        ctx.fillStyle = resolvedColor;
+        ctx.globalAlpha = 0.25;
+        for (let i = 0; i < barCount; i++) {
+          ctx.fillRect(i * stepWidth, canvas.height - 2, barWidth, 2);
+        }
+        return;
       }
+
+      phase += 0.14;
+      ctx.fillStyle = resolvedColor;
+
+      // Also reflect real audio output if native HTMLAudioElement is actively playing unmuted audio
+      const isNativeAudioPlaying =
+        Boolean(audioElement) && !audioElement!.paused && Boolean(audioElement!.currentSrc);
+
+      for (let i = 0; i < barCount; i++) {
+        const wave = Math.abs(Math.sin(phase + i * 0.55)) * 0.65 + Math.abs(Math.cos(phase * 0.7 - i * 0.3)) * 0.35;
+        const scale = isNativeAudioPlaying ? wave : wave * 0.85;
+        const barHeight = Math.max(3, scale * (canvas.height - 2));
+        ctx.globalAlpha = 0.45 + wave * 0.45;
+        ctx.fillRect(i * stepWidth, canvas.height - barHeight, barWidth, barHeight);
+      }
+
+      animationRef.current = requestAnimationFrame(drawFrame);
     };
 
-    draw();
+    drawFrame();
 
     return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      // We don't close the audioContext here to avoid re-initializing issues
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, [audioElement, isPlaying, barColor]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={120} 
-      height={30} 
-      className="opacity-60 group-hover:opacity-100 transition-opacity"
+    <canvas
+      ref={canvasRef}
+      width={120}
+      height={24}
+      className="opacity-80 group-hover:opacity-100 transition-opacity"
     />
   );
 }

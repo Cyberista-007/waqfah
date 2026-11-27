@@ -1,33 +1,52 @@
+'use client';
 
-"use client"
+import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  X,
+  Rewind,
+  Timer,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  FastForward,
+  Maximize2,
+  ChevronDown,
+  Headphones,
+} from 'lucide-react';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Rewind, Timer, Play, Pause, Volume2, VolumeX, FastForward, ExternalLink, Maximize2, Minimize2, ChevronDown } from "lucide-react";
-import { useAudioPlayer } from "./audio-player-provider";
-import { motion, AnimatePresence } from "framer-motion";
-import { useMood } from "./mood-provider";
-import { Button } from "./ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { cn } from "@/lib/utils";
-import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc, Timestamp, runTransaction, increment } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Label } from "./ui/label";
-import { Slider } from "./ui/slider";
-import { getPlaceholderImage } from "@/lib/images";
-import Image from "next/image";
-import Link from "next/link";
-import { AudioVisualizer } from "./audio-visualizer";
-
+import { useAudioPlayer } from './audio-player-provider';
+import { useMood } from './mood-provider';
+import { Button } from './ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Slider } from './ui/slider';
+import { AudioVisualizer } from './audio-visualizer';
+import { useToast } from '@/hooks/use-toast';
+import { getPlaceholderImage } from '@/lib/images';
+import { cn, getVideoIdFromUrl } from '@/lib/utils';
 
 function formatTime(seconds: number) {
-    const floorSeconds = Math.floor(seconds);
-    const minutes = Math.floor(floorSeconds / 60);
-    const remainingSeconds = floorSeconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
+  const floorSeconds = Math.floor(seconds);
+  const hours = Math.floor(floorSeconds / 3600);
+  const minutes = Math.floor((floorSeconds % 3600) / 60);
+  const remainingSeconds = floorSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds
+      .toString()
+      .padStart(2, '0')}`;
+  }
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
-
 
 export function FloatingAudioPlayer() {
   const {
@@ -46,23 +65,28 @@ export function FloatingAudioPlayer() {
     setAudioVolume,
     setAudioMuted,
   } = useAudioPlayer();
-  const { user } = useUser();
-  const firestore = useFirestore();
+
   const { toast } = useToast();
   const { moodColor } = useMood();
-  
+
   const [isMounted, setIsMounted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
-  
-  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [thumbFailed, setThumbFailed] = useState(false);
+
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [sleepTimerDuration, setSleepTimerDuration] = useState(0); // in minutes
-  const [sleepTimerRemaining, setSleepTimerRemaining] = useState(0); // in seconds
+  const [sleepTimerDuration, setSleepTimerDuration] = useState(0);
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState(0);
   const [sleepTimerEndOfTrack, setSleepTimerEndOfTrack] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return parseFloat(localStorage.getItem('audioPlayerSpeed') || '1') || 1;
+    }
+    return 1;
+  });
 
   const formatCountdown = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -74,251 +98,104 @@ export function FloatingAudioPlayer() {
     setIsMounted(true);
     const savedVolume = localStorage.getItem('audioPlayerVolume');
     if (savedVolume) {
-        const parsedVolume = parseFloat(savedVolume);
+      const parsedVolume = parseFloat(savedVolume);
+      if (Number.isFinite(parsedVolume)) {
         setVolume(parsedVolume);
-        if (audioRef.current) {
-            audioRef.current.volume = parsedVolume;
-        }
+        setAudioVolume(parsedVolume);
+      }
     }
-    // Restore saved playback speed
     const savedSpeed = localStorage.getItem('audioPlayerSpeed');
-    if (savedSpeed && audioRef.current) {
-        audioRef.current.playbackRate = parseFloat(savedSpeed);
+    if (savedSpeed) {
+      const parsedSpeed = parseFloat(savedSpeed);
+      if (Number.isFinite(parsedSpeed)) {
+        setPlaybackSpeed(parsedSpeed);
+        setAudioRate(parsedSpeed);
+      }
     }
-  }, [audioRef]);
-  
+  }, [setAudioVolume, setAudioRate]);
+
+  useEffect(() => {
+    setThumbFailed(false);
+  }, [track?.id]);
+
   // Sync progress & duration from unified AudioPlayerProvider
   useEffect(() => {
-    setProgress(audioCurrentTime);
-    setDuration(audioDuration);
+    setProgress(audioCurrentTime || 0);
+    setDuration(audioDuration || 0);
   }, [audioCurrentTime, audioDuration]);
 
-
-  const updateListenHistory = useCallback(async () => {
-    if (!user || !firestore || !track || !audioRef.current) return;
-
-    const currentTime = audioRef.current.currentTime;
-    const duration = audioRef.current.duration;
-
-    if (currentTime > 0 && duration > 0) {
-        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
-        const userRef = doc(firestore, 'users', user.uid);
-
-        try {
-            await runTransaction(firestore, async (transaction) => {
-                const historyDoc = await transaction.get(historyRef);
-                const lastPosition = historyDoc.exists() ? historyDoc.data().position : 0;
-                const timeListened = currentTime - lastPosition;
-
-                transaction.set(historyRef, {
-                    lectureId: track.id,
-                    seriesId: track.seriesId,
-                    position: currentTime,
-                    duration: duration,
-                    lastListened: Timestamp.now(),
-                }, { merge: true });
-
-                if (timeListened > 0 && timeListened < 300) { 
-                    transaction.update(userRef, {
-                        minutesListened: increment(timeListened / 60)
-                    });
-                }
-            });
-        } catch (error) {
-            console.error("Failed to update listen history/stats:", error);
-        }
-    }
-  }, [user, firestore, track, audioRef]);
-  
-  const clearSleepTimer = useCallback(() => {
+  const clearSleepTimer = () => {
     if (sleepTimerRef.current) {
-        clearInterval(sleepTimerRef.current);
-        sleepTimerRef.current = null;
+      clearInterval(sleepTimerRef.current);
+      sleepTimerRef.current = null;
     }
     setSleepTimerDuration(0);
     setSleepTimerRemaining(0);
     setSleepTimerEndOfTrack(false);
-    if (audioRef.current) {
-        audioRef.current.volume = volume;
-    }
-  }, [audioRef, volume]);
-
-  const handleEnded = useCallback(() => {
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-    
-    if (user && firestore && track && audioRef.current) {
-        const userRef = doc(firestore, 'users', user.uid);
-        const historyRef = doc(firestore, 'users', user.uid, 'listenHistory', track.id);
-        const currentTime = audioRef.current.currentTime;
-        const duration = audioRef.current.duration;
-
-        runTransaction(firestore, async (transaction) => {
-            const userDoc = await transaction.get(userRef);
-            const historyDoc = await transaction.get(historyRef);
-
-            if (!userDoc.exists()) {
-                console.error("User doc not found in transaction");
-                return;
-            }
-
-            const currentStreak = userDoc.data().streak || 0;
-            const newStreak = currentStreak + 1;
-            
-            const historyData = historyDoc.data();
-            const lastTime = historyData?.playbackPosition || 0;
-            const timeListened = currentTime - lastTime;
-
-            // 1. Prepare history update
-            transaction.set(historyRef, {
-                lectureId: track.id,
-                title: track.title,
-                programName: track.programName,
-                playbackPosition: currentTime,
-                duration: duration,
-                lastListenedAt: Timestamp.now(),
-                completed: true
-            }, { merge: true });
-
-            // 2. Prepare user profile updates
-            const userProfileUpdates: any = {
-                points: increment(10),
-                streak: newStreak
-            };
-            
-            // 3. Add last bit of listening time
-            if (timeListened > 0 && timeListened < 300) { // Safety check
-                userProfileUpdates.minutesListened = increment(timeListened / 60);
-            }
-            
-            // 4. Commit all user updates in one go
-            transaction.update(userRef, userProfileUpdates);
-
-        }).catch(error => {
-            console.error("Transaction failed on lecture end:", error);
-        });
-    }
-
-    closePlayer();
-    clearSleepTimer();
-  }, [user, firestore, track, audioRef, closePlayer, clearSleepTimer]);
-
+    setAudioVolume(volume);
+  };
 
   useEffect(() => {
-    const audioElement = audioRef.current;
-    if (!audioElement) return;
-
-    const handlePlay = () => {
-      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-      updateIntervalRef.current = setInterval(updateListenHistory, 10000); 
-    };
-    
-    const handlePause = () => {
-      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-      updateListenHistory();
-    };
-    
-    audioElement.addEventListener('play', handlePlay);
-    audioElement.addEventListener('pause', handlePause);
-    audioElement.addEventListener('ended', handleEnded);
-
-    if (track) {
-      audioElement.src = track.audioSrc;
-      audioElement.load();
-      // Restore saved speed for the new track
-      const savedSpeed = localStorage.getItem('audioPlayerSpeed');
-      if (savedSpeed) audioElement.playbackRate = parseFloat(savedSpeed);
-    }
-
     return () => {
-      audioElement.removeEventListener('play', handlePlay);
-      audioElement.removeEventListener('pause', handlePause);
-      audioElement.removeEventListener('ended', handleEnded);
-      if (updateIntervalRef.current) {
-        clearInterval(updateIntervalRef.current);
-      }
-      clearSleepTimer();
+      if (sleepTimerRef.current) clearInterval(sleepTimerRef.current);
     };
-  }, [audioRef, track, updateListenHistory, handleEnded, clearSleepTimer]);
-  
-   useEffect(() => {
-        if (isYoutubeAudio) return;
-        const audioElement = audioRef.current;
-        if (!audioElement) return;
-        if (isPlaying) {
-            audioElement.play().catch(e => console.error("Error playing audio:", e));
-        } else {
-            audioElement.pause();
-        }
-    }, [isPlaying, isYoutubeAudio, audioRef]);
-    
-  // Media Session API Integration
+  }, []);
+
+  // Safe Media Session integration
   useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
     if (!track) {
-      if ('mediaSession' in navigator) {
+      try {
         navigator.mediaSession.metadata = null;
         navigator.mediaSession.setActionHandler('play', null);
         navigator.mediaSession.setActionHandler('pause', null);
         navigator.mediaSession.setActionHandler('seekbackward', null);
         navigator.mediaSession.setActionHandler('seekforward', null);
-      }
+      } catch {}
       return;
     }
-    
-    const artworkUrl = getPlaceholderImage(track.imageId)?.imageUrl || `https://picsum.photos/seed/${track.slug}/512/512`;
 
-    if ('mediaSession' in navigator) {
+    const ytId = getVideoIdFromUrl(track.youtubeUrl || track.audioSrc);
+    const placeholder = getPlaceholderImage(track.imageId);
+    const artworkUrl = ytId
+      ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+      : placeholder?.imageUrl;
+
+    try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
-        artist: track.programName || track.seriesTitle || "محاضرات متنوعة",
-        album: 'منصة الدروس العلمية',
-        artwork: [
-          { src: artworkUrl, sizes: '96x96', type: 'image/jpeg' },
-          { src: artworkUrl, sizes: '128x128', type: 'image/jpeg' },
-          { src: artworkUrl, sizes: '192x192', type: 'image/jpeg' },
-          { src: artworkUrl, sizes: '256x256', type: 'image/jpeg' },
-          { src: artworkUrl, sizes: '384x384', type: 'image/jpeg' },
-          { src: artworkUrl, sizes: '512x512', type: 'image/jpeg' },
-        ]
+        artist: track.programName || track.seriesTitle || 'منصة وقفة',
+        album: 'محاضرات ودروس وقفة',
+        artwork: artworkUrl
+          ? [{ src: artworkUrl, sizes: '480x360', type: 'image/jpeg' }]
+          : [],
       });
 
       navigator.mediaSession.setActionHandler('play', () => {
-        if (audioRef.current) {
-          playTrack(track, audioRef.current.currentTime);
-        }
+        playTrack(track, audioCurrentTime || 0);
       });
       navigator.mediaSession.setActionHandler('pause', () => {
         pauseTrack();
       });
       navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        if (audioRef.current) {
-            audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - (details.seekOffset || 10));
-        }
+        seekAudio(Math.max(0, (audioCurrentTime || 0) - (details.seekOffset || 15)));
       });
       navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        if (audioRef.current) {
-            audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + (details.seekOffset || 10));
-        }
+        const nextPos = (audioCurrentTime || 0) + (details.seekOffset || 15);
+        seekAudio(audioDuration ? Math.min(audioDuration, nextPos) : nextPos);
       });
-    }
-  }, [track, playTrack, pauseTrack, audioRef, duration]);
-
+    } catch {}
+  }, [track, playTrack, pauseTrack, seekAudio, audioCurrentTime, audioDuration]);
 
   const handleRewind = () => {
-    seekAudio(Math.max(0, progress - 10));
+    seekAudio(Math.max(0, progress - 15));
   };
 
   const handleFastForward = () => {
-    if (duration) {
-      seekAudio(Math.min(duration, progress + 10));
-    }
+    const target = progress + 15;
+    seekAudio(duration > 0 ? Math.min(duration, target) : target);
   };
-
-  const [playbackSpeed, setPlaybackSpeed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return parseFloat(localStorage.getItem('audioPlayerSpeed') || '1');
-    }
-    return 1;
-  });
 
   const handleSpeedChange = (value: string) => {
     const speed = parseFloat(value);
@@ -326,45 +203,46 @@ export function FloatingAudioPlayer() {
     setPlaybackSpeed(speed);
     localStorage.setItem('audioPlayerSpeed', value);
   };
-  
+
   const setSleepTimer = (minutes: number) => {
-    clearSleepTimer(); // Clear any existing timer
+    clearSleepTimer();
     setSleepTimerEndOfTrack(false);
     if (minutes > 0) {
-        setSleepTimerDuration(minutes);
-        setSleepTimerRemaining(minutes * 60);
+      setSleepTimerDuration(minutes);
+      setSleepTimerRemaining(minutes * 60);
 
-        sleepTimerRef.current = setInterval(() => {
-            setSleepTimerRemaining(prev => {
-                // Smooth fade-out in the last 10 seconds
-                if (prev <= 10 && prev > 1 && audioRef.current) {
-                    audioRef.current.volume = Math.max(0, (prev / 10) * volume);
-                }
+      sleepTimerRef.current = setInterval(() => {
+        setSleepTimerRemaining((prev) => {
+          if (prev <= 10 && prev > 1) {
+            setAudioVolume(Math.max(0, (prev / 10) * volume));
+          }
+          if (prev <= 1) {
+            pauseTrack();
+            setAudioVolume(volume);
+            toast({ title: 'مؤقت النوم', description: 'تم إيقاف التشغيل تلقائياً.' });
+            clearSleepTimer();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
-                if (prev <= 1) {
-                    pauseTrack();
-                    if (audioRef.current) audioRef.current.volume = volume;
-                    toast({ title: "مؤقت النوم", description: `تم إيقاف التشغيل تلقائياً.` });
-                    clearSleepTimer();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        
-        toast({ title: "مؤقت النوم", description: `سيتم إيقاف التشغيل بعد ${minutes} دقيقة.` });
+      toast({ title: 'مؤقت النوم', description: `سيتم إيقاف التشغيل بعد ${minutes} دقيقة.` });
     }
   };
 
   const enableEndOfTrackTimer = () => {
     clearSleepTimer();
     setSleepTimerEndOfTrack(true);
-    toast({ title: "مؤقت النوم", description: "سيتم إيقاف التشغيل تلقائياً عند نهاية المقطع الحالي." });
+    toast({
+      title: 'مؤقت النوم',
+      description: 'سيتم إيقاف التشغيل تلقائياً عند نهاية المقطع الحالي.',
+    });
   };
-  
+
   const handleSeek = (value: number[]) => {
-      seekAudio(value[0]);
-      setProgress(value[0]);
+    seekAudio(value[0]);
+    setProgress(value[0]);
   };
 
   const handleVolumeChange = (value: number) => {
@@ -372,383 +250,488 @@ export function FloatingAudioPlayer() {
     setVolume(newVolume);
     setAudioVolume(newVolume);
     if (newVolume > 0 && isMuted) {
-        setAudioMuted(false);
-        setIsMuted(false);
+      setAudioMuted(false);
+      setIsMuted(false);
     }
     localStorage.setItem('audioPlayerVolume', newVolume.toString());
   };
 
   const toggleMute = () => {
-      const currentlyMuted = !isMuted;
-      setAudioMuted(currentlyMuted);
-      setIsMuted(currentlyMuted);
+    const currentlyMuted = !isMuted;
+    setAudioMuted(currentlyMuted);
+    setIsMuted(currentlyMuted);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (!track) return;
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
-            return;
-        }
-        
-        switch (event.code) {
-            case 'Space':
-                event.preventDefault();
-                togglePlayPause();
-                break;
-            case 'ArrowLeft':
-                event.preventDefault();
-                handleRewind();
-                break;
-            case 'ArrowRight':
-                event.preventDefault();
-                handleFastForward();
-                break;
-            case 'ArrowUp':
-                event.preventDefault();
-                handleVolumeChange(Math.min(100, Math.round((volume + 0.05) * 100)));
-                break;
-            case 'ArrowDown':
-                event.preventDefault();
-                handleVolumeChange(Math.max(0, Math.round((volume - 0.05) * 100)));
-                break;
-            case 'KeyM':
-                event.preventDefault();
-                toggleMute();
-                break;
-        }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [togglePlayPause, track, volume]);
+      if (!track) return;
+      const target = event.target as HTMLElement | null;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        return;
+      }
 
+      switch (event.code) {
+        case 'Space':
+          event.preventDefault();
+          togglePlayPause();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          handleRewind();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          handleFastForward();
+          break;
+        case 'KeyM':
+          event.preventDefault();
+          toggleMute();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [track, togglePlayPause, progress, duration, isMuted]);
 
   if (!isMounted || !track) {
     return null;
   }
-  
+
+  const ytId = getVideoIdFromUrl(track.youtubeUrl || track.audioSrc);
   const placeholder = getPlaceholderImage(track.imageId);
+  const artworkUrl = !thumbFailed
+    ? ytId
+      ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+      : placeholder?.imageUrl || ''
+    : '';
 
   return (
     <>
-    <AnimatePresence>
+      <AnimatePresence>
         {isExpanded && (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 100 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 100 }}
-                className="fixed inset-0 z-[100] flex flex-col bg-background/80 backdrop-blur-[100px] p-8 md:p-16 overflow-hidden"
-            >
-                {/* Immersive Background */}
-                <div className="absolute inset-0 z-[-1] opacity-30">
-                     <motion.div 
-                        animate={{ backgroundColor: moodColor }}
-                        className="absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] rounded-full blur-[150px] animate-blob" 
-                    />
-                    <motion.div 
-                        animate={{ backgroundColor: moodColor }}
-                        className="absolute bottom-[-20%] right-[-10%] w-[90vw] h-[90vw] rounded-full blur-[180px] animate-blob animation-delay-2000" 
-                    />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 40 }}
+            className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-2xl p-6 md:p-12 overflow-y-auto"
+          >
+            <div className="container mx-auto max-w-5xl h-full flex flex-col justify-between gap-6">
+              <div className="flex justify-between items-center">
+                <div className="text-2xl sm:text-3xl font-black font-headline text-primary">
+                  وقفة
                 </div>
-
-                <div className="container mx-auto max-w-5xl h-full flex flex-col justify-between">
-                    <div className="flex justify-between items-center">
-                         <div className="text-3xl font-black font-headline text-primary italic">وقـــفــــة</div>
-                         <Button onClick={() => setIsExpanded(false)} variant="ghost" size="icon" className="w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all">
-                            <ChevronDown className="w-8 h-8 text-white" />
-                         </Button>
-                    </div>
-
-                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 flex-1 justify-center py-10" dir="rtl">
-                         <motion.div 
-                            initial={{ x: 50, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[450px] lg:h-[450px] rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10"
-                        >
-                             <Image 
-                                src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/800/800`}
-                                alt={track.title}
-                                fill
-                                className="object-cover scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                         </motion.div>
-
-                         <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-right space-y-8 w-full">
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight mb-4">{track.title}</h1>
-                                <p className="text-xl lg:text-2xl text-primary font-bold">{track.seriesTitle}</p>
-                            </motion.div>
-
-                            <div className="w-full space-y-6">
-                                <div className="space-y-4">
-                                    <div className="flex justify-between text-lg font-mono text-white/40">
-                                        <span>{formatTime(progress)}</span>
-                                        <span>{formatTime(duration)}</span>
-                                    </div>
-                                    <Slider
-                                        value={[progress]}
-                                        max={duration || 1}
-                                        step={1}
-                                        onValueChange={handleSeek}
-                                        className="h-4"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-center lg:justify-start gap-8">
-                                    <Button onClick={handleRewind} variant="ghost" size="icon" className="w-16 h-16 text-white/40 hover:text-white hover:bg-white/5 rounded-full">
-                                        <Rewind className="w-8 h-8" />
-                                    </Button>
-                                    
-                                    <div className="relative group">
-                                        <motion.div 
-                                            animate={{ backgroundColor: moodColor }}
-                                            className="absolute inset-0 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity" 
-                                        />
-                                        <Button onClick={togglePlayPause} size="icon" className="w-24 h-24 rounded-full shadow-2xl relative z-10 hover:scale-105 active:scale-95 transition-all">
-                                            {isPlaying ? <Pause className="w-10 h-10 fill-white"/> : <Play className="w-10 h-10 fill-white ml-2"/>}
-                                        </Button>
-                                    </div>
-
-                                    <Button onClick={handleFastForward} variant="ghost" size="icon" className="w-16 h-16 text-white/40 hover:text-white hover:bg-white/5 rounded-full">
-                                        <FastForward className="w-8 h-8" />
-                                    </Button>
-                                </div>
-
-                                <div className="flex items-center justify-center lg:justify-start gap-6 pt-4">
-                                     <Select onValueChange={handleSpeedChange} value={playbackSpeed.toString()}>
-                                        <SelectTrigger className="w-32 h-14 text-lg font-bold rounded-2xl bg-white/5 border-white/10 text-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            {[0.5, 1, 1.25, 1.5, 2, 3].map(s => (
-                                                <SelectItem key={s} value={s.toString()}>{s}x</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 w-48">
-                                         <button onClick={toggleMute} className="text-white/60 hover:text-white transition-colors">
-                                            {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-                                         </button>
-                                         <Slider
-                                            value={[isMuted ? 0 : volume * 100]}
-                                            max={100}
-                                            step={1}
-                                            onValueChange={(value) => handleVolumeChange(value[0])}
-                                            className="flex-grow"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                         </div>
-                    </div>
-                    
-                    <div className="h-20 flex items-center justify-center">
-                         <div className="w-full max-w-2xl px-10">
-                            <AudioVisualizer audioElement={audioRef.current} isPlaying={isPlaying} barColor={moodColor} />
-                         </div>
-                    </div>
-                </div>
-            </motion.div>
-        )}
-    </AnimatePresence>
-
-    <div className={cn(
-      "sticky bottom-8 inset-x-4 max-w-sm mx-auto z-50 rounded-[2.5rem] shadow-[0_25px_60px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10 transition-all duration-700",
-      "bg-zinc-950/85 backdrop-blur-3xl border border-white/15",
-      track ? "translate-y-0 opacity-1" : "translate-y-[200%] opacity-0",
-      isExpanded && "scale-90 opacity-0 pointer-events-none"
-    )}>
-      <audio ref={audioRef} src={track.audioSrc} preload="metadata" className="hidden" />
-
-      <div className="flex flex-col p-5 gap-4">
-        <div className="flex items-center gap-4">
-            <div className="relative group/thumb h-16 w-16 shrink-0 shadow-2xl">
-                 <motion.div 
-                    layoutId="artwork"
-                    className="absolute inset-0 rounded-2xl overflow-hidden"
+                <Button
+                  onClick={() => setIsExpanded(false)}
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-full"
+                  aria-label="تصغير المشغل"
                 >
-                    <Image 
-                        src={placeholder?.imageUrl || `https://picsum.photos/seed/${track.slug}/100/100`}
-                        alt={track.title}
-                        fill
-                        className="object-cover image-theme-filter"
-                    />
-                </motion.div>
-                <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                    <button onClick={() => setIsExpanded(true)} className="p-2 bg-white/20 rounded-lg">
-                        <Maximize2 className="w-4 h-4 text-white" />
-                    </button>
-                </div>
-            </div>
-            <div className="flex-grow min-w-0">
-                <p className="text-sm font-black truncate leading-tight">
-                    <Link href={`/lectures/${track.slug}`} className="hover:text-primary transition-colors">{track.title}</Link>
-                </p>
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">
-                    {track.programName}
-                </p>
-                <div className="mt-2 h-[12px] flex items-center opacity-60">
-                    <AudioVisualizer audioElement={audioRef.current} isPlaying={isPlaying} barColor="hsl(var(--primary))" />
-                </div>
-            </div>
-            <div className="flex flex-col gap-1">
-                <Button onClick={closePlayer} variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 h-10 w-10 rounded-full hover:bg-destructive/10">
-                    <X className="w-5 h-5" />
+                  <ChevronDown className="w-6 h-6" />
                 </Button>
-                <button onClick={() => setIsExpanded(true)} className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
-                    <Maximize2 className="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-
-        <div className="space-y-1">
-              <Slider
-                  value={[progress]}
-                  max={duration || 1}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="flex-grow h-2"
-              />
-              <div className="flex justify-between text-[9px] font-black text-muted-foreground/50 tracking-tighter">
-                <span>{formatTime(progress)}</span>
-                <span>{formatTime(duration)}</span>
               </div>
-        </div>
 
-        <div className="flex items-center justify-between gap-2">
+              <div
+                className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 flex-1 justify-center py-4"
+                dir="rtl"
+              >
+                <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted shrink-0">
+                  {artworkUrl ? (
+                    <img
+                      src={artworkUrl}
+                      alt={track.title}
+                      onError={() => setThumbFailed(true)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary">
+                      <Headphones className="w-16 h-16" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-right space-y-6 w-full">
+                  <div>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-headline text-foreground leading-tight mb-2">
+                      {track.title}
+                    </h1>
+                    {track.programName && (
+                      <p className="text-base sm:text-xl text-primary font-bold">
+                        {track.programName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="w-full space-y-5">
+                    <div className="space-y-2" dir="ltr">
+                      <Slider
+                        value={[progress]}
+                        max={duration || 1}
+                        step={1}
+                        onValueChange={handleSeek}
+                        className="h-3"
+                      />
+                      <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                        <span>{formatTime(progress)}</span>
+                        <span>{formatTime(duration)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center lg:justify-start gap-6">
+                      <Button
+                        onClick={handleRewind}
+                        variant="ghost"
+                        size="icon"
+                        className="w-12 h-12 rounded-full"
+                        aria-label="تأخير 15 ثانية"
+                      >
+                        <Rewind className="w-6 h-6" />
+                      </Button>
+
+                      <Button
+                        onClick={togglePlayPause}
+                        size="icon"
+                        className="w-16 h-16 rounded-full shadow-lg"
+                        aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+                      >
+                        {isPlaying ? (
+                          <Pause className="w-7 h-7 fill-current" />
+                        ) : (
+                          <Play className="w-7 h-7 fill-current" />
+                        )}
+                      </Button>
+
+                      <Button
+                        onClick={handleFastForward}
+                        variant="ghost"
+                        size="icon"
+                        className="w-12 h-12 rounded-full"
+                        aria-label="تقديم 15 ثانية"
+                      >
+                        <FastForward className="w-6 h-6" />
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                      <Select
+                        onValueChange={handleSpeedChange}
+                        value={playbackSpeed.toString()}
+                      >
+                        <SelectTrigger className="w-24 h-10 font-bold rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {[0.5, 1, 1.25, 1.5, 2].map((s) => (
+                            <SelectItem key={s} value={s.toString()}>
+                              {s}x
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <div className="flex items-center gap-3 bg-muted/60 px-3 py-2 rounded-xl border border-border w-44">
+                        <button
+                          type="button"
+                          onClick={toggleMute}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={isMuted ? 'إلغاء الكتم' : 'كتم الصوت'}
+                        >
+                          {isMuted || volume === 0 ? (
+                            <VolumeX className="w-5 h-5" />
+                          ) : (
+                            <Volume2 className="w-5 h-5" />
+                          )}
+                        </button>
+                        <Slider
+                          value={[isMuted ? 0 : volume * 100]}
+                          max={100}
+                          step={1}
+                          onValueChange={(value) => handleVolumeChange(value[0])}
+                          className="flex-grow"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-12 flex items-center justify-center">
+                <AudioVisualizer
+                  audioElement={audioRef.current}
+                  isPlaying={isPlaying}
+                  barColor={moodColor}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fixed Mini Audio Player Card */}
+      <aside
+        aria-label="مشغل الصوت للمحاضرة"
+        dir="rtl"
+        className={cn(
+          'fixed right-4 md:right-8 z-50 w-[min(23rem,calc(100vw-2rem))] rounded-2xl border border-border/85 bg-card/95 text-card-foreground backdrop-blur-xl shadow-2xl transition-all duration-300',
+          'bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.75rem))] md:bottom-6',
+          isExpanded && 'scale-95 opacity-0 pointer-events-none'
+        )}
+      >
+        <div className="flex flex-col p-3.5 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-border bg-muted shrink-0">
+              {artworkUrl ? (
+                <img
+                  src={artworkUrl}
+                  alt={track.title}
+                  onError={() => setThumbFailed(true)}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary">
+                  <Headphones className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-black font-headline truncate leading-snug">
+                <Link
+                  href={`/lectures/${track.slug}`}
+                  className="hover:text-primary transition-colors"
+                >
+                  {track.title}
+                </Link>
+              </p>
+              <div className="flex items-center justify-between gap-2 mt-0.5">
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {track.programName || (isYoutubeAudio ? 'استماع صوتي' : 'محاضرة صوتية')}
+                </p>
+                <div className="shrink-0">
+                  <AudioVisualizer
+                    audioElement={audioRef.current}
+                    isPlaying={isPlaying}
+                    barColor="hsl(var(--primary))"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                onClick={() => setIsExpanded(true)}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary"
+                title="توسيع المشغل"
+                aria-label="توسيع المشغل"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={closePlayer}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                title="إغلاق المشغل"
+                aria-label="إغلاق المشغل"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1" dir="ltr">
+            <Slider
+              value={[progress]}
+              max={duration || 1}
+              step={1}
+              onValueChange={handleSeek}
+              className="flex-grow h-1.5"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
+              <span>{formatTime(progress)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1">
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button 
-                            variant="ghost" 
-                            size={sleepTimerRemaining > 0 || sleepTimerEndOfTrack ? "sm" : "icon"} 
-                            className={cn(
-                                "h-10 text-muted-foreground rounded-2xl transition-all duration-300", 
-                                (sleepTimerDuration > 0 || sleepTimerEndOfTrack) && "text-primary bg-primary/15 border border-primary/20 px-2.5 font-mono text-[11px] font-bold"
-                            )}
-                        >
-                            <Timer className={cn("w-4 h-4", (sleepTimerDuration > 0 || sleepTimerEndOfTrack) && "me-1 text-primary animate-pulse")} />
-                            {sleepTimerEndOfTrack ? "نهاية المقطع" : sleepTimerRemaining > 0 ? formatCountdown(sleepTimerRemaining) : null}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56 p-2 rounded-2xl border-border/50 backdrop-blur-xl shadow-2xl" dir="rtl">
-                        <div className="space-y-1">
-                            <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/5 mb-1">
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">مؤقت النوم</p>
-                                {(sleepTimerDuration > 0 || sleepTimerEndOfTrack) && (
-                                    <span className="text-[10px] font-mono text-primary font-bold">
-                                        {sleepTimerEndOfTrack ? "مفعل (نهاية المقطع)" : formatCountdown(sleepTimerRemaining)}
-                                    </span>
-                                )}
-                            </div>
-                            {[15, 30, 45, 60].map(mins => (
-                                <Button 
-                                    key={mins} 
-                                    onClick={() => setSleepTimer(mins)} 
-                                    variant="ghost" 
-                                    className="w-full justify-start rounded-xl text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors"
-                                >
-                                    <div className={cn("w-2 h-2 rounded-full me-2.5", sleepTimerDuration === mins && !sleepTimerEndOfTrack ? "bg-primary shadow-glow-primary" : "bg-white/15")} />
-                                    بعد {mins} دقيقة
-                                </Button>
-                            ))}
-                            <Button 
-                                onClick={enableEndOfTrackTimer} 
-                                variant="ghost" 
-                                className="w-full justify-start rounded-xl text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors"
-                            >
-                                <div className={cn("w-2 h-2 rounded-full me-2.5", sleepTimerEndOfTrack ? "bg-primary shadow-glow-primary" : "bg-white/15")} />
-                                عند نهاية المقطع الحالي
-                            </Button>
-                            {(sleepTimerDuration > 0 || sleepTimerEndOfTrack) && (
-                                <Button onClick={clearSleepTimer} variant="ghost" className="w-full justify-start text-destructive hover:bg-destructive/10 rounded-xl mt-2 text-xs font-bold">
-                                    <X className="w-4 h-4 me-2" /> إلغاء المؤقت
-                                </Button>
-                            )}
-                        </div>
-                    </PopoverContent>
-                </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size={sleepTimerRemaining > 0 || sleepTimerEndOfTrack ? 'sm' : 'icon'}
+                    className={cn(
+                      'h-8 text-muted-foreground rounded-xl',
+                      (sleepTimerDuration > 0 || sleepTimerEndOfTrack) &&
+                        'text-primary bg-primary/10 px-2 font-mono text-[11px] font-bold'
+                    )}
+                    title="مؤقت النوم"
+                  >
+                    <Timer
+                      className={cn(
+                        'w-4 h-4',
+                        (sleepTimerDuration > 0 || sleepTimerEndOfTrack) &&
+                          'me-1 text-primary animate-pulse'
+                      )}
+                    />
+                    {sleepTimerEndOfTrack
+                      ? 'النهاية'
+                      : sleepTimerRemaining > 0
+                      ? formatCountdown(sleepTimerRemaining)
+                      : null}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-52 p-2 rounded-2xl border-border bg-popover shadow-xl"
+                  dir="rtl"
+                >
+                  <div className="space-y-1">
+                    <p className="px-2 py-1 text-[11px] font-bold text-muted-foreground">
+                      مؤقت النوم
+                    </p>
+                    {[15, 30, 45, 60].map((mins) => (
+                      <Button
+                        key={mins}
+                        onClick={() => setSleepTimer(mins)}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start rounded-xl text-xs font-bold"
+                      >
+                        بعد {mins} دقيقة
+                      </Button>
+                    ))}
+                    <Button
+                      onClick={enableEndOfTrackTimer}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start rounded-xl text-xs font-bold"
+                    >
+                      عند نهاية المقطع
+                    </Button>
+                    {(sleepTimerDuration > 0 || sleepTimerEndOfTrack) && (
+                      <Button
+                        onClick={clearSleepTimer}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-destructive rounded-xl text-xs font-bold"
+                      >
+                        إلغاء المؤقت
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-                <Select onValueChange={handleSpeedChange} value={playbackSpeed.toString()}>
-                    <SelectTrigger className="w-[64px] h-10 text-[10px] font-black rounded-2xl bg-white/5 border-none shadow-none">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl">
-                        {[1, 1.25, 1.5, 2].map(s => (
-                            <SelectItem key={s} value={s.toString()} className="text-[10px] font-black">{s}x</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div className="flex items-center justify-center gap-1">
-                <Button onClick={handleRewind} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-primary/10 rounded-full">
-                    <Rewind className="w-5 h-5" />
-                </Button>
-                
-                <Button onClick={togglePlayPause} size="icon" className="h-12 w-12 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.5)] transition-all duration-300 hover:scale-105 active:scale-90">
-                    {isPlaying ? <Pause className="w-5 h-5 fill-current"/> : <Play className="w-5 h-5 fill-current ml-0.5"/>}
-                </Button>
-                
-                <Button onClick={handleFastForward} variant="ghost" size="icon" className="h-10 w-10 text-foreground hover:bg-primary/10 rounded-full">
-                    <FastForward className="w-5 h-5" />
-                </Button>
+              <Select onValueChange={handleSpeedChange} value={playbackSpeed.toString()}>
+                <SelectTrigger className="w-[58px] h-8 text-[11px] font-bold rounded-xl bg-muted/60 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {[1, 1.25, 1.5, 2].map((s) => (
+                    <SelectItem key={s} value={s.toString()} className="text-xs font-bold">
+                      {s}x
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-1">
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className={cn(
-                              "h-10 w-10 rounded-2xl transition-colors",
-                              isMuted || volume === 0 ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                            )}
-                            title={isMuted ? "الصوت مكتوم" : `مستوى الصوت: ${Math.round(volume * 100)}%`}
-                        >
-                            {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-16 p-3 flex flex-col items-center gap-3 rounded-2xl border-border/50 backdrop-blur-xl shadow-2xl" align="end">
-                        <span className="text-[10px] font-mono font-bold text-muted-foreground">
-                            {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
-                        </span>
-                        <div className="h-28 flex items-center justify-center">
-                            <Slider
-                                value={[isMuted ? 0 : volume * 100]}
-                                max={100}
-                                step={1}
-                                orientation="vertical"
-                                onValueChange={(value) => handleVolumeChange(value[0])}
-                                className="h-full"
-                            />
-                        </div>
-                        <Button
-                            onClick={toggleMute}
-                            variant="ghost"
-                            size="icon"
-                            className={cn("h-7 w-7 rounded-lg", isMuted && "text-destructive bg-destructive/10")}
-                            title={isMuted ? "إلغاء الكتم" : "كتم الصوت"}
-                        >
-                            {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                        </Button>
-                    </PopoverContent>
-                </Popover>
+              <Button
+                onClick={handleRewind}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                title="تأخير 15 ثانية"
+                aria-label="تأخير 15 ثانية"
+              >
+                <Rewind className="w-4 h-4" />
+              </Button>
+
+              <Button
+                onClick={togglePlayPause}
+                size="icon"
+                className="h-9 w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+                aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+              >
+                {isPlaying ? (
+                  <Pause className="w-4 h-4 fill-current" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current" />
+                )}
+              </Button>
+
+              <Button
+                onClick={handleFastForward}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                title="تقديم 15 ثانية"
+                aria-label="تقديم 15 ثانية"
+              >
+                <FastForward className="w-4 h-4" />
+              </Button>
             </div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-8 w-8 rounded-xl',
+                    isMuted || volume === 0
+                      ? 'text-destructive hover:bg-destructive/10'
+                      : 'text-muted-foreground hover:text-primary'
+                  )}
+                  title={isMuted ? 'الصوت مكتوم' : `مستوى الصوت: ${Math.round(volume * 100)}%`}
+                >
+                  {isMuted || volume === 0 ? (
+                    <VolumeX className="w-4 h-4" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-14 p-3 flex flex-col items-center gap-2 rounded-2xl border-border bg-popover shadow-xl"
+                align="end"
+              >
+                <span className="text-[10px] font-mono font-bold text-muted-foreground">
+                  {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                </span>
+                <div className="h-24 flex items-center justify-center">
+                  <Slider
+                    value={[isMuted ? 0 : volume * 100]}
+                    max={100}
+                    step={1}
+                    orientation="vertical"
+                    onValueChange={(value) => handleVolumeChange(value[0])}
+                    className="h-full"
+                  />
+                </div>
+                <Button
+                  onClick={toggleMute}
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg"
+                  title={isMuted ? 'إلغاء الكتم' : 'كتم الصوت'}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-3.5 h-3.5 text-destructive" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
-      </div>
-    </div>
+      </aside>
     </>
   );
 }

@@ -73,6 +73,16 @@ const LectureCardComponent = ({
   );
   
   const handlePlay = () => {
+    const resolvedSrc = lecture.audioSrc || lecture.youtubeUrl || '';
+    if (!resolvedSrc) {
+      toast({
+        variant: 'destructive',
+        title: 'الرابط الصوتي غير متوفر',
+        description: 'لا يوجد مصدر صوتي لهذه المحاضرة حالياً.',
+      });
+      return;
+    }
+
     let startTime = 0;
     if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
         startTime = lectureHistory.position;
@@ -82,7 +92,8 @@ const LectureCardComponent = ({
         });
     }
     playTrack({
-      audioSrc: lecture.audioSrc,
+      audioSrc: resolvedSrc,
+      youtubeUrl: lecture.youtubeUrl,
       title: lecture.title,
       id: lecture.id,
       seriesId: lecture.seriesId,

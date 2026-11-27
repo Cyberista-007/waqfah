@@ -56,6 +56,15 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
     const { data: lectureHistory } = useDoc<ListenHistoryItem>(historyDocRef);
 
     const handlePlay = () => {
+        const resolvedSrc = lecture.audioSrc || lecture.youtubeUrl || '';
+        if (!resolvedSrc) {
+            toast({
+                variant: "destructive",
+                title: "الرابط الصوتي غير متوفر",
+            });
+            return;
+        }
+
         let startTime = 0;
         if (lectureHistory && lectureHistory.position && lectureHistory.duration && (lectureHistory.duration - lectureHistory.position) > 10 && lectureHistory.position > 5) {
             startTime = lectureHistory.position;
@@ -66,7 +75,8 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
         }
 
         playTrack({
-            audioSrc: lecture.audioSrc,
+            audioSrc: resolvedSrc,
+            youtubeUrl: lecture.youtubeUrl,
             title: lecture.title,
             id: lecture.id,
             seriesId: lecture.seriesId,

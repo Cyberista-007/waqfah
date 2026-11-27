@@ -9,7 +9,7 @@ import { doc, getDoc, setDoc, Timestamp, runTransaction, increment } from "fireb
 import { useToast } from "@/hooks/use-toast";
 import { getVideoIdFromUrl } from "@/lib/utils";
 
-export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName'>;
+export type Track = Pick<Lecture, 'audioSrc' | 'title' | 'id' | 'seriesId' | 'seriesTitle' | 'seriesSlug' | 'imageId' | 'slug' | 'programName' | 'youtubeUrl'>;
 export type IframeTrack = {
   type: 'youtube' | 'soundcloud';
   src: string; // youtube videoId or soundcloud URL
@@ -251,6 +251,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [youtubeAudioId]);
 
   const playTrack = useCallback((newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
+    const resolvedSrc = newTrack.audioSrc || newTrack.youtubeUrl || '';
+    if (!resolvedSrc) return;
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'lecture' } }));
     }
@@ -260,15 +263,17 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setVideoClipEndTime(null);
     setClipEndTime(endTime);
 
-    const vId = getVideoIdFromUrl(newTrack.audioSrc);
+    const normalizedTrack: Track = { ...newTrack, audioSrc: resolvedSrc };
+    const vId = getVideoIdFromUrl(resolvedSrc) || getVideoIdFromUrl(newTrack.youtubeUrl);
     if (vId) {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
       }
       ytAudioStartRef.current = startTime;
       setAudioCurrentTime(startTime);
       setAudioDuration(0);
-      setTrack(newTrack);
+      setTrack(normalizedTrack);
       if (youtubeAudioId === vId && ytAudioPlayerRef.current?.seekTo) {
         try {
           ytAudioPlayerRef.current.seekTo(startTime, true);
@@ -286,10 +291,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setAudioCurrentTime(startTime);
     setAudioDuration(0);
 
-    if (track?.id !== newTrack.id) {
-      setTrack(newTrack);
+    if (track?.id !== normalizedTrack.id) {
+      setTrack(normalizedTrack);
       if (audioRef.current) {
-        audioRef.current.src = newTrack.audioSrc;
+        audioRef.current.src = resolvedSrc;
         audioRef.current.load();
       }
     }
@@ -608,7 +613,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const audioElement = audioRef.current;
-    if (!audioElement) return;
+    if (!audioElement || youtubeAudioId) return;
 
     const handlePlay = () => {
       if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
@@ -624,9 +629,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     audioElement.addEventListener('pause', handlePause);
     audioElement.addEventListener('ended', handleEnded);
 
-    if (track) {
-      audioElement.src = track.audioSrc;
-      audioElement.load();
+    if (track?.audioSrc) {
+      if (audioElement.src !== track.audioSrc) {
+        audioElement.src = track.audioSrc;
+        audioElement.load();
+      }
     }
 
     return () => {
@@ -637,23 +644,28 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         clearInterval(updateIntervalRef.current);
       }
     };
-  }, [track, updateListenHistory, handleEnded]);
+  }, [track, youtubeAudioId, updateListenHistory, handleEnded]);
 
   useEffect(() => {
+    if (youtubeAudioId) return;
     const audioElement = audioRef.current;
-    if (!audioElement) return;
+    if (!audioElement || !track?.audioSrc) return;
     if (isPlaying) {
       audioElement.play().catch(e => console.error("Error playing audio:", e));
     } else {
       audioElement.pause();
     }
-  }, [isPlaying]);
+  }, [isPlaying, youtubeAudioId, track?.audioSrc]);
 
 
   // --- New Site Time Logic ---
+  const siteTimeRef = useRef(0);
+  useEffect(() => {
+    siteTimeRef.current = siteTimeInSeconds;
+  }, [siteTimeInSeconds]);
+
   // Initialize time from firestore
   useEffect(() => {
-    // Run only when user exists, firestore is available, and time hasn't been initialized yet.
     if (user && firestore && !hasInitializedTime) {
       const fetchInitialTime = async () => {
         const userRef = doc(firestore, 'users', user.uid);
@@ -667,13 +679,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         } catch (e) {
           console.error("Failed to fetch initial site time", e);
         } finally {
-          // Mark as initialized to prevent re-fetching and to trigger the timer effect.
           setHasInitializedTime(true);
         }
       };
       fetchInitialTime();
     } else if (!user) {
-      // Reset when user logs out
       setHasInitializedTime(false);
       setSiteTimeInSeconds(0);
     }
@@ -681,33 +691,29 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   // Timer to increment the counter
   useEffect(() => {
-    // Start timer only after user is loaded and initial time is fetched
     if (!user || !hasInitializedTime) return;
 
     const interval = setInterval(() => {
       setSiteTimeInSeconds(prev => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [user, hasInitializedTime]); // Dependency on initialization state is key
+  }, [user, hasInitializedTime]);
 
-  // Periodically save to firestore
+  // Periodically save to firestore (every 30s, never every 1s)
   useEffect(() => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !hasInitializedTime) return;
 
     const saveTimeToDb = () => {
-      // Only save if initialization is complete and there's time to save
-      if (hasInitializedTime && siteTimeInSeconds > 0) {
+      if (siteTimeRef.current > 0) {
         const userRef = doc(firestore, 'users', user.uid);
-        // No need to await, just fire and forget.
-        setDoc(userRef, { minutesListened: siteTimeInSeconds / 60 }, { merge: true });
+        setDoc(userRef, { minutesListened: siteTimeRef.current / 60 }, { merge: true }).catch(() => {});
         lastSaveTime.current = Date.now();
       }
-    }
+    };
 
-    const saveInterval = setInterval(saveTimeToDb, 30000); // Save every 30 seconds
+    const saveInterval = setInterval(saveTimeToDb, 30000);
 
     const handleBeforeUnload = () => {
-      // Save only if it has been a while since last save
       if (Date.now() - lastSaveTime.current > 5000) {
         saveTimeToDb();
       }
@@ -717,9 +723,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      saveTimeToDb(); // Final save on component unmount or user change
+      saveTimeToDb();
     };
-  }, [user, firestore, siteTimeInSeconds, hasInitializedTime]);
+  }, [user, firestore, hasInitializedTime]);
 
 
   return (
