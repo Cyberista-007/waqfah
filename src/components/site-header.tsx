@@ -1,32 +1,33 @@
-
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { signOut } from "firebase/auth"
 import {
   Menu,
   Search,
   ChevronDown,
+  ChevronUp,
   ChevronLeft,
   User as UserIcon,
   LogOut,
   LayoutDashboard,
   Palette,
   CaseSensitive,
-  Calendar,
   HelpCircle,
   Heart,
   Mail,
   ListMusic,
-  Youtube,
-  ImageIcon,
+  Radio,
   Home,
   ListVideo,
   Settings,
   Podcast,
   Flame,
   BookCheck,
-  Hash,
   Trophy,
   GraduationCap,
   Layers,
@@ -41,563 +42,714 @@ import {
   Droplets,
   Scale,
   Compass,
-  Mic2
+  Mic2,
+  Grid2x2,
 } from "lucide-react"
-import { usePathname } from "next/navigation"
 
-import { cn } from "@/lib/utils"
+import { cn, getInitials } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
-  SheetClose
+  SheetClose,
 } from "@/components/ui/sheet"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { useScroll } from "@/hooks/use-scroll"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { signOut } from "firebase/auth"
-import { useRouter } from "next/navigation"
-import { Skeleton } from "./ui/skeleton"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
-import { useState } from "react"
-import dynamic from "next/dynamic"
-import { themes } from "./theme-switcher"
-import { languages } from "./language-switcher"
-
-const ThemeSwitcherDialog = dynamic(() => import("./theme-switcher").then(mod => mod.ThemeSwitcherDialog), { ssr: false })
-const FontSwitcherDialog = dynamic(() => import("./font-switcher").then(mod => mod.FontSwitcherDialog), { ssr: false })
-const SolidColorSwitcherDialog = dynamic(() => import("./solid-color-switcher").then(mod => mod.SolidColorSwitcherDialog), { ssr: false })
-const LanguageSwitcherDialog = dynamic(() => import("./language-switcher").then(mod => mod.LanguageSwitcherDialog), { ssr: false })
-
-import { getInitials } from "@/lib/utils"
-import { ScrollArea, ScrollBar } from "./ui/scroll-area"
-import { Separator } from "./ui/separator"
-import { useTheme } from "next-themes"
-import { AppearanceManager } from "./appearance-manager"
-import { useAppearance } from "./appearance-provider"
-import { Switch } from "./ui/switch"
-import { Label } from "./ui/label"
-import { ThemeToggle } from "./theme-toggle"
-import { NotificationBell } from "./notification-bell"
+import { useAppearance } from "@/components/appearance-provider"
+import { AppearanceManager } from "@/components/appearance-manager"
+import { NotificationBell } from "@/components/notification-bell"
 import { useAuth, useUser } from "@/firebase"
-import { useSearch } from "./search-provider"
-import Magnetic from "./magnetic"
+import { useSearch } from "@/components/search-provider"
 import { useTranslation } from "@/lib/i18n"
+import { languages } from "@/components/language-switcher"
 
-const mainNavItems = [
-  { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/podcasts", label: "البودكاست", icon: Mic2 },
-  { href: "/radio", label: "الإذاعة", icon: Headphones },
-  { href: "/pathways", label: "المسارات", icon: GraduationCap },
-  { href: "/live", label: "البث المباشر", icon: Youtube, isLive: true },
-  { href: "/programs", label: "البرامج", icon: Podcast },
-  { href: "/lectures", label: "المحاضرات", icon: ListVideo },
-  { href: "/palestine", label: "فلسطين", icon: Flag },
-  { href: "/profile", label: "مكتبتي", icon: ListMusic },
+const ThemeSwitcherDialog = dynamic(
+  () => import("./theme-switcher").then((mod) => mod.ThemeSwitcherDialog),
+  { ssr: false }
+)
+const FontSwitcherDialog = dynamic(
+  () => import("./font-switcher").then((mod) => mod.FontSwitcherDialog),
+  { ssr: false }
+)
+const SolidColorSwitcherDialog = dynamic(
+  () => import("./solid-color-switcher").then((mod) => mod.SolidColorSwitcherDialog),
+  { ssr: false }
+)
+const LanguageSwitcherDialog = dynamic(
+  () => import("./language-switcher").then((mod) => mod.LanguageSwitcherDialog),
+  { ssr: false }
+)
+
+interface NavItem {
+  href: string
+  label: string
+  enLabel: string
+  icon: React.ComponentType<{ className?: string }>
+  isLive?: boolean
+}
+
+const PRIMARY_NAV_ITEMS: NavItem[] = [
+  { href: "/", label: "الرئيسية", enLabel: "Home", icon: Home },
+  { href: "/podcasts", label: "البودكاست", enLabel: "Podcasts", icon: Mic2 },
+  { href: "/radio", label: "الإذاعة", enLabel: "Radio", icon: Headphones },
+  { href: "/pathways", label: "المسارات", enLabel: "Pathways", icon: GraduationCap },
+  { href: "/live", label: "البث المباشر", enLabel: "Live", icon: Radio, isLive: true },
 ]
 
-const moreNavItems = [
-  { href: "/podcasts", label: "البودكاست الصوتي", icon: Mic2 },
-  { href: "/bayan", label: "بيان (معجم المفردات)", icon: Sparkles },
-  { href: "/athar", label: "أثر (أطلس التاريخ)", icon: Compass },
-  { href: "/namaa", label: "نماء (حاسبة الزكاة)", icon: Scale },
-  { href: "/adab", label: "أدب (الآداب الأخلاقية)", icon: BookCheck },
-  { href: "/kanaf", label: "كنف (البيت والتربية)", icon: Heart },
-  { href: "/badges", label: "الأوسمة", icon: Medal },
-  { href: "/adhkar", label: "الأذكار والتسبيحات", icon: Headphones },
-  { href: "/hadith", label: "الحديث النبوي", icon: BookOpen },
-  { href: "/dua", label: "الأدعية المأثورة", icon: HandHeart },
-  { href: "/quran", label: "آيات قرآنية", icon: Layers },
-  { href: "/muhlikat", label: "المهلكات", icon: TriangleAlert },
-  { href: "/chastity", label: "درع العفة (التعافي من الإباحية)", icon: Shield },
-  { href: "/shubuhat", label: "تفنيد الشبهات", icon: Shield },
-  { href: "/essentials", label: "ما لا يسع المسلم جهله", icon: BookCheck },
-  { href: "/aqeedah", label: "العقيدة", icon: Shield },
-  { href: "/mirath", label: "حاسبة المواريث", icon: Scale },
-  { href: "/sciences-tree", label: "شجرة العلوم الشرعية", icon: Compass },
-  { href: "/memorize", label: "حافظ المتون التفاعلي", icon: BookOpen },
-  { href: "/curriculums", label: "المناهج التعليمية", icon: GraduationCap },
-  { href: "/leaderboard", label: "لوحة الصدارة", icon: Trophy },
-  { href: "/playlists", label: "قוائم التشغيل", icon: ListMusic },
-  { href: "/books", label: "الكتب", icon: BookOpen },
-  { href: "/challenges", label: "التحديات", icon: Flame },
-  { href: "/accountability", label: "محاسبة النفس", icon: BookCheck },
-  { href: "/qa", label: "سؤال وجواب", icon: HelpCircle },
-  { href: "/contact", label: "تواصل معنا", icon: Mail },
+const SECONDARY_QUICK_ITEMS: NavItem[] = [
+  { href: "/programs", label: "البرامج", enLabel: "Programs", icon: Podcast },
+  { href: "/lectures", label: "المحاضرات", enLabel: "Lectures", icon: ListVideo },
+  { href: "/palestine", label: "فلسطين", enLabel: "Palestine", icon: Flag },
+  { href: "/profile", label: "مكتبتي", enLabel: "My Library", icon: ListMusic },
 ]
 
-const mobileNavLinks = [
-  { href: '/', icon: Home, label: 'الرئيسية' },
-  { href: '/programs', icon: Podcast, label: 'البرامج' },
-  { href: '/palestine', icon: Flag, label: 'فلسطين' },
-  { href: '/search', icon: Search, label: 'بحث' },
-  { href: '/profile', icon: ListMusic, label: 'مكتبتي' }
-];
+const MORE_NAV_ITEMS: NavItem[] = [
+  { href: "/hadith", label: "الحديث النبوي", enLabel: "Hadith", icon: BookOpen },
+  { href: "/quran", label: "آيات قرآنية", enLabel: "Quran Verses", icon: Layers },
+  { href: "/adhkar", label: "الأذكار والتسبيحات", enLabel: "Adhkar", icon: Headphones },
+  { href: "/dua", label: "الأدعية المأثورة", enLabel: "Duas", icon: HandHeart },
+  { href: "/books", label: "الكتب", enLabel: "Books", icon: BookOpen },
+  { href: "/playlists", label: "قوائم التشغيل", enLabel: "Playlists", icon: ListMusic },
+  { href: "/bayan", label: "بيان (معجم المفردات)", enLabel: "Bayan (Lexicon)", icon: Sparkles },
+  { href: "/athar", label: "أثر (أطلس التاريخ)", enLabel: "Athar (Atlas)", icon: Compass },
+  { href: "/namaa", label: "نماء (حاسبة الزكاة)", enLabel: "Namaa (Zakat)", icon: Scale },
+  { href: "/mirath", label: "حاسبة المواريث", enLabel: "Inheritance Calc", icon: Scale },
+  { href: "/adab", label: "أدب (الآداب الأخلاقية)", enLabel: "Adab (Ethics)", icon: BookCheck },
+  { href: "/kanaf", label: "كنف (البيت والتربية)", enLabel: "Kanaf (Family)", icon: Heart },
+  { href: "/aqeedah", label: "العقيدة", enLabel: "Aqeedah", icon: Shield },
+  { href: "/essentials", label: "ما لا يسع المسلم جهله", enLabel: "Essentials", icon: BookCheck },
+  { href: "/sciences-tree", label: "شجرة العلوم الشرعية", enLabel: "Sciences Tree", icon: Compass },
+  { href: "/memorize", label: "حافظ المتون التفاعلي", enLabel: "Memorization", icon: BookOpen },
+  { href: "/curriculums", label: "المناهج التعليمية", enLabel: "Curriculums", icon: GraduationCap },
+  { href: "/shubuhat", label: "تفنيد الشبهات", enLabel: "Refutations", icon: Shield },
+  { href: "/muhlikat", label: "المهلكات", enLabel: "Heart Diseases", icon: TriangleAlert },
+  { href: "/chastity", label: "درع العفة", enLabel: "Chastity Shield", icon: Shield },
+  { href: "/accountability", label: "محاسبة النفس", enLabel: "Accountability", icon: BookCheck },
+  { href: "/challenges", label: "التحديات", enLabel: "Challenges", icon: Flame },
+  { href: "/badges", label: "الأوسمة", enLabel: "Badges", icon: Medal },
+  { href: "/leaderboard", label: "لوحة الصدارة", enLabel: "Leaderboard", icon: Trophy },
+  { href: "/qa", label: "سؤال وجواب", enLabel: "Q & A", icon: HelpCircle },
+  { href: "/contact", label: "تواصل معنا", enLabel: "Contact Us", icon: Mail },
+]
+
+const MOBILE_DOCK_ITEMS: NavItem[] = [
+  { href: "/", icon: Home, label: "الرئيسية", enLabel: "Home" },
+  { href: "/programs", icon: Podcast, label: "البرامج", enLabel: "Programs" },
+  { href: "/palestine", icon: Flag, label: "فلسطين", enLabel: "Palestine" },
+  { href: "/search", icon: Search, label: "بحث", enLabel: "Search" },
+  { href: "/profile", icon: ListMusic, label: "مكتبتي", enLabel: "Library" },
+]
 
 export function SiteHeader() {
-  const scrolled = useScroll(50);
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-  const { isAdmin } = useAdminAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
-  const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false);
-  const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isBackgroundShown, toggleBackground } = useAppearance();
-  const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false);
-  const { openSearch } = useSearch();
-  const { language: activeLanguage } = useAppearance();
-  const { t, isRtl } = useTranslation();
+  const scrolled = useScroll(32)
+  const { user, isUserLoading } = useUser()
+  const auth = useAuth()
+  const { isAdmin } = useAdminAuth()
+  const router = useRouter()
+  const pathname = usePathname()
 
-  const localizedMainNav = mainNavItems.map(item => {
-    const enLabels: Record<string, string> = {
-      "/": "Home",
-      "/podcasts": "Podcasts",
-      "/radio": "Radio",
-      "/pathways": "Pathways",
-      "/live": "Live",
-      "/programs": "Programs",
-      "/lectures": "Lectures",
-      "/palestine": "Palestine",
-      "/profile": "My Library",
-    };
-    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
-  });
+  const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false)
+  const [isFontSwitcherOpen, setIsFontSwitcherOpen] = useState(false)
+  const [isSolidColorSwitcherOpen, setIsSolidColorSwitcherOpen] = useState(false)
+  const [isLanguageSwitcherOpen, setIsLanguageSwitcherOpen] = useState(false)
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const localizedMoreNav = moreNavItems.map(item => {
-    const enLabels: Record<string, string> = {
-      "/podcasts": "Audio Podcasts",
-      "/bayan": "Bayan (Lexicon)",
-      "/athar": "Athar (Atlas)",
-      "/namaa": "Namaa (Zakat)",
-      "/adab": "Adab (Ethics)",
-      "/kanaf": "Kanaf (Family)",
-      "/badges": "Badges",
-      "/adhkar": "Adhkar",
-      "/hadith": "Hadith",
-      "/dua": "Duas",
-      "/quran": "Quran Verses",
-      "/muhlikat": "Heart Diseases",
-      "/chastity": "Chastity Shield",
-      "/shubuhat": "Refutations",
-      "/essentials": "Essentials",
-      "/aqeedah": "Aqeedah",
-      "/mirath": "Inheritance Calc",
-      "/sciences-tree": "Sciences Tree",
-      "/memorize": "Memorization",
-      "/curriculums": "Curriculums",
-      "/leaderboard": "Leaderboard",
-      "/playlists": "Playlists",
-      "/books": "Books",
-      "/challenges": "Challenges",
-      "/accountability": "Accountability",
-      "/qa": "Q & A",
-      "/contact": "Contact Us",
-    };
-    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
-  });
+  const { openSearch } = useSearch()
+  const { language: activeLanguage } = useAppearance()
+  const { t, isRtl } = useTranslation()
 
-  const localizedMobileNav = mobileNavLinks.map(item => {
-    const enLabels: Record<string, string> = {
-      "/": "Home",
-      "/programs": "Programs",
-      "/palestine": "Palestine",
-      "/search": "Search",
-      "/profile": "Library",
-    };
-    return { ...item, label: t(item.label, enLabels[item.href] || item.label) };
-  });
+  const activeLanguageCode =
+    activeLanguage === "en"
+      ? "EN"
+      : languages.find((l) => l.value === activeLanguage)?.name.slice(0, 2) || "عر"
 
-  const activeLanguageName = activeLanguage === 'en' ? 'EN' : (languages.find(l => l.value === activeLanguage)?.name.slice(0, 2) || 'عر');
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  
-  const activeIndex = mainNavItems.findIndex(
-    (item) => (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href))
-  );
-  const backdropIndex = hoveredIndex !== null ? hoveredIndex : (activeIndex !== -1 ? activeIndex : null);
-
-  const toggleHeader = () => setIsHeaderHidden(!isHeaderHidden);
-
-  const toggleTheme = () => {
-    const currentIndex = themes.findIndex((t) => t.value === theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    const nextTheme = themes[nextIndex]?.value;
-    if (nextTheme) {
-      setTheme(nextTheme);
-    }
-  };
-
+  const isRouteActive = (href: string) =>
+    (href === "/" && pathname === "/") || (href !== "/" && pathname.startsWith(href))
 
   const handleLogout = async () => {
     if (auth) {
-      await signOut(auth);
+      await signOut(auth)
     }
-    router.push('/');
+    router.push("/")
   }
 
-  const dynamicMoreNavItems = isAdmin
-    ? [...localizedMoreNav, { href: "/admin/dashboard", label: t("لوحة التحكم", "Admin Dashboard"), icon: LayoutDashboard }]
-    : localizedMoreNav;
+  const allDrawerMain = [...PRIMARY_NAV_ITEMS, ...SECONDARY_QUICK_ITEMS]
+  const drawerMore = isAdmin
+    ? [
+        ...MORE_NAV_ITEMS,
+        {
+          href: "/admin/dashboard",
+          label: "لوحة التحكم",
+          enLabel: "Admin Dashboard",
+          icon: LayoutDashboard,
+        },
+      ]
+    : MORE_NAV_ITEMS
 
   return (
     <>
       <AppearanceManager />
-      {/* Dynamic Floating Trigger for Hidden Header */}
+
+      {/* Reveal button when header is collapsed */}
       <AnimatePresence>
         {isHeaderHidden && (
           <motion.div
-            initial={{ y: -20, opacity: 0 }}
+            initial={{ y: -24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            className="fixed top-0 left-1/2 -translate-x-1/2 z-[60] pt-2"
+            exit={{ y: -24, opacity: 0 }}
+            className="fixed top-2 left-1/2 -translate-x-1/2 z-[60]"
           >
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setIsHeaderHidden(false)}
-              className="h-6 w-16 bg-background/40 backdrop-blur-3xl border border-white/10 rounded-b-full hover:bg-primary/20 hover:h-8 transition-all group shadow-2xl"
-              title="إظهار الشريط العلوي"
-              aria-label="إظهار الشريط العلوي"
+              className="h-7 px-3 rounded-full bg-card/90 backdrop-blur-md border-border shadow-md hover:border-primary/50 hover:text-primary gap-1 text-xs font-bold"
+              title={t("إظهار الشريط العلوي", "Show Header")}
+              aria-label={t("إظهار الشريط العلوي", "Show Header")}
             >
-              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary animate-bounce-subtle" />
+              <ChevronDown className="h-3.5 w-3.5" />
+              <span>{t("إظهار القائمة", "Show Bar")}</span>
             </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Desktop Header */}
-      <motion.header 
-        initial={false}
-        animate={{ 
-          y: isHeaderHidden ? -120 : 0,
-          opacity: isHeaderHidden ? 0 : 1
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      {/* Main Sticky Header */}
+      <header
+        dir={isRtl ? "rtl" : "ltr"}
         className={cn(
-          "sticky z-50 transition-all duration-700 ease-in-out px-4",
-          scrolled 
-            ? "top-4 w-full bg-zinc-950/70 backdrop-blur-3xl shadow-[0_32px_64px_-15px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] border border-white/10 rounded-[3rem] py-0.5 ring-1 ring-white/5" 
-            : "top-0 bg-transparent border-transparent py-6"
+          "sticky top-0 z-50 w-full transition-all duration-300",
+          isHeaderHidden && "-translate-y-full opacity-0 pointer-events-none",
+          scrolled ? "px-3 sm:px-6 pt-2.5" : "px-0 pt-0"
         )}
       >
-        <nav className="relative w-full px-4 sm:px-12 py-3 flex justify-between items-center">
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="group relative bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 text-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center me-3 shrink-0 shadow-inner"
-                aria-label="فتح القائمة الجانبية للتنقل"
-              >
-                <Menu className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90" />
-                <span className="absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 -z-10" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent 
-              side={isRtl ? "right" : "left"} 
-              className="w-[300px] sm:w-[350px] p-0 border-l border-white/10 bg-zinc-950/95 backdrop-blur-2xl text-white shadow-2xl flex flex-col h-full"
-              dir={isRtl ? "rtl" : "ltr"}
-            >
-              {isMobileMenuOpen && (
-                <div className="flex flex-col h-full">
-                  <div className="p-6 border-b border-white/10 bg-white/[0.02]">
-                    <h2 className="text-2xl font-black font-headline text-primary">{t("وقـــفــــة", "WAQFAH")}</h2>
-                    <p className="text-xs text-zinc-400 mt-1">{t("القائمة الرئيسية للمنصة", "Main Navigation Menu")}</p>
-                  </div>
-                  <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-8">
-                      <div className="space-y-3">
-                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">{t("التنقل السريع", "Quick Navigation")}</p>
-                        {localizedMainNav.map(item => (
-                          <SheetClose asChild key={item.href}>
-                            <Link 
-                              href={item.href} 
-                              prefetch={false}
-                              className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-300 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all font-black text-sm group"
-                            >
-                              <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />
-                              <span>{item.label}</span>
-                              {item.isLive && (
-                                <span className="relative flex h-2 w-2 mr-auto">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                </span>
-                              )}
-                            </Link>
-                          </SheetClose>
-                        ))}
+        <div
+          className={cn(
+            "mx-auto transition-all duration-300",
+            scrolled
+              ? "max-w-[1440px] rounded-2xl border border-border/80 bg-background/90 backdrop-blur-xl shadow-lg px-3 sm:px-5"
+              : "w-full border-b border-border/60 bg-background/85 backdrop-blur-md px-4 sm:px-8"
+          )}
+        >
+          <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3">
+            {/* Start Zone: Navigation Drawer + Brand Logo */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 rounded-xl border-border/80 bg-card/60 hover:bg-muted hover:border-primary/40 hover:text-primary shrink-0"
+                    aria-label={t("فتح القائمة الجانبية للتنقل", "Open navigation menu")}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side={isRtl ? "right" : "left"}
+                  className="w-[310px] sm:w-[360px] p-0 border-border bg-background text-foreground shadow-2xl flex flex-col h-full"
+                  dir={isRtl ? "rtl" : "ltr"}
+                >
+                  {isMobileMenuOpen && (
+                    <div className="flex flex-col h-full">
+                      <div className="p-5 border-b border-border bg-card/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h2 className="text-xl font-black font-headline text-primary">
+                              {t("وقـــفــــة", "WAQFAH")}
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {t("القائمة الرئيسية للمنصة", "Main Navigation")}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false)
+                            openSearch()
+                          }}
+                          className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/50 hover:bg-muted px-3 py-2 text-xs text-muted-foreground transition-colors"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Search className="h-3.5 w-3.5 text-primary" />
+                            <span>{t("ابحث عن درس أو شيخ...", "Search lectures, scholars...")}</span>
+                          </span>
+                          <kbd className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+                            ⌘K
+                          </kbd>
+                        </button>
                       </div>
-                      <div className="space-y-3">
-                        <p className="px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">{t("الأقسام الإضافية", "More Sections")}</p>
-                        {dynamicMoreNavItems.map(item => (
-                          <SheetClose asChild key={item.href}>
-                            <Link 
-                              href={item.href} 
-                              prefetch={false}
-                              className="flex items-center gap-3 p-3.5 rounded-2xl text-zinc-400 hover:text-primary hover:bg-white/5 border border-transparent hover:border-white/5 transition-all text-xs font-bold group"
-                            >
-                              {item.icon && <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:rotate-6 group-hover:scale-110 transition-all duration-300" />}
-                              <span>{item.label}</span>
-                            </Link>
-                          </SheetClose>
-                        ))}
+
+                      <ScrollArea className="flex-1 p-4">
+                        <div className="space-y-6">
+                          <div className="space-y-1">
+                            <p className="px-2.5 pb-1 text-[11px] font-bold text-muted-foreground">
+                              {t("التنقل السريع", "Quick Navigation")}
+                            </p>
+                            {allDrawerMain.map((item) => {
+                              const active = isRouteActive(item.href)
+                              return (
+                                <SheetClose asChild key={item.href}>
+                                  <Link
+                                    href={item.href}
+                                    prefetch={false}
+                                    className={cn(
+                                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors",
+                                      active
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-foreground/80 hover:text-primary hover:bg-muted/60"
+                                    )}
+                                  >
+                                    <item.icon className="h-4 w-4 shrink-0" />
+                                    <span className="flex-1">{t(item.label, item.enLabel)}</span>
+                                    {item.isLive && (
+                                      <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                                      </span>
+                                    )}
+                                  </Link>
+                                </SheetClose>
+                              )
+                            })}
+                          </div>
+
+                          <Separator />
+
+                          <div className="space-y-1">
+                            <p className="px-2.5 pb-1 text-[11px] font-bold text-muted-foreground">
+                              {t("الأقسام والمعارف", "Sections & Tools")}
+                            </p>
+                            {drawerMore.map((item) => {
+                              const active = isRouteActive(item.href)
+                              return (
+                                <SheetClose asChild key={item.href}>
+                                  <Link
+                                    href={item.href}
+                                    prefetch={false}
+                                    className={cn(
+                                      "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors",
+                                      active
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                    )}
+                                  >
+                                    <item.icon className="h-4 w-4 shrink-0" />
+                                    <span>{t(item.label, item.enLabel)}</span>
+                                  </Link>
+                                </SheetClose>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </ScrollArea>
+
+                      <div className="p-4 border-t border-border bg-card/40 grid grid-cols-3 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl text-xs font-bold gap-1.5"
+                          onClick={() => setIsThemeSwitcherOpen(true)}
+                        >
+                          <Palette className="h-3.5 w-3.5 text-primary" />
+                          <span>{t("الثيم", "Theme")}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl text-xs font-bold gap-1.5"
+                          onClick={() => setIsFontSwitcherOpen(true)}
+                        >
+                          <CaseSensitive className="h-3.5 w-3.5 text-primary" />
+                          <span>{t("الخط", "Font")}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl text-xs font-bold"
+                          onClick={() => setIsLanguageSwitcherOpen(true)}
+                        >
+                          {activeLanguageCode}
+                        </Button>
                       </div>
                     </div>
-                  </ScrollArea>
-                  <div className="p-6 border-t border-white/10 bg-white/[0.01] flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsThemeSwitcherOpen(true)}>{t("ثيمات", "Themes")}</Button>
-                    <Button variant="outline" className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 text-white font-bold" onClick={() => setIsFontSwitcherOpen(true)}>{t("الخطوط", "Fonts")}</Button>
-                  </div>
-                </div>
-              )}
-            </SheetContent>
-          </Sheet>
+                  )}
+                </SheetContent>
+              </Sheet>
 
-          <Link
-            href="/"
-            className="absolute md:relative left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 flex items-center space-x-2 space-x-reverse cursor-pointer group"
-          >
-            <div className="relative">
-                <div className="text-3xl font-black font-headline tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 transition-all duration-500 group-hover:tracking-normal">
-                {t("وقـــفــــة", "WAQFAH")}
-                </div>
-                <div className="absolute -bottom-1 right-0 w-0 h-0.5 bg-primary transition-all duration-500 group-hover:w-full opacity-50" />
+              <Link
+                href="/"
+                className="flex items-center gap-2 shrink-0 whitespace-nowrap group"
+              >
+                <span className="text-2xl font-black font-headline tracking-tight text-foreground group-hover:text-primary transition-colors">
+                  {t("وقفة", "WAQFAH")}
+                </span>
+              </Link>
             </div>
-          </Link>
 
-          <div className="hidden md:flex flex-grow overflow-hidden">
-            <ScrollArea className="w-full whitespace-nowrap" dir={isRtl ? "rtl" : "ltr"}>
-              <div className="flex justify-center items-center gap-2 px-4 py-1" onMouseLeave={() => setHoveredIndex(null)}>
-                {localizedMainNav.map((item, index) => {
-                  const isActive = index === activeIndex;
-                  const hasBackdrop = index === backdropIndex;
-                  return (
-                    <Button asChild key={item.label} variant="ghost" onMouseEnter={() => setHoveredIndex(index)} className={cn(
-                      "relative text-foreground/70 hover:text-primary font-bold shrink-0 flex items-center gap-2 rounded-2xl transition-all hover:scale-105 active:scale-95 group px-4 py-6",
-                      isActive && "text-primary"
-                    )}>
-                      <Link href={item.href} prefetch={false}>
-                        <item.icon className={cn("h-4 w-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6", isActive ? "opacity-100 text-primary scale-110" : "opacity-40 group-hover:opacity-100")} />
-                        <span className="relative z-10">{item.label}</span>
-                        {(item as any).isLive && (
-                           <span className="relative flex h-2 w-2 ml-1">
-                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                           </span>
-                        )}
-                        {hasBackdrop && (
-                          <motion.div
-                            layoutId="navBackdrop"
-                            className={cn(
-                              "absolute inset-0 rounded-[1.2rem] -z-10",
-                              hoveredIndex === index
-                                ? "bg-white/5 border border-white/10"
-                                : "bg-primary/10 border border-primary/20 shadow-[inset_0_0_20px_rgba(var(--primary-rgb),0.1)]"
-                            )}
-                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                          />
-                        )}
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-1 bg-primary rounded-full transition-all duration-500 group-hover:w-4 opacity-0 group-hover:opacity-100" />
-                      </Link>
-                    </Button>
-                  );
-                })}
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <Button variant="ghost" className="text-foreground/80 hover:text-primary font-bold shrink-0 flex items-center gap-2 rounded-2xl group transition-all hover:scale-105 active:scale-95">
-                      <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      <span>{t("المزيد", "More")}</span>
-                    </Button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl" dir={isRtl ? "rtl" : "ltr"}>
-                    <div className="flex flex-col space-y-1">
-                      <p className="px-3 pb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("أقسام إضافية", "More Sections")}</p>
-                      {dynamicMoreNavItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
+            {/* Center Zone: Clean Non-Wrapping Primary Links */}
+            <nav
+              aria-label={t("التنقل الرئيسي", "Primary navigation")}
+              className="hidden lg:flex items-center justify-center gap-1 min-w-0"
+            >
+              {PRIMARY_NAV_ITEMS.map((item) => {
+                const active = isRouteActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={false}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
+                      active
+                        ? "bg-primary/12 text-primary border border-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+                    <span>{t(item.label, item.enLabel)}</span>
+                    {item.isLive && (
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+
+              {/* 2xl+ Extra Direct Link */}
+              <Link
+                href="/programs"
+                prefetch={false}
+                className={cn(
+                  "hidden 2xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-colors",
+                  isRouteActive("/programs")
+                    ? "bg-primary/12 text-primary border border-primary/25"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+                )}
+              >
+                <Podcast className="h-4 w-4 shrink-0" />
+                <span>{t("البرامج", "Programs")}</span>
+              </Link>
+
+              {/* Click-Friendly More Dropdown */}
+              <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-9 px-3 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 gap-1.5 whitespace-nowrap shrink-0"
+                  >
+                    <Grid2x2 className="h-4 w-4" />
+                    <span>{t("الأقسام", "Sections")}</span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="center"
+                  className="w-[460px] p-3 rounded-2xl border-border bg-popover text-popover-foreground shadow-xl"
+                >
+                  <div className="mb-2.5">
+                    <DropdownMenuLabel className="px-2 py-1 text-[11px] font-bold text-muted-foreground">
+                      {t("وصول سريع", "Quick Access")}
+                    </DropdownMenuLabel>
+                    <div className="grid grid-cols-2 gap-1.5 mt-1">
+                      {SECONDARY_QUICK_ITEMS.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild className="rounded-xl cursor-pointer">
                           <Link
-                            key={item.label}
                             href={item.href}
                             prefetch={false}
-                            className="flex justify-between w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group"
+                            className="flex items-center justify-between gap-2 px-2.5 py-2 font-bold text-xs"
                           >
-                            <div className="flex items-center gap-3">
-                              {Icon && <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />}
-                              <span>{item.label}</span>
-                            </div>
-                            <ChevronLeft className="h-4 w-4 opacity-0 group-hover:opacity-50 transition-opacity" />
+                            <span className="flex items-center gap-2">
+                              <item.icon className="h-4 w-4 text-primary shrink-0" />
+                              <span>{t(item.label, item.enLabel)}</span>
+                            </span>
+                            <ChevronLeft className="h-3.5 w-3.5 opacity-40" />
                           </Link>
-                        )
-                      })}
-                      <Separator className="my-2 bg-border/40" />
-                      <button onClick={() => setIsThemeSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <Palette className="h-4 w-4 text-primary" />
-                        <span>{t("تغيير الثيم", "Change Theme")}</span>
-                      </button>
-                      <button onClick={() => setIsFontSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <CaseSensitive className="h-4 w-4 text-primary" />
-                        <span>{t("تغيير الخط", "Change Font")}</span>
-                      </button>
-                      <button onClick={() => setIsSolidColorSwitcherOpen(true)} className="flex justify-start w-full items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition-all font-bold group">
-                        <Droplets className="h-4 w-4 text-primary" />
-                        <span>{t("الألوان السادة", "Solid Colors")}</span>
-                      </button>
+                        </DropdownMenuItem>
+                      ))}
                     </div>
-                  </HoverCardContent>
-                </HoverCard>
-              </div>
-              <ScrollBar orientation="horizontal" className="h-2 opacity-0 hover:opacity-100 transition-opacity" />
-            </ScrollArea>
-          </div>
+                  </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-full px-3.5 py-1.5 gap-2.5 transition-all duration-300 cursor-pointer group shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]" onClick={openSearch}>
-                <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-xs text-muted-foreground/70 group-hover:text-foreground font-medium">{t("ابحث عن درس، شيخ، أو كتاب...", "Search lectures, scholars, books...")}</span>
-                <kbd className="hidden xl:flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                    <span className="text-xs">⌘</span>K
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuLabel className="px-2 py-1 text-[11px] font-bold text-muted-foreground mt-1">
+                    {t("المكتبة والأدوات التفاعلية", "Library & Interactive Tools")}
+                  </DropdownMenuLabel>
+                  <ScrollArea className="h-[260px] mt-1">
+                    <div className="grid grid-cols-2 gap-1 pe-2">
+                      {drawerMore.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild className="rounded-xl cursor-pointer">
+                          <Link
+                            href={item.href}
+                            prefetch={false}
+                            className="flex items-center gap-2 px-2.5 py-2 text-xs font-semibold"
+                          >
+                            <item.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="truncate">{t(item.label, item.enLabel)}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </ScrollArea>
+
+                  <DropdownMenuSeparator className="my-2" />
+
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      onClick={() => setIsThemeSwitcherOpen(true)}
+                    >
+                      <Palette className="h-3.5 w-3.5 text-primary" />
+                      <span>{t("الثيم", "Theme")}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      onClick={() => setIsFontSwitcherOpen(true)}
+                    >
+                      <CaseSensitive className="h-3.5 w-3.5 text-primary" />
+                      <span>{t("الخط", "Font")}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      onClick={() => setIsSolidColorSwitcherOpen(true)}
+                    >
+                      <Droplets className="h-3.5 w-3.5 text-primary" />
+                      <span>{t("الألوان", "Colors")}</span>
+                    </Button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </nav>
+
+            {/* End Zone: Search, Utilities, Donate CTA, User */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Single-line Search Pill on xl+ */}
+              <button
+                type="button"
+                onClick={openSearch}
+                className="hidden xl:flex items-center justify-between gap-3 h-9 w-52 2xl:w-60 rounded-xl border border-border/80 bg-muted/50 hover:bg-muted hover:border-primary/40 px-3 text-xs text-muted-foreground transition-colors whitespace-nowrap shrink-0 group"
+                aria-label={t("بحث", "Search")}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <span className="truncate font-medium">
+                    {t("ابحث في وقفة...", "Search Waqfah...")}
+                  </span>
+                </span>
+                <kbd className="hidden 2xl:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-semibold text-muted-foreground shrink-0">
+                  ⌘K
                 </kbd>
-            </div>
+              </button>
 
-            <button 
-              onClick={openSearch}
-              className="hidden md:flex lg:hidden p-2 rounded-full text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
-            >
-              <Search className="h-5 w-5" />
-              <span className="sr-only">بحث</span>
-            </button>
+              {/* Compact Search Icon on smaller screens */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={openSearch}
+                className="xl:hidden h-9 w-9 rounded-xl border-border/80 bg-card/60 hover:bg-muted hover:text-primary shrink-0"
+                aria-label={t("بحث", "Search")}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
 
-            <NotificationBell />
+              <NotificationBell />
 
-            <button 
-              onClick={() => setIsHeaderHidden(true)}
-              className="hidden md:flex p-2 rounded-full text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors"
-              title="إخفاء الشريط العلوي"
-              aria-label="إخفاء الشريط العلوي"
-            >
-              <ChevronDown className="h-5 w-5 rotate-180" />
-            </button>
+              {/* Unified Compact Utility Bar (Appearance, Language, Collapse Header) */}
+              <div className="hidden md:flex items-center rounded-xl border border-border/80 bg-muted/40 p-0.5 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsThemeSwitcherOpen(true)}
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-background"
+                  title={t("المظهر والثيمات", "Theme & Appearance")}
+                  aria-label={t("المظهر والثيمات", "Theme & Appearance")}
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsLanguageSwitcherOpen(true)}
+                  className="h-8 px-2 rounded-lg text-[11px] font-black text-muted-foreground hover:text-primary hover:bg-background"
+                  title={t("تغيير اللغة", "Change Language")}
+                  aria-label={t("تغيير اللغة", "Change Language")}
+                >
+                  {activeLanguageCode}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsHeaderHidden(true)}
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-background"
+                  title={t("إخفاء الشريط العلوي", "Hide Header")}
+                  aria-label={t("إخفاء الشريط العلوي", "Hide Header")}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+              </div>
 
-            <div className="hidden md:block">
-              <ThemeToggle onClick={() => setIsThemeSwitcherOpen(true)} />
-            </div>
-
-            <button
-                onClick={() => setIsLanguageSwitcherOpen(true)}
-                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
-                aria-label="تغيير لغة الموقع"
-            >
-                <span className="text-[10px] font-black group-hover:scale-110 transition-transform z-10">{activeLanguageName}</span>
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-
-            <Magnetic strength={0.1}>
-              <Button asChild variant="outline" className="hidden md:flex border-primary/40 text-primary hover:bg-primary/10 btn-magnetic rounded-full relative overflow-hidden group/donate shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
-                <Link href="/donations" prefetch={false}>
-                  <Heart className="me-2 h-4 w-4 fill-primary/20 group-hover/donate:fill-primary transition-all group-hover/donate:scale-110" />
-                  <span className="relative z-10 font-black">{t("ادعمنا", "Donate")}</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 translate-x-[-100%] group-hover/donate:translate-x-[100%] transition-transform duration-1000" />
+              {/* Donate Button */}
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex h-9 px-3 rounded-xl border-primary/35 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-bold whitespace-nowrap shrink-0 transition-colors"
+              >
+                <Link href="/donations" prefetch={false} className="inline-flex items-center gap-1.5">
+                  <Heart className="h-3.5 w-3.5 fill-primary/20" />
+                  <span>{t("ادعمنا", "Donate")}</span>
                 </Link>
               </Button>
-            </Magnetic>
 
-            {isUserLoading ? (
-              <Skeleton className="w-10 h-10 rounded-full" />
-            ) : (
-              <>
-                {user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                        <Avatar>
-                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
-                          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-background border-border">
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" prefetch={false}><UserIcon className="me-2 h-4 w-4" />{t("الملف الشخصي", "Profile")}</Link>
+              {/* Auth / Profile */}
+              {isUserLoading ? (
+                <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+              ) : user ? (
+                <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl border-border/80 p-0 overflow-hidden shrink-0"
+                    >
+                      <Avatar className="h-9 w-9 rounded-xl">
+                        <AvatarImage
+                          src={user.photoURL || undefined}
+                          alt={user.displayName || "User"}
+                        />
+                        <AvatarFallback className="rounded-xl text-xs font-bold">
+                          {getInitials(user.displayName)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl bg-popover border-border">
+                    <DropdownMenuItem asChild className="rounded-lg">
+                      <Link href="/profile" prefetch={false}>
+                        <UserIcon className="me-2 h-4 w-4" />
+                        {t("الملف الشخصي", "Profile")}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg">
+                      <Link href="/settings" prefetch={false}>
+                        <Settings className="me-2 h-4 w-4" />
+                        {t("الإعدادات", "Settings")}
+                      </Link>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="rounded-lg">
+                        <Link href="/admin/dashboard" prefetch={false}>
+                          <LayoutDashboard className="me-2 h-4 w-4" />
+                          {t("لوحة التحكم", "Admin Dashboard")}
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/settings" prefetch={false}><Settings className="me-2 h-4 w-4" />{t("الإعدادات", "Settings")}</Link>
-                      </DropdownMenuItem>
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/dashboard" prefetch={false}><LayoutDashboard className="me-2 h-4 w-4" />{t("لوحة التحكم", "Admin Dashboard")}</Link>
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="me-2 h-4 w-4" />
-                        {t("تسجيل الخروج", "Sign Out")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button asChild className="btn-magnetic bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.4)] border border-primary/40 rounded-full px-5">
-                    <Link href="/auth/login" prefetch={false}>
-                      <span className="relative z-10">{t("تسجيل الدخول", "Sign In")}</span>
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-destructive focus:text-destructive">
+                      <LogOut className="me-2 h-4 w-4" />
+                      {t("تسجيل الخروج", "Sign Out")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  asChild
+                  size="sm"
+                  className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold whitespace-nowrap shrink-0"
+                >
+                  <Link href="/auth/login" prefetch={false}>
+                    {t("دخول", "Sign In")}
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
-        </nav>
-      </motion.header>
+        </div>
+      </header>
 
-      {/* Mobile Bottom Nav (Floating Dock Style) */}
-      <motion.div 
-        animate={{ 
-          y: isHeaderHidden ? 150 : 0,
-          opacity: isHeaderHidden ? 0 : 1
-        }} 
-        className="md:hidden fixed bottom-6 left-4 right-4 z-40 h-20 bg-background/40 border border-white/10 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-around px-2 overflow-hidden"
+      {/* Mobile Bottom Dock */}
+      <nav
+        aria-label={t("شريط التنقل السريع للهاتف", "Mobile navigation")}
+        dir={isRtl ? "rtl" : "ltr"}
+        className={cn(
+          "md:hidden fixed bottom-4 left-3 right-3 z-40 h-16 rounded-2xl border border-border/80 bg-background/90 backdrop-blur-xl shadow-xl flex items-center justify-around px-1 transition-all duration-300",
+          isHeaderHidden && "translate-y-24 opacity-0 pointer-events-none"
+        )}
       >
-          {localizedMobileNav.map((item) => {
-            const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
-            const href = ((item.href === '/profile' || item.href === '/settings') && !user) ? `/auth/login?redirect_to=${item.href}` : item.href;
-            return (
-              <Link key={item.label} href={href} prefetch={false} className="relative flex flex-col items-center justify-center w-full h-full group touch-none">
-                <div className={cn(
-                    "flex flex-col items-center transition-all duration-300",
-                    isActive ? "scale-110 -translate-y-1" : "scale-100 opacity-60"
-                )}>
-                    <item.icon className={cn("w-6 h-6 mb-1 text-muted-foreground group-hover:text-primary", isActive && "text-primary")} />
-                    <span className={cn("text-[10px] font-bold text-muted-foreground group-hover:text-primary", isActive && "text-primary")}>{item.label}</span>
-                </div>
-                {isActive && (
-                    <motion.div 
-                        layoutId="activeBottomNav"
-                        className="absolute bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" 
-                    />
-                )}
-              </Link>
-            );
-          })}
-      </motion.div>
+        {MOBILE_DOCK_ITEMS.map((item) => {
+          const active = isRouteActive(item.href)
+          const href =
+            (item.href === "/profile" || item.href === "/settings") && !user
+              ? `/auth/login?redirect_to=${item.href}`
+              : item.href
 
-      {isThemeSwitcherOpen && <ThemeSwitcherDialog isOpen={isThemeSwitcherOpen} onOpenChange={setIsThemeSwitcherOpen} />}
-      {isFontSwitcherOpen && <FontSwitcherDialog isOpen={isFontSwitcherOpen} onOpenChange={setIsFontSwitcherOpen} />}
-      {isSolidColorSwitcherOpen && <SolidColorSwitcherDialog isOpen={isSolidColorSwitcherOpen} onOpenChange={setIsSolidColorSwitcherOpen} />}
-      {isLanguageSwitcherOpen && <LanguageSwitcherDialog isOpen={isLanguageSwitcherOpen} onOpenChange={setIsLanguageSwitcherOpen} />}
+          return (
+            <Link
+              key={item.href}
+              href={href}
+              prefetch={false}
+              className={cn(
+                "relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-[10px] font-bold">{t(item.label, item.enLabel)}</span>
+              {active && (
+                <span className="absolute bottom-1 h-1 w-4 rounded-full bg-primary" />
+              )}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {isThemeSwitcherOpen && (
+        <ThemeSwitcherDialog
+          isOpen={isThemeSwitcherOpen}
+          onOpenChange={setIsThemeSwitcherOpen}
+        />
+      )}
+      {isFontSwitcherOpen && (
+        <FontSwitcherDialog
+          isOpen={isFontSwitcherOpen}
+          onOpenChange={setIsFontSwitcherOpen}
+        />
+      )}
+      {isSolidColorSwitcherOpen && (
+        <SolidColorSwitcherDialog
+          isOpen={isSolidColorSwitcherOpen}
+          onOpenChange={setIsSolidColorSwitcherOpen}
+        />
+      )}
+      {isLanguageSwitcherOpen && (
+        <LanguageSwitcherDialog
+          isOpen={isLanguageSwitcherOpen}
+          onOpenChange={setIsLanguageSwitcherOpen}
+        />
+      )}
     </>
   )
 }
