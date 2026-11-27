@@ -251,6 +251,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [youtubeAudioId]);
 
   const playTrack = useCallback((newTrack: Track, startTime: number = 0, endTime: number | null = null) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'lecture' } }));
+    }
     if (isPlayerVisible) {
       pauseVideo();
     }
@@ -302,11 +305,27 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [isPlayerVisible, pauseVideo, track?.id, youtubeAudioId]);
 
   const playIframe = useCallback((iframe: IframeTrack) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'video' } }));
+    }
     pauseTrack();
     setClipEndTime(null);
     setIframeTrack({ ...iframe });
     setIsPlayerVisible(true);
   }, [pauseTrack]);
+
+  // Pause lecture/video playback automatically if Radio/Podcast starts
+  useEffect(() => {
+    const onOtherMediaStarted = (event: Event) => {
+      const detail = (event as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source === 'radio') {
+        pauseTrack();
+        pauseVideo();
+      }
+    };
+    window.addEventListener('waqfah:media-started', onOtherMediaStarted);
+    return () => window.removeEventListener('waqfah:media-started', onOtherMediaStarted);
+  }, [pauseTrack, pauseVideo]);
 
   const togglePlayPause = useCallback(() => {
     if (youtubeAudioId && ytAudioPlayerRef.current) {

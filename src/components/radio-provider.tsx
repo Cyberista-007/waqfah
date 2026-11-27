@@ -67,6 +67,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const [isBuffering, setIsBuffering] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
   const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
+  const [ytStartSeconds, setYtStartSeconds] = useState(0);
   const [playbackRate, setPlaybackRateState] = useState(1.0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -231,21 +232,43 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     setCurrentStation(null);
     currentStationRef.current = null;
     setActiveYoutubeId(null);
+    setYtStartSeconds(0);
     setCurrentTime(0);
     setDuration(0);
+    try {
+      sessionStorage.removeItem('radio_active_session');
+      localStorage.removeItem('radio_last_station');
+    } catch {}
   }, []);
 
   const togglePlay = useCallback(() => {
     if (!currentStation) return;
-    const ytId = currentStation ? getYoutubeId(currentStation.url) : null;
+    const ytId = getYoutubeId(currentStation.url);
 
     if (ytId) {
+      if (activeYoutubeId !== ytId) {
+        // Reload after page refresh cleanly
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'radio' } }));
+        }
+        const savedProgress = localStorage.getItem(`radio_progress_${currentStation.id}`);
+        const startSec = savedProgress ? parseInt(savedProgress, 10) : 0;
+        setYtStartSeconds(startSec);
+        setCurrentTime(startSec);
+        setActiveYoutubeId(ytId);
+        setIsBuffering(true);
+        return;
+      }
+
       const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
       if (iframe?.contentWindow) {
         if (isPlaying) {
           iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
           setIsPlaying(false);
         } else {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'radio' } }));
+          }
           iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
           setIsPlaying(true);
         }
@@ -253,14 +276,32 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const audio = audioRef.current;
-    if (!audio) return;
+    let audio = audioRef.current;
+    if (!audio || !audio.src || audio.src === window.location.href) {
+      audio = getAudioInstance();
+      if (!audio) return;
+      const savedProgress = localStorage.getItem(`radio_progress_${currentStation.id}`);
+      const startSec = savedProgress ? parseInt(savedProgress, 10) : 0;
+      pendingStartTimeRef.current = startSec;
+      audio.crossOrigin = 'anonymous';
+      audio.src = currentStation.url;
+      audio.volume = volume;
+      audio.playbackRate = playbackRate;
+    }
+
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(console.error);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'radio' } }));
+      }
+      setIsBuffering(true);
+      audio.play().catch((err) => {
+        console.error('Radio resume error:', err);
+        setIsBuffering(false);
+      });
     }
-  }, [currentStation, isPlaying]);
+  }, [currentStation, activeYoutubeId, isPlaying, getAudioInstance, volume, playbackRate]);
 
   const playStation = useCallback(
     (station: RadioStation) => {
@@ -268,14 +309,21 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       const audio = audioRef.current;
 
       // Same station AND already loaded/initialized → toggle
-      const isAlreadyLoaded = ytId 
-        ? (activeYoutubeId === ytId) 
+      const isAlreadyLoaded = ytId
+        ? (activeYoutubeId === ytId)
         : (audio && (audio.src === station.url || audio.src === encodeURI(station.url)));
 
       if (currentStation?.id === station.id && isAlreadyLoaded) {
         togglePlay();
         return;
       }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('waqfah:media-started', { detail: { source: 'radio' } }));
+      }
+      try {
+        sessionStorage.setItem('radio_active_session', '1');
+      } catch {}
 
       // Stop existing audio
       if (audioRef.current) {
@@ -291,13 +339,14 @@ export function RadioProvider({ children }: { children: ReactNode }) {
       }
 
       if (ytId) {
+        const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
+        const startSecond = savedProgress ? parseInt(savedProgress, 10) : 0;
+        setYtStartSeconds(startSecond);
         setActiveYoutubeId(ytId);
         setCurrentStation(station);
         currentStationRef.current = station;
         setIsPlaying(false);
         setIsBuffering(true);
-        const savedProgress = localStorage.getItem(`radio_progress_${station.id}`);
-        const startSecond = savedProgress ? parseInt(savedProgress, 10) : 0;
         setCurrentTime(startSecond);
         setDuration(0);
         // Save history
@@ -311,6 +360,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
 
       // Standard HTML5 audio
       setActiveYoutubeId(null);
+      setYtStartSeconds(0);
       
       const audioInstance = getAudioInstance();
       if (audioInstance) {
@@ -346,12 +396,13 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     [currentStation, activeYoutubeId, togglePlay, volume, getAudioInstance, playbackRate]
   );
 
-  // Restore last playing station on mount
+  // Restore station on mount ONLY if active during this browser tab session
   useEffect(() => {
     try {
+      const isSessionActive = sessionStorage.getItem('radio_active_session') === '1';
+      if (!isSessionActive) return;
       const saved = localStorage.getItem('radio_last_station');
       if (saved) {
-        // Don't auto-play on mount — just restore state visually
         const station: RadioStation = JSON.parse(saved);
         setCurrentStation(station);
         currentStationRef.current = station;
@@ -361,6 +412,26 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {}
+  }, []);
+
+  // Auto-pause Radio/Podcast if user starts playing a Lecture track or Video
+  useEffect(() => {
+    const onOtherMediaStarted = (event: Event) => {
+      const detail = (event as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source && detail.source !== 'radio') {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+        const iframe = document.getElementById('global-youtube-radio') as HTMLIFrameElement;
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        }
+        setIsPlaying(false);
+        setIsBuffering(false);
+      }
+    };
+    window.addEventListener('waqfah:media-started', onOtherMediaStarted);
+    return () => window.removeEventListener('waqfah:media-started', onOtherMediaStarted);
   }, []);
 
   // Listen to messages from the YouTube player iframe to sync play states
@@ -488,7 +559,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
         <iframe
           id="global-youtube-radio"
           key={activeYoutubeId}
-          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${Math.floor(currentTime || 0)}&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+          src={`https://www.youtube.com/embed/${activeYoutubeId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&start=${Math.floor(ytStartSeconds || 0)}&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
           className="pointer-events-none fixed -top-[9999px] -left-[9999px] w-10 h-10 opacity-0 overflow-hidden"
           allow="autoplay; encrypted-media"
           title="global-youtube-audio"
