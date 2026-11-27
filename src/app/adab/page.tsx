@@ -307,7 +307,7 @@ export default function AdabPage() {
           <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
           <span>مدرس السلوك والآداب</span>
         </HoloBadge>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 mb-4">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground mb-4">
           أدَب - دليل الآداب والأخلاق اليومية
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base text-center">
@@ -316,14 +316,13 @@ export default function AdabPage() {
       </div>
 
       {/* Daily Verse Reflection Card with Share Options */}
-      <Card className="bg-gradient-to-r from-zinc-900 to-zinc-950 border border-primary/20 rounded-3xl p-6 mb-8 text-right shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <Card className="bg-card/85 border border-primary/25 rounded-3xl p-6 mb-8 text-right shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1.5 flex-1">
             <span className="text-[10px] text-primary font-black uppercase tracking-wider flex items-center gap-1">
               <BookOpen className="h-3.5 w-3.5" /> آية التدبر والآداب اليومية
             </span>
-            <p className="font-headline text-lg font-black text-white leading-loose">
+            <p className="font-headline text-lg font-black text-foreground leading-loose">
               &quot;وَقُولُوا لِلنَّاسِ حُسْنًا&quot; (البقرة: 83)
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -337,7 +336,7 @@ export default function AdabPage() {
                 navigator.clipboard.writeText("قال تعالى: {وَقُولُوا لِلنَّاسِ حُسْنًا} [البقرة: 83] - أدب وتوجيه رباني كريم.");
                 alert("تم نسخ آية التدبر بنجاح!");
               }}
-              className="text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 px-3 py-2 rounded-xl transition-all font-bold"
+              className="text-xs bg-muted hover:bg-muted/80 text-foreground border border-border px-3 py-2 rounded-xl transition-all font-bold"
             >
               نسخ النص 📋
             </button>
@@ -353,7 +352,7 @@ export default function AdabPage() {
                   alert("ميزة المشاركة غير مدعومة في متصفحك، تم نسخ الرابط بدلاً من ذلك!");
                 }
               }}
-              className="text-xs bg-primary text-black px-3 py-2 rounded-xl transition-all font-black"
+              className="text-xs bg-primary text-primary-foreground px-3 py-2 rounded-xl transition-all font-black"
             >
               مشاركة 🔗
             </button>
@@ -363,20 +362,20 @@ export default function AdabPage() {
 
       {/* Streak Dashboard Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-zinc-950/40 border-white/10 rounded-2xl p-4 flex items-center justify-between">
+        <Card className="bg-card/85 border-border rounded-2xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-red-500/10 rounded-xl">
-              <Flame className="h-6 w-6 text-red-500 animate-pulse" />
+              <Flame className="h-6 w-6 text-red-500" />
             </div>
             <div>
               <div className="text-[10px] text-muted-foreground">التزامك المتواصل (Streak)</div>
-              <div className="text-lg font-bold text-white">{streak} أيام متتالية</div>
+              <div className="text-lg font-bold text-foreground">{streak} أيام متتالية</div>
             </div>
           </div>
-          <span className="text-[10px] text-red-400 bg-red-500/10 px-2.5 py-1 rounded font-bold">ملتزم بالسنن 🔥</span>
+          <span className="text-[10px] text-red-500 bg-red-500/10 px-2.5 py-1 rounded font-bold">ملتزم بالسنن 🔥</span>
         </Card>
 
-        <Card className="bg-zinc-950/40 border-white/10 rounded-2xl p-4 flex items-center justify-between md:col-span-2 text-right">
+        <Card className="bg-card/85 border-border rounded-2xl p-4 flex items-center justify-between md:col-span-2 text-right">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-emerald-500/10 rounded-xl">
               <Smile className="h-6 w-6 text-emerald-400 animate-bounce" />
@@ -396,10 +395,10 @@ export default function AdabPage() {
         {/* Left/Main Side: Habit timeline & 30-Day Grid */}
         <div className="lg:col-span-2 space-y-6">
           {/* Daily Tracker */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-bold flex items-center gap-2">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
                   <CheckSquare className="h-5 w-5 text-primary" />
                   <span>متابع السنن والآداب اليومي</span>
                 </h2>
@@ -408,13 +407,13 @@ export default function AdabPage() {
             </div>
 
             {/* Progress */}
-            <div className="bg-white/5 border border-white/5 p-4 rounded-2xl mb-8 flex items-center justify-between gap-6">
+            <div className="bg-muted/40 border border-border p-4 rounded-2xl mb-8 flex items-center justify-between gap-6">
               <div className="flex-1">
                 <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1.5">
                   <span>نسبة الإنجاز اليومي للآداب والسنن</span>
                   <span className="text-primary">{progressPercent}%</span>
                 </div>
-                <div className="w-full bg-white/10 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
                   <motion.div
                     className="bg-primary h-full"
                     initial={{ width: 0 }}
@@ -424,27 +423,27 @@ export default function AdabPage() {
                 </div>
               </div>
               <div className="text-center shrink-0">
-                <div className="text-2xl font-black text-white">{checkedCount}/{totalItems}</div>
+                <div className="text-2xl font-black text-foreground">{checkedCount}/{totalItems}</div>
                 <div className="text-[10px] text-muted-foreground">السنن المحققة</div>
               </div>
             </div>
 
             {/* Timeline */}
             <div className="space-y-8 relative">
-              <div className="absolute right-6 top-6 bottom-6 w-0.5 bg-white/10 pointer-events-none -z-10" />
+              <div className="absolute right-6 top-6 bottom-6 w-0.5 bg-border pointer-events-none -z-10" />
 
               {dailySunnahs.map((category) => {
                 const CatIcon = category.icon;
                 return (
                   <div key={category.id} className="relative flex gap-6 text-right">
                     <div
-                      className="h-12 w-12 rounded-full border-2 border-zinc-950 flex items-center justify-center shrink-0 shadow-lg z-10"
+                      className="h-12 w-12 rounded-full border-2 border-card flex items-center justify-center shrink-0 shadow-sm z-10"
                       style={{ backgroundColor: `${category.color}20`, borderColor: category.color }}
                     >
                       <CatIcon className="h-5 w-5" style={{ color: category.color }} />
                     </div>
 
-                    <div className="flex-1 bg-white/5 border border-white/5 p-5 rounded-2xl space-y-3">
+                    <div className="flex-1 bg-muted/40 border border-border p-5 rounded-2xl space-y-3">
                       <h3 className="font-bold text-sm" style={{ color: category.color }}>{category.time}</h3>
                       <div className="space-y-2">
                         {category.items.map((item) => (
@@ -485,8 +484,8 @@ export default function AdabPage() {
           </Card>
 
           {/* 30-Day Grid Challenge */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl">
-            <h2 className="text-xl font-bold flex items-center gap-2 mb-4 text-right justify-start text-white">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4 text-right justify-start text-foreground">
               <Calendar className="h-5 w-5 text-primary" />
               <span>تحدي الـ 30 يوماً لتهذيب السلوك والآداب</span>
             </h2>
@@ -544,8 +543,8 @@ export default function AdabPage() {
         {/* Right Side: Scenario, Gratitude and Moral Balance */}
         <div className="lg:col-span-1 space-y-6">
           {/* Moral Balance Dashboard */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-sm font-bold flex items-center gap-2 mb-4 justify-start text-white">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-sm font-bold flex items-center gap-2 mb-4 justify-start text-foreground">
               <BarChart2 className="h-5 w-5 text-primary" />
               <span>محلل التوازن الأخلاقي والسلوكي</span>
             </h3>
@@ -557,7 +556,7 @@ export default function AdabPage() {
                     <span className="text-muted-foreground">{dim.name} ({dim.count}/{dim.total})</span>
                     <span className="font-bold text-primary">{dim.percent}%</span>
                   </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                     <div
                       className="bg-primary h-full transition-all duration-300"
                       style={{ width: `${dim.percent}%` }}
@@ -569,8 +568,8 @@ export default function AdabPage() {
           </Card>
 
           {/* Advanced spiritual Wird and Accountability Scorecard */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-sm font-bold flex items-center gap-2 mb-2 justify-start text-white">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-sm font-bold flex items-center gap-2 mb-2 justify-start text-foreground">
               <CheckCircle2 className="h-5 w-5 text-primary" />
               <span>لوحة المراقبة الذاتية والورد اليومي</span>
             </h3>
@@ -626,9 +625,9 @@ export default function AdabPage() {
           </Card>
 
           {/* Ethical Decision Scenarios */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl relative h-max">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm relative h-max">
             <NeonBorder color="hsl(var(--primary) / 0.3)">
-              <CardHeader className="pb-4 border-b border-white/10">
+              <CardHeader className="pb-4 border-b border-border/60">
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary animate-pulse" />
                   <span>القرار والسلوك الأخلاقي</span>
@@ -695,16 +694,16 @@ export default function AdabPage() {
           </Card>
 
           {/* Daily Islamic Gratitude Journal */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-white">
-              <Heart className="h-5 w-5 text-red-400" />
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-foreground">
+              <Heart className="h-5 w-5 text-red-500" />
               <span>مفكرة الشكر والامتنان لله</span>
             </h3>
             <p className="text-[10px] text-muted-foreground mb-4">قال تعالى: &quot;لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ&quot;. دوّن 3 نعم تلمسها اليوم وتشكر الله عليها.</p>
 
             <div className="space-y-3">
               {gratitudes.map((g, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/5 p-2.5 rounded-xl text-xs text-white/90">
+                <div key={idx} className="bg-muted/40 border border-border p-2.5 rounded-xl text-xs text-foreground">
                   {idx + 1}. {g}
                 </div>
               ))}
@@ -715,9 +714,9 @@ export default function AdabPage() {
                     placeholder="نعمة البصر، الصحة، الأهل..."
                     value={newGratitude}
                     onChange={(e) => setNewGratitude(e.target.value)}
-                    className="bg-white/5 border-white/10 rounded-xl text-xs text-right"
+                    className="bg-background border-border rounded-xl text-xs text-right text-foreground"
                   />
-                  <Button onClick={addGratitude} size="sm" className="rounded-xl bg-primary hover:bg-primary/95 text-black font-bold text-xs">
+                  <Button onClick={addGratitude} size="sm" className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs">
                     شكر
                   </Button>
                 </div>

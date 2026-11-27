@@ -218,7 +218,7 @@ export default function AtharAtlasPage() {
           <Compass className="h-3.5 w-3.5 text-primary animate-spin-slow" />
           <span>أطلس الحضارة والتاريخ</span>
         </HoloBadge>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 mb-4">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground mb-4">
           أثَر - أطلس التاريخ والحضارة الإسلامية
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base text-center">
@@ -228,10 +228,10 @@ export default function AtharAtlasPage() {
 
       {/* Trivia Notification Box */}
       <div className="bg-primary/10 border border-primary/20 p-4 rounded-3xl mb-8 flex items-center gap-3 text-right">
-        <Sparkles className="h-5 w-5 text-primary shrink-0 animate-pulse" />
+        <Sparkles className="h-5 w-5 text-primary shrink-0" />
         <div className="flex-1">
           <span className="text-[10px] text-primary font-bold">إضاءة تاريخية خاطفة:</span>
-          <p className="text-xs text-white/90 mt-0.5">{currentEra.trivia}</p>
+          <p className="text-xs text-foreground mt-0.5">{currentEra.trivia}</p>
         </div>
       </div>
 
@@ -250,8 +250,8 @@ export default function AtharAtlasPage() {
             }}
             className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between ${
               selectedEraIndex === index
-                ? 'bg-zinc-900 border-primary shadow-lg shadow-primary/10'
-                : 'bg-zinc-950/40 border-white/10 hover:bg-white/5'
+                ? 'bg-card border-primary shadow-md'
+                : 'bg-card/70 border-border hover:bg-muted/60'
             }`}
           >
             <span
@@ -260,7 +260,7 @@ export default function AtharAtlasPage() {
             >
               {era.period}
             </span>
-            <h3 className="font-bold text-white text-base">{era.name}</h3>
+            <h3 className="font-bold text-foreground text-base">{era.name}</h3>
             <span className="text-xs text-muted-foreground mt-1">المركز: {era.center}</span>
           </button>
         ))}
@@ -269,15 +269,15 @@ export default function AtharAtlasPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Side: Map */}
         <div className="lg:col-span-2 space-y-6">
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm relative overflow-hidden">
             <div className="absolute top-4 left-4 z-10 flex gap-2 flex-wrap max-w-full">
               {/* Comparator Toggle */}
-              <label className="text-xs bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-muted-foreground flex items-center gap-1.5 cursor-pointer">
+              <label className="text-xs bg-background/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-border text-muted-foreground flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showOverlapRoute}
                   onChange={(e) => setShowOverlapRoute(e.target.checked)}
-                  className="rounded border-white/20 bg-transparent text-primary focus:ring-0"
+                  className="rounded border-border bg-transparent text-primary focus:ring-0"
                 />
                 <Eye className="h-3.5 w-3.5" />
                 <span>مقارنة مسار ابن بطوطة 🗺️</span>
@@ -287,21 +287,21 @@ export default function AtharAtlasPage() {
               <select
                 value={activeConquestOverlay}
                 onChange={(e: any) => setActiveConquestOverlay(e.target.value)}
-                className="text-xs bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-primary cursor-pointer focus:outline-none"
+                className="text-xs bg-background/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-border text-primary cursor-pointer focus:outline-none"
               >
-                <option value="none" className="bg-zinc-950 text-white">تراكب الفتوحات: لا يوجد</option>
-                <option value="sham" className="bg-zinc-950 text-white">فتوحات الشام ⚔️</option>
-                <option value="andalus" className="bg-zinc-950 text-white">فتح الأندلس ⚔️</option>
+                <option value="none" className="bg-card text-foreground">تراكب الفتوحات: لا يوجد</option>
+                <option value="sham" className="bg-card text-foreground">فتوحات الشام ⚔️</option>
+                <option value="andalus" className="bg-card text-foreground">فتح الأندلس ⚔️</option>
               </select>
 
-              <span className="text-xs bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-white flex items-center gap-1.5">
+              <span className="text-xs bg-background/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-border text-foreground flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: currentEra.color }} />
                 <span>عرض جغرافيا: {currentEra.name}</span>
               </span>
             </div>
 
             {/* Interactive Map Visual */}
-            <div className="relative h-[400px] w-full bg-zinc-950/80 border border-white/5 rounded-3xl overflow-hidden flex items-center justify-center">
+            <div className="relative h-[400px] w-full bg-muted/40 border border-border rounded-3xl overflow-hidden flex items-center justify-center">
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
 
               <svg className="w-full h-full opacity-35 absolute inset-0" viewBox="0 0 800 300" fill="none">
@@ -429,13 +429,13 @@ export default function AtharAtlasPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-4 left-4 right-4 bg-zinc-950/90 border border-white/10 backdrop-blur-md p-4 rounded-2xl shadow-xl flex items-start gap-3 text-right z-30"
+                    className="absolute bottom-4 left-4 right-4 bg-card/95 border border-border backdrop-blur-md p-4 rounded-2xl shadow-xl flex items-start gap-3 text-right z-30"
                   >
-                    <div className="p-2 rounded-xl bg-white/5">
+                    <div className="p-2 rounded-xl bg-muted">
                       <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">{hoveredPoint.name}</h4>
+                      <h4 className="font-bold text-foreground text-sm">{hoveredPoint.name}</h4>
                       <p className="text-muted-foreground text-xs mt-1 leading-relaxed">{hoveredPoint.desc}</p>
                     </div>
                   </motion.div>
@@ -443,13 +443,13 @@ export default function AtharAtlasPage() {
               </AnimatePresence>
 
               {selectedPoint && (
-                <div className="absolute inset-x-4 bottom-4 bg-zinc-950/95 border border-primary/30 p-4 rounded-2xl shadow-2xl flex justify-between items-start gap-4 text-right z-30 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="absolute inset-x-4 bottom-4 bg-card/95 border border-primary/30 p-4 rounded-2xl shadow-2xl flex justify-between items-start gap-4 text-right z-30 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex items-start gap-3">
                     <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
                       <MapPin className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-black text-white text-base">{selectedPoint.name}</h4>
+                      <h4 className="font-black text-foreground text-base">{selectedPoint.name}</h4>
                       <p className="text-muted-foreground text-xs mt-1 leading-relaxed">{selectedPoint.desc}</p>
                     </div>
                   </div>
@@ -508,8 +508,8 @@ export default function AtharAtlasPage() {
           </GlowCard>
 
           {/* Conquest / Battle Simulation Console */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl text-right">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm text-right">
+            <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
               <Swords className="h-5 w-5 text-primary" />
               <span>لوحة محاكاة الفتوحات والغزوات الإسلامية</span>
             </h3>
@@ -573,19 +573,19 @@ export default function AtharAtlasPage() {
           </Card>
 
           {/* Historical Architecture/Landmarks Gallery */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               <span>معالم وشواهد العمارة الخالدة في {currentEra.name}</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {currentEra.landmarks.map((land, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/5 p-4 rounded-2xl text-right space-y-2 hover:border-primary/40 transition-colors">
+                <div key={idx} className="bg-muted/40 border border-border p-4 rounded-2xl text-right space-y-2 hover:border-primary/40 transition-colors">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold">{land.city}</span>
                     <span className="text-[9px] text-muted-foreground">معلم تاريخي</span>
                   </div>
-                  <h4 className="font-bold text-sm text-white">{land.title}</h4>
+                  <h4 className="font-bold text-sm text-foreground">{land.title}</h4>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{land.desc}</p>
                 </div>
               ))}
@@ -596,8 +596,8 @@ export default function AtharAtlasPage() {
         {/* Right Side: Timeline & Quiz */}
         <div className="lg:col-span-1 space-y-6">
           {/* Timeline Milestones */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl h-max">
-            <CardHeader className="border-b border-white/10 pb-4">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm h-max">
+            <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle className="text-xl font-bold flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary" />
                 <span>جدول الأحداث والمعالم</span>
@@ -606,18 +606,18 @@ export default function AtharAtlasPage() {
             </CardHeader>
             <CardContent className="p-6 space-y-6 max-h-[300px] overflow-y-auto">
               <p className="text-xs text-muted-foreground leading-relaxed text-right">{currentEra.description}</p>
-              <div className="relative border-r border-white/10 pr-4 space-y-6 mr-2">
+              <div className="relative border-r border-border pr-4 space-y-6 mr-2">
                 {currentEra.milestones.map((m, idx) => (
                   <div key={idx} className="relative text-right">
                     <span
-                      className="absolute -right-[21px] top-1 h-3.5 w-3.5 rounded-full border-2 border-zinc-950"
+                      className="absolute -right-[21px] top-1 h-3.5 w-3.5 rounded-full border-2 border-card"
                       style={{ backgroundColor: currentEra.color }}
                     />
                     <div className="space-y-1">
                       <span className="text-[10px] font-black opacity-80 px-2 py-0.5 rounded" style={{ backgroundColor: `${currentEra.color}20`, color: currentEra.color }}>
                         {m.year}
                       </span>
-                      <h4 className="font-bold text-white text-sm mt-1">{m.title}</h4>
+                      <h4 className="font-bold text-foreground text-sm mt-1">{m.title}</h4>
                       <p className="text-muted-foreground text-xs leading-relaxed mt-0.5">{m.text}</p>
                     </div>
                   </div>
@@ -627,11 +627,11 @@ export default function AtharAtlasPage() {
           </Card>
 
           {/* Interactive Historical Geography Quiz */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm relative">
             <NeonBorder color="hsl(var(--primary) / 0.3)">
-              <CardHeader className="pb-2 border-b border-white/10">
+              <CardHeader className="pb-2 border-b border-border/60">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+                  <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                     <Award className="h-4.5 w-4.5 text-primary" />
                     <span>تحدي الجغرافيا التاريخية</span>
                   </CardTitle>

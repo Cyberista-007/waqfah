@@ -467,17 +467,9 @@ export default function EssentialsPage() {
   const progressPercent = Math.round((completed.length / totalItems) * 100);
 
   return (
-    <div className="min-h-screen pb-32 overflow-x-hidden relative bg-zinc-950 text-white selection:bg-primary selection:text-primary-foreground print:bg-white print:text-black">
-      {/* 🏛️ Premium Hero Section */}
-      <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden pt-20 print:hidden">
-        <div className="absolute inset-0 bg-zinc-950">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.18)_0%,transparent_70%)] opacity-60 animate-pulse" />
-          <motion.div 
-            animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 12, repeat: Infinity }}
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/10 rounded-full blur-[140px]" 
-          />
-        </div>
+    <div className="min-h-screen pb-24 overflow-x-hidden relative bg-background text-foreground selection:bg-primary selection:text-primary-foreground print:bg-white print:text-black">
+      {/* 🏛️ Clean Hero Section */}
+      <section className="relative py-16 flex flex-col items-center justify-center text-center px-4 border-b border-border/60 print:hidden">
 
         <motion.div 
           initial={{ opacity: 0, y: 40 }}

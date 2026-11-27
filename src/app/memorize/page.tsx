@@ -629,23 +629,16 @@ export default function MemorizePage() {
   const activeVerse = selectedMatn.verses[activeVerseIndex];
 
   return (
-    <div className="min-h-screen text-foreground relative py-12 px-4 md:px-8 max-w-6xl mx-auto animate-fadeIn" dir="rtl">
-      
-      {/* Dynamic flowing background glows */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[20%] left-[10%] w-[380px] h-[380px] rounded-full bg-amber-500/5 blur-[120px]" />
-        <div className="absolute bottom-[20%] right-[5%] w-[420px] h-[420px] rounded-full bg-primary/5 blur-[140px] animate-pulse-slow" />
-      </div>
-
+    <div className="min-h-screen text-foreground py-10 px-4 md:px-8 max-w-6xl mx-auto" dir="rtl">
       {/* Header */}
-      <header className="text-center mb-12 relative">
-        <div className="inline-flex p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-primary mb-4 shadow-xl">
-          <BookOpen className="h-10 w-10 text-amber-500" />
+      <header className="text-center mb-10 space-y-3 pb-6 border-b border-border/60">
+        <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+          <BookOpen className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-black font-headline text-white mb-3">
+        <h1 className="text-3xl md:text-5xl font-black font-headline text-foreground">
           حافظ وقارئ المتون التفاعلي
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed font-bold">
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
           أداة حفظ مرنة وصوتية لتعلم المنظومات والمتون الشرعية، تدعم إخفاء الشطور لاختبار الحفظ، التكرار، والوقوف على غريب الألفاظ.
         </p>
       </header>

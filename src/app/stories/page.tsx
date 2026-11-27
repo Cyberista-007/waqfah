@@ -114,22 +114,10 @@ export default function StoriesPage() {
         )}
       </AnimatePresence>
 
-      {/* 🌌 Dynamic Background Glows */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-         <div className={cn(
-           "absolute top-1/4 -right-20 w-[500px] h-[500px] rounded-full blur-[150px] transition-all duration-1000 opacity-20",
-           activeCategory === 'prophets' ? "bg-amber-500" : activeCategory === 'parables' ? "bg-emerald-500" : activeCategory === 'sunnah' ? "bg-blue-500" : "bg-primary"
-         )} />
-         <div className={cn(
-           "absolute bottom-1/4 -left-20 w-[500px] h-[500px] rounded-full blur-[150px] transition-all duration-1000 opacity-20",
-           activeCategory === 'prophets' ? "bg-amber-800" : activeCategory === 'parables' ? "bg-emerald-800" : activeCategory === 'sunnah' ? "bg-blue-800" : "bg-purple-900"
-         )} />
-      </div>
-
       {/* 🎛️ Controls Section */}
       <div className={cn(
         "container relative z-20 transition-all duration-500 max-w-6xl mx-auto px-4",
-        isReadingMode ? "pt-10" : "-mt-10"
+        isReadingMode ? "pt-10" : "pt-6"
       )}>
         {/* Persistent Controls Header */}
         <motion.div 

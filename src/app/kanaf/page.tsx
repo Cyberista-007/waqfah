@@ -180,7 +180,7 @@ export default function KanafParentingPage() {
           <Heart className="h-3.5 w-3.5 text-primary animate-pulse" />
           <span>التربية والأسرة المسلمة</span>
         </HoloBadge>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 mb-4">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground mb-4">
           كنَف - ركن التربية والبيت المسلم
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base text-center">
@@ -196,14 +196,14 @@ export default function KanafParentingPage() {
             onClick={() => setSelectedAgeIndex(idx)}
             className={`p-5 rounded-3xl border text-right transition-all flex flex-col justify-between ${
               selectedAgeIndex === idx
-                ? 'bg-zinc-900 border-primary shadow-lg shadow-primary/10'
-                : 'bg-zinc-950/40 border-white/10 hover:bg-white/5'
+                ? 'bg-card border-primary shadow-md'
+                : 'bg-card/70 border-border hover:bg-muted/60'
             }`}
           >
             <span className="text-xs bg-primary/15 text-primary px-3 py-1 rounded-full font-bold w-max mb-3">
               مسار تربوي مخصص
             </span>
-            <h3 className="font-bold text-white text-base">{age.title}</h3>
+            <h3 className="font-bold text-foreground text-base">{age.title}</h3>
             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{age.description.slice(0, 75)}...</p>
           </button>
         ))}
@@ -212,8 +212,8 @@ export default function KanafParentingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left/Main Side: Milestones Guides */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative hide-in-print">
-            <h2 className="text-xl font-bold border-b border-white/10 pb-4 mb-6 flex items-center gap-2">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative hide-in-print">
+            <h2 className="text-xl font-bold border-b border-border/60 pb-4 mb-6 flex items-center gap-2 text-foreground">
               <Smile className="h-5 w-5 text-primary" />
               <span>أهداف النمو التربوي: {currentAge.title}</span>
             </h2>
@@ -246,9 +246,9 @@ export default function KanafParentingPage() {
           </Card>
 
           {/* Interactive Prayer Tree Coloring Chart */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative text-right hide-in-print">
-            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-white justify-start">
-              <Sprout className="h-5 w-5 text-emerald-400" />
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative text-right hide-in-print">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground justify-start">
+              <Sprout className="h-5 w-5 text-emerald-500" />
               <span>شجرة الصلاة التفاعلية للأطفال (المتابعة الأسبوعية)</span>
             </h3>
             <p className="text-xs text-muted-foreground mb-6">
@@ -256,24 +256,24 @@ export default function KanafParentingPage() {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 text-center">
+              <div className="bg-muted/40 p-3 rounded-2xl border border-border text-center">
                 <span className="text-[10px] text-muted-foreground font-bold">في وقتها 🟢</span>
-                <div className="text-xl font-black text-emerald-400 mt-1">{treeStats.green} صلوات</div>
+                <div className="text-xl font-black text-emerald-500 mt-1">{treeStats.green} صلوات</div>
               </div>
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 text-center">
+              <div className="bg-muted/40 p-3 rounded-2xl border border-border text-center">
                 <span className="text-[10px] text-muted-foreground font-bold">متأخرة 🟡</span>
-                <div className="text-xl font-black text-amber-400 mt-1">{treeStats.yellow} صلوات</div>
+                <div className="text-xl font-black text-amber-500 mt-1">{treeStats.yellow} صلوات</div>
               </div>
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 text-center">
+              <div className="bg-muted/40 p-3 rounded-2xl border border-border text-center">
                 <span className="text-[10px] text-muted-foreground font-bold">فاتت 🔴</span>
-                <div className="text-xl font-black text-red-400 mt-1">{treeStats.red} صلوات</div>
+                <div className="text-xl font-black text-red-500 mt-1">{treeStats.red} صلوات</div>
               </div>
             </div>
 
-            <div className="bg-black/30 border border-white/5 rounded-3xl p-6 overflow-x-auto">
+            <div className="bg-muted/30 border border-border rounded-3xl p-6 overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-border">
                     <th className="pb-3 text-right text-muted-foreground font-bold">اليوم</th>
                     {prayers.map(p => (
                       <th key={p.key} className="pb-3 text-center text-muted-foreground font-bold">{p.label}</th>
@@ -282,8 +282,8 @@ export default function KanafParentingPage() {
                 </thead>
                 <tbody>
                   {weekdays.map((day, dayIdx) => (
-                    <tr key={day} className="border-b border-white/5 hover:bg-white/5 transition-all">
-                      <td className="py-4 font-bold text-white text-right">{day}</td>
+                    <tr key={day} className="border-b border-border/50 hover:bg-muted/40 transition-all">
+                      <td className="py-4 font-bold text-foreground text-right">{day}</td>
                       {prayers.map(p => {
                         const state = prayerTree[`${dayIdx}-${p.key}`] || 'empty';
                         return (
@@ -292,12 +292,12 @@ export default function KanafParentingPage() {
                               onClick={() => cycleLeafColor(dayIdx, p.key)}
                               className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${
                                 state === 'green'
-                                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500'
                                   : state === 'yellow'
-                                  ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                  ? 'bg-amber-500/20 border-amber-500 text-amber-500'
                                   : state === 'red'
-                                  ? 'bg-red-500/20 border-red-500 text-red-300'
-                                  : 'bg-white/5 border-white/10 text-transparent'
+                                  ? 'bg-red-500/20 border-red-500 text-red-500'
+                                  : 'bg-muted border-border text-transparent'
                               }`}
                             >
                               ★
@@ -313,7 +313,7 @@ export default function KanafParentingPage() {
           </Card>
 
           {/* Printable Worksheet Preview Card */}
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden">
             <div className="flex flex-col border-b border-white/10 pb-4 mb-6 gap-4 hide-in-print">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
@@ -396,10 +396,10 @@ export default function KanafParentingPage() {
           </GlowCard>
 
           {/* Child Appreciation Certificate Generator */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl text-right hide-in-print">
-            <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm text-right hide-in-print">
+            <div className="flex justify-between items-center border-b border-border/60 pb-4 mb-6">
               <div>
-                <h3 className="text-lg font-bold flex items-center gap-2 text-white">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
                   <Award className="h-5 w-5 text-primary" />
                   <span>مولد شهادات تقدير البطل الصغير</span>
                 </h3>
@@ -413,12 +413,12 @@ export default function KanafParentingPage() {
                 <select
                   value={certTitle}
                   onChange={(e) => setCertTitle(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none"
                 >
-                  <option value="بطل الصلاة والعبادة 🕌" className="bg-zinc-950">بطل الصلاة والعبادة 🕌</option>
-                  <option value="حافظ القرآن الصغير 📖" className="bg-zinc-950">حافظ القرآن الصغير 📖</option>
-                  <option value="طفل بار وخلوق ❤️" className="bg-zinc-950">طفل بار وخلوق ❤️</option>
-                  <option value="بطل الأخلاق والصدق ✨" className="bg-zinc-950">بطل الأخلاق والصدق ✨</option>
+                  <option value="بطل الصلاة والعبادة 🕌" className="bg-card text-foreground">بطل الصلاة والعبادة 🕌</option>
+                  <option value="حافظ القرآن الصغير 📖" className="bg-card text-foreground">حافظ القرآن الصغير 📖</option>
+                  <option value="طفل بار وخلوق ❤️" className="bg-card text-foreground">طفل بار وخلوق ❤️</option>
+                  <option value="بطل الأخلاق والصدق ✨" className="bg-card text-foreground">بطل الأخلاق والصدق ✨</option>
                 </select>
               </div>
 
@@ -469,8 +469,8 @@ export default function KanafParentingPage() {
         {/* Right Side: Stories, Adhkar Tracker, Activities Idea Bank */}
         <div className="lg:col-span-1 space-y-6 hide-in-print">
           {/* Daily Kids Adhkar Star Log */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-white">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-foreground">
               <Star className="h-5 w-5 text-amber-400 animate-pulse" />
               <span>لوحة أذكار الطفل الملونة</span>
             </h3>
@@ -516,8 +516,8 @@ export default function KanafParentingPage() {
           </Card>
 
           {/* Bedtime Stories */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-            <CardHeader className="border-b border-white/10 pb-4">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
                 <Music className="h-5 w-5 text-primary animate-pulse" />
                 <span>حكايات ما قبل النوم</span>
@@ -654,17 +654,17 @@ export default function KanafParentingPage() {
           </Card>
 
           {/* Weekly Family Activities Idea Bank */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-white">
-              <HelpingHand className="h-5 w-5 text-primary animate-pulse" />
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-foreground">
+              <HelpingHand className="h-5 w-5 text-primary" />
               <span>بنك الأنشطة العائلية الأسبوعية</span>
             </h3>
             <p className="text-[10px] text-muted-foreground mb-4 font-bold">أنشطة تفاعلية لترسيخ الود والتربية الإيمانية داخل المنزل.</p>
 
             <div className="space-y-3">
               {familyActivities.map((act, i) => (
-                <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-2xl space-y-1 hover:border-primary/45 transition-colors">
-                  <h4 className="font-bold text-xs text-white">{act.title}</h4>
+                <div key={i} className="bg-muted/40 border border-border p-3 rounded-2xl space-y-1 hover:border-primary/45 transition-colors">
+                  <h4 className="font-bold text-xs text-foreground">{act.title}</h4>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{act.desc}</p>
                   <button
                     onClick={() => setCustomTasks([...customTasks, act.title])}

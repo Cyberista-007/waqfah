@@ -241,7 +241,7 @@ export default function BayanLexiconPage() {
           <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
           <span>قسم بيان لعلوم القرآن</span>
         </HoloBadge>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 mb-4">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground mb-4">
           بيَان - معجم الألفاظ والكلمات القرآنية
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base text-center">
@@ -250,11 +250,11 @@ export default function BayanLexiconPage() {
       </div>
 
       {/* Alphabet filter block */}
-      <div className="flex flex-wrap justify-center gap-1.5 mb-8 bg-white/5 border border-white/5 p-3 rounded-2xl max-w-2xl mx-auto">
+      <div className="flex flex-wrap justify-center gap-1.5 mb-8 bg-card/80 border border-border p-3 rounded-2xl max-w-2xl mx-auto">
         <button
           onClick={() => setSelectedLetter(null)}
           className={`px-3 py-1.5 rounded-xl text-xs transition-all ${
-            selectedLetter === null ? 'bg-primary text-black font-black' : 'hover:bg-white/10 text-muted-foreground'
+            selectedLetter === null ? 'bg-primary text-primary-foreground font-black' : 'hover:bg-muted text-muted-foreground'
           }`}
         >
           الكل
@@ -264,7 +264,7 @@ export default function BayanLexiconPage() {
             key={l}
             onClick={() => setSelectedLetter(l)}
             className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
-              selectedLetter === l ? 'bg-primary text-black font-black scale-110 shadow-md shadow-primary/20' : 'hover:bg-white/5 text-muted-foreground'
+              selectedLetter === l ? 'bg-primary text-primary-foreground font-black scale-105 shadow-sm' : 'hover:bg-muted text-muted-foreground'
             }`}
           >
             {l}
@@ -275,7 +275,7 @@ export default function BayanLexiconPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Side: Search & Roots Directory */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold flex items-center gap-2 text-right justify-start">
                 <Search className="h-5 w-5 text-primary" />
@@ -339,7 +339,7 @@ export default function BayanLexiconPage() {
           </Card>
 
           {/* Vocabulary Challenge */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl overflow-hidden shadow-sm relative">
             <NeonBorder color="hsl(var(--primary) / 0.3)">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
@@ -414,8 +414,8 @@ export default function BayanLexiconPage() {
           </Card>
 
           {/* Rhetoric & Eloquence Explorer */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-5 shadow-2xl text-right">
-            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-white">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-5 shadow-sm text-right">
+            <h3 className="text-base font-bold flex items-center gap-2 mb-2 justify-start text-foreground">
               <MessageCircle className="h-5 w-5 text-primary" />
               <span>مستكشف الفصاحة والبيان الإعجازي</span>
             </h3>
@@ -431,7 +431,7 @@ export default function BayanLexiconPage() {
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
                     selectedEloqIndex === idx
                       ? 'bg-primary/20 border-primary text-primary'
-                      : 'bg-white/5 border-transparent text-muted-foreground hover:bg-white/10'
+                      : 'bg-muted/50 border-transparent text-muted-foreground hover:bg-muted'
                   }`}
                 >
                   {e.title.split(' ')[0]}
@@ -439,15 +439,15 @@ export default function BayanLexiconPage() {
               ))}
             </div>
 
-            <div className="bg-white/5 border border-white/5 p-4 rounded-2xl text-xs space-y-3">
+            <div className="bg-muted/40 border border-border p-4 rounded-2xl text-xs space-y-3">
               <div>
                 <span className="text-[9px] text-primary font-bold">الرابط البلاغي:</span>
-                <div className="font-bold text-white mt-0.5">{eloquenceSecrets[selectedEloqIndex].title}</div>
+                <div className="font-bold text-foreground mt-0.5">{eloquenceSecrets[selectedEloqIndex].title}</div>
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 {eloquenceSecrets[selectedEloqIndex].rhetoric}
               </p>
-              <div className="bg-black/30 border border-white/5 p-2 rounded-xl text-[10px] leading-relaxed">
+              <div className="bg-background/60 border border-border p-2 rounded-xl text-[10px] leading-relaxed text-foreground">
                 <strong>الآية الشاهدة:</strong> {eloquenceSecrets[selectedEloqIndex].verse}
               </div>
             </div>
@@ -456,11 +456,11 @@ export default function BayanLexiconPage() {
 
         {/* Center / Right Column: Detailed analysis & Derivatives */}
         <div className="lg:col-span-2 space-y-6">
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-6 gap-4">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border/60 pb-4 mb-6 gap-4">
               <div>
                 <HoloBadge className="mb-2">جذر لغوي مفعل</HoloBadge>
-                <h2 className="text-3xl font-black text-white text-right">المشتقات اللغوية للجذر: {selectedRoot.root}</h2>
+                <h2 className="text-3xl font-black text-foreground text-right">المشتقات اللغوية للجذر: {selectedRoot.root}</h2>
               </div>
               <div className="flex gap-2">
                 {selectedRoot.derivatives.map((der) => (
@@ -533,8 +533,8 @@ export default function BayanLexiconPage() {
 
           {/* Quranic Linguistic Statistics Dashboard */}
           {selectedRoot.stats && (
-            <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl text-right">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2 justify-start">
+            <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm text-right">
+              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 justify-start">
                 <BarChart2 className="h-5 w-5 text-primary" />
                 <span>محلل إحصائيات الجذر اللغوي: &quot;{selectedRoot.root}&quot;</span>
               </h3>
@@ -593,8 +593,8 @@ export default function BayanLexiconPage() {
           )}
 
           {/* Compare Nuances Interactive Matrix */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2 justify-start">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2 justify-start">
               <ArrowRightLeft className="h-5 w-5 text-primary" />
               <span>مصفوفة مقارنة الفروق البيانية المتقدمة</span>
             </h3>
@@ -606,10 +606,10 @@ export default function BayanLexiconPage() {
                 <select
                   value={compareWordA}
                   onChange={(e) => setCompareWordA(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground"
                 >
-                  <option value="الرِّيح" className="bg-zinc-950">الرِّيح</option>
-                  <option value="جَاءَ" className="bg-zinc-950">جَاءَ</option>
+                  <option value="الرِّيح" className="bg-card text-foreground">الرِّيح</option>
+                  <option value="جَاءَ" className="bg-card text-foreground">جَاءَ</option>
                 </select>
               </div>
 
@@ -618,15 +618,15 @@ export default function BayanLexiconPage() {
                 <select
                   value={compareWordB}
                   onChange={(e) => setCompareWordB(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground"
                 >
-                  <option value="الرِّيَاح" className="bg-zinc-950">الرِّيَاح</option>
-                  <option value="أَتَى" className="bg-zinc-950">أَتَى</option>
+                  <option value="الرِّيَاح" className="bg-card text-foreground">الرِّيَاح</option>
+                  <option value="أَتَى" className="bg-card text-foreground">أَتَى</option>
                 </select>
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/5 p-4 rounded-2xl text-xs space-y-2">
+            <div className="bg-muted/40 border border-border p-4 rounded-2xl text-xs space-y-2">
               <div className="flex items-center gap-2 text-primary font-bold">
                 <BookOpenCheck className="h-4 w-4" />
                 <span>الاستنتاج البياني للمقارنة:</span>
@@ -639,10 +639,10 @@ export default function BayanLexiconPage() {
           </Card>
 
           {/* Quranic Synonym Nuance Comparator */}
-          <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-6 gap-4">
+          <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border/60 pb-4 mb-6 gap-4">
               <div>
-                <h3 className="text-lg font-bold flex items-center gap-2 text-white">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
                   <Columns className="h-5 w-5 text-primary" />
                   <span>الفروق اللغوية الدقيقة والمترادفات</span>
                 </h3>

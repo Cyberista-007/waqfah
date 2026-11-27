@@ -381,12 +381,8 @@ export default function RadioPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-between p-6 sm:p-12 overflow-hidden select-none"
+            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-2xl text-foreground flex flex-col items-center justify-between p-6 sm:p-12 overflow-hidden select-none"
           >
-            <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[650px] h-[650px] bg-primary/15 blur-[160px] rounded-full animate-pulse" />
-            </div>
-
             <div className="w-full max-w-5xl flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
@@ -489,21 +485,19 @@ export default function RadioPage() {
 
       {/* ── Compact Studio Header & Quick Tools ── */}
       <section className="container px-4 max-w-6xl mx-auto pt-4">
-        <div className="page-hero-banner p-6 sm:p-8 md:p-10 relative">
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-primary/15 blur-[120px] rounded-full pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-right">
+        <div className="rounded-3xl bg-card/85 border border-border p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-right">
             <div className="space-y-3 max-w-2xl">
-              <div className="luxury-badge luxury-badge-primary inline-flex">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 <span>بث قرآني مباشر 24/7 • {allStations.length} إذاعة</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl font-black font-headline tracking-tight text-white">
+              <h1 className="text-3xl sm:text-5xl font-black font-headline tracking-tight text-foreground">
                 أثير <span className="text-primary">السكينة والقرآن</span>
               </h1>
 
-              <p className="text-sm sm:text-base text-white/70 font-medium leading-relaxed">
+              <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
                 استمع لأشهر إذاعات العالم الإسلامي وكبار القراء، مع مؤقت نوم، منبه الفجر، ومزج الأصوات الطبيعية الهادئة.
               </p>
             </div>
@@ -684,9 +678,7 @@ export default function RadioPage() {
 
       {/* ── Always-Available Studio Player Deck ── */}
       <section className="container px-4 max-w-6xl mx-auto">
-        <div className="luxury-glass rounded-[2rem] p-5 sm:p-7 border border-white/10 relative overflow-hidden space-y-5">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary/15 blur-[100px] rounded-full pointer-events-none" />
-
+        <div className="bg-card/85 rounded-3xl p-5 sm:p-7 border border-border relative overflow-hidden space-y-5 shadow-sm">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
             {/* Station Info */}
             <div className="lg:col-span-5 flex items-center gap-4">

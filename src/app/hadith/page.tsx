@@ -780,60 +780,50 @@ export default function HadithHubPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-amber-500/30 pb-32">
-      {/* 🔮 Cinematic Hero Section */}
-      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 pt-40 pb-32 px-4 overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl bg-[#0a0a0a]">
-        {/* Background Decorations */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/3 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4" />
-        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
-
+    <div className="min-h-screen bg-background text-foreground selection:bg-amber-500/30 pb-24">
+      {/* 🔮 Clean Theme-Aware Header Section */}
+      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 py-12 md:py-16 px-4 sm:px-8 overflow-hidden border border-border rounded-3xl shadow-sm bg-card/85">
         <div className="container relative z-10 mx-auto max-w-7xl">
-          <div className="flex flex-col gap-16 items-center">
-            <div className="w-full space-y-8 text-center flex flex-col items-center">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-amber-500 text-[10px] font-black uppercase tracking-[0.4em]"
-              >
-                <Sparkles className="w-4 h-4" /> موسوعة السنة النبوية الشاملة
-              </motion.div>
+          <div className="flex flex-col gap-12 items-center">
+            <div className="w-full space-y-6 text-center flex flex-col items-center">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5" /> موسوعة السنة النبوية الشاملة
+              </div>
 
-              <h1 className="text-7xl md:text-[7rem] lg:text-[8rem] font-black font-headline tracking-tighter leading-[0.8] text-white">
-                كُنوز <span className="text-transparent bg-clip-text bg-gradient-to-l from-amber-200 via-amber-500 to-amber-700 italic">الوَحي</span>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black font-headline tracking-tight text-foreground">
+                كُنوز <span className="text-amber-500">الوَحي</span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-white/40 font-medium leading-relaxed max-w-3xl mx-auto">
-                أضخم منصة رقمية تفاعلية لجَمع وتصنيف السُّنة النبوية المطهَّرة من "الكتب الستة"، بدقة عالية وتجربة قراءة سينمائية فريدة.
+              <p className="text-sm md:text-lg text-muted-foreground font-medium leading-relaxed max-w-2xl mx-auto">
+                منصة رقمية تفاعلية لجَمع وتصنيف السُّنة النبوية المطهَّرة من الكتب الستة بدقة عالية وتجربة قراءة مريحة.
               </p>
 
               {/* Stats Bento */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 w-full max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 w-full max-w-4xl mx-auto">
                 {STATS.map((stat, i) => (
                   <motion.div
                     key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * i }}
-                    className="p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group"
+                    transition={{ delay: 0.05 * i }}
+                    className="p-5 rounded-2xl bg-background/70 border border-border hover:border-amber-500/30 transition-colors group"
                   >
-                    <stat.icon className={cn("w-6 h-6 mb-4 mx-auto", stat.color)} />
-                    <div className="text-2xl font-black text-white group-hover:scale-110 transition-transform origin-center">{stat.value}</div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mt-1">{stat.label}</div>
+                    <stat.icon className={cn("w-5 h-5 mb-3 mx-auto", stat.color)} />
+                    <div className="text-xl font-black text-foreground">{stat.value}</div>
+                    <div className="text-xs font-bold text-muted-foreground mt-1">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 w-full max-w-6xl mx-auto items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 w-full max-w-6xl mx-auto items-stretch">
               {/* Daily Hadith card */}
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="lg:col-span-3 relative"
               >
-                <div className="absolute inset-0 bg-amber-500/20 blur-[100px] opacity-30" />
-                <div className="relative p-10 md:p-14 rounded-[4rem] bg-zinc-900/50 border border-white/10 backdrop-blur-3xl space-y-10 overflow-hidden group h-full flex flex-col justify-between">
+                <div className="relative p-6 md:p-10 rounded-3xl bg-background/80 border border-border space-y-8 overflow-hidden group h-full flex flex-col justify-between">
                   <Quote className="absolute top-10 left-10 w-32 h-32 text-white/[0.03] group-hover:scale-110 transition-transform" />
 
                   <div className="flex justify-between items-center relative z-10">
@@ -932,13 +922,12 @@ export default function HadithHubPage() {
 
               {/* Trivia Challenge card */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 }}
                 className="lg:col-span-2 relative"
               >
-                <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] opacity-25" />
-                <div className="relative p-10 rounded-[4rem] bg-zinc-900/50 border border-white/10 backdrop-blur-3xl h-full flex flex-col justify-between overflow-hidden group">
+                <div className="relative p-6 md:p-8 rounded-3xl bg-background/80 border border-border h-full flex flex-col justify-between overflow-hidden group">
                   <div className="absolute top-10 left-10 w-24 h-24 text-amber-500/[0.03] pointer-events-none">
                     <Trophy className="w-full h-full" />
                   </div>

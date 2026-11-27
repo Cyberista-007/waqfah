@@ -575,57 +575,46 @@ export default function PodcastsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-44 space-y-12" dir="rtl">
-      {/* ── Cinematic Hero Section ── */}
-      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-6 pt-20 pb-20 px-6 md:px-12 flex flex-col items-center text-center overflow-hidden border border-violet-500/20 bg-gradient-to-b from-violet-950/40 via-zinc-950 to-zinc-950 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-violet-500/15 blur-[150px] rounded-full" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-emerald-500/10 blur-[130px] rounded-full" />
+    <div className="min-h-screen pb-44 space-y-10" dir="rtl">
+      {/* ── Clean Podcast Hub Header ── */}
+      <header className="container mx-auto px-4 max-w-6xl pt-6 md:pt-10 pb-6 border-b border-border/60 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+            <Mic2 className="w-3.5 h-3.5" />
+            <span>بودكاست وقفة الصوتي</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground">
+            أثير <span className="text-primary">الفكر والمعرفة</span>
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+            مكتبة صوتية تضم السلاسل والمحاضرات الفكرية والإيمانية والتاريخية مع دعم خلاصات RSS.
+          </p>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl">
-          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 text-xs font-bold tracking-wider shadow-inner">
-            <Mic2 className="w-4 h-4 text-violet-400 animate-pulse" />
-            بودكاست وقفة الصوتي | Waqfah Podcast Hub
+        <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold shrink-0">
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-foreground shadow-sm">
+            <Headphones className="w-4 h-4 text-primary" />
+            <span>{allLectures?.length || 0} حلقة</span>
           </div>
-
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black font-headline tracking-tight text-white leading-tight">
-            أثير <span className="bg-clip-text text-transparent bg-gradient-to-l from-violet-400 via-fuchsia-300 to-white">الفكر والمعرفة</span> الإسلامية
-          </h1>
-
-          <p className="text-base sm:text-xl text-white/60 font-medium leading-relaxed max-w-2xl mx-auto">
-            مكتبة صوتية راقية تضم مئات السلاسل والمحاضرات الفكرية، الإيمانية، والتاريخية، قابلة للاستماع المباشر والاشتراك عبر أشهر تطبيقات البودكاست.
-          </p>
-
-          {/* Quick Counter Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 max-w-xl mx-auto">
-            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
-              <div className="text-2xl sm:text-3xl font-black text-violet-400">{allLectures?.length || '450+'}</div>
-              <div className="text-[11px] text-white/50 font-bold mt-0.5">حلقة صوتية</div>
-            </div>
-            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-400">{allSeries?.length || '35+'}</div>
-              <div className="text-[11px] text-white/50 font-bold mt-0.5">سلسلة بودكاست</div>
-            </div>
-            <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl col-span-2 sm:col-span-1">
-              <div className="text-2xl sm:text-3xl font-black text-amber-400">100%</div>
-              <div className="text-[11px] text-white/50 font-bold mt-0.5">دعم خلاصات RSS</div>
-            </div>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-foreground shadow-sm">
+            <Layers className="w-4 h-4 text-emerald-500" />
+            <span>{allSeries?.length || 0} سلسلة</span>
           </div>
-        </motion.div>
-      </section>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card border border-border text-foreground shadow-sm">
+            <Rss className="w-4 h-4 text-amber-500" />
+            <span>RSS</span>
+          </div>
+        </div>
+      </header>
 
-      {/* ── Active Podcast Live Top Player Dashboard (Styled like Radio) ── */}
+      {/* ── Active Podcast Live Top Player Dashboard ── */}
       {spotlightEpisode && (
         <section className="container px-4 max-w-6xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 md:p-8 rounded-[2.5rem] bg-gradient-to-br from-zinc-900/95 via-zinc-900/80 to-zinc-950 border border-violet-500/40 backdrop-blur-2xl shadow-2xl relative overflow-hidden space-y-6"
+            className="p-6 md:p-8 rounded-3xl bg-card/85 border border-border backdrop-blur-xl shadow-lg relative overflow-hidden space-y-6"
           >
-            {/* Ambient Background Glow */}
-            <div className="absolute top-0 right-1/4 w-72 h-72 bg-violet-600/10 blur-[100px] pointer-events-none rounded-full" />
-            <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-fuchsia-600/10 blur-[100px] pointer-events-none rounded-full" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               {/* Left/Start: Episode Thumbnail & Info */}

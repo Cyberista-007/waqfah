@@ -1871,8 +1871,8 @@ export default function QuranPage() {
                 <ChevronDown className="w-4 h-4 text-white/20 mr-2" />
               </div>
               <div className="absolute top-[90%] right-0 pt-3 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all z-[80]">
-                <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 shadow-3xl backdrop-blur-3xl">
-                  {TAFSEERS.map(t => (<button key={t.id} onClick={() => setSelectedTafseer(t)} className={cn("w-full text-right p-4 rounded-xl text-xs font-bold transition-all", selectedTafseer.id === t.id ? "bg-primary text-primary-foreground" : "text-white/40 hover:bg-white/5 hover:text-white")}>{t.name}</button>))}
+                <div className="bg-card border border-border rounded-2xl p-2 shadow-xl">
+                  {TAFSEERS.map(t => (<button key={t.id} onClick={() => setSelectedTafseer(t)} className={cn("w-full text-right p-4 rounded-xl text-xs font-bold transition-all", selectedTafseer.id === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{t.name}</button>))}
                 </div>
               </div>
             </div>
@@ -2045,9 +2045,8 @@ export default function QuranPage() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-16 grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Memorization Progress (Large, spans 2 columns) */}
-            <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-[3rem] p-8 md:p-12 relative overflow-hidden group hover:border-white/20 transition-all cursor-default shadow-3xl">
-              <div className="absolute top-0 left-0 h-1.5 bg-gradient-to-r from-primary to-emerald-400 w-full opacity-50 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700 pointer-events-none" />
+            <div className="md:col-span-2 bg-card border border-border rounded-3xl p-8 md:p-10 relative overflow-hidden group hover:border-primary/30 transition-all cursor-default shadow-sm">
+              <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-primary to-emerald-400 w-full opacity-50 group-hover:opacity-100 transition-opacity" />
 
               <div className="relative z-10 flex flex-col justify-between h-full gap-10">
                 <div className="flex items-start justify-between">
@@ -3283,7 +3282,6 @@ export default function QuranPage() {
           {view === 'plan' && (
             <div className="space-y-12">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
-                <div className="absolute inset-0 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
                   {/* Left Column: Progress & Quick Actions */}
@@ -3466,14 +3464,7 @@ export default function QuranPage() {
               </div>
 
               {/* Top Banner Player (Now Playing) */}
-              <div className="luxury-glass rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group transition-all duration-300 hover:border-primary/25">
-                {/* Glowing ambient background based on selected station */}
-                <div
-                  className={cn(
-                    "absolute -top-32 -right-32 w-96 h-96 blur-[120px] rounded-full opacity-25 transition-all duration-1000 pointer-events-none bg-gradient-to-br",
-                    currentRadioStation ? currentRadioStation.color : "from-primary/30 to-transparent"
-                  )}
-                />
+              <div className="bg-card/85 border border-border rounded-3xl p-6 md:p-8 relative overflow-hidden group transition-all duration-300 hover:border-primary/25 shadow-sm">
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8" dir="rtl">
                   {/* Left Column: Metadata & Vinyl & Play Button */}

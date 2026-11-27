@@ -226,7 +226,7 @@ export default function NamaaZakatPage() {
           <Coins className="h-3.5 w-3.5 text-primary animate-pulse" />
           <span>الزكاة والمعاملات المالية</span>
         </HoloBadge>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-primary/80 mb-4">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-foreground mb-4">
           نَمَاء - حاسبة الزكاة الذكية ودليل مصارفها
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base text-center">
@@ -240,8 +240,8 @@ export default function NamaaZakatPage() {
           onClick={() => setActiveTab('maal')}
           className={`px-5 py-2.5 rounded-full text-xs font-bold border transition-all ${
             activeTab === 'maal'
-              ? 'bg-primary text-black font-black border-primary shadow-lg shadow-primary/20'
-              : 'bg-zinc-950/40 border-white/10 text-muted-foreground hover:bg-white/5'
+              ? 'bg-primary text-primary-foreground font-black border-primary shadow-sm'
+              : 'bg-card/80 border-border text-muted-foreground hover:bg-muted'
           }`}
         >
           حاسبة زكاة المال والأعمال
@@ -250,8 +250,8 @@ export default function NamaaZakatPage() {
           onClick={() => setActiveTab('crops')}
           className={`px-5 py-2.5 rounded-full text-xs font-bold border transition-all ${
             activeTab === 'crops'
-              ? 'bg-primary text-black font-black border-primary shadow-lg shadow-primary/20'
-              : 'bg-zinc-950/40 border-white/10 text-muted-foreground hover:bg-white/5'
+              ? 'bg-primary text-primary-foreground font-black border-primary shadow-sm'
+              : 'bg-card/80 border-border text-muted-foreground hover:bg-muted'
           }`}
         >
           حاسبة الزروع والأنعام 🌾
@@ -260,8 +260,8 @@ export default function NamaaZakatPage() {
           onClick={() => setActiveTab('fitr')}
           className={`px-5 py-2.5 rounded-full text-xs font-bold border transition-all ${
             activeTab === 'fitr'
-              ? 'bg-primary text-black font-black border-primary shadow-lg shadow-primary/20'
-              : 'bg-zinc-950/40 border-white/10 text-muted-foreground hover:bg-white/5'
+              ? 'bg-primary text-primary-foreground font-black border-primary shadow-sm'
+              : 'bg-card/80 border-border text-muted-foreground hover:bg-muted'
           }`}
         >
           حاسبة زكاة الفطر للأفراد
@@ -270,8 +270,8 @@ export default function NamaaZakatPage() {
           onClick={() => setActiveTab('waqf')}
           className={`px-5 py-2.5 rounded-full text-xs font-bold border transition-all ${
             activeTab === 'waqf'
-              ? 'bg-primary text-black font-black border-primary shadow-lg shadow-primary/20'
-              : 'bg-zinc-950/40 border-white/10 text-muted-foreground hover:bg-white/5'
+              ? 'bg-primary text-primary-foreground font-black border-primary shadow-sm'
+              : 'bg-card/80 border-border text-muted-foreground hover:bg-muted'
           }`}
         >
           مستشار الاستثمار الوقفي 🏛️
@@ -282,7 +282,7 @@ export default function NamaaZakatPage() {
         <>
           {/* Nisab Status Bar */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 hide-in-print">
-            <Card className="bg-zinc-950/40 border-white/10 rounded-2xl p-4 flex items-center justify-between">
+            <Card className="bg-card/85 border-border rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-amber-500/10 rounded-xl">
                   <Scale className="h-6 w-6 text-amber-400" />
@@ -295,24 +295,24 @@ export default function NamaaZakatPage() {
               <span className="text-[10px] text-muted-foreground bg-white/5 px-2.5 py-1 rounded">24 قيراط</span>
             </Card>
 
-            <Card className="bg-zinc-950/40 border-white/10 rounded-2xl p-4 flex items-center justify-between">
+            <Card className="bg-card/85 border-border rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-zinc-400/10 rounded-xl">
-                  <Coins className="h-6 w-6 text-zinc-400" />
+                <div className="p-3 bg-muted rounded-xl">
+                  <Coins className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground">نصاب الفضة الحالي (595 غرام)</div>
-                  <div className="text-lg font-bold text-white">{Math.round(nisabSilver).toLocaleString()} {selectedCurrency.symbol}</div>
+                  <div className="text-lg font-bold text-foreground">{Math.round(nisabSilver).toLocaleString()} {selectedCurrency.symbol}</div>
                 </div>
               </div>
-              <span className="text-[10px] text-muted-foreground bg-white/5 px-2.5 py-1 rounded">فضة خام</span>
+              <span className="text-[10px] text-muted-foreground bg-muted px-2.5 py-1 rounded">فضة خام</span>
             </Card>
 
             {/* Currency Selector Card */}
-            <Card className="bg-zinc-950/40 border-white/10 rounded-2xl p-4 flex items-center justify-between">
+            <Card className="bg-card/85 border-border rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-emerald-500/10 rounded-xl">
-                  <Wallet className="h-6 w-6 text-emerald-400" />
+                  <Wallet className="h-6 w-6 text-emerald-500" />
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground">العملة الحالية المعروضة</div>
@@ -322,10 +322,10 @@ export default function NamaaZakatPage() {
                       const curr = currencyConversions.find(c => c.code === e.target.value);
                       if (curr) setSelectedCurrency(curr);
                     }}
-                    className="bg-transparent text-white font-bold text-sm border-none focus:outline-none focus:ring-0 p-0 pr-6 select-rtl cursor-pointer"
+                    className="bg-transparent text-foreground font-bold text-sm border-none focus:outline-none focus:ring-0 p-0 pr-6 select-rtl cursor-pointer"
                   >
                     {currencyConversions.map((c) => (
-                      <option key={c.code} value={c.code} className="bg-zinc-950 text-white">
+                      <option key={c.code} value={c.code} className="bg-card text-foreground">
                         {c.name} ({c.symbol})
                       </option>
                     ))}
@@ -342,7 +342,7 @@ export default function NamaaZakatPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Side: Step Wizard Inputs */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative min-h-[420px] flex flex-col justify-between hide-in-print">
+              <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative min-h-[420px] flex flex-col justify-between hide-in-print">
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <span className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full font-black">
@@ -514,8 +514,8 @@ export default function NamaaZakatPage() {
               </Card>
 
               {/* Dynamic Recipient Allocation Slider Dashboard */}
-              <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl text-right hide-in-print">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-white">
+              <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm text-right hide-in-print">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-foreground">
                   <Sliders className="h-5 w-5 text-primary" />
                   <span>توزيع مصارف الزكاة التفاعلي (مجموعها 100%)</span>
                 </h3>
@@ -528,7 +528,7 @@ export default function NamaaZakatPage() {
                         <span className="text-muted-foreground">{item.desc}</span>
                         <span className="font-bold text-primary flex items-center gap-2">
                           <span>{item.title}</span>
-                          <span className="bg-primary/10 px-2 py-0.5 rounded text-white">{item.percent}%</span>
+                          <span className="bg-primary/10 px-2 py-0.5 rounded text-foreground">{item.percent}%</span>
                         </span>
                       </div>
                       <Slider
@@ -546,9 +546,9 @@ export default function NamaaZakatPage() {
 
             {/* Right Side: Results Panel */}
             <div className="lg:col-span-1 space-y-6 hide-in-print">
-              <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col justify-between min-h-[500px]">
+              <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[500px]">
                 <div>
-                  <h3 className="text-lg font-bold border-b border-white/10 pb-4 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-bold border-b border-border/60 pb-4 mb-4 flex items-center gap-2 text-foreground">
                     <Scale className="h-5 w-5 text-primary" />
                     <span>التقرير والوعاء المالي</span>
                   </h3>
@@ -556,7 +556,7 @@ export default function NamaaZakatPage() {
                   <div className="space-y-4 text-right">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground">إجمالي الأصول والسيولة</span>
-                      <span className="font-bold text-white">{totalAssets.toLocaleString()} {selectedCurrency.symbol}</span>
+                      <span className="font-bold text-foreground">{totalAssets.toLocaleString()} {selectedCurrency.symbol}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground">الالتزامات المخصومة</span>
@@ -699,8 +699,8 @@ export default function NamaaZakatPage() {
           className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-right"
         >
           {/* Crops Zakat */}
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6">
-            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-white justify-start">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm relative space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground justify-start">
               <Wheat className="h-5 w-5 text-amber-400" />
               <span>زكاة الزروع والثمار</span>
             </h3>
@@ -759,8 +759,8 @@ export default function NamaaZakatPage() {
           </GlowCard>
 
           {/* Livestock Zakat */}
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6">
-            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-white justify-start">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm relative space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground justify-start">
               <Sprout className="h-5 w-5 text-emerald-400" />
               <span>زكاة الأنعام بهيمة الأنعام</span>
             </h3>
@@ -827,8 +827,8 @@ export default function NamaaZakatPage() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-3xl mx-auto space-y-6"
         >
-          <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative">
-            <h3 className="text-xl font-bold flex items-center gap-2 mb-4 justify-start">
+          <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-4 justify-start text-foreground">
               <Coins className="h-5 w-5 text-primary" />
               <span>زكاة الفطر للأفراد والأسرة</span>
             </h3>
@@ -876,8 +876,8 @@ export default function NamaaZakatPage() {
         >
           {/* Inputs Section */}
           <div className="lg:col-span-2 space-y-6">
-            <GlowCard className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative space-y-6">
-              <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-white justify-start">
+            <GlowCard className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 md:p-8 shadow-sm relative space-y-6">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground justify-start">
                 <Building className="h-5 w-5 text-primary" />
                 <span>مستشار توجيه استثمار المال الوقفي</span>
               </h3>
@@ -954,9 +954,9 @@ export default function NamaaZakatPage() {
 
           {/* Report Side Panel */}
           <div className="lg:col-span-1 space-y-6">
-            <Card className="bg-zinc-950/40 backdrop-blur-xl border-white/10 rounded-3xl p-6 shadow-2xl space-y-6">
+            <Card className="bg-card/85 backdrop-blur-xl border-border rounded-3xl p-6 shadow-sm space-y-6">
               <div>
-                <h3 className="text-lg font-bold border-b border-white/10 pb-4 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold border-b border-border/60 pb-4 mb-4 flex items-center gap-2 text-foreground">
                   <ShieldCheck className="h-5 w-5 text-emerald-400" />
                   <span>توقعات الأثر الوقفي</span>
                 </h3>

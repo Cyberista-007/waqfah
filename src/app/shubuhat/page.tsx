@@ -266,68 +266,40 @@ export default function ShubuhatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white selection:bg-indigo-500/30 pb-32">
-      {/* 🌌 Cinematic Hero Section */}
-      <section className="relative mx-4 sm:mx-8 mt-4 sm:mt-8 pt-40 pb-20 px-4 overflow-hidden border border-white/10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl bg-[#0a0a0a]">
-        {/* Background Gradients & Noise */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/3 animate-pulse duration-1000" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[150px] translate-y-1/3 -translate-x-1/4" />
-
-        <div className="container relative z-10 mx-auto w-full text-center space-y-10">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] shadow-[0_0_20px_rgba(99,102,241,0.2)]"
-          >
+    <div className="min-h-screen text-foreground pb-24" dir="rtl">
+      {/* ── Clean Header Section ── */}
+      <section className="container mx-auto px-4 pt-8 pb-8 border-b border-border/60">
+        <div className="w-full text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
             <ShieldCheck className="w-4 h-4" /> الدفاع عن الثوابت الإسلامية
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, type: 'spring', damping: 20 }}
-            className="text-7xl md:text-[8rem] font-black font-headline tracking-tighter leading-[0.9] text-white"
-          >
-            حصن <span className="text-transparent bg-clip-text bg-gradient-to-l from-indigo-300 via-indigo-500 to-purple-600 italic drop-shadow-lg">اليقين</span>
-          </motion.h1>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-headline tracking-tight text-foreground">
+            حصن <span className="text-primary">اليقين</span>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl md:text-2xl text-white/40 font-medium leading-relaxed max-w-3xl mx-auto"
-          >
-            منصة فكرية متطورة لتفكيك الشبهات المعاصرة والرد عليها بمنهجية علمية وعقلية صارمة، لترسيخ اليقين وحماية الوعي.
-          </motion.p>
+          <p className="text-sm md:text-base text-muted-foreground font-medium leading-relaxed max-w-2xl mx-auto">
+            منصة فكرية لتفكيك الشبهات المعاصرة والرد عليها بمنهجية علمية وعقلية رصينة.
+          </p>
 
-          {/* 📊 Advanced Stats Row */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 w-full mx-auto"
-          >
+          {/* Stats Row */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             {[
-              { label: 'شبهة مفندة', value: shubuhatData.length > 0 ? `${shubuhatData.length}+` : '+500', icon: ShieldCheck, color: 'text-indigo-400' },
-              { label: 'تصنيف علمي', value: '10', icon: Library, color: 'text-emerald-400' },
-              { label: 'باحث ومختص', value: '45', icon: Users, color: 'text-amber-400' },
-              { label: 'تحديثات مستمرة', value: 'يومياً', icon: Activity, color: 'text-rose-400' },
+              { label: 'شبهة مفندة', value: shubuhatData.length, icon: ShieldCheck, color: 'text-primary' },
+              { label: 'تصنيف علمي', value: 10, icon: Library, color: 'text-emerald-500' },
             ].map((stat, idx) => (
-              <div key={idx} className="p-6 rounded-[2.25rem] bg-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03] group">
-                <stat.icon className={cn("w-6 h-6 mx-auto mb-4 opacity-50 group-hover:opacity-100 transition-opacity", stat.color)} />
-                <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform origin-center">{stat.value}</div>
-                <div className="text-[10px] text-white/40 uppercase tracking-widest">{stat.label}</div>
+              <div key={idx} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border text-xs font-bold shadow-sm">
+                <stat.icon className={cn("w-4 h-4", stat.color)} />
+                <span>{stat.value} {stat.label}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
 
           {/* Search Bar */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="relative w-full mx-auto group mt-12"
+            className="relative max-w-xl mx-auto group mt-4"
           >
             <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center">

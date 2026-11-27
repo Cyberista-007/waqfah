@@ -725,81 +725,68 @@ export default function MuhlikatPage() {
     if (!isClient) return null;
 
     return (
-        <div className="min-h-screen pb-24 bg-[#0a0a0c] text-white selection:bg-red-500/30 overflow-x-hidden relative">
-            {/* ── Background: Cinematic Slate ── */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-red-500/5 blur-[150px] rounded-full translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-red-500/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2" />
-            </div>
-
-            <div className={cn("container relative z-10 px-4 sm:px-6", isReadingMode && "reading-content")}>
-                <div className="flex justify-center mb-10 relative z-50">
+        <div className="min-h-screen pb-20 text-foreground" dir="rtl">
+            <div className={cn("container relative z-10 px-4 sm:px-6 pt-6 md:pt-10", isReadingMode && "reading-content")}>
+                <div className="flex justify-center mb-6 relative z-30">
                     <ReadingModeToggle />
                 </div>
                 
-                {/* ── The "Frame" (Main Container) ── */}
-                <div className="relative group/frame w-full mx-auto rounded-[4rem] p-1 bg-gradient-to-br from-red-500/20 via-white/5 to-transparent shadow-2xl">
-                    <div className="relative bg-[#0d0d10] rounded-[3.9rem] overflow-hidden p-8 md:p-16">
-                        
-                        {/* Background Decor inside frame */}
-                        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none bg-[radial-gradient(#ff0000_1px,transparent_1px)] bg-[size:40px_40px]" />
-
-                        {/* ── Hero inside frame ── */}
-                        <div className={cn("text-center pb-16 transition-all duration-500 relative z-10", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
-                                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black mb-8 uppercase tracking-[0.4em]">
-                                    <Zap className="w-3.5 h-3.5 fill-red-500" /> مجهر النفس والتزكية
-                                </div>
-                                <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
-                                    موسوعة <span className="text-red-500">المهلكات</span>
-                                </h1>
-                                <p className="text-white/30 text-lg md:text-2xl w-full mx-auto leading-relaxed font-tajawal">
-                                    تشخيص دقيق لأدوية القلوب المهلكة وسبل الوقاية منها — رحلة التزكية تبدأ من هنا.
-                                </p>
-
-                                {/* Focus Stats */}
-                                <div className="flex items-center justify-center gap-12 mt-12">
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-4xl font-black text-white">{sins?.length || 0}</span>
-                                        <span className="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-1">مرضاً نفسياً</span>
-                                    </div>
-                                    <div className="w-px h-12 bg-white/10" />
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-4xl font-black text-red-500">{focusedSins.length}</span>
-                                        <span className="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-1">تحت العلاج</span>
-                                    </div>
-                                </div>
-                            </motion.div>
+                {/* ── Main Container ── */}
+                <div className="w-full mx-auto rounded-3xl border border-border bg-card/80 backdrop-blur-xl p-6 md:p-12 shadow-sm">
+                    {/* ── Header ── */}
+                    <div className={cn("text-center pb-10 border-b border-border/60 mb-10", isReadingMode && "hidden")}>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold mb-4">
+                            <Zap className="w-3.5 h-3.5 fill-current" /> مجهر النفس والتزكية
                         </div>
+                        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 text-foreground">
+                            موسوعة <span className="text-red-500">المهلكات</span>
+                        </h1>
+                        <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                            تشخيص دقيق لأدوية القلوب المهلكة وسبل الوقاية منها — رحلة التزكية تبدأ من هنا.
+                        </p>
 
-                        {/* ── Search & Filter ── */}
-                        <div className={cn("w-full mx-auto mb-20 hide-in-reading-mode relative z-10")}>
-                            <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-3 flex flex-col md:flex-row items-center gap-4 group focus-within:border-red-500/20 transition-all">
-                                <div className="relative flex-1 w-full">
-                                    <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-red-500 transition-colors" />
-                                    <Input 
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="ابحث عن داء أو علاج..."
-                                        className="bg-transparent border-none text-xl pr-14 h-14 focus-visible:ring-0 placeholder:text-white/10 text-white"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 px-4">
-                                    {categories.map(cat => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => setActiveFilter(cat)}
-                                            className={cn(
-                                                "px-6 py-2.5 rounded-2xl text-[10px] font-black transition-all whitespace-nowrap",
-                                                activeFilter === cat 
-                                                    ? "bg-red-500 text-white shadow-lg shadow-red-500/20 scale-105" 
-                                                    : "text-white/30 hover:text-white hover:bg-white/5"
-                                            )}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Focus Stats */}
+                        <div className="flex items-center justify-center gap-8 mt-6">
+                            <div className="flex flex-col items-center">
+                                <span className="text-2xl font-black text-foreground">{sins?.length || 0}</span>
+                                <span className="text-xs font-semibold text-muted-foreground">مرض نفسي</span>
+                            </div>
+                            <div className="w-px h-8 bg-border" />
+                            <div className="flex flex-col items-center">
+                                <span className="text-2xl font-black text-red-500">{focusedSins.length}</span>
+                                <span className="text-xs font-semibold text-muted-foreground">تحت العلاج</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Search & Filter ── */}
+                    <div className={cn("w-full mx-auto mb-10", isReadingMode && "hidden")}>
+                        <div className="bg-background/80 border border-border rounded-2xl p-2.5 flex flex-col md:flex-row items-center gap-3">
+                            <div className="relative flex-1 w-full">
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="ابحث عن داء أو علاج..."
+                                    className="bg-transparent border-none text-lg pr-11 h-12 focus-visible:ring-0 placeholder:text-muted-foreground text-foreground"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 px-2">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setActiveFilter(cat)}
+                                        className={cn(
+                                            "px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
+                                            activeFilter === cat 
+                                                ? "bg-red-500 text-white shadow-sm" 
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
                             </div>
                         </div>
 
@@ -870,7 +857,6 @@ export default function MuhlikatPage() {
                         </div>
                     </div>
                 </div>
-            </div>
 
             {/* ⚖️ Interactive Deeds Scale */}
             <div className="mt-24">
@@ -893,12 +879,12 @@ export default function MuhlikatPage() {
                         <span className="font-bold text-lg hidden sm:block pr-2 pl-2">إبلاغ عن مهلكة</span>
                     </motion.button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md border border-white/10 bg-[#0c0c0f] text-white rounded-3xl p-6" dir="rtl">
+                <DialogContent className="max-w-md border border-border bg-card text-foreground rounded-3xl p-6" dir="rtl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black flex items-center gap-2">
                             <TriangleAlert className="text-red-500 w-6 h-6" /> اقتراح مهلكة جديدة
                         </DialogTitle>
-                        <DialogDescription className="text-white/40 text-sm">
+                        <DialogDescription className="text-muted-foreground text-sm">
                             ساعدنا في توسيع الموسوعة من خلال اقتراح سلوك أو معصية مهلكة للنفس مع تفاصيلها لمراجعتها وإضافتها.
                         </DialogDescription>
                     </DialogHeader>
@@ -926,13 +912,13 @@ export default function MuhlikatPage() {
                                 <select 
                                     value={suggestCategory}
                                     onChange={(e) => setSuggestCategory(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-red-500 text-sm"
+                                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground focus:outline-none focus:border-red-500 text-sm"
                                 >
-                                    <option value="غلاظ" className="bg-[#0c0c0f]">غلاظ</option>
-                                    <option value="قلبية" className="bg-[#0c0c0f]">قلبية</option>
-                                    <option value="باطنة" className="bg-[#0c0c0f]">باطنة</option>
-                                    <option value="لسانية" className="bg-[#0c0c0f]">لسانية</option>
-                                    <option value="أخرى" className="bg-[#0c0c0f]">أخرى</option>
+                                    <option value="غلاظ">غلاظ</option>
+                                    <option value="قلبية">قلبية</option>
+                                    <option value="باطنة">باطنة</option>
+                                    <option value="لسانية">لسانية</option>
+                                    <option value="أخرى">أخرى</option>
                                 </select>
                             </div>
                             <div className="space-y-1.5">

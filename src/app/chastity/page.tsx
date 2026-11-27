@@ -57,9 +57,9 @@ interface QuizResult {
   date: string;
 }
 
-// Cinematic Liquid Glass styling tokens
-const glassCardClass = "bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-[2.25rem] shadow-[inset_0_1px_2px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(255,255,255,0.05),0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:border-emerald-500/25 hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(16,185,129,0.04)] hover:bg-white/[0.03]";
-const glassInputClass = "bg-white/[0.015] backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 focus:bg-white/[0.03] focus:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all";
+// Theme-aware card and input tokens
+const glassCardClass = "bg-card/85 backdrop-blur-xl border border-border rounded-3xl shadow-sm transition-all duration-300 ease-out hover:border-emerald-500/35";
+const glassInputClass = "bg-background/80 backdrop-blur-md border border-border rounded-2xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-emerald-500 transition-all";
 const textGlowStyle = { textShadow: '0 0 20px rgba(16, 185, 129, 0.3)' };
 
 function ChastityPageContent() {
@@ -923,7 +923,7 @@ function ChastityPageContent() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen pb-24 bg-transparent text-white selection:bg-emerald-500/30 overflow-x-hidden relative">
+    <div className="min-h-screen pb-24 bg-background text-foreground selection:bg-emerald-500/30 overflow-x-hidden relative">
 
       {/* Dynamic Style injection for non-tailwind configurations */}
       <style dangerouslySetInnerHTML={{
@@ -940,66 +940,12 @@ function ChastityPageContent() {
         }
       `}} />
 
-      {/* ── Background: Cinematic Glows & Animated Liquid Blobs ── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Animated Blob 1 */}
-        <motion.div
-          animate={{
-            x: [0, 80, -50, 0],
-            y: [0, -100, 60, 0],
-            scale: [1, 1.25, 0.85, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut"
-          }}
-          className="absolute top-[-5%] right-[-5%] w-[700px] h-[700px] bg-emerald-500/20 blur-[110px] rounded-full"
-        />
-        {/* Animated Blob 2 */}
-        <motion.div
-          animate={{
-            x: [0, -90, 40, 0],
-            y: [0, 80, -50, 0],
-            scale: [1, 0.8, 1.2, 1]
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut"
-          }}
-          className="absolute bottom-[-5%] left-[-5%] w-[600px] h-[600px] bg-teal-500/18 blur-[100px] rounded-full"
-        />
-        {/* Animated Blob 3 */}
-        <motion.div
-          animate={{
-            x: [0, 60, -40, 0],
-            y: [0, 90, -60, 0],
-            scale: [1, 1.15, 0.85, 1]
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut"
-          }}
-          className="absolute top-[35%] left-[25%] w-[550px] h-[550px] bg-purple-600/12 blur-[120px] rounded-full"
-        />
-
-        {/* Subtle grid mesh */}
-        <div className="absolute inset-0 opacity-[0.025] bg-[radial-gradient(#ffffff_1.2px,transparent_1.2px)] bg-[size:32px_32px]" />
-      </div>
-
       <div className="container relative z-10 px-4 sm:px-6">
 
         {/* ── Header Card ── */}
-        <div className={cn(glassCardClass, "w-full mx-auto mt-8 p-6 md:p-12 relative overflow-hidden group/frame")}>
-          <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] bg-[size:40px_40px]" />
-
+        <div className={cn(glassCardClass, "w-full mx-auto mt-8 p-6 md:p-10 relative overflow-hidden group/frame")}>
           {/* Hero Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-8 relative z-10 pb-8 border-b border-white/10">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-8 relative z-10 pb-8 border-b border-border/60">
             <div className="text-right flex-1">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black mb-4 uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                 <Shield className="w-3.5 h-3.5 fill-emerald-500/20 animate-pulse" /> درع العفة والتحصين السلوكي
@@ -1824,7 +1770,6 @@ function ChastityPageContent() {
                 className="max-w-4xl mx-auto space-y-8"
               >
                 <div className={cn(glassCardClass, "p-8 md:p-12 relative overflow-hidden")}>
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.01] blur-[120px] rounded-full pointer-events-none" />
 
                   {/* Intro Slide */}
                   {quizStep === -1 && (
@@ -2023,9 +1968,8 @@ function ChastityPageContent() {
                 </div>
 
                 <div className={cn(glassCardClass, "p-8 md:p-12 relative overflow-hidden")}>
-                  <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/[0.01] blur-[120px] rounded-full pointer-events-none" />
 
-                  <div className="text-right pb-6 border-b border-white/10">
+                  <div className="text-right pb-6 border-b border-border/60">
                     <h3 className="text-2xl font-black text-white flex items-center gap-2">
                       <HeartHandshake className="w-7 h-7 text-emerald-400" />
                       منشئ خطة الطوارئ والوقاية من الانتكاسة الشخصية
@@ -2405,7 +2349,6 @@ function ChastityPageContent() {
 
                 {/* Daily Journal Form */}
                 <div className={cn(glassCardClass, "p-8 md:p-12 relative overflow-hidden")}>
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.01] blur-[120px] rounded-full pointer-events-none" />
                   <h3 className="text-xl font-black text-white flex items-center gap-2 mb-2">
                     <FileText className="w-5 h-5 text-emerald-400" />
                     المفكرة السلوكية اليومية والتأمل الذاتي
@@ -2501,9 +2444,8 @@ function ChastityPageContent() {
 
                 {/* Logs History Panel */}
                 <div className={cn(glassCardClass, "p-8 md:p-10 relative overflow-hidden")}>
-                  <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/[0.01] blur-[100px] rounded-full pointer-events-none" />
 
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-white/10 mb-8 text-right">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-border/60 mb-8 text-right">
                     <div>
                       <h3 className="text-lg font-black text-white flex items-center gap-2">
                         <History className="w-5 h-5 text-emerald-400" />

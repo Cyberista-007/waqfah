@@ -440,29 +440,22 @@ export default function MirathPage() {
   };
 
   return (
-    <div className="min-h-screen text-foreground relative py-12 px-4 md:px-8 max-w-5xl mx-auto" dir="rtl">
-      
-      {/* Background Decorative Gradients */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-primary/10 blur-[120px] animate-pulse-subtle" />
-        <div className="absolute bottom-[20%] right-[10%] w-[350px] h-[350px] rounded-full bg-amber-500/10 blur-[100px]" />
-      </div>
-
+    <div className="min-h-screen text-foreground py-10 px-4 md:px-8 max-w-5xl mx-auto" dir="rtl">
       {/* Header */}
-      <header className="text-center mb-12">
-        <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary mb-4 shadow-glow-primary-sm">
-          <Scale className="h-10 w-10" />
+      <header className="text-center mb-10 space-y-3 pb-6 border-b border-border/60">
+        <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+          <Scale className="h-8 w-8" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tight text-white mb-3">
-          حاسبة المواريث والفرائض الإلكترونية
+        <h1 className="text-3xl md:text-5xl font-black font-headline tracking-tight text-foreground">
+          حاسبة المواريث والفرائض
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
           أداة حسابية فقهية دقيقة لحساب وتوزيع التركات والمواريث وتفصيل أنصبة الورثة الشرعيين ببرهانها من الكتاب والسنة.
         </p>
       </header>
 
       {/* Main Container */}
-      <main className="glass-card rounded-3xl p-6 md:p-10 border border-border/80 shadow-2xl relative overflow-hidden">
+      <main className="bg-card/85 backdrop-blur-xl rounded-3xl p-6 md:p-10 border border-border shadow-sm">
         
         {/* Step Progress Tracker */}
         <div className="flex items-center justify-between max-w-md mx-auto mb-10 border-b border-white/5 pb-6">
