@@ -151,7 +151,7 @@ const MOBILE_DOCK_ITEMS: NavItem[] = [
   { href: "/programs", icon: Podcast, label: "البرامج", enLabel: "Programs" },
   { href: "/palestine", icon: Flag, label: "فلسطين", enLabel: "Palestine" },
   { href: "/search", icon: Search, label: "بحث", enLabel: "Search" },
-  { href: "/profile", icon: ListMusic, label: "مكتبتي", enLabel: "Library" },
+  { href: "/profile", icon: UserIcon, label: "حسابي", enLabel: "Profile" },
 ]
 
 export function SiteHeader() {
@@ -699,12 +699,12 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* Mobile Bottom Dock */}
+      {/* Mobile Bottom Dock (Expandable Pill Style) */}
       <nav
         aria-label={t("شريط التنقل السريع للهاتف", "Mobile navigation")}
         dir={isRtl ? "rtl" : "ltr"}
         className={cn(
-          "md:hidden fixed bottom-4 left-3 right-3 z-40 h-16 rounded-2xl border border-border/80 bg-background/90 backdrop-blur-xl shadow-xl flex items-center justify-around px-1 transition-all duration-300",
+          "md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-md z-40 rounded-full p-1.5 bg-card/95 border border-border/80 backdrop-blur-xl shadow-[0_14px_38px_-10px_rgba(0,0,0,0.5)] flex items-center justify-between gap-1 transition-all duration-300",
           isHeaderHidden && "translate-y-24 opacity-0 pointer-events-none"
         )}
       >
@@ -714,21 +714,39 @@ export function SiteHeader() {
             (item.href === "/profile" || item.href === "/settings") && !user
               ? `/auth/login?redirect_to=${item.href}`
               : item.href
+          const label = t(item.label, item.enLabel)
 
           return (
             <Link
               key={item.href}
               href={href}
               prefetch={false}
+              aria-label={label}
+              title={label}
               className={cn(
-                "relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl transition-colors",
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                "relative flex items-center justify-center rounded-full h-11 transition-all duration-300 select-none",
+                active
+                  ? "px-4 gap-2 text-background shrink-0"
+                  : "flex-1 min-w-[2.75rem] text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-bold">{t(item.label, item.enLabel)}</span>
               {active && (
-                <span className="absolute bottom-1 h-1 w-4 rounded-full bg-primary" />
+                <motion.span
+                  layoutId="mobileBottomActivePill"
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 rounded-full bg-foreground shadow-sm"
+                />
+              )}
+              <item.icon
+                className={cn(
+                  "relative z-10 transition-transform duration-200 shrink-0",
+                  active ? "h-4 w-4 stroke-[2.25]" : "h-5 w-5 stroke-[1.75]"
+                )}
+              />
+              {active && (
+                <span className="relative z-10 text-xs font-black whitespace-nowrap">
+                  {label}
+                </span>
               )}
             </Link>
           )

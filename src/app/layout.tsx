@@ -173,7 +173,7 @@ export default async function RootLayout({
                     {children}
                 </PageTransition>
               </main>
-              <div className="hide-in-reading-mode">
+              <div className="hide-in-reading-mode pb-24 md:pb-0">
                 <SiteFooter />
               </div>
             </div>
