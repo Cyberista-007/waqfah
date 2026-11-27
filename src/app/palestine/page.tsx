@@ -1,15 +1,10 @@
 'use client';
 
 import React from 'react';
-import { FilmGrain } from '@/components/palestine/shared';
 import { 
   CinematicAudioPlayer, 
-  GlassyBackground, 
-  CinematicCursor, 
   PalestineMapOverlay,
-  ScrollProgressIndicator,
-  BackgroundSoulWords,
-  InteractiveBackgroundGlow
+  ScrollProgressIndicator
 } from '@/components/palestine/layout-elements';
 import { 
   HeroSection, 
@@ -75,13 +70,7 @@ import { SectionGrid } from '@/components/palestine/navigation';
 export default function PalestinePage() {
   return (
     <main id="palestine-portal-root" className="min-h-screen text-foreground selection:bg-rose-500/30 selection:text-rose-400 overflow-x-hidden relative" dir="rtl">
-      {/* Cinematic Overlays */}
       <ScrollProgressIndicator />
-      <BackgroundSoulWords />
-      <FilmGrain />
-      <GlassyBackground />
-      <InteractiveBackgroundGlow />
-      <CinematicCursor />
       <PalestineMapOverlay />
       <CinematicAudioPlayer />
 

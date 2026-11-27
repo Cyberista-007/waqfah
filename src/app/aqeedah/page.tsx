@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Shield, ChevronLeft, Zap, BookOpen, LayoutGrid } from 'lucide-react';
+import { Shield, Zap, BookOpen } from 'lucide-react';
 import { PILLARS, TERMINOLOGY } from './data';
 import { ReadingModeToggle } from '@/components/reading-mode-toggle';
 import { useReadingMode } from '@/components/reading-provider';
@@ -12,33 +11,41 @@ import { DailyChallenges } from '@/components/daily-challenges';
 export default function AqeedahPage() {
   const { isReadingMode, fontSize } = useReadingMode();
   const [activeId, setActiveId] = useState('allah');
-  const activePillar = PILLARS.find(p => p.id === activeId) || PILLARS[0];
+  const activePillar = PILLARS.find((p) => p.id === activeId) || PILLARS[0];
 
   return (
-    <div className="min-h-screen pb-24 px-4 sm:px-6">
-      {/* ... prev header ... */}
-      {/* Header Section */}
-      <div className={cn("w-full mx-auto text-center pt-16 pb-12 transition-all duration-500", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6"
+    <div className="min-h-screen pb-20" dir="rtl">
+      <div className="container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-8 max-w-5xl">
+        {/* Header */}
+        <header
+          className={cn(
+            'flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-border/60 transition-all',
+            isReadingMode && 'hidden'
+          )}
         >
-          <Shield className="w-3 h-3" /> أصول الدين
-        </motion.div>
-        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">علم العقيدة</h1>
-        <p className="text-white/40 text-lg md:text-xl font-medium w-full mx-auto">
-          أركان الإيمان الستة — شرح مبسط وأدلة شرعية من الكتاب والسنة
-        </p>
-      </div>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+              <Shield className="w-3.5 h-3.5" />
+              <span>أصول الدين</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline text-foreground tracking-tight">
+              علم <span className="text-primary">العقيدة</span>
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
+              أركان الإيمان الستة — شرح مبسط وأدلة شرعية من الكتاب والسنة.
+            </p>
+          </div>
+          <ReadingModeToggle />
+        </header>
 
-      <div className="flex justify-center mb-8">
-        <ReadingModeToggle />
-      </div>
+        {isReadingMode && (
+          <div className="flex justify-center">
+            <ReadingModeToggle />
+          </div>
+        )}
 
-      {/* Pillars Tabs */}
-      <div className={cn("w-full mx-auto mb-12 hide-in-reading-mode")}>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Pillars Tabs */}
+        <div className={cn('flex flex-wrap items-center gap-2', isReadingMode && 'hidden')}>
           {PILLARS.map((p) => {
             const Icon = p.icon;
             const isActive = activeId === p.id;
@@ -47,156 +54,111 @@ export default function AqeedahPage() {
                 key={p.id}
                 onClick={() => setActiveId(p.id)}
                 className={cn(
-                  'flex items-center gap-3 px-5 py-3 rounded-2xl border font-bold transition-all duration-300',
-                  isActive 
-                    ? `bg-gradient-to-br ${p.bg} ${p.border} ${p.color} shadow-lg scale-105` 
-                    : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-white/50'
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all',
+                  isActive
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                 )}
               >
-                <Icon className={cn("w-4 h-4", isActive ? p.color : "opacity-50")} />
-                <span className="text-sm">{p.label}</span>
+                <Icon className="w-4 h-4" />
+                <span>{p.label}</span>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* Content Area */}
-      <div className={cn("w-full mx-auto transition-all duration-700", isReadingMode && "reading-content")}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeId}
-            initial={{ opacity: 0, scale: 0.98, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: -10 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className={cn(
-              "rounded-[3.5rem] p-1.5 transition-all duration-700 bg-gradient-to-br shadow-[0_0_100px_-20px_rgba(0,0,0,0.4)]",
-              activePillar.bg
-            )}
-          >
-            <div className="bg-[#020202]/80 backdrop-blur-3xl rounded-[3.4rem] p-8 md:p-14 overflow-hidden relative">
-              {/* Background Accent Icon */}
-              <div className="absolute -top-12 -left-12 opacity-[0.03] pointer-events-none">
-                 <activePillar.icon className="w-80 h-80 rotate-12" />
-              </div>
-
-              <div className="relative z-10">
-                <div className="flex items-center gap-6 mb-16">
-                  <div className={cn("p-5 rounded-[2rem] bg-white/5 border-2 shadow-2xl", activePillar.border)}>
-                    <activePillar.icon className={cn("w-10 h-10", activePillar.color)} />
-                  </div>
-                  <div>
-                    <h2 className={cn("text-4xl md:text-6xl font-black mb-2", activePillar.color)}>
-                      {activePillar.label}
-                    </h2>
-                    <p className="text-white/20 font-bold uppercase tracking-[0.4em] text-[10px]">
-                      {activePillar.sublabel}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-8">
-                  {activePillar.articles.map((article, idx) => (
-                    <motion.div 
-                      key={article.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + idx * 0.1 }}
-                      className="group p-10 rounded-[3rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all duration-500"
-                    >
-                      <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-4">
-                        <span className={cn("w-2 h-8 rounded-full", activePillar.color.replace('text-', 'bg-'))} />
-                        {article.title}
-                      </h3>
-                      <p 
-                        className={cn("text-white/45 leading-[1.8] text-lg md:text-xl mb-10 font-medium transition-all", isReadingMode && "reading-text")}
-                        style={isReadingMode ? { fontSize: `${fontSize}px` } : {}}
-                      >
-                        {article.body}
-                      </p>
-                      
-                      {article.evidence && (
-                        <div className="relative group/evidence">
-                          <div className={cn("absolute inset-0 blur-3xl opacity-0 group-hover/evidence:opacity-10 transition-opacity duration-700", activePillar.bg)} />
-                          <div className="relative p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all duration-500 text-center">
-                            <p 
-                              className={cn("font-quran text-3xl md:text-4xl text-white/90 leading-[1.7] transition-all", isReadingMode && "reading-text")}
-                              style={isReadingMode ? { fontSize: `${fontSize + 8}px` } : {}}
-                            >
-                              "{article.evidence}"
-                            </p>
-                            <div className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 text-[10px] font-black uppercase text-white/25 border border-white/5 tracking-[0.2em]">
-                              <Zap className="w-3.5 h-3.5 text-amber-400" /> الدليل من الوحي
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-20">
-                   <p className="font-quran text-3xl italic">وَتِلْكَ حُجَّتُنَا آتَيْنَاهَا إِبْرَاهِيمَ عَلَى قَوْمِهِ</p>
-                   <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.5em]">
-                      <div className="w-16 h-px bg-white/40" />
-                      أصول الاعتقاد
-                      <div className="w-16 h-px bg-white/40" />
-                   </div>
-                </div>
-              </div>
+        {/* Active Pillar Content */}
+        <section
+          className={cn(
+            'bg-card/85 backdrop-blur-xl border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6',
+            isReadingMode && 'reading-content'
+          )}
+        >
+          <div className="flex items-center gap-4 border-b border-border pb-5">
+            <div className={cn('p-3.5 rounded-2xl border bg-muted/50', activePillar.border)}>
+              <activePillar.icon className={cn('w-7 h-7', activePillar.color)} />
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-black text-foreground">{activePillar.label}</h2>
+              <p className="text-xs font-semibold text-muted-foreground">{activePillar.sublabel}</p>
+            </div>
+          </div>
 
-      {/* Basic Theological Concepts Section - Centered in Reading Mode */}
-      <div className={cn("w-full mx-auto mt-32 hide-in-reading-mode")}>
-        <div className="flex items-center gap-4 mb-12">
-           <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-indigo-400" />
-           </div>
-           <div>
-              <h2 className="text-3xl font-black text-white tracking-tighter">مفاهيم عقدية أساسية</h2>
-              <p className="text-white/25 text-sm font-bold uppercase tracking-widest mt-1">Foundational Terminology</p>
-           </div>
-           <div className="flex-1 h-px bg-white/5 ml-4" />
-        </div>
+          <div className="space-y-5">
+            {activePillar.articles.map((article) => (
+              <article
+                key={article.id}
+                className="p-5 sm:p-6 rounded-2xl bg-background/70 border border-border space-y-4"
+              >
+                <h3 className="text-lg md:text-xl font-bold text-foreground flex items-center gap-2.5">
+                  <span className="w-1.5 h-6 rounded-full bg-primary shrink-0" />
+                  <span>{article.title}</span>
+                </h3>
+                <p
+                  className={cn(
+                    'text-muted-foreground leading-relaxed text-sm md:text-base',
+                    isReadingMode && 'reading-text'
+                  )}
+                  style={isReadingMode ? { fontSize: `${fontSize}px` } : {}}
+                >
+                  {article.body}
+                </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {TERMINOLOGY.map((term, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative p-10 rounded-[3.5rem] bg-indigo-500/[0.03] border border-indigo-500/5 hover:bg-indigo-500/[0.08] hover:border-indigo-500/20 transition-all duration-500 overflow-hidden"
-            >
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
-                   <div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
-                   <h3 className="text-2xl font-black text-white">{term.title}</h3>
-                </div>
-                <p className="text-white/40 leading-relaxed text-lg font-medium">
+                {article.evidence && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-primary/5 border border-primary/20 text-center space-y-2">
+                    <p
+                      className={cn(
+                        'font-quran text-xl md:text-2xl text-foreground leading-relaxed',
+                        isReadingMode && 'reading-text'
+                      )}
+                      style={isReadingMode ? { fontSize: `${fontSize + 6}px` } : {}}
+                    >
+                      &quot;{article.evidence}&quot;
+                    </p>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-background border border-border text-[11px] font-bold text-amber-500">
+                      <Zap className="w-3 h-3" />
+                      <span>الدليل من الوحي</span>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Terminology */}
+        <section className={cn('space-y-5', isReadingMode && 'hidden')}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">مفاهيم عقدية أساسية</h2>
+              <p className="text-xs text-muted-foreground">مصطلحات لا غنى عنها في دراسة العقيدة</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {TERMINOLOGY.map((term, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-2xl bg-card/80 border border-border space-y-2 shadow-sm"
+              >
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span>{term.title}</span>
+                </h3>
+                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                   {term.definition}
                 </p>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </section>
 
-      {/* 🎯 Daily Challenges Section */}
-      <div className={cn("w-full mx-auto mt-32 hide-in-reading-mode")}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        <div className={cn(isReadingMode && 'hidden')}>
           <DailyChallenges />
-        </motion.div>
+        </div>
       </div>
     </div>
   );

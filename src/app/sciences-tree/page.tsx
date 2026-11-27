@@ -249,23 +249,16 @@ export default function SciencesTreePage() {
   };
 
   return (
-    <div className="min-h-screen text-foreground relative py-12 px-4 md:px-8 max-w-6xl mx-auto" dir="rtl">
-      
-      {/* Decorative floating grids */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[10%] right-[10%] w-[350px] h-[350px] rounded-full bg-primary/10 blur-[100px] animate-pulse-slow" />
-        <div className="absolute bottom-[15%] left-[5%] w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[120px]" />
-      </div>
-
+    <div className="min-h-screen text-foreground py-10 px-4 md:px-8 max-w-6xl mx-auto" dir="rtl">
       {/* Header */}
-      <header className="text-center mb-16 relative">
-        <div className="inline-flex p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 text-primary mb-4 shadow-xl">
-          <Compass className="h-10 w-10 animate-spin-slow text-amber-500" />
+      <header className="text-center mb-12 space-y-3 pb-6 border-b border-border/60">
+        <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+          <Compass className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-4xl md:text-6xl font-black font-headline text-white mb-4">
+        <h1 className="text-3xl md:text-5xl font-black font-headline text-foreground">
           شجرة العلوم الشرعية التفاعلية
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-bold">
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
           خارطة طريق بصرية للعلوم الإسلامية الأساسية، تتيح لك فهم ترابط العلوم، وتحديد أولويات دراستك مع المتون الموصى بها.
         </p>
       </header>
@@ -274,125 +267,111 @@ export default function SciencesTreePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
         
         {/* Visual Map Nodes */}
-        <div className="lg:col-span-7 space-y-6">
-          <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-            <Map className="h-5 w-5 text-amber-500" /> اختر أحد العلوم الشرعية لاستكشافه:
+        <div className="lg:col-span-7 space-y-5">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            <Map className="h-5 w-5 text-primary" /> اختر أحد العلوم الشرعية لاستكشافه:
           </h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {scienceBranches.map((branch) => {
               const progress = calculateBranchProgress(branch);
               const isSelected = selectedBranch?.id === branch.id;
               
               return (
-                <motion.div
+                <div
                   key={branch.id}
-                  whileHover={{ scale: 1.02, x: -4 }}
                   onClick={() => setSelectedBranch(branch)}
                   className={cn(
-                    "p-6 rounded-3xl border cursor-pointer transition-all duration-300 relative overflow-hidden flex items-center justify-between group",
+                    "p-5 rounded-2xl border cursor-pointer transition-all duration-300 flex items-center justify-between group shadow-sm",
                     isSelected 
-                      ? "border-primary bg-primary/[0.04] shadow-2xl" 
-                      : "border-white/5 bg-white/[0.01] hover:border-white/20 hover:bg-white/[0.02]"
+                      ? "border-primary bg-primary/5" 
+                      : "border-border bg-card/80 hover:border-primary/40"
                   )}
-                  style={{
-                    boxShadow: isSelected ? `0 10px 30px -10px ${branch.shadowColor}` : 'none'
-                  }}
                 >
-                  <div className="flex items-center gap-5 relative z-10">
+                  <div className="flex items-center gap-4">
                     <div className={cn(
-                      "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center text-3xl shadow-lg transition-transform group-hover:scale-110",
+                      "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-2xl shadow-sm shrink-0",
                       branch.color
                     )}>
                       {branch.icon}
                     </div>
                     <div className="space-y-1 text-right">
-                      <h4 className="text-xl font-black text-white group-hover:text-amber-400 transition-colors">
+                      <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                         {branch.arabicName}
                       </h4>
-                      <p className="text-muted-foreground text-xs font-bold max-w-sm line-clamp-1">
+                      <p className="text-muted-foreground text-xs max-w-sm line-clamp-1">
                         {branch.summary}
                       </p>
                     </div>
                   </div>
 
                   {/* Progress Indicator */}
-                  <div className="flex items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-3 shrink-0">
                     {progress > 0 && (
-                      <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">
+                      <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2.5 py-1 rounded-full text-xs font-bold">
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span>{progress}%</span>
                       </div>
                     )}
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-white transition-colors" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-
-                  {/* Decorative background aura on hover */}
-                  <div className={cn(
-                    "absolute -right-20 -bottom-20 w-40 h-40 rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none bg-gradient-to-br",
-                    branch.color
-                  )} />
-                </motion.div>
+                </div>
               );
             })}
           </div>
         </div>
 
         {/* Dynamic Science Details Drawer Card */}
-        <div className="lg:col-span-5 relative">
+        <div className="lg:col-span-5">
           <AnimatePresence mode="wait">
             {selectedBranch ? (
               <motion.div
                 key={selectedBranch.id}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="glass-card rounded-[2.5rem] p-6 md:p-8 border border-white/5 shadow-2xl relative overflow-hidden space-y-6 text-right"
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+                className="bg-card/85 backdrop-blur-xl rounded-3xl p-6 md:p-7 border border-border shadow-sm relative overflow-hidden space-y-5 text-right"
               >
-                {/* Accent glow line */}
-                <div className={cn(
-                  "absolute top-0 right-0 left-0 h-2 bg-gradient-to-r",
-                  selectedBranch.color
-                )} />
+                <div className={cn("absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r", selectedBranch.color)} />
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{selectedBranch.icon}</span>
-                    <h3 className="text-2xl font-black text-white">{selectedBranch.arabicName}</h3>
+                    <span className="text-2xl">{selectedBranch.icon}</span>
+                    <h3 className="text-xl font-bold text-foreground">{selectedBranch.arabicName}</h3>
                   </div>
-                  <span className="text-xs font-bold text-muted-foreground font-mono uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
+                  <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
                     {selectedBranch.title}
                   </span>
                 </div>
 
                 {/* Science Importance Section */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <span className="text-xs font-bold text-amber-500 flex items-center gap-1.5">
                     <Lightbulb className="w-4 h-4" /> أهمية العلم وفضله:
                   </span>
-                  <p className="text-muted-foreground text-sm leading-relaxed font-semibold">
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     {selectedBranch.importance}
                   </p>
                 </div>
 
                 {/* Hadith Proof Box */}
-                <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 italic text-white/70 text-xs leading-relaxed">
+                <div className="bg-muted/50 border border-border rounded-2xl p-4 italic text-foreground/85 text-xs leading-relaxed">
                   {selectedBranch.hadithProof}
                 </div>
 
                 {/* Subfields list & recommendations */}
                 <div className="space-y-4 pt-2">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-primary" /> التقسيمات الداخلية والمتون الموصى بها:
                   </span>
 
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {selectedBranch.subfields.map((sub, i) => (
-                      <div key={i} className="space-y-3">
+                      <div key={i} className="space-y-2.5">
                         <div className="space-y-1">
-                          <h5 className="text-sm font-black text-white">{sub.name}</h5>
-                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                          <h5 className="text-sm font-bold text-foreground">{sub.name}</h5>
+                          <p className="text-muted-foreground text-xs leading-relaxed">
                             {sub.description}
                           </p>
                         </div>
@@ -410,31 +389,31 @@ export default function SciencesTreePage() {
                                 className={cn(
                                   "p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors text-right select-none",
                                   isDone 
-                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                                    : "bg-white/[0.01] border-white/5 text-white/80 hover:border-white/10"
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" 
+                                    : "bg-background border-border text-foreground hover:border-primary/40"
                                 )}
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={cn(
-                                    "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                                    "w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0",
                                     isDone 
                                       ? "bg-emerald-500 border-emerald-500 text-white" 
-                                      : "border-white/20 bg-transparent"
+                                      : "border-border bg-background"
                                   )}>
                                     {isDone && <span className="text-[10px]">✓</span>}
                                   </div>
                                   <div className="space-y-0.5">
                                     <span className="text-xs font-bold block">{text.title}</span>
-                                    <span className="text-[10px] text-muted-foreground block">{text.author}</span>
+                                    <span className="text-[11px] text-muted-foreground block">{text.author}</span>
                                   </div>
                                 </div>
                                 <span className={cn(
-                                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
                                   text.level === 'مبتدئ' 
-                                    ? "bg-blue-500/10 text-blue-400" 
+                                    ? "bg-blue-500/10 text-blue-500" 
                                     : text.level === 'متوسط' 
-                                      ? "bg-amber-500/10 text-amber-400" 
-                                      : "bg-red-500/10 text-red-400"
+                                      ? "bg-amber-500/10 text-amber-500" 
+                                      : "bg-red-500/10 text-red-500"
                                 )}>
                                   {text.level}
                                 </span>
@@ -448,10 +427,10 @@ export default function SciencesTreePage() {
                 </div>
 
                 {/* Call-to-action button */}
-                <div className="pt-4 flex justify-end">
+                <div className="pt-2 flex justify-end">
                   <Link
                     href={selectedBranch.coursesLink}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition-opacity"
                   >
                     عرض محاضرات ومسارات هذا العلم <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
@@ -459,9 +438,9 @@ export default function SciencesTreePage() {
 
               </motion.div>
             ) : (
-              <div className="glass-card rounded-[2.5rem] p-10 border border-white/5 text-center flex flex-col items-center justify-center h-[400px]">
-                <Book className="w-16 h-16 text-muted-foreground/30 mb-4 animate-bounce-slow" />
-                <h4 className="text-white font-bold text-lg mb-2">اختر علماً للبدء</h4>
+              <div className="bg-card/80 rounded-3xl p-10 border border-border text-center flex flex-col items-center justify-center h-[360px]">
+                <Book className="w-12 h-12 text-muted-foreground/40 mb-4" />
+                <h4 className="text-foreground font-bold text-lg mb-2">اختر علماً للبدء</h4>
                 <p className="text-muted-foreground text-xs max-w-xs leading-relaxed mx-auto">
                   قم بالضغط على أي فرع من فروع العلوم الشرعية في القائمة الجانبية لعرض التبويبات والمناهج والكتب الموصى بها.
                 </p>
@@ -474,7 +453,7 @@ export default function SciencesTreePage() {
 
       {/* Info board regarding Study levels */}
       <footer className="mt-12 text-center text-xs text-muted-foreground leading-relaxed max-w-xl mx-auto space-y-4">
-        <div className="flex items-center justify-center gap-4 text-xs font-bold text-muted-foreground border-t border-white/5 pt-6">
+        <div className="flex items-center justify-center gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-6">
           <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500" /> مبتدئ</div>
           <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /> متوسط</div>
           <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500" /> متقدم</div>
