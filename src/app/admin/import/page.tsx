@@ -487,6 +487,13 @@ function ImportPageComponent() {
                 await setDoc(statsRef, statsUpdate, { merge: true });
             }
 
+            // Auto-register channel in YouTube WebSub for instant future uploads
+            fetch('/api/cron/youtube-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ programId: programToUse.id, renewWebSub: true }),
+            }).catch(() => {});
+
             toast({
                 title: 'اكتمل الاستيراد بنجاح!',
                 description: `تم استيراد ${newLecturesCount} محاضرة جديدة${linkedLecturesCount > 0 ? ` وربط ${linkedLecturesCount} محاضرة موجودة` : ''}${newSeriesCount > 0 ? ` وإنشاء ${newSeriesCount} سلسلة` : ''}${skippedDuplicatesInRun > 0 ? ` (تم تجاهل ${skippedDuplicatesInRun} مكرر)` : ''}.`,
@@ -659,10 +666,22 @@ function ImportPageComponent() {
                                     });
                                     const result = await res.json();
                                     if (res.ok && result.success) {
+                                        const diag = result.diagnostics;
+                                        const websubNote =
+                                            result.websubRenewedCount > 0
+                                                ? ` وتفعيل الإشعار الفوري لـ ${result.websubRenewedCount} قناة.`
+                                                : '';
                                         toast({
                                             title: 'اكتملت المزامنة بنجاح!',
-                                            description: `تم فحص ${result.syncedProgramsCount || 0} برنامج واستيراد ${result.totalImported || 0} محاضرة جديدة.`,
+                                            description: `تم فحص ${result.syncedProgramsCount || 0} برنامج واستيراد ${result.totalImported || 0} محاضرة جديدة.${websubNote}`,
                                         });
+                                        if (diag && !diag.hasAdminSdk) {
+                                            toast({
+                                                variant: 'destructive',
+                                                title: 'تنبيه: FIREBASE_SERVICE_ACCOUNT غير مضاف في Vercel',
+                                                description: 'لتعمل الإضافة الفورية من يوتيوب في الخلفية أضف FIREBASE_SERVICE_ACCOUNT في إعدادات Vercel.',
+                                            });
+                                        }
                                     } else {
                                         toast({
                                             variant: 'destructive',

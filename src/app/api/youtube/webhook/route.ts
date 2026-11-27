@@ -28,7 +28,15 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ status: 'ok', service: 'youtube-websub-webhook' }, { status: 200 });
+  return NextResponse.json(
+    {
+      status: 'ok',
+      service: 'youtube-websub-webhook',
+      readyForBackgroundWrites: Boolean(getSyncDb().adminDb),
+      hasYoutubeApiKey: Boolean(process.env.YOUTUBE_API_KEY),
+    },
+    { status: 200 }
+  );
 }
 
 function verifyHubSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {

@@ -202,6 +202,12 @@ async function runYoutubeSync(req: NextRequest, targetProgramId?: string, forceR
         totalImported,
         syncedProgramsCount: programs.length,
         websubRenewedCount,
+        diagnostics: {
+          hasAdminSdk: Boolean(db.adminDb),
+          hasYoutubeApiKey: Boolean(youtube),
+          hasCronSecret: Boolean(process.env.CRON_SECRET),
+          webhookUrl: origin ? `${origin}/api/youtube/webhook` : null,
+        },
         results: syncResults,
       },
       { status: 200 }
