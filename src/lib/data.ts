@@ -11,10 +11,40 @@ const getFirestore = () => {
     return firestore;
 }
 
+let quotaExhaustedUntil = 0;
+const serverReadCache = new Map<string, { value: any; expiresAt: number }>();
+
+function isQuotaBlocked(): boolean {
+    return Date.now() < quotaExhaustedUntil;
+}
+
+function handleFirestoreError(label: string, error: any) {
+    if (error?.code === 8 || String(error?.message || '').includes('RESOURCE_EXHAUSTED')) {
+        quotaExhaustedUntil = Date.now() + 60_000;
+    }
+    console.error(`${label}:`, error?.message || error);
+}
+
+async function withServerCache<T>(key: string, ttlMs: number, loader: () => Promise<T>, fallback: T): Promise<T> {
+    if (isQuotaBlocked()) return fallback;
+    const hit = serverReadCache.get(key);
+    if (hit && Date.now() < hit.expiresAt) {
+        return hit.value as T;
+    }
+    try {
+        const value = await loader();
+        serverReadCache.set(key, { value, expiresAt: Date.now() + ttlMs });
+        return value;
+    } catch (error) {
+        handleFirestoreError(`Server cache fetch failed [${key}]`, error);
+        return fallback;
+    }
+}
+
 const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
     const firestore = getFirestore();
     // If Firestore admin instance is not available (e.g., no service account), return empty array.
-    if (!firestore) return [];
+    if (!firestore || isQuotaBlocked()) return [];
 
     try {
         const snapshot = await firestore.collection(collectionName).get();
@@ -23,14 +53,14 @@ const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string 
         }
         return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
     } catch (error) {
-        console.error(`Could not fetch collection ${collectionName}:`, error);
+        handleFirestoreError(`Could not fetch collection ${collectionName}`, error);
         return [];
     }
 };
 
 const getDocsWithQuery = async <T>(collectionName: string, options: { orderBy: [string, 'asc' | 'desc'], limit: number }): Promise<(T & { id: string })[]> => {
     const firestore = getFirestore();
-    if (!firestore) return [];
+    if (!firestore || isQuotaBlocked()) return [];
 
     try {
         let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = firestore.collection(collectionName);
@@ -48,7 +78,7 @@ const getDocsWithQuery = async <T>(collectionName: string, options: { orderBy: [
         }
         return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
     } catch (error) {
-        console.error(`Could not query collection ${collectionName}:`, error);
+        handleFirestoreError(`Could not query collection ${collectionName}`, error);
         return [];
     }
 };
@@ -95,54 +125,32 @@ export const getAllCurriculums = cache(() => getAllDocs<Curriculum>('curriculums
 
 export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings | null> => {
     const firestore = getFirestore();
-    // If Firestore admin instance is not available, return null.
     if (!firestore) return null;
 
-    const docRef = firestore.doc('settings/appearance');
-    try {
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return null;
-        }
-        return docSnap.data() as AppearanceSettings;
-    } catch (error) {
-        console.error("Could not fetch appearance settings:", error);
-        return null;
-    }
+    return withServerCache('settings/appearance', 60_000, async () => {
+        const docSnap = await firestore.doc('settings/appearance').get();
+        return docSnap.exists ? (docSnap.data() as AppearanceSettings) : null;
+    }, null);
 });
 
 export const getAnnouncement = cache(async (): Promise<AnnouncementSettings | null> => {
     const firestore = getFirestore();
     if (!firestore) return null;
 
-    const docRef = firestore.doc('settings/announcement');
-    try {
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return null;
-        }
-        return docSnap.data() as AnnouncementSettings;
-    } catch (error) {
-        console.error("Could not fetch announcement settings:", error);
-        return null;
-    }
+    return withServerCache('settings/announcement', 60_000, async () => {
+        const docSnap = await firestore.doc('settings/announcement').get();
+        return docSnap.exists ? (docSnap.data() as AnnouncementSettings) : null;
+    }, null);
 });
 
 export const getHomepageConfig = async (): Promise<HomepageDetailedConfig | null> => {
     const firestore = getFirestore();
     if (!firestore) return null;
 
-    const docRef = firestore.doc('settings/homepage');
-    try {
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return null;
-        }
-        return docSnap.data() as HomepageDetailedConfig;
-    } catch (error) {
-        console.error("Could not fetch homepage detailed config:", error);
-        return null;
-    }
+    return withServerCache('settings/homepage', 60_000, async () => {
+        const docSnap = await firestore.doc('settings/homepage').get();
+        return docSnap.exists ? (docSnap.data() as HomepageDetailedConfig) : null;
+    }, null);
 };
 
 export const getUpcomingLesson = cache(async (): Promise<ScheduleItem | null> => {
