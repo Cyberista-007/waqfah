@@ -59,6 +59,7 @@ export function FluidButton({
 
   return (
     <motion.button
+      type="button"
       className={baseClass}
       onClick={handleClick}
       disabled={state === 'loading' || disabled}
