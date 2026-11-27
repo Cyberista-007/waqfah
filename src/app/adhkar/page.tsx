@@ -219,52 +219,42 @@ function DhikrCounterDisplay({
   const progress = Math.min((current / maxCount) * 100, 100);
 
   return (
-    <div className={cn('flex items-center gap-3 mt-4 p-3 rounded-2xl bg-white/5 border pointer-events-none', border)}>
+    <div className="flex items-center gap-4 mt-4 p-3.5 rounded-2xl bg-muted/50 border border-border pointer-events-none">
       {/* Progress ring + count */}
       <div className="relative flex-shrink-0">
-        <svg width="68" height="68" viewBox="0 0 64 64" className="-rotate-90">
-          <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-white/10" />
+        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-border" />
           <circle
             cx="32" cy="32" r="28"
             fill="none" stroke="currentColor" strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 28}`}
             strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress / 100)}`}
-            className={cn('transition-all duration-300', accentColor)}
+            className={cn('transition-all duration-300', done ? 'text-emerald-500' : 'text-primary')}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            {done ? (
-              <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                <Check className={cn('w-6 h-6', accentColor)} />
-              </motion.div>
-            ) : (
-              <div className="relative flex items-center justify-center notranslate" translate="no">
-                <Fingerprint className={cn('absolute inset-0 w-8 h-8 opacity-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', accentColor)} />
-                <motion.span
-                  key={current}
-                  initial={{ scale: 1.3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="text-sm font-black text-white tabular-nums relative z-10"
-                >
-                  {current}
-                </motion.span>
-              </div>
-            )}
-          </AnimatePresence>
+          {done ? (
+            <Check className="w-6 h-6 text-emerald-500" />
+          ) : (
+            <div className="relative flex items-center justify-center notranslate" translate="no">
+              <span className="text-sm font-black text-foreground tabular-nums">
+                {current}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Label */}
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-white/40 mb-0.5 uppercase tracking-widest font-black">التكرار</p>
-        <div className={cn('text-xl font-black tabular-nums transition-colors notranslate flex items-baseline gap-1', done ? accentColor : 'text-white')} translate="no">
-          <span className="text-2xl">{current}</span>
-          <span className="text-white/20 opacity-50">/</span>
-          <span className="text-sm opacity-50">{maxCount}</span>
+        <p className="text-[11px] text-muted-foreground mb-0.5 font-bold">التكرار</p>
+        <div className={cn('text-lg font-black tabular-nums transition-colors notranslate flex items-baseline gap-1', done ? 'text-emerald-500' : 'text-foreground')} translate="no">
+          <span className="text-xl">{current}</span>
+          <span className="text-muted-foreground/50">/</span>
+          <span className="text-xs text-muted-foreground">{maxCount}</span>
         </div>
-        {source && <p className="text-[10px] text-white/30 mt-0.5 truncate italic">{source}</p>}
+        {source && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{source}</p>}
       </div>
 
       {/* Reset */}
@@ -274,10 +264,10 @@ function DhikrCounterDisplay({
           e.stopPropagation();
           onReset();
         }}
-        className="h-11 w-11 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-all pointer-events-auto group/reset active:scale-90"
+        className="h-10 w-10 flex items-center justify-center rounded-xl bg-background border border-border hover:bg-accent transition-all pointer-events-auto active:scale-90 text-muted-foreground hover:text-foreground"
         aria-label="إعادة"
       >
-        <RefreshCw className="w-5 h-5 text-white/60 group-hover/reset:text-white transition-colors" />
+        <RefreshCw className="w-4 h-4" />
       </button>
     </div>
   );
@@ -289,7 +279,6 @@ function DhikrCard({
   dhikr,
   accentColor,
   border,
-  index,
   isReadingMode,
   fontSize
 }: {
@@ -303,7 +292,6 @@ function DhikrCard({
   const [current, setCurrent] = useState(0);
   const done = current >= dhikr.count;
 
-  // Load from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(`dhikr_count_${dhikr.id}`);
@@ -335,11 +323,7 @@ function DhikrCard({
   }, [dhikr.id]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileTap={!done ? { scale: 0.985 } : {}}
-      transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 25 }}
+    <div
       onClick={handleTap}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -350,20 +334,16 @@ function DhikrCard({
       role="button"
       tabIndex={0}
       className={cn(
-        'w-full relative rounded-[2.5rem] border p-7 bg-white/[0.04] backdrop-blur-md transition-all duration-300 cursor-pointer select-none overflow-hidden transform-gpu flex flex-col items-stretch text-right outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        border,
-        !done ? 'hover:bg-white/[0.08] hover:border-white/20 active:bg-white/[0.12]' : 'grayscale-[0.5] opacity-60'
+        'w-full relative rounded-2xl border p-6 bg-background/80 transition-all cursor-pointer select-none flex flex-col items-stretch text-right outline-none focus-visible:ring-2 focus-visible:ring-primary/50 shadow-sm',
+        !done ? 'border-border hover:border-primary/40' : 'border-emerald-500/30 bg-emerald-500/5 opacity-75'
       )}
     >
-      {/* Background Icon Hint */}
-      <Fingerprint className={cn('absolute -bottom-8 -right-8 w-40 h-40 opacity-[0.03] pointer-events-none transition-opacity', !done && 'group-hover:opacity-[0.08]')} />
-
       {/* Arabic text */}
       <p
-        className={cn("text-white text-right font-quran text-2xl md:text-3xl leading-relaxed mb-3 transition-all", isReadingMode && "reading-text")}
+        className={cn("text-foreground text-right font-quran text-2xl md:text-3xl leading-relaxed mb-2 transition-all", isReadingMode && "reading-text")}
         style={{
           fontSize: isReadingMode ? `${fontSize && fontSize + 6}px` : undefined,
-          lineHeight: isReadingMode ? '2' : '1.6'
+          lineHeight: isReadingMode ? '2' : '1.7'
         }}
       >
         {dhikr.arabic}
@@ -371,13 +351,13 @@ function DhikrCard({
 
       {/* Meaning */}
       {dhikr.meaning && (
-        <p className="mt-5 text-base text-white/50 text-right leading-relaxed border-t border-white/5 pt-5 italic pointer-events-none">
+        <p className="mt-3 text-sm text-muted-foreground text-right leading-relaxed border-t border-border/60 pt-3 pointer-events-none">
           {dhikr.meaning}
         </p>
       )}
 
       {/* Counter UI */}
-      <div className={cn("w-full transition-all duration-500", isReadingMode && "opacity-20 hover:opacity-100")}>
+      <div className={cn("w-full transition-all duration-300", isReadingMode && "opacity-30 hover:opacity-100")}>
         <DhikrCounterDisplay
           current={current}
           maxCount={dhikr.count}
@@ -387,7 +367,7 @@ function DhikrCard({
           onReset={resetCount}
         />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -403,144 +383,98 @@ export default function AdhkarPage() {
   );
 
   return (
-    <div className="min-h-screen pb-24 overflow-x-hidden">
-      {/* Background Decorative Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-amber-500/5 blur-[120px] rounded-full translate-x-1/2 translate-y-1/2" />
-      </div>
-
-      <div className={cn("container relative z-10", isReadingMode && "reading-content")}>
-        <div className="flex justify-center mb-10 relative z-50">
-          <ReadingModeToggle />
-        </div>
-        {/* Hero Section */}
-        <div className={cn("text-center pt-20 pb-16 relative transition-all duration-500", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black mb-6 uppercase tracking-[0.3em]">
-              <Heart className="w-3.5 h-3.5 fill-primary" />
-              حصن المسلم اليومي
+    <div className="min-h-screen pb-20" dir="rtl">
+      <div className={cn("container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-8 max-w-5xl", isReadingMode && "reading-content")}>
+        {/* Header */}
+        <header className={cn("flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-border/60", isReadingMode && "hidden")}>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+              <Heart className="w-3.5 h-3.5 fill-current" />
+              <span>حصن المسلم اليومي</span>
             </div>
-
-            <h1 className="text-5xl md:text-8xl font-black text-white font-headline leading-tight mb-6 tracking-tighter">
-              الأذكار والتسبيحات
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground font-headline tracking-tight">
+              الأذكار <span className="text-primary">والتسبيحات</span>
             </h1>
-            <p className="text-white/40 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed font-tajawal">
-              "ألا بذكر الله تطمئن القلوب" — حَصِّن يومك بأذكار الصباح والمساء المأثورة.
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
+              «ألا بذكر الله تطمئن القلوب» — حصّن يومك بأذكار الصباح والمساء المأثورة.
             </p>
-          </motion.div>
-        </div>
+          </div>
+          <ReadingModeToggle />
+        </header>
 
-        {/* 💧 Dew Adhkar Section (New Visual Mode) */}
-        <div className={cn("mb-12", isReadingMode && "hidden")}>
+        {isReadingMode && (
+          <div className="flex justify-center">
+            <ReadingModeToggle />
+          </div>
+        )}
+
+        {/* Dew Adhkar Section */}
+        <div className={cn(isReadingMode && "hidden")}>
            <DewAdhkar />
         </div>
 
-
-
         {/* Category Tabs */}
-        <div className={cn("flex items-center gap-3 overflow-x-auto pb-8 mb-12 no-scrollbar justify-center flex-nowrap px-4 hide-in-reading-mode")}>
-          {ADHKAR_DATA.map((cat, idx) => {
+        <div className={cn("flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar", isReadingMode && "hidden")}>
+          {ADHKAR_DATA.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.id === activeCategory;
             return (
-              <motion.button
+              <button
                 key={cat.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05 }}
                 onClick={() => setActiveCategory(cat.id)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 className={cn(
-                  'flex items-center gap-3 px-8 py-4 rounded-[2rem] border font-black text-sm whitespace-nowrap transition-all duration-500',
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs sm:text-sm whitespace-nowrap transition-all shrink-0',
                   isActive
-                    ? `bg-gradient-to-br ${cat.bg} ${cat.border} ${cat.color} shadow-2xl scale-105`
-                    : 'bg-white/[0.03] border-white/5 text-white/30 hover:bg-white/[0.08] hover:text-white/70'
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                 )}
               >
-                <Icon className={cn('w-4 h-4', isActive ? cat.color : 'text-current opacity-50')} />
+                <Icon className="w-4 h-4" />
                 <span>{cat.label}</span>
-              </motion.button>
+              </button>
             );
           })}
         </div>
 
         {/* Cards Container */}
-        <div className="w-full">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -30, filter: 'blur(10px)' }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className={cn('rounded-[3.5rem] p-1.5 transition-all duration-700 bg-gradient-to-br shadow-[0_0_100px_-20px_rgba(0,0,0,0.4)]', category.bg)}
-            >
-              <div className="bg-[#020202]/60 backdrop-blur-3xl rounded-[3.4rem] p-8 md:p-14 relative overflow-hidden">
-                {/* Floating Category Icon in background */}
-                <div className="absolute -top-10 -left-10 opacity-[0.03] pointer-events-none">
-                  {(() => { const Icon = category.icon; return <Icon className="w-80 h-80 rotate-12" />; })()}
-                </div>
-
-                <div className="relative z-10">
-                  {/* Category Header */}
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 px-4">
-                    <div className="flex items-center gap-6">
-                      <div className={cn('p-5 rounded-[2rem] bg-white/5 border-2 shadow-2xl', category.border)}>
-                        {(() => { const Icon = category.icon; return <Icon className={cn('w-10 h-10', category.color)} />; })()}
-                      </div>
-                      <div className="text-right">
-                        <h2 className={cn('text-3xl md:text-5xl font-black mb-1', category.color)}>
-                          {category.label}
-                        </h2>
-                        <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.4em]">حصن المسلم اليومي</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-8 bg-white/5 px-8 py-4 rounded-3xl border border-white/5">
-                      <div className="text-center">
-                        <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-1">المحتوى</p>
-                        <p className="text-2xl font-black text-white" translate="no">{category.adhkar.length}</p>
-                      </div>
-                      <div className="w-px h-10 bg-white/10" />
-                      <div className="text-center">
-                        <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-1">تنبيه</p>
-                        <p className={cn("text-xs font-bold", category.color)}>انقر للعد</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Adhkar List */}
-                  <div className="grid gap-8">
-                    {category.adhkar.map((dhikr, i) => (
-                      <DhikrCard
-                        key={dhikr.id}
-                        dhikr={dhikr}
-                        accentColor={category.color}
-                        border={category.border}
-                        index={i}
-                        isReadingMode={isReadingMode}
-                        fontSize={fontSize}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Motivational Footer */}
-                  <div className="mt-20 pt-12 border-t border-white/5 text-center">
-                    <p className="font-quran text-2xl text-white/20 italic">
-                      "فاذكروني أذكركم واشكروا لي ولا تكفرون"
-                    </p>
-                  </div>
-                </div>
+        <section className="bg-card/85 backdrop-blur-xl border border-border rounded-3xl p-5 sm:p-8 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+                {(() => { const Icon = category.icon; return <Icon className="w-6 h-6" />; })()}
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">{category.label}</h2>
+                <p className="text-xs text-muted-foreground">اضغط على أي ذكر لحساب التكرار تلقائياً</p>
+              </div>
+            </div>
+
+            <div className="inline-flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-xl border border-border text-xs font-bold self-start sm:self-auto">
+              <span className="text-muted-foreground">عدد الأذكار:</span>
+              <span className="text-base font-black text-foreground" translate="no">{category.adhkar.length}</span>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {category.adhkar.map((dhikr, i) => (
+              <DhikrCard
+                key={dhikr.id}
+                dhikr={dhikr}
+                accentColor={category.color}
+                border={category.border}
+                index={i}
+                isReadingMode={isReadingMode}
+                fontSize={fontSize}
+              />
+            ))}
+          </div>
+
+          <div className="pt-6 border-t border-border/60 text-center">
+            <p className="font-quran text-lg text-muted-foreground">
+              «فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ»
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );

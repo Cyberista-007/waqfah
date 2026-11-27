@@ -2,14 +2,11 @@
 
 import React from 'react';
 import { 
-  SeerahFilmGrain,
   SeerahScrollProgress, 
-  SeerahSoulWords,
   SeerahAudioPlayer,
   SeerahSectionHeader,
   SeerahBentoCard
 } from '@/components/seerah/layout/elements';
-import { SeerahStarfield } from '@/components/seerah/layout/starfield';
 import { SeerahHero } from '@/components/seerah/identity/hero';
 import { SeerahTimeline } from '@/components/seerah/history/timeline';
 import { SeerahCompanions } from '@/components/seerah/people/companions';
@@ -53,10 +50,7 @@ export default function SeerahPage() {
   return (
     <main id="seerah-page" className="min-h-screen text-foreground selection:bg-amber-500/30 selection:text-amber-400 overflow-x-hidden relative" dir="rtl">
       {/* 🧩 Layout Foundation */}
-      <SeerahStarfield />
       <SeerahScrollProgress />
-      <SeerahFilmGrain />
-      <SeerahSoulWords />
       <SeerahAudioPlayer />
 
       {/* 🕋 Phase 1: Makkah - The Dawn of Revelation */}
@@ -151,8 +145,7 @@ export default function SeerahPage() {
       <IsraAscension />
 
       {/* 🐫 Phase 3: The Hijrah - The Great Transition */}
-      <section className="relative py-64 overflow-hidden border-y border-white/5 bg-zinc-950/50">
-        <motion.div style={{ y: parallaxY }} className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] scale-150" />
+      <section className="relative py-48 overflow-hidden border-y border-border bg-card/50">
         <div className="w-full px-4 md:px-8 lg:px-12 relative z-10 text-center">
              <div className="w-40 h-40 rounded-full bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center mx-auto mb-16 group hover:scale-110 transition-transform duration-700 shadow-[0_0_80px_rgba(245,158,11,0.2)]">
                 <Moon className="w-20 h-20 text-amber-500" />

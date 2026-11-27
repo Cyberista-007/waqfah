@@ -287,43 +287,37 @@ function DuaCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06, type: 'spring', stiffness: 250, damping: 22 }}
       className={cn(
-        'group relative rounded-[2rem] border overflow-hidden',
-        'bg-white/[0.03] backdrop-blur-md transition-all duration-300',
-        'hover:bg-white/[0.06] hover:border-white/20 hover:shadow-xl',
-        border
+        'group relative rounded-2xl border border-border overflow-hidden bg-background/80 hover:border-primary/40 transition-all shadow-sm'
       )}
     >
-      {/* Top color bar */}
-      <div className={cn('h-[2px] w-full opacity-60', accentColor.replace('text-', 'bg-'))} />
-
-      <div className="p-6 md:p-8">
+      <div className="p-5 sm:p-6 space-y-4">
         {/* Title */}
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div className={cn('flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border text-xs font-black', border, accentColor)}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
             <HandHeart className="w-3.5 h-3.5" />
-            {dua.title}
+            <span>{dua.title}</span>
           </div>
         </div>
 
         {/* Arabic Text */}
         <p
-          className={cn("text-white/95 text-right leading-[2.6] mb-6 text-xl md:text-2xl transition-all font-quran", isReadingMode && "reading-text")}
+          className={cn("text-foreground text-right leading-[2.2] text-xl md:text-2xl transition-all font-quran", isReadingMode && "reading-text")}
           style={{
             fontSize: isReadingMode ? `${fontSize && fontSize + 8}px` : undefined,
-            lineHeight: isReadingMode ? '2' : '2.6'
+            lineHeight: isReadingMode ? '2' : '2.2'
           }}
         >
           {dua.arabic}
         </p>
 
         {/* Meaning */}
-        <div className={cn('rounded-2xl bg-white/[0.04] border p-4 text-right mb-4 transition-all duration-500', border, isReadingMode && "opacity-20 hover:opacity-100")}>
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">المعنى والفائدة</p>
-          <p className="text-white/60 text-sm leading-relaxed">{dua.meaning}</p>
+        <div className={cn('rounded-xl bg-muted/50 border border-border p-4 text-right space-y-1', isReadingMode && "opacity-30 hover:opacity-100")}>
+          <p className="text-[11px] font-bold text-muted-foreground">المعنى والفائدة</p>
+          <p className="text-foreground/85 text-sm leading-relaxed">{dua.meaning}</p>
         </div>
 
         {/* Source + Actions */}
-        <div className={cn("flex items-center justify-between pt-3 border-t border-white/5 transition-all duration-500", isReadingMode && "opacity-0 h-0 overflow-hidden")}>
+        <div className={cn("flex items-center justify-between pt-3 border-t border-border/60", isReadingMode && "opacity-0 h-0 overflow-hidden")}>
           <div className="flex items-center gap-2">
             <ImanCardGenerator 
               title={`دعاء مأثور - ${dua.title}`}
@@ -331,47 +325,38 @@ function DuaCard({
               secondaryContent={dua.meaning}
               source={`المأثورات - ${dua.source}`}
               trigger={
-                <motion.button
-                  whileTap={{ scale: 0.82 }}
-                  className="h-9 w-9 rounded-xl flex items-center justify-center border bg-white/5 border-white/10 text-amber-400 hover:text-amber-300 hover:bg-white/10 transition-all cursor-pointer"
+                <button
+                  className="h-9 w-9 rounded-xl flex items-center justify-center border border-border bg-card text-amber-500 hover:bg-accent transition-all cursor-pointer"
                   title="تحميل كبطاقة دعوية"
                 >
                   <Sparkles className="w-4 h-4" />
-                </motion.button>
+                </button>
               }
             />
 
-            <motion.button
-              whileTap={{ scale: 0.82 }}
+            <button
               onClick={handleCopy}
               className={cn(
-                'h-9 w-9 rounded-xl flex items-center justify-center border transition-all duration-200',
+                'h-9 w-9 rounded-xl flex items-center justify-center border transition-all',
                 copied
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                  : 'bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10'
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-500'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground hover:bg-accent'
               )}
               aria-label="نسخ الدعاء"
             >
-              <AnimatePresence mode="wait">
-                <motion.span key={copied ? 'c' : 'x'} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.12 }}>
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
 
-            <motion.button
-              whileTap={{ scale: 0.82 }}
+            <button
               onClick={handleShare}
-              className="h-9 w-9 rounded-xl flex items-center justify-center border bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10 transition-all"
+              className="h-9 w-9 rounded-xl flex items-center justify-center border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
               aria-label="مشاركة الدعاء"
             >
               <Share2 className="w-4 h-4" />
-            </motion.button>
+            </button>
           </div>
 
-          <div className="text-right">
-            <p className={cn('text-xs font-black', accentColor)}>{dua.source}</p>
-          </div>
+          <p className="text-xs font-bold text-primary">{dua.source}</p>
         </div>
       </div>
     </motion.div>
@@ -404,196 +389,128 @@ export default function DuaPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen pb-24 overflow-x-hidden">
-      {/* Background Decorative Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-500/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-500/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2" />
-      </div>
-
-      <div className={cn("container relative z-10", isReadingMode && "reading-content")}>
-        <div className="flex justify-center mb-10 relative z-50">
-          <ReadingModeToggle />
-        </div>
-        {/* Hero Section */}
-        <div className={cn("text-center pt-20 pb-16 relative transition-all duration-500", isReadingMode && "opacity-0 h-0 p-0 overflow-hidden")}>
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[10px] font-black mb-6 uppercase tracking-[0.3em]">
+    <div className="min-h-screen pb-20" dir="rtl">
+      <div className={cn("container mx-auto px-3 sm:px-6 pt-6 md:pt-10 space-y-8 max-w-5xl", isReadingMode && "reading-content")}>
+        {/* Header */}
+        <header className={cn("flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-border/60", isReadingMode && "hidden")}>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
               <HandHeart className="w-3.5 h-3.5" />
-              أدعية وأذكار مأثورة
+              <span>أدعية وأذكار مأثورة</span>
             </div>
-
-            <h1 className="text-5xl md:text-8xl font-black text-white font-headline leading-none mb-6 tracking-tighter">
-              الأدعية المأثورة
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground font-headline tracking-tight">
+              الأدعية <span className="text-primary">المأثورة</span>
             </h1>
-            <p className="text-white/45 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed">
-              "ادعوني أستجب لكم" — ادعُ بمأثور الدعاء عن النبي ﷺ والصالحين.
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
+              «ادعوني أستجب لكم» — ادعُ بمأثور الدعاء عن النبي ﷺ والصالحين ({ALL_DUA.length} دعاء في {DUA_DATA.length} أبواب).
             </p>
+          </div>
+          <ReadingModeToggle />
+        </header>
 
-            {/* Stats */}
-            <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
-              {[
-                { label: 'تصنيف', value: DUA_DATA.length },
-                { label: 'دعاء مأثور', value: ALL_DUA.length },
-                { label: 'قسم', value: 'مبارك' },
-              ].map((s) => (
-                <div key={s.label} className="flex flex-col items-center">
-                  <span className="text-4xl font-black text-white" translate="no">{s.value}</span>
-                  <span className="text-white/25 text-[10px] font-bold uppercase tracking-widest mt-1">{s.label}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+        {isReadingMode && (
+          <div className="flex justify-center">
+            <ReadingModeToggle />
+          </div>
+        )}
 
         {/* Search */}
-        <div className={cn("w-full mb-12 px-2 hide-in-reading-mode")}>
-          <div className="relative group">
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 group-focus-within:text-sky-400 transition-colors pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث في الأدعية..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pr-12 pl-12 text-white placeholder-white/20 text-right focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white/[0.08] transition-all text-sm"
-              dir="rtl"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
+        <div className={cn("relative", isReadingMode && "hidden")}>
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="ابحث في الأدعية..."
+            className="w-full bg-card border border-border rounded-2xl py-3 pr-10 pl-10 text-foreground placeholder:text-muted-foreground text-right focus:outline-none focus:border-primary text-sm"
+            dir="rtl"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Category Tabs */}
         {!isSearching && (
-          <div className={cn("flex items-center gap-4 overflow-x-auto pb-8 mb-12 no-scrollbar justify-start md:justify-center flex-nowrap px-4 hide-in-reading-mode")}>
-            {DUA_DATA.map((cat, idx) => {
+          <div className={cn("flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar", isReadingMode && "hidden")}>
+            {DUA_DATA.map((cat) => {
               const Icon = cat.icon;
               const isActive = cat.id === activeCategory;
               return (
-                <motion.button
+                <button
                   key={cat.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
                   onClick={() => setActiveCategory(cat.id)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   className={cn(
-                    'flex items-center gap-3 px-8 py-4 rounded-[2rem] border font-black text-sm whitespace-nowrap transition-all duration-500 flex-shrink-0',
+                    'flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs sm:text-sm whitespace-nowrap transition-all shrink-0',
                     isActive
-                      ? `bg-gradient-to-br ${cat.bg} ${cat.border} ${cat.color} shadow-2xl scale-105`
-                      : 'bg-white/[0.03] border-white/5 text-white/30 hover:bg-white/[0.08] hover:text-white/70'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                   )}
                 >
-                  <Icon className={cn('w-4 h-4', isActive ? cat.color : 'text-current opacity-50')} />
+                  <Icon className="w-4 h-4" />
                   <span>{cat.label}</span>
-                </motion.button>
+                </button>
               );
             })}
           </div>
         )}
 
-        {/* Global search label */}
-        {isSearching && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 flex items-center justify-center gap-4">
-            <div className="h-px w-12 bg-white/10" />
-            <div className="flex items-center gap-2 text-white/40 text-sm font-bold">
-              <Search className="w-4 h-4" />
-              نتائج البحث عن: <span className="text-white/70">"{searchQuery}"</span>
-            </div>
-            <div className="h-px w-12 bg-white/10" />
-          </motion.div>
-        )}
-
         {/* Content Area */}
-        <div className="w-full">
-          <AnimatePresence mode="wait">
-            {!isSearching ? (
-              <motion.div
-                key={activeCategory}
-                initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: -30, filter: 'blur(10px)' }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className={cn('rounded-[3.5rem] p-1.5 transition-all duration-700 bg-gradient-to-br shadow-[0_0_100px_-20px_rgba(0,0,0,0.4)]', category.bg)}
-              >
-                <div className="bg-[#020202]/60 backdrop-blur-3xl rounded-[3.4rem] p-8 md:p-14 relative overflow-hidden">
-                  {/* Floating Icon in background */}
-                  <div className="absolute -top-10 -left-10 opacity-[0.03] pointer-events-none">
-                    {(() => { const Icon = category.icon; return <Icon className="w-80 h-80 rotate-12" />; })()}
-                  </div>
-
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8 px-4">
-                      <div className="flex items-center gap-6">
-                        <div className={cn('p-5 rounded-[2rem] bg-white/5 border-2 shadow-2xl', category.border)}>
-                          {(() => { const Icon = category.icon; return <Icon className={cn('w-10 h-10', category.color)} />; })()}
-                        </div>
-                        <div className="text-right">
-                          <h2 className={cn('text-3xl md:text-5xl font-black mb-1', category.color)}>{category.label}</h2>
-                          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.4em]">باب الدعاء المستجاب</p>
-                        </div>
-                      </div>
-                      <div className="bg-white/5 px-8 py-4 rounded-3xl border border-white/5 text-center">
-                        <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-1">الأدعية المتاحة</p>
-                        <span className="text-3xl font-black text-white" translate="no">{category.dua.length}</span>
-                      </div>
-                    </div>
-                    <div className="grid gap-8">
-                      {category.dua.map((d, i) => (
-                        <DuaCard
-                          key={d.id}
-                          dua={d}
-                          accentColor={category.color}
-                          border={category.border}
-                          index={i}
-                          isReadingMode={isReadingMode}
-                          fontSize={fontSize}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Motivational Footer */}
-                    <div className="mt-20 pt-12 border-t border-white/5 text-center">
-                      <p className="font-quran text-2xl text-white/20 italic">
-                        "وإذا سألك عبادي عني فإني قريب أجيب دعوة الداع إذا دعان"
-                      </p>
-                    </div>
-                  </div>
+        {!isSearching ? (
+          <section className="bg-card/85 backdrop-blur-xl border border-border rounded-3xl p-5 sm:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+                  {(() => { const Icon = category.icon; return <Icon className="w-6 h-6" />; })()}
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {displayedDua.length > 0 ? (
-                  <div className="grid gap-8">
-                    {displayedDua.map((d, i) => (
-                      <div key={d.id}>
-                        <div className={cn('flex items-center gap-1.5 mb-3 px-4 text-[10px] font-black uppercase tracking-widest', d.category.color)}>
-                          <LayoutGrid className="w-4 h-4" />
-                          {d.categoryLabel}
-                        </div>
-                        <DuaCard dua={d} accentColor={d.category.color} border={d.category.border} index={i} />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-32 gap-6">
-                    <div className="p-10 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-2xl">
-                      <Search className="w-16 h-16 text-white/10" />
-                    </div>
-                    <p className="text-white/30 font-black text-2xl">لا توجد نتائج لـ "{searchQuery}"</p>
-                    <button onClick={() => setSearchQuery('')} className="text-sm text-sky-400/50 hover:text-sky-400 transition-all font-bold underline underline-offset-8">
-                      العودة لتصفح التصنيفات
-                    </button>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">{category.label}</h2>
+                  <p className="text-xs text-muted-foreground">باب الدعاء المستجاب</p>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-xl border border-border text-xs font-bold self-start sm:self-auto">
+                <span className="text-muted-foreground">الأدعية المتاحة:</span>
+                <span className="text-base font-black text-foreground" translate="no">{category.dua.length}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {category.dua.map((d, i) => (
+                <DuaCard
+                  key={d.id}
+                  dua={d}
+                  accentColor={category.color}
+                  border={category.border}
+                  index={i}
+                  isReadingMode={isReadingMode}
+                  fontSize={fontSize}
+                />
+              ))}
+            </div>
+          </section>
+        ) : displayedDua.length > 0 ? (
+          <div className="grid gap-4">
+            {displayedDua.map((d, i) => (
+              <div key={d.id} className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>{d.categoryLabel}</span>
+                </div>
+                <DuaCard dua={d} accentColor={d.category.color} border={d.category.border} index={i} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-card/50 border border-dashed border-border rounded-3xl space-y-3">
+            <Search className="w-10 h-10 text-muted-foreground/40 mx-auto" />
+            <p className="text-lg font-bold text-foreground">لا توجد نتائج لـ &quot;{searchQuery}&quot;</p>
+            <button onClick={() => setSearchQuery('')} className="text-sm text-primary font-bold hover:underline">
+              العودة لتصفح التصنيفات
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
