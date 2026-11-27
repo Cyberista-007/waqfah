@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Lecture, Series, Program } from "@/lib/types";
-import { doc, runTransaction, increment, collection, writeBatch, Timestamp, getDocs, query, where } from "firebase/firestore";
+import { doc, collection, writeBatch, getDocs, getDoc, query, where, setDoc } from "firebase/firestore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getVideoIdFromUrl, normalizeArabic } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -218,153 +218,164 @@ export default function DuplicatesManagerPage() {
       return;
     }
 
-    let ids: string[] = [];
+    // Select all duplicate copies (keep the oldest original at index 0 untouched)
+    const ids: string[] = [];
     if (activeTab === "lectures") {
-      lectureDuplicateGroups.forEach(g => g.items.forEach(item => ids.push(item.id)));
+      lectureDuplicateGroups.forEach(g => g.items.slice(1).forEach(item => ids.push(item.id)));
     } else if (activeTab === "series") {
-      seriesDuplicateGroups.forEach(g => g.items.forEach(item => ids.push(item.id)));
+      seriesDuplicateGroups.forEach(g => g.items.slice(1).forEach(item => ids.push(item.id)));
     } else if (activeTab === "programs") {
-      programDuplicateGroups.forEach(g => g.items.forEach(item => ids.push(item.id)));
+      programDuplicateGroups.forEach(g => g.items.slice(1).forEach(item => ids.push(item.id)));
     }
     setSelectedIds(ids);
   };
 
-  // Perform Deletion inside Firestore Transaction
+  // Perform Bulk Deletion safely using chunked writeBatch (<= 400 ops/batch)
   const executeDelete = async () => {
     if (!firestore || selectedIds.length === 0) return;
 
     setIsDeleting(true);
     setIsConfirmOpen(false);
 
-    try {
-      if (activeTab === "lectures") {
-        await runTransaction(firestore, async (transaction) => {
-          const lecturesToDelete = allLectures!.filter(l => selectedIds.includes(l.id));
-          const seriesUpdateCounts: Record<string, number> = {};
-          
-          lecturesToDelete.forEach(lecture => {
-            if (lecture.seriesId) {
-              if (!seriesUpdateCounts[lecture.seriesId]) {
-                seriesUpdateCounts[lecture.seriesId] = 0;
-              }
-              seriesUpdateCounts[lecture.seriesId]--;
-            }
-          });
-
-          // 1. PERFORM ALL READS FIRST
-          const seriesDocMap = new Map<string, any>();
-          for (const seriesId in seriesUpdateCounts) {
-            const seriesRef = doc(firestore, 'series', seriesId);
-            const seriesDoc = await transaction.get(seriesRef);
-            if (seriesDoc.exists()) {
-              seriesDocMap.set(seriesId, seriesDoc.data());
-            }
+    const commitOpsInChunks = async (
+      ops: Array<{ type: 'delete' | 'update'; ref: ReturnType<typeof doc>; data?: Record<string, any> }>
+    ) => {
+      const CHUNK_SIZE = 400;
+      for (let i = 0; i < ops.length; i += CHUNK_SIZE) {
+        const batch = writeBatch(firestore);
+        const chunk = ops.slice(i, i + CHUNK_SIZE);
+        chunk.forEach((op) => {
+          if (op.type === 'update' && op.data) {
+            batch.update(op.ref, op.data);
+          } else {
+            batch.delete(op.ref);
           }
-
-          const statsRef = doc(firestore, 'stats', 'global');
-          const statsDoc = await transaction.get(statsRef);
-          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
-
-          // 2. PERFORM ALL WRITES SECOND
-          // Update affected series lecture counts
-          seriesDocMap.forEach((data, seriesId) => {
-            const seriesRef = doc(firestore, 'series', seriesId);
-            const currentCount = data.lectureCount || 0;
-            transaction.update(seriesRef, { 
-              lectureCount: Math.max(0, currentCount + seriesUpdateCounts[seriesId]) 
-            });
-          });
-
-          // Update global stats
-          if (statsDoc.exists()) {
-            transaction.update(statsRef, {
-              lectures: Math.max(0, (currentStats.lectures || 0) - lecturesToDelete.length)
-            });
-          }
-
-          // Delete lecture documents
-          lecturesToDelete.forEach(lecture => {
-            const lRef = doc(firestore, 'lectures', lecture.id);
-            transaction.delete(lRef);
-          });
         });
+        await batch.commit();
+      }
+    };
+
+    try {
+      const statsRef = doc(firestore, 'stats', 'global');
+      const statsSnap = await getDoc(statsRef);
+      const currentStats = statsSnap.exists() ? (statsSnap.data() || {}) : {};
+
+      if (activeTab === "lectures") {
+        const lecturesToDelete = (allLectures || []).filter(l => selectedIds.includes(l.id));
+        if (lecturesToDelete.length === 0) {
+          setSelectedIds([]);
+          return;
+        }
+
+        const seriesUpdateCounts: Record<string, number> = {};
+        lecturesToDelete.forEach(lecture => {
+          if (lecture.seriesId) {
+            seriesUpdateCounts[lecture.seriesId] = (seriesUpdateCounts[lecture.seriesId] || 0) - 1;
+          }
+        });
+
+        const ops: Array<{ type: 'delete' | 'update'; ref: ReturnType<typeof doc>; data?: Record<string, any> }> = [];
+
+        // Safely check affected series docs so orphaned IDs never break the batch
+        for (const seriesId of Object.keys(seriesUpdateCounts)) {
+          const sRef = doc(firestore, 'series', seriesId);
+          const sSnap = await getDoc(sRef);
+          if (sSnap.exists()) {
+            const currentCount = sSnap.data()?.lectureCount || 0;
+            ops.push({
+              type: 'update',
+              ref: sRef,
+              data: { lectureCount: Math.max(0, currentCount + seriesUpdateCounts[seriesId]) },
+            });
+          }
+        }
+
+        lecturesToDelete.forEach(lecture => {
+          ops.push({ type: 'delete', ref: doc(firestore, 'lectures', lecture.id) });
+        });
+
+        await commitOpsInChunks(ops);
+
+        if (statsSnap.exists()) {
+          await setDoc(
+            statsRef,
+            { lectures: Math.max(0, (currentStats.lectures || 0) - lecturesToDelete.length) },
+            { merge: true }
+          );
+        }
 
         toast({
           title: "تم حذف المحاضرات بنجاح",
-          description: `تم إزالة ${selectedIds.length} محاضرة مكررة وتعديل الإحصائيات بنجاح.`,
+          description: `تم إزالة ${lecturesToDelete.length} محاضرة مكررة وتحديث الإحصائيات بنجاح.`,
         });
 
       } else if (activeTab === "series") {
-        const seriesToDelete = allSeries!.filter(s => selectedIds.includes(s.id));
-        
-        // 1. Fetch all lectures belonging to the selected series outside of transaction
-        const lecturesToDeleteRefs: any[] = [];
+        const seriesToDelete = (allSeries || []).filter(s => selectedIds.includes(s.id));
+        if (seriesToDelete.length === 0) {
+          setSelectedIds([]);
+          return;
+        }
+
+        const seenLectureIds = new Set<string>();
+        const ops: Array<{ type: 'delete' | 'update'; ref: ReturnType<typeof doc> }> = [];
+        let deletedLecturesCount = 0;
+
         for (const series of seriesToDelete) {
           const q = query(collection(firestore, 'lectures'), where("seriesId", "==", series.id));
           const lecturesSnapshot = await getDocs(q);
-          lecturesSnapshot.docs.forEach((docSnap: any) => {
-            lecturesToDeleteRefs.push(docSnap.ref);
+          lecturesSnapshot.docs.forEach((docSnap) => {
+            if (!seenLectureIds.has(docSnap.id)) {
+              seenLectureIds.add(docSnap.id);
+              ops.push({ type: 'delete', ref: docSnap.ref });
+              deletedLecturesCount++;
+            }
           });
+          ops.push({ type: 'delete', ref: doc(firestore, 'series', series.id) });
         }
 
-        // 2. Run transaction for writes
-        await runTransaction(firestore, async (transaction) => {
-          // Read stats first
-          const statsRef = doc(firestore, 'stats', 'global');
-          const statsDoc = await transaction.get(statsRef);
-          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
+        await commitOpsInChunks(ops);
 
-          // Update stats
-          if (statsDoc.exists()) {
-            transaction.update(statsRef, {
+        if (statsSnap.exists()) {
+          await setDoc(
+            statsRef,
+            {
               series: Math.max(0, (currentStats.series || 0) - seriesToDelete.length),
-              lectures: Math.max(0, (currentStats.lectures || 0) - lecturesToDeleteRefs.length)
-            });
-          }
-
-          // Delete lectures
-          lecturesToDeleteRefs.forEach(ref => {
-            transaction.delete(ref);
-          });
-
-          // Delete series
-          seriesToDelete.forEach(series => {
-            const sRef = doc(firestore, 'series', series.id);
-            transaction.delete(sRef);
-          });
-        });
+              lectures: Math.max(0, (currentStats.lectures || 0) - deletedLecturesCount),
+            },
+            { merge: true }
+          );
+        }
 
         toast({
           title: "تم حذف السلاسل بنجاح",
-          description: `تم إزالة ${selectedIds.length} سلسلة مكررة وجميع محاضراتها المرتبطة بها.`,
+          description: `تم إزالة ${seriesToDelete.length} سلسلة مكررة و ${deletedLecturesCount} محاضرة مرتبطة بها.`,
         });
 
       } else if (activeTab === "programs") {
-        // Deleting programs
-        await runTransaction(firestore, async (transaction) => {
-          const programsToDelete = allPrograms!.filter(p => selectedIds.includes(p.id));
+        const programsToDelete = (allPrograms || []).filter(p => selectedIds.includes(p.id));
+        if (programsToDelete.length === 0) {
+          setSelectedIds([]);
+          return;
+        }
 
-          // 1. Read stats first
-          const statsRef = doc(firestore, 'stats', 'global');
-          const statsDoc = await transaction.get(statsRef);
-          const currentStats = statsDoc.exists() ? (statsDoc.data() || {}) : {};
+        const ops = programsToDelete.map(program => ({
+          type: 'delete' as const,
+          ref: doc(firestore, 'programs', program.id),
+        }));
 
-          // 2. Perform all writes
-          if (statsDoc.exists()) {
-            transaction.update(statsRef, {
-              programs: Math.max(0, (currentStats.programs || 0) - programsToDelete.length)
-            });
-          }
+        await commitOpsInChunks(ops);
 
-          programsToDelete.forEach(program => {
-            const pRef = doc(firestore, 'programs', program.id);
-            transaction.delete(pRef);
-          });
-        });
+        if (statsSnap.exists()) {
+          await setDoc(
+            statsRef,
+            { programs: Math.max(0, (currentStats.programs || 0) - programsToDelete.length) },
+            { merge: true }
+          );
+        }
 
         toast({
           title: "تم حذف البرامج بنجاح",
-          description: `تم إزالة ${selectedIds.length} برنامج مكرر بنجاح.`,
+          description: `تم إزالة ${programsToDelete.length} برنامج مكرر بنجاح.`,
         });
       }
 
@@ -374,7 +385,7 @@ export default function DuplicatesManagerPage() {
       toast({
         variant: "destructive",
         title: "فشل الحذف المجمع",
-        description: "حدث خطأ غير متوقع أثناء إزالة العناصر المكررة.",
+        description: e?.message || "حدث خطأ غير متوقع أثناء إزالة العناصر المكررة.",
       });
     } finally {
       setIsDeleting(false);
@@ -509,15 +520,15 @@ export default function DuplicatesManagerPage() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      const allCurrentIds: string[] = [];
-                      currentGroups.forEach(g => g.items.forEach(item => allCurrentIds.push(item.id)));
-                      const isAll = allCurrentIds.every(id => selectedIds.includes(id));
+                      const allDupIds: string[] = [];
+                      currentGroups.forEach(g => g.items.slice(1).forEach(item => allDupIds.push(item.id)));
+                      const isAll = allDupIds.length > 0 && allDupIds.every(id => selectedIds.includes(id));
                       handleSelectAll(!isAll);
                     }}
-                    className="p-2 hover:bg-white/5 rounded-xl h-10 w-10 text-muted-foreground hover:text-foreground"
+                    className="p-2 hover:bg-muted rounded-xl h-10 w-10 text-muted-foreground hover:text-foreground"
                     title="تحديد الكل"
                   >
-                    {currentGroups.every(g => g.items.every(item => selectedIds.includes(item.id))) ? (
+                    {currentGroups.every(g => g.items.slice(1).every(item => selectedIds.includes(item.id))) ? (
                       <CheckSquare className="h-6 w-6 text-primary" />
                     ) : (
                       <Square className="h-6 w-6" />
