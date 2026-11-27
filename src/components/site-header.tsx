@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronLeft,
+  ChevronRight,
   User as UserIcon,
   LogOut,
   LayoutDashboard,
@@ -405,6 +406,32 @@ export function SiteHeader() {
                   {t("وقفة", "WAQFAH")}
                 </span>
               </Link>
+
+              {/* Back & Forward Navigation Controls */}
+              <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 p-0.5 shrink-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.back()}
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-background"
+                  title={t("رجوع", "Back")}
+                  aria-label={t("رجوع", "Back")}
+                >
+                  {isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.forward()}
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-background"
+                  title={t("للأمام", "Forward")}
+                  aria-label={t("للأمام", "Forward")}
+                >
+                  {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             {/* Center Zone: Bounded, Non-Overlapping Primary Links */}

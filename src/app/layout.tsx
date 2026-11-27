@@ -26,7 +26,6 @@ import {
 import { getAppearanceSettings, getAnnouncement } from '@/lib/data';
 import type { AppearanceSettings, AnnouncementSettings } from '@/lib/types';
 import { AnnouncementBar } from '@/components/announcement-bar';
-import { GlobalBackButton } from '@/components/global-back-button';
 import { ReadingProvider } from '@/components/reading-provider';
 import { LayoutClientWidgets } from '@/components/layout-client-widgets';
 
@@ -164,9 +163,6 @@ export default async function RootLayout({
             <div className="relative flex min-h-screen flex-col">
               <div className="hide-in-reading-mode">
                 <SiteHeader />
-              </div>
-              <div className="hide-in-reading-mode">
-                <GlobalBackButton />
               </div>
               <main className="flex-1 w-full overflow-hidden">
                 <PageTransition>
