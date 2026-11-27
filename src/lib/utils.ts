@@ -86,19 +86,34 @@ export function normalizeArabic(text: string): string {
 
 export function getVideoIdFromUrl(url: string | undefined): string | null {
     if (!url) return null;
+    const trimmed = url.trim();
+    if (!trimmed) return null;
     try {
-        const parsedUrl = new URL(url);
-        if (parsedUrl.hostname === 'youtu.be') {
-          return parsedUrl.pathname.split('/')[1];
+        const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+        const parsedUrl = new URL(normalized);
+        const hostname = parsedUrl.hostname.toLowerCase();
+
+        if (hostname === 'youtu.be' || hostname.endsWith('.youtu.be')) {
+            const id = parsedUrl.pathname.split('/').filter(Boolean)[0];
+            if (id) return id;
         }
-        if (parsedUrl.hostname.includes('youtube.com')) {
-          const videoId = parsedUrl.searchParams.get('v');
-          if (videoId) {
-            return videoId;
-          }
+        if (hostname.includes('youtube.com')) {
+            const vParam = parsedUrl.searchParams.get('v');
+            if (vParam) return vParam;
+
+            const segments = parsedUrl.pathname.split('/').filter(Boolean);
+            if (
+                segments.length >= 2 &&
+                ['shorts', 'embed', 'live', 'v'].includes(segments[0]) &&
+                segments[1]
+            ) {
+                return segments[1];
+            }
         }
-    } catch (error) {
-        // Silently fail for invalid URLs
+    } catch {
+        // Fallback regex if URL constructor fails
+        const match = trimmed.match(/(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if (match?.[1]) return match[1];
     }
     return null;
 }

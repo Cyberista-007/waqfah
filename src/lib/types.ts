@@ -191,6 +191,7 @@ export type Series = Serializable<{
   createdAt: Timestamp;
   language?: string;
   isCompleted?: boolean;
+  youtubePlaylistId?: string;
 }>;
 
 export type Book = Serializable<{
