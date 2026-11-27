@@ -1251,7 +1251,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                                 <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
                               </div>
                             )}
-                            <div className="absolute bottom-1 left-1 bg-black/80 text-white text-[9px] font-bold px-1 py-0.5 rounded">
+                            <div className="absolute bottom-1 left-1 bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[5px] tabular-nums">
                               {formatDuration(item.duration ?? 0)}
                             </div>
                           </div>

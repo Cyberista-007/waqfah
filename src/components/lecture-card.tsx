@@ -346,9 +346,8 @@ const LectureCardComponent = ({
 
           {/* Duration badge */}
           {lecture.duration > 0 && (
-            <div className="absolute bottom-2.5 left-2.5 z-30 flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/10 pointer-events-none">
-              <Clock className="w-3 h-3 text-white/80" />
-              <span>{formatDuration(lecture.duration)}</span>
+            <div className="absolute bottom-2.5 left-2.5 z-30 bg-black/75 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-0.5 rounded-[6px] tabular-nums pointer-events-none">
+              {formatDuration(lecture.duration)}
             </div>
           )}
 

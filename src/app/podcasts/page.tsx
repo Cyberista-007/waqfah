@@ -1179,7 +1179,7 @@ export default function PodcastsPage() {
                             )}
                           </div>
                         </div>
-                        <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] text-white/80 font-bold">
+                        <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded-[6px] text-[11px] text-white font-bold tabular-nums">
                           {formatDuration(lecture.duration)}
                         </div>
                       </div>
