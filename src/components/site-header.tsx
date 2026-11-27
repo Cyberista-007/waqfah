@@ -470,25 +470,27 @@ export function SiteHeader() {
                   </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="center"
-                  className="w-[460px] p-3 rounded-2xl border-border bg-popover text-popover-foreground shadow-xl"
+                  collisionPadding={12}
+                  sideOffset={8}
+                  className="w-[min(600px,calc(100vw-2rem))] max-h-[calc(100vh-5.5rem)] overflow-y-auto p-3 rounded-2xl border-border bg-popover text-popover-foreground shadow-xl"
                 >
-                  <div className="mb-2.5">
+                  <div className="mb-2">
                     <DropdownMenuLabel className="px-2 py-1 text-[11px] font-bold text-muted-foreground">
                       {t("وصول سريع", "Quick Access")}
                     </DropdownMenuLabel>
-                    <div className="grid grid-cols-2 gap-1.5 mt-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mt-1">
                       {SECONDARY_QUICK_ITEMS.map((item) => (
                         <DropdownMenuItem key={item.href} asChild className="rounded-xl cursor-pointer">
                           <Link
                             href={item.href}
                             prefetch={false}
-                            className="flex items-center justify-between gap-2 px-2.5 py-2 font-bold text-xs"
+                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 font-bold text-xs"
                           >
-                            <span className="flex items-center gap-2">
-                              <item.icon className="h-4 w-4 text-primary shrink-0" />
-                              <span>{t(item.label, item.enLabel)}</span>
+                            <span className="flex items-center gap-2 min-w-0">
+                              <item.icon className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span className="truncate">{t(item.label, item.enLabel)}</span>
                             </span>
-                            <ChevronLeft className="h-3.5 w-3.5 opacity-40" />
+                            <ChevronLeft className="h-3 w-3 opacity-40 shrink-0" />
                           </Link>
                         </DropdownMenuItem>
                       ))}
@@ -500,22 +502,20 @@ export function SiteHeader() {
                   <DropdownMenuLabel className="px-2 py-1 text-[11px] font-bold text-muted-foreground mt-1">
                     {t("المكتبة والأدوات التفاعلية", "Library & Interactive Tools")}
                   </DropdownMenuLabel>
-                  <ScrollArea className="h-[260px] mt-1">
-                    <div className="grid grid-cols-2 gap-1 pe-2">
-                      {drawerMore.map((item) => (
-                        <DropdownMenuItem key={item.href} asChild className="rounded-xl cursor-pointer">
-                          <Link
-                            href={item.href}
-                            prefetch={false}
-                            className="flex items-center gap-2 px-2.5 py-2 text-xs font-semibold"
-                          >
-                            <item.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span className="truncate">{t(item.label, item.enLabel)}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mt-1">
+                    {drawerMore.map((item) => (
+                      <DropdownMenuItem key={item.href} asChild className="rounded-xl cursor-pointer">
+                        <Link
+                          href={item.href}
+                          prefetch={false}
+                          className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold"
+                        >
+                          <item.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate">{t(item.label, item.enLabel)}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
 
                   <DropdownMenuSeparator className="my-2" />
 
@@ -523,7 +523,7 @@ export function SiteHeader() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      className="justify-center sm:justify-start gap-2 rounded-xl text-xs font-bold h-8"
                       onClick={() => setIsThemeSwitcherOpen(true)}
                     >
                       <Palette className="h-3.5 w-3.5 text-primary" />
@@ -532,7 +532,7 @@ export function SiteHeader() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      className="justify-center sm:justify-start gap-2 rounded-xl text-xs font-bold h-8"
                       onClick={() => setIsFontSwitcherOpen(true)}
                     >
                       <CaseSensitive className="h-3.5 w-3.5 text-primary" />
@@ -541,7 +541,7 @@ export function SiteHeader() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="justify-start gap-2 rounded-xl text-xs font-bold"
+                      className="justify-center sm:justify-start gap-2 rounded-xl text-xs font-bold h-8"
                       onClick={() => setIsSolidColorSwitcherOpen(true)}
                     >
                       <Droplets className="h-3.5 w-3.5 text-primary" />
