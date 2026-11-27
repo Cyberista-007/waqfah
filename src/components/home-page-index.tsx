@@ -1,22 +1,20 @@
+"use client";
 
-"use client"
-
-import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { usePathname } from "next/navigation"
-import { 
-    Home, 
-    Grid, 
-    Layers, 
-    GraduationCap, 
-    Star, 
-    Smartphone, 
-    PlayCircle, 
-    HelpCircle,
-    ChevronLeft,
-    ChevronUp
-} from "lucide-react"
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import {
+  Home,
+  Grid,
+  Layers,
+  GraduationCap,
+  Star,
+  PlayCircle,
+  HelpCircle,
+  ChevronUp,
+  X,
+} from "lucide-react";
 
 const sections = [
   { id: "hero", label: "الرئيسية", sub: "بداية الرحلة والبحث", icon: Home },
@@ -25,14 +23,12 @@ const sections = [
   { id: "latest", label: "أحدث المحتوى", sub: "البرامج والمحاضرات والسلاسل", icon: PlayCircle },
   { id: "pathways", label: "المسارات المنهجية", sub: "خرائط طريق لطلب العلم", icon: GraduationCap },
   { id: "faq", label: "الأسئلة الشائعة", sub: "إجابات لاستفساراتك", icon: HelpCircle },
-]
+];
 
 export function PageIndex() {
-  const [activeSection, setActiveSection] = useState("hero")
-  const [isHovered, setIsHovered] = useState(false)
-  const [isVisible, setIsVisible] = useState(true)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const [activeSection, setActiveSection] = useState("hero");
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let ticking = false;
@@ -40,10 +36,6 @@ export function PageIndex() {
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
-          setScrollProgress(progress);
-
           const scrollPosition = window.scrollY;
           let current = "hero";
 
@@ -54,7 +46,7 @@ export function PageIndex() {
             }
           }
 
-          setActiveSection(prev => (prev !== current ? current : prev));
+          setActiveSection((prev) => (prev !== current ? current : prev));
           ticking = false;
         });
         ticking = true;
@@ -66,142 +58,122 @@ export function PageIndex() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
   const scrollTo = (id: string) => {
-    const el = document.getElementById(id)
+    const el = document.getElementById(id);
     if (el) {
-      const offset = el.offsetTop - 100
+      const offset = el.offsetTop - 90;
       window.scrollTo({
-        top: offset,
-        behavior: "smooth"
-      })
-      setIsMobileOpen(false)
+        top: Math.max(0, offset),
+        behavior: "smooth",
+      });
     }
-  }
+    setIsOpen(false);
+  };
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <>
-          {/* Desktop Luxury Capsule Sidebar */}
-          <div className="fixed right-5 xl:right-6 top-1/2 -translate-y-1/2 z-[60] hidden lg:flex flex-col items-center pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, x: 30, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 30, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              className="pointer-events-auto flex flex-col items-center gap-1.5 p-1.5 py-2.5 rounded-full bg-zinc-950/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.12)] group/sidebar transition-all duration-300"
-            >
-              {sections.map((section) => {
-                const isActive = activeSection === section.id
-                return (
-                  <div key={section.id} className="relative flex items-center justify-center">
-                    <button
-                      onClick={() => scrollTo(section.id)}
-                      aria-label={section.label}
-                      className={cn(
-                        "relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer",
-                        isActive 
-                          ? "text-primary-foreground font-black" 
-                          : "text-white/40 hover:text-white hover:bg-white/10"
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activePageIndexIndicator"
-                          className="absolute inset-0 rounded-full bg-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.6)] -z-10"
-                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                        />
-                      )}
-                      <section.icon size={17} className={cn("transition-transform duration-300", isActive && "scale-105")} />
-                    </button>
-
-                    <AnimatePresence>
-                      {isHovered && (
-                        <motion.div
-                          initial={{ opacity: 0, x: 15, scale: 0.95 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          exit={{ opacity: 0, x: 15, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute right-full mr-3.5 px-3.5 py-2 rounded-2xl bg-zinc-950/95 backdrop-blur-2xl border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.7)] whitespace-nowrap pointer-events-none z-20"
-                        >
-                          <div className="flex flex-col text-right">
-                            <span className="text-xs font-black text-white">{section.label}</span>
-                            <span className="text-[9px] font-medium text-white/40">{section.sub}</span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )
-              })}
-              
-              {/* Subtle Horizontal Divider */}
-              <div className="w-5 h-px bg-white/15 my-1 mx-auto rounded-full" />
-
-              {/* Back to top Chevron */}
-              <button 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                title="العودة للأعلى"
-                aria-label="العودة للأعلى"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-            </motion.div>
-          </div>
-
-          {/* Mobile Floating Action Menu */}
+    <div
+      ref={containerRef}
+      className="fixed bottom-8 right-24 z-[55]"
+      dir="rtl"
+    >
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="fixed bottom-28 left-6 z-[60] lg:hidden"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute bottom-14 right-0 w-64 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-2.5 shadow-2xl space-y-1"
           >
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsMobileOpen(!isMobileOpen)}
-              aria-label={isMobileOpen ? "إغلاق قائمة الفهرس" : "فتح قائمة الفهرس"}
-              className="w-12 h-12 rounded-full bg-zinc-950/90 backdrop-blur-2xl text-primary shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-center justify-center border border-white/15 relative overflow-hidden"
-            >
-              {isMobileOpen ? <ChevronLeft className="rotate-90 w-5 h-5 text-white" /> : <Layers className="w-5 h-5 text-primary" />}
-            </motion.button>
+            <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/60 mb-1">
+              <span className="text-xs font-black text-foreground">فهرس الصفحة</span>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="إغلاق الفهرس"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-            <AnimatePresence>
-              {isMobileOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                  className="absolute bottom-20 right-0 w-56 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] overflow-hidden p-3 shadow-[0_30px_70px_rgba(0,0,0,0.8)]"
+            {sections.map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => scrollTo(section.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-right cursor-pointer",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                  )}
                 >
-                  <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-3 px-3">فهرس المحتوى</div>
-                  {sections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollTo(section.id)}
+                  <section.icon size={16} className="shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold truncate">{section.label}</span>
+                    <span
                       className={cn(
-                        "w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all text-right",
-                        activeSection === section.id 
-                            ? "bg-primary text-primary-foreground shadow-lg" 
-                            : "text-white/40 hover:bg-white/5"
+                        "text-[10px] truncate",
+                        isActive ? "text-primary-foreground/80" : "text-muted-foreground"
                       )}
                     >
-                      <section.icon size={18} />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black">{section.label}</span>
-                        <span className="text-[8px] opacity-60 font-bold">{section.sub}</span>
-                      </div>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      {section.sub}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            <div className="pt-1 mt-1 border-t border-border/60">
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  setIsOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+                <span>العودة للأعلى</span>
+              </button>
+            </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  )
+        )}
+      </AnimatePresence>
+
+      {/* Compact On-Demand Toggle Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label={isOpen ? "إغلاق فهرس الصفحة" : "فتح فهرس الصفحة"}
+        title="فهرس أقسام الصفحة"
+        className={cn(
+          "h-11 px-3.5 rounded-full border shadow-lg backdrop-blur-xl flex items-center gap-2 text-xs font-bold transition-all cursor-pointer",
+          isOpen
+            ? "bg-primary text-primary-foreground border-primary"
+            : "bg-card/90 border-border text-foreground hover:border-primary/50 hover:text-primary"
+        )}
+      >
+        {isOpen ? <X className="w-4 h-4 shrink-0" /> : <Layers className="w-4 h-4 shrink-0 text-primary" />}
+        <span className="hidden sm:inline">فهرس الصفحة</span>
+      </button>
+    </div>
+  );
 }
 
 export function HomePageIndexWrapper() {
