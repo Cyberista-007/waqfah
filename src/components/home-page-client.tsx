@@ -60,6 +60,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useCollection, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { LatestLecturesSection } from '@/components/latest-lectures-section';
+import { FeaturedProgramsSection } from '@/components/featured-programs-section';
 import {
   Accordion,
   AccordionContent,
@@ -1353,13 +1354,7 @@ export function HomePageClient({
 
         {/* Main Media Catalog */}
         <div id="latest" className="space-y-20">
-          <PaginatedSection
-            title="أبرز البرامج"
-            items={topPrograms}
-            viewAllHref="/programs"
-            itemsPerPage={4}
-            renderItem={(item, index) => <ProgramCard program={item} index={index} key={item.id} />}
-          />
+          <FeaturedProgramsSection programs={topPrograms} />
 
           <LatestLecturesSection
             programs={topPrograms}
