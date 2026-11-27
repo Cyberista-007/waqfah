@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRadio, RadioStation } from '@/components/radio-provider';
+import { computeSpectrumBands, resolveCanvasColor } from '@/lib/audio-spectrum';
 
 const getYoutubeId = (url: string): string | null => {
   const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|live\/)([^#&?]{11}).*/;
@@ -22,6 +23,7 @@ export function useQuranRadio() {
     currentTime,
     duration,
     seekTo,
+    playbackRate,
   } = useRadio();
 
   const [radioSearchQuery, setRadioSearchQuery] = useState<string>('');
@@ -243,195 +245,180 @@ export function useQuranRadio() {
     return () => clearInterval(interval);
   }, [isAlarmEnabled, alarmTime, alarmStationId, radioStations, customRadioStations, handlePlayRadio, currentStation]);
 
-  // ── High-Fidelity Canvas Visualizer Animation ──
+  // Keep latest reactive playback state accessible inside requestAnimationFrame loop
+  const liveVizStateRef = useRef({
+    isPlayingRadio,
+    isRadioBuffering,
+    radioVolume,
+    currentTime,
+    playbackRate,
+    hasStation: Boolean(currentStation),
+  });
+  liveVizStateRef.current = {
+    isPlayingRadio,
+    isRadioBuffering,
+    radioVolume,
+    currentTime,
+    playbackRate,
+    hasStation: Boolean(currentStation),
+  };
+  const vizPrevLevelsRef = useRef<number[]>([]);
+
+  // ── High-Fidelity Synced Canvas Visualizer Animation ──
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     let animationId: number;
-    let width = canvas.width = canvas.offsetWidth;
-    let height = canvas.height = canvas.offsetHeight;
-    
+    let width = (canvas.width = canvas.offsetWidth || 320);
+    let height = (canvas.height = canvas.offsetHeight || 56);
+
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
+      if (canvas.offsetWidth > 0) width = canvas.width = canvas.offsetWidth;
+      if (canvas.offsetHeight > 0) height = canvas.height = canvas.offsetHeight;
     };
     window.addEventListener('resize', handleResize);
-    
+
     let phase = 0;
-    
     let dataArray: Uint8Array | null = null;
-    let bufferLength = 0;
-    const analyser = analyserNodeRef.current;
-    
-    if (analyser && radioAudioRef.current?.crossOrigin === 'anonymous') {
-      bufferLength = analyser.frequencyBinCount;
-      dataArray = new Uint8Array(bufferLength);
-    }
 
     const render = () => {
+      const {
+        isPlayingRadio: playing,
+        isRadioBuffering: buffering,
+        radioVolume: vol,
+        currentTime: time,
+        playbackRate: rate,
+        hasStation,
+      } = liveVizStateRef.current;
+
+      const analyser = analyserNodeRef.current;
+      if (analyser && (!dataArray || dataArray.length !== analyser.frequencyBinCount)) {
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+
+      if (width <= 0 || height <= 0) {
+        width = canvas.width = canvas.offsetWidth || 320;
+        height = canvas.height = canvas.offsetHeight || 56;
+      }
+
       ctx.clearRect(0, 0, width, height);
-      
-      if (!isPlayingRadio) {
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 2;
-        ctx.moveTo(0, height / 2);
-        ctx.lineTo(width, height / 2);
-        ctx.stroke();
-        animationId = requestAnimationFrame(render);
-        return;
+
+      const primaryColor = resolveCanvasColor(canvas, 'hsl(var(--primary))', '#10b981');
+      const barCount = visualizerStyle === 'waves' ? 40 : 35;
+      if (vizPrevLevelsRef.current.length !== barCount) {
+        vizPrevLevelsRef.current = new Array(barCount).fill(0);
       }
-      
-      let hasRealData = false;
-      if (analyser && dataArray && radioAudioRef.current?.crossOrigin === 'anonymous') {
-        analyser.getByteFrequencyData(dataArray as any);
-        for (let j = 0; j < dataArray.length; j++) {
-          if (dataArray[j] > 0) {
-            hasRealData = true;
-            break;
-          }
-        }
-      }
-      
-      phase += 0.08;
-      
+
+      phase += playing ? 0.085 * Math.max(0.5, rate) : 0.03;
+
+      const { levels, average } = computeSpectrumBands({
+        barCount,
+        analyser: radioAudioRef.current?.crossOrigin === 'anonymous' ? analyser : null,
+        dataArray: radioAudioRef.current?.crossOrigin === 'anonymous' ? dataArray : null,
+        isPlaying: hasStation && playing,
+        isBuffering: hasStation && buffering,
+        currentTime: time,
+        playbackRate: rate,
+        volume: vol,
+        phase,
+        prevLevels: vizPrevLevelsRef.current,
+      });
+
       if (visualizerStyle === 'waves') {
+        const sliceWidth = width / barCount;
         ctx.beginPath();
         ctx.moveTo(0, height);
-        const barCount = 40;
-        const sliceWidth = width / barCount;
-        
         for (let i = 0; i <= barCount; i++) {
-          let val = 0;
-          if (hasRealData && dataArray && bufferLength > 0) {
-            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
-            val = dataArray[dataIdx] || 0;
-          } else {
-            val = (Math.sin(i * 0.2 + phase) * Math.cos(i * 0.1 - phase * 0.5) + 1) * 60;
-          }
-          const yVal = height - (val / 255) * (height * 0.75) - 6;
-          const xVal = i * sliceWidth;
-          ctx.lineTo(xVal, yVal);
+          const level = levels[Math.min(i, barCount - 1)] ?? 0;
+          const yVal = height - level * (height * 0.78) - 4;
+          ctx.lineTo(i * sliceWidth, yVal);
         }
-        
         ctx.lineTo(width, height);
         ctx.closePath();
-        
-        const grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, 'rgba(16, 185, 129, 0.05)');
-        grad.addColorStop(0.5, 'rgba(16, 185, 129, 0.3)');
-        grad.addColorStop(1, 'rgba(52, 211, 153, 0.6)');
-        ctx.fillStyle = grad;
+
+        ctx.fillStyle = primaryColor;
+        ctx.globalAlpha = playing ? 0.25 : 0.08;
         ctx.fill();
-        
+
         ctx.beginPath();
         for (let i = 0; i <= barCount; i++) {
-          let val = 0;
-          if (hasRealData && dataArray && bufferLength > 0) {
-            const dataIdx = Math.floor((i / barCount) * bufferLength * 0.6);
-            val = dataArray[dataIdx] || 0;
-          } else {
-            val = (Math.sin(i * 0.2 + phase) * Math.cos(i * 0.1 - phase * 0.5) + 1) * 60;
-          }
-          const yVal = height - (val / 255) * (height * 0.75) - 6;
+          const level = levels[Math.min(i, barCount - 1)] ?? 0;
+          const yVal = height - level * (height * 0.78) - 4;
           const xVal = i * sliceWidth;
           if (i === 0) ctx.moveTo(xVal, yVal);
           else ctx.lineTo(xVal, yVal);
         }
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = primaryColor;
+        ctx.globalAlpha = playing ? 0.95 : 0.35;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
       } else if (visualizerStyle === 'particles') {
-        let average = 0;
-        if (hasRealData && dataArray && bufferLength > 0) {
-          let sum = 0;
-          for (let j = 0; j < dataArray.length; j++) sum += dataArray[j];
-          average = sum / dataArray.length;
-        } else {
-          average = (Math.sin(phase) + 1) * 60 + 40;
-        }
-        
         const cX = width / 2;
         const cY = height / 2;
         const baseRadius = Math.min(width, height) * 0.18;
-        const maxRadius = baseRadius + (average / 255) * (height * 0.3);
-        
-        const radialGrad = ctx.createRadialGradient(cX, cY, baseRadius * 0.5, cX, cY, maxRadius);
-        radialGrad.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
-        radialGrad.addColorStop(0.5, 'rgba(52, 211, 153, 0.2)');
-        radialGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-        
-        ctx.fillStyle = radialGrad;
+        const maxRadius = baseRadius + average * (height * 0.32);
+
+        ctx.fillStyle = primaryColor;
+        ctx.globalAlpha = playing ? 0.22 : 0.08;
         ctx.beginPath();
         ctx.arc(cX, cY, maxRadius, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.6)';
+
+        ctx.strokeStyle = primaryColor;
+        ctx.globalAlpha = playing ? 0.75 : 0.25;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(cX, cY, maxRadius, 0, Math.PI * 2);
         ctx.stroke();
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
         const dotCount = 8;
         for (let i = 0; i < dotCount; i++) {
-          const angle = (i / dotCount) * Math.PI * 2 + (phase * 0.15);
-          const dist = maxRadius + Math.sin(phase + i) * 6;
+          const angle = (i / dotCount) * Math.PI * 2 + phase * 0.18;
+          const dist = maxRadius + (levels[i % barCount] ?? 0) * 8;
           const pX = cX + Math.cos(angle) * dist;
           const pY = cY + Math.sin(angle) * dist;
+          ctx.fillStyle = primaryColor;
+          ctx.globalAlpha = playing ? 0.85 : 0.25;
           ctx.beginPath();
-          ctx.arc(pX, pY, 2.5, 0, Math.PI * 2);
+          ctx.arc(pX, pY, 2.2, 0, Math.PI * 2);
           ctx.fill();
         }
       } else {
-        const barCount = 35;
-        const barWidth = width / barCount;
-        
-        const grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
-        grad.addColorStop(0.5, 'rgba(16, 185, 129, 0.6)');
-        grad.addColorStop(1, '#ffffff');
-        ctx.fillStyle = grad;
-        
+        const slotWidth = width / barCount;
+        const barWidth = Math.max(2, slotWidth - 3);
+
         for (let i = 0; i < barCount; i++) {
-          let barHeight = 0;
-          
-          if (hasRealData && dataArray && bufferLength > 0) {
-            const percentIdx = i / barCount;
-            const dataIdx = Math.floor(percentIdx * bufferLength * 0.65);
-            const value = dataArray[dataIdx] || 0;
-            barHeight = (value / 255) * (height * 0.85);
-            barHeight = Math.max(6, Math.min(barHeight, height - 8));
-          } else {
-            const multiplier = Math.sin(i * 0.18 + phase) * Math.cos(i * 0.08 - phase * 0.4);
-            const rand = Math.sin(phase * (i % 2 === 0 ? 1.5 : 1)) * 4;
-            barHeight = Math.abs(multiplier) * (height * 0.75) + rand;
-            barHeight = Math.max(6, Math.min(barHeight, height - 8));
-          }
-          
-          const x = i * barWidth;
-          const y = height - barHeight;
-          
+          const level = levels[i] ?? 0;
+          const barHeight = Math.max(4, level * (height - 8));
+          const x = i * slotWidth + 1.5;
+          const y = (height - barHeight) / 2;
+
+          ctx.fillStyle = primaryColor;
+          ctx.globalAlpha = playing || level > 0.05 ? 0.35 + level * 0.65 : 0.18;
           ctx.beginPath();
-          ctx.roundRect(x + 1.5, y, barWidth - 3, barHeight, 3);
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(x, y, barWidth, barHeight, Math.min(3, barWidth / 2));
+          } else {
+            ctx.rect(x, y, barWidth, barHeight);
+          }
           ctx.fill();
         }
       }
-      
+
       animationId = requestAnimationFrame(render);
     };
-    
+
     render();
-    
+
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isPlayingRadio, currentStation, visualizerStyle, radioAudioRef, isAmbientScreenSaver]);
+  }, [currentStation, visualizerStyle, radioAudioRef, isAmbientScreenSaver]);
 
   // Clean up AudioContext on unmount to prevent audio device resource leaks
   useEffect(() => {

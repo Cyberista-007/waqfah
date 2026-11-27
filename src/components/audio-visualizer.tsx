@@ -1,36 +1,56 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import {
+  computeSpectrumBands,
+  getOrCreateMediaAnalyser,
+  resolveCanvasColor,
+} from '@/lib/audio-spectrum';
+import { cn } from '@/lib/utils';
 
 interface AudioVisualizerProps {
   audioElement: HTMLAudioElement | null;
   isPlaying: boolean;
   barColor?: string;
+  currentTime?: number;
+  playbackRate?: number;
+  volume?: number;
+  isBuffering?: boolean;
+  variant?: 'compact' | 'expanded';
+  className?: string;
 }
 
-const DEFAULT_COLOR = '#10b981';
-
-function resolveCanvasColor(canvas: HTMLCanvasElement, color?: string): string {
-  if (!color) return DEFAULT_COLOR;
-  try {
-    if (!color.includes('var(')) return color;
-    const match = color.match(/var\((--[^)]+)\)/);
-    if (!match) return DEFAULT_COLOR;
-    const raw = getComputedStyle(canvas).getPropertyValue(match[1]).trim();
-    if (!raw) return DEFAULT_COLOR;
-    // Tailwind HSL variable format: e.g. "160 84% 39%"
-    if (/^\d/.test(raw) && !raw.startsWith('#') && !raw.startsWith('hsl') && !raw.startsWith('rgb')) {
-      return `hsl(${raw})`;
-    }
-    return raw;
-  } catch {
-    return DEFAULT_COLOR;
-  }
-}
-
-export function AudioVisualizer({ audioElement, isPlaying, barColor }: AudioVisualizerProps) {
+export function AudioVisualizer({
+  audioElement,
+  isPlaying,
+  barColor,
+  currentTime = 0,
+  playbackRate = 1,
+  volume = 1,
+  isBuffering = false,
+  variant = 'compact',
+  className,
+}: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
+  const prevLevelsRef = useRef<number[]>([]);
+  const liveStateRef = useRef({
+    isPlaying,
+    isBuffering,
+    currentTime,
+    playbackRate,
+    volume,
+    audioElement,
+  });
+
+  liveStateRef.current = {
+    isPlaying,
+    isBuffering,
+    currentTime,
+    playbackRate,
+    volume,
+    audioElement,
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,37 +58,73 @@ export function AudioVisualizer({ audioElement, isPlaying, barColor }: AudioVisu
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const resolvedColor = resolveCanvasColor(canvas, barColor);
-    const barCount = 18;
-    const stepWidth = canvas.width / barCount;
-    const barWidth = Math.max(2, stepWidth - 2.5);
+    const barCount = variant === 'expanded' ? 36 : 16;
+    if (prevLevelsRef.current.length !== barCount) {
+      prevLevelsRef.current = new Array(barCount).fill(0);
+    }
+
     let phase = 0;
+    let width = (canvas.width = canvas.offsetWidth || (variant === 'expanded' ? 380 : 112));
+    let height = (canvas.height = canvas.offsetHeight || (variant === 'expanded' ? 56 : 24));
+
+    const handleResize = () => {
+      if (!canvas) return;
+      if (canvas.offsetWidth > 0) width = canvas.width = canvas.offsetWidth;
+      if (canvas.offsetHeight > 0) height = canvas.height = canvas.offsetHeight;
+    };
+    window.addEventListener('resize', handleResize);
 
     const drawFrame = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const {
+        isPlaying: playing,
+        isBuffering: buffering,
+        currentTime: time,
+        playbackRate: rate,
+        volume: vol,
+        audioElement: audioEl,
+      } = liveStateRef.current;
 
-      if (!isPlaying) {
-        ctx.fillStyle = resolvedColor;
-        ctx.globalAlpha = 0.25;
-        for (let i = 0; i < barCount; i++) {
-          ctx.fillRect(i * stepWidth, canvas.height - 2, barWidth, 2);
-        }
-        return;
-      }
+      const resolvedColor = resolveCanvasColor(canvas, barColor, '#10b981');
+      const graph = playing && audioEl ? getOrCreateMediaAnalyser(audioEl) : null;
 
-      phase += 0.14;
-      ctx.fillStyle = resolvedColor;
+      phase += playing ? 0.085 * Math.max(0.5, rate) : 0.03;
 
-      // Also reflect real audio output if native HTMLAudioElement is actively playing unmuted audio
-      const isNativeAudioPlaying =
-        Boolean(audioElement) && !audioElement!.paused && Boolean(audioElement!.currentSrc);
+      const { levels } = computeSpectrumBands({
+        barCount,
+        analyser: graph?.analyser,
+        dataArray: graph?.dataArray,
+        isPlaying: playing,
+        isBuffering: buffering,
+        currentTime: time,
+        playbackRate: rate,
+        volume: vol,
+        phase,
+        prevLevels: prevLevelsRef.current,
+      });
+
+      ctx.clearRect(0, 0, width, height);
+
+      const slotWidth = width / barCount;
+      const gap = variant === 'expanded' ? 3 : 2;
+      const barWidth = Math.max(2, slotWidth - gap);
+      const minHeight = variant === 'expanded' ? 4 : 2;
+      const radius = Math.min(3, barWidth / 2);
 
       for (let i = 0; i < barCount; i++) {
-        const wave = Math.abs(Math.sin(phase + i * 0.55)) * 0.65 + Math.abs(Math.cos(phase * 0.7 - i * 0.3)) * 0.35;
-        const scale = isNativeAudioPlaying ? wave : wave * 0.85;
-        const barHeight = Math.max(3, scale * (canvas.height - 2));
-        ctx.globalAlpha = 0.45 + wave * 0.45;
-        ctx.fillRect(i * stepWidth, canvas.height - barHeight, barWidth, barHeight);
+        const level = levels[i] ?? 0;
+        const barHeight = Math.max(minHeight, level * (height - 4));
+        const x = i * slotWidth + gap / 2;
+        const y = variant === 'expanded' ? (height - barHeight) / 2 : height - barHeight;
+
+        ctx.fillStyle = resolvedColor;
+        ctx.globalAlpha = playing || level > 0.05 ? 0.35 + level * 0.65 : 0.22;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(x, y, barWidth, barHeight, radius);
+        } else {
+          ctx.rect(x, y, barWidth, barHeight);
+        }
+        ctx.fill();
       }
 
       animationRef.current = requestAnimationFrame(drawFrame);
@@ -77,19 +133,23 @@ export function AudioVisualizer({ audioElement, isPlaying, barColor }: AudioVisu
     drawFrame();
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
     };
-  }, [audioElement, isPlaying, barColor]);
+  }, [barColor, variant]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={120}
-      height={24}
-      className="opacity-80 group-hover:opacity-100 transition-opacity"
+      className={cn(
+        variant === 'expanded'
+          ? 'w-full max-w-md h-14 rounded-2xl bg-card/70 border border-border/70 px-3 py-1.5 shadow-inner'
+          : 'w-[108px] h-6 opacity-85 group-hover:opacity-100 transition-opacity',
+        className
+      )}
     />
   );
 }

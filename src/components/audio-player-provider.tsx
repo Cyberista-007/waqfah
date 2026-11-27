@@ -294,8 +294,18 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (track?.id !== normalizedTrack.id) {
       setTrack(normalizedTrack);
       if (audioRef.current) {
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.load();
+        const el = audioRef.current;
+        el.crossOrigin = 'anonymous';
+        el.onerror = () => {
+          if (el.crossOrigin === 'anonymous') {
+            el.removeAttribute('crossOrigin');
+            el.src = resolvedSrc;
+            el.load();
+            el.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
+        };
+        el.src = resolvedSrc;
+        el.load();
       }
     }
 

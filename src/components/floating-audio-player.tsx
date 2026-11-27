@@ -456,11 +456,15 @@ export function FloatingAudioPlayer() {
                 </div>
               </div>
 
-              <div className="h-8 flex items-center justify-center shrink-0">
+              <div className="h-14 flex items-center justify-center shrink-0">
                 <AudioVisualizer
                   audioElement={audioRef.current}
                   isPlaying={isPlaying}
-                  barColor={moodColor}
+                  barColor={moodColor || 'hsl(var(--primary))'}
+                  currentTime={progress}
+                  playbackRate={playbackSpeed}
+                  volume={isMuted ? 0 : volume}
+                  variant="expanded"
                 />
               </div>
             </div>
@@ -513,6 +517,10 @@ export function FloatingAudioPlayer() {
                     audioElement={audioRef.current}
                     isPlaying={isPlaying}
                     barColor="hsl(var(--primary))"
+                    currentTime={progress}
+                    playbackRate={playbackSpeed}
+                    volume={isMuted ? 0 : volume}
+                    variant="compact"
                   />
                 </div>
               </div>
