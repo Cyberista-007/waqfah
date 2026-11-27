@@ -16,31 +16,41 @@ const getAllDocs = async <T>(collectionName: string): Promise<(T & { id: string 
     // If Firestore admin instance is not available (e.g., no service account), return empty array.
     if (!firestore) return [];
 
-    const snapshot = await firestore.collection(collectionName).get();
-    if (snapshot.empty) {
+    try {
+        const snapshot = await firestore.collection(collectionName).get();
+        if (snapshot.empty) {
+            return [];
+        }
+        return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
+    } catch (error) {
+        console.error(`Could not fetch collection ${collectionName}:`, error);
         return [];
     }
-    return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
 };
 
 const getDocsWithQuery = async <T>(collectionName: string, options: { orderBy: [string, 'asc' | 'desc'], limit: number }): Promise<(T & { id: string })[]> => {
     const firestore = getFirestore();
     if (!firestore) return [];
 
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = firestore.collection(collectionName);
+    try {
+        let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = firestore.collection(collectionName);
 
-    if (options.orderBy) {
-        query = query.orderBy(...options.orderBy);
-    }
-    if (options.limit) {
-        query = query.limit(options.limit);
-    }
+        if (options.orderBy) {
+            query = query.orderBy(...options.orderBy);
+        }
+        if (options.limit) {
+            query = query.limit(options.limit);
+        }
 
-    const snapshot = await query.get();
-    if (snapshot.empty) {
+        const snapshot = await query.get();
+        if (snapshot.empty) {
+            return [];
+        }
+        return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
+    } catch (error) {
+        console.error(`Could not query collection ${collectionName}:`, error);
         return [];
     }
-    return snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
 };
 
 export const getLatestSeries = cache(() => getDocsWithQuery<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12 }));
