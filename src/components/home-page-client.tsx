@@ -506,8 +506,9 @@ function InspirationSlider() {
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  const { data: remoteQuotes, isLoading } = useCollection<Inspiration>('inspiration', {
+  const { data: remoteQuotes } = useCollection<Inspiration>('inspiration', {
     orderBy: ['createdAt', 'desc'],
+    once: true,
   });
 
   const fallbackQuotes = [
@@ -534,7 +535,7 @@ function InspirationSlider() {
     },
   ];
 
-  const quotes = remoteQuotes?.length ? remoteQuotes : isLoading ? [] : (fallbackQuotes as any[]);
+  const quotes = remoteQuotes?.length ? remoteQuotes : (fallbackQuotes as any[]);
 
   useEffect(() => {
     if (isHovered || !quotes.length) return;
@@ -544,30 +545,20 @@ function InspirationSlider() {
     return () => clearInterval(timer);
   }, [quotes.length, isHovered]);
 
-  if (isLoading && !quotes.length) {
-    return (
-      <div className="h-56 flex items-center justify-center bg-card/40 rounded-[2rem] animate-pulse border border-border/50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-      </div>
-    );
-  }
-
   if (!quotes.length) return null;
 
-  const current = quotes[index];
+  const current = quotes[index % quotes.length];
   const Icon = current.type === 'hadith' ? Sparkles : current.type === 'quote' ? Quote : BookOpen;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       viewport={{ once: true }}
-      className="group relative rounded-[2.25rem] luxury-glass border border-white/10 p-8 sm:p-12 overflow-hidden shadow-2xl"
+      className="group relative rounded-[2.25rem] luxury-glass border border-border/80 p-8 sm:p-12 overflow-hidden shadow-sm min-h-[190px]"
     >
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/15 rounded-full blur-[90px] pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
 
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12" dir="rtl">
         <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center shadow-inner">
@@ -1123,7 +1114,6 @@ export function HomePageClient({
             className="md:col-span-2 lg:row-span-2"
           >
             <div className="group relative flex flex-col justify-between h-full min-h-[340px] p-8 sm:p-10 rounded-[2rem] luxury-card overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/15 blur-[90px] rounded-full group-hover:scale-125 transition-transform duration-700 pointer-events-none" />
               <div className="relative z-10 space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">

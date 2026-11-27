@@ -96,11 +96,13 @@ export default function PodcastsPage() {
   // Firestore queries for series and lectures with query limits
   const { data: allLectures, isLoading: isLoadingLectures } = useCollection<Lecture>('lectures', {
     orderBy: ['createdAt', 'desc'],
-    limit: fetchLimit
+    limit: fetchLimit,
+    once: true,
   });
 
   const { data: allSeries, isLoading: isLoadingSeries } = useCollection<Series>('series', {
-    orderBy: ['createdAt', 'desc']
+    orderBy: ['createdAt', 'desc'],
+    once: true,
   });
 
   const [searchQuery, setSearchQuery] = useState('');

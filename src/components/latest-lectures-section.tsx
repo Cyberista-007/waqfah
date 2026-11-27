@@ -55,10 +55,10 @@ export function LatestLecturesSection({
     [programs, selectedProgramId]
   );
 
-  // Live Firestore query for up to 20 latest videos of the selected channel
+  // Live cached query for up to 20 latest videos of the selected channel
   const { data: channelRawLectures, isLoading: isChannelLoading } = useCollection<Lecture>(
     selectedProgram ? 'lectures' : null,
-    selectedProgram ? { where: ['programId', '==', selectedProgram.id], limit: 250 } : undefined
+    selectedProgram ? { where: ['programId', '==', selectedProgram.id], limit: 250, once: true } : undefined
   );
 
   const channelLatest20 = useMemo(() => {

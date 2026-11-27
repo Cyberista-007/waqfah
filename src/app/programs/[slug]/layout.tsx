@@ -296,26 +296,31 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
   const slugParam = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const slug = decodeURIComponent(slugParam as string);
 
-  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
-  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
+  const { data: matchedPrograms, isLoading: programsLoading } = useCollection<Program>('programs', {
+    where: ['slug', '==', slug],
+    limit: 1,
+    once: true,
+  });
+  const matchedProgram = matchedPrograms?.[0] || null;
 
-  const isLoading = programsLoading || lecturesLoading || seriesLoading;
+  const { data: programLectures, isLoading: lecturesLoading } = useCollection<Lecture>(
+    matchedProgram ? 'lectures' : null,
+    matchedProgram ? { where: ['programId', '==', matchedProgram.id], limit: 200, once: true } : undefined
+  );
+  const { data: programSeries, isLoading: seriesLoading } = useCollection<Series>(
+    matchedProgram ? 'series' : null,
+    matchedProgram ? { where: ['programId', '==', matchedProgram.id], limit: 50, once: true } : undefined
+  );
+
+  const isLoading = programsLoading || (!!matchedProgram && (lecturesLoading || seriesLoading));
 
   const programData = useMemo(() => {
-    if (isLoading || !allPrograms || !allLectures || !allSeries) {
+    if (isLoading || !matchedProgram) {
       return { program: null, contentCounts: { lectures: 0, shorts: 0, series: 0 }, featuredLecture: null };
     }
 
-    const program = allPrograms.find((p) => p.slug === slug);
-    if (!program) {
-      return { program: null, contentCounts: { lectures: 0, shorts: 0, series: 0 }, featuredLecture: null };
-    }
-
-    const seriesForProgram = allSeries.filter(
-      (s) => s.programId === program.id || s.programSlug === program.slug
-    );
-    const seriesIds = new Set(seriesForProgram.map((s) => s.id));
+    const lecturesList = programLectures || [];
+    const seriesList = programSeries || [];
 
     let lectureCount = 0;
     let shortCount = 0;
@@ -330,34 +335,27 @@ export default function ProgramLayout({ children }: { children: React.ReactNode 
       return isNaN(d.getTime()) ? 0 : d.getTime();
     };
 
-    const sortedLectures = [...allLectures].sort(
+    const sortedLectures = [...lecturesList].sort(
       (a, b) => toMs(b.publishedAt || b.createdAt) - toMs(a.publishedAt || a.createdAt)
     );
 
     sortedLectures.forEach((l) => {
-      const belongsToProgram =
-        l.programId === program.id ||
-        l.programSlug === program.slug ||
-        (l.seriesId && seriesIds.has(l.seriesId));
-
-      if (belongsToProgram) {
-        if (l.duration <= 180) {
-          shortCount++;
-        } else {
-          lectureCount++;
-          if (!featuredLecture && l.youtubeUrl) {
-            featuredLecture = l;
-          }
+      if (l.duration <= 180) {
+        shortCount++;
+      } else {
+        lectureCount++;
+        if (!featuredLecture && l.youtubeUrl) {
+          featuredLecture = l;
         }
       }
     });
 
     return {
-      program,
-      contentCounts: { lectures: lectureCount, shorts: shortCount, series: seriesForProgram.length },
+      program: matchedProgram,
+      contentCounts: { lectures: lectureCount, shorts: shortCount, series: seriesList.length },
       featuredLecture,
     };
-  }, [isLoading, allPrograms, allLectures, allSeries, slug]);
+  }, [isLoading, matchedProgram, programLectures, programSeries]);
 
   const { program, contentCounts, featuredLecture } = programData;
 

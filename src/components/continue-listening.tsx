@@ -33,7 +33,8 @@ export function ContinueWatching({ isProfilePage = false }: ContinueWatchingProp
   const { data: matchedLectures, isLoading: lecturesLoading } = useCollection<Lecture>(
     lectureIds.length > 0 ? 'lectures' : null,
     useMemo(() => ({
-      where: ['__name__', 'in', lectureIds]
+      where: ['__name__', 'in', lectureIds],
+      once: true,
     }), [lectureIds])
   );
 
@@ -62,6 +63,7 @@ export function ContinueWatching({ isProfilePage = false }: ContinueWatchingProp
   }, [listenHistory, matchedLectures, historyLoading, lecturesLoading, isProfilePage, lectureIds.length]);
 
   if (isLoading) {
+    if (!isProfilePage) return null;
     return (
         <section>
             <h2 className="text-3xl font-bold mb-6 font-headline flex items-center gap-2"><History /> أكمل المشاهدة</h2>

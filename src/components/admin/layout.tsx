@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { ClientAutoSync } from '@/components/client-auto-sync';
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -117,6 +118,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   </Link>
               </header>
               <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20 rounded-xl">
+                <ClientAutoSync />
                 {children}
               </main>
             </div>

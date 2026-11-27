@@ -70,10 +70,10 @@ function SearchPageComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputValue]);
 
-  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures');
-  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series');
-  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs');
-  const { data: allBooks, isLoading: booksLoading } = useCollection<Book>('books');
+  const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>('lectures', { once: true });
+  const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>('series', { once: true });
+  const { data: allPrograms, isLoading: programsLoading } = useCollection<Program>('programs', { once: true });
+  const { data: allBooks, isLoading: booksLoading } = useCollection<Book>('books', { once: true });
 
   const isLoading = lecturesLoading || seriesLoading || programsLoading || booksLoading;
 

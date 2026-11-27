@@ -1,6 +1,5 @@
-
 'use client';
-    
+
 import { useState, useEffect } from 'react';
 import {
   DocumentReference,
@@ -14,40 +13,56 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useFirestore } from '../provider';
 
-/** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
 
-/**
- * Interface for the return value of the useDoc hook.
- * @template T Type of the document data.
- */
 export interface UseDocResult<T> {
-  data: WithId<T> | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
-  error: FirestoreError | Error | null; // Error object, or null.
+  data: WithId<T> | null;
+  isLoading: boolean;
+  error: FirestoreError | Error | null;
+}
+
+const MAX_DOC_CACHE = 80;
+const docCache = new Map<string, { data: any; timestamp: number }>();
+
+function writeDocCache(key: string, data: any) {
+  if (docCache.size >= MAX_DOC_CACHE && !docCache.has(key)) {
+    const oldest = docCache.keys().next().value;
+    if (oldest) docCache.delete(oldest);
+  }
+  docCache.set(key, { data, timestamp: Date.now() });
+}
+
+function getCacheKey(
+  pathOrRef: string | DocumentReference<DocumentData> | null | undefined
+): string | null {
+  if (!pathOrRef) return null;
+  return typeof pathOrRef === 'string' ? pathOrRef : pathOrRef.path;
 }
 
 /**
- * React hook to subscribe to a single Firestore document in real-time.
- * Handles nullable references.
- *
- * @template T Optional type for document data. Defaults to any.
- * @param {string | DocumentReference<DocumentData> | null | undefined} pathOrRef -
- * The Firestore path string or DocumentReference. Waits if null/undefined.
- * @returns {UseDocResult<T>} Object with data, isLoading, error.
+ * React hook to subscribe to a single Firestore document with instant memory cache hydration.
  */
 export function useDoc<T = any>(
-  pathOrRef: string | DocumentReference<DocumentData> | null | undefined,
+  pathOrRef: string | DocumentReference<DocumentData> | null | undefined
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
-  
+
   const firestore = useFirestore();
-  const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const cacheKey = getCacheKey(pathOrRef);
+
+  const [data, setData] = useState<StateDataType>(() => {
+    if (!cacheKey) return null;
+    const hit = docCache.get(cacheKey);
+    return hit ? (hit.data as StateDataType) : null;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (!cacheKey) return false;
+    return !docCache.has(cacheKey);
+  });
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    if (!pathOrRef || !firestore) {
+    if (!pathOrRef || !firestore || !cacheKey) {
       if (!pathOrRef) {
         setData(null);
         setIsLoading(false);
@@ -56,72 +71,76 @@ export function useDoc<T = any>(
       return;
     }
 
-    setIsLoading(true);
+    const cached = docCache.get(cacheKey);
+    if (cached) {
+      setData(cached.data as StateDataType);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     let docRef: DocumentReference<DocumentData>;
     try {
-        if (typeof pathOrRef === 'string') {
-            docRef = doc(firestore, pathOrRef);
-        } else {
-            docRef = pathOrRef;
-        }
+      docRef = typeof pathOrRef === 'string' ? doc(firestore, pathOrRef) : pathOrRef;
     } catch (e: any) {
-        setError(e);
-        setIsLoading(false);
-        return;
+      setError(e);
+      setIsLoading(false);
+      return;
     }
 
     let isMounted = true;
     let localUnsubscribe: (() => void) | null = null;
-    
+
     try {
-        localUnsubscribe = onSnapshot(
-          docRef,
-          (snapshot: DocumentSnapshot<DocumentData>) => {
-            if (!isMounted) return;
-            if (snapshot.exists()) {
-              const docData = { ...(snapshot.data() as T), id: snapshot.id } as any;
+      localUnsubscribe = onSnapshot(
+        docRef,
+        (snapshot: DocumentSnapshot<DocumentData>) => {
+          if (!isMounted) return;
+          if (snapshot.exists()) {
+            const docData = { ...(snapshot.data() as T), id: snapshot.id } as any;
 
-              if (docRef.path.startsWith('users/') && docData.role === 'admin' && !docData.donationTier) {
-                docData.donationTier = 'gold';
-              }
-              
-              setData(docData);
-            } else {
-              setData(null);
+            if (docRef.path.startsWith('users/') && docData.role === 'admin' && !docData.donationTier) {
+              docData.donationTier = 'gold';
             }
-            setError(null); 
-            setIsLoading(false);
-          },
-          (err: FirestoreError) => {
-            if (!isMounted) return;
-            const contextualError = new FirestorePermissionError({
-              operation: 'get',
-              path: docRef.path,
-            })
 
-            console.error(`Firestore useDoc error at [${docRef.path}]:`, err.message);
-            setError(contextualError)
-            setData(null)
-            setIsLoading(false)
-            errorEmitter.emit('permission-error', contextualError);
+            writeDocCache(cacheKey, docData);
+            setData(docData);
+          } else {
+            writeDocCache(cacheKey, null);
+            setData(null);
           }
-        );
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: FirestoreError) => {
+          if (!isMounted) return;
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: docRef.path,
+          });
+
+          console.error(`Firestore useDoc error at [${docRef.path}]:`, err.message);
+          setError(contextualError);
+          if (!cached) setData(null);
+          setIsLoading(false);
+          errorEmitter.emit('permission-error', contextualError);
+        }
+      );
     } catch (err: any) {
-        console.error(`Firestore useDoc initial subscription error at [${pathOrRef}]:`, err.message);
-        setError(err);
-        setIsLoading(false);
+      console.error(`Firestore useDoc initial subscription error at [${pathOrRef}]:`, err.message);
+      setError(err);
+      setIsLoading(false);
     }
 
     return () => {
-        isMounted = false;
-        if (localUnsubscribe) {
-            const toUnsub = localUnsubscribe;
-            setTimeout(() => toUnsub(), 0);
-        }
+      isMounted = false;
+      if (localUnsubscribe) {
+        const toUnsub = localUnsubscribe;
+        setTimeout(() => toUnsub(), 0);
+      }
     };
-  }, [firestore, pathOrRef]);
+  }, [firestore, pathOrRef, cacheKey]);
 
   return { data, isLoading, error };
 }

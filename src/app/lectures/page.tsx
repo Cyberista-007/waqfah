@@ -39,9 +39,11 @@ function LecturesListPageClient() {
 
   const { data: allLectures, isLoading: lecturesLoading } = useCollection<Lecture>("lectures", {
     orderBy: ["createdAt", "desc"],
+    once: true,
   });
   const { data: allSeries, isLoading: seriesLoading } = useCollection<Series>("series", {
     orderBy: ["title", "asc"],
+    once: true,
   });
 
   const currentPage = Number(searchParams.get("page")) || 1;
