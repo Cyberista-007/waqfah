@@ -134,23 +134,32 @@ export default async function RootLayout({
           };
         `}} />
       </head>
-      <body className={cn(
-        'min-h-screen bg-background font-body antialiased body-background',
-        sourceCodePro.variable,
-        cairo.variable,
-        tajawal.variable,
-        amiri.variable,
-        almarai.variable,
-        lalezar.variable,
-        notoSansArabic.variable,
-        ibmPlexSansArabic.variable,
-        changa.variable,
-        elMessiri.variable,
-        reemKufi.variable,
-        markaziText.variable,
-        scheherazadeNew.variable,
-        mada.variable
-      )}>
+      <body
+        suppressHydrationWarning
+        className={cn(
+          'min-h-screen bg-background antialiased body-background',
+          appearanceSettings?.defaultFont || 'font-body',
+          sourceCodePro.variable,
+          cairo.variable,
+          tajawal.variable,
+          amiri.variable,
+          almarai.variable,
+          lalezar.variable,
+          notoSansArabic.variable,
+          ibmPlexSansArabic.variable,
+          changa.variable,
+          elMessiri.variable,
+          reemKufi.variable,
+          markaziText.variable,
+          scheherazadeNew.variable,
+          mada.variable
+        )}
+      >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var f=localStorage.getItem("site-font");if(f&&f!=="font-body"){document.body.classList.remove("font-body");document.body.classList.add(f);}}catch(e){}`,
+          }}
+        />
         <AppProviders 
           appearanceSettings={appearanceSettings}
         >

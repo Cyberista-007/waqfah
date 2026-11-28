@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { usePathname, useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
 import { signOut } from "firebase/auth"
 import {
   Menu,
@@ -211,44 +210,37 @@ export function SiteHeader() {
       <AppearanceManager />
 
       {/* Reveal button when header is collapsed */}
-      <AnimatePresence>
-        {isHeaderHidden && (
-          <motion.div
-            initial={{ y: -24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -24, opacity: 0 }}
-            className="fixed top-2 left-1/2 -translate-x-1/2 z-[60]"
+      {isHeaderHidden && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[60]">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHeaderHidden(false)}
+            className="h-7 px-3 rounded-full bg-card border-border shadow-md hover:border-primary/50 hover:text-primary gap-1 text-xs font-bold"
+            title={t("إظهار الشريط العلوي", "Show Header")}
+            aria-label={t("إظهار الشريط العلوي", "Show Header")}
           >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsHeaderHidden(false)}
-              className="h-7 px-3 rounded-full bg-card/90 backdrop-blur-md border-border shadow-md hover:border-primary/50 hover:text-primary gap-1 text-xs font-bold"
-              title={t("إظهار الشريط العلوي", "Show Header")}
-              aria-label={t("إظهار الشريط العلوي", "Show Header")}
-            >
-              <ChevronDown className="h-3.5 w-3.5" />
-              <span>{t("إظهار القائمة", "Show Bar")}</span>
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <ChevronDown className="h-3.5 w-3.5" />
+            <span>{t("إظهار القائمة", "Show Bar")}</span>
+          </Button>
+        </div>
+      )}
 
       {/* Main Sticky Header */}
       <header
         dir={isRtl ? "rtl" : "ltr"}
         className={cn(
-          "sticky top-0 z-50 w-full transition-all duration-300",
+          "sticky top-0 z-50 w-full transition-all duration-200",
           isHeaderHidden && "-translate-y-full opacity-0 pointer-events-none",
-          scrolled ? "px-3 sm:px-6 pt-2.5" : "px-0 pt-0"
+          scrolled ? "px-3 sm:px-6 pt-2" : "px-0 pt-0"
         )}
       >
         <div
           className={cn(
-            "mx-auto transition-all duration-300",
+            "mx-auto transition-all duration-200",
             scrolled
-              ? "max-w-[1440px] rounded-2xl border border-border/80 bg-background/90 backdrop-blur-xl shadow-lg px-3 sm:px-5"
-              : "w-full border-b border-border/60 bg-background/85 backdrop-blur-md px-4 sm:px-8"
+              ? "max-w-[1440px] rounded-2xl border border-border bg-background/95 shadow-md px-3 sm:px-5"
+              : "w-full border-b border-border/80 bg-background/95 px-4 sm:px-8"
           )}
         >
           <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3">
@@ -731,7 +723,7 @@ export function SiteHeader() {
         aria-label={t("شريط التنقل السريع للهاتف", "Mobile navigation")}
         dir={isRtl ? "rtl" : "ltr"}
         className={cn(
-          "md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-md z-40 rounded-full p-1.5 bg-card/95 border border-border/80 backdrop-blur-xl shadow-[0_14px_38px_-10px_rgba(0,0,0,0.5)] flex items-center justify-between gap-1 transition-all duration-300",
+          "md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-md z-40 rounded-full p-1.5 bg-card border border-border shadow-lg flex items-center justify-between gap-1 transition-all duration-200",
           isHeaderHidden && "translate-y-24 opacity-0 pointer-events-none"
         )}
       >
@@ -751,18 +743,14 @@ export function SiteHeader() {
               aria-label={label}
               title={label}
               className={cn(
-                "relative flex items-center justify-center rounded-full h-11 transition-all duration-300 select-none",
+                "relative flex items-center justify-center rounded-full h-11 transition-all duration-200 select-none",
                 active
                   ? "px-4 gap-2 text-background shrink-0"
                   : "flex-1 min-w-[2.75rem] text-muted-foreground hover:text-foreground"
               )}
             >
               {active && (
-                <motion.span
-                  layoutId="mobileBottomActivePill"
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                  className="absolute inset-0 rounded-full bg-foreground shadow-sm"
-                />
+                <span className="absolute inset-0 rounded-full bg-foreground shadow-sm" />
               )}
               <item.icon
                 className={cn(

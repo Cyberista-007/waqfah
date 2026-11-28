@@ -55,7 +55,7 @@ const SeriesCardComponent = ({ series, pinnedMessage }: SeriesCardProps) => {
       <article
         className={cn(
           'relative h-full flex flex-col rounded-2xl border border-border bg-card overflow-hidden shadow-sm',
-          'transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-lg'
+          'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg'
         )}
       >
         {/* Top Playlist Cover Area */}
@@ -86,10 +86,10 @@ const SeriesCardComponent = ({ series, pinnedMessage }: SeriesCardProps) => {
           <div className="absolute top-3 right-3 z-10">
             <span
               className={cn(
-                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-md shadow-sm',
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm',
                 series.isCompleted
-                  ? 'bg-emerald-600/90 text-white'
-                  : 'bg-black/65 text-white border border-white/15'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-zinc-900/90 text-white border border-white/15'
               )}
             >
               {series.isCompleted ? (
@@ -103,7 +103,7 @@ const SeriesCardComponent = ({ series, pinnedMessage }: SeriesCardProps) => {
 
           {/* Bottom Episode Count Badge */}
           <div className="absolute bottom-3 left-3 z-10">
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-black/75 backdrop-blur-md border border-white/15 px-2.5 py-1 text-xs font-black text-white shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/80 border border-white/15 px-2.5 py-1 text-xs font-black text-white shadow-sm">
               <Layers className="h-3.5 w-3.5 text-primary" />
               <span>{lectureCount.toLocaleString('ar-EG')} محاضرة</span>
             </span>

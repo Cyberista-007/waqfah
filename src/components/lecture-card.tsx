@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Headphones, Play, Share2, Eye, Calendar, MessageSquare, Download, ListPlus, MoreVertical, Clock, Flag, PlaySquare, Loader2, Brain } from "lucide-react"
-import { useState, useMemo, useRef, memo } from "react"
+import { useState, useMemo, memo } from "react"
 import { format, subDays } from "date-fns";
 import { ar } from 'date-fns/locale';
 
@@ -27,7 +27,6 @@ import { useRouter } from "next/navigation"
 import { TooltipProvider } from "./ui/tooltip"
 import { QuizDialog } from "./quiz-dialog"
 import { DownloaderModal } from "./downloader-modal"
-import { motion } from "framer-motion"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -36,6 +35,7 @@ interface LectureCardProps {
   pinnedMessage?: string;
   listenHistory?: ListenHistoryItem[];
   playlists?: Playlist[];
+  programImageUrl?: string;
 }
 
 const LectureCardComponent = ({ 
@@ -43,13 +43,12 @@ const LectureCardComponent = ({
     index = 0, 
     pinnedMessage,
     listenHistory,
-    playlists 
+    playlists,
+    programImageUrl,
 }: LectureCardProps) => {
   const { playTrack, playIframe } = useAudioPlayer();
-  const [isHovering, setIsHovering] = useState(false);
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false);
   const [downloadFormats, setDownloadFormats] = useState<any[]>([]);
@@ -58,7 +57,10 @@ const LectureCardComponent = ({
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
-  const { data: programDoc } = useDoc<Program>(lecture.programId ? `programs/${lecture.programId}` : null);
+  const { data: programDoc } = useDoc<Program>(
+    lecture.programId && programImageUrl === undefined ? `programs/${lecture.programId}` : null
+  );
+  const resolvedProgramImage = programImageUrl ?? programDoc?.imageUrl;
 
   const videoId = getVideoIdFromUrl(lecture.youtubeUrl);
   const placeholder = getPlaceholderImage(lecture.imageId);
@@ -213,21 +215,6 @@ const LectureCardComponent = ({
     setIsPlaylistDialogOpen(true);
   }
 
-  const handleMouseEnter = () => {
-      if (videoId) {
-          hoverTimeout.current = setTimeout(() => {
-              setIsHovering(true);
-          }, 500);
-      }
-  };
-
-  const handleMouseLeave = () => {
-      if (hoverTimeout.current) {
-          clearTimeout(hoverTimeout.current);
-      }
-      setIsHovering(false);
-  };
-
   const sampleQuiz: Quiz = {
     id: `quiz-${lecture.id}`,
     lectureId: lecture.id,
@@ -284,18 +271,9 @@ const LectureCardComponent = ({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -4 }}
-        whileTap={{ scale: 0.99 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="relative w-full group flex flex-col"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
+      <article className="relative w-full group flex flex-col">
         {/* Thumbnail */}
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black/40 border border-border/50">
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted border border-white/10">
           <Link
             href={`/lectures/${lecture.slug}`}
             className="absolute inset-0 z-10"
@@ -307,11 +285,11 @@ const LectureCardComponent = ({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             priority={index < 4}
-            className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-75"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
 
           {/* Hover Play / Audio Overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-20 bg-black/45 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-20 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => {
@@ -319,7 +297,7 @@ const LectureCardComponent = ({
                   e.stopPropagation();
                   handlePlay();
                 }}
-                className="h-10 px-3.5 rounded-full bg-white/15 hover:bg-primary border border-white/25 hover:border-primary text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="h-9 px-3.5 rounded-full bg-zinc-900/90 hover:bg-primary border border-white/25 hover:border-primary text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
                 title="استماع (صوت)"
               >
                 <Headphones className="w-3.5 h-3.5" />
@@ -329,7 +307,7 @@ const LectureCardComponent = ({
               {videoId && (
                 <button
                   onClick={handleWatch}
-                  className="h-10 px-3.5 rounded-full bg-white/15 hover:bg-red-600 border border-white/25 hover:border-red-500 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95"
+                  className="h-9 px-3.5 rounded-full bg-zinc-900/90 hover:bg-red-600 border border-white/25 hover:border-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
                   title="مشاهدة (فيديو)"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
@@ -341,30 +319,37 @@ const LectureCardComponent = ({
 
           {/* Top-right Audio-only indicator */}
           {!videoId && (
-            <div className="absolute top-2.5 right-2.5 z-30 flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-md pointer-events-none bg-primary/90 border-primary/50 text-primary-foreground">
+            <div className="absolute top-2.5 right-2.5 z-30 flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md pointer-events-none bg-primary text-primary-foreground">
               <span>🎧 صوت</span>
             </div>
           )}
 
           {/* Optional New badge top-left */}
           {isNew && (
-            <div className="absolute top-2.5 left-2.5 z-30 px-2 py-0.5 bg-primary/90 text-primary-foreground text-[10px] font-black rounded-full shadow-md pointer-events-none">
+            <div className="absolute top-2.5 left-2.5 z-30 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-black rounded-md pointer-events-none">
               جديد
             </div>
           )}
 
           {/* Duration badge */}
           {lecture.duration > 0 && (
-            <div className="absolute bottom-2.5 left-2.5 z-30 bg-black/75 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-0.5 rounded-[6px] tabular-nums pointer-events-none">
+            <div
+              className="absolute bottom-2.5 left-2.5 z-30 text-[11px] font-bold px-2.5 py-0.5 rounded-lg tabular-nums pointer-events-none shadow-sm"
+              style={{
+                backgroundColor: 'rgba(9, 9, 11, 0.84)',
+                color: '#ffffff',
+                borderRadius: '8px',
+              }}
+            >
               {formatDuration(lecture.duration)}
             </div>
           )}
 
           {/* Progress Bar */}
           {progress > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/15 z-30 pointer-events-none">
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-30 pointer-events-none">
               <div
-                className="h-full bg-primary transition-all duration-500"
+                className="h-full bg-primary"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -372,17 +357,17 @@ const LectureCardComponent = ({
         </div>
 
         {/* Clean Info Below Thumbnail */}
-        <div className="mt-3 px-1 flex items-start justify-between gap-2.5">
+        <div className="mt-3 px-0.5 flex items-start justify-between gap-2.5">
           {/* Channel / Program Logo */}
           {lecture.programSlug && (
             <Link
               href={`/programs/${lecture.programSlug}`}
-              className="shrink-0 mt-0.5 transition-transform hover:scale-105 active:scale-95"
+              className="shrink-0 mt-0.5"
               onClick={(e) => e.stopPropagation()}
               title={lecture.programName}
             >
-              <Avatar className="h-9 w-9 border border-border bg-background shadow-sm">
-                <AvatarImage src={programDoc?.imageUrl} alt={lecture.programName} className="object-cover" />
+              <Avatar className="h-9 w-9 border border-border bg-background">
+                <AvatarImage src={resolvedProgramImage} alt={lecture.programName} className="object-cover" />
                 <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
                   {getInitials(lecture.programName || "P")}
                 </AvatarFallback>
@@ -391,7 +376,6 @@ const LectureCardComponent = ({
           )}
 
           <div className="min-w-0 flex-1 space-y-1 text-right">
-            {/* Stats Above Title */}
             {(dateText || (lecture.youtubeViewCount ?? 0) > 0) && (
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground font-medium">
                 {dateText && (
@@ -450,12 +434,12 @@ const LectureCardComponent = ({
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label="المزيد من خيارات المحاضرة"
-                  className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg transition-all"
+                  className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg transition-colors"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border">
+              <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
                 <DropdownMenuItem onClick={handlePlay} className="gap-3 cursor-pointer py-2 text-emerald-500">
                   <Headphones className="w-4 h-4" />
                   <span className="font-bold">استماع للمحاضرة (صوت)</span>
@@ -528,7 +512,7 @@ const LectureCardComponent = ({
             </DropdownMenu>
           </div>
         </div>
-      </motion.div>
+      </article>
       
       {user && (
         <AddToPlaylistDialog

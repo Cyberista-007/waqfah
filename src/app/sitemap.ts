@@ -17,12 +17,14 @@ const toDate = (timestamp: any): Date => {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-  // Fetch all dynamic content
-  const lectures = await getAllLectures();
-  const series = await getAllSeries();
-  const programs = await getAllPrograms();
-  const topics = await getAllTopics();
-  const curriculums = await getAllCurriculums();
+  // Fetch minimal metadata only for sitemap (prevents pulling large transcript blobs)
+  const [lectures, series, programs, topics, curriculums] = await Promise.all([
+    getAllLectures(['slug', 'createdAt']),
+    getAllSeries(['slug', 'createdAt']),
+    getAllPrograms(['slug', 'createdAt']),
+    getAllTopics(['slug']),
+    getAllCurriculums(['slug', 'createdAt']),
+  ]);
 
   const lectureEntries: MetadataRoute.Sitemap = lectures.map(({ slug, createdAt }) => ({
     url: `${siteUrl}/lectures/${slug}`,

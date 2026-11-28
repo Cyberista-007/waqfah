@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -1055,7 +1055,11 @@ export default function ProfilePage() {
     );
   }
 
-  return <ProfileContent user={user} userProfile={userProfile} />;
+  return (
+    <Suspense fallback={<div className="flex h-[70vh] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
+      <ProfileContent user={user} userProfile={userProfile} />
+    </Suspense>
+  );
 }
 
 function ProfileContent({ user, userProfile }: { user: User; userProfile: UserProfile }) {

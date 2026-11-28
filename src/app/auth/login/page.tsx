@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useTranslation } from '@/lib/i18n';
 import type { UserProfile } from '@/lib/types';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const { t, isRtl } = useTranslation();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
@@ -242,5 +242,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[70vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,7 +32,7 @@ import { getInitials } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function AdminProgramsPage() {
+function AdminProgramsContent() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const searchParams = useSearchParams();
@@ -216,4 +216,12 @@ export default function AdminProgramsPage() {
         />
       </>
     );
+}
+
+export default function AdminProgramsPage() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <AdminProgramsContent />
+    </Suspense>
+  );
 }

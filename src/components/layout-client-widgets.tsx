@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 const ChatWidget = dynamic(() => import('@/components/chat-widget').then(mod => mod.ChatWidget), { ssr: false });
@@ -11,15 +12,35 @@ const PresenceTracker = dynamic(() => import('@/components/presence-tracker').th
 const ScrollProgressBar = dynamic(() => import('@/components/scroll-progress').then(mod => mod.ScrollProgressBar), { ssr: false });
 
 export function LayoutClientWidgets() {
+  const [idleReady, setIdleReady] = useState(false);
+
+  useEffect(() => {
+    // Defer auxiliary floating chrome until after initial paint & hydration
+    let handle: number | ReturnType<typeof setTimeout>;
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      handle = (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
+        () => setIdleReady(true),
+        { timeout: 1200 }
+      );
+      return () => (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(handle as number);
+    }
+    handle = setTimeout(() => setIdleReady(true), 600);
+    return () => clearTimeout(handle);
+  }, []);
+
   return (
     <>
-      <ScrollProgressBar />
-      <PresenceTracker />
-      <HomePageIndexWrapper />
-      <ChatWidget />
       <OfflineIndicator />
       <FloatingRadioPlayer />
-      <BackToTop />
+      {idleReady && (
+        <>
+          <ScrollProgressBar />
+          <PresenceTracker />
+          <HomePageIndexWrapper />
+          <ChatWidget />
+          <BackToTop />
+        </>
+      )}
     </>
   );
 }

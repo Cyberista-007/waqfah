@@ -930,11 +930,7 @@ select:focus-visible {
 }
 
 [role="dialog"] {
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  box-shadow:
-    0 30px 90px -20px hsl(0 0% 0% / 0.75),
-    inset 0 1px 0 hsl(var(--foreground) / 0.1) !important;
+  box-shadow: 0 24px 60px -16px hsl(0 0% 0% / 0.55) !important;
 }
 
 button:active:not(:disabled) {
@@ -942,180 +938,125 @@ button:active:not(:disabled) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SPATIAL LIQUID GLASS & LUXURY DESIGN UTILITIES
+   EDITORIAL MINIMAL SURFACES (High-FPS, Clean Contrast, Theme-Aware)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @layer utilities {
-  /* ── Theme-Aware Spatial Glass Surface ── */
+  /* ── Clean Theme-Aware Surface ── */
   .luxury-glass {
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, hsl(var(--card)) 78%, hsl(var(--foreground)) 4%) 0%,
-      color-mix(in srgb, hsl(var(--card)) 58%, transparent) 100%
-    );
-    backdrop-filter: blur(26px) saturate(175%);
-    -webkit-backdrop-filter: blur(26px) saturate(175%);
-    border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, hsl(var(--foreground)) 8%);
-    box-shadow:
-      0 20px 48px -18px hsl(0 0% 0% / 0.45),
-      inset 0 1px 0 hsl(var(--foreground) / 0.09);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 10px -4px hsl(0 0% 0% / 0.16);
   }
 
-  /* ── Spatial Interactive Card with Specular Top Beam ── */
+  /* ── Editorial Interactive Card ── */
   .luxury-card {
     position: relative;
-    border-radius: 2rem;
-    background: linear-gradient(
-      150deg,
-      color-mix(in srgb, hsl(var(--card)) 82%, hsl(var(--foreground)) 3%) 0%,
-      color-mix(in srgb, hsl(var(--card)) 60%, transparent) 100%
-    );
-    border: 1px solid color-mix(in srgb, hsl(var(--border)) 72%, hsl(var(--foreground)) 6%);
-    backdrop-filter: blur(22px) saturate(160%);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border-radius: 1.25rem;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     transition:
-      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 0.35s ease,
-      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      background 0.35s ease;
-    box-shadow:
-      0 12px 34px -14px hsl(0 0% 0% / 0.45),
-      inset 0 1px 0 hsl(var(--foreground) / 0.08);
+      transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.2s ease,
+      box-shadow 0.22s ease;
+    box-shadow: 0 2px 10px -4px hsl(0 0% 0% / 0.14);
   }
 
   .luxury-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 12%;
-    right: 12%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(var(--primary) / 0.55),
-      hsl(var(--foreground) / 0.25),
-      transparent
-    );
-    opacity: 0;
-    transition: opacity 0.35s ease;
-    pointer-events: none;
-    z-index: 2;
+    content: none;
   }
 
   .luxury-card:hover {
-    transform: translateY(-5px);
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow:
-      0 24px 55px -18px hsl(0 0% 0% / 0.55),
-      0 0 36px -12px hsl(var(--primary) / 0.24),
-      inset 0 1px 0 hsl(var(--foreground) / 0.14);
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow: 0 10px 24px -10px hsl(0 0% 0% / 0.24);
   }
 
-  .luxury-card:hover::before {
-    opacity: 1;
-  }
-
-  /* ── Luxury Badges ── */
+  /* ── Editorial Badges ── */
   .luxury-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.35rem 0.9rem;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.02em;
-    background: hsl(var(--card) / 0.7);
-    border: 1px solid hsl(var(--border) / 0.8);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    transition: all 0.25s ease;
+    letter-spacing: 0.01em;
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    transition: border-color 0.2s ease, background-color 0.2s ease;
   }
 
   .luxury-badge-primary {
-    background: hsl(var(--primary) / 0.12);
-    border-color: hsl(var(--primary) / 0.3);
+    background: hsl(var(--primary) / 0.1);
+    border-color: hsl(var(--primary) / 0.25);
     color: hsl(var(--primary));
-    box-shadow: 0 4px 16px -4px hsl(var(--primary) / 0.25);
   }
 
   .luxury-badge-emerald {
-    background: color-mix(in srgb, #10b981 14%, transparent);
-    border-color: color-mix(in srgb, #10b981 35%, transparent);
-    color: #34d399;
-    box-shadow: 0 4px 16px -4px color-mix(in srgb, #10b981 25%, transparent);
+    background: color-mix(in srgb, #10b981 12%, transparent);
+    border-color: color-mix(in srgb, #10b981 30%, transparent);
+    color: #10b981;
   }
 
   .luxury-badge-gold {
-    background: color-mix(in srgb, #f59e0b 14%, transparent);
-    border-color: color-mix(in srgb, #f59e0b 35%, transparent);
-    color: #fbbf24;
-    box-shadow: 0 4px 16px -4px color-mix(in srgb, #f59e0b 25%, transparent);
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    border-color: color-mix(in srgb, #f59e0b 30%, transparent);
+    color: #f59e0b;
   }
 
-  /* ── Luxury Pill Button ── */
+  /* ── Clean Pill Button ── */
   .luxury-pill-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.35rem;
+    padding: 0.55rem 1.25rem;
     border-radius: 9999px;
     font-weight: 800;
     font-size: 0.875rem;
-    background: hsl(var(--card) / 0.7);
+    background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     color: hsl(var(--foreground));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 4px 14px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(var(--foreground) / 0.08);
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
 
   .luxury-pill-btn:hover {
-    background: hsl(var(--primary) / 0.14);
+    background: hsl(var(--primary) / 0.1);
     border-color: hsl(var(--primary) / 0.45);
     color: hsl(var(--primary));
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px -8px hsl(var(--primary) / 0.35);
+    transform: translateY(-1px);
   }
 
-  /* ── Luxury Stat Card ── */
+  /* ── Clean Stat Card ── */
   .luxury-stat-card {
     position: relative;
-    padding: 1.35rem;
-    border-radius: 1.5rem;
-    background: color-mix(in srgb, hsl(var(--card)) 74%, transparent);
-    border: 1px solid hsl(var(--border) / 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 10px 28px -12px hsl(0 0% 0% / 0.35), inset 0 1px 0 hsl(var(--foreground) / 0.07);
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 1.15rem;
+    border-radius: 1rem;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    transition: transform 0.2s ease, border-color 0.2s ease;
   }
 
   .luxury-stat-card:hover {
-    transform: translateY(-3px);
-    border-color: hsl(var(--primary) / 0.35);
-    box-shadow: 0 16px 36px -12px hsl(0 0% 0% / 0.45), 0 0 24px -10px hsl(var(--primary) / 0.22);
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.4);
   }
 
-  /* ── Glass Card Variants (Theme-Safe) ── */
+  /* ── Clean Card Variants (Theme-Safe) ── */
   .glass-card {
-    background: linear-gradient(135deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.4) 100%);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid hsl(var(--border) / 0.7);
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.25), inset 0 1px 0 hsl(var(--foreground) / 0.06);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 10px -4px hsl(0 0% 0% / 0.16);
   }
 
   .glass-card-hover {
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .glass-card-hover:hover {
-    border-color: hsl(var(--primary) / 0.35);
-    box-shadow: 0 14px 40px hsl(0 0% 0% / 0.35), 0 0 28px hsl(var(--primary) / 0.14);
-    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 10px 24px -10px hsl(0 0% 0% / 0.24);
+    transform: translateY(-2px);
   }
 
   .frosted-glass {

@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronDown, ChevronUp, Tv } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { ProgramArtwork } from '@/components/program-artwork';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Program } from '@/lib/types';
-import { getInitials } from '@/lib/utils';
 
 interface FeaturedProgramsSectionProps {
   programs: Program[];
@@ -59,23 +59,14 @@ export function FeaturedProgramsSection({ programs }: FeaturedProgramsSectionPro
               href={`/programs/${program.slug}`}
               title={program.name}
               aria-label={program.name}
-              className="group relative block aspect-square rounded-2xl overflow-hidden border border-border/70 bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/45 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="group relative block aspect-square rounded-2xl overflow-hidden border border-white/10 bg-card shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt={program.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="h-full w-full flex flex-col items-center justify-center bg-muted/80 text-foreground p-4 text-center">
-                  <Tv className="w-7 h-7 text-primary mb-2" />
-                  <span className="font-headline font-black text-sm line-clamp-2 leading-snug">
-                    {program.name || getInitials(program.name)}
-                  </span>
-                </div>
-              )}
+              <ProgramArtwork
+                src={imageUrl}
+                alt={program.name}
+                fallbackText={program.name}
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
 
               {/* Subtle Title Overlay Only On Hover/Focus */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none">
@@ -97,7 +88,7 @@ export function FeaturedProgramsSection({ programs }: FeaturedProgramsSectionPro
               onClick={() =>
                 setVisibleCount((prev) => Math.min(prev + INITIAL_VISIBLE, programs.length))
               }
-              className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-xs sm:text-sm font-bold bg-card border border-border hover:border-primary/40 hover:bg-primary/10 text-foreground hover:text-primary transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-xs sm:text-sm font-bold bg-card border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
             >
               <span>عرض المزيد ({programs.length - visibleCount})</span>
               <ChevronDown className="w-4 h-4 text-primary" />

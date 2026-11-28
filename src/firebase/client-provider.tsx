@@ -1,30 +1,30 @@
-
 'use client';
 
-import React, { useState, useEffect, ReactNode, useMemo } from 'react';
-import { FirebaseApp, initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import React, { useEffect, ReactNode } from 'react';
+import { getApps, initializeApp } from 'firebase/app';
 import { firebaseConfig } from './config';
 import { FirebaseProvider } from './provider';
-import { HomePageSkeleton } from '@/components/skeletons';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-// This new provider ensures that Firebase is initialized only once on the client
-// and prevents re-renders from causing re-initializations.
+/**
+ * Ensures Firebase is initialized once on the client without blocking
+ * Server-Side Rendering or initial HTML paint.
+ */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [isInitialized, setIsInitialized] = useState(false);
-
   useEffect(() => {
     const handleGlobalError = (event: ErrorEvent) => {
-      console.error(`Global Error: ${event.message}\nFile: ${event.filename}\nLine: ${event.lineno}:${event.colno}\nStack: ${event.error?.stack}`);
+      console.error(
+        `Global Error: ${event.message}\nFile: ${event.filename}\nLine: ${event.lineno}:${event.colno}\nStack: ${event.error?.stack}`
+      );
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error(`Unhandled Promise Rejection: ${event.reason?.message || event.reason}\nStack: ${event.reason?.stack}`);
+      console.error(
+        `Unhandled Promise Rejection: ${event.reason?.message || event.reason}\nStack: ${event.reason?.stack}`
+      );
     };
 
     window.addEventListener('error', handleGlobalError);
@@ -35,20 +35,14 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeApp(firebaseConfig);
       }
     } catch (e: any) {
-      console.error("FirebaseClientProvider: Failed to initialize Firebase: ", e.message, e.stack);
+      console.error('FirebaseClientProvider: Failed to initialize Firebase:', e?.message);
     }
-    
-    setIsInitialized(true);
 
     return () => {
       window.removeEventListener('error', handleGlobalError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, []);
-
-  if (!isInitialized) {
-    return <HomePageSkeleton />;
-  }
 
   return <FirebaseProvider>{children}</FirebaseProvider>;
 }

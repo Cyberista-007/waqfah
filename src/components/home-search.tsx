@@ -1,15 +1,12 @@
 'use client';
 
-import { Search, Sparkles, Mic, MicOff } from 'lucide-react';
+import { Search, Mic, MicOff } from 'lucide-react';
 import { useSearch } from './search-provider';
-import { motion, AnimatePresence } from 'framer-motion';
-import Magnetic from './magnetic';
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 
-// Extend Window type to include speech recognition API
 declare global {
   interface Window {
     SpeechRecognition: any;
@@ -19,11 +16,11 @@ declare global {
 
 export function HomeSearch() {
   const router = useRouter();
-  const { openSearch, isSearchOpen } = useSearch();
+  const { openSearch } = useSearch();
   const { t } = useTranslation();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [supported, setSupported] = useState(true);
+  const [supported, setSupported] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -55,9 +52,7 @@ export function HomeSearch() {
 
       if (result.isFinal && text.trim()) {
         setIsListening(false);
-        // Open search and pass the voice query via client router push
-        const searchUrl = `/search?q=${encodeURIComponent(text.trim())}`;
-        router.push(searchUrl);
+        router.push(`/search?q=${encodeURIComponent(text.trim())}`);
       }
     };
 
@@ -74,8 +69,8 @@ export function HomeSearch() {
   }, [supported, isListening, router]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 md:px-0 relative">
-      <motion.div
+    <div className="max-w-2xl mx-auto relative">
+      <div
         role="button"
         tabIndex={0}
         onClick={openSearch}
@@ -85,44 +80,18 @@ export function HomeSearch() {
             openSearch();
           }
         }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full flex items-center justify-between h-20 ps-8 pe-4 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[40px] border border-white/10 text-white/30 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] group/search text-start relative overflow-hidden cursor-pointer"
+        className="w-full flex items-center justify-between h-14 sm:h-16 ps-5 pe-2.5 rounded-2xl bg-card border border-border hover:border-primary/50 text-muted-foreground hover:text-foreground transition-colors duration-200 shadow-sm group/search text-start cursor-pointer"
       >
-        {/* Internal Glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-0 group-hover/search:opacity-100 transition-opacity duration-700" />
-
-        <div className="flex items-center gap-4 relative z-10 flex-1 min-w-0">
-          <div className="flex items-center justify-center p-2 rounded-xl bg-white/5 border border-white/5 text-primary group-hover/search:scale-110 transition-transform duration-500 shrink-0">
-            <Sparkles className="w-4 h-4 fill-current" />
-          </div>
-          <AnimatePresence mode="wait">
-            {isListening ? (
-              <motion.span
-                key="listening"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className="text-xl font-bold tracking-tight text-primary truncate"
-              >
-                {transcript || t('جارٍ الاستماع...', 'Listening...')}
-              </motion.span>
-            ) : (
-              <motion.span
-                key="placeholder"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className="text-xl font-bold tracking-tight truncate"
-              >
-                {t('ابحث عن محاضرة، سلسلة، كتاب...', 'Search lectures, series, books...')}
-              </motion.span>
-            )}
-          </AnimatePresence>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Search className="w-5 h-5 text-primary shrink-0" />
+          <span className={cn('text-sm sm:text-base font-bold truncate', isListening && 'text-primary')}>
+            {isListening
+              ? transcript || t('جارٍ الاستماع...', 'Listening...')
+              : t('ابحث عن محاضرة، سلسلة، كتاب...', 'Search lectures, series, books...')}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 relative z-10 shrink-0">
-          {/* Voice Search Button */}
+        <div className="flex items-center gap-2 shrink-0">
           {supported && (
             <button
               type="button"
@@ -131,74 +100,30 @@ export function HomeSearch() {
                 startVoiceSearch();
               }}
               className={cn(
-                'p-3 rounded-2xl transition-all duration-500 border relative overflow-hidden',
+                'p-2.5 rounded-xl border transition-colors duration-200',
                 isListening
-                  ? 'bg-primary/20 border-primary text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]'
-                  : 'bg-white/5 border-white/10 text-white/40 hover:bg-primary/10 hover:text-primary hover:border-primary/30'
+                  ? 'bg-primary/15 border-primary text-primary animate-pulse'
+                  : 'bg-muted/60 border-border text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30'
               )}
               title="بحث صوتي"
+              aria-label="بحث صوتي"
             >
-              {/* Ripple animation when listening */}
-              {isListening && (
-                <>
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl bg-primary/20"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
-                  />
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl bg-primary/10"
-                    animate={{ scale: [1, 2, 1], opacity: [0.3, 0, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut', delay: 0.3 }}
-                  />
-                </>
-              )}
-              <motion.div
-                animate={isListening ? { scale: [1, 1.2, 1] } : {}}
-                transition={{ duration: 0.6, repeat: Infinity }}
-              >
-                {isListening ? (
-                  <MicOff className="w-5 h-5 relative z-10" />
-                ) : (
-                  <Mic className="w-5 h-5 relative z-10" />
-                )}
-              </motion.div>
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
           )}
 
-          {/* Search Button */}
-          <Magnetic>
-            <div className="p-3 rounded-2xl bg-primary text-white shadow-lg group-hover/search:shadow-primary/40 transition-all duration-500">
-              <Search className="w-6 h-6" />
-            </div>
-          </Magnetic>
+          <div className="h-10 sm:h-11 px-4 rounded-xl bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs sm:text-sm font-black shadow-sm">
+            <span>{t('ابحث', 'Search')}</span>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Listening Indicator Pill */}
-      <AnimatePresence>
-        {isListening && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-bold backdrop-blur-xl shadow-xl z-20 whitespace-nowrap"
-          >
-            {/* Sound Bars Animation */}
-            <div className="flex items-center gap-0.5 h-4">
-              {[0, 0.1, 0.2, 0.1, 0].map((delay, i) => (
-                <motion.div
-                  key={i}
-                  className="w-0.5 bg-primary rounded-full"
-                  animate={{ height: ['4px', '14px', '4px'] }}
-                  transition={{ duration: 0.6, repeat: Infinity, delay, ease: 'easeInOut' }}
-                />
-              ))}
-            </div>
-            <span>جارٍ الاستماع... تحدث الآن</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isListening && (
+        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2.5 px-4 py-2 rounded-full bg-card border border-primary/40 text-primary text-xs font-bold shadow-lg z-20 whitespace-nowrap">
+          <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+          <span>جارٍ الاستماع... تحدث الآن</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -113,13 +113,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
         ...authState,
     }), [services, authState]);
 
-    if (!services) {
-        return <CinematicAppLoader />;
-    }
-
     return (
         <FirebaseContext.Provider value={contextValue}>
-            <FirebaseErrorListener />
+            {services && <FirebaseErrorListener />}
             {children}
         </FirebaseContext.Provider>
     );
@@ -127,42 +123,42 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
 export const useAuth = (): Auth => {
   const context = useContext(FirebaseContext);
-  if (context === undefined || !context.services) {
-    throw new Error('useAuth must be used within a FirebaseProvider and after initialization');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within a FirebaseProvider');
   }
-  return context.services.auth;
+  return (context.services?.auth ?? null) as unknown as Auth;
 };
 
 export const useFirestore = (): Firestore => {
   const context = useContext(FirebaseContext);
-  if (context === undefined || !context.services) {
-    throw new Error('useFirestore must be used within a FirebaseProvider and after initialization');
+  if (context === undefined) {
+    throw new Error('useFirestore must be used within a FirebaseProvider');
   }
-  return context.services.firestore;
+  return (context.services?.firestore ?? null) as unknown as Firestore;
 };
 
 export const useFirebaseApp = (): FirebaseApp => {
   const context = useContext(FirebaseContext);
-  if (context === undefined || !context.services) {
-    throw new Error('useFirebaseApp must be used within a FirebaseProvider and after initialization');
+  if (context === undefined) {
+    throw new Error('useFirebaseApp must be used within a FirebaseProvider');
   }
-  return context.services.app;
+  return (context.services?.app ?? null) as unknown as FirebaseApp;
 };
 
 export const useFunctions = (): Functions => {
   const context = useContext(FirebaseContext);
-  if (context === undefined || !context.services) {
-    throw new Error('useFunctions must be used within a FirebaseProvider and after initialization');
+  if (context === undefined) {
+    throw new Error('useFunctions must be used within a FirebaseProvider');
   }
-  return context.services.functions;
+  return (context.services?.functions ?? null) as unknown as Functions;
 };
 
 export const useStorage = (): FirebaseStorage => {
     const context = useContext(FirebaseContext);
-    if (context === undefined || !context.services) {
-        throw new Error('useStorage must be used within a FirebaseProvider and after initialization');
+    if (context === undefined) {
+        throw new Error('useStorage must be used within a FirebaseProvider');
     }
-    return context.services.storage;
+    return (context.services?.storage ?? null) as unknown as FirebaseStorage;
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T | null {

@@ -10,14 +10,14 @@ import {
   Clapperboard,
   ExternalLink,
   Loader2,
-  Tv,
 } from 'lucide-react';
 
 import { LectureCard } from '@/components/lecture-card';
+import { ProgramArtwork } from '@/components/program-artwork';
 import { useCollection } from '@/firebase';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Lecture, ListenHistoryItem, Playlist, Program } from '@/lib/types';
-import { cn, getInitials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface LatestLecturesSectionProps {
   programs: Program[];
@@ -54,6 +54,14 @@ export function LatestLecturesSection({
     () => programs.find((p) => p.id === selectedProgramId) || null,
     [programs, selectedProgramId]
   );
+
+  const programImageMap = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const p of programs) {
+      map[p.id] = p.imageUrl || getPlaceholderImage(p.imageId)?.imageUrl;
+    }
+    return map;
+  }, [programs]);
 
   // Live cached query for up to 20 latest videos of the selected channel
   const { data: channelRawLectures, isLoading: isChannelLoading } = useCollection<Lecture>(
@@ -192,27 +200,18 @@ export function LatestLecturesSection({
                   className={cn(
                     'group relative aspect-square rounded-2xl overflow-hidden border bg-card transition-all duration-200 cursor-pointer focus:outline-none',
                     isSelected
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background border-primary scale-[1.03] shadow-lg'
+                      ? 'ring-2 ring-white/60 ring-offset-2 ring-offset-background border-white/40 scale-[1.03] shadow-lg'
                       : selectedProgramId
-                      ? 'border-border/60 opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]'
-                      : 'border-border/70 hover:border-primary/50 hover:scale-[1.03] shadow-sm'
+                      ? 'border-white/10 opacity-70 hover:opacity-100 hover:scale-[1.02]'
+                      : 'border-white/10 hover:scale-[1.03] shadow-sm'
                   )}
                 >
-                  {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={program.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-foreground font-black text-sm p-2 text-center">
-                      <Tv className="w-5 h-5 text-primary mb-1" />
-                      <span className="line-clamp-2 text-[10px] leading-tight">
-                        {getInitials(program.name)}
-                      </span>
-                    </div>
-                  )}
+                  <ProgramArtwork
+                    src={imgUrl}
+                    alt={program.name}
+                    fallbackText={program.name}
+                    compactFallback
+                  />
 
                   {/* Subtle bottom hover label */}
                   <div
@@ -239,11 +238,14 @@ export function LatestLecturesSection({
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {selectedProgram.imageUrl && (
-                <img
-                  src={selectedProgram.imageUrl}
-                  alt={selectedProgram.name}
-                  className="w-9 h-9 rounded-xl object-cover border border-border shrink-0"
-                />
+                <div className="w-9 h-9 rounded-xl overflow-hidden border border-border shrink-0">
+                  <ProgramArtwork
+                    src={selectedProgram.imageUrl}
+                    alt={selectedProgram.name}
+                    fallbackText={selectedProgram.name}
+                    compactFallback
+                  />
+                </div>
               )}
               <div className="min-w-0">
                 <h3 className="text-base sm:text-lg font-black text-foreground truncate">
@@ -298,6 +300,7 @@ export function LatestLecturesSection({
                     index={index}
                     listenHistory={listenHistory || undefined}
                     playlists={playlists || undefined}
+                    programImageUrl={item.programId ? programImageMap[item.programId] : undefined}
                   />
                 </div>
               ))}
@@ -318,6 +321,7 @@ export function LatestLecturesSection({
                 key={item.id}
                 listenHistory={listenHistory || undefined}
                 playlists={playlists || undefined}
+                programImageUrl={item.programId ? programImageMap[item.programId] : undefined}
               />
             ))}
           </div>

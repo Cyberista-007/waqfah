@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Quote, Sparkles, Share2, BookMarked, ArrowLeft, BookOpen, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,30 +10,26 @@ const VERSES = [
     text: "إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا",
     surah: "الأحزاب",
     number: 56,
-    theme: "from-emerald-500/20 to-teal-500/5",
-    accent: "text-emerald-400"
+    accent: "text-emerald-500",
   },
   {
     text: "وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ",
     surah: "الطلاق",
     number: 2,
-    theme: "from-amber-500/20 to-orange-500/5",
-    accent: "text-amber-400"
+    accent: "text-amber-500",
   },
   {
     text: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا * إِنَّ مَعَ الْعُسْرِ يُسْرًا",
     surah: "الشرح",
     number: "5-6",
-    theme: "from-blue-500/20 to-indigo-500/5",
-    accent: "text-blue-400"
+    accent: "text-blue-500",
   },
   {
     text: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
     surah: "الرعد",
     number: 28,
-    theme: "from-rose-500/20 to-pink-500/5",
-    accent: "text-rose-400"
-  }
+    accent: "text-rose-500",
+  },
 ];
 
 const HADITHS = [
@@ -42,23 +37,20 @@ const HADITHS = [
     text: "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ",
     narrator: "رواه مسلم",
     topic: "فضل العلم",
-    theme: "from-blue-500/20 to-indigo-500/5",
-    accent: "text-blue-400"
+    accent: "text-blue-500",
   },
   {
     text: "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى",
     narrator: "رواه البخاري ومسلم",
     topic: "الإخلاص والنية",
-    theme: "from-emerald-500/20 to-teal-500/5",
-    accent: "text-emerald-400"
+    accent: "text-emerald-500",
   },
   {
     text: "عَلَيْكُمْ بِالصِّدْقِ فَإِنَّ الصِّدْقَ يَهْدِي إِلَى الْبِرِّ وَإِنَّ الْبِرَّ يَهْدِي إِلَى الْجَنَّةِ",
     narrator: "رواه البخاري ومسلم",
     topic: "الصدق والأمانة",
-    theme: "from-amber-500/20 to-orange-500/5",
-    accent: "text-amber-400"
-  }
+    accent: "text-amber-500",
+  },
 ];
 
 const DUAS = [
@@ -66,23 +58,20 @@ const DUAS = [
     text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا",
     source: "مسند أحمد",
     category: "دعاء طلب العلم",
-    theme: "from-purple-500/20 to-pink-500/5",
-    accent: "text-purple-400"
+    accent: "text-purple-500",
   },
   {
     text: "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ",
     source: "رواه الترمذي",
     category: "الثبات على الحق",
-    theme: "from-rose-500/20 to-red-500/5",
-    accent: "text-rose-400"
+    accent: "text-rose-500",
   },
   {
     text: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
     source: "سورة البقرة - الآية 201",
     category: "جوامع الدعاء",
-    theme: "from-teal-500/20 to-emerald-500/5",
-    accent: "text-teal-400"
-  }
+    accent: "text-teal-500",
+  },
 ];
 
 const WISDOMS = [
@@ -90,23 +79,20 @@ const WISDOMS = [
     text: "العلم صيد والكتابة قيده، قيد صيودك بالحبال الواثقة",
     author: "الإمام الشافعي",
     category: "طلب العلم",
-    theme: "from-amber-500/20 to-yellow-500/5",
-    accent: "text-amber-400"
+    accent: "text-amber-500",
   },
   {
     text: "من وطَّن قلبه عند ربه سكن واستراح، ومن أرسله في الناس اضطرب واشتد به القلق",
     author: "ابن القيم",
     category: "أعمال القلوب",
-    theme: "from-indigo-500/20 to-purple-500/5",
-    accent: "text-indigo-400"
+    accent: "text-indigo-500",
   },
   {
     text: "عليك بطريق الحق ولا تستوحش لقلة السالكين، وإياك وطريق الباطل ولا تغتر بكثرة الهالكين",
     author: "الفضيل بن عياض",
     category: "الاستقامة والثبات",
-    theme: "from-emerald-500/20 to-teal-500/5",
-    accent: "text-emerald-400"
-  }
+    accent: "text-emerald-500",
+  },
 ];
 
 export function VerseOfTheDay() {
@@ -114,9 +100,7 @@ export function VerseOfTheDay() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    // Generate deterministic index based on day of month to simulate daily updates
-    const day = new Date().getDate();
-    setCurrentIndex(day);
+    setCurrentIndex(new Date().getDate());
   }, []);
 
   const getActiveItem = () => {
@@ -136,117 +120,108 @@ export function VerseOfTheDay() {
   const item = getActiveItem();
 
   return (
-    <section className="container px-4 sm:px-6 lg:px-12 py-10 md:py-16 relative">
+    <section className="container px-4 sm:px-6 lg:px-12 py-8 md:py-12">
       <div className="max-w-4xl mx-auto">
-        {/* Sliding Tabs Control */}
-        <div className="flex items-center justify-center p-1.5 bg-white/5 border border-white/10 rounded-full mb-8 max-w-md mx-auto backdrop-blur-xl">
+        {/* Clean Editorial Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 p-1.5 bg-muted/60 border border-border rounded-full mb-7 max-w-lg mx-auto">
           {[
             { id: 'verse', label: 'آية اليوم', icon: Sparkles },
             { id: 'hadith', label: 'حديث اليوم', icon: BookOpen },
             { id: 'dua', label: 'دعاء اليوم', icon: Heart },
-            { id: 'wisdom', label: 'حكمة اليوم', icon: Quote }
+            { id: 'wisdom', label: 'حكمة اليوم', icon: Quote },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "relative flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-black transition-all cursor-pointer",
-                  isActive ? "bg-primary text-white shadow-lg shadow-primary/25 scale-105" : "text-white/70 hover:text-white"
+                  'flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-colors cursor-pointer',
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
               </button>
-            )
+            );
           })}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className={cn(
-            "relative p-7 sm:p-10 md:p-14 rounded-[2.5rem] md:rounded-[3rem] border border-white/10 backdrop-blur-3xl overflow-hidden group transition-all duration-700 shadow-2xl",
-            "bg-gradient-to-br", item.theme
-          )}
-        >
-          {/* Animated Background Orbs */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors duration-1000 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-primary/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col items-center text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', damping: 12, delay: 0.2 }}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-xl"
-            >
-              <Quote className={cn("w-6 h-6 sm:w-7 sm:h-7 fill-current", item.accent)} />
-            </motion.div>
-
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              {activeTab === 'verse' && "آيةٌ تتدبّرها اليَوْم"}
-              {activeTab === 'hadith' && "حديثٌ شريف نقتدي به"}
-              {activeTab === 'dua' && "دعاءٌ مأثور نرجوه"}
-              {activeTab === 'wisdom' && "حكمةٌ نافعة نتفكر فيها"}
+        <div className="relative p-7 sm:p-10 md:p-12 rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-11 h-11 rounded-xl bg-muted border border-border flex items-center justify-center mb-5">
+              <Quote className={cn('w-5 h-5', item.accent)} />
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab + '-' + item.text}
-                initial={{ opacity: 0, filter: 'blur(8px)', y: 15 }}
-                animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                exit={{ opacity: 0, filter: 'blur(8px)', y: -15 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-6 max-w-3xl"
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-muted border border-border text-muted-foreground text-[11px] font-black mb-5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              {activeTab === 'verse' && 'آيةٌ تتدبّرها اليَوْم'}
+              {activeTab === 'hadith' && 'حديثٌ شريف نقتدي به'}
+              {activeTab === 'dua' && 'دعاءٌ مأثور نرجوه'}
+              {activeTab === 'wisdom' && 'حكمةٌ نافعة نتفكر فيها'}
+            </div>
+
+            <div className="space-y-5 max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground leading-[1.65] font-quran">
+                {item.text}
+              </h2>
+
+              <div className="flex items-center justify-center gap-4 text-sm sm:text-base font-bold text-muted-foreground">
+                <div className="h-px w-6 bg-border" />
+                {activeTab === 'verse' && (
+                  <span>سورة {(item as any).surah} - الآية {(item as any).number}</span>
+                )}
+                {activeTab === 'hadith' && (
+                  <span>{(item as any).narrator} - {(item as any).topic}</span>
+                )}
+                {activeTab === 'dua' && (
+                  <span>{(item as any).source} - {(item as any).category}</span>
+                )}
+                {activeTab === 'wisdom' && (
+                  <span>{(item as any).author} - {(item as any).category}</span>
+                )}
+                <div className="h-px w-6 bg-border" />
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 h-11 text-xs sm:text-sm font-bold gap-2"
               >
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-black text-white leading-[1.6] tracking-normal font-quran drop-shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
-                  {item.text}
-                </h2>
-
-                <div className="flex items-center justify-center gap-4 text-base sm:text-lg md:text-xl font-bold text-white/75">
-                  <div className="h-px w-6 sm:w-8 bg-white/15" />
-                  {activeTab === 'verse' && <span>سورة {(item as any).surah} - الآية {(item as any).number}</span>}
-                  {activeTab === 'hadith' && <span>{(item as any).narrator} - {(item as any).topic}</span>}
-                  {activeTab === 'dua' && <span>{(item as any).source} - {(item as any).category}</span>}
-                  {activeTab === 'wisdom' && <span>{(item as any).author} - {(item as any).category}</span>}
-                  <div className="h-px w-6 sm:w-8 bg-white/10" />
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Button size="lg" className="rounded-full px-6 sm:px-8 h-11 sm:h-12 text-xs sm:text-sm font-black bg-white/5 border border-white/10 text-white hover:bg-white/10 gap-2.5 group/btn transition-all shadow-md">
-                <BookMarked className="w-4 h-4 opacity-50 group-hover/btn:opacity-100 transition-opacity" />
+                <BookMarked className="w-4 h-4 text-muted-foreground" />
                 حفظ في المفضلة
               </Button>
 
-              <Button size="lg" className="rounded-full px-7 sm:px-9 h-11 sm:h-12 text-xs sm:text-sm font-black bg-primary text-white border-none shadow-lg shadow-primary/25 hover:scale-105 gap-2.5 group/share transition-all">
+              <Button
+                size="lg"
+                className="rounded-full px-7 h-11 text-xs sm:text-sm font-black bg-primary text-primary-foreground gap-2"
+              >
                 <Share2 className="w-4 h-4" />
-                {activeTab === 'verse' && "مشاركة الآية"}
-                {activeTab === 'hadith' && "مشاركة الحديث"}
-                {activeTab === 'dua' && "مشاركة الدعاء"}
-                {activeTab === 'wisdom' && "مشاركة الحكمة"}
+                {activeTab === 'verse' && 'مشاركة الآية'}
+                {activeTab === 'hadith' && 'مشاركة الحديث'}
+                {activeTab === 'dua' && 'مشاركة الدعاء'}
+                {activeTab === 'wisdom' && 'مشاركة الحكمة'}
               </Button>
 
-              <Button variant="ghost" className="rounded-full px-5 sm:px-7 h-11 sm:h-12 text-xs sm:text-sm font-bold text-white/70 hover:text-white gap-2 transition-all">
-                {activeTab === 'verse' && "تفسير الآية"}
-                {activeTab === 'hadith' && "شرح الحديث"}
-                {activeTab === 'dua' && "فضل الدعاء"}
-                {activeTab === 'wisdom' && "تأمل الأثر"}
+              <Button
+                variant="ghost"
+                className="rounded-full px-5 h-11 text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground gap-2"
+              >
+                {activeTab === 'verse' && 'تفسير الآية'}
+                {activeTab === 'hadith' && 'شرح الحديث'}
+                {activeTab === 'dua' && 'فضل الدعاء'}
+                {activeTab === 'wisdom' && 'تأمل الأثر'}
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </div>
           </div>
-
-          {/* Decorative Corner Elements */}
-          <div className="absolute top-8 left-8 w-14 h-14 border-t-2 border-l-2 border-white/5 rounded-tl-2xl pointer-events-none" />
-          <div className="absolute bottom-8 right-8 w-14 h-14 border-b-2 border-r-2 border-white/5 rounded-br-2xl pointer-events-none" />
-        </motion.div>
+        </div>
       </div>
     </section>
   );

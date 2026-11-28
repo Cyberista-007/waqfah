@@ -2,12 +2,13 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Tv, Users } from 'lucide-react';
+import { ArrowLeft, Users } from 'lucide-react';
 
 import { FollowButton } from '@/components/follow-button';
+import { ProgramArtwork } from '@/components/program-artwork';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Program } from '@/lib/types';
-import { cn, getInitials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface ProgramCardProps {
   program: Program;
@@ -24,8 +25,8 @@ const ProgramCardComponent = ({ program, pinnedMessage }: ProgramCardProps) => {
     <article
       dir="rtl"
       className={cn(
-        'group h-full flex flex-col justify-between rounded-2xl border border-border bg-card/85 p-5 shadow-sm',
-        'transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md'
+        'group h-full flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm',
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md'
       )}
     >
       <div className="space-y-4">
@@ -35,19 +36,13 @@ const ProgramCardComponent = ({ program, pinnedMessage }: ProgramCardProps) => {
           className="flex items-center gap-3.5 group/link"
         >
           <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl overflow-hidden border border-border bg-muted shrink-0 shadow-sm">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={program.name}
-                loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover/link:scale-105"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-primary/10 text-primary font-black text-sm">
-                <Tv className="w-4 h-4 mb-0.5" />
-                <span className="text-[11px] leading-none">{getInitials(program.name)}</span>
-              </div>
-            )}
+            <ProgramArtwork
+              src={imageUrl}
+              alt={program.name}
+              fallbackText={program.name}
+              compactFallback
+              className="transition-transform duration-300 group-hover/link:scale-105"
+            />
           </div>
 
           <div className="min-w-0 flex-1 space-y-1.5 text-right">

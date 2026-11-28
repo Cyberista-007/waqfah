@@ -1,33 +1,40 @@
-'use client';
-
 import { HomePageClient } from '@/components/home-page-client';
-import { CinematicAppLoader } from '@/components/skeletons';
-import { useCollection, useDoc } from '@/firebase';
-import type { Lecture, Program, Series, ScheduleItem, QAPair, Playlist, HomepageDetailedConfig } from '@/lib/types';
-import React, { Suspense, useMemo } from 'react';
+import {
+  getHomepageConfig,
+  getLatestLectures,
+  getLatestSeries,
+  getLecturesByIds,
+  getTopPrograms,
+} from '@/lib/data';
 
-function HomePageContent() {
-  const { data: latestLectures } = useCollection<Lecture>('lectures', { orderBy: ['createdAt', 'desc'], limit: 12, once: true });
-  const { data: topPrograms } = useCollection<Program>('programs', { orderBy: ['followerCount', 'desc'], limit: 50, once: true });
-  const { data: latestSeries } = useCollection<Series>('series', { orderBy: ['createdAt', 'desc'], limit: 12, once: true });
-  const { data: homepageConfig } = useDoc<HomepageDetailedConfig>('settings/homepage');
+export const revalidate = 120;
+
+export default async function Home() {
+  const [latestLectures, topPrograms, latestSeries, homepageConfig] = await Promise.all([
+    getLatestLectures(),
+    getTopPrograms(),
+    getLatestSeries(),
+    getHomepageConfig(),
+  ]);
+
+  const stripIds = Array.from(
+    new Set(
+      (homepageConfig?.featuredStrips ?? []).flatMap((strip) => strip.lectureIds ?? [])
+    )
+  ).slice(0, 30);
+
+  const stripLectures = stripIds.length > 0 ? await getLecturesByIds(stripIds) : [];
 
   return (
-    <HomePageClient 
-        latestLectures={latestLectures || []}
-        topPrograms={topPrograms || []}
-        latestSeries={latestSeries || []}
-        upcomingLesson={null} 
-        latestQAPair={null} 
-        publicPlaylists={[]}
-        homepageConfig={homepageConfig || null}
-        stripLectures={[]} 
-      />
+    <HomePageClient
+      latestLectures={latestLectures}
+      topPrograms={topPrograms}
+      latestSeries={latestSeries}
+      upcomingLesson={null}
+      latestQAPair={null}
+      publicPlaylists={[]}
+      homepageConfig={homepageConfig}
+      stripLectures={stripLectures}
+    />
   );
-}
-
-export default function Home() {
-    return (
-        <HomePageContent />
-    )
 }
