@@ -2,8 +2,29 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useTheme } from "next-themes";
 import { fonts } from "./font-switcher";
+import { isLightTheme } from "./theme-switcher";
 import { HeroBanner } from "@/lib/types";
+
+function isHexDark(hex?: string | null): boolean {
+  if (!hex) return true;
+  const clean = hex.trim().replace('#', '');
+  let r = 0, g = 0, b = 0;
+  if (clean.length === 3) {
+    r = parseInt(clean[0] + clean[0], 16);
+    g = parseInt(clean[1] + clean[1], 16);
+    b = parseInt(clean[2] + clean[2], 16);
+  } else if (clean.length >= 6) {
+    r = parseInt(clean.slice(0, 2), 16);
+    g = parseInt(clean.slice(2, 4), 16);
+    b = parseInt(clean.slice(4, 6), 16);
+  } else {
+    return true;
+  }
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance < 0.5;
+}
 
 type BackgroundState = {
   image: string | null;
@@ -82,6 +103,10 @@ type AppearanceProviderProps = {
 
 
 export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadithIconUrl, heroImageUrl, heroTitle, heroSubtitle, heroBanners }: AppearanceProviderProps) {
+  const { theme, resolvedTheme } = useTheme();
+  const activeTheme = !theme || theme === 'system' ? resolvedTheme : theme;
+  const lightModeActive = isLightTheme(activeTheme);
+
   const [font, setFont] = useState(defaultFont || "font-body");
   const [language, setLanguageState] = useState('ar');
   const [background, setBackground] = useState<BackgroundState>({ image: null, color: null, type: 'image' });
@@ -177,33 +202,56 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     const customBgImage = localStorage.getItem("site-background-image");
     const customBgColor = localStorage.getItem("site-background-color");
     const customBgType = localStorage.getItem("site-background-type") as 'image' | 'pattern' | null;
+    const customBgMode = localStorage.getItem("site-background-mode");
+    const currentMode = lightModeActive ? 'light' : 'dark';
 
-    document.body.style.backgroundImage = customBgImage || '';
-    document.body.style.backgroundColor = customBgColor || '';
+    const colorConflictsWithMode =
+      !!customBgColor &&
+      ((lightModeActive && isHexDark(customBgColor)) ||
+        (!lightModeActive && !isHexDark(customBgColor)));
 
-    if (customBgImage || customBgColor) {
-      if (customBgType === 'pattern' && customBgImage) {
+    const imageConflictsWithMode =
+      !!customBgImage &&
+      customBgType !== 'pattern' &&
+      (customBgMode ? customBgMode !== currentMode : lightModeActive);
+
+    const effectiveColor = colorConflictsWithMode ? '' : (customBgColor || '');
+    const effectiveImage = imageConflictsWithMode ? '' : (customBgImage || '');
+
+    document.body.style.backgroundImage = effectiveImage;
+    document.body.style.backgroundColor = effectiveColor;
+
+    if (effectiveImage) {
+      if (customBgType === 'pattern') {
         document.body.style.backgroundAttachment = 'scroll';
         document.body.style.backgroundPosition = '0 0';
         document.body.style.backgroundRepeat = 'repeat';
         document.body.style.backgroundSize = 'auto';
-      } else { // 'image' or not set (legacy for images)
+      } else {
         document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundPosition = 'center';
         document.body.style.backgroundRepeat = 'no-repeat';
         document.body.style.backgroundSize = 'cover';
       }
-      document.body.classList.remove('body-background');
     } else {
       document.body.style.backgroundAttachment = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundRepeat = '';
       document.body.style.backgroundSize = '';
+    }
+
+    if (effectiveColor) {
+      document.body.classList.remove('body-background');
+    } else {
       document.body.classList.add('body-background');
     }
 
-    setBackground({ image: customBgImage, color: customBgColor, type: customBgType || 'image' });
-  }, []);
+    setBackground({
+      image: effectiveImage || null,
+      color: effectiveColor || null,
+      type: customBgType || 'image',
+    });
+  }, [lightModeActive]);
 
   const clearBackgroundStyles = useCallback(() => {
     document.body.style.backgroundImage = '';
@@ -279,13 +327,22 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
         localStorage.removeItem("site-background-type");
       }
 
+      if (newBg?.image || newBg?.color) {
+        const bgMode = newBg.type === 'pattern'
+          ? 'any'
+          : (newBg.color ? (isHexDark(newBg.color) ? 'dark' : 'light') : (lightModeActive ? 'light' : 'dark'));
+        localStorage.setItem("site-background-mode", bgMode);
+      } else {
+        localStorage.removeItem("site-background-mode");
+      }
+
 
     if (!isBackgroundShown && (newBg?.image || newBg?.color)) {
         toggleBackground(true);
     } else if (isBackgroundShown) {
         applyBackground();
     }
-  }, [isBackgroundShown, toggleBackground, applyBackground]);
+  }, [isBackgroundShown, lightModeActive, toggleBackground, applyBackground]);
 
   useEffect(() => {
     const allFontClasses = fonts.map(f => f.value);
@@ -323,11 +380,6 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
     const show = storedIsShown !== "false";
     
     setIsBackgroundShown(show);
-    if (show) {
-      applyBackground();
-    } else {
-      clearBackgroundStyles();
-    }
 
     const storedGradient = localStorage.getItem("site-gradient-preset");
     if (storedGradient) {
@@ -391,7 +443,15 @@ export function AppearanceProvider({ children, defaultFont, quranIconUrl, hadith
       setAuroraGrainState(g);
       document.documentElement.style.setProperty('--aurora-grain', g.toString());
     }
-  }, [defaultFont, applyBackground, clearBackgroundStyles, applyGradientPreset, applyLanguageAttributes]);
+  }, [defaultFont, applyGradientPreset, applyLanguageAttributes]);
+
+  useEffect(() => {
+    if (isBackgroundShown) {
+      applyBackground();
+    } else {
+      clearBackgroundStyles();
+    }
+  }, [isBackgroundShown, applyBackground, clearBackgroundStyles]);
 
   const value = {
     font,

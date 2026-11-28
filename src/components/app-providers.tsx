@@ -19,7 +19,7 @@ function ThemeModeClassSync() {
   const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
-    const active = theme || resolvedTheme;
+    const active = !theme || theme === 'system' ? resolvedTheme : theme;
     const isLight = isLightTheme(active);
     document.documentElement.classList.toggle('dark', !isLight);
   }, [theme, resolvedTheme]);

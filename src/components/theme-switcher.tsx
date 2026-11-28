@@ -24,7 +24,7 @@ export const LIGHT_THEME_VALUES = new Set([
 
 export function isLightTheme(theme?: string | null): boolean {
   if (!theme) return false
-  return LIGHT_THEME_VALUES.has(theme)
+  return theme === "light" || LIGHT_THEME_VALUES.has(theme)
 }
 
 export const themes = [
@@ -162,7 +162,8 @@ interface ThemeSwitcherDialogProps {
 }
 
 export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialogProps) {
-  const { theme: activeTheme, setTheme } = useTheme()
+  const { theme: rawTheme, resolvedTheme, setTheme } = useTheme()
+  const activeTheme = !rawTheme || rawTheme === "system" ? resolvedTheme : rawTheme
   const currentlyLight = isLightTheme(activeTheme)
 
   return (
@@ -187,7 +188,7 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
             }}
             className={cn(
               "flex items-center justify-center gap-2.5 h-12 rounded-2xl border font-black text-sm transition-colors cursor-pointer",
-              currentlyLight && activeTheme === DEFAULT_LIGHT_THEME
+              currentlyLight
                 ? "bg-primary text-primary-foreground border-primary shadow-sm"
                 : "bg-muted/60 text-foreground border-border hover:border-primary/40"
             )}
@@ -203,7 +204,7 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
             }}
             className={cn(
               "flex items-center justify-center gap-2.5 h-12 rounded-2xl border font-black text-sm transition-colors cursor-pointer",
-              activeTheme === DEFAULT_DARK_THEME || (!activeTheme && !currentlyLight)
+              !currentlyLight
                 ? "bg-primary text-primary-foreground border-primary shadow-sm"
                 : "bg-muted/60 text-foreground border-border hover:border-primary/40"
             )}
@@ -216,7 +217,10 @@ export function ThemeSwitcherDialog({ isOpen, onOpenChange }: ThemeSwitcherDialo
         <ScrollArea className="max-h-[52vh] pl-2 pr-3" dir="rtl">
           <div className="grid grid-cols-1 gap-3 py-4 px-1">
             {themes.map((theme) => {
-              const isActive = activeTheme === theme.value
+              const isActive =
+                activeTheme === theme.value ||
+                (activeTheme === "light" && theme.value === DEFAULT_LIGHT_THEME) ||
+                (activeTheme === "dark" && theme.value === DEFAULT_DARK_THEME)
               return (
                 <button
                   key={theme.value}

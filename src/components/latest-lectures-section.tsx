@@ -124,7 +124,7 @@ export function LatestLecturesSection({
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-5 border-b border-border/60">
         <div>
-          <div className="luxury-badge bg-cyan-500/10 text-cyan-400 border-cyan-500/20 mb-3">
+          <div className="luxury-badge bg-primary/10 text-primary border-primary/20 mb-3">
             <Clapperboard className="w-3.5 h-3.5" />
             <span>طرحٌ متجدد</span>
           </div>

@@ -22,7 +22,11 @@ export function ThemeToggle({ onClick, className, showLabel = false }: ThemeTogg
     setMounted(true)
   }, [])
 
-  const active = mounted ? theme || resolvedTheme : undefined
+  const active = mounted
+    ? !theme || theme === "system"
+      ? resolvedTheme
+      : theme
+    : undefined
   const isLight = isLightTheme(active)
 
   const handleToggle = () => {

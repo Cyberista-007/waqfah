@@ -20,15 +20,24 @@ type SolidColor = {
 }
 
 export const solidColors: SolidColor[] = [
+    { name: "ورقي نهاري (Warm Paper)", hex: "#f7f6f2" },
+    { name: "أبيض نقي (Pure White)", hex: "#ffffff" },
+    { name: "ضباب القطب (Arctic Mist)", hex: "#eef5fc" },
+    { name: "مخطوطة دافئة (Parchment)", hex: "#f5efe2" },
     { name: "أسود حالك (Obsidian)", hex: "#000000" },
     { name: "فحمي غامق (Carbon)", hex: "#0a0a0c" },
     { name: "أزرق ليلي (Deep Space)", hex: "#040914" },
-    { name: "بنفسجي داكن (Imperial)", hex: "#0d0517" },
     { name: "أخضر داكن (Shadow Emerald)", hex: "#030c06" },
-    { name: "عنابي ملكي (Royal Burgundy)", hex: "#0f0303" },
-    { name: "بني دافئ (Warm Umber)", hex: "#0f0b08" },
-    { name: "رمادي برونزي (Slate)", hex: "#161719" },
 ]
+
+function isLightSwatch(hex: string): boolean {
+    const clean = hex.replace('#', '');
+    if (clean.length !== 6) return false;
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 >= 0.5;
+}
 
 interface SolidColorSwitcherDialogProps {
     isOpen: boolean;
@@ -50,7 +59,7 @@ export function SolidColorSwitcherDialog({ isOpen, onOpenChange }: SolidColorSwi
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-2 border-primary/10 bg-card/95 backdrop-blur-xl">
+      <DialogContent className="max-w-2xl border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black font-headline text-center">خلفيات الألوان السادة</DialogTitle>
           <DialogDescription className="text-center text-muted-foreground">
@@ -61,10 +70,10 @@ export function SolidColorSwitcherDialog({ isOpen, onOpenChange }: SolidColorSwi
         <ScrollArea className="max-h-[60vh] px-2">
             <div className="space-y-8 py-4">
                 {/* Clear option */}
-                <div className="flex justify-between items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div className="flex justify-between items-center gap-4 bg-muted/60 p-4 rounded-2xl border border-border">
                     <div>
-                        <h4 className="font-bold text-sm">استعادة الخلفية الافتراضية</h4>
-                        <p className="text-xs text-muted-foreground">إزالة اللون الموحد والرجوع إلى خلفية التدرج الحركي.</p>
+                        <h4 className="font-bold text-sm text-foreground">استعادة الخلفية الافتراضية</h4>
+                        <p className="text-xs text-muted-foreground">إزالة اللون الموحد والرجوع إلى لون الثيم التلقائي.</p>
                     </div>
                     <button 
                         onClick={handleClear}
@@ -86,24 +95,29 @@ export function SolidColorSwitcherDialog({ isOpen, onOpenChange }: SolidColorSwi
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {solidColors.map((color) => {
                             const isActive = !background?.image && background?.color === color.hex;
+                            const lightSwatch = isLightSwatch(color.hex);
                             
                             return (
                                 <div
                                     key={color.hex}
                                     onClick={() => handleSelectColor(color.hex)}
                                     className={cn(
-                                        "cursor-pointer rounded-2xl border-2 p-3 transition-all relative aspect-[4/3] flex flex-col justify-between group overflow-hidden shadow-lg",
+                                        "cursor-pointer rounded-2xl border-2 p-3 transition-all relative aspect-[4/3] flex flex-col justify-between group overflow-hidden shadow-sm",
                                         isActive 
                                             ? "border-primary shadow-primary/20" 
-                                            : "border-white/5 hover:border-white/20 hover:shadow-black/50"
+                                            : "border-border hover:border-primary/40"
                                     )}
                                     style={{ backgroundColor: color.hex }}
                                 >
-                                    {/* Accent shine */}
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    
                                     <div className="flex justify-between items-start z-10">
-                                        <span className="text-[10px] font-mono bg-black/40 text-white/70 px-2 py-0.5 rounded-full uppercase">{color.hex}</span>
+                                        <span
+                                          className={cn(
+                                            "text-[10px] font-mono px-2 py-0.5 rounded-full uppercase",
+                                            lightSwatch ? "bg-black/10 text-zinc-900" : "bg-black/40 text-white/80"
+                                          )}
+                                        >
+                                          {color.hex}
+                                        </span>
                                         {isActive && (
                                             <span className="bg-primary text-primary-foreground rounded-full p-0.5 animate-in zoom-in duration-200">
                                                 <Check className="h-3 w-3" />
@@ -111,7 +125,12 @@ export function SolidColorSwitcherDialog({ isOpen, onOpenChange }: SolidColorSwi
                                         )}
                                     </div>
 
-                                    <span className="text-xs font-black text-white bg-black/50 px-2.5 py-1 rounded-xl z-10 w-fit backdrop-blur-sm truncate max-w-full">
+                                    <span
+                                      className={cn(
+                                        "text-xs font-black px-2.5 py-1 rounded-xl z-10 w-fit backdrop-blur-sm truncate max-w-full",
+                                        lightSwatch ? "bg-black/10 text-zinc-900" : "bg-black/50 text-white"
+                                      )}
+                                    >
                                         {color.name}
                                     </span>
                                 </div>
@@ -121,13 +140,13 @@ export function SolidColorSwitcherDialog({ isOpen, onOpenChange }: SolidColorSwi
                 </div>
 
                 {/* Custom Color Selector */}
-                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
+                <div className="bg-muted/60 p-6 rounded-2xl border border-border space-y-4">
                     <div className="flex items-center gap-3">
                         <Palette className="w-5 h-5 text-primary" />
-                        <h4 className="font-bold text-sm">مُنقّي الألوان المخصصة</h4>
+                        <h4 className="font-bold text-sm text-foreground">مُنقّي الألوان المخصصة</h4>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
-                        <div className="relative w-full sm:w-24 h-12 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center cursor-pointer bg-muted">
+                        <div className="relative w-full sm:w-24 h-12 rounded-xl overflow-hidden border border-border flex items-center justify-center cursor-pointer bg-muted">
                             <input 
                                 type="color" 
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
