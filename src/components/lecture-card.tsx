@@ -120,6 +120,8 @@ const LectureCardComponent = ({
         title: lecture.title,
         lectureId: lecture.id,
         seriesId: lecture.seriesId,
+        programName: lecture.programName,
+        slug: lecture.slug,
       });
     }
   };
@@ -265,7 +267,7 @@ const LectureCardComponent = ({
 
   const publicationDate = toDate(lecture.publishedAt) || toDate(lecture.createdAt);
   const dateText = publicationDate
-    ? format(publicationDate, 'EEEE، d MMMM yyyy', { locale: ar })
+    ? format(publicationDate, 'd MMMM yyyy', { locale: ar })
     : null;
   const isNew = publicationDate && publicationDate > subDays(new Date(), 7);
 
@@ -273,7 +275,7 @@ const LectureCardComponent = ({
     <TooltipProvider delayDuration={100}>
       <article className="relative w-full group flex flex-col">
         {/* Thumbnail */}
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted border border-border/70">
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted">
           <Link
             href={`/lectures/${lecture.slug}`}
             className="absolute inset-0 z-10"
@@ -390,7 +392,7 @@ const LectureCardComponent = ({
                 {(lecture.youtubeViewCount ?? 0) > 0 && (
                   <div className="flex items-center gap-1">
                     <Eye className="w-3 h-3 shrink-0" />
-                    <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
+                    <span>{formatViews(lecture.youtubeViewCount ?? 0)}</span>
                   </div>
                 )}
               </div>

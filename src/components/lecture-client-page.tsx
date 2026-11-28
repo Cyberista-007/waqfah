@@ -982,7 +982,7 @@ export function LectureClientPage({ lecture, relatedLectures, playlist }: Lectur
                     {(lecture.youtubeViewCount ?? 0) > 0 && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60">
                         <Eye className="w-3.5 h-3.5" />
-                        <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
+                        <span>{formatViews(lecture.youtubeViewCount ?? 0)}</span>
                       </span>
                     )}
                     {(lecture.duration ?? 0) > 0 && (

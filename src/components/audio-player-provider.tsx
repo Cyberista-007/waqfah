@@ -16,6 +16,8 @@ export type IframeTrack = {
   title: string;
   lectureId?: string;
   seriesId?: string;
+  programName?: string;
+  slug?: string;
 };
 
 type AudioPlayerContextType = {

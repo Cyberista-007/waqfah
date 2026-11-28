@@ -127,7 +127,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
 
     const handleImageClick = () => {
         if (videoId) {
-            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId, programName: lecture.programName, slug: lecture.slug });
         } else {
             handlePlay();
         }
@@ -141,7 +141,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
         e.preventDefault();
         e.stopPropagation();
         if (videoId) {
-            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
+            playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId, programName: lecture.programName, slug: lecture.slug });
         }
     }
 
@@ -241,7 +241,7 @@ const LectureListItemComponent = ({ lecture, index }: LectureListItemProps) => {
                         {(lecture.youtubeViewCount ?? 0) > 0 && (
                             <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 text-white/80">
                                 <Eye className="w-4 h-4 text-primary" />
-                                <span>{formatViews(lecture.youtubeViewCount ?? 0)} مشاهدة</span>
+                                <span>{formatViews(lecture.youtubeViewCount ?? 0)}</span>
                             </div>
                         )}
                         {lecture.seriesTitle && (

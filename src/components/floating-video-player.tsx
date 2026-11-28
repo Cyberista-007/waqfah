@@ -1,7 +1,8 @@
 'use client';
 
 import { useAudioPlayer } from './audio-player-provider';
-import { X, Maximize2, GripHorizontal, CheckCircle2, Bookmark, Play, Pause, RotateCcw, RotateCw, Captions, PictureInPicture } from 'lucide-react';
+import Link from 'next/link';
+import { X, Maximize2, ChevronDown, ExternalLink, GripHorizontal, CheckCircle2, Bookmark, Play, Pause, RotateCcw, RotateCw, Captions, PictureInPicture } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
@@ -16,6 +17,13 @@ export default function FloatingVideoPlayer() {
     const [size, setSize] = useState({ width: 480, height: 270 }); // 16:9 ratio
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
+
+    useEffect(() => {
+        if (isPlayerVisible && iframeTrack?.src) {
+            setIsExpanded(true);
+        }
+    }, [isPlayerVisible, iframeTrack?.src]);
 
     // Native PiP State
     const [isNativePiP, setIsNativePiP] = useState(false);
@@ -733,205 +741,357 @@ export default function FloatingVideoPlayer() {
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: isExpanded ? 0.96 : 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                style={{
-                    width: size.width,
-                    height: size.height,
-                    left: position.x,
-                    top: position.y,
-                    position: 'fixed'
-                }}
+                exit={{ opacity: 0, scale: isExpanded ? 0.96 : 0.9 }}
+                style={
+                    isExpanded
+                        ? undefined
+                        : {
+                              width: size.width,
+                              height: size.height,
+                              left: position.x,
+                              top: position.y,
+                              position: 'fixed',
+                          }
+                }
                 className={cn(
-                    "z-[100] bg-[#0a0a0a] rounded-3xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(14,165,229,0.15)] border border-white/10 group select-none transition-shadow duration-300",
-                    activeHandle === 'move' ? "cursor-grabbing ring-2 ring-blue-500/50 shadow-[0_35px_80px_rgba(0,0,0,1)]" : "cursor-grab shadow-2xl"
+                    isExpanded
+                        ? "fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-2xl p-4 sm:p-6 md:p-8 overflow-y-auto"
+                        : cn(
+                              "z-[100] bg-[#0a0a0a] rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.9)] group select-none transition-shadow duration-300",
+                              activeHandle === 'move' ? "cursor-grabbing shadow-[0_35px_80px_rgba(0,0,0,1)]" : "cursor-grab shadow-2xl"
+                          )
                 )}
-                onMouseDown={(e) => handleResizeStart(e, 'move')}
-                onTouchStart={(e) => handleResizeStart(e, 'move')}
+                onMouseDown={!isExpanded ? (e) => handleResizeStart(e, 'move') : undefined}
+                onTouchStart={!isExpanded ? (e) => handleResizeStart(e, 'move') : undefined}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                {/* 8-Point Resize Handles */}
-                <div className="absolute inset-0 pointer-events-none z-[100]">
-                    {/* Corners */}
-                    <div onMouseDown={(e) => handleResizeStart(e, 'top-left')} onTouchStart={(e) => handleResizeStart(e, 'top-left')} className="absolute top-0 left-0 w-6 h-6 pointer-events-auto cursor-nw-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'top-right')} onTouchStart={(e) => handleResizeStart(e, 'top-right')} className="absolute top-0 right-0 w-6 h-6 pointer-events-auto cursor-ne-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} onTouchStart={(e) => handleResizeStart(e, 'bottom-left')} className="absolute bottom-0 left-0 w-6 h-6 pointer-events-auto cursor-sw-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} onTouchStart={(e) => handleResizeStart(e, 'bottom-right')} className="absolute bottom-0 right-0 w-6 h-6 pointer-events-auto cursor-se-resize" />
-
-                    {/* Edges */}
-                    <div onMouseDown={(e) => handleResizeStart(e, 'top')} onTouchStart={(e) => handleResizeStart(e, 'top')} className="absolute top-0 left-6 right-6 h-2 pointer-events-auto cursor-n-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'bottom')} onTouchStart={(e) => handleResizeStart(e, 'bottom')} className="absolute bottom-0 left-6 right-6 h-2 pointer-events-auto cursor-s-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'left')} onTouchStart={(e) => handleResizeStart(e, 'left')} className="absolute left-0 top-6 bottom-6 w-2 pointer-events-auto cursor-w-resize" />
-                    <div onMouseDown={(e) => handleResizeStart(e, 'right')} onTouchStart={(e) => handleResizeStart(e, 'right')} className="absolute right-0 top-6 bottom-6 w-2 pointer-events-auto cursor-e-resize" />
-                </div>
-
-                {/* Visual Polish: Dark Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/60 pointer-events-none z-10" />
-
-                {/* Video Container */}
-                <div id="player-video-wrapper" className="w-full h-full relative z-0 pointer-events-none">
-                    <div ref={playerContainerRef} id="youtube-player-container" className="w-full h-full scale-[1.01]" />
-                </div>
-
-                {/* Native PiP Overlay Indicator */}
-                {isNativePiP && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-[45] text-center p-4">
-                        <PictureInPicture className="w-12 h-12 text-blue-500 animate-pulse mb-3" />
-                        <p className="text-sm font-black text-white">الفيديو نشط في النافذة العائمة الخارجية</p>
-                        <p className="text-xs text-white/50 mt-1">تصفح الموقع بحرية، أو أغلق النافذة الخارجية للعودة.</p>
+                {isExpanded && (
+                    <div className="container mx-auto max-w-5xl flex justify-between items-center shrink-0 mb-4" dir="rtl">
+                        <div className="text-xl sm:text-2xl font-black font-headline text-primary">
+                            وقفة
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                onClick={() => setIsExpanded(false)}
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 rounded-full"
+                                title="تصغير إلى نافذة عائمة"
+                                aria-label="تصغير إلى نافذة عائمة"
+                            >
+                                <ChevronDown className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={hidePlayer}
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 rounded-full hover:text-destructive hover:border-destructive/40"
+                                title="إغلاق المشغل"
+                                aria-label="إغلاق المشغل"
+                            >
+                                <X className="w-5 h-5" />
+                            </Button>
+                        </div>
                     </div>
                 )}
 
-                {/* Center Playback Controls */}
-                <div className={cn(
-                    "absolute inset-0 z-30 flex items-center justify-center gap-6 transition-all duration-500",
-                    (isHovered && !isNativePiP) ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                )}>
-                    <button 
-                        onClick={() => skip(-10)} 
-                        onMouseDown={(e) => e.stopPropagation()}
-                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
-                        title="تأخر 10 ثواني"
-                    >
-                        <RotateCcw className="w-8 h-8 text-white drop-shadow-lg" />
-                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
-                    </button>
+                <div className={cn(isExpanded ? "container mx-auto max-w-5xl flex-1 flex flex-col items-center justify-center gap-6 py-2" : "w-full h-full relative")} dir="rtl">
+                    <div className={cn(isExpanded ? "w-full max-w-4xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl relative shrink-0" : "w-full h-full relative")}>
+                        {!isExpanded && (
+                            /* 8-Point Resize Handles */
+                            <div className="absolute inset-0 pointer-events-none z-[100]">
+                                <div onMouseDown={(e) => handleResizeStart(e, 'top-left')} onTouchStart={(e) => handleResizeStart(e, 'top-left')} className="absolute top-0 left-0 w-6 h-6 pointer-events-auto cursor-nw-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'top-right')} onTouchStart={(e) => handleResizeStart(e, 'top-right')} className="absolute top-0 right-0 w-6 h-6 pointer-events-auto cursor-ne-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} onTouchStart={(e) => handleResizeStart(e, 'bottom-left')} className="absolute bottom-0 left-0 w-6 h-6 pointer-events-auto cursor-sw-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} onTouchStart={(e) => handleResizeStart(e, 'bottom-right')} className="absolute bottom-0 right-0 w-6 h-6 pointer-events-auto cursor-se-resize" />
 
-                    <button 
-                        onClick={togglePlay} 
-                        onMouseDown={(e) => e.stopPropagation()}
-                        className="w-14 h-14 flex items-center justify-center pointer-events-auto hover:scale-110 transition-all active:scale-90 group/btn"
-                    >
-                        {isPlaying ? (
-                            <Pause className="w-8 h-8 text-white fill-white drop-shadow-md" />
-                        ) : (
-                            <Play className="w-8 h-8 text-white fill-white translate-x-1 drop-shadow-md" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'top')} onTouchStart={(e) => handleResizeStart(e, 'top')} className="absolute top-0 left-6 right-6 h-2 pointer-events-auto cursor-n-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'bottom')} onTouchStart={(e) => handleResizeStart(e, 'bottom')} className="absolute bottom-0 left-6 right-6 h-2 pointer-events-auto cursor-s-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'left')} onTouchStart={(e) => handleResizeStart(e, 'left')} className="absolute left-0 top-6 bottom-6 w-2 pointer-events-auto cursor-w-resize" />
+                                <div onMouseDown={(e) => handleResizeStart(e, 'right')} onTouchStart={(e) => handleResizeStart(e, 'right')} className="absolute right-0 top-6 bottom-6 w-2 pointer-events-auto cursor-e-resize" />
+                            </div>
                         )}
-                    </button>
 
-                    <button 
-                        onClick={() => skip(10)} 
-                        onMouseDown={(e) => e.stopPropagation()}
-                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
-                        title="تقدم 10 ثواني"
-                    >
-                        <RotateCw className="w-8 h-8 text-white drop-shadow-lg" />
-                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
-                    </button>
-                </div>
+                        {!isExpanded && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/60 pointer-events-none z-10" />
+                        )}
 
-                {/* Bottom Control Bar */}
-                <div 
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className={cn(
-                        "absolute bottom-0 left-0 right-0 p-6 z-30 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500",
-                        (isHovered && !isNativePiP) ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
-                    )}
-                >
-                    {/* Time Display */}
-                    <div className="flex justify-between items-center text-white/90 text-sm font-bold font-mono tracking-tighter drop-shadow-md">
-                        <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full border border-white/5 backdrop-blur-md">
-                            <span className="text-white">{formatTime(currentTime)}</span>
-                            <span className="text-white/40">/</span>
-                            <span className="text-white/70">{formatTime(duration)}</span>
-                        </div>
-                        <button 
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="p-2 rounded-xl hover:bg-white/10 transition-colors pointer-events-auto"
-                        >
-                            <Captions className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div 
-                        onMouseDown={(e) => e.stopPropagation()}
-                        className="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden group/progress cursor-pointer pointer-events-auto"
-                    >
-                        <div 
-                            className="absolute inset-y-0 left-0 bg-blue-500 transition-all duration-300" 
-                            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-                        />
-                        <input 
-                            type="range"
-                            min="0"
-                            max={duration || 100}
-                            step="0.1"
-                            value={currentTime}
-                            onChange={handleSeek}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                    </div>
-                </div>
-
-                {/* Cinematic Floating Header (Visible on Hover, Drag Handle always present) */}
-                <div 
-                    className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/95 via-black/40 to-transparent opacity-40 group-hover:opacity-100 transition-all duration-500 z-40 translate-y-[-10px] group-hover:translate-y-0"
-                >
-                    <div className="flex gap-2 items-center">
-                        <button
-                            onClick={hidePlayer}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-red-500/80 flex items-center justify-center transition-all border border-white/10 pointer-events-auto backdrop-blur-md"
-                            title="إغلاق"
-                        >
-                            <X className="w-5 h-5 text-white" />
-                        </button>
-                        <button
-                            onClick={() => {
-                                markVideoAsComplete();
-                                hidePlayer();
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/80 flex items-center justify-center transition-all border border-white/10 pointer-events-auto backdrop-blur-md"
-                            title="تحديد كمكتمل"
-                        >
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                        </button>
-                    </div>
-
-                    <div className="flex-1 flex justify-center px-4">
-                        <GripHorizontal className="w-6 h-6 text-white drop-shadow-md" />
-                    </div>
-
-                    <div className="flex gap-2 items-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onMouseDown={(e) => e.stopPropagation()}
+                        {/* Video Container */}
+                        <div
+                            id="player-video-wrapper"
                             className={cn(
-                                "w-10 h-10 rounded-xl border pointer-events-auto backdrop-blur-md transition-all",
-                                isNativePiP 
-                                    ? "bg-blue-500 text-white border-blue-400 hover:bg-blue-600" 
-                                    : "bg-white/5 text-white border-white/10 hover:bg-white/10"
+                                "w-full h-full relative z-0 [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:block",
+                                isExpanded ? "pointer-events-auto" : "pointer-events-none"
                             )}
-                            onClick={toggleNativePiP}
-                            title="نافذة عائمة خارج المتصفح (Picture-in-Picture)"
                         >
-                            <PictureInPicture className="h-5 w-5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-blue-500/80 text-white border border-white/10 pointer-events-auto backdrop-blur-md"
-                            onClick={() => toast({ title: "تمت الإضافة للمشاهدة لاحقاً" })}
-                        >
-                            <Bookmark className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </div>
+                            <div ref={playerContainerRef} id="youtube-player-container" className="w-full h-full" />
+                        </div>
 
-                {/* Glass Tag (Only visible when not hovered) */}
-                <div className={cn(
-                    "absolute bottom-4 left-4 z-20 flex items-center gap-2 transition-opacity duration-300",
-                    (isHovered || isNativePiP) ? "opacity-0" : "opacity-60"
-                )}>
-                    <div className="bg-blue-500/20 backdrop-blur-md border border-blue-500/30 px-2 py-0.5 rounded-lg">
-                        <span className="text-[10px] font-black text-blue-400 tracking-tighter uppercase">Waqfah Cinematic</span>
+                        {/* Native PiP Overlay Indicator */}
+                        {isNativePiP && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-[45] text-center p-4">
+                                <PictureInPicture className="w-12 h-12 text-primary animate-pulse mb-3" />
+                                <p className="text-sm font-black text-white">الفيديو نشط في النافذة العائمة الخارجية</p>
+                                <p className="text-xs text-white/50 mt-1">تصفح الموقع بحرية، أو أغلق النافذة الخارجية للعودة.</p>
+                            </div>
+                        )}
+
+                        {!isExpanded && (
+                            <>
+                                {/* Center Playback Controls */}
+                                <div className={cn(
+                                    "absolute inset-0 z-30 flex items-center justify-center gap-6 transition-all duration-500",
+                                    (isHovered && !isNativePiP) ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                                )}>
+                                    <button 
+                                        onClick={() => skip(-10)} 
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
+                                        title="تأخر 10 ثواني"
+                                    >
+                                        <RotateCcw className="w-8 h-8 text-white drop-shadow-lg" />
+                                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={togglePlay} 
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        className="w-14 h-14 flex items-center justify-center pointer-events-auto hover:scale-110 transition-all active:scale-90 group/btn"
+                                    >
+                                        {isPlaying ? (
+                                            <Pause className="w-8 h-8 text-white fill-white drop-shadow-md" />
+                                        ) : (
+                                            <Play className="w-8 h-8 text-white fill-white translate-x-1 drop-shadow-md" />
+                                        )}
+                                    </button>
+
+                                    <button 
+                                        onClick={() => skip(10)} 
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        className="relative flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto active:scale-90 group/skip"
+                                        title="تقدم 10 ثواني"
+                                    >
+                                        <RotateCw className="w-8 h-8 text-white drop-shadow-lg" />
+                                        <span className="absolute text-[9px] font-black text-white mt-1">10</span>
+                                    </button>
+                                </div>
+
+                                {/* Bottom Control Bar */}
+                                <div 
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className={cn(
+                                        "absolute bottom-0 left-0 right-0 p-6 z-30 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500",
+                                        (isHovered && !isNativePiP) ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
+                                    )}
+                                >
+                                    <div className="flex justify-between items-center text-white/90 text-sm font-bold font-mono tracking-tighter drop-shadow-md">
+                                        <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
+                                            <span className="text-white">{formatTime(currentTime)}</span>
+                                            <span className="text-white/40">/</span>
+                                            <span className="text-white/70">{formatTime(duration)}</span>
+                                        </div>
+                                        <button 
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className="p-2 rounded-xl hover:bg-white/10 transition-colors pointer-events-auto"
+                                        >
+                                            <Captions className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    <div 
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        className="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden group/progress cursor-pointer pointer-events-auto"
+                                    >
+                                        <div 
+                                            className="absolute inset-y-0 left-0 bg-primary transition-all duration-300" 
+                                            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                                        />
+                                        <input 
+                                            type="range"
+                                            min="0"
+                                            max={duration || 100}
+                                            step="0.1"
+                                            value={currentTime}
+                                            onChange={handleSeek}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Floating Header */}
+                                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/95 via-black/40 to-transparent opacity-40 group-hover:opacity-100 transition-all duration-500 z-40 translate-y-[-10px] group-hover:translate-y-0">
+                                    <div className="flex gap-2 items-center">
+                                        <button
+                                            onClick={hidePlayer}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-red-500/80 flex items-center justify-center transition-all pointer-events-auto backdrop-blur-md"
+                                            title="إغلاق"
+                                        >
+                                            <X className="w-4 h-4 text-white" />
+                                        </button>
+                                        <button
+                                            onClick={() => setIsExpanded(true)}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-primary/80 flex items-center justify-center transition-all pointer-events-auto backdrop-blur-md"
+                                            title="توسيع صفحة الفيديو"
+                                        >
+                                            <Maximize2 className="w-4 h-4 text-white" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                markVideoAsComplete();
+                                                hidePlayer();
+                                            }}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-emerald-500/80 flex items-center justify-center transition-all pointer-events-auto backdrop-blur-md"
+                                            title="تحديد كمكتمل"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4 text-white" />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex-1 flex justify-center px-4">
+                                        <GripHorizontal className="w-6 h-6 text-white drop-shadow-md" />
+                                    </div>
+
+                                    <div className="flex gap-2 items-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className={cn(
+                                                "w-9 h-9 rounded-xl pointer-events-auto backdrop-blur-md transition-all",
+                                                isNativePiP 
+                                                    ? "bg-primary text-primary-foreground" 
+                                                    : "bg-white/10 text-white hover:bg-white/20"
+                                            )}
+                                            onClick={toggleNativePiP}
+                                            title="نافذة عائمة خارج المتصفح (Picture-in-Picture)"
+                                        >
+                                            <PictureInPicture className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-primary/80 text-white pointer-events-auto backdrop-blur-md"
+                                            onClick={() => toast({ title: "تمت الإضافة للمشاهدة لاحقاً" })}
+                                        >
+                                            <Bookmark className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
+
+                    {isExpanded && (
+                        <div className="w-full max-w-4xl space-y-5 text-center sm:text-right">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="min-w-0">
+                                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-black font-headline text-foreground leading-snug line-clamp-2">
+                                        {iframeTrack.title}
+                                    </h1>
+                                    {iframeTrack.programName && (
+                                        <p className="text-sm sm:text-base text-primary font-bold mt-1 truncate">
+                                            {iframeTrack.programName}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 shrink-0">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => skip(-10)}
+                                        className="rounded-xl gap-1.5 font-bold"
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                        <span>-10ث</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={togglePlay}
+                                        className="rounded-xl gap-1.5 font-black px-4"
+                                    >
+                                        {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                                        <span>{isPlaying ? 'إيقاف' : 'تشغيل'}</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => skip(10)}
+                                        className="rounded-xl gap-1.5 font-bold"
+                                    >
+                                        <span>+10ث</span>
+                                        <RotateCw className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={toggleNativePiP}
+                                        className="rounded-xl gap-1.5 font-bold"
+                                        title="نافذة عائمة خارج المتصفح"
+                                    >
+                                        <PictureInPicture className="w-4 h-4" />
+                                        <span className="hidden sm:inline">عائم</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            markVideoAsComplete();
+                                            hidePlayer();
+                                        }}
+                                        className="rounded-xl gap-1.5 font-bold"
+                                    >
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        <span className="hidden sm:inline">مكتمل</span>
+                                    </Button>
+                                    {iframeTrack.slug && (
+                                        <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 font-bold">
+                                            <Link href={`/lectures/${iframeTrack.slug}`} onClick={() => setIsExpanded(false)}>
+                                                <span>تفاصيل الدرس</span>
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5" dir="ltr">
+                                <div className="relative w-full h-2 bg-muted rounded-full overflow-hidden cursor-pointer">
+                                    <div
+                                        className="absolute inset-y-0 left-0 bg-primary transition-all duration-200"
+                                        style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                                    />
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={duration || 100}
+                                        step="0.5"
+                                        value={currentTime}
+                                        onChange={handleSeek}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                                    <span>{formatTime(currentTime)}</span>
+                                    <span>{formatTime(duration)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </AnimatePresence>

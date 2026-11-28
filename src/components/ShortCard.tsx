@@ -24,7 +24,7 @@ export function ShortCard({ lecture, index = 0 }: ShortCardProps) {
 
   const handlePlay = () => {
     if (videoId) {
-        playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId });
+        playIframe({ type: 'youtube', src: videoId, title: lecture.title, lectureId: lecture.id, seriesId: lecture.seriesId, programName: lecture.programName, slug: lecture.slug });
     }
   };
 
@@ -55,7 +55,7 @@ export function ShortCard({ lecture, index = 0 }: ShortCardProps) {
           </div>
           {lecture.youtubeViewCount && lecture.youtubeViewCount > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
-                  {formatViews(lecture.youtubeViewCount)} مشاهدة
+                  {formatViews(lecture.youtubeViewCount)}
               </p>
           )}
       </div>
