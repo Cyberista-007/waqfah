@@ -377,17 +377,18 @@ export function AmbientScreenSaver({
               {/* Outer Glow Ring */}
               <div
                 className={cn(
-                  "absolute inset-0 rounded-full border border-primary/20 blur-xl opacity-50 scale-110 transition-all duration-[3s]",
+                  "absolute inset-0 rounded-full border border-primary/20 blur-xl opacity-50 scale-110 transition-all",
                   isPlayingRadio ? "animate-pulse" : ""
                 )}
+                style={{ transitionDuration: '3000ms' }}
               />
 
               <div
                 className={cn(
-                  "absolute inset-0 rounded-full border border-white/5 bg-black/60 shadow-[0_0_80px_rgba(0,0,0,0.8)] transition-all duration-[10s] flex items-center justify-center",
+                  "absolute inset-0 rounded-full border border-white/5 bg-black/60 shadow-[0_0_80px_rgba(0,0,0,0.8)] transition-all flex items-center justify-center",
                   isPlayingRadio ? "animate-spin" : ""
                 )}
-                style={{ animationDuration: '16s' }}
+                style={{ animationDuration: '16s', transitionDuration: '10000ms' }}
               >
                 {/* Vinyl Grooves */}
                 <div className="absolute inset-4 rounded-full border border-dashed border-white/5" />

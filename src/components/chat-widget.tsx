@@ -44,7 +44,7 @@ function parseInlineMarkdown(text: string) {
         <Link
           key={index}
           href={url}
-          className="text-primary font-bold underline underline-offset-4 hover:text-white transition-colors duration-200 cursor-pointer inline"
+          className="text-primary font-bold underline underline-offset-4 hover:text-foreground transition-colors duration-200 cursor-pointer inline"
         >
           {label}
         </Link>
@@ -72,17 +72,17 @@ function QuranVerseCard({ surah, ayah, tafsir, text, onQuery }: QuranBlock & { o
   const [showTafsir, setShowTafsir] = useState(false);
 
   return (
-    <div className="my-3.5 p-4 rounded-2xl bg-amber-500/[0.04] border border-amber-500/25 shadow-[0_4px_20px_rgba(245,158,11,0.06)] flex flex-col gap-2.5 selection:bg-amber-500/20 selection:text-amber-200">
-      <div className="flex items-center justify-between border-b border-amber-500/15 pb-2">
-        <div className="flex items-center gap-1.5 text-amber-400">
+    <div className="my-3.5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col gap-2.5 selection:bg-amber-500/20">
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
           <BookIcon className="w-3.5 h-3.5" />
           <span className="text-[11px] font-black font-headline">آية قرآنية</span>
         </div>
-        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25 text-[10px] font-black text-amber-300">
+        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25 text-[10px] font-black text-amber-700 dark:text-amber-300">
           سورة {surah} - آية {ayah}
         </span>
       </div>
-      <p className="text-lg font-bold font-quran leading-loose text-center text-amber-100 py-1.5 select-text">
+      <p className="text-lg font-bold font-quran leading-loose text-center text-foreground py-1.5 select-text">
         {text}
       </p>
       <div className="flex justify-end">
@@ -94,7 +94,7 @@ function QuranVerseCard({ surah, ayah, tafsir, text, onQuery }: QuranBlock & { o
               onQuery(`ما التفسير الميسر للآية الكريمة: "${text}" [سورة ${surah} آية ${ayah}]؟`);
             }
           }}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 text-amber-300 text-[10px] font-black transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-[10px] font-black transition-all cursor-pointer"
         >
           <Sparkles className="w-3 h-3" />
           <span>{tafsir ? (showTafsir ? "إخفاء التفسير" : "عرض التفسير الميسر") : "طلب تفسير الآية"}</span>
@@ -104,7 +104,7 @@ function QuranVerseCard({ surah, ayah, tafsir, text, onQuery }: QuranBlock & { o
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15 text-xs font-medium text-amber-100/90 leading-relaxed text-right select-text"
+          className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-foreground/90 leading-relaxed text-right select-text"
         >
           <strong>التفسير الميسر:</strong> {tafsir}
         </motion.div>
@@ -118,18 +118,18 @@ function HadithCard({ source, grade, explanation, text, onQuery }: HadithBlock &
 
   const isSahih = grade.includes("صحيح");
   const gradeClass = isSahih
-    ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-300"
-    : "bg-amber-500/15 border-amber-500/25 text-amber-300";
+    ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-700 dark:text-emerald-300"
+    : "bg-amber-500/15 border-amber-500/25 text-amber-700 dark:text-amber-300";
 
   return (
-    <div className="my-3.5 p-4 rounded-2xl bg-emerald-500/[0.04] border border-emerald-500/20 shadow-[0_4px_20px_rgba(16,185,129,0.04)] flex flex-col gap-2.5 selection:bg-emerald-500/20 selection:text-emerald-200">
-      <div className="flex items-center justify-between border-b border-emerald-500/15 pb-2">
-        <div className="flex items-center gap-1.5 text-emerald-400">
+    <div className="my-3.5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col gap-2.5 selection:bg-emerald-500/20">
+      <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+        <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
           <Compass className="w-3.5 h-3.5" />
           <span className="text-[11px] font-black font-headline">حديث نبوي شريف</span>
         </div>
         <div className="flex gap-1.5">
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-black text-emerald-300">
+          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-black text-emerald-700 dark:text-emerald-300">
             {source}
           </span>
           <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-black border", gradeClass)}>
@@ -137,7 +137,7 @@ function HadithCard({ source, grade, explanation, text, onQuery }: HadithBlock &
           </span>
         </div>
       </div>
-      <p className="text-sm font-bold leading-relaxed text-right text-emerald-50/95 py-1 select-text">
+      <p className="text-sm font-bold leading-relaxed text-right text-foreground py-1 select-text">
         {text}
       </p>
       <div className="flex justify-end">
@@ -149,7 +149,7 @@ function HadithCard({ source, grade, explanation, text, onQuery }: HadithBlock &
               onQuery(`ما شرح وتخريج الحديث النبوي الشريف: "${text}" [المصدر: ${source}]؟`);
             }
           }}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-300 text-[10px] font-black transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-[10px] font-black transition-all cursor-pointer"
         >
           <Sparkles className="w-3 h-3" />
           <span>{explanation ? (showExplanation ? "إخفاء الشرح" : "عرض شرح الحديث") : "طلب شرح وتخريج الحديث"}</span>
@@ -159,7 +159,7 @@ function HadithCard({ source, grade, explanation, text, onQuery }: HadithBlock &
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="p-3 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/15 text-xs font-medium text-emerald-100/90 leading-relaxed text-right select-text"
+          className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-foreground/90 leading-relaxed text-right select-text"
         >
           <strong>فائدة وشرح الحديث:</strong> {explanation}
         </motion.div>
@@ -221,19 +221,19 @@ function parseMarkdown(text: string, onQuery: (q: string) => void) {
     }
 
     if (trimmed.startsWith('### ')) {
-      return <h5 key={i} className="text-sm font-black text-white mt-3 mb-1 font-headline">{trimmed.substring(4)}</h5>;
+      return <h5 key={i} className="text-sm font-black text-foreground mt-3 mb-1 font-headline">{trimmed.substring(4)}</h5>;
     }
     if (trimmed.startsWith('## ')) {
-      return <h4 key={i} className="text-base font-black text-white mt-3.5 mb-1.5 font-headline">{trimmed.substring(3)}</h4>;
+      return <h4 key={i} className="text-base font-black text-foreground mt-3.5 mb-1.5 font-headline">{trimmed.substring(3)}</h4>;
     }
     if (trimmed.startsWith('# ')) {
-      return <h3 key={i} className="text-lg font-black text-white mt-4 mb-2 font-headline">{trimmed.substring(2)}</h3>;
+      return <h3 key={i} className="text-lg font-black text-foreground mt-4 mb-2 font-headline">{trimmed.substring(2)}</h3>;
     }
 
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
       const content = trimmed.substring(2);
       return (
-        <li key={i} className="list-disc list-inside mr-3 text-white/90 leading-relaxed my-1 pr-1">
+        <li key={i} className="list-disc list-inside mr-3 text-foreground/90 leading-relaxed my-1 pr-1">
           {parseInlineMarkdown(content)}
         </li>
       );
@@ -242,7 +242,7 @@ function parseMarkdown(text: string, onQuery: (q: string) => void) {
     if (trimmed.startsWith('1. ') || trimmed.match(/^\d+\.\s/)) {
       const content = trimmed.substring(trimmed.indexOf('.') + 1).trim();
       return (
-        <li key={i} className="list-decimal list-inside mr-3 text-white/90 leading-relaxed my-1 pr-1">
+        <li key={i} className="list-decimal list-inside mr-3 text-foreground/90 leading-relaxed my-1 pr-1">
           {parseInlineMarkdown(content)}
         </li>
       );
@@ -253,7 +253,7 @@ function parseMarkdown(text: string, onQuery: (q: string) => void) {
     }
 
     return (
-      <p key={i} className="leading-relaxed my-1 text-white/90">
+      <p key={i} className="leading-relaxed my-1 text-foreground/90">
         {parseInlineMarkdown(line)}
       </p>
     );
@@ -352,15 +352,15 @@ export function ChatWidget() {
         ? 'backdrop-blur-[50px]'
         : 'backdrop-blur-3xl';
     const glowShadow = enableGlow
-      ? 'shadow-[0_0_0_1px_rgba(var(--primary-rgb),0.22),0_35px_90px_-20px_rgba(0,0,0,0.75),0_0_50px_-15px_rgba(var(--primary-rgb),0.18)]'
-      : 'shadow-[0_35px_90px_-20px_rgba(0,0,0,0.7)]';
+      ? 'shadow-[0_0_0_1px_rgba(var(--primary-rgb),0.22),0_25px_70px_-20px_rgba(0,0,0,0.45)]'
+      : 'shadow-2xl';
     if (widgetTheme === 'glass') {
-      return `bg-zinc-950/65 ${blurClass} border border-white/15 rounded-[1.75rem] ${glowShadow} overflow-hidden flex flex-col select-none relative`;
+      return `bg-popover/85 text-popover-foreground ${blurClass} border border-border rounded-[1.75rem] ${glowShadow} overflow-hidden flex flex-col select-none relative`;
     }
     if (widgetTheme === 'emerald') {
-      return `bg-[#04120a]/95 ${blurClass} border border-emerald-500/25 rounded-[1.75rem] shadow-[0_35px_90px_-20px_rgba(0,0,0,0.8),0_0_50px_-15px_rgba(16,185,129,0.14)] overflow-hidden flex flex-col select-none relative`;
+      return `bg-popover text-popover-foreground ${blurClass} border border-emerald-500/35 rounded-[1.75rem] shadow-2xl overflow-hidden flex flex-col select-none relative`;
     }
-    return `bg-zinc-950/92 ${blurClass} border border-white/10 rounded-[1.75rem] ${glowShadow} overflow-hidden flex flex-col select-none relative`;
+    return `bg-popover text-popover-foreground ${blurClass} border border-border rounded-[1.75rem] ${glowShadow} overflow-hidden flex flex-col select-none relative`;
   }, [widgetTheme, blurStrength, enableGlow]);
 
   // ── Voice: Speech-to-Text ─────────────────────────────────────────────────
@@ -1038,7 +1038,7 @@ export function ChatWidget() {
                 />
                 <div
                   onPointerDown={(e) => startResize(e, 'ne')}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 cursor-nesw-resize flex items-center justify-center text-white/25 hover:text-primary rounded-md z-50 transition-colors"
+                  className="absolute top-1.5 right-1.5 w-5 h-5 cursor-nesw-resize flex items-center justify-center text-muted-foreground/50 hover:text-primary rounded-md z-50 transition-colors"
                   title="تغيير حجم النافذة"
                 >
                   <svg width="9" height="9" viewBox="0 0 10 10">
@@ -1056,17 +1056,17 @@ export function ChatWidget() {
                 if (target.closest('button')) return;
                 dragControls.start(event);
               }}
-              className="px-4 py-3.5 border-b border-white/10 flex items-center justify-between bg-white/[0.02] cursor-grab active:cursor-grabbing select-none shrink-0"
+              className="px-4 py-3.5 border-b border-border flex items-center justify-between bg-muted/40 cursor-grab active:cursor-grabbing select-none shrink-0"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]">
+                <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
                   <Sparkles className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-black text-white font-headline tracking-tight leading-none mb-1">وقفة AI</h3>
+                  <h3 className="text-sm font-black text-foreground font-headline tracking-tight leading-none mb-1">وقفة AI</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span className="text-[10px] font-bold text-white/60 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground truncate">
                       {showSettings ? "إعدادات المساعد" : getModelFriendlyName(aiModel)}
                     </span>
                   </div>
@@ -1078,7 +1078,7 @@ export function ChatWidget() {
                   onClick={() => { setShowSettings(!showSettings); setIsMinimized(false); }}
                   className={cn(
                     "w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer",
-                    showSettings ? "text-primary bg-primary/15 border border-primary/30" : "text-white/50 hover:text-white hover:bg-white/10"
+                    showSettings ? "text-primary bg-primary/15 border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                   title="إعدادات المساعد الذكي"
                   aria-label="إعدادات المساعد الذكي"
@@ -1087,7 +1087,7 @@ export function ChatWidget() {
                 </button>
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
                   aria-label={isMinimized ? "تكبير نافذة الدردشة" : "تصغير نافذة الدردشة"}
                 >
                   {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
@@ -1095,7 +1095,7 @@ export function ChatWidget() {
                 {!showSettings && messages.length > 0 && (
                   <button
                     onClick={clearChat}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                     title="مسح المحادثة"
                     aria-label="مسح المحادثة"
                   >
@@ -1104,7 +1104,7 @@ export function ChatWidget() {
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                   aria-label="إغلاق المساعد الذكي"
                 >
                   <X className="w-4 h-4" />
@@ -1117,9 +1117,9 @@ export function ChatWidget() {
               <div className="flex-1 flex flex-col min-h-0">
                 {showSettings ? (
                   /* Unified Settings View */
-                  <div className="flex-1 flex flex-col min-h-0 bg-black/25">
+                  <div className="flex-1 flex flex-col min-h-0 bg-muted/20">
                     {/* Settings Tab Bar */}
-                    <div className="px-4 pt-3 pb-2 border-b border-white/10 flex gap-1.5 shrink-0">
+                    <div className="px-4 pt-3 pb-2 border-b border-border flex gap-1.5 shrink-0">
                       {[
                         { id: 'models', label: 'النموذج', icon: Cpu },
                         { id: 'design', label: 'المظهر', icon: SlidersHorizontal },
@@ -1135,7 +1135,7 @@ export function ChatWidget() {
                               "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer",
                               active
                                 ? "bg-primary text-primary-foreground shadow-sm"
-                                : "bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                                : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
                             )}
                           >
                             <TabIcon className="w-3.5 h-3.5" />
@@ -1148,7 +1148,7 @@ export function ChatWidget() {
                     <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                       {settingsTab === 'models' && (
                         <div className="space-y-2.5">
-                          <p className="text-xs text-white/60 leading-relaxed">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             اختر نموذج الذكاء الاصطناعي المناسب لاحتياجاتك البحثية:
                           </p>
                           {AVAILABLE_MODELS.map((model) => {
@@ -1160,12 +1160,12 @@ export function ChatWidget() {
                                 className={cn(
                                   "flex flex-col text-right p-3.5 rounded-2xl border transition-all duration-200 w-full cursor-pointer",
                                   isSelected
-                                    ? "border-primary/60 bg-primary/10 text-white"
-                                    : "border-white/10 bg-white/[0.02] text-white/70 hover:bg-white/[0.06] hover:border-white/20"
+                                    ? "border-primary/60 bg-primary/10 text-foreground"
+                                    : "border-border bg-card text-muted-foreground hover:bg-muted/60 hover:border-primary/30"
                                 )}
                               >
                                 <div className="flex items-center justify-between w-full mb-1">
-                                  <span className={cn("text-xs font-black", isSelected ? "text-primary" : "text-white")}>
+                                  <span className={cn("text-xs font-black", isSelected ? "text-primary" : "text-foreground")}>
                                     {model.name}
                                   </span>
                                   {isSelected && (
@@ -1174,7 +1174,7 @@ export function ChatWidget() {
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[11px] text-white/55 leading-snug">{model.desc}</span>
+                                <span className="text-[11px] text-muted-foreground leading-snug">{model.desc}</span>
                               </button>
                             );
                           })}
@@ -1183,11 +1183,11 @@ export function ChatWidget() {
 
                       {settingsTab === 'design' && (
                         <div className="space-y-4">
-                          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
-                            <span className="text-xs font-black text-white block">سمة النافذة</span>
+                          <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3">
+                            <span className="text-xs font-black text-foreground block">سمة النافذة</span>
                             <div className="grid grid-cols-3 gap-2">
                               {[
-                                { id: 'obsidian', label: 'أوبسيديان' },
+                                { id: 'obsidian', label: 'متكيف' },
                                 { id: 'glass', label: 'زجاجي' },
                                 { id: 'emerald', label: 'زمردي' },
                               ].map(t => (
@@ -1197,8 +1197,8 @@ export function ChatWidget() {
                                   className={cn(
                                     "py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer",
                                     widgetTheme === t.id
-                                      ? "bg-primary/20 border-primary text-primary"
-                                      : "bg-white/5 border-white/10 text-white/65 hover:text-white"
+                                      ? "bg-primary/15 border-primary text-primary"
+                                      : "bg-muted/60 border-border text-muted-foreground hover:text-foreground"
                                   )}
                                 >
                                   {t.label}
@@ -1207,21 +1207,21 @@ export function ChatWidget() {
                             </div>
                           </div>
 
-                          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                            <span className="text-xs font-bold text-white/85">توهج الإطار</span>
+                          <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">توهج الإطار</span>
                             <button
                               onClick={() => setEnableGlow(!enableGlow)}
                               className={cn(
                                 "px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer",
-                                enableGlow ? "bg-primary text-primary-foreground" : "bg-white/10 text-white/70"
+                                enableGlow ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                               )}
                             >
                               {enableGlow ? 'مفعل' : 'معطل'}
                             </button>
                           </div>
 
-                          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                            <span className="text-xs font-bold text-white/85">قوة الضبابية</span>
+                          <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">قوة الضبابية</span>
                             <div className="flex gap-1.5">
                               {[
                                 { id: 'md', label: 'متوسط' },
@@ -1233,7 +1233,7 @@ export function ChatWidget() {
                                   onClick={() => setBlurStrength(b.id as any)}
                                   className={cn(
                                     "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                                    blurStrength === b.id ? "bg-primary text-primary-foreground" : "bg-white/5 text-white/60 hover:text-white"
+                                    blurStrength === b.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground hover:text-foreground"
                                   )}
                                 >
                                   {b.label}
@@ -1242,8 +1242,8 @@ export function ChatWidget() {
                             </div>
                           </div>
 
-                          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                            <span className="text-xs font-bold text-white/85">حجم خط المحادثة</span>
+                          <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">حجم خط المحادثة</span>
                             <div className="flex gap-1.5">
                               {[
                                 { id: 'sm', label: 'قياسي' },
@@ -1254,7 +1254,7 @@ export function ChatWidget() {
                                   onClick={() => setChatFontSize(f.id as any)}
                                   className={cn(
                                     "px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                                    chatFontSize === f.id ? "bg-primary text-primary-foreground" : "bg-white/5 text-white/60 hover:text-white"
+                                    chatFontSize === f.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground hover:text-foreground"
                                   )}
                                 >
                                   {f.label}
@@ -1267,22 +1267,22 @@ export function ChatWidget() {
 
                       {settingsTab === 'tester' && (
                         <div className="space-y-4">
-                          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-200 leading-relaxed">
+                          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
                             يعمل المساعد تلقائياً عبر خادم المنصة، ويمكنك إضافة مفتاح Gemini API خاص بك أدناه للاستخدام المباشر.
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-white/75 block">مفتاح Gemini API الخاص (اختياري)</label>
+                            <label className="text-xs font-black text-foreground block">مفتاح Gemini API الخاص (اختياري)</label>
                             <div className="relative">
                               <Input
                                 type="password"
                                 placeholder="أدخل مفتاح Gemini API هنا..."
                                 value={aiApiKey || ''}
                                 onChange={(e) => setAiApiKey(e.target.value)}
-                                className="h-11 bg-white/5 border-white/10 rounded-xl focus:bg-white/10 text-xs font-mono pr-4 pl-10 text-white"
+                                className="h-11 bg-card border-border rounded-xl text-xs font-mono pr-4 pl-10 text-foreground"
                               />
                               {aiApiKey && (
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">
                                   <Check className="w-4 h-4" />
                                 </div>
                               )}
@@ -1295,14 +1295,15 @@ export function ChatWidget() {
                               >
                                 احصل على مفتاح من Google AI Studio
                               </Link>
-                              <span className="text-white/40">يُحفظ محلياً</span>
+                              <span className="text-muted-foreground">يُحفظ محلياً</span>
                             </div>
                           </div>
 
                           <Button
                             onClick={testApiKey}
                             disabled={isTestingKey || !aiApiKey?.trim()}
-                            className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs cursor-pointer"
+                            variant="outline"
+                            className="w-full h-10 rounded-xl font-bold text-xs cursor-pointer"
                           >
                             {isTestingKey ? 'جاري فحص المفتاح...' : 'اختبار صلاحية المفتاح المخصص'}
                           </Button>
@@ -1311,8 +1312,8 @@ export function ChatWidget() {
                             <div className={cn(
                               "p-3 rounded-xl text-xs font-bold border",
                               keyTestResult.ok
-                                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-200"
-                                : "bg-rose-500/15 border-rose-500/30 text-rose-200"
+                                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-200"
+                                : "bg-rose-500/15 border-rose-500/30 text-rose-700 dark:text-rose-200"
                             )}>
                               {keyTestResult.message}
                             </div>
@@ -1321,7 +1322,7 @@ export function ChatWidget() {
                       )}
                     </div>
 
-                    <div className="p-4 border-t border-white/10 shrink-0">
+                    <div className="p-4 border-t border-border shrink-0">
                       <Button
                         onClick={() => setShowSettings(false)}
                         className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-black hover:opacity-95 transition-all cursor-pointer"
@@ -1340,8 +1341,8 @@ export function ChatWidget() {
                       {messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center space-y-5 py-4">
                           <div className="relative">
-                            <div className="absolute inset-0 bg-primary/25 blur-xl rounded-full" />
-                            <div className="relative w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center shadow-lg">
+                            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+                            <div className="relative w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center shadow-sm">
                               <Bot className="w-8 h-8 text-primary" />
                             </div>
                           </div>
@@ -1351,8 +1352,8 @@ export function ChatWidget() {
                             return (
                               <>
                                 <div className="space-y-1.5 max-w-[300px]">
-                                  <p className="text-lg font-black font-headline text-white">{greeting.title}</p>
-                                  <p className="text-xs font-medium leading-relaxed text-white/65">
+                                  <p className="text-lg font-black font-headline text-foreground">{greeting.title}</p>
+                                  <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                     {greeting.description}
                                   </p>
                                 </div>
@@ -1362,7 +1363,7 @@ export function ChatWidget() {
                                     <button
                                       key={idx}
                                       onClick={() => handleSend(s.text)}
-                                      className="text-[11px] font-bold text-white/85 hover:text-primary-foreground bg-white/[0.04] hover:bg-primary border border-white/10 hover:border-primary px-3.5 py-2 rounded-full transition-all duration-200 active:scale-95 cursor-pointer"
+                                      className="text-[11px] font-bold text-foreground hover:text-primary-foreground bg-muted/60 hover:bg-primary border border-border hover:border-primary px-3.5 py-2 rounded-full transition-all duration-200 active:scale-95 cursor-pointer"
                                     >
                                       {s.label}
                                     </button>
@@ -1386,7 +1387,7 @@ export function ChatWidget() {
                             <div className={cn(
                               "w-8 h-8 rounded-xl flex items-center justify-center border shrink-0 mt-1",
                               msg.role === 'user'
-                                ? "bg-white/10 border-white/15 text-white/80"
+                                ? "bg-muted border-border text-foreground"
                                 : "bg-primary/15 border-primary/30 text-primary"
                             )}>
                               {msg.role === 'user' ? <User className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
@@ -1400,10 +1401,10 @@ export function ChatWidget() {
                                 "px-4 py-3 rounded-2xl leading-relaxed relative",
                                 chatFontSize === 'base' ? "text-[15px]" : "text-sm",
                                 msg.role === 'user'
-                                  ? "bg-primary/15 border border-primary/25 text-white rounded-tr-sm whitespace-pre-line"
+                                  ? "bg-primary/15 border border-primary/25 text-foreground rounded-tr-sm whitespace-pre-line"
                                   : msg.isError
-                                    ? "bg-rose-500/10 border border-rose-500/25 text-rose-100 rounded-tl-sm"
-                                    : "bg-white/[0.04] border border-white/10 text-white/95 rounded-tl-sm"
+                                    ? "bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-200 rounded-tl-sm"
+                                    : "bg-card border border-border text-foreground rounded-tl-sm"
                               )}>
                                 {msg.role === 'user' ? (
                                   msg.content
@@ -1414,15 +1415,15 @@ export function ChatWidget() {
                                 )}
 
                                 {msg.role === 'assistant' && !msg.isError && (
-                                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-2.5 border-t border-white/10 justify-end">
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-2.5 border-t border-border justify-end">
                                     <button
                                       onClick={() => speakMessage(msg.content, msg.id)}
                                       aria-label="استماع للرد"
                                       className={cn(
                                         "flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition-all cursor-pointer",
                                         speakingMsgId === msg.id
-                                          ? "bg-primary/25 text-primary"
-                                          : "text-white/55 hover:text-white bg-white/5 hover:bg-white/10"
+                                          ? "bg-primary/20 text-primary"
+                                          : "text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted"
                                       )}
                                     >
                                       {speakingMsgId === msg.id ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
@@ -1432,10 +1433,10 @@ export function ChatWidget() {
                                     <button
                                       onClick={() => copyToClipboard(msg.content, msg.id)}
                                       aria-label="نسخ النص"
-                                      className="flex items-center gap-1 text-[10px] font-bold text-white/55 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-all cursor-pointer"
+                                      className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted px-2 py-1 rounded-lg transition-all cursor-pointer"
                                     >
                                       {copiedId === msg.id ? (
-                                        <><Check className="w-3 h-3 text-emerald-400" /> تم</>
+                                        <><Check className="w-3 h-3 text-emerald-500" /> تم</>
                                       ) : (
                                         <><Copy className="w-3 h-3" /> نسخ</>
                                       )}
@@ -1444,7 +1445,7 @@ export function ChatWidget() {
                                     <button
                                       onClick={() => exportAsFile(msg.content)}
                                       aria-label="تصدير كملف"
-                                      className="flex items-center gap-1 text-[10px] font-bold text-white/55 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-all cursor-pointer"
+                                      className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted px-2 py-1 rounded-lg transition-all cursor-pointer"
                                     >
                                       <FileDown className="w-3 h-3" /> تصدير
                                     </button>
@@ -1453,7 +1454,7 @@ export function ChatWidget() {
                                       <button
                                         onClick={() => saveToNotebook(msg.id, msg.content)}
                                         disabled={isSavingNote === msg.id}
-                                        className="flex items-center gap-1 text-[10px] font-bold text-white/55 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-all disabled:opacity-50 cursor-pointer"
+                                        className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted px-2 py-1 rounded-lg transition-all disabled:opacity-50 cursor-pointer"
                                       >
                                         {isSavingNote === msg.id ? (
                                           <Loader2 className="w-3 h-3 animate-spin text-primary" />
@@ -1466,7 +1467,7 @@ export function ChatWidget() {
                                   </div>
                                 )}
                               </div>
-                              <span className="text-[10px] font-semibold text-white/35 px-2">
+                              <span className="text-[10px] font-semibold text-muted-foreground px-2">
                                 {msg.timestamp.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
@@ -1483,20 +1484,20 @@ export function ChatWidget() {
                           <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
                             <Loader2 className="w-4 h-4 text-primary animate-spin" />
                           </div>
-                          <div className="bg-white/[0.04] border border-white/10 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-3">
+                          <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-3">
                             <div className="flex gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
                               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.15s]" />
                               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.3s]" />
                             </div>
-                            <span className="text-xs font-bold text-white/70">جاري صياغة الإجابة...</span>
+                            <span className="text-xs font-bold text-muted-foreground">جاري صياغة الإجابة...</span>
                           </div>
                         </motion.div>
                       )}
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-3.5 sm:p-4 bg-white/[0.02] border-t border-white/10 shrink-0 space-y-2.5">
+                    <div className="p-3.5 sm:p-4 bg-muted/30 border-t border-border shrink-0 space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <button
                           onClick={handleSummarizePage}
@@ -1509,13 +1510,13 @@ export function ChatWidget() {
 
                         <button
                           onClick={() => setShowSettings(true)}
-                          className="text-[11px] font-bold text-white/50 hover:text-primary transition-colors shrink-0 cursor-pointer"
+                          className="text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
                         >
                           {getModelFriendlyName(aiModel)}
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 focus-within:border-primary/50 rounded-2xl p-1.5 transition-all">
+                      <div className="flex items-center gap-2 bg-background border border-border focus-within:border-primary/50 rounded-2xl p-1.5 transition-all">
                         <button
                           type="button"
                           onClick={isListening ? stopListening : startListening}
@@ -1523,8 +1524,8 @@ export function ChatWidget() {
                           className={cn(
                             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer",
                             isListening
-                              ? "bg-rose-500/20 text-rose-400 animate-pulse border border-rose-500/30"
-                              : "text-white/55 hover:text-white hover:bg-white/10"
+                              ? "bg-rose-500/20 text-rose-500 animate-pulse border border-rose-500/30"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                           title={isListening ? "إيقاف الاستماع" : "تحدث بالمايكروفون"}
                         >
@@ -1538,13 +1539,13 @@ export function ChatWidget() {
                           onChange={(e) => setInput(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                           disabled={isLoading}
-                          className="flex-1 bg-transparent text-sm font-medium text-white placeholder:text-white/40 outline-none px-1 h-10"
+                          className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none px-1 h-10"
                         />
 
                         <Button
                           onClick={() => handleSend()}
                           disabled={!input.trim() || isLoading}
-                          className="w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all p-0 shrink-0 cursor-pointer"
+                          className="w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-sm hover:scale-105 active:scale-95 transition-all p-0 shrink-0 cursor-pointer"
                           aria-label="إرسال"
                         >
                           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -1569,8 +1570,8 @@ export function ChatWidget() {
         className={cn(
           "pointer-events-auto w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all duration-300 relative group cursor-pointer border",
           isOpen
-            ? "bg-zinc-900 text-white border-white/20 shadow-2xl"
-            : "bg-primary text-primary-foreground border-primary/40 shadow-[0_12px_32px_-8px_rgba(var(--primary-rgb),0.6)]"
+            ? "bg-card text-foreground border-border shadow-xl"
+            : "bg-primary text-primary-foreground border-primary/40 shadow-lg"
         )}
       >
         {isOpen ? (

@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { Headphones, Play, Share2, Eye, Calendar, MessageSquare, Download, ListPlus, MoreVertical, Clock, Flag, PlaySquare, Loader2, Brain } from "lucide-react"
+import { MediaThumbnail } from "./media-thumbnail"
 import { useState, useMemo, memo } from "react"
 import { format, subDays } from "date-fns";
 import { ar } from 'date-fns/locale';
@@ -279,13 +279,13 @@ const LectureCardComponent = ({
             className="absolute inset-0 z-10"
             aria-label={lecture.title}
           />
-          <Image
+          <MediaThumbnail
             src={imageUrl}
+            videoId={videoId}
             alt={lecture.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            fallbackTitle={lecture.title}
             priority={index < 4}
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="transition-transform duration-300 group-hover:scale-[1.03]"
           />
 
           {/* Hover Play / Audio Overlay */}
@@ -367,7 +367,7 @@ const LectureCardComponent = ({
               title={lecture.programName}
             >
               <Avatar className="h-9 w-9 border border-border bg-background">
-                <AvatarImage src={resolvedProgramImage} alt={lecture.programName} className="object-cover" />
+                <AvatarImage src={resolvedProgramImage} alt={lecture.programName} referrerPolicy="no-referrer" className="object-cover" />
                 <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
                   {getInitials(lecture.programName || "P")}
                 </AvatarFallback>

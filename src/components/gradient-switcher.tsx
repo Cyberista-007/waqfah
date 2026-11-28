@@ -76,14 +76,14 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl bg-[#050508]/95 backdrop-blur-3xl border-white/5 rounded-[3rem] shadow-[0_0_120px_rgba(0,0,0,1)] overflow-y-auto max-h-[95vh] custom-scrollbar">
+      <DialogContent className="max-w-4xl bg-popover text-popover-foreground border border-border rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[95vh] custom-scrollbar">
         <DialogHeader className="text-center pt-8 pb-4">
           <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
              <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-20" />
              <Sparkles className="h-10 w-10 text-primary animate-pulse relative z-10" />
           </div>
-          <DialogTitle className="text-5xl font-black font-headline text-white mb-2 tracking-tight">مختبر التدرجات الفائق</DialogTitle>
-          <DialogDescription className="text-xl text-muted-foreground/60">
+          <DialogTitle className="text-4xl sm:text-5xl font-black font-headline text-foreground mb-2 tracking-tight">مختبر التدرجات الفائق</DialogTitle>
+          <DialogDescription className="text-lg text-muted-foreground">
              تحكم كامل في فيزياء الألوان، التفاعل، والأجواء البصرية للمنصة.
           </DialogDescription>
         </DialogHeader>
@@ -100,18 +100,18 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
                         whileTap={{ scale: 0.95 }}
                         onClick={() => { setGradientPreset(preset.value); setShowCustom(false); }}
                         className={cn(
-                        "relative cursor-pointer rounded-[2.5rem] border-2 p-6 transition-all duration-700 group overflow-hidden h-32 flex flex-col justify-end",
+                        "relative cursor-pointer rounded-[2rem] border-2 p-6 transition-all duration-300 group overflow-hidden h-32 flex flex-col justify-end",
                         isActive 
-                            ? "border-primary bg-primary/10 shadow-[0_0_50px_rgba(var(--primary-rgb),0.3)]" 
-                            : "border-white/5 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                            ? "border-primary bg-primary/10 shadow-md" 
+                            : "border-border bg-card hover:border-primary/40"
                         )}
                     >
-                        <div className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-1000"
+                        <div className="absolute inset-0 opacity-65 group-hover:opacity-85 transition-opacity duration-500"
                             style={{ background: `linear-gradient(135deg, hsl(${preset.colors[0]}), hsl(${preset.colors[1]}), hsl(${preset.colors[2]}), hsl(${preset.colors[3]}))` }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <div className="relative z-10 flex items-center justify-between w-full">
-                            <span className={cn("font-black text-lg", isActive ? "text-primary" : "text-white")}>{preset.name}</span>
+                            <span className={cn("font-black text-lg text-white")}>{preset.name}</span>
                             {isActive && <div className="bg-primary p-1.5 rounded-full shadow-glow-primary"><Check className="h-4 w-4 text-primary-foreground stroke-[3px]" /></div>}
                         </div>
                     </motion.div>
@@ -123,17 +123,17 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { setGradientPreset('custom'); setShowCustom(true); }}
                     className={cn(
-                        "relative cursor-pointer rounded-[2.5rem] border-2 p-6 transition-all duration-700 group h-32 flex flex-col justify-end overflow-hidden",
+                        "relative cursor-pointer rounded-[2rem] border-2 p-6 transition-all duration-300 group h-32 flex flex-col justify-end overflow-hidden",
                         activePreset === 'custom' 
-                            ? "border-amber-500 bg-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.3)]" 
-                            : "border-white/5 bg-white/[0.02] hover:border-white/20"
+                            ? "border-amber-500 bg-amber-500/15 shadow-md" 
+                            : "border-border bg-card hover:border-amber-500/40"
                     )}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/30 via-orange-500/20 to-transparent opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-transparent opacity-60" />
                     <div className="relative z-10 flex items-center justify-between w-full">
                         <div className="flex items-center gap-3">
                             <Palette className="h-6 w-6 text-amber-500" />
-                            <span className={cn("font-black text-lg", activePreset === 'custom' ? "text-amber-500" : "text-white")}>المختبر الحر</span>
+                            <span className={cn("font-black text-lg", activePreset === 'custom' ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>المختبر الحر</span>
                         </div>
                         {activePreset === 'custom' && <div className="bg-amber-500 p-1.5 rounded-full shadow-lg"><Check className="h-4 w-4 text-black stroke-[3px]" /></div>}
                     </div>
@@ -150,36 +150,36 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
                         className="space-y-10"
                     >
                         {/* Physics Lab Panel */}
-                        <div className="p-10 rounded-[3.5rem] bg-zinc-950/50 backdrop-blur-3xl border border-white/5 space-y-12 shadow-2xl relative overflow-hidden">
+                        <div className="p-8 sm:p-10 rounded-[2.5rem] bg-card border border-border space-y-10 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-5">
                                 <Zap className="w-32 h-32 text-primary" />
                             </div>
 
                             <div className="flex items-center gap-4 mb-2">
-                                <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
                                     <Activity className="h-6 w-6 text-primary" />
                                 </div>
-                                <h4 className="text-2xl font-black font-headline text-white">إعدادات المحرك الفائق</h4>
+                                <h4 className="text-2xl font-black font-headline text-foreground">إعدادات المحرك الفائق</h4>
                             </div>
 
                             {/* Advanced Color Section */}
                             <div className="space-y-6">
-                                <div className="flex items-center gap-2 text-white/40 mb-4 px-2">
+                                <div className="flex items-center gap-2 text-muted-foreground mb-4 px-2">
                                     <Droplets className="w-4 h-4" />
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">لوحة الألوان المتقدمة</span>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                     {[0, 1, 2, 3].map((i) => (
                                         <div key={i} className="space-y-4 group/picker">
-                                            <div className="relative w-full h-24 rounded-[2rem] overflow-hidden border-2 border-white/5 hover:border-primary/50 transition-all shadow-xl group-hover/picker:scale-105 duration-500">
+                                            <div className="relative w-full h-24 rounded-[1.5rem] overflow-hidden border-2 border-border hover:border-primary/50 transition-all shadow-sm group-hover/picker:scale-105 duration-300">
                                                 <input 
                                                     type="color" 
                                                     className="absolute inset-[-20px] w-[200%] h-[200%] cursor-pointer bg-transparent"
                                                     onChange={(e) => handleColorChange(i, e.target.value)}
                                                 />
-                                                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                                                    <div className="w-8 h-8 rounded-full border-2 border-white/30 shadow-2xl mb-2" style={{ background: `hsl(${customColors[i]})` }} />
-                                                    <span className="text-[8px] font-black text-white/40 uppercase">Color {i+1}</span>
+                                                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center bg-black/25 backdrop-blur-[2px]">
+                                                    <div className="w-8 h-8 rounded-full border-2 border-white/60 shadow-lg mb-2" style={{ background: `hsl(${customColors[i]})` }} />
+                                                    <span className="text-[8px] font-black text-white/90 uppercase">Color {i+1}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -188,7 +188,7 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
                             </div>
 
                             {/* Sliders Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-6">
                                 {/* Row 1 */}
                                 <ControlSlider label="سرعة التموج" icon={<Wind className="w-4 h-4" />} value={auroraSpeed} min={0.1} max={5} step={0.1} suffix={`x${auroraSpeed.toFixed(1)}`} onChange={setAuroraSpeed} />
                                 <ControlSlider label="كثافة الضبابية" icon={<LayersIcon className="w-4 h-4" />} value={auroraBlur} min={0.5} max={3} step={0.1} suffix={`${Math.round(auroraBlur * 100)}%`} onChange={setAuroraBlur} />
@@ -202,10 +202,10 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
                                 <ControlSlider label="حبيبات الفيلم" icon={<Waves className="w-4 h-4" />} value={auroraGrain} min={0} max={0.1} step={0.005} suffix={`${(auroraGrain * 1000).toFixed(0)}i`} onChange={setAuroraGrain} />
                             </div>
 
-                            <div className="pt-8 border-t border-white/5 flex items-center justify-center gap-6">
-                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/5">
+                            <div className="pt-8 border-t border-border flex items-center justify-center gap-6">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border">
                                     <Waves className="w-3 h-3 text-primary" />
-                                    <span className="text-[10px] font-bold text-white/40 italic">ميزة "التموج عند النقر" مفعلة تلقائياً</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground italic">ميزة "التموج عند النقر" مفعلة تلقائياً</span>
                                 </div>
                             </div>
                         </div>
@@ -220,13 +220,13 @@ export function GradientSwitcherDialog({ isOpen, onOpenChange }: GradientSwitche
 
 function ControlSlider({ label, icon, value, min, max, step, suffix, onChange }: any) {
     return (
-        <div className="space-y-5 group/slider">
+        <div className="space-y-4 group/slider">
             <div className="flex justify-between items-center px-2">
-                <div className="flex items-center gap-3 text-white/50 group-hover/slider:text-white transition-colors duration-300">
-                    <div className="p-2 rounded-xl bg-white/5">{icon}</div>
+                <div className="flex items-center gap-3 text-muted-foreground group-hover/slider:text-foreground transition-colors duration-300">
+                    <div className="p-2 rounded-xl bg-muted border border-border">{icon}</div>
                     <span className="text-sm font-black tracking-wide">{label}</span>
                 </div>
-                <span className="text-primary font-black text-xs tabular-nums bg-primary/10 px-3 py-1 rounded-lg border border-primary/20 shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]">
+                <span className="text-primary font-black text-xs tabular-nums bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
                     {suffix}
                 </span>
             </div>
@@ -235,7 +235,7 @@ function ControlSlider({ label, icon, value, min, max, step, suffix, onChange }:
                     type="range" min={min} max={max} step={step} 
                     value={value}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-zinc-900 rounded-full appearance-none cursor-pointer accent-primary border border-white/5 transition-all hover:bg-zinc-800"
+                    className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-primary border border-border transition-all"
                 />
                 <div className="absolute top-0 left-0 h-full bg-primary/20 rounded-full pointer-events-none" style={{ width: `${((value - min) / (max - min)) * 100}%` }} />
             </div>

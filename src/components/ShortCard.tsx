@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { MoreVertical } from 'lucide-react';
+import { MediaThumbnail } from './media-thumbnail';
 import type { Lecture } from '@/lib/types';
 import { getPlaceholderImage } from '@/lib/images';
 import { formatViews, getVideoIdFromUrl } from '@/lib/utils';
@@ -32,15 +32,14 @@ export function ShortCard({ lecture, index = 0 }: ShortCardProps) {
     <div className="w-full animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
       <div onClick={handlePlay} className="group cursor-pointer">
         <div className="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-muted">
-          <Image
+          <MediaThumbnail
             src={imageUrl}
+            videoId={videoId}
             alt={lecture.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 15vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105 image-theme-filter"
-            data-ai-hint={placeholder?.imageHint || 'video thumbnail'}
+            fallbackTitle={lecture.title}
+            className="transition-transform duration-300 group-hover:scale-105 image-theme-filter"
           />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
         </div>
       </div>
       <div className="mt-2 px-1">

@@ -3473,10 +3473,10 @@ export default function QuranPage() {
                     <div className="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center shrink-0">
                       <div
                         className={cn(
-                          "absolute inset-0 rounded-full border border-white/10 bg-black/60 transition-all duration-[4s] shadow-2xl flex items-center justify-center",
+                          "absolute inset-0 rounded-full border border-white/10 bg-black/60 transition-all shadow-2xl flex items-center justify-center",
                           isPlayingRadio && !isRadioBuffering ? "animate-spin" : ""
                         )}
-                        style={{ animationDuration: '10s' }}
+                        style={{ animationDuration: '10s', transitionDuration: '4000ms' }}
                       >
                         <div className="absolute inset-1.5 rounded-full border border-dashed border-white/10" />
                         <div className="absolute inset-3 rounded-full border border-white/10" />

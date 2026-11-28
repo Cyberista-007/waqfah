@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Play, Headphones, ExternalLink } from 'lucide-react';
+import { MediaThumbnail } from '@/components/media-thumbnail';
 import { Button } from '@/components/ui/button';
 import { useAudioPlayer } from '@/components/audio-player-provider';
 import { getVideoIdFromUrl, formatDuration } from '@/lib/utils';
@@ -63,12 +63,12 @@ function StripCard({ lecture }: { lecture: Lecture }) {
           className="absolute inset-0 z-10"
           aria-label={lecture.title}
         />
-        <Image
+        <MediaThumbnail
           src={thumbnailUrl}
+          videoId={videoId}
           alt={lecture.title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          fallbackTitle={lecture.title}
+          className="transition-transform duration-300 group-hover:scale-[1.03]"
         />
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-20 pointer-events-none group-hover:pointer-events-auto">

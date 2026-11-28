@@ -4,6 +4,7 @@ import 'server-only';
 import { initializeAdminApp } from '@/lib/firebase-admin';
 import { firebaseConfig } from '@/firebase/config';
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import type { Lecture, Series, Program, Topic, AppearanceSettings, AnnouncementSettings, Curriculum, ScheduleItem, QAPair, Playlist, HomepageDetailedConfig } from '@/lib/types';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -127,7 +128,9 @@ async function fetchRestDoc<T>(docPath: string): Promise<T | null> {
 }
 
 let quotaExhaustedUntil = 0;
+let lastQuotaLogAt = 0;
 const serverReadCache = new Map<string, { value: any; expiresAt: number }>();
+const inFlightCache = new Map<string, Promise<any>>();
 
 function isQuotaBlocked(): boolean {
     return Date.now() < quotaExhaustedUntil;
@@ -135,29 +138,50 @@ function isQuotaBlocked(): boolean {
 
 function handleFirestoreError(label: string, error: any) {
     const msg = String(error?.message || '');
-    if (error?.code === 8 || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('HTTP 429')) {
-        quotaExhaustedUntil = Date.now() + 60_000;
+    const isRateLimited = error?.code === 8 || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('HTTP 429');
+    if (isRateLimited) {
+        quotaExhaustedUntil = Date.now() + 15_000;
+        if (Date.now() - lastQuotaLogAt > 15_000) {
+            lastQuotaLogAt = Date.now();
+            console.warn(`${label}: ${msg || 'Rate limited'}`);
+        }
+        return;
     }
     console.error(`${label}:`, msg || error);
 }
 
 async function withServerCache<T>(key: string, ttlMs: number, loader: () => Promise<T>, fallback: T): Promise<T> {
-    if (isQuotaBlocked()) return fallback;
     const hit = serverReadCache.get(key);
     if (hit && Date.now() < hit.expiresAt) {
         return hit.value as T;
     }
-    try {
-        const value = await loader();
-        const isNonEmpty = Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined;
-        if (isNonEmpty) {
-            serverReadCache.set(key, { value, expiresAt: Date.now() + ttlMs });
-        }
-        return value;
-    } catch (error) {
-        handleFirestoreError(`Server cache fetch failed [${key}]`, error);
-        return fallback;
+    if (isQuotaBlocked()) {
+        return hit ? (hit.value as T) : fallback;
     }
+
+    const pending = inFlightCache.get(key);
+    if (pending) {
+        return pending as Promise<T>;
+    }
+
+    const promise = (async () => {
+        try {
+            const value = await loader();
+            const isNonEmpty = Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined;
+            if (isNonEmpty) {
+                serverReadCache.set(key, { value, expiresAt: Date.now() + ttlMs });
+            }
+            return value;
+        } catch (error) {
+            handleFirestoreError(`Server cache fetch failed [${key}]`, error);
+            return hit ? (hit.value as T) : fallback;
+        } finally {
+            inFlightCache.delete(key);
+        }
+    })();
+
+    inFlightCache.set(key, promise);
+    return promise;
 }
 
 const getAllDocs = async <T>(collectionName: string, select?: string[]): Promise<(T & { id: string })[]> => {
@@ -285,32 +309,48 @@ export const getAllPrograms = cache((select?: string[]) => getAllDocs<Program>('
 export const getAllTopics = cache((select?: string[]) => getAllDocs<Topic>('topics', select));
 export const getAllCurriculums = cache((select?: string[]) => getAllDocs<Curriculum>('curriculums', select));
 
-export const getAppearanceSettings = cache(async (): Promise<AppearanceSettings | null> => {
-    return withServerCache('settings/appearance', 120_000, async () => {
-        const firestore = getFirestore();
-        if (!firestore) return fetchRestDoc<AppearanceSettings>('settings/appearance');
-        const docSnap = await firestore.doc('settings/appearance').get();
-        return docSnap.exists ? serializeValue(docSnap.data() as AppearanceSettings) : null;
-    }, null);
-});
+const cachedAppearanceSettings = unstable_cache(
+    async (): Promise<AppearanceSettings | null> => {
+        return withServerCache('settings/appearance', 120_000, async () => {
+            const firestore = getFirestore();
+            if (!firestore) return fetchRestDoc<AppearanceSettings>('settings/appearance');
+            const docSnap = await firestore.doc('settings/appearance').get();
+            return docSnap.exists ? serializeValue(docSnap.data() as AppearanceSettings) : null;
+        }, null);
+    },
+    ['settings/appearance'],
+    { revalidate: 120 }
+);
 
-export const getAnnouncement = cache(async (): Promise<AnnouncementSettings | null> => {
-    return withServerCache('settings/announcement', 120_000, async () => {
-        const firestore = getFirestore();
-        if (!firestore) return fetchRestDoc<AnnouncementSettings>('settings/announcement');
-        const docSnap = await firestore.doc('settings/announcement').get();
-        return docSnap.exists ? serializeValue(docSnap.data() as AnnouncementSettings) : null;
-    }, null);
-});
+const cachedAnnouncement = unstable_cache(
+    async (): Promise<AnnouncementSettings | null> => {
+        return withServerCache('settings/announcement', 120_000, async () => {
+            const firestore = getFirestore();
+            if (!firestore) return fetchRestDoc<AnnouncementSettings>('settings/announcement');
+            const docSnap = await firestore.doc('settings/announcement').get();
+            return docSnap.exists ? serializeValue(docSnap.data() as AnnouncementSettings) : null;
+        }, null);
+    },
+    ['settings/announcement'],
+    { revalidate: 120 }
+);
 
-export const getHomepageConfig = async (): Promise<HomepageDetailedConfig | null> => {
-    return withServerCache('settings/homepage', 120_000, async () => {
-        const firestore = getFirestore();
-        if (!firestore) return fetchRestDoc<HomepageDetailedConfig>('settings/homepage');
-        const docSnap = await firestore.doc('settings/homepage').get();
-        return docSnap.exists ? serializeValue(docSnap.data() as HomepageDetailedConfig) : null;
-    }, null);
-};
+const cachedHomepageConfig = unstable_cache(
+    async (): Promise<HomepageDetailedConfig | null> => {
+        return withServerCache('settings/homepage', 120_000, async () => {
+            const firestore = getFirestore();
+            if (!firestore) return fetchRestDoc<HomepageDetailedConfig>('settings/homepage');
+            const docSnap = await firestore.doc('settings/homepage').get();
+            return docSnap.exists ? serializeValue(docSnap.data() as HomepageDetailedConfig) : null;
+        }, null);
+    },
+    ['settings/homepage'],
+    { revalidate: 120 }
+);
+
+export const getAppearanceSettings = cache(() => cachedAppearanceSettings());
+export const getAnnouncement = cache(() => cachedAnnouncement());
+export const getHomepageConfig = cache(() => cachedHomepageConfig());
 
 export const getUpcomingLesson = cache(async (): Promise<ScheduleItem | null> => {
     const firestore = getFirestore();
