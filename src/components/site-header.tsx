@@ -75,6 +75,7 @@ import { useAuth, useUser } from "@/firebase"
 import { useSearch } from "@/components/search-provider"
 import { useTranslation } from "@/lib/i18n"
 import { languages } from "@/components/language-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const ThemeSwitcherDialog = dynamic(
   () => import("./theme-switcher").then((mod) => mod.ThemeSwitcherDialog),
@@ -357,20 +358,24 @@ export function SiteHeader() {
                         </div>
                       </ScrollArea>
 
-                      <div className="p-4 border-t border-border bg-card/40 grid grid-cols-3 gap-2">
+                      <div className="p-4 border-t border-border bg-card/40 grid grid-cols-2 gap-2">
+                        <ThemeToggle
+                          showLabel
+                          className="h-9 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                        />
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-xl text-xs font-bold gap-1.5"
+                          className="h-9 rounded-xl text-xs font-bold gap-1.5"
                           onClick={() => setIsThemeSwitcherOpen(true)}
                         >
                           <Palette className="h-3.5 w-3.5 text-primary" />
-                          <span>{t("الثيم", "Theme")}</span>
+                          <span>{t("الثيمات", "Themes")}</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-xl text-xs font-bold gap-1.5"
+                          className="h-9 rounded-xl text-xs font-bold gap-1.5"
                           onClick={() => setIsFontSwitcherOpen(true)}
                         >
                           <CaseSensitive className="h-3.5 w-3.5 text-primary" />
@@ -379,7 +384,7 @@ export function SiteHeader() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-xl text-xs font-bold"
+                          className="h-9 rounded-xl text-xs font-bold"
                           onClick={() => setIsLanguageSwitcherOpen(true)}
                         >
                           {activeLanguageCode}
@@ -605,8 +610,14 @@ export function SiteHeader() {
 
               <NotificationBell />
 
-              {/* Unified Compact Utility Bar (Appearance, Language, Collapse Header) */}
+              {/* Mobile Quick Day/Night Toggle */}
+              <div className="md:hidden shrink-0">
+                <ThemeToggle className="h-9 w-9 rounded-xl border border-border/80 bg-card/60 text-foreground hover:bg-muted" />
+              </div>
+
+              {/* Unified Compact Utility Bar (Day/Night, Themes, Language, Collapse Header) */}
               <div className="hidden md:flex items-center rounded-xl border border-border/80 bg-muted/40 p-0.5 shrink-0">
+                <ThemeToggle />
                 <Button
                   variant="ghost"
                   size="icon"

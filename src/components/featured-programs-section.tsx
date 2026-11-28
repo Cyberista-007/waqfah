@@ -59,7 +59,7 @@ export function FeaturedProgramsSection({ programs }: FeaturedProgramsSectionPro
               href={`/programs/${program.slug}`}
               title={program.name}
               aria-label={program.name}
-              className="group relative block aspect-square rounded-2xl overflow-hidden border border-white/10 bg-card shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative block aspect-square rounded-2xl overflow-hidden border border-border/70 bg-card shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ProgramArtwork
                 src={imageUrl}

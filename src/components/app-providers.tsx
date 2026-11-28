@@ -1,6 +1,8 @@
 
 'use client';
 
+import { useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AudioPlayerProvider } from '@/components/audio-player-provider';
 import { RadioProvider } from '@/components/radio-provider';
@@ -9,9 +11,21 @@ import dynamic from 'next/dynamic';
 import { MaintenanceHandler } from '@/components/maintenance-handler';
 import type { AppearanceSettings } from '@/lib/types';
 import { FirebaseClientProvider } from '@/firebase';
-import { themes } from './theme-switcher';
+import { DEFAULT_DARK_THEME, isLightTheme, themes } from './theme-switcher';
 import { SearchProvider } from './search-provider';
 import { MoodProvider } from './mood-provider';
+
+function ThemeModeClassSync() {
+  const { theme, resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    const active = theme || resolvedTheme;
+    const isLight = isLightTheme(active);
+    document.documentElement.classList.toggle('dark', !isLight);
+  }, [theme, resolvedTheme]);
+
+  return null;
+}
 
 const FloatingVideoPlayer = dynamic(
   () => import('./floating-video-player'),
@@ -52,10 +66,16 @@ export function AppProviders({
     return (
         <ThemeProvider 
           attribute="class" 
-          defaultTheme={defaultTheme || "theme-default-dark"}
-          enableSystem={false}
+          defaultTheme={defaultTheme || DEFAULT_DARK_THEME}
+          enableSystem={true}
           themes={themes.map(t => t.value)}
+          value={{
+            light: 'theme-default-light',
+            dark: 'theme-default-dark',
+            ...Object.fromEntries(themes.map((t) => [t.value, t.value])),
+          }}
         >
+          <ThemeModeClassSync />
           <AppearanceProvider 
             defaultFont={defaultFont}
             quranIconUrl={quranIconUrl}

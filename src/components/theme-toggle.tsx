@@ -1,43 +1,61 @@
-
 "use client"
 
 import * as React from "react"
-import { Palette } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "./ui/button"
-import { themes } from "./theme-switcher"
+import { cn } from "@/lib/utils"
+import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, isLightTheme } from "./theme-switcher"
 
 interface ThemeToggleProps {
-  onClick?: () => void;
+  onClick?: () => void
+  className?: string
+  showLabel?: boolean
 }
 
-export function ThemeToggle({ onClick }: ThemeToggleProps) {
-  const { theme, setTheme } = useTheme()
+export function ThemeToggle({ onClick, className, showLabel = false }: ThemeToggleProps) {
+  const { theme, resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
 
-  const toggleTheme = () => {
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const active = mounted ? theme || resolvedTheme : undefined
+  const isLight = isLightTheme(active)
+
+  const handleToggle = () => {
     if (onClick) {
-      onClick();
-      return;
+      onClick()
+      return
     }
-    const currentIndex = themes.findIndex((t) => t.value === theme)
-    const nextIndex = (currentIndex + 1) % themes.length
-    const nextTheme = themes[nextIndex]?.value
-    if (nextTheme) {
-      setTheme(nextTheme)
-    }
+    setTheme(isLight ? DEFAULT_DARK_THEME : DEFAULT_LIGHT_THEME)
   }
+
+  const label = isLight ? "الوضع الليلي" : "الوضع النهاري"
 
   return (
     <Button
-      onClick={toggleTheme}
+      type="button"
+      onClick={handleToggle}
       variant="ghost"
-      size="icon"
-      aria-label="Toggle theme"
-      className="text-foreground/70 hover:text-primary transition-all hover:bg-primary/10 rounded-full"
+      size={showLabel ? "sm" : "icon"}
+      title={label}
+      aria-label={label}
+      className={cn(
+        showLabel
+          ? "gap-1.5 rounded-xl text-xs font-bold"
+          : "h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-background",
+        className
+      )}
     >
-      <Palette className="h-5 w-5" />
-      <span className="sr-only">Toggle theme</span>
+      {mounted && isLight ? (
+        <Moon className="h-4 w-4 shrink-0" />
+      ) : (
+        <Sun className="h-4 w-4 shrink-0" />
+      )}
+      {showLabel ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </Button>
   )
 }

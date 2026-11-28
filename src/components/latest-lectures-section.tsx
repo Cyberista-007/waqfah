@@ -200,10 +200,10 @@ export function LatestLecturesSection({
                   className={cn(
                     'group relative aspect-square rounded-2xl overflow-hidden border bg-card transition-all duration-200 cursor-pointer focus:outline-none',
                     isSelected
-                      ? 'ring-2 ring-white/60 ring-offset-2 ring-offset-background border-white/40 scale-[1.03] shadow-lg'
+                      ? 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background border-border scale-[1.03] shadow-lg'
                       : selectedProgramId
-                      ? 'border-white/10 opacity-70 hover:opacity-100 hover:scale-[1.02]'
-                      : 'border-white/10 hover:scale-[1.03] shadow-sm'
+                      ? 'border-border/70 opacity-70 hover:opacity-100 hover:scale-[1.02]'
+                      : 'border-border/70 hover:scale-[1.03] shadow-sm'
                   )}
                 >
                   <ProgramArtwork

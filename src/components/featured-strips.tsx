@@ -57,7 +57,7 @@ function StripCard({ lecture }: { lecture: Lecture }) {
 
   return (
     <article className="relative w-full group flex flex-col">
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted border border-white/10">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-muted border border-border/70">
         <Link
           href={`/lectures/${lecture.slug}`}
           className="absolute inset-0 z-10"

@@ -32,7 +32,10 @@ import { LayoutClientWidgets } from '@/components/layout-client-widgets';
 
 
 export const viewport: Viewport = {
-  themeColor: '#09090b',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f6f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d0f12' },
+  ],
 };
 
 export const metadata: Metadata = {

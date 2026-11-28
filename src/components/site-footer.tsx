@@ -12,7 +12,7 @@ export function SiteFooter() {
 
   return (
     <footer
-      className="relative bg-zinc-950 text-zinc-100 py-14 sm:py-16 border-t border-border mt-16"
+      className="relative bg-card text-foreground py-14 sm:py-16 border-t border-border mt-16"
       dir={isRtl ? "rtl" : "ltr"}
     >
       <div className="container mx-auto px-4 sm:px-8">
@@ -20,15 +20,15 @@ export function SiteFooter() {
           {/* Brand Column */}
           <div className="lg:col-span-5 space-y-6">
             <Link href="/" prefetch={false} className="inline-block group">
-              <span className="text-4xl font-black font-headline tracking-tight text-white block mb-1.5 group-hover:text-primary transition-colors">
+              <span className="text-4xl font-black font-headline tracking-tight text-foreground block mb-1.5 group-hover:text-primary transition-colors">
                 {t("وقـــفــــة", "WAQFAH")}
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-[0.35em] text-zinc-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-[0.35em] text-muted-foreground block">
                 {t("للعلم الشرعي الموثوق", "AUTHENTIC ISLAMIC KNOWLEDGE")}
               </span>
             </Link>
 
-            <p className="max-w-md text-sm sm:text-base text-zinc-400 leading-relaxed font-medium">
+            <p className="max-w-md text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
               {t(
                 "صرحٌ تعليميٌّ متكاملٌ يهدفُ إلى تقريبِ العلمِ النافعِ، وربطِ المسلمِ بالكتابِ والسنةِ على فهمِ سلفِ الأمةِ، عبرَ تجربةٍ تقنيةٍ واضحةٍ وسريعة.",
                 "An integrated educational platform dedicated to making beneficial Islamic knowledge accessible through a clear, fast digital experience."
@@ -37,17 +37,17 @@ export function SiteFooter() {
 
             <div className="flex gap-2.5">
               {[
-                { icon: Youtube, label: "قناة اليوتيوب", color: "hover:border-red-500/40 hover:text-red-400" },
-                { icon: Twitter, label: "حساب تويتر", color: "hover:border-blue-500/40 hover:text-blue-400" },
-                { icon: Facebook, label: "صفحة الفيسبوك", color: "hover:border-indigo-500/40 hover:text-indigo-400" },
-                { icon: MessageCircle, label: "رابط الواتساب", color: "hover:border-green-500/40 hover:text-green-400" },
-                { icon: Send, label: "قناة التليجرام", color: "hover:border-sky-500/40 hover:text-sky-400" },
+                { icon: Youtube, label: "قناة اليوتيوب", color: "hover:border-red-500/40 hover:text-red-500" },
+                { icon: Twitter, label: "حساب تويتر", color: "hover:border-blue-500/40 hover:text-blue-500" },
+                { icon: Facebook, label: "صفحة الفيسبوك", color: "hover:border-indigo-500/40 hover:text-indigo-500" },
+                { icon: MessageCircle, label: "رابط الواتساب", color: "hover:border-green-500/40 hover:text-green-500" },
+                { icon: Send, label: "قناة التليجرام", color: "hover:border-sky-500/40 hover:text-sky-500" },
               ].map((social, i) => (
                 <a
                   key={i}
                   href="#"
                   aria-label={social.label}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 transition-colors duration-200 ${social.color}`}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl bg-muted/70 border border-border text-muted-foreground transition-colors duration-200 ${social.color}`}
                 >
                   <social.icon className="w-4 h-4" />
                 </a>
@@ -58,7 +58,7 @@ export function SiteFooter() {
           {/* Links Columns */}
           <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-10">
             <div>
-              <h3 className="text-white font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
+              <h3 className="text-foreground font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
                 <span className="w-1 h-4 bg-primary rounded-full" />
                 {t("المنصة", "Platform")}
               </h3>
@@ -75,7 +75,7 @@ export function SiteFooter() {
                     <Link
                       href={link.href}
                       prefetch={false}
-                      className="text-zinc-400 hover:text-white transition-colors text-sm font-bold flex items-center gap-1 group"
+                      className="text-muted-foreground hover:text-foreground transition-colors text-sm font-bold flex items-center gap-1 group"
                     >
                       <span>{link.label}</span>
                       <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -86,7 +86,7 @@ export function SiteFooter() {
             </div>
 
             <div>
-              <h3 className="text-white font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
+              <h3 className="text-foreground font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
                 <span className="w-1 h-4 bg-emerald-500 rounded-full" />
                 {t("المحتوى", "Content")}
               </h3>
@@ -102,7 +102,7 @@ export function SiteFooter() {
                     <Link
                       href={link.href}
                       prefetch={false}
-                      className="text-zinc-400 hover:text-white transition-colors text-sm font-bold flex items-center"
+                      className="text-muted-foreground hover:text-foreground transition-colors text-sm font-bold flex items-center"
                     >
                       {link.label}
                     </Link>
@@ -112,7 +112,7 @@ export function SiteFooter() {
             </div>
 
             <div className="col-span-2 md:col-span-1">
-              <h3 className="text-white font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
+              <h3 className="text-foreground font-black text-xs uppercase tracking-widest mb-5 flex items-center gap-2">
                 <span className="w-1 h-4 bg-amber-500 rounded-full" />
                 {t("الدعم", "Support")}
               </h3>
@@ -121,10 +121,10 @@ export function SiteFooter() {
                   <Link
                     href="/contact"
                     prefetch={false}
-                    className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col gap-1 hover:border-zinc-700 transition-colors"
+                    className="p-3.5 rounded-xl bg-muted/60 border border-border flex flex-col gap-1 hover:bg-muted transition-colors"
                   >
-                    <span className="text-white font-black text-sm">{t("تواصل معنا", "Contact Us")}</span>
-                    <span className="text-zinc-400 text-xs">{t("نحن هنا للإجابة على استفساراتك", "We are here to answer your questions")}</span>
+                    <span className="text-foreground font-black text-sm">{t("تواصل معنا", "Contact Us")}</span>
+                    <span className="text-muted-foreground text-xs">{t("نحن هنا للإجابة على استفساراتك", "We are here to answer your questions")}</span>
                   </Link>
                 </li>
                 <li>
@@ -145,8 +145,8 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-14 pt-8 border-t border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-xs font-bold text-zinc-400">
+        <div className="mt-14 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-xs font-bold text-muted-foreground">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <p>© {new Date().getFullYear()} {t("منصة وقفة العلمية — وقف خيري لوجه الله تعالى", "Waqfah Platform — Non-Profit Islamic Endowment")}</p>
@@ -157,7 +157,7 @@ export function SiteFooter() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 text-zinc-300 text-xs font-bold bg-zinc-900 px-5 py-2.5 rounded-full border border-zinc-800">
+          <div className="flex items-center gap-2.5 text-foreground/80 text-xs font-bold bg-muted/70 px-5 py-2.5 rounded-full border border-border">
             <Globe className="w-4 h-4 text-primary shrink-0" />
             <span>{t("بُني باحترافية رقمية لنصرة الدين ونشر العلم الشرعي النافع", "Crafted digitally to serve and spread authentic Islamic knowledge")}</span>
           </div>
