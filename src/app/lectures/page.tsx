@@ -8,9 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LectureCard } from "@/components/lecture-card";
+import { ChannelFilterStrip } from "@/components/channel-filter-strip";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCollection } from "@/firebase";
-import type { Lecture, Series } from "@/lib/types";
+import type { Lecture, Program, Series } from "@/lib/types";
+import { getPlaceholderImage } from "@/lib/images";
 import { CinematicAppLoader } from "@/components/skeletons";
 import { useMemo, useState, Suspense } from "react";
 import { Search, Sparkles, Clapperboard, Clock, ListVideo, Filter, X } from "lucide-react";
@@ -45,18 +47,39 @@ function LecturesListPageClient() {
     orderBy: ["title", "asc"],
     once: true,
   });
+  const { data: allPrograms } = useCollection<Program>("programs", {
+    orderBy: ["followerCount", "desc"],
+    once: true,
+  });
 
   const currentPage = Number(searchParams.get("page")) || 1;
   const seriesFilter = searchParams.get("series");
+  const programFilter = searchParams.get("program");
   const sortOrder = searchParams.get("sort") || "newest";
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleFilterChange = (type: "series" | "sort", value: string) => {
+  const selectedProgram = useMemo(() => {
+    if (!programFilter || !allPrograms) return null;
+    return (
+      allPrograms.find((p) => p.id === programFilter || p.slug === programFilter) ||
+      null
+    );
+  }, [allPrograms, programFilter]);
+
+  const programImageMap = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const p of allPrograms || []) {
+      map[p.id] = p.imageUrl || getPlaceholderImage(p.imageId)?.imageUrl;
+    }
+    return map;
+  }, [allPrograms]);
+
+  const handleFilterChange = (type: "series" | "sort" | "program", value: string | null) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     current.set("page", "1");
 
-    if (value === "all") {
+    if (!value || value === "all") {
       current.delete(type);
     } else {
       current.set(type, value);
@@ -65,6 +88,16 @@ function LecturesListPageClient() {
     const search = current.toString();
     const query = search ? `?${search}` : "";
     router.push(`${pathname}${query}`);
+  };
+
+  const resetAllFilters = () => {
+    setSearchTerm("");
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.delete("series");
+    current.delete("program");
+    current.set("page", "1");
+    const search = current.toString();
+    router.push(search ? `${pathname}?${search}` : pathname);
   };
 
   const handlePageChange = (page: number) => {
@@ -86,6 +119,15 @@ function LecturesListPageClient() {
     if (!allLectures) return [];
 
     let lectures = [...allLectures];
+
+    if (selectedProgram) {
+      lectures = lectures.filter(
+        (l) =>
+          l.programId === selectedProgram.id ||
+          (selectedProgram.slug && l.programSlug === selectedProgram.slug) ||
+          l.programName === selectedProgram.name
+      );
+    }
 
     if (seriesFilter && seriesFilter !== "all") {
       lectures = lectures.filter((l) => l.seriesId === seriesFilter);
@@ -138,7 +180,7 @@ function LecturesListPageClient() {
     });
 
     return lectures;
-  }, [allLectures, seriesFilter, sortOrder, searchTerm]);
+  }, [allLectures, selectedProgram, seriesFilter, sortOrder, searchTerm]);
 
   const totalPages = Math.ceil(filteredLectures.length / ITEMS_PER_PAGE);
   const lecturesForPage = filteredLectures.slice(
@@ -152,7 +194,9 @@ function LecturesListPageClient() {
     return <CinematicAppLoader />;
   }
 
-  const hasActiveFilters = Boolean(searchTerm.trim() || (seriesFilter && seriesFilter !== "all"));
+  const hasActiveFilters = Boolean(
+    searchTerm.trim() || selectedProgram || (seriesFilter && seriesFilter !== "all")
+  );
 
   return (
     <div className="min-h-screen pb-20" dir="rtl">
@@ -274,12 +318,10 @@ function LecturesListPageClient() {
             <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs text-muted-foreground">
               <span>
                 عرض <strong className="text-foreground">{filteredLectures.length}</strong> محاضرة مطابقة
+                {selectedProgram ? ` في قناة ${selectedProgram.name}` : ""}
               </span>
               <button
-                onClick={() => {
-                  setSearchTerm("");
-                  handleFilterChange("series", "all");
-                }}
+                onClick={resetAllFilters}
                 className="text-primary font-bold hover:underline flex items-center gap-1"
               >
                 <X className="w-3.5 h-3.5" />
@@ -289,11 +331,29 @@ function LecturesListPageClient() {
           )}
         </section>
 
+        {/* ── 2.5. CHANNEL TILES FILTER BAR ── */}
+        {allPrograms && allPrograms.length > 0 && (
+          <section className="pt-1">
+            <ChannelFilterStrip
+              programs={allPrograms}
+              selectedProgramId={selectedProgram?.id || null}
+              onSelectProgram={(programId) => handleFilterChange("program", programId)}
+              totalCount={allLectures?.length || 0}
+              hintText="اضغط على صورة القناة لعرض فيديوهاتها:"
+            />
+          </section>
+        )}
+
         {/* ── 3. LECTURES GRID ── */}
         {lecturesForPage.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {lecturesForPage.map((lecture, index) => (
-              <LectureCard key={lecture.id} lecture={lecture} index={index} />
+              <LectureCard
+                key={lecture.id}
+                lecture={lecture}
+                index={index}
+                programImageUrl={lecture.programId ? programImageMap[lecture.programId] : undefined}
+              />
             ))}
           </div>
         ) : (
@@ -307,10 +367,7 @@ function LecturesListPageClient() {
             </div>
             <Button
               variant="outline"
-              onClick={() => {
-                setSearchTerm("");
-                handleFilterChange("series", "all");
-              }}
+              onClick={resetAllFilters}
               className="rounded-xl font-bold"
             >
               إعادة ضبط الفلاتر

@@ -8,16 +8,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
-  ExternalLink,
   Loader2,
 } from 'lucide-react';
 
+import { ChannelFilterStrip } from '@/components/channel-filter-strip';
 import { LectureCard } from '@/components/lecture-card';
 import { ProgramArtwork } from '@/components/program-artwork';
 import { useCollection } from '@/firebase';
 import { getPlaceholderImage } from '@/lib/images';
 import type { Lecture, ListenHistoryItem, Playlist, Program } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 interface LatestLecturesSectionProps {
   programs: Program[];
@@ -147,87 +146,14 @@ export function LatestLecturesSection({
 
       {/* Square Channel Tiles Showcase (Thmanyah-style) */}
       {programs.length > 0 && (
-        <div className="mb-8 space-y-4" dir="rtl">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setSelectedProgramId(null)}
-                className={cn(
-                  'px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border',
-                  !selectedProgramId
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/40'
-                )}
-              >
-                الكل ({regularLectures.length})
-              </button>
-              <span className="text-xs text-muted-foreground font-medium">
-                اضغط على صورة القناة لعرض أحدث 20 فيديو:
-              </span>
-            </div>
-
-            {selectedProgram && (
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <span className="text-primary">{selectedProgram.name}</span>
-                <Link
-                  href={`/programs/${selectedProgram.slug}`}
-                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <span>صفحة القناة</span>
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
-            {programs.map((program) => {
-              const isSelected = selectedProgramId === program.id;
-              const imgUrl =
-                program.imageUrl || getPlaceholderImage(program.imageId)?.imageUrl || '';
-
-              return (
-                <button
-                  key={program.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedProgramId((prev) => (prev === program.id ? null : program.id))
-                  }
-                  title={program.name}
-                  aria-label={program.name}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    'group relative aspect-square rounded-2xl overflow-hidden border bg-card transition-all duration-200 cursor-pointer focus:outline-none',
-                    isSelected
-                      ? 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background border-border scale-[1.03] shadow-lg'
-                      : selectedProgramId
-                      ? 'border-border/70 opacity-70 hover:opacity-100 hover:scale-[1.02]'
-                      : 'border-border/70 hover:scale-[1.03] shadow-sm'
-                  )}
-                >
-                  <ProgramArtwork
-                    src={imgUrl}
-                    alt={program.name}
-                    fallbackText={program.name}
-                    compactFallback
-                  />
-
-                  {/* Subtle bottom hover label */}
-                  <div
-                    className={cn(
-                      'absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-1.5 transition-opacity duration-200 pointer-events-none',
-                      isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    )}
-                  >
-                    <p className="text-[10px] font-bold text-white truncate text-center">
-                      {program.name}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="mb-8">
+          <ChannelFilterStrip
+            programs={programs}
+            selectedProgramId={selectedProgramId}
+            onSelectProgram={setSelectedProgramId}
+            totalCount={regularLectures.length}
+            hintText="اضغط على صورة القناة لعرض أحدث 20 فيديو:"
+          />
         </div>
       )}
 
